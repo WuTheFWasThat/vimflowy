@@ -1,0 +1,23 @@
+{
+  "name": "vimflowy",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.2.x"
+  },
+  "scripts": {
+    "start": "NODE_ENV=development nodemon server.coffee"
+  },
+  "dependencies": {
+    "async": "latest",
+    "coffee-script": "latest",
+    "connect-assets": "latest",
+    "connect-flash": "latest",
+    "express": "latest",
+    "jade": "latest",
+    "nodemon": "latest",
+    "node-sass": "=1.2.3",
+    "underscore": "latest"
+  }
+}
