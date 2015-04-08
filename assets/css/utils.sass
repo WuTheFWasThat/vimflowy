@@ -1,0 +1,26 @@
+@mixin calc($property, $expression)
+  #{$property}: -moz-calc(#{$expression})
+  #{$property}: -webkit-calc(#{$expression})
+  #{$property}: calc(#{$expression})
+
+@mixin transition($transition)
+  -moz-transition:    $transition
+  -o-transition:      $transition
+  -webkit-transition: $transition
+  transition:         $transition
+
+.unselectable
+  -moz-user-select: -moz-none
+  -khtml-user-select: none
+  -webkit-user-select: none
+  // Introduced in IE 10.  See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+  -ms-user-select: none
+  user-select: none
+
+.center
+  text-align: center
+  margin-left: auto
+  margin-right: auto
+
+.text-center
+  text-align: center
