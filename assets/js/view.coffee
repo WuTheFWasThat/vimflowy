@@ -54,12 +54,17 @@ class View
       else if key == 'r'
         if options.ctrl
           do @redo
+      else if key == 'x'
+        # TODO: deal with edge cases
+        @act new DelChars @curRow, @curCol, 1
     else if @mode == MODES.INSERT
       if key == 'esc'
         @setMode MODES.VISUAL
+      else if key == 'backspace'
+        @act new DelChars @curRow, (@curCol-1), 1
       else
         console.log 'precur', JSON.stringify data.lines[@curRow]
-        @act new AddChars @curRow, @curCol, key
+        @act new AddChars @curRow, @curCol, [key]
         console.log 'cur', data.lines[view.curRow]
 
   act: (action) ->
