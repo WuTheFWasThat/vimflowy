@@ -15,11 +15,12 @@ class Data
     return @
 
   writeChars: (row, col, chars) ->
-    args = [col, 0].concat do chars.split
+    args = [col, 0].concat chars
     [].splice.apply @lines[row], args
 
   deleteChars: (row, col, num) ->
-    @lines[row].splice col, num
+    removed = @lines[row].splice col, num
+    return removed
 
   serialize: () ->
     return {

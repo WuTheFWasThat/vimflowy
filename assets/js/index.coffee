@@ -4,6 +4,7 @@
 
 keyCodeMap =
   27: 'esc'
+  8: 'backspace'
 
 data = new Data
 view = new View $('#contents'), $('#mode'), data

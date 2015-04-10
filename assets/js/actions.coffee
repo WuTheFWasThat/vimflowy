@@ -14,6 +14,18 @@ class AddChars extends Action
     view.setCur @row, (@col + @chars.length)
     view.drawRow @row
   rewind: (view) ->
-    view.data.deleteChars @row, @col, @chars.length
+    reverse = new DelChars @row, @col, @chars.length
+    reverse.apply view
+
+class DelChars extends Action
+  constructor: (row, col, nchars) ->
+    @row = row
+    @col = col
+    @nchars = nchars
+  apply: (view) ->
+    @chars = view.data.deleteChars @row, @col, @nchars
     view.setCur @row, @col
     view.drawRow @row
+  rewind: (view) ->
+    reverse = new AddChars @row, @col, @chars
+    reverse.apply view
