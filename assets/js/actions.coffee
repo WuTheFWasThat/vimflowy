@@ -24,6 +24,7 @@ class DelChars extends Action
     @nchars = nchars
   apply: (view) ->
     @chars = view.data.deleteChars @row, @col, @nchars
+    console.log @chars, @chars.length, @nchars
     view.setCur @row, @col
     view.drawRow @row
   rewind: (view) ->
