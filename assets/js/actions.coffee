@@ -1,3 +1,5 @@
+# actions mutate the data of a view, and are undoable
+
 class Action
   apply: (view) ->
     return
