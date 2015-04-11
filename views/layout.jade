@@ -2,7 +2,8 @@ html
   head
     title Vimflowy
 
-    link(rel='stylesheet', href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css')
+    // link(rel='stylesheet', href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css')
+    link(rel='stylesheet', href='/bootstrap.min.css')
     != css('app')
 
     block morehead
@@ -10,9 +11,12 @@ html
   body(class=bodyClass)
     block content
 
-    script(src='//code.jquery.com/jquery-2.1.1.min.js')
-    script(src='//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js')
-    script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js')
-    script(src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js')
+    // script(src='//code.jquery.com/jquery-2.1.1.min.js')
+    script(src='/jquery-2.1.1.min.js')
+    // script(src='//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js')
+    // script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js')
+    script(src='/underscore-min.js')
+    // script(src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js')
+    script(src='/bootstrap.min.js')
     != js('app.js')
     block morefoot

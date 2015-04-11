@@ -42,8 +42,10 @@ class View
       @historyIndex += 1
 
   handleKey: (key, options) ->
+    console.log('handling', key)
     if @mode == MODES.VISUAL
       if key == 'a'
+        do @moveCursorRight
         @setMode MODES.INSERT
       else if key == 'i'
         @setMode MODES.INSERT
@@ -54,18 +56,35 @@ class View
       else if key == 'r'
         if options.ctrl
           do @redo
+      else if key == 'h'
+        do @moveCursorLeft
+      else if key == 'l'
+        do @moveCursorRight
       else if key == 'x'
-        # TODO: deal with edge cases
         @act new DelChars @curRow, @curCol, 1
+        do @moveCursorBackIfNeeded
     else if @mode == MODES.INSERT
       if key == 'esc'
         @setMode MODES.VISUAL
+        do @moveCursorBackIfNeeded
       else if key == 'backspace'
         @act new DelChars @curRow, (@curCol-1), 1
       else
-        console.log 'precur', JSON.stringify data.lines[@curRow]
         @act new AddChars @curRow, @curCol, [key]
-        console.log 'cur', data.lines[view.curRow]
+
+  moveCursorBackIfNeeded: () ->
+    if @curCol > data.lines[@curRow].length - 1
+      do @moveCursorLeft
+
+  moveCursorRight: () ->
+    if @curCol < data.lines[@curRow].length - 1
+      @curCol += 1
+      @drawRow @curRow
+
+  moveCursorLeft: () ->
+    if @curCol > 0
+      @curCol -= 1
+      @drawRow @curRow
 
   act: (action) ->
     action.apply @
@@ -102,14 +121,14 @@ class View
 
     console.log lineData
 
-    # add cursor
-    if row == @curRow and lineData.length == @curCol
-      lineData.push ' '
-
     line = lineData.map (x) ->
       if x == ' '
         return '&nbsp;'
       return x
+
+    # add cursor
+    if row == @curRow and lineData.length == @curCol
+      line.push '&nbsp;'
 
     do onto.empty
 
