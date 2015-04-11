@@ -1,26 +1,15 @@
 class View
-  constructor: (mainDiv, modeDiv, data) ->
+  constructor: (mainDiv, data) ->
     @mainDiv = mainDiv
-    @modeDiv = modeDiv
     @data = data
 
     @curRow = 0 # id
     @curCol = 0
 
-    @mode = ''
-    @setMode MODES.VISUAL
-
     @history = []
     @historyIndex = 0
 
     return @
-
-  setMode: (mode) ->
-    @mode = mode
-    for k, v of MODES
-      if v == mode
-        @modeDiv.text k
-        break
 
   add_history: (action) ->
     # TODO: check if we can merge with previous action
@@ -41,43 +30,15 @@ class View
       action.apply @
       @historyIndex += 1
 
-  handleKey: (key, options) ->
-    console.log('handling', key)
-    if @mode == MODES.VISUAL
-      if key == 'a'
-        do @moveCursorRight
-        @setMode MODES.INSERT
-      else if key == 'i'
-        @setMode MODES.INSERT
-      else if key == 'u'
-        do @undo
-      else if key == ':'
-        @setMode MODES.EX
-      else if key == 'r'
-        if options.ctrl
-          do @redo
-      else if key == 'h'
-        do @moveCursorLeft
-      else if key == 'l'
-        do @moveCursorRight
-      else if key == 'x'
-        @act new DelChars @curRow, @curCol, 1
-        do @moveCursorBackIfNeeded
-    else if @mode == MODES.INSERT
-      if key == 'esc'
-        @setMode MODES.VISUAL
-        do @moveCursorBackIfNeeded
-      else if key == 'backspace'
-        @act new DelChars @curRow, (@curCol-1), 1
-      else
-        @act new AddChars @curRow, @curCol, [key]
 
   moveCursorBackIfNeeded: () ->
     if @curCol > data.lines[@curRow].length - 1
       do @moveCursorLeft
 
-  moveCursorRight: () ->
-    if @curCol < data.lines[@curRow].length - 1
+  moveCursorRight: (options) ->
+    options?={}
+    shift = if options.pastEnd then 0 else 1
+    if @curCol < data.lines[@curRow].length - shift
       @curCol += 1
       @drawRow @curRow
 

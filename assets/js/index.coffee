@@ -2,28 +2,17 @@
 
 # mapping from id to line
 
+data = new Data
+view = new View $('#contents'), data
+
+keyhandler = new KeyHandler
+keybinder = new KeyBindings keyhandler, $('#mode'), view
+
 keyCodeMap =
   27: 'esc'
   8: 'backspace'
 
-data = new Data
-view = new View $('#contents'), $('#mode'), data
-
 $(document).ready ->
 
   do view.render
-
-  $(document).keydown (e) ->
-    console.log('keydown', e.keyCode)
-    if e.keyCode of keyCodeMap
-      key = keyCodeMap[e.keyCode]
-    else
-      key = do (String.fromCharCode e.keyCode).toLowerCase
-      if e.shiftKey
-        key = do key.toUpperCase
-
-    options =
-      ctrl: e.ctrlKey
-    console.log('keycode', e.keyCode, key, options)
-    view.handleKey key, options
-
+  do keyhandler.listen
