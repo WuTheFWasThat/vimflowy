@@ -10,8 +10,6 @@ class Data
       0: []
     }
 
-    @history = []
-    @historyIndex = 0
     return @
 
   writeChars: (row, col, chars) ->

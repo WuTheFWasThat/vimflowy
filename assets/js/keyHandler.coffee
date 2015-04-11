@@ -1,24 +1,56 @@
-keyCodeMap =
-  27: 'esc'
-  8: 'backspace'
-
 class KeyHandler extends EventEmitter
+
+  shiftMap =
+    '1': '!'
+    '2': '@'
+    '3': '#'
+    '4': '$'
+    '5': '%'
+    '6': '^'
+    '7': '&'
+    '8': '*'
+    '9': '('
+    '0': ')'
+
+  keyCodeMap =
+    8: 'backspace'
+    27: 'esc'
+    48: '0'
+    49: '1'
+    50: '2'
+    51: '3'
+    52: '4'
+    53: '5'
+    54: '6'
+    55: '7'
+    56: '8'
+    57: '9'
+
+  for i in [1..26]
+    keyCode = i + 64
+    letter = String.fromCharCode keyCode
+    lower = do letter.toLowerCase
+    keyCodeMap[keyCode] = lower
+    shiftMap[lower] = letter
+
   constructor: () ->
     super
 
   listen: () ->
     self = @
     $(document).keydown (e) ->
-      console.log('keydown', e.keyCode)
       if e.keyCode of keyCodeMap
         key = keyCodeMap[e.keyCode]
-      else
-        key = do (String.fromCharCode e.keyCode).toLowerCase
-        if e.shiftKey
-          key = do key.toUpperCase
 
-      if e.ctrlKey
-        key = 'ctrl+' + key
-      console.log('keycode', e.keyCode, key)
-      self.emit 'keydown', key
+        if e.shiftKey
+          if key of shiftMap
+            key = shiftMap[key]
+          else
+            key = 'shift+'
+
+        if e.ctrlKey
+          key = 'ctrl+' + key
+
+        self.emit 'keydown', key
+      console.log('keycode', e.keyCode, 'key', key)
 

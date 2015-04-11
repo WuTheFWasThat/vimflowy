@@ -1,3 +1,6 @@
+# a View consists of Data and a cursor
+# it also renders
+
 class View
   constructor: (mainDiv, data) ->
     @mainDiv = mainDiv
@@ -10,6 +13,8 @@ class View
     @historyIndex = 0
 
     return @
+
+  # ACTIONS
 
   add_history: (action) ->
     # TODO: check if we can merge with previous action
@@ -30,10 +35,24 @@ class View
       action.apply @
       @historyIndex += 1
 
+  act: (action) ->
+    action.apply @
+    @add_history action
+
+  # CURSOR MOVEMENT AND DATA MANIPULATION
+
+  setCur: (row, col) ->
+    view.curRow = row
+    view.curCol = col
 
   moveCursorBackIfNeeded: () ->
     if @curCol > data.lines[@curRow].length - 1
       do @moveCursorLeft
+
+  moveCursorLeft: () ->
+    if @curCol > 0
+      @curCol -= 1
+      @drawRow @curRow
 
   moveCursorRight: (options) ->
     options?={}
@@ -42,14 +61,18 @@ class View
       @curCol += 1
       @drawRow @curRow
 
-  moveCursorLeft: () ->
-    if @curCol > 0
-      @curCol -= 1
-      @drawRow @curRow
+  moveCursorHome: () ->
+    @curCol = 0
+    @drawRow @curRow
 
-  act: (action) ->
-    action.apply @
-    @add_history action
+  moveCursorEnd: (options) ->
+    options?={}
+    shift = if options.pastEnd then 0 else 1
+    @curCol = data.lines[@curRow].length - shift
+    @drawRow @curRow
+
+
+  # RENDERING
 
   render: () ->
     @renderHelper @mainDiv, @data
@@ -70,10 +93,6 @@ class View
       console.log 'el', el
       console.log 'onto', onto
       onto.append el
-
-  setCur: (row, col) ->
-    view.curRow = row
-    view.curCol = col
 
   drawRow: (row, onto) ->
     if not onto
