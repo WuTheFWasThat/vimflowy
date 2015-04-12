@@ -1,4 +1,0 @@
-MODES =
-  VISUAL: 0
-  INSERT: 1
-  EX: 2

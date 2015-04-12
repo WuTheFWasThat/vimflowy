@@ -2,6 +2,11 @@
 
 class KeyBindings
 
+  MODES =
+    VISUAL: 0
+    INSERT: 1
+    EX: 2
+
   defaultVimKeyBindings =
     HELP:
       display: 'Show/hide key bindings'
@@ -61,10 +66,7 @@ class KeyBindings
       display: 'Change character'
       key: 's'
 
-  constructor: (keyHandler, modeDiv, keybindingsDiv, view) ->
-    @keyHandler = keyHandler
-    keyHandler.on 'keydown', @handleKey.bind(@)
-
+  constructor: (modeDiv, keybindingsDiv, view) ->
     @view = view
 
     @bindings = defaultVimKeyBindings
@@ -75,16 +77,17 @@ class KeyBindings
     # for k, v of @bindings
     #     @reverseBindings[v] = k
 
-    table = $('<table>')
-    for k,v of @bindings
-      row = $('<tr>')
-      row.append $('<td>').text v.display
-      row.append $('<td>').text v.key
-      table.append row
+    if keybindingsDiv
+      table = $('<table>')
+      for k,v of @bindings
+        row = $('<tr>')
+        row.append $('<td>').text v.display
+        row.append $('<td>').text v.key
+        table.append row
 
-    keybindingsDiv.empty().append(table)
-    @keybindingsDiv = keybindingsDiv
-    console.log(@keybindingsDiv)
+      keybindingsDiv.empty().append(table)
+      @keybindingsDiv = keybindingsDiv
+      console.log(@keybindingsDiv)
 
     @modeDiv = modeDiv
 
@@ -94,13 +97,12 @@ class KeyBindings
     @operator = undefined
 
   setMode: (mode) ->
-    console.log('setting mode', mode)
     @mode = mode
-    console.log('set mode', @mode)
-    for k, v of MODES
-      if v == mode
-        @modeDiv.text k
-        break
+    if @modeDiv
+      for k, v of MODES
+        if v == mode
+          @modeDiv.text k
+          break
 
   setOperator: (operator) ->
     @operator = operator
@@ -157,12 +159,12 @@ class KeyBindings
         else if key == @getKey 'DELETE'
           @setOperator 'DELETE'
         else if key == @getKey 'DELETE_CHAR'
-          @view.act new DelChars @view.curRow, @view.curCol, 1
+          @view.act new actions.DelChars @view.curRow, @view.curCol, 1
           do @view.moveCursorBackIfNeeded
         else if key == @getKey 'CHANGE'
           @setOperator 'CHANGE'
         else if key == @getKey 'CHANGE_CHAR'
-          @view.act new DelChars @view.curRow, @view.curCol, 1
+          @view.act new actions.DelChars @view.curRow, @view.curCol, 1
           @setMode MODES.INSERT
         else if key == @getKey 'LEFT'
           do @view.moveCursorLeft
@@ -177,6 +179,11 @@ class KeyBindings
           @setMode MODES.VISUAL
           do @view.moveCursorLeft
         else if key == 'backspace'
-          @view.act new DelChars @view.curRow, (@view.curCol-1), 1
+          @view.act new actions.DelChars @view.curRow, (@view.curCol-1), 1
         else
-          @view.act new AddChars @view.curRow, @view.curCol, [key]
+          @view.act new actions.AddChars @view.curRow, @view.curCol, [key]
+
+if module?
+  actions = require('./actions.coffee')
+module?.exports = KeyBindings
+
