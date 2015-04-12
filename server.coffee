@@ -1,5 +1,3 @@
-_ = require 'underscore'
-async = require 'async'
 express = require 'express'
 
 process.on 'uncaughtException', (err) ->
