@@ -6,9 +6,9 @@ data = new Data
 view = new View $('#contents'), data
 
 keyhandler = new KeyHandler
-keybinder = new KeyBindings keyhandler, $('#mode'), $('#keybindings'), view
+do keyhandler.listen
+keybinder = new KeyBindings $('#mode'), $('#keybindings'), view
+keyhandler.on 'keydown', keybinder.handleKey.bind(keybinder)
 
 $(document).ready ->
-
   do view.render
-  do keyhandler.listen

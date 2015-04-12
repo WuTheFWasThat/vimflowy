@@ -6,7 +6,7 @@ class View
     @mainDiv = mainDiv
     @data = data
 
-    @curRow = 0 # id
+    @curRow = 1 # id
     @curCol = 0
 
     @history = []
@@ -42,11 +42,11 @@ class View
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
   setCur: (row, col) ->
-    view.curRow = row
-    view.curCol = col
+    @curRow = row
+    @curCol = col
 
   moveCursorBackIfNeeded: () ->
-    if @curCol > data.lines[@curRow].length - 1
+    if @curCol > @data.lines[@curRow].length - 1
       do @moveCursorLeft
 
   cursorLeft: () ->
@@ -59,7 +59,7 @@ class View
     options?={}
     shift = if options.pastEnd then 0 else 1
     col = @curCol
-    if col < data.lines[@curRow].length - shift
+    if col < @data.lines[@curRow].length - shift
       col += 1
     return [@curRow, col]
 
@@ -69,7 +69,7 @@ class View
   cursorEnd: (options) ->
     options?={}
     shift = if options.pastEnd then 0 else 1
-    return [@curRow, (data.lines[@curRow].length - shift)]
+    return [@curRow, (@data.lines[@curRow].length - shift)]
 
   moveCursor: (row, col) ->
     oldrow = @curRow
@@ -98,17 +98,16 @@ class View
   # RENDERING
 
   render: () ->
-    @renderHelper @mainDiv, @data
+    @renderHelper @mainDiv, 0
 
-  renderHelper: (onto, data) ->
-    for child in data.structure
+  renderHelper: (onto, rootid) ->
+    for id in @data.structure[rootid].children
       do onto.empty
-      id = child.id
       elId = 'node-' + id
       el = $('<div>').attr('id', elId).addClass('.node')
       elLine = $('<div>').attr 'id', (elId + '-row')
 
-      console.log data.lines, data.lines[id]
+      console.log @data.lines, id, @data.lines[id]
       @drawRow id, elLine
 
       el.append elLine
@@ -118,6 +117,7 @@ class View
       onto.append el
 
   drawRow: (row, onto) ->
+    console.log('drawing row', row)
     if not onto
       onto = $('#node-' + row + '-row')
     lineData = @data.lines[row]
@@ -150,3 +150,4 @@ class View
     if acc.length
       onto.append $('<span>').html(acc).addClass(style)
 
+module?.exports = View

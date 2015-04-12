@@ -1,14 +1,16 @@
 class Data
   constructor: () ->
 
-    @structure = [
-      {
-        id: 0
-      }
-    ]
-    @lines = {
-      0: []
-    }
+    @structure =
+      0: # always the root node
+        children: [1]
+      1:
+        children: []
+        parent: 0
+
+    @lines =
+      0: [] # document title?
+      1: []
 
     return @
 
@@ -20,13 +22,18 @@ class Data
     removed = @lines[row].splice col, num
     return removed
 
-  serialize: () ->
-    return {
-      structure: @structure
-      lines: @lines
-    }
+  serialize: (id = 0) ->
+    console.log('called', id)
+    line = @lines[id].join('')
+    if @structure[id].children.length
+      children = (@serialize childid for childid in @structure[id].children)
+      return {
+        line: line
+        children: children
+      }
+    else
+      return line
 
-  load: (serialized) ->
-    @structure = serialized.structure
-    @lines = serialized.lines
+  # load: (serialized) ->
 
+module?.exports = Data
