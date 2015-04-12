@@ -6,7 +6,7 @@ data = new Data
 view = new View $('#contents'), data
 
 keyhandler = new KeyHandler
-keybinder = new KeyBindings keyhandler, $('#mode'), view
+keybinder = new KeyBindings keyhandler, $('#mode'), $('#keybindings'), view
 
 $(document).ready ->
 

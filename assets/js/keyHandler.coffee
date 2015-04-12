@@ -11,10 +11,18 @@ class KeyHandler extends EventEmitter
     '8': '*'
     '9': '('
     '0': ')'
+    '/': '?'
 
   keyCodeMap =
     8: 'backspace'
+    13: 'enter'
     27: 'esc'
+
+    37: 'left'
+    38: 'up'
+    39: 'right'
+    40: 'down'
+
     48: '0'
     49: '1'
     50: '2'
@@ -25,6 +33,8 @@ class KeyHandler extends EventEmitter
     55: '7'
     56: '8'
     57: '9'
+
+    191: '/'
 
   for i in [1..26]
     keyCode = i + 64

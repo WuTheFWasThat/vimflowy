@@ -6,13 +6,33 @@ body, html
     background: $content-color
 
 #mode
-    position: absolute
     background: #AAAAAA
     padding: 10px
+    display: inline-block
+
+#keybindings
+    position: absolute
+    height: 100%
+    top: 0
+    background: #AAAAAA
+    right: 0px
+    width: 0%
+    overflow: scroll
+    &.active
+      width: 300px
+      // @include calc( width, '100% - 100px')
+
+    table
+      width: 100%
+      td
+        border: 1px solid
+        padding: 5px
+
 
 #contents
     padding: 50px
     font-family: 'Monaco', monospace
+    // TODO have word wrap be a setting?
     word-wrap: break-word
 
 .cursor
