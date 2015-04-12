@@ -49,28 +49,51 @@ class View
     if @curCol > data.lines[@curRow].length - 1
       do @moveCursorLeft
 
-  moveCursorLeft: () ->
-    if @curCol > 0
-      @curCol -= 1
-      @drawRow @curRow
+  cursorLeft: () ->
+    col = @curCol
+    if col > 0
+      col -= 1
+    return [@curRow, col]
 
-  moveCursorRight: (options) ->
+  cursorRight: (options) ->
     options?={}
     shift = if options.pastEnd then 0 else 1
-    if @curCol < data.lines[@curRow].length - shift
-      @curCol += 1
-      @drawRow @curRow
+    col = @curCol
+    if col < data.lines[@curRow].length - shift
+      col += 1
+    return [@curRow, col]
 
-  moveCursorHome: () ->
-    @curCol = 0
+  cursorHome: () ->
+    return [@curRow, 0]
+
+  cursorEnd: (options) ->
+    options?={}
+    shift = if options.pastEnd then 0 else 1
+    return [@curRow, (data.lines[@curRow].length - shift)]
+
+  moveCursor: (row, col) ->
+    oldrow = @curRow
+    @curRow = row
+    @curCol = col
+
+    @drawRow oldrow
     @drawRow @curRow
 
   moveCursorEnd: (options) ->
-    options?={}
-    shift = if options.pastEnd then 0 else 1
-    @curCol = data.lines[@curRow].length - shift
+    [row, @curCol] = @cursorEnd options
     @drawRow @curRow
 
+  moveCursorRight: (options) ->
+    [row, @curCol] = @cursorRight options
+    @drawRow @curRow
+
+  moveCursorLeft: () ->
+    [row, @curCol] = do @cursorLeft
+    @drawRow @curRow
+
+  moveCursorHome: () ->
+    [row, @curCol] = do @cursorHome
+    @drawRow @curRow
 
   # RENDERING
 

@@ -2,26 +2,66 @@
 
 class KeyBindings
 
-  defaultVimKeyBindings = {
-        'Insert at character': 'i',
-        'Insert at beginning of line': 'I',
-        'Insert after character': 'a',
-        'Insert after end of line': 'A',
+  defaultVimKeyBindings =
+    HELP:
+      display: 'Show/hide key bindings'
+      key: '?'
 
-        'Undo': 'u',
-        'Redo': 'ctrl+r',
+    INSERT:
+      display: 'Insert at character'
+      key: 'i'
+    INSERT_AFTER:
+      display: 'Insert after character'
+      key: 'a'
+    INSERT_HOME:
+      display: 'Insert at beginning of line'
+      key: 'I'
+    INSERT_END:
+      display: 'Insert after end of line'
+      key: 'A'
+    EX:
+      display: 'Enter EX mode'
+      key: ':'
 
-        'Enter EX mode': ':',
 
-        'Move cursor left': 'h',
-        'Move cursor right': 'l',
-        'Move cursor to beginning of line': '0',
-        'Move cursor to end of line': '$',
+    UNDO:
+      display: 'Undo'
+      key: 'u'
+    REDO:
+      display: 'Redo'
+      key: 'ctrl+r'
 
-        'Delete character': 'x',
-  }
+    LEFT:
+      display: 'Move cursor left'
+      key: 'h'
+      motion: true
+    RIGHT:
+      display: 'Move cursor right'
+      key: 'l'
+      motion: true
+    HOME:
+      display: 'Move cursor to beginning of line'
+      key: '0'
+      motion: true
+    END:
+      display: 'Move cursor to end of line'
+      key: '$'
+      motion: true
 
-  constructor: (keyHandler, modeDiv, view) ->
+    DELETE:
+      display: 'Delete (operator)'
+      key: 'd'
+    CHANGE:
+      display: 'Change (operator)'
+      key: 'c'
+    DELETE_CHAR:
+      display: 'Delete character'
+      key: 'x'
+    CHANGE_CHAR:
+      display: 'Change character'
+      key: 's'
+
+  constructor: (keyHandler, modeDiv, keybindingsDiv, view) ->
     @keyHandler = keyHandler
     keyHandler.on 'keydown', @handleKey.bind(@)
 
@@ -35,10 +75,23 @@ class KeyBindings
     # for k, v of @bindings
     #     @reverseBindings[v] = k
 
+    table = $('<table>')
+    for k,v of @bindings
+      row = $('<tr>')
+      row.append $('<td>').text v.display
+      row.append $('<td>').text v.key
+      table.append row
+
+    keybindingsDiv.empty().append(table)
+    @keybindingsDiv = keybindingsDiv
+    console.log(@keybindingsDiv)
+
     @modeDiv = modeDiv
 
     @mode = ''
     @setMode MODES.VISUAL
+
+    @operator = undefined
 
   setMode: (mode) ->
     console.log('setting mode', mode)
@@ -49,48 +102,81 @@ class KeyBindings
         @modeDiv.text k
         break
 
+  setOperator: (operator) ->
+    @operator = operator
+
+  getKey: (name) ->
+    return @bindings[name].key
+
+  handleMotion: (key) ->
+    if key == @getKey 'LEFT'
+      return do @view.cursorLeft
+    if key == @getKey 'RIGHT'
+      return do @view.cursorRight
+    if key == @getKey 'HOME'
+      return do @view.cursorHome
+    if key == @getKey 'END'
+      return do @view.cursorEnd
+    return null
+
   handleKey: (key) ->
     # if key not in @reverseBindings:
     #     return
 
-    # action = @reverseBindings[key]
-    # handler = @handlers[action]
+    # name = @reverseBindings[key]
+    # handler = @handlers[name]
     # do handler
 
-    if @mode == MODES.VISUAL
-      if key == @bindings['Insert after character']
-        @view.moveCursorRight {pastEnd: true}
-        @setMode MODES.INSERT
-      else if key == @bindings['Insert at character']
-        @setMode MODES.INSERT
-      else if key == @bindings['Insert after end of line']
-        @view.moveCursorEnd {pastEnd: true}
-        @setMode MODES.INSERT
-      else if key == @bindings['Insert at beginning of line']
-        do @view.moveCursorHome
-        @setMode MODES.INSERT
-      else if key == @bindings['Enter EX mode']
-        @setMode MODES.EX
-      else if key == @bindings['Undo']
-        do @view.undo
-      else if key == @bindings['Redo']
-        do @view.redo
-      else if key == @bindings['Move cursor left']
+    if @operator == 'DELETE' or @operator == 'CHANGE'
+      do @setOperator
+    else
+      if key == @getKey 'HELP'
+        @keybindingsDiv.toggleClass 'active'
+      else if key == 'left'
         do @view.moveCursorLeft
-      else if key == @bindings['Move cursor right']
+      else if key == 'right'
         do @view.moveCursorRight
-      else if key == @bindings['Move cursor to beginning of line']
-        do @view.moveCursorHome
-      else if key == @bindings['Move cursor to end of line']
-        do @view.moveCursorEnd
-      else if key == @bindings['Delete character']
-        @view.act new DelChars @view.curRow, @view.curCol, 1
-        do @view.moveCursorBackIfNeeded
-    else if @mode == MODES.INSERT
-      if key == 'esc'
-        @setMode MODES.VISUAL
-        do @view.moveCursorBackIfNeeded
-      else if key == 'backspace'
-        @view.act new DelChars @view.curRow, (@view.curCol-1), 1
-      else
-        @view.act new AddChars @view.curRow, @view.curCol, [key]
+      else if @mode == MODES.VISUAL
+        if key == @getKey 'INSERT'
+          @setMode MODES.INSERT
+        else if key == @getKey 'INSERT_AFTER'
+          @view.moveCursorRight {pastEnd: true}
+          @setMode MODES.INSERT
+        else if key == @getKey 'INSERT_HOME'
+          do @view.moveCursorHome
+          @setMode MODES.INSERT
+        else if key == @getKey 'INSERT_END'
+          @view.moveCursorEnd {pastEnd: true}
+          @setMode MODES.INSERT
+        else if key == @getKey 'EX'
+          @setMode MODES.EX
+        else if key == @getKey 'UNDO'
+          do @view.undo
+        else if key == @getKey 'REDO'
+          do @view.redo
+        else if key == @getKey 'DELETE'
+          @setOperator 'DELETE'
+        else if key == @getKey 'DELETE_CHAR'
+          @view.act new DelChars @view.curRow, @view.curCol, 1
+          do @view.moveCursorBackIfNeeded
+        else if key == @getKey 'CHANGE'
+          @setOperator 'CHANGE'
+        else if key == @getKey 'CHANGE_CHAR'
+          @view.act new DelChars @view.curRow, @view.curCol, 1
+          @setMode MODES.INSERT
+        else if key == @getKey 'LEFT'
+          do @view.moveCursorLeft
+        else if key == @getKey 'RIGHT'
+          do @view.moveCursorRight
+        else if key == @getKey 'HOME'
+          do @view.moveCursorHome
+        else if key == @getKey 'END'
+          do @view.moveCursorEnd
+      else if @mode == MODES.INSERT
+        if key == 'esc'
+          @setMode MODES.VISUAL
+          do @view.moveCursorLeft
+        else if key == 'backspace'
+          @view.act new DelChars @view.curRow, (@view.curCol-1), 1
+        else
+          @view.act new AddChars @view.curRow, @view.curCol, [key]
