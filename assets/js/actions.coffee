@@ -9,31 +9,32 @@
       return
 
   class AddChars extends Action
-    constructor: (row, col, chars) ->
+    constructor: (row, col, chars, options) ->
       @row = row
       @col = col
       @chars = chars
+      @options = options
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
-      view.setCur @row, (@col + @chars.length)
+      view.setCur @row, (@col + @chars.length), @options
       view.drawRow @row
     rewind: (view) ->
       reverse = new DelChars @row, @col, @chars.length
       reverse.apply view
 
   class DelChars extends Action
-    constructor: (row, col, nchars) ->
+    constructor: (row, col, nchars, options) ->
       @row = row
       @col = col
       @nchars = nchars
+      @options = options
     apply: (view) ->
       @chars = view.data.deleteChars @row, @col, @nchars
-      console.log @chars, @chars.length, @nchars
-      view.setCur @row, @col
+      view.setCur @row, @col, @options
       view.drawRow @row
     rewind: (view) ->
-      reverse = new AddChars @row, @col, @chars
-      reverse.apply view
+      view.data.writeChars @row, @col, @chars
+      view.drawRow @row
 
   exports.AddChars = AddChars
   exports.DelChars = DelChars

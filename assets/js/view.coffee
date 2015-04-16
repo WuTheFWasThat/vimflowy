@@ -28,6 +28,9 @@ class View
       @historyIndex -= 1
       action = @history[@historyIndex]
       action.rewind @
+      [@curRow, @curCol] = action.oldCursor
+      @setCur @curRow, @curCol
+      @drawRow @curRow
 
   redo: () ->
     if @historyIndex < @history.length
@@ -36,14 +39,20 @@ class View
       @historyIndex += 1
 
   act: (action) ->
+    action.oldCursor = [@curRow, @curCol]
     action.apply @
     @add_history action
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
-  setCur: (row, col) ->
+  setCur: (row, col, options) ->
+    options ?= {}
     @curRow = row
     @curCol = col
+
+    shift = if options.pastEnd then 0 else 1
+    if @curCol > @data.lines[@curRow].length - shift
+      @curCol = @data.lines[@curRow].length - shift
 
   moveCursorBackIfNeeded: () ->
     if @curCol > @data.lines[@curRow].length - 1
@@ -67,7 +76,7 @@ class View
     return [@curRow, 0]
 
   cursorEnd: (options) ->
-    options?={}
+    options ?= {}
     shift = if options.pastEnd then 0 else 1
     return [@curRow, (@data.lines[@curRow].length - shift)]
 
