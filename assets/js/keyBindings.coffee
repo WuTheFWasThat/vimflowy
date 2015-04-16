@@ -3,7 +3,7 @@
 class KeyBindings
 
   MODES =
-    VISUAL: 0
+    NORMAL: 0
     INSERT: 1
     EX: 2
 
@@ -40,10 +40,12 @@ class KeyBindings
       display: 'Move cursor left'
       key: 'h'
       motion: true
+      alternateKeys: ['left']
     RIGHT:
       display: 'Move cursor right'
       key: 'l'
       motion: true
+      alternateKeys: ['right']
     HOME:
       display: 'Move cursor to beginning of line'
       key: '0'
@@ -71,11 +73,15 @@ class KeyBindings
 
     @bindings = defaultVimKeyBindings
 
-    # @reverseBindings = {}
+    # reverse of bindings map
+    @keyMap = {}
 
-    # # TODO: ensure no collision
-    # for k, v of @bindings
-    #     @reverseBindings[v] = k
+    # TODO: ensure no collision
+    for k, v of @bindings
+        @keyMap[v.key] = k
+        if v.alternateKeys
+          for key in v.alternateKeys
+            @keyMap[key] = k
 
     if keybindingsDiv
       table = $('<table>')
@@ -89,10 +95,12 @@ class KeyBindings
       @keybindingsDiv = keybindingsDiv
       console.log(@keybindingsDiv)
 
+    @lastSequence = [] # last key sequence
+
     @modeDiv = modeDiv
 
     @mode = ''
-    @setMode MODES.VISUAL
+    @setMode MODES.NORMAL
 
     @operator = undefined
 
@@ -110,15 +118,15 @@ class KeyBindings
   getKey: (name) ->
     return @bindings[name].key
 
-  handleMotion: (key) ->
-    if key == @getKey 'LEFT'
-      return do @view.cursorLeft
-    if key == @getKey 'RIGHT'
-      return do @view.cursorRight
-    if key == @getKey 'HOME'
-      return do @view.cursorHome
-    if key == @getKey 'END'
-      return do @view.cursorEnd
+  handleMotion: (motion, options) ->
+    if motion == 'LEFT'
+      return @view.cursorLeft options
+    if motion == 'RIGHT'
+      return @view.cursorRight options
+    if motion == 'HOME'
+      return @view.cursorHome options
+    if motion == 'END'
+      return @view.cursorEnd options
     return null
 
   handleKey: (key) ->
@@ -129,59 +137,70 @@ class KeyBindings
     # handler = @handlers[name]
     # do handler
 
-    if @operator == 'DELETE' or @operator == 'CHANGE'
-      do @setOperator
-    else
-      if key == @getKey 'HELP'
-        @keybindingsDiv.toggleClass 'active'
+    if @mode == MODES.INSERT
+      if key == 'esc'
+        @setMode MODES.NORMAL
+        do @view.moveCursorLeft
       else if key == 'left'
         do @view.moveCursorLeft
       else if key == 'right'
         do @view.moveCursorRight
-      else if @mode == MODES.VISUAL
-        if key == @getKey 'INSERT'
-          @setMode MODES.INSERT
-        else if key == @getKey 'INSERT_AFTER'
-          @view.moveCursorRight {pastEnd: true}
-          @setMode MODES.INSERT
-        else if key == @getKey 'INSERT_HOME'
-          do @view.moveCursorHome
-          @setMode MODES.INSERT
-        else if key == @getKey 'INSERT_END'
-          @view.moveCursorEnd {pastEnd: true}
-          @setMode MODES.INSERT
-        else if key == @getKey 'EX'
-          @setMode MODES.EX
-        else if key == @getKey 'UNDO'
-          do @view.undo
-        else if key == @getKey 'REDO'
-          do @view.redo
-        else if key == @getKey 'DELETE'
-          @setOperator 'DELETE'
-        else if key == @getKey 'DELETE_CHAR'
-          @view.act new actions.DelChars @view.curRow, @view.curCol, 1
-          do @view.moveCursorBackIfNeeded
-        else if key == @getKey 'CHANGE'
-          @setOperator 'CHANGE'
-        else if key == @getKey 'CHANGE_CHAR'
-          @view.act new actions.DelChars @view.curRow, @view.curCol, 1
-          @setMode MODES.INSERT
-        else if key == @getKey 'LEFT'
-          do @view.moveCursorLeft
-        else if key == @getKey 'RIGHT'
-          do @view.moveCursorRight
-        else if key == @getKey 'HOME'
-          do @view.moveCursorHome
-        else if key == @getKey 'END'
-          do @view.moveCursorEnd
-      else if @mode == MODES.INSERT
-        if key == 'esc'
-          @setMode MODES.VISUAL
-          do @view.moveCursorLeft
-        else if key == 'backspace'
-          @view.act new actions.DelChars @view.curRow, (@view.curCol-1), 1
-        else
-          @view.act new actions.AddChars @view.curRow, @view.curCol, [key]
+      else if key == 'backspace'
+        @view.act new actions.DelChars @view.curRow, (@view.curCol-1), 1
+      else
+        @view.act new actions.AddChars @view.curRow, @view.curCol, [key], {pastEnd: true}
+    else if @mode == MODES.NORMAL
+      if key not of @keyMap
+        return
+
+      binding = @keyMap[key]
+      info = @bindings[binding]
+
+      if not @operator
+        if binding == 'HELP'
+          @keybindingsDiv.toggleClass 'active'
+        else if info.motion
+          [row, col] = @handleMotion binding
+          @view.moveCursor row, col
+        else if @mode == MODES.NORMAL
+          if binding == 'INSERT'
+            @setMode MODES.INSERT
+          else if binding == 'INSERT_AFTER'
+            @view.moveCursorRight {pastEnd: true}
+            @setMode MODES.INSERT
+          else if binding == 'INSERT_HOME'
+            do @view.moveCursorHome
+            @setMode MODES.INSERT
+          else if binding == 'INSERT_END'
+            @view.moveCursorEnd {pastEnd: true}
+            @setMode MODES.INSERT
+          else if binding == 'EX'
+            @setMode MODES.EX
+          else if binding == 'UNDO'
+            do @view.undo
+          else if binding == 'REDO'
+            do @view.redo
+          else if binding == 'DELETE'
+            @setOperator 'DELETE'
+          else if binding == 'DELETE_CHAR'
+            @view.act new actions.DelChars @view.curRow, @view.curCol, 1
+            do @view.moveCursorBackIfNeeded
+          else if binding == 'CHANGE'
+            @setOperator 'CHANGE'
+          else if binding == 'CHANGE_CHAR'
+            @view.act new actions.DelChars @view.curRow, @view.curCol, 1, {pastEnd: true}
+            @setMode MODES.INSERT
+      else if @operator == 'DELETE' or @operator == 'CHANGE'
+        if info.motion
+          [row, col] = @handleMotion binding, {pastEnd: true}
+          if col < @view.curCol
+            @view.act new actions.DelChars @view.curRow, col, (@view.curCol - col)
+          else if col > @view.curCol
+            @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol)
+          @curCol = col
+          if @operator == 'CHANGE'
+            @setMode 'INSERT'
+        do @setOperator
 
 if module?
   actions = require('./actions.coffee')

@@ -23,7 +23,6 @@ class Data
     return removed
 
   serialize: (id = 0) ->
-    console.log('called', id)
     line = @lines[id].join('')
     if @structure[id].children.length
       children = (@serialize childid for childid in @structure[id].children)
