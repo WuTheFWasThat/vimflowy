@@ -24,6 +24,10 @@ class KeyBindings
     INSERT_END:
       display: 'Insert after end of line'
       key: 'A'
+    REPLACE:
+      display: 'Replace character'
+      key: 'r'
+
     EX:
       display: 'Enter EX mode'
       key: ':'
@@ -53,6 +57,18 @@ class KeyBindings
     END:
       display: 'Move cursor to end of line'
       key: '$'
+      motion: true
+    BEGINNING_WORD:
+      display: 'Move cursor to the first word-beginning before it'
+      key: 'b'
+      motion: true
+    END_WORD:
+      display: 'Move cursor to the first word-ending after it'
+      key: 'e'
+      motion: true
+    NEXT_WORD:
+      display: 'Move cursor to the beginning of the next word'
+      key: 'w'
       motion: true
 
     DELETE:
@@ -127,6 +143,12 @@ class KeyBindings
       return @view.cursorHome options
     if motion == 'END'
       return @view.cursorEnd options
+    if motion == 'BEGINNING_WORD'
+      return @view.cursorBeginningWord options
+    if motion == 'END_WORD'
+      return @view.cursorEndWord options
+    if motion == 'NEXT_WORD'
+      return @view.cursorNextWord options
     return null
 
   handleKey: (key) ->
@@ -138,7 +160,7 @@ class KeyBindings
     # do handler
 
     if @mode == MODES.INSERT
-      if key == 'esc'
+      if key == 'esc' or key == 'ctrl+c'
         @setMode MODES.NORMAL
         do @view.moveCursorLeft
       else if key == 'left'
@@ -190,6 +212,12 @@ class KeyBindings
           else if binding == 'CHANGE_CHAR'
             @view.act new actions.DelChars @view.curRow, @view.curCol, 1, {pastEnd: true}
             @setMode MODES.INSERT
+          else if binding == 'REPLACE'
+            @setOperator 'REPLACE'
+      else if @operator == 'REPLACE'
+        @view.act new actions.SpliceChars @view.curRow, @view.curCol, 1, [key], {cursor: 'stay'}
+
+        do @setOperator
       else if @operator == 'DELETE' or @operator == 'CHANGE'
         if info.motion
           [row, col] = @handleMotion binding, {pastEnd: true}
@@ -199,7 +227,7 @@ class KeyBindings
             @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol)
           @curCol = col
           if @operator == 'CHANGE'
-            @setMode 'INSERT'
+            @setMode MODES.INSERT
         do @setOperator
 
 if module?
