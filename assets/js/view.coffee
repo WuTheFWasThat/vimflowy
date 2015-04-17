@@ -51,8 +51,9 @@ class View
     @curCol = col
 
     shift = if options.pastEnd then 0 else 1
-    if @curCol > @data.lines[@curRow].length - shift
-      @curCol = @data.lines[@curRow].length - shift
+    rowLen = @data.lines[@curRow].length
+    if rowLen > 0 and @curCol > rowLen - shift
+      @curCol = rowLen - shift
 
   moveCursorBackIfNeeded: () ->
     if @curCol > @data.lines[@curRow].length - 1
@@ -80,6 +81,56 @@ class View
     shift = if options.pastEnd then 0 else 1
     return [@curRow, (@data.lines[@curRow].length - shift)]
 
+
+  cursorBeginningWord: () ->
+    col = @curCol
+    row = @curRow
+    if col == 0
+      return [row, col]
+    col -= 1
+    while col > 0 and @data.lines[row][col] == ' '
+      col -= 1
+    while col > 0 and @data.lines[row][col-1] != ' '
+      col -= 1
+    return [row, col]
+
+  cursorEndWord: (options = {}) ->
+    col = @curCol
+    row = @curRow
+
+    end = @data.lines[row].length - 1
+    if col == end
+      if options.pastEnd
+        col += 1
+      return [row, col]
+    col += 1
+    while col < end and @data.lines[row][col] == ' '
+      col += 1
+    while col < end and @data.lines[row][col+1] != ' '
+      col += 1
+
+    if options.pastEnd
+      col += 1
+    return [row, col]
+
+  cursorNextWord: (options = {}) ->
+    col = @curCol
+    row = @curRow
+
+    end = @data.lines[row].length - 1
+    if col == end
+      if options.pastEnd
+        col += 1
+      return [row, col]
+    while col < end and @data.lines[row][col] != ' '
+      col += 1
+    while col < end and @data.lines[row][col+1] == ' '
+      col += 1
+
+    if col < end or options.pastEnd
+      col += 1
+    return [row, col]
+
   moveCursor: (row, col) ->
     oldrow = @curRow
     @curRow = row
@@ -88,20 +139,20 @@ class View
     @drawRow oldrow
     @drawRow @curRow
 
-  moveCursorEnd: (options) ->
-    [row, @curCol] = @cursorEnd options
+  moveCursorLeft: () ->
+    [row, @curCol] = do @cursorLeft
     @drawRow @curRow
 
   moveCursorRight: (options) ->
     [row, @curCol] = @cursorRight options
     @drawRow @curRow
 
-  moveCursorLeft: () ->
-    [row, @curCol] = do @cursorLeft
-    @drawRow @curRow
-
   moveCursorHome: () ->
     [row, @curCol] = do @cursorHome
+    @drawRow @curRow
+
+  moveCursorEnd: (options) ->
+    [row, @curCol] = @cursorEnd options
     @drawRow @curRow
 
   # RENDERING
@@ -126,7 +177,7 @@ class View
       onto.append el
 
   drawRow: (row, onto) ->
-    console.log('drawing row', row)
+    console.log('drawing row', row, @curRow, @curCol)
     if not onto
       onto = $('#node-' + row + '-row')
     lineData = @data.lines[row]

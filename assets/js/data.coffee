@@ -33,6 +33,34 @@ class Data
     else
       return line
 
-  # load: (serialized) ->
+  load: (serialized) ->
+    id = 0
+
+    structure =
+      0:
+        children: []
+
+    lines =
+      0: []
+
+    helper = (children, parentId) ->
+      for child in children
+        id++
+
+        structure[id] =
+          children: []
+          parent: parentId
+        structure[parentId].children.push id
+
+        if typeof child == 'string'
+          lines[id] = child.split ''
+        else
+          lines[id] = child.line.split ''
+          helper child.children, id
+
+    helper(serialized, 0)
+
+    @structure = structure
+    @lines = lines
 
 module?.exports = Data

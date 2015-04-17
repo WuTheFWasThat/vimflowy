@@ -60,9 +60,9 @@ class KeyHandler extends EventEmitter
 
         if e.ctrlKey
           key = 'ctrl+' + key
-
-        self.emit 'keydown', key
-      else:
+      else
         key = String.fromCharCode e.keyCode
+
       console.log('keycode', e.keyCode, 'key', key)
+      self.emit 'keydown', key
 

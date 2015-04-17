@@ -9,7 +9,7 @@
       return
 
   class AddChars extends Action
-    constructor: (row, col, chars, options) ->
+    constructor: (row, col, chars, options = {}) ->
       @row = row
       @col = col
       @chars = chars
@@ -23,7 +23,7 @@
       reverse.apply view
 
   class DelChars extends Action
-    constructor: (row, col, nchars, options) ->
+    constructor: (row, col, nchars, options = {}) ->
       @row = row
       @col = col
       @nchars = nchars
@@ -36,6 +36,33 @@
       view.data.writeChars @row, @col, @chars
       view.drawRow @row
 
+  # NOTE: this generalized add/del chars...
+  class SpliceChars extends Action
+    constructor: (row, col, nchars, chars, options = {}) ->
+      @row = row
+      @col = col
+      @nchars = nchars
+      @chars = chars
+
+      options.cursor ?= 'end'
+      @options = options
+
+    apply: (view) ->
+      @deletedChars = view.data.deleteChars @row, @col, @nchars
+      view.data.writeChars @row, @col, @chars
+
+      if @options.cursor == 'end'
+        view.setCur @row, (@col + @chars.length)
+      else if @options.cursor == 'pastEnd'
+        view.setCur @row, (@col + @chars.length), {pastEnd: true}
+
+      view.drawRow @row
+    rewind: (view) ->
+      view.data.deleteChars @row, @col, @chars.length
+      view.data.writeChars @row, @col, @deletedChars
+      view.drawRow @row
+
   exports.AddChars = AddChars
   exports.DelChars = DelChars
+  exports.SpliceChars = SpliceChars
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})
