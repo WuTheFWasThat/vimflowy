@@ -13,6 +13,9 @@ class KeyHandler extends EventEmitter
     '0': ')'
     '/': '?'
 
+  ignoreMap =
+    16: 'shift alone'
+
   keyCodeMap =
     8: 'backspace'
     13: 'enter'
@@ -50,7 +53,9 @@ class KeyHandler extends EventEmitter
   listen: () ->
     self = @
     $(document).keydown (e) ->
-      if e.keyCode of keyCodeMap
+      if e.keyCode of ignoreMap
+        return
+      else if e.keyCode of keyCodeMap
         key = keyCodeMap[e.keyCode]
 
         if e.shiftKey
@@ -62,6 +67,7 @@ class KeyHandler extends EventEmitter
         if e.ctrlKey
           key = 'ctrl+' + key
       else
+        # this is necessary for typing stuff..
         key = String.fromCharCode e.keyCode
 
       console.log('keycode', e.keyCode, 'key', key)
