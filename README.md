@@ -1,5 +1,14 @@
 # vimflowy?? #
 
+## TODO ##
+
+implement # to repeat
+implement f/F/t/T
+implement y and p
+implement ctrl+o
+
+make undo work properly for sequences?
+
 ## KNOWN ISSUES: ##
 
 Firstly, I have many known inconsistencies with vi.  Many are intentional.  For example:

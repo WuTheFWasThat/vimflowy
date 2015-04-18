@@ -210,3 +210,35 @@ t.expect ['th']
 t = new TestCase ['blahblah']
 t.sendKeys '0d$iab'
 t.expect ['ab']
+
+# test the shit out of repeat
+t = new TestCase ['']
+t.sendKeys '....'
+t.expect ['']
+t.sendKeys 'irainbow'
+t.sendKey 'esc'
+t.sendKey '.'
+t.expect ['rainborainboww']
+t.sendKeys 'x...'
+t.expect ['rainborain']
+
+t = new TestCase ['the quick brown fox   jumped   over the lazy dog']
+t.sendKeys 'dw'
+t.expect ['quick brown fox   jumped   over the lazy dog']
+t.sendKeys '..'
+t.expect ['fox   jumped   over the lazy dog']
+t.sendKeys 'u.'
+t.expect ['fox   jumped   over the lazy dog']
+t.sendKeys 'dy' # nonsense
+t.expect ['fox   jumped   over the lazy dog']
+t.sendKeys '..'
+t.expect ['over the lazy dog']
+t.sendKeys 'rxll.w.e.$.'
+t.expect ['xvxr xhx lazy dox']
+t.sendKeys 'cbxero'
+t.sendKey 'esc'
+t.expect ['xvxr xhx lazy xerox']
+t.sendKeys 'b.'
+t.expect ['xvxr xhx xeroxerox']
+t.sendKeys '.'
+t.expect ['xvxr xhx xerooxerox']

@@ -34,6 +34,7 @@ class KeyHandler extends EventEmitter
     56: '8'
     57: '9'
 
+    190: '.'
     191: '/'
 
   for i in [1..26]
