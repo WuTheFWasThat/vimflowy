@@ -127,7 +127,6 @@ class KeyBindings
       table.append row
 
     @keybindingsDiv.empty().append(table)
-    console.log(@keybindingsDiv)
 
 
   buildKeyMap: () ->
@@ -157,11 +156,9 @@ class KeyBindings
 
   continueSequence: (key) ->
     @curSequence.push key
-    console.log('cursequence', @curSequence)
 
   registerSequence: () ->
     @lastSequence = @curSequence
-    console.log('set last', @lastSequence)
     do @clearSequence
 
   finishSequence: (key) ->
@@ -172,19 +169,19 @@ class KeyBindings
     @curSequence = []
 
   handleMotion: (motion, options) ->
-    if motion == 'LEFT'
+    if motion.type == 'LEFT'
       return @view.cursorLeft options
-    if motion == 'RIGHT'
+    if motion.type == 'RIGHT'
       return @view.cursorRight options
-    if motion == 'HOME'
+    if motion.type == 'HOME'
       return @view.cursorHome options
-    if motion == 'END'
+    if motion.type == 'END'
       return @view.cursorEnd options
-    if motion == 'BEGINNING_WORD'
+    if motion.type == 'BEGINNING_WORD'
       return @view.cursorBeginningWord options
-    if motion == 'END_WORD'
+    if motion.type == 'END_WORD'
       return @view.cursorEndWord options
-    if motion == 'NEXT_WORD'
+    if motion.type == 'NEXT_WORD'
       return @view.cursorNextWord options
     return null
 
@@ -199,15 +196,37 @@ class KeyBindings
   processKeys: (keys) ->
     index = -1
     while keys.length and index != 0
-      index = @processOnce keys
+      try
+        index = @processOnce keys
+      catch e
+        if e == 'Need more keys'
+          return keys
+        throw e
       keys = keys.slice index
     return keys
 
   # returns index processed up to
   processOnce: (keys) ->
+
     keyIndex = 0
-    nextKey = () =>
+
+    nextKey = () ->
+      if keyIndex == keys.length
+        throw 'Need more keys'
       return keys[keyIndex++]
+
+    # useful when you expect a motion
+    getMotion = () =>
+      motionKey = nextKey()
+      motionBinding = @keyMap[motionKey]
+      motionInfo = @bindings[motionBinding]
+
+      if not motionInfo?.motion
+        return null
+
+      motion = {type: motionBinding}
+      return motion
+
 
     console.log('keys', keys)
     key = nextKey()
@@ -247,43 +266,32 @@ class KeyBindings
       if binding == 'HELP'
         @keybindingsDiv.toggleClass 'active'
       else if info.motion
-        [row, col] = @handleMotion binding
+        [row, col] = @handleMotion {type: binding}
         @view.moveCursor row, col
       else if @mode == MODES.NORMAL
         if binding == 'DELETE' or binding == 'CHANGE'
-          motionKey = nextKey()
 
-          if not motionKey
-            return 0
-
-          motionBinding = @keyMap[motionKey]
-          motionInfo = @bindings[motionBinding]
-
-          if not motionInfo?.motion
-            console.log('cleared', @lastSequence)
-            do @clearSequence
+          motion = do getMotion
+          if not motion
             return keyIndex
+
+          [row, col] = @handleMotion motion, {pastEnd: true}
+
+          if col < @view.curCol
+            @view.act new actions.DelChars @view.curRow, col, (@view.curCol - col)
+          else if col > @view.curCol
+            @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol), {pastEnd: binding == 'CHANGE'}
+
+          @continueSequence key
+          if binding == 'CHANGE'
+            @continueSequence keys[keyIndex-1]
+            @setMode MODES.INSERT
           else
-            [row, col] = @handleMotion motionBinding, {pastEnd: true}
-            if col < @view.curCol
-              @view.act new actions.DelChars @view.curRow, col, (@view.curCol - col)
-            else if col > @view.curCol
-              @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol)
-            @curCol = col
-
-            @continueSequence key
-            if binding == 'CHANGE'
-              @setMode MODES.INSERT
-              @continueSequence motionKey
-            else
-              @finishSequence motionKey
-            return keyIndex
+            @finishSequence keys[keyIndex-1]
+          return keyIndex
 
         else if binding == 'REPLACE'
           replaceKey = nextKey()
-          if not replaceKey
-            return 0
-
           @view.act new actions.SpliceChars @view.curRow, @view.curCol, 1, [replaceKey], {cursor: 'stay'}
 
           @continueSequence key

@@ -243,7 +243,16 @@ t.expect ['xvxr xhx xeroxerox']
 t.sendKeys '.'
 t.expect ['xvxr xhx xerooxerox']
 
+# repeat works on c
+t = new TestCase ['vim is great']
+t.sendKeys 'ceblah'
+t.sendKey 'esc'
+t.sendKeys 'w.w.'
+t.expect ['blah blah blah']
+# t.sendKeys 'uuuw..'
+# t.expect ['vim blah blah']
+
 # repeat works on replace
-t = new TestCase ['blahblah']
-t.sendKeys 'rgllll.'
-t.expect ['glahglah']
+t = new TestCase ['obladi oblada']
+t.sendKeys 'eroehl.'
+t.expect ['oblado oblado']
