@@ -31,7 +31,6 @@ class KeyBindings
     REPLACE:
       display: 'Replace character'
       key: 'r'
-      operator: true
 
     EX:
       display: 'Enter EX mode'
@@ -84,14 +83,15 @@ class KeyBindings
     DELETE:
       display: 'Delete (operator)'
       key: 'd'
-      operator: true
     CHANGE:
       display: 'Change (operator)'
       key: 'c'
-      operator: true
     DELETE_CHAR:
       display: 'Delete character'
       key: 'x'
+    DELETE_LAST_CHAR:
+      display: 'Delete last character'
+      key: 'X'
     CHANGE_CHAR:
       display: 'Change character'
       key: 's'
@@ -114,6 +114,7 @@ class KeyBindings
 
     @operator = undefined
 
+    @queuedKeys = [] # queue so that we can read group of keys, like 123 or fy
     @curSequence = [] # current key sequence
     @lastSequence = [] # last key sequence
 
@@ -151,18 +152,16 @@ class KeyBindings
           @modeDiv.text k
           break
 
-  setOperator: (operator) ->
-    @operator = operator
-
   getKey: (name) ->
     return @bindings[name].key
 
   continueSequence: (key) ->
     @curSequence.push key
-    # console.log('cursequence', @curSequence)
+    console.log('cursequence', @curSequence)
 
   registerSequence: () ->
     @lastSequence = @curSequence
+    console.log('set last', @lastSequence)
     do @clearSequence
 
   finishSequence: (key) ->
@@ -194,6 +193,25 @@ class KeyBindings
       @handleKey key
 
   handleKey: (key) ->
+    @queuedKeys.push key
+    @queuedKeys = @processKeys @queuedKeys
+
+  processKeys: (keys) ->
+    index = -1
+    while keys.length and index != 0
+      index = @processOnce keys
+      keys = keys.slice index
+    return keys
+
+  # returns index processed up to
+  processOnce: (keys) ->
+    keyIndex = 0
+    nextKey = () =>
+      return keys[keyIndex++]
+
+    console.log('keys', keys)
+    key = nextKey()
+
     # if key not in @reverseBindings:
     #     return
 
@@ -221,83 +239,93 @@ class KeyBindings
     else if @mode == MODES.NORMAL
       if key not of @keyMap
         do @clearSequence
-        do @setOperator
-        return
+        return keyIndex
 
       binding = @keyMap[key]
       info = @bindings[binding]
 
-      if not @operator
-        if binding == 'HELP'
-          @keybindingsDiv.toggleClass 'active'
-        else if info.motion
-          [row, col] = @handleMotion binding
-          @view.moveCursor row, col
-        else if @mode == MODES.NORMAL
+      if binding == 'HELP'
+        @keybindingsDiv.toggleClass 'active'
+      else if info.motion
+        [row, col] = @handleMotion binding
+        @view.moveCursor row, col
+      else if @mode == MODES.NORMAL
+        if binding == 'DELETE' or binding == 'CHANGE'
+          motionKey = nextKey()
 
-          if info.operator
-            if binding == 'DELETE'
-              @setOperator 'DELETE'
-            else if binding == 'CHANGE'
-              @setOperator 'CHANGE'
-            else if binding == 'REPLACE'
-              @setOperator 'REPLACE'
+          if not motionKey
+            return 0
 
-            @continueSequence key
-          else if info.insert
-            if binding == 'INSERT'
-              # do nothing
-            else if binding == 'INSERT_AFTER'
-              @view.moveCursorRight {pastEnd: true}
-            else if binding == 'INSERT_HOME'
-              do @view.moveCursorHome
-            else if binding == 'INSERT_END'
-              @view.moveCursorEnd {pastEnd: true}
-            else if binding == 'CHANGE_CHAR'
-              @view.act new actions.DelChars @view.curRow, @view.curCol, 1, {pastEnd: true}
+          motionBinding = @keyMap[motionKey]
+          motionInfo = @bindings[motionBinding]
 
-            @setMode MODES.INSERT
-
-            @continueSequence key
+          if not motionInfo?.motion
+            console.log('cleared', @lastSequence)
+            do @clearSequence
+            return keyIndex
           else
-            if binding == 'EX'
-              @setMode MODES.EX
-            else if binding == 'UNDO'
-              do @view.undo
-            else if binding == 'REDO'
-              do @view.redo
-            else if binding == 'REPEAT'
-              # console.log('replaying', @lastSequence)
-              @handleKeys @lastSequence
-            else if binding == 'DELETE_CHAR'
-              @view.act new actions.DelChars @view.curRow, @view.curCol, 1
-              do @view.moveCursorBackIfNeeded
+            [row, col] = @handleMotion motionBinding, {pastEnd: true}
+            if col < @view.curCol
+              @view.act new actions.DelChars @view.curRow, col, (@view.curCol - col)
+            else if col > @view.curCol
+              @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol)
+            @curCol = col
 
-              @finishSequence key
-
-      else if @operator == 'REPLACE'
-        @view.act new actions.SpliceChars @view.curRow, @view.curCol, 1, [key], {cursor: 'stay'}
-
-        @finishSequence key
-        do @setOperator
-      else if @operator == 'DELETE' or @operator == 'CHANGE'
-        if info.motion
-          [row, col] = @handleMotion binding, {pastEnd: true}
-          if col < @view.curCol
-            @view.act new actions.DelChars @view.curRow, col, (@view.curCol - col)
-          else if col > @view.curCol
-            @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol)
-          @curCol = col
-          if @operator == 'CHANGE'
-            @setMode MODES.INSERT
             @continueSequence key
-          else
-            @finishSequence key
+            if binding == 'CHANGE'
+              @setMode MODES.INSERT
+              @continueSequence motionKey
+            else
+              @finishSequence motionKey
+            return keyIndex
+
+        else if binding == 'REPLACE'
+          replaceKey = nextKey()
+          if not replaceKey
+            return 0
+
+          @view.act new actions.SpliceChars @view.curRow, @view.curCol, 1, [replaceKey], {cursor: 'stay'}
+
+          @continueSequence key
+          @finishSequence replaceKey
+          return keyIndex
+        else if info.insert
+          if binding == 'INSERT'
+            # do nothing
+          else if binding == 'INSERT_AFTER'
+            @view.moveCursorRight {pastEnd: true}
+          else if binding == 'INSERT_HOME'
+            do @view.moveCursorHome
+          else if binding == 'INSERT_END'
+            @view.moveCursorEnd {pastEnd: true}
+          else if binding == 'CHANGE_CHAR'
+            @view.act new actions.DelChars @view.curRow, @view.curCol, 1, {pastEnd: true}
+
+          @setMode MODES.INSERT
+
+          @continueSequence key
         else
-          console.log('cleared', @lastSequence)
-          do @clearSequence
+          if binding == 'EX'
+            @setMode MODES.EX
+          else if binding == 'UNDO'
+            do @view.undo
+          else if binding == 'REDO'
+            do @view.redo
+          else if binding == 'REPEAT'
+            if @curSequence.length != 0
+              console.log('cursequence nontrivial while replaying', @curSequence)
+            do @clearSequence
+            @processKeys @lastSequence
+          else if binding == 'DELETE_LAST_CHAR'
+            if @view.curCol > 0
+              @view.act new actions.DelChars @view.curRow, @view.curCol-1, 1
+            @finishSequence key
+          else if binding == 'DELETE_CHAR'
+            @view.act new actions.DelChars @view.curRow, @view.curCol, 1
+            do @view.moveCursorBackIfNeeded
 
-        do @setOperator
+            @finishSequence key
+    return keyIndex
 
 if module?
   actions = require('./actions.coffee')

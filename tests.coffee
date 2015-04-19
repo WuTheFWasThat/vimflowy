@@ -242,3 +242,8 @@ t.sendKeys 'b.'
 t.expect ['xvxr xhx xeroxerox']
 t.sendKeys '.'
 t.expect ['xvxr xhx xerooxerox']
+
+# repeat works on replace
+t = new TestCase ['blahblah']
+t.sendKeys 'rgllll.'
+t.expect ['glahglah']
