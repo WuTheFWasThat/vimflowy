@@ -227,7 +227,7 @@ class KeyBindings
 
     # useful when you expect a motion
     getMotion = () =>
-      motionKey = nextKey()
+      motionKey = do nextKey
       motionBinding = @keyMap[motionKey]
       motionInfo = @bindings[motionBinding]
 
@@ -237,9 +237,21 @@ class KeyBindings
       motion = {type: motionBinding}
       return motion
 
+    # takes key, returns repeat number and key
+    getRepeat = (key) =>
+      begins = [1..9].map ((x) -> return do x.toString)
+      continues = [0..9].map ((x) -> return do x.toString)
+      if key not in begins
+        return [1, key]
+      numStr = key
+      key = do nextKey
+      while key in continues
+        numStr += key
+        key = do nextKey
+      return [parseInt(numStr), key]
 
     console.log('keys', keys)
-    key = nextKey()
+    key = do nextKey
 
     # if key not in @reverseBindings:
     #     return
@@ -265,6 +277,8 @@ class KeyBindings
 
         return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
     else if @mode == MODES.NORMAL
+      [repeat, key] = getRepeat key
+
       if key not of @keyMap
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
@@ -275,8 +289,9 @@ class KeyBindings
         @keybindingsDiv.toggleClass 'active'
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if info.motion
-        [row, col] = @handleMotion {type: binding}
-        @view.moveCursor row, col
+        for i in [1..repeat]
+          [row, col] = @handleMotion {type: binding}
+          @view.moveCursor row, col
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if @mode == MODES.NORMAL
         if binding == 'DELETE' or binding == 'CHANGE'
@@ -285,12 +300,12 @@ class KeyBindings
           if not motion
             return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
-          [row, col] = @handleMotion motion, {pastEnd: true}
-
-          if col < @view.curCol
-            @view.act new actions.DelChars @view.curRow, col, (@view.curCol - col)
-          else if col > @view.curCol
-            @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol), {pastEnd: binding == 'CHANGE'}
+          for i in [1..repeat]
+            [row, col] = @handleMotion motion, {pastEnd: true}
+            if col < @view.curCol
+              @view.act new actions.DelChars @view.curRow, col, (@view.curCol - col)
+            else if col > @view.curCol
+              @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol), {pastEnd: binding == 'CHANGE'}
 
           if binding == 'CHANGE'
             @setMode MODES.INSERT
@@ -299,8 +314,10 @@ class KeyBindings
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
         else if binding == 'REPLACE'
-          replaceKey = nextKey()
-          @view.act new actions.SpliceChars @view.curRow, @view.curCol, 1, [replaceKey], {cursor: 'stay'}
+          replaceKey = do nextKey
+          num = Math.min(repeat, do @view.curRowLength - @view.curCol)
+          newChars = (replaceKey for i in [1..num])
+          @view.act new actions.SpliceChars @view.curRow, @view.curCol, num, newChars, {cursor: 'beforeEnd'}
           return [keyIndex, SEQUENCE_ACTIONS.FINISH]
         else if info.insert
           if binding == 'INSERT'
@@ -321,23 +338,27 @@ class KeyBindings
             @setMode MODES.EX
             return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'UNDO'
-            do @view.undo
+            for i in [1..repeat]
+              do @view.undo
             return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'REDO'
-            do @view.redo
+            for i in [1..repeat]
+              do @view.redo
             return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'REPEAT'
             if @curSequence.length != 0
               console.log('cursequence nontrivial while replaying', @curSequence)
-            do @clearSequence
-            @processKeys @lastSequence
+              do @clearSequence
+            for i in [1..repeat]
+              @processKeys @lastSequence
             return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'DELETE_LAST_CHAR'
-            if @view.curCol > 0
-              @view.act new actions.DelChars @view.curRow, @view.curCol-1, 1
+            num = Math.min @view.curCol, repeat
+            if num > 0
+              @view.act new actions.DelChars @view.curRow, @view.curCol-num, num
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'DELETE_CHAR'
-            @view.act new actions.DelChars @view.curRow, @view.curCol, 1
+            @view.act new actions.DelChars @view.curRow, @view.curCol, repeat
             do @view.moveCursorBackIfNeeded
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
