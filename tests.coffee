@@ -282,6 +282,18 @@ t.expect ['oblad oblada o blah blah blaha']
 # numbers repeat works on d
 t.sendKeys '03de'
 t.expect [' blah blah blaha']
+t.sendKeys '3u'
+t.expect ['oblad oblada o blah blah blaha']
+# number works within movement
+t.sendKeys 'd3e'
+t.expect [' blah blah blaha']
+# and undo does it all at once
+t.sendKeys 'u'
+t.expect ['oblad oblada o blah blah blaha']
+# try cut too
+t.sendKeys 'c3eblah'
+t.sendKey 'esc'
+t.expect ['blah blah blah blaha']
 
 # numbers repeat works on replace
 t = new TestCase ['1234123412341234 is my credit card']

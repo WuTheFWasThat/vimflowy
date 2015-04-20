@@ -171,22 +171,29 @@ class KeyBindings
   clearSequence: () ->
     @curSequence = []
 
-  handleMotion: (motion, options) ->
-    if motion.type == 'LEFT'
-      return @view.cursorLeft options
-    if motion.type == 'RIGHT'
-      return @view.cursorRight options
-    if motion.type == 'HOME'
-      return @view.cursorHome options
-    if motion.type == 'END'
-      return @view.cursorEnd options
-    if motion.type == 'BEGINNING_WORD'
-      return @view.cursorBeginningWord options
-    if motion.type == 'END_WORD'
-      return @view.cursorEndWord options
-    if motion.type == 'NEXT_WORD'
-      return @view.cursorNextWord options
-    return null
+  handleMotion: (motion, options = {}) ->
+    motion.repeat ?= 1
+
+    cursor = do @view.cursor.clone
+
+    for i in [1..motion.repeat]
+      if motion.type == 'LEFT'
+        cursor.left options
+      else if motion.type == 'RIGHT'
+        cursor.right options
+      else if motion.type == 'HOME'
+        cursor.home options
+      else if motion.type == 'END'
+        cursor.end options
+      else if motion.type == 'BEGINNING_WORD'
+        cursor.beginningWord options
+      else if motion.type == 'END_WORD'
+        cursor.endWord options
+      else if motion.type == 'NEXT_WORD'
+        cursor.nextWord options
+      else
+        return null
+    return cursor
 
   handleKeys: (keys) ->
     for key in keys
@@ -228,13 +235,15 @@ class KeyBindings
     # useful when you expect a motion
     getMotion = () =>
       motionKey = do nextKey
+      [repeat, motionKey] = getRepeat motionKey
+
       motionBinding = @keyMap[motionKey]
       motionInfo = @bindings[motionBinding]
 
       if not motionInfo?.motion
         return null
 
-      motion = {type: motionBinding}
+      motion = {type: motionBinding, repeat: repeat}
       return motion
 
     # takes key, returns repeat number and key
@@ -271,27 +280,24 @@ class KeyBindings
         else if key == 'right'
           do @view.moveCursorRight
         else if key == 'backspace'
-          @view.act new actions.DelChars @view.curRow, (@view.curCol-1), 1
+          @view.act new actions.DelChars @view.cursor.row, (@view.cursor.col-1), 1
         else
-          @view.act new actions.AddChars @view.curRow, @view.curCol, [key], {pastEnd: true}
+          @view.act new actions.AddChars @view.cursor.row, @view.cursor.col, [key], {pastEnd: true}
 
         return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
     else if @mode == MODES.NORMAL
       [repeat, key] = getRepeat key
 
-      if key not of @keyMap
-        return [keyIndex, SEQUENCE_ACTIONS.DROP]
-
       binding = @keyMap[key]
-      info = @bindings[binding]
+      info = @bindings[binding] || {}
 
       if binding == 'HELP'
         @keybindingsDiv.toggleClass 'active'
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if info.motion
-        for i in [1..repeat]
-          [row, col] = @handleMotion {type: binding}
-          @view.moveCursor row, col
+        # TODO: do this by handing repeat in motion
+        cursor = @handleMotion {type: binding, repeat: repeat}
+        @view.moveCursor cursor.row, cursor.col
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if @mode == MODES.NORMAL
         if binding == 'DELETE' or binding == 'CHANGE'
@@ -301,11 +307,11 @@ class KeyBindings
             return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
           for i in [1..repeat]
-            [row, col] = @handleMotion motion, {pastEnd: true}
-            if col < @view.curCol
-              @view.act new actions.DelChars @view.curRow, col, (@view.curCol - col)
-            else if col > @view.curCol
-              @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol), {pastEnd: binding == 'CHANGE'}
+            cursor = @handleMotion motion, {pastEnd: true}
+            if cursor.col < @view.cursor.col
+              @view.act new actions.DelChars @view.cursor.row, cursor.col, (@view.cursor.col - cursor.col)
+            else if cursor.col > @view.cursor.col
+              @view.act new actions.DelChars @view.cursor.row, @view.cursor.col, (cursor.col - @view.cursor.col), {pastEnd: binding == 'CHANGE'}
 
           if binding == 'CHANGE'
             @setMode MODES.INSERT
@@ -315,9 +321,9 @@ class KeyBindings
 
         else if binding == 'REPLACE'
           replaceKey = do nextKey
-          num = Math.min(repeat, do @view.curRowLength - @view.curCol)
+          num = Math.min(repeat, do @view.curRowLength - @view.cursor.col)
           newChars = (replaceKey for i in [1..num])
-          @view.act new actions.SpliceChars @view.curRow, @view.curCol, num, newChars, {cursor: 'beforeEnd'}
+          @view.act new actions.SpliceChars @view.cursor.row, @view.cursor.col, num, newChars, {cursor: 'beforeEnd'}
           return [keyIndex, SEQUENCE_ACTIONS.FINISH]
         else if info.insert
           if binding == 'INSERT'
@@ -329,7 +335,7 @@ class KeyBindings
           else if binding == 'INSERT_END'
             @view.moveCursorEnd {pastEnd: true}
           else if binding == 'CHANGE_CHAR'
-            @view.act new actions.DelChars @view.curRow, @view.curCol, 1, {pastEnd: true}
+            @view.act new actions.DelChars @view.cursor.row, @view.cursor.col, 1, {pastEnd: true}
 
           @setMode MODES.INSERT
           return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
@@ -353,16 +359,17 @@ class KeyBindings
               @processKeys @lastSequence
             return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'DELETE_LAST_CHAR'
-            num = Math.min @view.curCol, repeat
+            num = Math.min @view.cursor.col, repeat
             if num > 0
-              @view.act new actions.DelChars @view.curRow, @view.curCol-num, num
+              @view.act new actions.DelChars @view.cursor.row, @view.cursor.col-num, num
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'DELETE_CHAR'
-            @view.act new actions.DelChars @view.curRow, @view.curCol, repeat
+            @view.act new actions.DelChars @view.cursor.row, @view.cursor.col, repeat
             do @view.moveCursorBackIfNeeded
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
+
 
 if module?
   actions = require('./actions.coffee')

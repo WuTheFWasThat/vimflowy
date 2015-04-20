@@ -1,13 +1,79 @@
 # a View consists of Data and a cursor
 # it also renders
 
+class Cursor
+  constructor: (view, row = 1, col = 0) ->
+    @view = view
+    @row = row
+    @col = col
+
+  clone: () ->
+    return new Cursor @view, @row, @col
+
+  left: () ->
+    if @col > 0
+      @col -= 1
+
+  right: (options) ->
+    options?={}
+    shift = if options.pastEnd then 0 else 1
+    if @col < (@view.rowLength @row) - shift
+      @col += 1
+
+  home: () ->
+    @col = 0
+
+  end: (options) ->
+    options ?= {}
+    shift = if options.pastEnd then 0 else 1
+    @col= (@view.rowLength @row) - shift
+
+  beginningWord: () ->
+    if @col == 0
+      return
+    @col -= 1
+    while @col > 0 and (@view.getData @row, @col) == ' '
+      @col -= 1
+    while @col > 0 and (@view.getData @row, @col-1) != ' '
+      @col -= 1
+
+  endWord: (options = {}) ->
+    end = (@view.rowLength @row) - 1
+    if @col == end
+      if options.pastEnd
+        @col += 1
+      return
+
+    @col += 1
+    while @col < end and (@view.getData @row, @col) == ' '
+      @col += 1
+    while @col < end and (@view.getData @row, @col+1) != ' '
+      @col += 1
+
+    if options.pastEnd
+      @col += 1
+
+  nextWord: (options = {}) ->
+    end = (@view.rowLength @row) - 1
+    if @col == end
+      if options.pastEnd
+        @col += 1
+      return
+
+    while @col < end and (@view.getData @row, @col) != ' '
+      @col += 1
+    while @col < end and (@view.getData @row, @col+1) == ' '
+      @col += 1
+
+    if @col < end or options.pastEnd
+      @col += 1
+
 class View
   constructor: (mainDiv, data) ->
     @mainDiv = mainDiv
     @data = data
 
-    @curRow = 1 # id
-    @curCol = 0
+    @cursor = new Cursor @
 
     @history = []
     @historyIndex = 0
@@ -28,9 +94,9 @@ class View
       @historyIndex -= 1
       action = @history[@historyIndex]
       action.rewind @
-      [@curRow, @curCol] = action.oldCursor
-      @setCur @curRow, @curCol
-      @drawRow @curRow
+      [@cursor.row, @cursor.col] = action.oldCursor
+      @setCur @cursor.row, @cursor.col
+      @drawRow @cursor.row
 
   redo: () ->
     if @historyIndex < @history.length
@@ -39,124 +105,59 @@ class View
       @historyIndex += 1
 
   act: (action) ->
-    action.oldCursor = [@curRow, @curCol]
+    action.oldCursor = [@cursor.row, @cursor.col]
     action.apply @
     @add_history action
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
+  getData: (row, col) ->
+    return @data.lines[row][col]
+
+  rowLength: (row) ->
+    return @data.lines[row].length
+
   curRowLength: () ->
-    return @data.lines[@curRow].length
+    return @rowLength @cursor.row
 
   setCur: (row, col, options) ->
     options ?= {}
-    @curRow = row
-    @curCol = col
+    @cursor.row = row
+    @cursor.col = col
 
     shift = if options.pastEnd then 0 else 1
     rowLen = do @curRowLength
-    if rowLen > 0 and @curCol > rowLen - shift
-      @curCol = rowLen - shift
+    if rowLen > 0 and @cursor.col > rowLen - shift
+      @cursor.col = rowLen - shift
 
   moveCursorBackIfNeeded: () ->
-    if @curCol > do @curRowLength - 1
+    if @cursor.col > do @curRowLength - 1
       do @moveCursorLeft
 
-  cursorLeft: () ->
-    col = @curCol
-    if col > 0
-      col -= 1
-    return [@curRow, col]
-
-  cursorRight: (options) ->
-    options?={}
-    shift = if options.pastEnd then 0 else 1
-    col = @curCol
-    if col < do @curRowLength - shift
-      col += 1
-    return [@curRow, col]
-
-  cursorHome: () ->
-    return [@curRow, 0]
-
-  cursorEnd: (options) ->
-    options ?= {}
-    shift = if options.pastEnd then 0 else 1
-    return [@curRow, do @curRowLength - shift]
-
-
-  cursorBeginningWord: () ->
-    col = @curCol
-    row = @curRow
-    if col == 0
-      return [row, col]
-    col -= 1
-    while col > 0 and @data.lines[row][col] == ' '
-      col -= 1
-    while col > 0 and @data.lines[row][col-1] != ' '
-      col -= 1
-    return [row, col]
-
-  cursorEndWord: (options = {}) ->
-    col = @curCol
-    row = @curRow
-
-    end = do @curRowLength - 1
-    if col == end
-      if options.pastEnd
-        col += 1
-      return [row, col]
-    col += 1
-    while col < end and @data.lines[row][col] == ' '
-      col += 1
-    while col < end and @data.lines[row][col+1] != ' '
-      col += 1
-
-    if options.pastEnd
-      col += 1
-    return [row, col]
-
-  cursorNextWord: (options = {}) ->
-    col = @curCol
-    row = @curRow
-
-    end = do @curRowLength - 1
-    if col == end
-      if options.pastEnd
-        col += 1
-      return [row, col]
-    while col < end and @data.lines[row][col] != ' '
-      col += 1
-    while col < end and @data.lines[row][col+1] == ' '
-      col += 1
-
-    if col < end or options.pastEnd
-      col += 1
-    return [row, col]
 
   moveCursor: (row, col) ->
-    oldrow = @curRow
-    @curRow = row
-    @curCol = col
+    oldrow = @cursor.row
+    @cursor.row = row
+    @cursor.col = col
 
     @drawRow oldrow
-    @drawRow @curRow
+    @drawRow @cursor.row
 
   moveCursorLeft: () ->
-    [row, @curCol] = do @cursorLeft
-    @drawRow @curRow
+    do @cursor.left
+    @drawRow @cursor.row
 
   moveCursorRight: (options) ->
-    [row, @curCol] = @cursorRight options
-    @drawRow @curRow
+    @cursor.right options
+    @drawRow @cursor.row
 
   moveCursorHome: () ->
-    [row, @curCol] = do @cursorHome
-    @drawRow @curRow
+    do @cursor.home
+    @drawRow @cursor.row
 
   moveCursorEnd: (options) ->
-    [row, @curCol] = @cursorEnd options
-    @drawRow @curRow
+    @cursor.end options
+    @drawRow @cursor.row
 
   # RENDERING
 
@@ -180,7 +181,7 @@ class View
       onto.append el
 
   drawRow: (row, onto) ->
-    console.log('drawing row', row, @curRow, @curCol)
+    console.log('drawing row', row, @cursor.row, @cursor.col)
     if not onto
       onto = $('#node-' + row + '-row')
     lineData = @data.lines[row]
@@ -193,7 +194,7 @@ class View
       return x
 
     # add cursor
-    if row == @curRow and lineData.length == @curCol
+    if row == @cursor.row and lineData.length == @cursor.col
       line.push '&nbsp;'
 
     do onto.empty
@@ -202,7 +203,7 @@ class View
     style = ''
     for x, i in line
       mystyle = ''
-      if row == @curRow and i == @curCol
+      if row == @cursor.row and i == @cursor.col
         mystyle = 'cursor'
       if mystyle != style
         onto.append $('<span>').html(acc).addClass(style)
