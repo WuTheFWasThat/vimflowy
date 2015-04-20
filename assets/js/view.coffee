@@ -45,18 +45,21 @@ class View
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
+  curRowLength: () ->
+    return @data.lines[@curRow].length
+
   setCur: (row, col, options) ->
     options ?= {}
     @curRow = row
     @curCol = col
 
     shift = if options.pastEnd then 0 else 1
-    rowLen = @data.lines[@curRow].length
+    rowLen = do @curRowLength
     if rowLen > 0 and @curCol > rowLen - shift
       @curCol = rowLen - shift
 
   moveCursorBackIfNeeded: () ->
-    if @curCol > @data.lines[@curRow].length - 1
+    if @curCol > do @curRowLength - 1
       do @moveCursorLeft
 
   cursorLeft: () ->
@@ -69,7 +72,7 @@ class View
     options?={}
     shift = if options.pastEnd then 0 else 1
     col = @curCol
-    if col < @data.lines[@curRow].length - shift
+    if col < do @curRowLength - shift
       col += 1
     return [@curRow, col]
 
@@ -79,7 +82,7 @@ class View
   cursorEnd: (options) ->
     options ?= {}
     shift = if options.pastEnd then 0 else 1
-    return [@curRow, (@data.lines[@curRow].length - shift)]
+    return [@curRow, do @curRowLength - shift]
 
 
   cursorBeginningWord: () ->
@@ -98,7 +101,7 @@ class View
     col = @curCol
     row = @curRow
 
-    end = @data.lines[row].length - 1
+    end = do @curRowLength - 1
     if col == end
       if options.pastEnd
         col += 1
@@ -117,7 +120,7 @@ class View
     col = @curCol
     row = @curRow
 
-    end = @data.lines[row].length - 1
+    end = do @curRowLength - 1
     if col == end
       if options.pastEnd
         col += 1

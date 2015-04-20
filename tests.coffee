@@ -144,7 +144,7 @@ t.sendKeys 'hhhdb'
 t.expect ['the ck fox   umped   ver he azy og']
 t.sendKeys 'bx'
 t.expect ['he ck fox   umped   ver he azy og']
-t.sendKeys 'bbbbx'
+t.sendKeys '5bx'
 t.expect ['e ck fox   umped   ver he azy og']
 t = new TestCase ['the']
 t.sendKeys '0db'
@@ -172,7 +172,7 @@ t.sendKeys 'lllde'
 t.expect ['th quic brow fo   jumpe   ove la dog']
 t.sendKeys 'ex'
 t.expect ['th quic brow fo   jumpe   ove la do']
-t.sendKeys 'eeeex'
+t.sendKeys '5ex'
 t.expect ['th quic brow fo   jumpe   ove la d']
 t = new TestCase ['the']
 t.sendKeys '$de'
@@ -200,7 +200,7 @@ t.sendKeys 'wx'
 t.expect ['the uick rown ox   umped   thlazy og']
 t.sendKeys 'wx'
 t.expect ['the uick rown ox   umped   thlazy o']
-t.sendKeys 'wwwwx'
+t.sendKeys '5wx'
 t.expect ['the uick rown ox   umped   thlazy ']
 t = new TestCase ['the']
 t.sendKeys '$dw'
@@ -211,7 +211,10 @@ t = new TestCase ['blahblah']
 t.sendKeys '0d$iab'
 t.expect ['ab']
 
-# test the shit out of repeat
+#########
+# REPEAT
+#########
+
 t = new TestCase ['']
 t.sendKeys '....'
 t.expect ['']
@@ -256,3 +259,47 @@ t.expect ['blah blah blah']
 t = new TestCase ['obladi oblada']
 t.sendKeys 'eroehl.'
 t.expect ['oblado oblado']
+
+#########
+# NUMBERS
+#########
+
+# numbers works on movement
+t = new TestCase ['obladi oblada o lee lee o lah lah']
+t.sendKeys '5lx'
+t.expect ['oblad oblada o lee lee o lah lah']
+t.sendKeys '6wx'
+t.expect ['oblad oblada o lee lee o ah lah']
+t.sendKeys '7$x'
+t.expect ['oblad oblada o lee lee o ah la']
+t.sendKeys '5bx'
+t.expect ['oblad oblada o ee lee o ah la']
+# numbers repeat works on c
+t.sendKeys '$5cb'
+t.sendKeys 'blah blah blah'
+t.sendKey 'esc'
+t.expect ['oblad oblada o blah blah blaha']
+# numbers repeat works on d
+t.sendKeys '03de'
+t.expect [' blah blah blaha']
+
+# numbers repeat works on replace
+t = new TestCase ['1234123412341234 is my credit card']
+t.sendKeys '12r*'
+t.expect ['************1234 is my credit card']
+t.sendKeys 'l12X'
+t.expect ['1234 is my credit card']
+# number repeat works with undo
+t.sendKeys 'u'
+t.expect ['************1234 is my credit card']
+t.sendKeys 'u'
+t.expect ['1234123412341234 is my credit card']
+t.sendKey 'ctrl+r'
+t.expect ['************1234 is my credit card']
+t.sendKeys 'lX.................................'
+t.expect ['1234 is my credit card']
+# number repeat works on undo
+t.sendKeys '8u'
+t.expect ['********1234 is my credit card']
+t.sendKeys '6u'
+t.expect ['1234123412341234 is my credit card']

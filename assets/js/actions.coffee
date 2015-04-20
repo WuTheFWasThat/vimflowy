@@ -51,7 +51,9 @@
       @deletedChars = view.data.deleteChars @row, @col, @nchars
       view.data.writeChars @row, @col, @chars
 
-      if @options.cursor == 'end'
+      if @options.cursor == 'beforeEnd'
+        view.setCur @row, (@col + @chars.length - 1)
+      else if @options.cursor == 'end'
         view.setCur @row, (@col + @chars.length)
       else if @options.cursor == 'pastEnd'
         view.setCur @row, (@col + @chars.length), {pastEnd: true}
