@@ -97,6 +97,12 @@ class KeyBindings
       key: 's'
       insert: true
 
+  SEQUENCE_ACTIONS = {
+    DROP: 0
+    CONTINUE: 1
+    FINISH: 2
+  }
+
   constructor: (modeDiv, keybindingsDiv, view) ->
     @view = view
 
@@ -154,16 +160,13 @@ class KeyBindings
   getKey: (name) ->
     return @bindings[name].key
 
-  continueSequence: (key) ->
-    @curSequence.push key
+  continueSequence: (keys) ->
+    for key in keys
+      @curSequence.push key
 
   registerSequence: () ->
     @lastSequence = @curSequence
     do @clearSequence
-
-  finishSequence: (key) ->
-    @continueSequence key
-    do @registerSequence
 
   clearSequence: () ->
     @curSequence = []
@@ -197,12 +200,19 @@ class KeyBindings
     index = -1
     while keys.length and index != 0
       try
-        index = @processOnce keys
+        [index, seqAction] = @processOnce keys
       catch e
         if e == 'Need more keys'
           return keys
         throw e
-      keys = keys.slice index
+      processed = keys.splice 0, index
+      if seqAction == SEQUENCE_ACTIONS.DROP
+        do @clearSequence
+      else if seqAction == SEQUENCE_ACTIONS.CONTINUE
+        @continueSequence processed
+      else if seqAction == SEQUENCE_ACTIONS.FINISH
+        @continueSequence processed
+        do @registerSequence
     return keys
 
   # returns index processed up to
@@ -242,8 +252,7 @@ class KeyBindings
       if key == 'esc' or key == 'ctrl+c'
         @setMode MODES.NORMAL
         do @view.moveCursorLeft
-
-        @finishSequence key
+        return [keyIndex, SEQUENCE_ACTIONS.FINISH]
       else
         if key == 'left'
           do @view.moveCursorLeft
@@ -254,26 +263,27 @@ class KeyBindings
         else
           @view.act new actions.AddChars @view.curRow, @view.curCol, [key], {pastEnd: true}
 
-        @continueSequence key
+        return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
     else if @mode == MODES.NORMAL
       if key not of @keyMap
-        do @clearSequence
-        return keyIndex
+        return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
       binding = @keyMap[key]
       info = @bindings[binding]
 
       if binding == 'HELP'
         @keybindingsDiv.toggleClass 'active'
+        return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if info.motion
         [row, col] = @handleMotion {type: binding}
         @view.moveCursor row, col
+        return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if @mode == MODES.NORMAL
         if binding == 'DELETE' or binding == 'CHANGE'
 
           motion = do getMotion
           if not motion
-            return keyIndex
+            return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
           [row, col] = @handleMotion motion, {pastEnd: true}
 
@@ -282,21 +292,16 @@ class KeyBindings
           else if col > @view.curCol
             @view.act new actions.DelChars @view.curRow, @view.curCol, (col - @view.curCol), {pastEnd: binding == 'CHANGE'}
 
-          @continueSequence key
           if binding == 'CHANGE'
-            @continueSequence keys[keyIndex-1]
             @setMode MODES.INSERT
+            return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
           else
-            @finishSequence keys[keyIndex-1]
-          return keyIndex
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
         else if binding == 'REPLACE'
           replaceKey = nextKey()
           @view.act new actions.SpliceChars @view.curRow, @view.curCol, 1, [replaceKey], {cursor: 'stay'}
-
-          @continueSequence key
-          @finishSequence replaceKey
-          return keyIndex
+          return [keyIndex, SEQUENCE_ACTIONS.FINISH]
         else if info.insert
           if binding == 'INSERT'
             # do nothing
@@ -310,30 +315,33 @@ class KeyBindings
             @view.act new actions.DelChars @view.curRow, @view.curCol, 1, {pastEnd: true}
 
           @setMode MODES.INSERT
-
-          @continueSequence key
+          return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
         else
           if binding == 'EX'
             @setMode MODES.EX
+            return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'UNDO'
             do @view.undo
+            return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'REDO'
             do @view.redo
+            return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'REPEAT'
             if @curSequence.length != 0
               console.log('cursequence nontrivial while replaying', @curSequence)
             do @clearSequence
             @processKeys @lastSequence
+            return [keyIndex, SEQUENCE_ACTIONS.DROP]
           else if binding == 'DELETE_LAST_CHAR'
             if @view.curCol > 0
               @view.act new actions.DelChars @view.curRow, @view.curCol-1, 1
-            @finishSequence key
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'DELETE_CHAR'
             @view.act new actions.DelChars @view.curRow, @view.curCol, 1
             do @view.moveCursorBackIfNeeded
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
-            @finishSequence key
-    return keyIndex
+          return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
 if module?
   actions = require('./actions.coffee')
