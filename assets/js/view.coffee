@@ -88,6 +88,8 @@ class Cursor
       return
 
     @col = found
+    if options.pastEnd
+      @col += 1
     if options.beforeFound
       @col -= 1
 
