@@ -68,6 +68,51 @@ class Cursor
     if @col < end or options.pastEnd
       @col += 1
 
+  nextChar: (char, options = {}) ->
+    end = (@view.rowLength @row) - 1
+    if @col == end
+      return
+
+    col = @col
+    if options.beforeFound
+      col += 1
+
+    found = null
+    while col < end
+      col += 1
+      if (@view.getData @row, col) == char
+        found = col
+        break
+
+    if found == null
+      return
+
+    @col = found
+    if options.beforeFound
+      @col -= 1
+
+  prevChar: (char, options = {}) ->
+    if @col == 0
+      return
+
+    col = @col
+    if options.beforeFound
+      col -= 1
+
+    found = null
+    while col > 0
+      col -= 1
+      if (@view.getData @row, col) == char
+        found = col
+        break
+
+    if found == null
+      return
+
+    @col = found
+    if options.beforeFound
+      @col += 1
+
 class View
   constructor: (mainDiv, data) ->
     @mainDiv = mainDiv
