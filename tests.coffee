@@ -372,3 +372,21 @@ t.sendKeys 'Tex'
 t.expect ['ee case']
 t.sendKeys 'hTfx'
 t.expect ['e case']
+
+# test delete with f/t
+t = new TestCase ['asdf asdf asdf']
+t.sendKeys 'd2fa'
+t.expect ['sdf']
+
+t = new TestCase ['asdf asdf asdf']
+t.sendKeys 'd2ta'
+t.expect ['asdf']
+
+t = new TestCase ['asdf asdf asdf']
+t.sendKeys '$d2Fa'
+t.expect ['asdf f']
+
+t = new TestCase ['asdf asdf asdf']
+t.sendKeys '$d2Ta'
+t.expect ['asdf af']
+

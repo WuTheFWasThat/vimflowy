@@ -1,14 +1,43 @@
-$content-color: #FFFFFF
+$color-white: #FFFFFF
+
+$content-color: $color-white
 
 body, html
     margin: 0
     color: #000
     background: $content-color
+    font-family: 'Monaco', monospace
+
+.bottom-line
+
+.bottom-bar
+    $bar-height: 40px
+
+    background-color: $color-white
+    z-index: 1
+    position: absolute
+    bottom: 0px
+    height: $bar-height
+    border-top: 1px solid black
+    width: 100%
+
+    $vertical-padding: 10px
+    $horizontal-padding: 25px
+
+    & > div
+        position: relative
+        float: left
+        height: $bar-height - 2 * $vertical-padding
+        padding: $vertical-padding $horizontal-padding
+
+$mode-width: 100px
 
 #mode
+    width: $mode-width
     background: #AAAAAA
-    padding: 10px
-    display: inline-block
+
+#exInput
+    background: #FFFFFF
 
 #keybindings
     position: absolute
@@ -31,7 +60,6 @@ body, html
 
 #contents
     padding: 50px
-    font-family: 'Monaco', monospace
     // TODO have word wrap be a setting?
     word-wrap: break-word
 

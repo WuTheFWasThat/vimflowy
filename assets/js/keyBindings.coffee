@@ -28,6 +28,14 @@ class KeyBindings
       display: 'Insert after end of line'
       key: 'A'
       insert: true
+    # INSERT_LINE_BELOW:
+    #   display: 'Insert on new line after current line'
+    #   key: 'o'
+    #   insert: true
+    # INSERT_LINE_ABOVE:
+    #   display: 'Insert on new line before current line'
+    #   key: 'o'
+    #   insert: true
     REPLACE:
       display: 'Replace character'
       key: 'r'
@@ -35,7 +43,6 @@ class KeyBindings
     EX:
       display: 'Enter EX mode'
       key: ':'
-
 
     UNDO:
       display: 'Undo'
@@ -212,13 +219,15 @@ class KeyBindings
       else if motion.type == 'NEXT_WORD'
         cursor.nextWord options
       else if motion.type == 'FIND_NEXT_CHAR'
-        cursor.nextChar motion.char
+        cursor.nextChar motion.char, options
       else if motion.type == 'TO_NEXT_CHAR'
-        cursor.nextChar motion.char, {beforeFound: true}
+        options.beforeFound = true
+        cursor.nextChar motion.char, options
       else if motion.type == 'FIND_PREV_CHAR'
-        cursor.prevChar motion.char
+        cursor.prevChar motion.char, options
       else if motion.type == 'TO_PREV_CHAR'
-        cursor.prevChar motion.char, {beforeFound: true}
+        options.beforeFound = true
+        cursor.prevChar motion.char, options
       else
         return null
     return cursor
