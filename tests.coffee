@@ -315,3 +315,60 @@ t.sendKeys '8u'
 t.expect ['********1234 is my credit card']
 t.sendKeys '6u'
 t.expect ['1234123412341234 is my credit card']
+
+# test f, F, t T
+t = new TestCase ['Peter Piper picked a peck of pickled peppers']
+t.sendKeys 'fprd'
+t.expect ['Peter Pider picked a peck of pickled peppers']
+t.sendKeys 'fprl'
+t.expect ['Peter Pider licked a peck of pickled peppers']
+t.sendKeys '5fpx'
+t.expect ['Peter Pider licked a peck of pickled pepers']
+t.sendKeys 'u'
+t.expect ['Peter Pider licked a peck of pickled peppers']
+t.sendKeys '5fpx'
+t.expect ['Peter Pider licked a peck of pickled pepers']
+t.sendKeys '0tPx'
+t.expect ['PeterPider licked a peck of pickled pepers']
+
+t = new TestCase ['Peter Piper picked a peck of pickled peppers']
+t.sendKeys '$Fpx'
+t.expect ['Peter Piper picked a peck of pickled pepers']
+t.sendKeys '3FpTpra'
+t.expect ['Peter Piper picked a pack of pickled pepers']
+t.sendKeys 'TpruFpal'
+t.sendKey 'esc'
+t.expect ['Peter Piper plucked a pack of pickled pepers']
+t.sendKeys '2TPae'
+t.sendKey 'esc'
+t.expect ['Peeter Piper plucked a pack of pickled pepers']
+
+t = new TestCase ['edge case']
+t.sendKeys 'fsx'
+t.expect ['edge cae']
+t.sendKeys 'fex'
+t.expect ['edge ca']
+t.sendKeys 'fex'
+t.expect ['edge c']
+
+t = new TestCase ['edge case']
+t.sendKeys '2tex'
+t.expect ['edge cae']
+t.sendKeys 'htex'
+t.expect ['edge ce']
+
+t = new TestCase ['edge case']
+t.sendKeys '$Fdx'
+t.expect ['ege case']
+t.sendKeys 'Fex'
+t.expect ['ge case']
+t.sendKeys 'Fex'
+t.expect ['e case']
+
+t = new TestCase ['edge case']
+t.sendKeys '$2Tex'
+t.expect ['ege case']
+t.sendKeys 'Tex'
+t.expect ['ee case']
+t.sendKeys 'hTfx'
+t.expect ['e case']

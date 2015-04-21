@@ -79,6 +79,26 @@ class KeyBindings
       display: 'Move cursor to the beginning of the next word'
       key: 'w'
       motion: true
+    FIND_NEXT_CHAR:
+      display: 'Move cursor to next occurrence of character in line'
+      key: 'f'
+      motion: true
+      find: true
+    FIND_PREV_CHAR:
+      display: 'Move cursor to previous occurrence of character in line'
+      key: 'F'
+      motion: true
+      find: true
+    TO_NEXT_CHAR:
+      display: 'Move cursor to just before next occurrence of character in line'
+      key: 't'
+      motion: true
+      find: true
+    TO_PREV_CHAR:
+      display: 'Move cursor to just after previous occurrence of character in line'
+      key: 'T'
+      motion: true
+      find: true
 
     DELETE:
       display: 'Delete (operator)'
@@ -191,6 +211,14 @@ class KeyBindings
         cursor.endWord options
       else if motion.type == 'NEXT_WORD'
         cursor.nextWord options
+      else if motion.type == 'FIND_NEXT_CHAR'
+        cursor.nextChar motion.char
+      else if motion.type == 'TO_NEXT_CHAR'
+        cursor.nextChar motion.char, {beforeFound: true}
+      else if motion.type == 'FIND_PREV_CHAR'
+        cursor.prevChar motion.char
+      else if motion.type == 'TO_PREV_CHAR'
+        cursor.prevChar motion.char, {beforeFound: true}
       else
         return null
     return cursor
@@ -238,12 +266,14 @@ class KeyBindings
       [repeat, motionKey] = getRepeat motionKey
 
       motionBinding = @keyMap[motionKey]
-      motionInfo = @bindings[motionBinding]
-
-      if not motionInfo?.motion
-        return null
+      motionInfo = @bindings[motionBinding] || {}
+      if not motionInfo.motion
+        return
 
       motion = {type: motionBinding, repeat: repeat}
+      if motionInfo.find
+        char = do nextKey
+        motion.char = char
       return motion
 
     # takes key, returns repeat number and key
@@ -259,7 +289,7 @@ class KeyBindings
         key = do nextKey
       return [parseInt(numStr), key]
 
-    console.log('keys', keys)
+    # console.log('keys', keys)
     key = do nextKey
 
     # if key not in @reverseBindings:
@@ -295,8 +325,12 @@ class KeyBindings
         @keybindingsDiv.toggleClass 'active'
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if info.motion
-        # TODO: do this by handing repeat in motion
-        cursor = @handleMotion {type: binding, repeat: repeat}
+        keyIndex = 0 # easier to just redo the work
+        motion = do getMotion
+        if not motion
+          return [keyIndex, SEQUENCE_ACTION.DROP]
+
+        cursor = @handleMotion motion
         @view.moveCursor cursor.row, cursor.col
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if @mode == MODES.NORMAL

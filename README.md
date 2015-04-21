@@ -2,8 +2,6 @@
 
 ## TODO ##
 
-implement # to repeat
-implement f/F/t/T
 implement y and p
 implement ctrl+o
 
@@ -18,6 +16,7 @@ Firstly, I have many known inconsistencies with vi.  Many are intentional.  For 
 - in vim, cw works like ciw, which is inconsistent/counterintuitive
 - 5$ doesn't work
 - 100rx will replace as many as it can
+- t and T work when you use them repeatedly
 
 Ones which should probably be fixed
 - undoing does not undo entire blocks of transactions (i.e. insert mode + blah + esc does not undo atomically, neither does 5de)
