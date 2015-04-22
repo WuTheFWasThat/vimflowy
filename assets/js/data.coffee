@@ -51,8 +51,8 @@ class Data
     if id == 0
       console.log 'Cannot get siblings of root'
       return id
-    parentId = @getParent id
-    children = @getChildren parentId
+    parent = @getParent id
+    children = @getChildren parent
     index = (children.indexOf id) + offset
     if index >= children.length
       return id
@@ -61,22 +61,53 @@ class Data
     else
       return children[index]
 
-  insertSiblingAfter: (id) ->
+  _insertSiblingHelper: (id, after) ->
     if id == 0
       console.log 'Cannot insert sibling of root'
       return
 
     newId = do @getId
-    parentId = @getParent id
-    children = @getChildren parentId
+    parent = @getParent id
+    children = @getChildren parent
     index = children.indexOf id
 
-    children.splice (index + 1), 0, newId
+    children.splice (index + after), 0, newId
     @lines[newId] = []
     @structure[newId] =
       children: []
-      parent: parentId
+      parent: parent
     return newId
+
+  insertSiblingAfter: (id) ->
+    return @_insertSiblingHelper id, 1
+
+  insertSiblingBefore: (id) ->
+    return @_insertSiblingHelper id, 0
+
+  # returns next row
+  deleteRow: (id) ->
+    if id == 0
+      console.log 'Cannot delete root'
+      return 0
+
+    for child in @getChildren id
+      @deleteRow child
+    parent = @getParent id
+    parent_children = @getChildren parent
+
+    index = parent_children.indexOf id
+    parent_children.splice index, 1
+
+    delete @structure[id]
+    delete @lines[id]
+
+    if index == parent_children.length
+      if parent == 0
+        # TODO: make new row
+        return 0
+      return parent
+    else
+      return parent_children[index]
 
   # data manipulation
 

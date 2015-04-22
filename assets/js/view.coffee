@@ -22,6 +22,9 @@ class View
     @history.push action
     @historyIndex += 1
 
+  undrawCursors: () ->
+    $('.cursor').removeClass 'cursor'
+
   undo: () ->
     if @historyIndex > 0
       @historyIndex -= 1
@@ -29,10 +32,12 @@ class View
       action.rewind @
       [@cursor.row, @cursor.col] = action.oldCursor
       @setCur @cursor.row, @cursor.col
+      do @undrawCursors
       @drawRow @cursor.row
 
   redo: () ->
     if @historyIndex < @history.length
+      do @undrawCursors
       action = @history[@historyIndex]
       action.apply @
       @historyIndex += 1
@@ -99,9 +104,31 @@ class View
     @act new actions.SpliceChars @cursor.row, @cursor.col, nchars, chars, options
 
   newLineBelow: () ->
+    # TODO: make this undoable
     row = @data.insertSiblingAfter @cursor.row
     @cursor.row = row
     @cursor.col = 0
+    # TODO: make this better
+    do @render
+
+  newLineAbove: () ->
+    # TODO: make this undoable
+    row = @data.insertSiblingBefore @cursor.row
+    @cursor.row = row
+    @cursor.col = 0
+    # TODO: make this better
+    do @render
+
+  delLine: () ->
+    # TODO: make this undoable
+    row = @data.deleteRow @cursor.row
+    @cursor.row = row
+    @cursor.col = 0
+    # TODO: make this better
+    do @render
+
+  clearLine: () ->
+    # TODO: make this undoable
     # TODO: make this better
     do @render
 
