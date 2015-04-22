@@ -23,7 +23,7 @@ class Cursor
   end: (options) ->
     options ?= {}
     shift = if options.pastEnd then 0 else 1
-    @col= (@data.rowLength @row) - shift
+    @col = (@data.rowLength @row) - shift
 
   beginningWord: () ->
     if @col == 0
@@ -111,6 +111,18 @@ class Cursor
     @col = found
     if options.beforeFound
       @col += 1
+
+  up: () ->
+    row = @data.getSiblingBefore @row
+    if row != @row
+      @row = row
+      @col = 0
+
+  down: () ->
+    row = @data.getSiblingAfter @row
+    if row != @row
+      @row = row
+      @col = 0
 
 # exports
 module?.exports = Cursor

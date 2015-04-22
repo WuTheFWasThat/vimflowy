@@ -65,6 +65,16 @@ class KeyBindings
       key: 'l'
       motion: true
       alternateKeys: ['right']
+    UP:
+      display: 'Move cursor up'
+      key: 'k'
+      motion: true
+      alternateKeys: ['up']
+    DOWN:
+      display: 'Move cursor down'
+      key: 'j'
+      motion: true
+      alternateKeys: ['down']
     HOME:
       display: 'Move cursor to beginning of line'
       key: '0'
@@ -208,6 +218,10 @@ class KeyBindings
         cursor.left options
       else if motion.type == 'RIGHT'
         cursor.right options
+      else if motion.type == 'UP'
+        do cursor.up
+      else if motion.type == 'DOWN'
+        do cursor.down
       else if motion.type == 'HOME'
         cursor.home options
       else if motion.type == 'END'

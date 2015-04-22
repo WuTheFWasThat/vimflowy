@@ -33,7 +33,6 @@ class Data
   rowLength: (row) ->
     return @getRow(row).length
 
-
   getParent: (row) ->
     return @structure[row].parent
 
@@ -41,6 +40,26 @@ class Data
     return @structure[row].children
 
   # structure manipulation
+
+  getSiblingBefore: (id) ->
+    return @_getSiblingOffset id, -1
+
+  getSiblingAfter: (id) ->
+    return @_getSiblingOffset id, 1
+
+  _getSiblingOffset: (id, offset) ->
+    if id == 0
+      console.log 'Cannot get siblings of root'
+      return id
+    parentId = @getParent id
+    children = @getChildren parentId
+    index = (children.indexOf id) + offset
+    if index >= children.length
+      return id
+    else if index < 0
+      return id
+    else
+      return children[index]
 
   insertSiblingAfter: (id) ->
     if id == 0
@@ -50,7 +69,7 @@ class Data
     newId = do @getId
     parentId = @getParent id
     children = @getChildren parentId
-    index = children.indexOf newId
+    index = children.indexOf id
 
     children.splice (index + 1), 0, newId
     @lines[newId] = []

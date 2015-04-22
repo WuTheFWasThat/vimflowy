@@ -393,3 +393,13 @@ t = new TestCase ['awdf awdf awdf']
 t.sendKeys '$d2Ta'
 t.expect ['awdf af']
 
+# test multiline
+t = new TestCase ['']
+t.sendKeys 'ione'
+t.sendKey 'esc'
+t.sendKeys 'otwo'
+t.sendKey 'esc'
+t.expect ['one', 'two']
+# test j and k
+t.sendKeys 'kxjlx'
+t.expect ['ne', 'to']
