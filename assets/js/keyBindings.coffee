@@ -414,7 +414,10 @@ class KeyBindings
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
 
+# imports
 if module?
   actions = require('./actions.coffee')
+
+# exports
 module?.exports = KeyBindings
 

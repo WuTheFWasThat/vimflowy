@@ -4,6 +4,7 @@ class Data
     @structure =
       0: # always the root node
         children: [1]
+        parent: 0
       1:
         children: []
         parent: 0
@@ -13,6 +14,13 @@ class Data
       1: []
 
     return @
+
+  rowLength: (row) ->
+    return @lines[row].length
+
+  getChar: (row, col) ->
+    return @lines[row][col]
+
 
   writeChars: (row, col, chars) ->
     args = [col, 0].concat chars
@@ -36,31 +44,28 @@ class Data
   load: (serialized) ->
     id = 0
 
-    structure =
-      0:
+    structure = {}
+    lines = {}
+
+    helper = (my_id, my_serialized, parent_id) ->
+      structure[my_id] =
         children: []
+        parent: parent_id
 
-    lines =
-      0: []
+      if typeof my_serialized == 'string'
+        lines[my_id] = my_serialized.split ''
+      else
+        lines[my_id] = my_serialized.line.split ''
 
-    helper = (children, parentId) ->
-      for child in children
-        id++
+        for child in my_serialized.children
+          id++
+          structure[my_id].children.push id
+          helper id, child, my_id
 
-        structure[id] =
-          children: []
-          parent: parentId
-        structure[parentId].children.push id
-
-        if typeof child == 'string'
-          lines[id] = child.split ''
-        else
-          lines[id] = child.line.split ''
-          helper child.children, id
-
-    helper(serialized, 0)
+    helper 0, serialized, 0
 
     @structure = structure
     @lines = lines
 
+# exports
 module?.exports = Data

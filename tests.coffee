@@ -2,13 +2,16 @@ require 'coffee-script/register'
 assert = require 'assert'
 
 Data = require './assets/js/data.coffee'
+Cursor = require './assets/js/cursor.coffee'
 View = require './assets/js/view.coffee'
 KeyBindings = require './assets/js/keyBindings.coffee'
 
 class TestCase
   constructor: (serialized = ['']) ->
     @data = new Data
-    @data.load serialized
+    @data.load
+      line: ''
+      children: serialized
 
     @view = new View null, @data
     @view.render = -> return
@@ -374,19 +377,19 @@ t.sendKeys 'hTfx'
 t.expect ['e case']
 
 # test delete with f/t
-t = new TestCase ['asdf asdf asdf']
+t = new TestCase ['awdf awdf awdf']
 t.sendKeys 'd2fa'
-t.expect ['sdf']
+t.expect ['wdf']
 
-t = new TestCase ['asdf asdf asdf']
+t = new TestCase ['awdf awdf awdf']
 t.sendKeys 'd2ta'
-t.expect ['asdf']
+t.expect ['awdf']
 
-t = new TestCase ['asdf asdf asdf']
+t = new TestCase ['awdf awdf awdf']
 t.sendKeys '$d2Fa'
-t.expect ['asdf f']
+t.expect ['awdf f']
 
-t = new TestCase ['asdf asdf asdf']
+t = new TestCase ['awdf awdf awdf']
 t.sendKeys '$d2Ta'
-t.expect ['asdf af']
+t.expect ['awdf af']
 
