@@ -22,15 +22,44 @@ class Data
       id++
     return id
 
-  rowLength: (row) ->
-    return @lines[row].length
+  # data access
+
+  getRow: (row) ->
+    return @lines[row]
 
   getChar: (row, col) ->
-    return @lines[row][col]
+    return @getRow(row)[col]
+
+  rowLength: (row) ->
+    return @getRow(row).length
+
+
+  getParent: (row) ->
+    return @structure[row].parent
+
+  getChildren: (row) ->
+    return @structure[row].children
+
+  # structure manipulation
 
   insertSiblingAfter: (id) ->
-    newId = getId()
-    return
+    if id == 0
+      console.log 'Cannot insert sibling of root'
+      return
+
+    newId = do @getId
+    parentId = @getParent id
+    children = @getChildren parentId
+    index = children.indexOf newId
+
+    children.splice (index + 1), 0, newId
+    @lines[newId] = []
+    @structure[newId] =
+      children: []
+      parent: parentId
+    return newId
+
+  # data manipulation
 
   writeChars: (row, col, chars) ->
     args = [col, 0].concat chars

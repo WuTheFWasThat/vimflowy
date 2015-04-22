@@ -98,21 +98,28 @@ class View
   spliceCharsAfterCursor: (nchars, chars, options) ->
     @act new actions.SpliceChars @cursor.row, @cursor.col, nchars, chars, options
 
+  newLineBelow: () ->
+    row = @data.insertSiblingAfter @cursor.row
+    @cursor.row = row
+    @cursor.col = 0
+    # TODO: make this better
+    do @render
+
   # RENDERING
 
   render: () ->
-    @renderHelper @mainDiv, 0
+    @renderTree 0, @mainDiv
 
-  renderHelper: (onto, rootid) ->
-    for id in @data.structure[rootid].children
-      do onto.empty
+  renderTree: (parentid, onto) ->
+    do onto.empty
+    for id in @data.structure[parentid].children
       elId = 'node-' + id
       el = $('<div>')
         .attr('id', elId)
-        .addClass('.node')
+        .addClass('node')
 
       bullet = $('<i>').addClass('fa fa-circle bullet')
-      elLine = $('<span>').attr 'id', (elId + '-row')
+      elLine = $('<div>').addClass('node-text').attr('id', (elId + '-row'))
 
       console.log @data.lines, id, @data.lines[id]
       @drawRow id, elLine
@@ -132,16 +139,25 @@ class View
 
     console.log lineData
 
-    line = lineData.map (x) ->
-      if x == ' '
-        return '&nbsp;'
-      if x == '\n'
-        return '&nbsp;<br/>'
-      return x
+    # ideally this takes up space but is unselectable (uncopyable)
+    cursorChar = '&nbsp;'
 
-    # add cursor
+    line = []
+    for char, i in lineData
+      x = char
+
+      if char == ' '
+        x = '&nbsp;'
+      else if char == '\n'
+        x = '<br/>'
+        if row == @cursor.row and i == @cursor.col
+          x = cursorChar + x
+
+      line.push x
+
+    # add cursor if at end
     if row == @cursor.row and lineData.length == @cursor.col
-      line.push '&nbsp;'
+      line.push cursorChar
 
     do onto.empty
 
