@@ -17,6 +17,7 @@ class TestCase
     @view.render = -> return
     @view.renderHelper = -> return
     @view.drawRow = -> return
+    @view.undrawCursors = -> return
     @keybinder = new KeyBindings null, null, @view
 
   sendKeys: (keys) ->
@@ -403,3 +404,23 @@ t.expect ['one', 'two']
 # test j and k
 t.sendKeys 'kxjlx'
 t.expect ['ne', 'to']
+# don't go off the edge!
+t.sendKeys 'jxkkx'
+t.expect ['e', 't']
+
+# test o and O, edge cases
+t = new TestCase ['a', 's', 'd', 'f']
+t.sendKeys 'Oo'
+t.expect ['o', 'a', 's', 'd', 'f']
+
+t = new TestCase ['a', 's', 'd', 'f']
+t.sendKeys '5joO'
+t.expect ['a', 's', 'd', 'f', 'O']
+
+t = new TestCase ['a', 's', 'd', 'f']
+t.sendKeys 'oO'
+t.expect ['a', 'O', 's', 'd', 'f']
+
+t = new TestCase ['a', 's', 'd', 'f']
+t.sendKeys '5jOo'
+t.expect ['a', 's', 'd', 'o', 'f']

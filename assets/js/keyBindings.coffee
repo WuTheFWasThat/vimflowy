@@ -32,10 +32,10 @@ class KeyBindings
       display: 'Insert on new line after current line'
       key: 'o'
       insert: true
-    # INSERT_LINE_ABOVE:
-    #   display: 'Insert on new line before current line'
-    #   key: 'o'
-    #   insert: true
+    INSERT_LINE_ABOVE:
+      display: 'Insert on new line before current line'
+      key: 'O'
+      insert: true
     REPLACE:
       display: 'Replace character'
       key: 'r'
@@ -284,8 +284,9 @@ class KeyBindings
       return keys[keyIndex++]
 
     # useful when you expect a motion
-    getMotion = () =>
-      motionKey = do nextKey
+    getMotion = (motionKey) =>
+      if not motionKey
+        motionKey = do nextKey
       [repeat, motionKey] = getRepeat motionKey
 
       motionBinding = @keyMap[motionKey]
@@ -352,10 +353,10 @@ class KeyBindings
         @keybindingsDiv.toggleClass 'active'
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if info.motion
-        keyIndex = 0 # easier to just redo the work
+        keyIndex = 0 # easier to just redo the work (number case is annoying)
         motion = do getMotion
         if not motion
-          return [keyIndex, SEQUENCE_ACTION.DROP]
+          return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
         cursor = @handleMotion motion
         @view.moveCursor cursor.row, cursor.col
@@ -363,16 +364,25 @@ class KeyBindings
       else if @mode == MODES.NORMAL
         if binding == 'DELETE' or binding == 'CHANGE'
 
-          motion = do getMotion
-          if not motion
-            return [keyIndex, SEQUENCE_ACTIONS.DROP]
+          nkey = do nextKey
+          if nkey == key
+            # e.g. dd, cc
+            # delete repeat lines
+            if binding == 'CHANGE'
+            else
+              for i in [1..repeat]
+                do @view.delLine
+          else
+            motion = getMotion nkey
+            if not motion
+              return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
-          for i in [1..repeat]
-            cursor = @handleMotion motion, {pastEnd: true}
-            if cursor.col < @view.cursor.col
-              @view.delCharsBeforeCursor (@view.cursor.col - cursor.col)
-            else if cursor.col > @view.cursor.col
-              @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {pastEnd: binding == 'CHANGE'}
+            for i in [1..repeat]
+              cursor = @handleMotion motion, {pastEnd: true}
+              if cursor.col < @view.cursor.col
+                @view.delCharsBeforeCursor (@view.cursor.col - cursor.col)
+              else if cursor.col > @view.cursor.col
+                @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {pastEnd: binding == 'CHANGE'}
 
           if binding == 'CHANGE'
             @setMode MODES.INSERT
@@ -397,6 +407,8 @@ class KeyBindings
             @view.moveCursorEnd {pastEnd: true}
           else if binding == 'CHANGE_CHAR'
             @view.delCharsAfterCursor 1, {pastEnd: true}
+          else if binding == 'INSERT_LINE_ABOVE'
+            do @view.newLineAbove
           else if binding == 'INSERT_LINE_BELOW'
             do @view.newLineBelow
 
