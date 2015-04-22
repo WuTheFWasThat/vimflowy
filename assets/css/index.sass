@@ -47,6 +47,9 @@ $mode-width: 100px
     right: 0px
     width: 0%
     overflow: scroll
+
+    @include transition(width 0.2s ease-in-out)
+
     &.active
       width: 300px
       // @include calc( width, '100% - 100px')
@@ -54,11 +57,13 @@ $mode-width: 100px
     table
       width: 100%
       td
+        font-size: 10px;
         border: 1px solid
         padding: 5px
 
 
 #contents
+    font-size: 12px;
     padding: 50px
     // TODO have word wrap be a setting?
     word-wrap: break-word

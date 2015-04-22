@@ -1,126 +1,12 @@
 # a View consists of Data and a cursor
 # it also renders
 
-class Cursor
-  constructor: (view, row = 1, col = 0) ->
-    @view = view
-    @row = row
-    @col = col
-
-  clone: () ->
-    return new Cursor @view, @row, @col
-
-  left: () ->
-    if @col > 0
-      @col -= 1
-
-  right: (options) ->
-    options?={}
-    shift = if options.pastEnd then 0 else 1
-    if @col < (@view.rowLength @row) - shift
-      @col += 1
-
-  home: () ->
-    @col = 0
-
-  end: (options) ->
-    options ?= {}
-    shift = if options.pastEnd then 0 else 1
-    @col= (@view.rowLength @row) - shift
-
-  beginningWord: () ->
-    if @col == 0
-      return
-    @col -= 1
-    while @col > 0 and (@view.getData @row, @col) == ' '
-      @col -= 1
-    while @col > 0 and (@view.getData @row, @col-1) != ' '
-      @col -= 1
-
-  endWord: (options = {}) ->
-    end = (@view.rowLength @row) - 1
-    if @col == end
-      if options.pastEnd
-        @col += 1
-      return
-
-    @col += 1
-    while @col < end and (@view.getData @row, @col) == ' '
-      @col += 1
-    while @col < end and (@view.getData @row, @col+1) != ' '
-      @col += 1
-
-    if options.pastEnd
-      @col += 1
-
-  nextWord: (options = {}) ->
-    end = (@view.rowLength @row) - 1
-    if @col == end
-      if options.pastEnd
-        @col += 1
-      return
-
-    while @col < end and (@view.getData @row, @col) != ' '
-      @col += 1
-    while @col < end and (@view.getData @row, @col+1) == ' '
-      @col += 1
-
-    if @col < end or options.pastEnd
-      @col += 1
-
-  nextChar: (char, options = {}) ->
-    end = (@view.rowLength @row) - 1
-    if @col == end
-      return
-
-    col = @col
-    if options.beforeFound
-      col += 1
-
-    found = null
-    while col < end
-      col += 1
-      if (@view.getData @row, col) == char
-        found = col
-        break
-
-    if found == null
-      return
-
-    @col = found
-    if options.pastEnd
-      @col += 1
-    if options.beforeFound
-      @col -= 1
-
-  prevChar: (char, options = {}) ->
-    if @col == 0
-      return
-
-    col = @col
-    if options.beforeFound
-      col -= 1
-
-    found = null
-    while col > 0
-      col -= 1
-      if (@view.getData @row, col) == char
-        found = col
-        break
-
-    if found == null
-      return
-
-    @col = found
-    if options.beforeFound
-      @col += 1
-
 class View
   constructor: (mainDiv, data) ->
     @mainDiv = mainDiv
     @data = data
 
-    @cursor = new Cursor @
+    @cursor = new Cursor @data
 
     @history = []
     @historyIndex = 0
@@ -158,14 +44,8 @@ class View
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
-  getData: (row, col) ->
-    return @data.lines[row][col]
-
-  rowLength: (row) ->
-    return @data.lines[row].length
-
   curRowLength: () ->
-    return @rowLength @cursor.row
+    return @data.rowLength @cursor.row
 
   setCur: (row, col, options) ->
     options ?= {}
@@ -261,4 +141,9 @@ class View
     if acc.length
       onto.append $('<span>').html(acc).addClass(style)
 
+# imports
+if module?
+  Cursor = require('./cursor.coffee')
+
+# exports
 module?.exports = View

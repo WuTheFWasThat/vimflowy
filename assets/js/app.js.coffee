@@ -4,6 +4,7 @@
 #= require keyHandler
 #= require data
 #= require actions
+#= require cursor
 #= require view
 #= require keyBindings
 
