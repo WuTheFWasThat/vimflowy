@@ -15,6 +15,7 @@ class KeyHandler extends EventEmitter
 
   ignoreMap =
     16: 'shift alone'
+    91: 'command alone'
 
   keyCodeMap =
     8: 'backspace'
