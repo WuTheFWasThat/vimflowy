@@ -28,10 +28,10 @@ class KeyBindings
       display: 'Insert after end of line'
       key: 'A'
       insert: true
-    # INSERT_LINE_BELOW:
-    #   display: 'Insert on new line after current line'
-    #   key: 'o'
-    #   insert: true
+    INSERT_LINE_BELOW:
+      display: 'Insert on new line after current line'
+      key: 'o'
+      insert: true
     # INSERT_LINE_ABOVE:
     #   display: 'Insert on new line before current line'
     #   key: 'o'
@@ -320,8 +320,10 @@ class KeyBindings
           @view.moveCursorRight {pastEnd: true}
         else if key == 'backspace'
           @view.delCharsBeforeCursor 1
-        else if key == 'enter'
+        else if key == 'shift+enter'
           @view.addCharsAfterCursor ['\n'], {pastEnd: true}
+        else if key == 'enter'
+          # @view.addLine
         else
           @view.addCharsAfterCursor [key], {pastEnd: true}
 
@@ -381,6 +383,8 @@ class KeyBindings
             @view.moveCursorEnd {pastEnd: true}
           else if binding == 'CHANGE_CHAR'
             @view.delCharsAfterCursor 1, {pastEnd: true}
+          else if binding == 'INSERT_LINE_BELOW'
+            do @view.newLineBelow
 
           @setMode MODES.INSERT
           return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
