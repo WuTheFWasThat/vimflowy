@@ -317,11 +317,13 @@ class KeyBindings
         if key == 'left'
           do @view.moveCursorLeft
         else if key == 'right'
-          do @view.moveCursorRight
+          @view.moveCursorRight {pastEnd: true}
         else if key == 'backspace'
-          @view.act new actions.DelChars @view.cursor.row, (@view.cursor.col-1), 1
+          @view.delCharsBeforeCursor 1
+        else if key == 'enter'
+          @view.addCharsAfterCursor ['\n'], {pastEnd: true}
         else
-          @view.act new actions.AddChars @view.cursor.row, @view.cursor.col, [key], {pastEnd: true}
+          @view.addCharsAfterCursor [key], {pastEnd: true}
 
         return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
     else if @mode == MODES.NORMAL
@@ -352,9 +354,9 @@ class KeyBindings
           for i in [1..repeat]
             cursor = @handleMotion motion, {pastEnd: true}
             if cursor.col < @view.cursor.col
-              @view.act new actions.DelChars @view.cursor.row, cursor.col, (@view.cursor.col - cursor.col)
+              @view.delCharsBeforeCursor (@view.cursor.col - cursor.col)
             else if cursor.col > @view.cursor.col
-              @view.act new actions.DelChars @view.cursor.row, @view.cursor.col, (cursor.col - @view.cursor.col), {pastEnd: binding == 'CHANGE'}
+              @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {pastEnd: binding == 'CHANGE'}
 
           if binding == 'CHANGE'
             @setMode MODES.INSERT
@@ -366,7 +368,7 @@ class KeyBindings
           replaceKey = do nextKey
           num = Math.min(repeat, do @view.curRowLength - @view.cursor.col)
           newChars = (replaceKey for i in [1..num])
-          @view.act new actions.SpliceChars @view.cursor.row, @view.cursor.col, num, newChars, {cursor: 'beforeEnd'}
+          @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
           return [keyIndex, SEQUENCE_ACTIONS.FINISH]
         else if info.insert
           if binding == 'INSERT'
@@ -378,7 +380,7 @@ class KeyBindings
           else if binding == 'INSERT_END'
             @view.moveCursorEnd {pastEnd: true}
           else if binding == 'CHANGE_CHAR'
-            @view.act new actions.DelChars @view.cursor.row, @view.cursor.col, 1, {pastEnd: true}
+            @view.delCharsAfterCursor 1, {pastEnd: true}
 
           @setMode MODES.INSERT
           return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
@@ -404,18 +406,17 @@ class KeyBindings
           else if binding == 'DELETE_LAST_CHAR'
             num = Math.min @view.cursor.col, repeat
             if num > 0
-              @view.act new actions.DelChars @view.cursor.row, @view.cursor.col-num, num
+              @view.delCharsBeforeCursor num
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'DELETE_CHAR'
-            @view.act new actions.DelChars @view.cursor.row, @view.cursor.col, repeat
+            @view.delCharsAfterCursor repeat
             do @view.moveCursorBackIfNeeded
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
-
-# imports
 if module?
+  Cursor = require('./cursor.coffee')
   actions = require('./actions.coffee')
 
 # exports

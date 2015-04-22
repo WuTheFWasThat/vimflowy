@@ -86,6 +86,18 @@ class View
     @cursor.end options
     @drawRow @cursor.row
 
+  addCharsAfterCursor: (chars, options) ->
+    @act new actions.AddChars @cursor.row, @cursor.col, chars, options
+
+  delCharsBeforeCursor: (nchars) ->
+    @act new actions.DelChars @cursor.row, (@cursor.col-nchars), nchars
+
+  delCharsAfterCursor: (nchars, options) ->
+    @act new actions.DelChars @cursor.row, @cursor.col, nchars, options
+
+  spliceCharsAfterCursor: (nchars, chars, options) ->
+    @act new actions.SpliceChars @cursor.row, @cursor.col, nchars, chars, options
+
   # RENDERING
 
   render: () ->
@@ -95,13 +107,18 @@ class View
     for id in @data.structure[rootid].children
       do onto.empty
       elId = 'node-' + id
-      el = $('<div>').attr('id', elId).addClass('.node')
-      elLine = $('<div>').attr 'id', (elId + '-row')
+      el = $('<div>')
+        .attr('id', elId)
+        .addClass('.node')
+
+      bullet = $('<i>').addClass('fa fa-circle bullet')
+      elLine = $('<span>').attr 'id', (elId + '-row')
 
       console.log @data.lines, id, @data.lines[id]
       @drawRow id, elLine
 
-      el.append elLine
+      el.append(bullet).append(elLine)
+
       console.log 'elline', elLine
       console.log 'el', el
       console.log 'onto', onto
@@ -118,6 +135,8 @@ class View
     line = lineData.map (x) ->
       if x == ' '
         return '&nbsp;'
+      if x == '\n'
+        return '&nbsp;<br/>'
       return x
 
     # add cursor
@@ -144,6 +163,7 @@ class View
 # imports
 if module?
   Cursor = require('./cursor.coffee')
+  actions = require('./actions.coffee')
 
 # exports
 module?.exports = View

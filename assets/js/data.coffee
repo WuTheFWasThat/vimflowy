@@ -1,5 +1,6 @@
 class Data
   constructor: () ->
+    # defaults
 
     @structure =
       0: # always the root node
@@ -15,12 +16,21 @@ class Data
 
     return @
 
+  getId: () ->
+    id = 0
+    while @lines[id]
+      id++
+    return id
+
   rowLength: (row) ->
     return @lines[row].length
 
   getChar: (row, col) ->
     return @lines[row][col]
 
+  insertSiblingAfter: (id) ->
+    newId = getId()
+    return
 
   writeChars: (row, col, chars) ->
     args = [col, 0].concat chars
