@@ -41,11 +41,14 @@ t.sendKeys 'xxxsu'
 t.expect ['hello wu']
 
 t.sendKey 'esc'
-t.sendKeys 'uuuuu'
+t.sendKeys 'uuuu'
 t.expect ['hello world']
+t.sendKeys 'u'
+t.expect ['']
 
-t.sendKey 'esc'
-for i in [1..5]
+t.sendKey 'ctrl+r'
+t.expect ['hello world']
+for i in [1..4]
   t.sendKey 'ctrl+r'
 t.expect ['hello wu']
 
@@ -286,7 +289,7 @@ t.expect ['oblad oblada o blah blah blaha']
 # numbers repeat works on d
 t.sendKeys '03de'
 t.expect [' blah blah blaha']
-t.sendKeys '3u'
+t.sendKeys 'u'
 t.expect ['oblad oblada o blah blah blaha']
 # number works within movement
 t.sendKeys 'd3e'

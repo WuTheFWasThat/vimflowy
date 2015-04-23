@@ -4,8 +4,7 @@
 
 implement y and p
 implement ctrl+o
-
-make undo work properly for sequences?
+maybe add a granular undo?
 
 ## KNOWN ISSUES: ##
 
@@ -19,9 +18,6 @@ Firstly, I have many known inconsistencies with vi.  Many are intentional.  Here
 - I goes to the beginning of the line, irrespective of whitespace
 
 - yank (y) never moves the cursor (in vim, yb and yh move the cursor to the start of the yank region)
-
-Ones which should probably be fixed
-- undoing does not undo entire blocks of transactions (i.e. insert mode + blah + esc does not undo atomically, neither does 5de)
 
 ## CONTRIBUTE: ##
 

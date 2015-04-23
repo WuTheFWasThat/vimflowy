@@ -8,44 +8,56 @@ class View
 
     @cursor = new Cursor @data
 
-    @history = []
-    @historyIndex = 0
+    @actions = [] # full action history
+    @history = [0] # indices into actions
+    @historyIndex = 0 # index into indices
 
     return @
 
   # ACTIONS
 
-  add_history: (action) ->
-    # TODO: check if we can merge with previous action
-    if @historyIndex != @history.length
-        @history = @history.slice 0, @historyIndex
-    @history.push action
+  save: () ->
+    if @history[@historyIndex] == @actions.length
+        return
     @historyIndex += 1
-
-  undrawCursors: () ->
-    $('.cursor').removeClass 'cursor'
+    @history.push @actions.length
 
   undo: () ->
     if @historyIndex > 0
+      oldIndex = @history[@historyIndex]-1
       @historyIndex -= 1
-      action = @history[@historyIndex]
-      action.rewind @
-      [@cursor.row, @cursor.col] = action.oldCursor
-      @setCur @cursor.row, @cursor.col
+      newIndex = @history[@historyIndex]-1
+
+      for i in [oldIndex...newIndex]
+          action = @actions[i]
+          action.rewind @
+
+          # use final cursor
+          [@cursor.row, @cursor.col] = action.oldCursor
+          @setCur @cursor.row, @cursor.col
       do @undrawCursors
       @drawRow @cursor.row
 
   redo: () ->
     if @historyIndex < @history.length
-      do @undrawCursors
-      action = @history[@historyIndex]
-      action.apply @
+      oldIndex = @history[@historyIndex]
       @historyIndex += 1
+      newIndex = @history[@historyIndex]
+
+      for i in [oldIndex...newIndex]
+          action = @actions[i]
+          action.apply @
+
+      do @undrawCursors
 
   act: (action) ->
+    if @historyIndex + 1 != @history.length
+        @history = @history.slice 0, (@historyIndex + 1)
+        @actions = @actions.slice 0, @history[@historyIndex]
+
     action.oldCursor = [@cursor.row, @cursor.col]
     action.apply @
-    @add_history action
+    @actions.push action
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
@@ -136,6 +148,9 @@ class View
 
   render: () ->
     @renderTree 0, @mainDiv
+
+  undrawCursors: () ->
+    $('.cursor').removeClass 'cursor'
 
   renderTree: (parentid, onto) ->
     do onto.empty

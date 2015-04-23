@@ -204,6 +204,7 @@ class KeyBindings
   registerSequence: () ->
     @lastSequence = @curSequence
     do @clearSequence
+    do @view.save
 
   clearSequence: () ->
     @curSequence = []
