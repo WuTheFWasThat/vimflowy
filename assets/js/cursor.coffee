@@ -113,14 +113,14 @@ class Cursor
       @col += 1
 
   up: () ->
-    row = @data.getSiblingBefore @row
-    if row != @row
+    row = @data.prevVisible @row
+    if row != null
       @row = row
       @col = 0
 
   down: () ->
-    row = @data.getSiblingAfter @row
-    if row != @row
+    row = @data.nextVisible @row
+    if row != null
       @row = row
       @col = 0
 

@@ -134,6 +134,19 @@ class KeyBindings
       key: 's'
       insert: true
 
+    INDENT_RIGHT:
+      display: 'Indent right'
+      key: '>'
+    INDENT_LEFT:
+      display: 'Indent left'
+      key: '<'
+    INDENT_BLOCK_RIGHT:
+      display: 'Indent right'
+      key: ']'
+    INDENT_BLOCK_LEFT:
+      display: 'Indent left'
+      key: '['
+
   SEQUENCE_ACTIONS = {
     DROP: 0
     CONTINUE: 1
@@ -263,6 +276,7 @@ class KeyBindings
       catch e
         if e == 'Need more keys'
           return keys
+        console.log e.stack
         throw e
       processed = keys.splice 0, index
       if seqAction == SEQUENCE_ACTIONS.DROP
@@ -443,6 +457,16 @@ class KeyBindings
             @view.delCharsAfterCursor repeat
             do @view.moveCursorBackIfNeeded
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
+          else if binding == 'INDENT_RIGHT'
+            do @view.indentLine
+            return [keyIndex, SEQUENCE_ACTIONS.DROP]
+          else if binding == 'INDENT_LEFT'
+            do @view.unindentLine
+            return [keyIndex, SEQUENCE_ACTIONS.DROP]
+          else if binding == 'INDENT_BLOCK_RIGHT'
+            return
+          else if binding == 'INDENT_BLOCK_LEFT'
+            return
 
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
 

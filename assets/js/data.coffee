@@ -1,4 +1,6 @@
 class Data
+  root = 0
+
   constructor: () ->
     # defaults
 
@@ -6,9 +8,11 @@ class Data
       0: # always the root node
         children: [1]
         parent: 0
+        collapsed: false
       1:
         children: []
         parent: 0
+        collapsed: false
 
     @lines =
       0: [] # document title?
@@ -36,10 +40,97 @@ class Data
   getParent: (row) ->
     return @structure[row].parent
 
+  setParent: (row, parent) ->
+    @structure[row].parent = parent
+
   getChildren: (row) ->
     return @structure[row].children
 
+  collapsed: (row) ->
+    return @structure[row].collapsed
+
   # structure manipulation
+  removeChild: (id, child) ->
+    children = @getChildren id
+    i = children.indexOf child
+    children.splice i, 1
+    return i
+
+  addChild: (id, child, index = -1) ->
+    children = @getChildren id
+    if index == -1
+      children.push child
+    else
+      children.splice index, 0, child
+    @setParent child, id
+
+  indent: (id, options = {}) ->
+    sib = @getSiblingBefore id
+    if sib == null
+      return null # cannot indent
+
+    @removeChild (@getParent id), id
+    @addChild sib, id
+
+    if not options.recursive
+      for child in (@getChildren id).slice()
+        @removeChild id, child
+        @addChild sib, child
+
+    return sib
+
+  unindent: (id, options = {}) ->
+    if not options.recursive
+      if (@getChildren id).length > 0
+        return
+
+    parent = @getParent id
+    if parent == root
+      return
+
+    p_i = @removeChild parent, id
+
+    newparent = @getParent parent
+
+    pp_i = (@getChildren newparent).indexOf parent
+    @addChild newparent, id, (pp_i+1)
+
+    if not options.recursive
+      p_children = @getChildren parent
+      for child in p_children.slice(p_i)
+        @removeChild parent, child
+        @addChild id, child
+
+  nextVisible: (id) ->
+    if not @collapsed id
+      children = @getChildren id
+      if children.length > 0
+        return children[0]
+    nextsib = @getSiblingAfter id
+    if nextsib != null
+      return nextsib
+    parent = @getParent id
+    if parent == root
+      return null
+    return @nextVisible parent
+
+  # last thing visible nested within id
+  lastVisible: (id) ->
+    if @collapsed id
+      return id
+    children = @getChildren id
+    if children.length > 0
+      return @lastVisible children[children.length - 1]
+    return id
+
+  prevVisible: (id) ->
+    prevsib = @getSiblingBefore id
+    if prevsib != null
+      return @lastVisible prevsib
+    parent = @getParent id
+    if parent == root
+      return null
+    return parent
 
   getSiblingBefore: (id) ->
     return @_getSiblingOffset id, -1
@@ -48,23 +139,23 @@ class Data
     return @_getSiblingOffset id, 1
 
   _getSiblingOffset: (id, offset) ->
-    if id == 0
+    if id == root
       console.log 'Cannot get siblings of root'
-      return id
+      return null
     parent = @getParent id
     children = @getChildren parent
     index = (children.indexOf id) + offset
     if index >= children.length
-      return id
+      return null
     else if index < 0
-      return id
+      return null
     else
       return children[index]
 
   _insertSiblingHelper: (id, after) ->
-    if id == 0
+    if id == root
       console.log 'Cannot insert sibling of root'
-      return
+      return null
 
     newId = do @getId
     parent = @getParent id
@@ -74,6 +165,7 @@ class Data
     children.splice (index + after), 0, newId
     @lines[newId] = []
     @structure[newId] =
+      collapsed: false
       children: []
       parent: parent
     return newId
@@ -86,9 +178,9 @@ class Data
 
   # returns next row
   deleteRow: (id) ->
-    if id == 0
+    if id == root
       console.log 'Cannot delete root'
-      return 0
+      return id
 
     for child in @getChildren id
       @deleteRow child
@@ -102,9 +194,9 @@ class Data
     delete @lines[id]
 
     if index == parent_children.length
-      if parent == 0
+      if parent == root
         # TODO: make new row
-        return 0
+        return id
       return parent
     else
       return parent_children[index]
@@ -119,14 +211,17 @@ class Data
     removed = @lines[row].splice col, num
     return removed
 
-  serialize: (id = 0) ->
+  serialize: (id = root) ->
     line = @lines[id].join('')
     if @structure[id].children.length
-      children = (@serialize childid for childid in @structure[id].children)
-      return {
+      children = (@serialize childid for childid in @getChildren id)
+      struct = {
         line: line
         children: children
       }
+      if @collapsed id
+        struct.collapsed = true
+      return struct
     else
       return line
 
@@ -137,7 +232,7 @@ class Data
     lines = {}
 
     helper = (my_id, my_serialized, parent_id) ->
-      structure[my_id] =
+      struct =
         children: []
         parent: parent_id
 
@@ -145,11 +240,13 @@ class Data
         lines[my_id] = my_serialized.split ''
       else
         lines[my_id] = my_serialized.line.split ''
+        struct.collapsed = my_serialized.collapsed
 
         for child in my_serialized.children
           id++
-          structure[my_id].children.push id
+          struct.children.push id
           helper id, child, my_id
+      structure[my_id] = struct
 
     helper 0, serialized, 0
 
