@@ -59,12 +59,36 @@
         view.setCur @row, (@col + @chars.length), {pastEnd: true}
 
       view.drawRow @row
+
     rewind: (view) ->
       view.data.deleteChars @row, @col, @chars.length
       view.data.writeChars @row, @col, @deletedChars
       view.drawRow @row
 
+  class InsertRowSibling extends Action
+    constructor: (row, options) ->
+      @row = row
+      @options = options
+
+    apply: (view) ->
+      if @options.after
+        @newrow = view.data.insertSiblingAfter @row
+      else if @options.before
+        @newrow = view.data.insertSiblingBefore @row
+      else
+        console.log @options
+        throw 'InsertRowSibling needs valid option'
+      view.setCur @newrow, 0
+      # TODO: more efficient
+      do view.render
+
+    rewind: (view) ->
+      view.data.deleteRow @newrow
+      # TODO: more efficient
+      do view.render
+
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.SpliceChars = SpliceChars
+  exports.InsertRowSibling = InsertRowSibling
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

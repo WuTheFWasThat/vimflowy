@@ -415,15 +415,145 @@ t.expect ['e', 't']
 t = new TestCase ['a', 's', 'd', 'f']
 t.sendKeys 'Oo'
 t.expect ['o', 'a', 's', 'd', 'f']
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect ['a', 's', 'd', 'f']
 
 t = new TestCase ['a', 's', 'd', 'f']
 t.sendKeys '5joO'
 t.expect ['a', 's', 'd', 'f', 'O']
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect ['a', 's', 'd', 'f']
 
 t = new TestCase ['a', 's', 'd', 'f']
 t.sendKeys 'oO'
 t.expect ['a', 'O', 's', 'd', 'f']
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect ['a', 's', 'd', 'f']
 
 t = new TestCase ['a', 's', 'd', 'f']
 t.sendKeys '5jOo'
 t.expect ['a', 's', 'd', 'o', 'f']
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect ['a', 's', 'd', 'f']
+
+threeRows = [
+  {
+    "line": "top row",
+    "children": [
+      {
+        "line" : "middle row",
+        "children" : ["bottom row"],
+      }
+    ]
+  }
+]
+
+t = new TestCase threeRows
+t.sendKeys 'Oo'
+t.expect [
+  "o",
+  {
+    "line": "top row",
+    "children": [
+      {
+        "line" : "middle row",
+        "children" : ["bottom row"],
+      },
+    ]
+  }
+]
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect threeRows
+
+t = new TestCase threeRows
+t.sendKeys 'oO'
+t.expect [
+  {
+    "line": "top row",
+    "children": [
+      {
+        "line" : "middle row",
+        "children" : ["bottom row"],
+      },
+    ]
+  }
+  "O",
+]
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect threeRows
+
+t = new TestCase threeRows
+t.sendKeys 'jOo'
+t.expect [
+  {
+    "line": "top row",
+    "children": [
+      "o",
+      {
+        "line" : "middle row",
+        "children" : ["bottom row"],
+      },
+    ]
+  }
+]
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect threeRows
+
+t = new TestCase threeRows
+t.sendKeys 'joO'
+t.expect [
+  {
+    "line": "top row",
+    "children": [
+      {
+        "line" : "middle row",
+        "children" : ["bottom row"],
+      },
+      "O",
+    ]
+  }
+]
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect threeRows
+
+t = new TestCase threeRows
+t.sendKeys '2jOo'
+t.expect [
+  {
+    "line": "top row",
+    "children": [
+      {
+        "line" : "middle row",
+        "children" : ["o", "bottom row"],
+      },
+    ]
+  }
+]
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect threeRows
+
+t = new TestCase threeRows
+t.sendKeys '2joO'
+t.expect [
+  {
+    "line": "top row",
+    "children": [
+      {
+        "line" : "middle row",
+        "children" : ["bottom row", "O"],
+      },
+    ]
+  }
+]
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect threeRows

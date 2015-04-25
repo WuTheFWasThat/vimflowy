@@ -2,6 +2,16 @@
 # it also renders
 
 class View
+
+  containerDivID = (id) ->
+    return 'node-' + id
+
+  rowDivID = (id) ->
+    return 'node-' + id + '-row'
+
+  childrenDivID = (id) ->
+    return 'node-' + id + '-children'
+
   constructor: (mainDiv, data) ->
     @mainDiv = mainDiv
     @data = data
@@ -116,20 +126,10 @@ class View
     @act new actions.SpliceChars @cursor.row, @cursor.col, nchars, chars, options
 
   newLineBelow: () ->
-    # TODO: make this undoable
-    row = @data.insertSiblingAfter @cursor.row
-    @cursor.row = row
-    @cursor.col = 0
-    # TODO: make this better
-    do @render
+    @act new actions.InsertRowSibling @cursor.row, {after: true}
 
   newLineAbove: () ->
-    # TODO: make this undoable
-    row = @data.insertSiblingBefore @cursor.row
-    @cursor.row = row
-    @cursor.col = 0
-    # TODO: make this better
-    do @render
+    @act new actions.InsertRowSibling @cursor.row, {before: true}
 
   delLine: () ->
     # TODO: make this undoable
@@ -144,6 +144,19 @@ class View
     # TODO: make this better
     do @render
 
+  indentLine: () ->
+    # TODO: make this undoable
+    @data.indent @cursor.row
+    # TODO: make this better
+    do @render
+
+  unindentLine: () ->
+    # TODO: make this undoable
+    @data.unindent @cursor.row
+    # TODO: make this better
+    do @render
+
+
   # RENDERING
 
   render: () ->
@@ -153,24 +166,22 @@ class View
     $('.cursor').removeClass 'cursor'
 
   renderTree: (parentid, onto) ->
+
     do onto.empty
-    for id in @data.structure[parentid].children
-      elId = 'node-' + id
+    for id in @data.getChildren parentid
       el = $('<div>')
-        .attr('id', elId)
+        .attr('id', containerDivID id)
         .addClass('node')
 
       bullet = $('<i>').addClass('fa fa-circle bullet')
-      elLine = $('<div>').addClass('node-text').attr('id', (elId + '-row'))
 
-      console.log @data.lines, id, @data.lines[id]
+      elLine = $('<div>').addClass('node-text').attr('id', rowDivID id)
       @drawRow id, elLine
 
-      el.append(bullet).append(elLine)
+      children = $('<div>').addClass('node-children').attr('id', childrenDivID id)
+      @renderTree id, children
 
-      console.log 'elline', elLine
-      console.log 'el', el
-      console.log 'onto', onto
+      el.append(bullet).append(elLine).append(children)
       onto.append el
 
   drawRow: (row, onto) ->

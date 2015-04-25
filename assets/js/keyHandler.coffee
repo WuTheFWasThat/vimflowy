@@ -12,6 +12,8 @@ class KeyHandler extends EventEmitter
     '9': '('
     '0': ')'
     '/': '?'
+    '.': '>'
+    ',': '<'
 
   ignoreMap =
     16: 'shift alone'
@@ -38,8 +40,12 @@ class KeyHandler extends EventEmitter
     56: '8'
     57: '9'
 
+    188: ','
     190: '.'
     191: '/'
+
+    219: '['
+    221: ']'
 
   for i in [1..26]
     keyCode = i + 64
