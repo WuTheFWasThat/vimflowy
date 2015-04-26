@@ -88,8 +88,9 @@
       do view.render
 
   class DeleteRow extends Action
-    constructor: (row) ->
+    constructor: (row, options = {}) ->
       @row = row
+      @options = options
 
     apply: (view) ->
       # leaves dangling pointers, for both paste and undo
@@ -104,15 +105,22 @@
 
       siblings = view.data.getChildren parent
       if index < siblings.length
-        next = siblings[index]
+        if @options.addNew
+            next = view.data.addChild parent, index
+            @nextCreated = true
+        else
+            next = siblings[index]
       else if index > 0
-        next = siblings[index - 1]
+        if @options.addNew
+            next = view.data.addChild parent
+            @nextCreated = true
+        else
+            next = siblings[index - 1]
       else
         next = parent
-
-      if next == view.data.root
-        next = view.data.addChild view.data.root
-        @nextCreated = true
+        if @options.addNew or (next == view.data.root)
+            next = view.data.addChild parent
+            @nextCreated = true
 
       view.setCur next, 0
 

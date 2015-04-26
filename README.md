@@ -3,6 +3,7 @@
 ## TODO ##
 
 implement y and p
+implement folding
 implement ctrl+o
 
 ## KNOWN ISSUES: ##
