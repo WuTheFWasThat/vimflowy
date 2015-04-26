@@ -354,6 +354,10 @@ class KeyBindings
           @view.addCharsAfterCursor ['\n'], {pastEnd: true}
         else if key == 'enter'
           do @view.newLineBelow
+        else if key == 'tab'
+          @view.indentLine {}
+        else if key == 'shift+tab'
+          @view.unindentLine {}
         else
           @view.addCharsAfterCursor [key], {pastEnd: true}
 

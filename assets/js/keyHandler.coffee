@@ -21,6 +21,7 @@ class KeyHandler extends EventEmitter
 
   keyCodeMap =
     8: 'backspace'
+    9: 'tab'
     13: 'enter'
     27: 'esc'
 

@@ -442,11 +442,11 @@ t.expect ['a', 's', 'd', 'f']
 
 threeRows = [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["bottom row"],
+        line : 'middle row',
+        children : ['bottom row'],
       }
     ]
   }
@@ -455,13 +455,13 @@ threeRows = [
 t = new TestCase threeRows
 t.sendKeys 'Oo'
 t.expect [
-  "o",
+  'o',
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["bottom row"],
+        line : 'middle row',
+        children : ['bottom row'],
       },
     ]
   }
@@ -474,12 +474,12 @@ t = new TestCase threeRows
 t.sendKeys 'oO'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
-      "O",
+      'O',
       {
-        line : "middle row",
-        children : ["bottom row"],
+        line : 'middle row',
+        children : ['bottom row'],
       },
     ]
   }
@@ -492,12 +492,12 @@ t = new TestCase threeRows
 t.sendKeys 'jOo'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
-      "o",
+      'o',
       {
-        line : "middle row",
-        children : ["bottom row"],
+        line : 'middle row',
+        children : ['bottom row'],
       },
     ]
   }
@@ -510,11 +510,11 @@ t = new TestCase threeRows
 t.sendKeys 'joO'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["O", "bottom row"],
+        line : 'middle row',
+        children : ['O', 'bottom row'],
       },
     ]
   }
@@ -527,11 +527,11 @@ t = new TestCase threeRows
 t.sendKeys '2jOo'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["o", "bottom row"],
+        line : 'middle row',
+        children : ['o', 'bottom row'],
       },
     ]
   }
@@ -544,11 +544,11 @@ t = new TestCase threeRows
 t.sendKeys '2joO'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["bottom row", "O"],
+        line : 'middle row',
+        children : ['bottom row', 'O'],
       },
     ]
   }
@@ -567,10 +567,10 @@ t.expect threeRows
 t.sendKeys '<'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
-      "middle row",
-      "bottom row",
+      'middle row',
+      'bottom row',
     ]
   }
 ]
@@ -579,50 +579,50 @@ t.expect threeRows
 
 t = new TestCase [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["bottom row"],
+        line : 'middle row',
+        children : ['bottom row'],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys '2jx'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["ottom row"],
+        line : 'middle row',
+        children : ['ottom row'],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys 'jx'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["ottom row"],
+        line : 'middle row',
+        children : ['ottom row'],
       }
     ]
   },
-  "nother row"
+  'nother row'
 ]
 t.sendKeys '>>'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["ottom row", "nother row"],
+        line : 'middle row',
+        children : ['ottom row', 'nother row'],
       }
     ]
   },
@@ -630,25 +630,25 @@ t.expect [
 t.sendKeys 'uu'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["ottom row"],
+        line : 'middle row',
+        children : ['ottom row'],
       }
     ]
   },
-  "nother row"
+  'nother row'
 ]
 t.sendKey 'ctrl+r'
 t.sendKey 'ctrl+r'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
-        children : ["ottom row", "nother row"],
+        line : 'middle row',
+        children : ['ottom row', 'nother row'],
       }
     ]
   },
@@ -656,12 +656,12 @@ t.expect [
 t.sendKeys 'k<'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
-      "middle row",
+      'middle row',
       {
-        line : "ottom row",
-        children : ["nother row"],
+        line : 'ottom row',
+        children : ['nother row'],
       }
     ]
   },
@@ -669,25 +669,25 @@ t.expect [
 t.sendKeys '<'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
-      "middle row",
+      'middle row',
       {
-        line : "ottom row",
-        children : ["nother row"],
+        line : 'ottom row',
+        children : ['nother row'],
       }
     ]
   },
 ]
 t.sendKeys 'k<'
 t.expect [
-  "top row",
+  'top row',
   {
-    line: "middle row",
+    line: 'middle row',
     children: [
       {
-        line : "ottom row",
-        children : ["nother row"],
+        line : 'ottom row',
+        children : ['nother row'],
       }
     ]
   },
@@ -695,14 +695,14 @@ t.expect [
 t.sendKeys ']'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line: "middle row",
+        line: 'middle row',
         children: [
           {
-            line : "ottom row",
-            children : ["nother row"],
+            line : 'ottom row',
+            children : ['nother row'],
           }
         ]
       }
@@ -711,13 +711,13 @@ t.expect [
 ]
 t.sendKeys 'u'
 t.expect [
-  "top row",
+  'top row',
   {
-    line: "middle row",
+    line: 'middle row',
     children: [
       {
-        line : "ottom row",
-        children : ["nother row"],
+        line : 'ottom row',
+        children : ['nother row'],
       }
     ]
   },
@@ -725,12 +725,12 @@ t.expect [
 t.sendKeys 'u'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
-      "middle row",
+      'middle row',
       {
-        line : "ottom row",
-        children : ["nother row"],
+        line : 'ottom row',
+        children : ['nother row'],
       }
     ]
   },
@@ -738,23 +738,23 @@ t.expect [
 t.sendKeys 'j['
 t.expect [
   {
-    line: "top row",
-    children: [ "middle row", ]
+    line: 'top row',
+    children: [ 'middle row', ]
   },
   {
-    line : "ottom row",
-    children : ["nother row"],
+    line : 'ottom row',
+    children : ['nother row'],
   }
 ]
 t.sendKeys 'u'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
-      "middle row",
+      'middle row',
       {
-        line : "ottom row",
-        children : ["nother row"],
+        line : 'ottom row',
+        children : ['nother row'],
       }
     ]
   },
@@ -763,185 +763,185 @@ t.expect [
 # test delete behavior
 t = new TestCase [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "bottom row"
-          "bottomest row"
+          'bottom row'
+          'bottomest row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys '3jdd'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "bottom row"
+          'bottom row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys 'x'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "ottom row"
+          'ottom row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys '2u'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "bottom row"
-          "bottomest row"
+          'bottom row'
+          'bottomest row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 
 t = new TestCase [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "bottom row"
-          "bottomest row"
+          'bottom row'
+          'bottomest row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys '2jdd'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "bottomest row"
+          'bottomest row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys 'x'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "ottomest row"
+          'ottomest row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys '2u'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "bottom row"
-          "bottomest row"
+          'bottom row'
+          'bottomest row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 
 t = new TestCase [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "bottom row"
-          "bottomest row"
+          'bottom row'
+          'bottomest row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 t.sendKeys 'dd'
-t.expect [ "another row" ]
+t.expect [ 'another row' ]
 
 # automatically creates a new row
 t.sendKeys 'dd'
-t.expect [ "" ]
+t.expect [ '' ]
 t.sendKeys 'u'
-t.expect [ "another row" ]
+t.expect [ 'another row' ]
 
 # brings back everything!
 t.sendKeys 'u'
 t.expect [
   {
-    line: "top row",
+    line: 'top row',
     children: [
       {
-        line : "middle row",
+        line : 'middle row',
         children : [
-          "bottom row"
-          "bottomest row"
+          'bottom row'
+          'bottomest row'
         ],
       }
     ]
   },
-  "another row"
+  'another row'
 ]
 
 # test block indent
 t = new TestCase [
   {
-    line: "a",
+    line: 'a',
     children: [
       {
-        line : "ab",
+        line : 'ab',
         children : [
-          "abc"
+          'abc'
         ],
       }
       {
-        line : "ad",
+        line : 'ad',
         children : [
-          "ade"
+          'ade'
         ],
       }
     ]
@@ -949,15 +949,15 @@ t = new TestCase [
 ]
 t.sendKeys 'j['
 t.expect [
-  "a",
+  'a',
   {
-    line: "ab",
+    line: 'ab',
     children: [
-      "abc",
+      'abc',
       {
-        line : "ad",
+        line : 'ad',
         children : [
-          "ade"
+          'ade'
         ],
       }
     ]
@@ -966,16 +966,16 @@ t.expect [
 t.sendKeys ']'
 t.expect [
   {
-    line: "a",
+    line: 'a',
     children: [
       {
-        line: "ab",
+        line: 'ab',
         children: [
-          "abc",
+          'abc',
           {
-            line : "ad",
+            line : 'ad',
             children : [
-              "ade"
+              'ade'
             ],
           }
         ]
@@ -985,15 +985,15 @@ t.expect [
 ]
 t.sendKeys 'u'
 t.expect [
-  "a",
+  'a',
   {
-    line: "ab",
+    line: 'ab',
     children: [
-      "abc",
+      'abc',
       {
-        line : "ad",
+        line : 'ad',
         children : [
-          "ade"
+          'ade'
         ],
       }
     ]
@@ -1002,18 +1002,18 @@ t.expect [
 t.sendKeys 'u'
 t.expect [
   {
-    line: "a",
+    line: 'a',
     children: [
       {
-        line : "ab",
+        line : 'ab',
         children : [
-          "abc"
+          'abc'
         ],
       }
       {
-        line : "ad",
+        line : 'ad',
         children : [
-          "ade"
+          'ade'
         ],
       }
     ]
@@ -1030,3 +1030,31 @@ t.sendKey 'esc'
 t.expect ['hello', 'world']
 t.sendKey 'u'
 t.expect ['']
+
+t = new TestCase
+t.sendKey 'i'
+t.sendKeys 'hello'
+t.sendKey 'enter'
+t.sendKeys 'world'
+t.sendKey 'tab'
+t.sendKey 'esc'
+t.expect [
+ {
+  line: 'hello',
+  children: ['world']
+ }
+]
+t.sendKey 'u'
+t.expect ['']
+t.sendKey 'ctrl+r'
+t.expect [
+ {
+  line: 'hello',
+  children: ['world']
+ }
+]
+t.sendKeys 'a of'
+t.sendKey 'shift+tab'
+t.sendKeys ' goo'
+t.sendKey 'esc'
+t.expect ['hello', 'world of goo']
