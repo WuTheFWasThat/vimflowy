@@ -1019,3 +1019,14 @@ t.expect [
     ]
   },
 ]
+
+# test insert mode enter
+t = new TestCase
+t.sendKey 'i'
+t.sendKeys 'hello'
+t.sendKey 'enter'
+t.sendKeys 'world'
+t.sendKey 'esc'
+t.expect ['hello', 'world']
+t.sendKey 'u'
+t.expect ['']
