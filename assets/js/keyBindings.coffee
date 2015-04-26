@@ -141,10 +141,10 @@ class KeyBindings
       display: 'Indent left'
       key: '<'
     INDENT_BLOCK_RIGHT:
-      display: 'Indent right'
+      display: 'Indent block right'
       key: ']'
     INDENT_BLOCK_LEFT:
-      display: 'Indent left'
+      display: 'Indent block left'
       key: '['
 
   SEQUENCE_ACTIONS = {

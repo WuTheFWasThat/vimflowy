@@ -14,7 +14,7 @@ setInterval (() ->
 ), 1000
 
 
-view = new View $('#contents'), data
+view = new View $('#view'), data
 
 $(window).on('paste', (e) ->
     e.preventDefault()

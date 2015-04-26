@@ -8,16 +8,14 @@ body, html
     background: $content-color
     font-family: 'Monaco', monospace
 
-.bottom-line
-
-.bottom-bar
-    $bar-height: 25px
+$bottom-bar-height: 25px
+#bottom-bar
 
     background-color: $color-white
     z-index: 1
     position: absolute
     bottom: 0px
-    height: $bar-height
+    height: $bottom-bar-height
     border-top: 1px solid black
     width: 100%
 
@@ -27,7 +25,7 @@ body, html
     & > div
         position: relative
         float: left
-        height: $bar-height - 2 * $vertical-padding
+        height: $bottom-bar-height - 2 * $vertical-padding
         padding: $vertical-padding $horizontal-padding
 
     $mode-width: 50px
@@ -40,31 +38,32 @@ body, html
     #exInput
         background: #FFFFFF
 
-#keybindings
-    position: absolute
-    height: 100%
-    top: 0
-    background: #CCCCCC
-    right: 0px
-    width: 0%
-    overflow: scroll
-
-    @include transition(width 0.2s ease-in-out)
-
-    &.active
-      width: 300px
-      // @include calc( width, '100% - 100px')
-
-    table
-      width: 100%
-      td
-        font-size: 10px;
-        border: 1px solid
-        padding: 5px
-
 #contents
-    font-size: 10px;
-    padding: 50px
-    // TODO have word wrap be a setting?
-    word-wrap: break-word
+    #keybindings
+        position: absolute
+        @include calc(height, '100% - #{$bottom-bar-height}')
+        top: 0
+        background: #CCCCCC
+        right: 0px
+        width: 0%
+        overflow: scroll
+
+        @include transition(width 0.2s ease-in-out)
+
+        &.active
+          width: 300px
+          // @include calc( width, '100% - 100px')
+
+        table
+          width: 100%
+          td
+            font-size: 10px;
+            border: 1px solid
+            padding: 5px
+
+    #view
+        font-size: 10px;
+        padding: 50px
+        // TODO have word wrap be a setting?
+        word-wrap: break-word
 
