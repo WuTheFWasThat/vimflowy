@@ -759,3 +759,170 @@ t.expect [
     ]
   },
 ]
+
+# test delete behavior
+t = new TestCase [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "bottom row"
+          "bottomest row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+t.sendKeys '3jdd'
+t.expect [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "bottom row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+t.sendKeys 'x'
+t.expect [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "ottom row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+t.sendKeys '2u'
+t.expect [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "bottom row"
+          "bottomest row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+
+t = new TestCase [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "bottom row"
+          "bottomest row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+t.sendKeys '2jdd'
+t.expect [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "bottomest row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+t.sendKeys 'x'
+t.expect [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "ottomest row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+t.sendKeys '2u'
+t.expect [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "bottom row"
+          "bottomest row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+
+t = new TestCase [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "bottom row"
+          "bottomest row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
+t.sendKeys 'dd'
+t.expect [ "another row" ]
+
+# automatically creates a new row
+t.sendKeys 'dd'
+t.expect [ "" ]
+t.sendKeys 'u'
+t.expect [ "another row" ]
+
+# brings back everything!
+t.sendKeys 'u'
+t.expect [
+  {
+    line: "top row",
+    children: [
+      {
+        line : "middle row",
+        children : [
+          "bottom row"
+          "bottomest row"
+        ],
+      }
+    ]
+  },
+  "another row"
+]
