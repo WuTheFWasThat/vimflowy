@@ -51,10 +51,18 @@ class Data
 
   # structure manipulation
 
+  indexOf: (child) ->
+    parent = @getParent child
+    children = @getChildren parent
+    return children.indexOf child
+
   detach: (id) ->
     parent = @getParent id
-    @detachChild parent, id
-    return parent
+    index = @detachChild parent, id
+    return {
+      parent: parent
+      index: index
+    }
 
   detachChild: (id, child) ->
     children = @getChildren id
@@ -69,43 +77,6 @@ class Data
     else
       children.splice index, 0, child
     @setParent child, id
-
-  indent: (id, options = {}) ->
-    sib = @getSiblingBefore id
-    if sib == null
-      return null # cannot indent
-
-    @detachChild (@getParent id), id
-    @attachChild sib, id
-
-    if not options.recursive
-      for child in (@getChildren id).slice()
-        @detachChild id, child
-        @attachChild sib, child
-
-    return sib
-
-  unindent: (id, options = {}) ->
-    if not options.recursive
-      if (@getChildren id).length > 0
-        return
-
-    parent = @getParent id
-    if parent == @root
-      return
-
-    p_i = @detachChild parent, id
-
-    newparent = @getParent parent
-
-    pp_i = (@getChildren newparent).indexOf parent
-    @attachChild newparent, id, (pp_i+1)
-
-    if not options.recursive
-      p_children = @getChildren parent
-      for child in p_children.slice(p_i)
-        @detachChild parent, child
-        @attachChild id, child
 
   nextVisible: (id) ->
     if not @collapsed id

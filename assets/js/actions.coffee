@@ -87,32 +87,6 @@
       view.data.deleteRow @newrow
       do view.render
 
-  class IndentRow extends Action
-    constructor: (row, options) ->
-      @row = row
-      @options = options
-
-    apply: (view) ->
-      view.data.indent @row, @options
-      do view.render
-
-    rewind: (view) ->
-      view.data.unindent @row, @options
-      do view.render
-
-  class UnindentRow extends Action
-    constructor: (row, options) ->
-      @row = row
-      @options = options
-
-    apply: (view) ->
-      view.data.unindent @row, @options
-      do view.render
-
-    rewind: (view) ->
-      view.data.indent @row, @options
-      do view.render
-
   class DeleteRow extends Action
     constructor: (row) ->
       @row = row
@@ -154,11 +128,37 @@
       view.data.attachChild @parent, @row, @index
       do view.render
 
+  class AttachRow extends Action
+    constructor: (parent, row, index = -1) ->
+      @parent = parent
+      @row = row
+      @index = index
+
+    apply: (view) ->
+      view.data.attachChild @parent, @row, @index
+      do view.render
+
+    rewind: (view) ->
+      view.data.detach @row
+      do view.render
+
+  class DetachRow extends Action
+    constructor: (row) ->
+      @row = row
+
+    apply: (view) ->
+      @result = view.data.detach @row
+      do view.render
+
+    rewind: (view) ->
+      view.data.attachChild @result.parent, @row, @result.index
+      do view.render
+
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.SpliceChars = SpliceChars
   exports.InsertRowSibling = InsertRowSibling
-  exports.IndentRow = IndentRow
-  exports.UnindentRow = UnindentRow
   exports.DeleteRow = DeleteRow
+  exports.AttachRow = AttachRow
+  exports.DetachRow = DetachRow
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

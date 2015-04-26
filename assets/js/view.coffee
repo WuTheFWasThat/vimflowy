@@ -142,17 +142,52 @@ class View
     # TODO:
     do @render
 
+  indent: (id, options = {}) ->
+    sib = @data.getSiblingBefore id
+    if sib == null
+      return null # cannot indent
+
+    @act new actions.DetachRow id
+    @act new actions.AttachRow sib, id
+
+    if not options.recursive
+      for child in (@data.getChildren id).slice()
+        @act new actions.DetachRow child
+        @act new actions.AttachRow sib, child
+
+  unindent: (id, options = {}) ->
+    if not options.recursive
+      if (@data.getChildren id).length > 0
+        return
+
+    parent = @data.getParent id
+    if parent == @data.root
+      return
+
+    p_i = @data.indexOf id
+    @act new actions.DetachRow id
+
+    newparent = @data.getParent parent
+
+    pp_i = @data.indexOf parent
+    @act new actions.AttachRow newparent, id, (pp_i+1)
+
+    p_children = @data.getChildren parent
+    for child in p_children.slice(p_i)
+      @act new actions.DetachRow child
+      @act new actions.AttachRow id, child
+
   indentLine: () ->
-    @act new actions.IndentRow @cursor.row
+    @indent @cursor.row
 
   unindentLine: () ->
-    @act new actions.UnindentRow @cursor.row
+    @unindent @cursor.row
 
   indentBlock: () ->
-    @act new actions.IndentRow @cursor.row, {recursive: true}
+    @indent @cursor.row, {recursive: true}
 
   unindentBlock: () ->
-    @act new actions.UnindentRow @cursor.row, {recursive: true}
+    @unindent @cursor.row, {recursive: true}
 
   # RENDERING
 
