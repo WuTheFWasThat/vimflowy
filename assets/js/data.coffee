@@ -106,13 +106,13 @@ class Data
       children = @getChildren id
       if children.length > 0
         return children[0]
-    nextsib = @getSiblingAfter id
-    if nextsib != null
-      return nextsib
-    parent = @getParent id
-    if parent == root
-      return null
-    return @nextVisible parent
+    while true
+      nextsib = @getSiblingAfter id
+      if nextsib != null
+        return nextsib
+      id = @getParent id
+      if id == root
+        return null
 
   # last thing visible nested within id
   lastVisible: (id) ->

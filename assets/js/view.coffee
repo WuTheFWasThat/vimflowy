@@ -126,7 +126,11 @@ class View
     @act new actions.SpliceChars @cursor.row, @cursor.col, nchars, chars, options
 
   newLineBelow: () ->
-    @act new actions.InsertRowSibling @cursor.row, {after: true}
+    children = @data.getChildren @cursor.row
+    if children.length > 0
+      @act new actions.InsertRowSibling children[0], {before: true}
+    else
+      @act new actions.InsertRowSibling @cursor.row, {after: true}
 
   newLineAbove: () ->
     @act new actions.InsertRowSibling @cursor.row, {before: true}
@@ -140,22 +144,20 @@ class View
     do @render
 
   clearLine: () ->
-    # TODO: make this undoable
-    # TODO: make this better
+    # TODO:
     do @render
 
   indentLine: () ->
-    # TODO: make this undoable
-    @data.indent @cursor.row
-    # TODO: make this better
-    do @render
+    @act new actions.IndentRow @cursor.row
 
   unindentLine: () ->
-    # TODO: make this undoable
-    @data.unindent @cursor.row
-    # TODO: make this better
-    do @render
+    @act new actions.UnindentRow @cursor.row
 
+  indentBlock: () ->
+    @act new actions.IndentRow @cursor.row, {recursive: true}
+
+  unindentBlock: () ->
+    @act new actions.UnindentRow @cursor.row, {recursive: true}
 
   # RENDERING
 
