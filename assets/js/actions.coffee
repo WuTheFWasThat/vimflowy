@@ -65,6 +65,8 @@
       view.data.writeChars @row, @col, @deletedChars
       view.drawRow @row
 
+  # TODO: make all the `do view.render` more efficient
+
   class InsertRowSibling extends Action
     constructor: (row, options) ->
       @row = row
@@ -79,12 +81,10 @@
         console.log @options
         throw 'InsertRowSibling needs valid option'
       view.setCur @newrow, 0
-      # TODO: more efficient
       do view.render
 
     rewind: (view) ->
       view.data.deleteRow @newrow
-      # TODO: more efficient
       do view.render
 
   class IndentRow extends Action
@@ -94,12 +94,10 @@
 
     apply: (view) ->
       view.data.indent @row, @options
-      # TODO: more efficient
       do view.render
 
     rewind: (view) ->
       view.data.unindent @row, @options
-      # TODO: more efficient
       do view.render
 
   class UnindentRow extends Action
@@ -109,12 +107,10 @@
 
     apply: (view) ->
       view.data.unindent @row, @options
-      # TODO: more efficient
       do view.render
 
     rewind: (view) ->
       view.data.indent @row, @options
-      # TODO: more efficient
       do view.render
 
   exports.AddChars = AddChars
