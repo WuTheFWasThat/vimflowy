@@ -458,15 +458,17 @@ class KeyBindings
             do @view.moveCursorBackIfNeeded
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'INDENT_RIGHT'
-            do @view.indentLine
-            return [keyIndex, SEQUENCE_ACTIONS.DROP]
+            @view.indentLine {}
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'INDENT_LEFT'
-            do @view.unindentLine
-            return [keyIndex, SEQUENCE_ACTIONS.DROP]
+            @view.unindentLine {}
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'INDENT_BLOCK_RIGHT'
-            return
+            @view.indentBlock {recursive: true}
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'INDENT_BLOCK_LEFT'
-            return
+            @view.unindentBlock {recursive: true}
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
 

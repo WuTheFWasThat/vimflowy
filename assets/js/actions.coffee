@@ -87,8 +87,40 @@
       # TODO: more efficient
       do view.render
 
+  class IndentRow extends Action
+    constructor: (row, options) ->
+      @row = row
+      @options = options
+
+    apply: (view) ->
+      view.data.indent @row, @options
+      # TODO: more efficient
+      do view.render
+
+    rewind: (view) ->
+      view.data.unindent @row, @options
+      # TODO: more efficient
+      do view.render
+
+  class UnindentRow extends Action
+    constructor: (row, options) ->
+      @row = row
+      @options = options
+
+    apply: (view) ->
+      view.data.unindent @row, @options
+      # TODO: more efficient
+      do view.render
+
+    rewind: (view) ->
+      view.data.indent @row, @options
+      # TODO: more efficient
+      do view.render
+
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.SpliceChars = SpliceChars
   exports.InsertRowSibling = InsertRowSibling
+  exports.IndentRow = IndentRow
+  exports.UnindentRow = UnindentRow
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})
