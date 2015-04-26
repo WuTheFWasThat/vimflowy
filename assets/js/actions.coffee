@@ -113,10 +113,52 @@
       view.data.indent @row, @options
       do view.render
 
+  class DeleteRow extends Action
+    constructor: (row) ->
+      @row = row
+
+    apply: (view) ->
+      # leaves dangling pointers, for both paste and undo
+      # these get garbage collected when we serialize/deserialize
+
+      if @row == view.root
+        throw 'Cannot delete root'
+
+      parent = view.data.getParent @row
+
+      index = view.data.detachChild parent, @row
+
+      siblings = view.data.getChildren parent
+      if index < siblings.length
+        next = siblings[index]
+      else if index > 0
+        next = siblings[index - 1]
+      else
+        next = parent
+
+      if next == view.data.root
+        next = view.data.addChild view.data.root
+        @nextCreated = true
+
+      view.setCur next, 0
+
+      @next = next
+      @parent = parent
+      @index = index
+
+      do view.render
+
+    rewind: (view) ->
+      if @nextCreated
+        view.data.deleteRow @next
+      view.data.attachChild @parent, @row, @index
+      do view.render
+
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.SpliceChars = SpliceChars
   exports.InsertRowSibling = InsertRowSibling
   exports.IndentRow = IndentRow
   exports.UnindentRow = UnindentRow
+  exports.DeleteRow = DeleteRow
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

@@ -136,12 +136,7 @@ class View
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
   delLine: () ->
-    # TODO: make this undoable
-    row = @data.deleteRow @cursor.row
-    @cursor.row = row
-    @cursor.col = 0
-    # TODO: make this better
-    do @render
+    @act new actions.DeleteRow @cursor.row
 
   clearLine: () ->
     # TODO:
