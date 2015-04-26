@@ -926,3 +926,96 @@ t.expect [
   },
   "another row"
 ]
+
+# test block indent
+t = new TestCase [
+  {
+    line: "a",
+    children: [
+      {
+        line : "ab",
+        children : [
+          "abc"
+        ],
+      }
+      {
+        line : "ad",
+        children : [
+          "ade"
+        ],
+      }
+    ]
+  },
+]
+t.sendKeys 'j['
+t.expect [
+  "a",
+  {
+    line: "ab",
+    children: [
+      "abc",
+      {
+        line : "ad",
+        children : [
+          "ade"
+        ],
+      }
+    ]
+  },
+]
+t.sendKeys ']'
+t.expect [
+  {
+    line: "a",
+    children: [
+      {
+        line: "ab",
+        children: [
+          "abc",
+          {
+            line : "ad",
+            children : [
+              "ade"
+            ],
+          }
+        ]
+      },
+    ]
+  }
+]
+t.sendKeys 'u'
+t.expect [
+  "a",
+  {
+    line: "ab",
+    children: [
+      "abc",
+      {
+        line : "ad",
+        children : [
+          "ade"
+        ],
+      }
+    ]
+  },
+]
+t.sendKeys 'u'
+t.expect [
+  {
+    line: "a",
+    children: [
+      {
+        line : "ab",
+        children : [
+          "abc"
+        ],
+      }
+      {
+        line : "ad",
+        children : [
+          "ade"
+        ],
+      }
+    ]
+  },
+]
