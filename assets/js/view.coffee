@@ -59,6 +59,7 @@ class View
           action.apply @
 
       do @undrawCursors
+      @drawRow @cursor.row
 
   act: (action) ->
     if @historyIndex + 1 != @history.length
@@ -239,6 +240,8 @@ class View
           x = cursorChar + x
 
       line.push x
+    if line.length == 0
+      line.push '<br/>'
 
     # add cursor if at end
     if row == @cursor.row and lineData.length == @cursor.col

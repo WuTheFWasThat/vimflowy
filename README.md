@@ -4,11 +4,10 @@
 
 implement y and p
 implement ctrl+o
-maybe add a granular undo?
 
 ## KNOWN ISSUES: ##
 
-Firstly, I have many known inconsistencies with vi.  Many are intentional.  Here is a list of known differences:
+Firstly, there are many known inconsistencies with vi.  Many are intentional.  Here is a list of known differences:
 - undoing operations always puts your cursor where it was.  (This is not true in vim: try going to the middle of a line and typing d0u)
 - b/e/w all treat all non-whitespace as part of a word
 - in vim, cw works like ciw, which is inconsistent/counterintuitive
