@@ -353,7 +353,7 @@ class KeyBindings
         else if key == 'shift+enter'
           @view.addCharsAfterCursor ['\n'], {pastEnd: true}
         else if key == 'enter'
-          # @view.addLine
+          do @view.newLineBelow
         else
           @view.addCharsAfterCursor [key], {pastEnd: true}
 
