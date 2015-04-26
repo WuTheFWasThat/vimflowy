@@ -927,6 +927,160 @@ t.expect [
   'another row'
 ]
 
+# test cc
+t = new TestCase [
+  {
+    line: 'top row',
+    children: [
+      {
+        line : 'middle row',
+        children : [
+          'bottom row'
+          'bottomest row'
+        ],
+      }
+    ]
+  },
+  'another row'
+]
+t.sendKeys 'cc'
+t.sendKeys 'a row'
+t.sendKey 'esc'
+t.expect [ 'a row', 'another row' ]
+t.sendKeys 'u'
+t = new TestCase [
+  {
+    line: 'top row',
+    children: [
+      {
+        line : 'middle row',
+        children : [
+          'bottom row'
+          'bottomest row'
+        ],
+      }
+    ]
+  },
+  'another row'
+]
+
+# see that it handles deletion of everything correctly
+t = new TestCase [
+  {
+    line: 'top row',
+    children: [
+      {
+        line : 'middle row',
+        children : [
+          'bottom row'
+          'bottomest row'
+        ],
+      }
+    ]
+  },
+]
+t.sendKeys 'cc'
+t.sendKeys 'a row'
+t.sendKey 'esc'
+t.expect [ 'a row' ]
+t.sendKeys 'u'
+t.expect [
+  {
+    line: 'top row',
+    children: [
+      {
+        line : 'middle row',
+        children : [
+          'bottom row'
+          'bottomest row'
+        ],
+      }
+    ]
+  },
+]
+
+t = new TestCase [
+  {
+    line: 'top row',
+    children: [
+      'middle row'
+      'bottom row'
+    ]
+  },
+]
+t.sendKeys 'jcc'
+t.sendKeys 'a row'
+t.sendKey 'esc'
+t.expect [
+  {
+    line: 'top row',
+    children: [
+      'a row'
+      'bottom row'
+    ]
+  },
+]
+t.sendKey 'u'
+t.sendKeys 'jcc'
+t.sendKeys 'a row'
+t.sendKey 'esc'
+t.expect [
+  {
+    line: 'top row',
+    children: [
+      'middle row'
+      'a row'
+    ]
+  },
+]
+
+t = new TestCase [
+  {
+    line: 'top row',
+    children: [
+      {
+        line: 'middle row'
+        children: ['bottom row']
+      }
+    ]
+  },
+]
+t.sendKeys 'jjcc'
+t.sendKeys 'a row'
+t.sendKey 'esc'
+t.expect [
+  {
+    line: 'top row',
+    children: [
+      {
+        line: 'middle row'
+        children: ['a row']
+      }
+    ]
+  },
+]
+
+t = new TestCase [
+  {
+    line: 'top row',
+    children: [
+      {
+        line: 'middle row'
+        children: ['bottom row']
+      }
+    ]
+  },
+]
+t.sendKeys 'jj2cc'
+t.sendKeys 'a row'
+t.sendKey 'esc'
+t.expect [
+  {
+    line: 'top row',
+    children: [ 'a row' ]
+  },
+]
+
 # test block indent
 t = new TestCase [
   {

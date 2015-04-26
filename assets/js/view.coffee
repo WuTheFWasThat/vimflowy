@@ -136,8 +136,8 @@ class View
   newLineAbove: () ->
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
-  delLine: () ->
-    @act new actions.DeleteRow @cursor.row
+  delLine: (options) ->
+    @act new actions.DeleteRow @cursor.row, options
 
   clearLine: () ->
     # TODO:
@@ -240,12 +240,14 @@ class View
           x = cursorChar + x
 
       line.push x
-    if line.length == 0
-      line.push '<br/>'
 
     # add cursor if at end
     if row == @cursor.row and lineData.length == @cursor.col
       line.push cursorChar
+
+    # if still empty, put a newline
+    if line.length == 0
+      line.push '<br/>'
 
     do onto.empty
 
