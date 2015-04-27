@@ -16,7 +16,7 @@
       @options = options
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
-      view.setCur @row, (@col + @chars.length), @options
+      view.setCur @row, (@col + @chars.length), @options.cursor
       view.drawRow @row
     rewind: (view) ->
       reverse = new DelChars @row, @col, @chars.length
@@ -29,39 +29,10 @@
       @nchars = nchars
       @options = options
     apply: (view) ->
-      @chars = view.data.deleteChars @row, @col, @nchars
-      view.setCur @row, @col, @options
-      view.drawRow @row
-    rewind: (view) ->
-      view.data.writeChars @row, @col, @chars
-      view.drawRow @row
-
-  # NOTE: this generalized add/del chars...
-  class SpliceChars extends Action
-    constructor: (row, col, nchars, chars, options = {}) ->
-      @row = row
-      @col = col
-      @nchars = nchars
-      @chars = chars
-
-      options.cursor ?= 'end'
-      @options = options
-
-    apply: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
-      view.data.writeChars @row, @col, @chars
-
-      if @options.cursor == 'beforeEnd'
-        view.setCur @row, (@col + @chars.length - 1)
-      else if @options.cursor == 'end'
-        view.setCur @row, (@col + @chars.length)
-      else if @options.cursor == 'pastEnd'
-        view.setCur @row, (@col + @chars.length), {pastEnd: true}
-
+      view.setCur @row, @col, @options.cursor
       view.drawRow @row
-
     rewind: (view) ->
-      view.data.deleteChars @row, @col, @chars.length
       view.data.writeChars @row, @col, @deletedChars
       view.drawRow @row
 
@@ -164,7 +135,6 @@
 
   exports.AddChars = AddChars
   exports.DelChars = DelChars
-  exports.SpliceChars = SpliceChars
   exports.InsertRowSibling = InsertRowSibling
   exports.DeleteRow = DeleteRow
   exports.AttachRow = AttachRow

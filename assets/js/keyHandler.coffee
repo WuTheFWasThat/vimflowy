@@ -11,6 +11,10 @@ class KeyHandler extends EventEmitter
     '8': '*'
     '9': '('
     '0': ')'
+    '-': '_'
+    '=': '+'
+    '[': '{'
+    ']': '}'
     '/': '?'
     '.': '>'
     ',': '<'
@@ -41,7 +45,9 @@ class KeyHandler extends EventEmitter
     56: '8'
     57: '9'
 
+    187: '='
     188: ','
+    189: '-'
     190: '.'
     191: '/'
 

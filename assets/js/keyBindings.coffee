@@ -347,11 +347,11 @@ class KeyBindings
         if key == 'left'
           do @view.moveCursorLeft
         else if key == 'right'
-          @view.moveCursorRight {pastEnd: true}
+          @view.moveCursorRight {cursor: 'pastEnd'}
         else if key == 'backspace'
           @view.delCharsBeforeCursor 1
         else if key == 'shift+enter'
-          @view.addCharsAfterCursor ['\n'], {pastEnd: true}
+          @view.addCharsAfterCursor ['\n'], {cursor: 'pastEnd'}
         else if key == 'enter'
           do @view.newLineBelow
         else if key == 'tab'
@@ -359,7 +359,7 @@ class KeyBindings
         else if key == 'shift+tab'
           @view.unindentLine {}
         else
-          @view.addCharsAfterCursor [key], {pastEnd: true}
+          @view.addCharsAfterCursor [key], {cursor: 'pastEnd'}
 
         return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
     else if @mode == MODES.NORMAL
@@ -399,11 +399,12 @@ class KeyBindings
               return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
             for i in [1..repeat]
-              cursor = @handleMotion motion, {pastEnd: true}
+              cursor = @handleMotion motion, {cursor: 'pastEnd'}
               if cursor.col < @view.cursor.col
                 @view.delCharsBeforeCursor (@view.cursor.col - cursor.col)
               else if cursor.col > @view.cursor.col
-                @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {pastEnd: binding == 'CHANGE'}
+                cursorOption = if binding == 'CHANGE' then 'pastEnd' else ''
+                @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {cursor: cursorOption}
 
           if binding == 'CHANGE'
             @setMode MODES.INSERT
@@ -421,13 +422,13 @@ class KeyBindings
           if binding == 'INSERT'
             # do nothing
           else if binding == 'INSERT_AFTER'
-            @view.moveCursorRight {pastEnd: true}
+            @view.moveCursorRight {cursor: 'pastEnd'}
           else if binding == 'INSERT_HOME'
             do @view.moveCursorHome
           else if binding == 'INSERT_END'
-            @view.moveCursorEnd {pastEnd: true}
+            @view.moveCursorEnd {cursor: 'pastEnd'}
           else if binding == 'CHANGE_CHAR'
-            @view.delCharsAfterCursor 1, {pastEnd: true}
+            @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}
           else if binding == 'INSERT_LINE_ABOVE'
             do @view.newLineAbove
           else if binding == 'INSERT_LINE_BELOW'
