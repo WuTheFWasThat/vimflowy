@@ -13,7 +13,7 @@ class Cursor
 
   right: (options) ->
     options?={}
-    shift = if options.pastEnd then 0 else 1
+    shift = if options.cursor == 'pastEnd' then 0 else 1
     if @col < (@data.rowLength @row) - shift
       @col += 1
 
@@ -22,7 +22,7 @@ class Cursor
 
   end: (options) ->
     options ?= {}
-    shift = if options.pastEnd then 0 else 1
+    shift = if options.cursor == 'pastEnd' then 0 else 1
     @col = (@data.rowLength @row) - shift
 
   beginningWord: () ->
@@ -37,7 +37,7 @@ class Cursor
   endWord: (options = {}) ->
     end = (@data.rowLength @row) - 1
     if @col == end
-      if options.pastEnd
+      if options.cursor == 'pastEnd'
         @col += 1
       return
 
@@ -47,13 +47,13 @@ class Cursor
     while @col < end and (@data.getChar @row, @col+1) != ' '
       @col += 1
 
-    if options.pastEnd
+    if options.cursor == 'pastEnd'
       @col += 1
 
   nextWord: (options = {}) ->
     end = (@data.rowLength @row) - 1
     if @col == end
-      if options.pastEnd
+      if options.cursor == 'pastEnd'
         @col += 1
       return
 
@@ -62,7 +62,7 @@ class Cursor
     while @col < end and (@data.getChar @row, @col+1) == ' '
       @col += 1
 
-    if @col < end or options.pastEnd
+    if @col < end or options.cursor == 'pastEnd'
       @col += 1
 
   nextChar: (char, options = {}) ->
@@ -85,7 +85,7 @@ class Cursor
       return
 
     @col = found
-    if options.pastEnd
+    if options.cursor == 'pastEnd'
       @col += 1
     if options.beforeFound
       @col -= 1

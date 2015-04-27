@@ -17,6 +17,7 @@ class View
     @data = data
 
     @cursor = new Cursor @data
+    @register = new Register @
 
     @actions = [] # full action history
     @history = [0] # indices into actions
@@ -75,12 +76,15 @@ class View
   curRowLength: () ->
     return @data.rowLength @cursor.row
 
-  setCur: (row, col, options) ->
-    options ?= {}
+  setCur: (row, col, option = '') ->
+    if option == 'beforeEnd'
+      if col > 0
+        col -= 1
+
     @cursor.row = row
     @cursor.col = col
 
-    shift = if options.pastEnd then 0 else 1
+    shift = if option == 'pastEnd' then 0 else 1
     rowLen = do @curRowLength
     if rowLen > 0 and @cursor.col > rowLen - shift
       @cursor.col = rowLen - shift
@@ -124,7 +128,8 @@ class View
     @act new actions.DelChars @cursor.row, @cursor.col, nchars, options
 
   spliceCharsAfterCursor: (nchars, chars, options) ->
-    @act new actions.SpliceChars @cursor.row, @cursor.col, nchars, chars, options
+    @delCharsAfterCursor nchars, {cursor: 'pastEnd'}
+    @addCharsAfterCursor chars, options
 
   newLineBelow: () ->
     children = @data.getChildren @cursor.row
@@ -270,6 +275,7 @@ class View
 if module?
   Cursor = require('./cursor.coffee')
   actions = require('./actions.coffee')
+  Register = require('./register.coffee')
 
 # exports
 module?.exports = View

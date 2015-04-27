@@ -2,7 +2,6 @@ require 'coffee-script/register'
 assert = require 'assert'
 
 Data = require './assets/js/data.coffee'
-Cursor = require './assets/js/cursor.coffee'
 View = require './assets/js/view.coffee'
 KeyBindings = require './assets/js/keyBindings.coffee'
 
