@@ -25,13 +25,43 @@ class Cursor
     shift = if options.cursor == 'pastEnd' then 0 else 1
     @col = (@data.rowLength @row) - shift
 
-  beginningWord: () ->
+  wordRegex = /^[a-z0-9_]+$/i
+
+  isWhitespace = (char) ->
+    return char == ' '
+
+  isInWhitespace: (row, col) ->
+    char = @data.getChar row, col
+    return isWhitespace char
+
+  isInWord: (row, col, matchChar) ->
+    if isWhitespace matchChar
+      return false
+
+    char = @data.getChar row, col
+    if isWhitespace char
+      return false
+
+    if wordRegex.test char
+      return wordRegex.test matchChar
+    else
+      return not wordRegex.test matchChar
+
+  getWordCheck: (options, matchChar) ->
+    if options.block
+      return ((row, col) => not @isInWhitespace row, col)
+    else
+      return ((row, col) => @isInWord row, col, matchChar)
+
+  beginningWord: (options = {}) ->
     if @col == 0
       return
     @col -= 1
-    while @col > 0 and (@data.getChar @row, @col) == ' '
+    while @col > 0 and @isInWhitespace @row, @col
       @col -= 1
-    while @col > 0 and (@data.getChar @row, @col-1) != ' '
+
+    wordcheck = @getWordCheck options, (@data.getChar @row, @col)
+    while @col > 0 and wordcheck @row, (@col-1)
       @col -= 1
 
   endWord: (options = {}) ->
@@ -42,9 +72,10 @@ class Cursor
       return
 
     @col += 1
-    while @col < end and (@data.getChar @row, @col) == ' '
+    while @col < end and @isInWhitespace @row, @col
       @col += 1
-    while @col < end and (@data.getChar @row, @col+1) != ' '
+    wordcheck = @getWordCheck options, (@data.getChar @row, @col)
+    while @col < end and wordcheck @row, (@col+1)
       @col += 1
 
     if options.cursor == 'pastEnd'
@@ -57,9 +88,10 @@ class Cursor
         @col += 1
       return
 
-    while @col < end and (@data.getChar @row, @col) != ' '
+    wordcheck = @getWordCheck options, (@data.getChar @row, @col)
+    while @col < end and wordcheck @row, (@col+1)
       @col += 1
-    while @col < end and (@data.getChar @row, @col+1) == ' '
+    while @col < end and @isInWhitespace @row, (@col+1)
       @col += 1
 
     if @col < end or options.cursor == 'pastEnd'

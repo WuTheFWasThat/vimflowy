@@ -21,7 +21,7 @@ $(window).on('paste', (e) ->
     text = (e.originalEvent || e).clipboardData.getData('text/plain')
     chars = text.split ''
     # TODO: deal with this better when there are multiple lines
-    view.addCharsAfterCursor chars
+    view.addCharsAtCursor chars
 )
 
 keyhandler = new KeyHandler

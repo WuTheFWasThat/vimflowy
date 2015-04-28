@@ -212,6 +212,133 @@ t = new TestCase ['the']
 t.sendKeys '$dw'
 t.expect ['th']
 
+# test blocks vs. words!
+t = new TestCase ['ah... yes ... it (ahem) was me!']
+t.sendKeys 'ex'
+t.expect ['a... yes ... it (ahem) was me!']
+t.sendKeys 'ex'
+t.expect ['a.. yes ... it (ahem) was me!']
+t.sendKeys 'ex'
+t.expect ['a.. ye ... it (ahem) was me!']
+t.sendKeys 'ex'
+t.expect ['a.. ye .. it (ahem) was me!']
+t.sendKeys 'ex'
+t.expect ['a.. ye .. i (ahem) was me!']
+t.sendKeys 'ex'
+t.expect ['a.. ye .. i ahem) was me!']
+t.sendKeys 'ex'
+t.expect ['a.. ye .. i ahe) was me!']
+t.sendKeys 'ex'
+t.expect ['a.. ye .. i ahe) wa me!']
+t.sendKeys 'ex'
+t.expect ['a.. ye .. i ahe) wa m!']
+t.sendKeys 'ex'
+t.expect ['a.. ye .. i ahe) wa m']
+t.sendKeys 'ex'
+t.expect ['a.. ye .. i ahe) wa ']
+
+t = new TestCase ['ah... yes ... it (ahem) was me!']
+t.sendKeys 'Ex'
+t.expect ['ah.. yes ... it (ahem) was me!']
+t.sendKeys 'Ex'
+t.expect ['ah.. ye ... it (ahem) was me!']
+t.sendKeys 'Ex'
+t.expect ['ah.. ye .. it (ahem) was me!']
+t.sendKeys 'Ex'
+t.expect ['ah.. ye .. i (ahem) was me!']
+t.sendKeys 'Ex'
+t.expect ['ah.. ye .. i (ahem was me!']
+t.sendKeys 'Ex'
+t.expect ['ah.. ye .. i (ahem wa me!']
+t.sendKeys 'Ex'
+t.expect ['ah.. ye .. i (ahem wa me']
+t.sendKeys 'Ex'
+t.expect ['ah.. ye .. i (ahem wa m']
+
+t = new TestCase ['ah... yes ... it (ahem) was me!']
+t.sendKeys 'wx'
+t.expect ['ah.. yes ... it (ahem) was me!']
+t.sendKeys 'wx'
+t.expect ['ah.. es ... it (ahem) was me!']
+t.sendKeys 'wx'
+t.expect ['ah.. es .. it (ahem) was me!']
+t.sendKeys 'wx'
+t.expect ['ah.. es .. t (ahem) was me!']
+t.sendKeys 'wx'
+t.expect ['ah.. es .. t ahem) was me!']
+t.sendKeys 'wx'
+t.expect ['ah.. es .. t ahem was me!']
+t.sendKeys 'wx'
+t.expect ['ah.. es .. t ahem as me!']
+t.sendKeys 'wx'
+t.expect ['ah.. es .. t ahem as e!']
+t.sendKeys 'wx'
+t.expect ['ah.. es .. t ahem as e']
+t.sendKeys 'wx'
+t.expect ['ah.. es .. t ahem as ']
+
+t = new TestCase ['ah... yes ... it (ahem) was me!']
+t.sendKeys 'Wx'
+t.expect ['ah... es ... it (ahem) was me!']
+t.sendKeys 'Wx'
+t.expect ['ah... es .. it (ahem) was me!']
+t.sendKeys 'Wx'
+t.expect ['ah... es .. t (ahem) was me!']
+t.sendKeys 'Wx'
+t.expect ['ah... es .. t ahem) was me!']
+t.sendKeys 'Wx'
+t.expect ['ah... es .. t ahem) as me!']
+t.sendKeys 'Wx'
+t.expect ['ah... es .. t ahem) as e!']
+t.sendKeys 'Wx'
+t.expect ['ah... es .. t ahem) as e']
+t.sendKeys 'Wx'
+t.expect ['ah... es .. t ahem) as ']
+
+t = new TestCase ['ah... yes ... it (ahem) was me!']
+t.sendKeys '$'
+t.sendKeys 'bx'
+t.expect ['ah... yes ... it (ahem) was e!']
+t.sendKeys 'bx'
+t.expect ['ah... yes ... it (ahem) as e!']
+t.sendKeys 'bx'
+t.expect ['ah... yes ... it (ahem as e!']
+t.sendKeys 'bx'
+t.expect ['ah... yes ... it (hem as e!']
+t.sendKeys 'bx'
+t.expect ['ah... yes ... it hem as e!']
+t.sendKeys 'bx'
+t.expect ['ah... yes ... t hem as e!']
+t.sendKeys 'bx'
+t.expect ['ah... yes .. t hem as e!']
+t.sendKeys 'bx'
+t.expect ['ah... es .. t hem as e!']
+t.sendKeys 'bx'
+t.expect ['ah.. es .. t hem as e!']
+t.sendKeys 'bx'
+t.expect ['h.. es .. t hem as e!']
+t.sendKeys 'bx'
+t.expect ['.. es .. t hem as e!']
+
+t = new TestCase ['ah... yes ... it (ahem) was me!']
+t.sendKeys '$'
+t.sendKeys 'Bx'
+t.expect ['ah... yes ... it (ahem) was e!']
+t.sendKeys 'Bx'
+t.expect ['ah... yes ... it (ahem) as e!']
+t.sendKeys 'Bx'
+t.expect ['ah... yes ... it ahem) as e!']
+t.sendKeys 'Bx'
+t.expect ['ah... yes ... t ahem) as e!']
+t.sendKeys 'Bx'
+t.expect ['ah... yes .. t ahem) as e!']
+t.sendKeys 'Bx'
+t.expect ['ah... es .. t ahem) as e!']
+t.sendKeys 'Bx'
+t.expect ['h... es .. t ahem) as e!']
+t.sendKeys 'Bx'
+t.expect ['... es .. t ahem) as e!']
+
 # make sure cursor doesn't go before line
 t = new TestCase ['blahblah']
 t.sendKeys '0d$iab'
@@ -1211,3 +1338,31 @@ t.sendKey 'shift+tab'
 t.sendKeys ' goo'
 t.sendKey 'esc'
 t.expect ['hello', 'world of goo']
+
+# test pasting!
+t = new TestCase ['px']
+t.sendKeys 'xp'
+t.expect ['xp']
+t.sendKeys 'xp'
+t.expect ['xp']
+
+t = new TestCase ['one fish, two fish, red fish, blue fish']
+t.sendKeys 'dWWhp'
+t.expect ['fish, one two fish, red fish, blue fish']
+# undo doesn't move cursor, and paste still has stuff in register
+t.sendKeys 'up'
+t.expect ['fish, one two fish, red fish, blue fish']
+
+t = new TestCase ['one fish, two fish, red fish, blue fish']
+t.sendKeys '2dW2Whp'
+t.expect ['two fish, fish, red fish, blue fish']
+# undo doesn't move cursor, and paste still has stuff in register
+t.sendKeys 'up'
+t.expect ['two fish, fish, red fish, blue fish']
+
+t = new TestCase ['one fish, two fish, red fish, blue fish']
+t.sendKeys 'd2W2Whp'
+t.expect ['two fish, one fish, red fish, blue fish']
+# undo doesn't move cursor, and paste still has stuff in register
+t.sendKeys 'up'
+t.expect ['two fish, one fish, red fish, blue fish']

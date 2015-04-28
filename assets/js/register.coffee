@@ -20,5 +20,11 @@ class Register
     @type = TYPES.LINES
     @lines = lines
 
+  paste: (options) ->
+    if @type == TYPES.CHARS
+      return @view.addCharsAfterCursor @chars
+    else if @type == TYPES.LINES
+      return
+
 # exports
 module?.exports = Register
