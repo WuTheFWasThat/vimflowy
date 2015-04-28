@@ -2,7 +2,8 @@
 
 ## TODO ##
 
-implement y and p
+implement y and p for dd/cc
+implement J
 implement folding
 implement ctrl+o
 
