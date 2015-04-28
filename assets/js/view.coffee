@@ -118,18 +118,26 @@ class View
     @cursor.end options
     @drawRow @cursor.row
 
-  addCharsAfterCursor: (chars, options) ->
+  addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
 
+  addCharsAfterCursor: (chars, options) ->
+    @act new actions.AddChars @cursor.row, (@cursor.col+1), chars, options
+
+  delChars: (row, col, nchars, options) ->
+    delAction = new actions.DelChars row, col, nchars, options
+    @act delAction
+    @register.saveChars delAction.deletedChars
+
   delCharsBeforeCursor: (nchars) ->
-    @act new actions.DelChars @cursor.row, (@cursor.col-nchars), nchars
+    @delChars @cursor.row, (@cursor.col-nchars), nchars
 
   delCharsAfterCursor: (nchars, options) ->
-    @act new actions.DelChars @cursor.row, @cursor.col, nchars, options
+    @delChars @cursor.row, @cursor.col, nchars, options
 
   spliceCharsAfterCursor: (nchars, chars, options) ->
     @delCharsAfterCursor nchars, {cursor: 'pastEnd'}
-    @addCharsAfterCursor chars, options
+    @addCharsAtCursor chars, options
 
   newLineBelow: () ->
     children = @data.getChildren @cursor.row
@@ -194,6 +202,9 @@ class View
 
   unindentBlock: () ->
     @unindent @cursor.row, {recursive: true}
+
+  paste: () ->
+    do @register.paste
 
   # RENDERING
 

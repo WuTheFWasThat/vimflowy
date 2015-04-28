@@ -96,6 +96,18 @@ class KeyBindings
       display: 'Move cursor to the beginning of the next word'
       key: 'w'
       motion: true
+    BEGINNING_BLOCK:
+      display: 'Move cursor to the first block-beginning before it'
+      key: 'B'
+      motion: true
+    END_BLOCK:
+      display: 'Move cursor to the first block-ending after it'
+      key: 'E'
+      motion: true
+    NEXT_BLOCK:
+      display: 'Move cursor to the beginning of the next block'
+      key: 'W'
+      motion: true
     FIND_NEXT_CHAR:
       display: 'Move cursor to next occurrence of character in line'
       key: 'f'
@@ -133,6 +145,10 @@ class KeyBindings
       display: 'Change character'
       key: 's'
       insert: true
+
+    PASTE:
+      display: 'Paste'
+      key: 'p'
 
     INDENT_RIGHT:
       display: 'Indent right'
@@ -246,6 +262,15 @@ class KeyBindings
         cursor.endWord options
       else if motion.type == 'NEXT_WORD'
         cursor.nextWord options
+      else if motion.type == 'BEGINNING_BLOCK'
+        options.block = true
+        cursor.beginningWord options
+      else if motion.type == 'END_BLOCK'
+        options.block = true
+        cursor.endWord options
+      else if motion.type == 'NEXT_BLOCK'
+        options.block = true
+        cursor.nextWord options
       else if motion.type == 'FIND_NEXT_CHAR'
         cursor.nextChar motion.char, options
       else if motion.type == 'TO_NEXT_CHAR'
@@ -351,7 +376,7 @@ class KeyBindings
         else if key == 'backspace'
           @view.delCharsBeforeCursor 1
         else if key == 'shift+enter'
-          @view.addCharsAfterCursor ['\n'], {cursor: 'pastEnd'}
+          @view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
         else if key == 'enter'
           do @view.newLineBelow
         else if key == 'tab'
@@ -359,7 +384,7 @@ class KeyBindings
         else if key == 'shift+tab'
           @view.unindentLine {}
         else
-          @view.addCharsAfterCursor [key], {cursor: 'pastEnd'}
+          @view.addCharsAtCursor [key], {cursor: 'pastEnd'}
 
         return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
     else if @mode == MODES.NORMAL
@@ -475,6 +500,9 @@ class KeyBindings
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'INDENT_BLOCK_LEFT'
             @view.unindentBlock {recursive: true}
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
+          else if binding == 'PASTE'
+            do @view.paste
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
