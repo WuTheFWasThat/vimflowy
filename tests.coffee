@@ -1366,3 +1366,29 @@ t.expect ['two fish, one fish, red fish, blue fish']
 # undo doesn't move cursor, and paste still has stuff in register
 t.sendKeys 'up'
 t.expect ['two fish, one fish, red fish, blue fish']
+
+# test an edge case
+t = new TestCase ['word']
+t.sendKeys 'de'
+t.expect ['']
+t.sendKeys 'p'
+t.expect ['word']
+t.sendKeys 'u'
+t.expect ['']
+
+# test paste behind
+t = new TestCase ['one fish, two fish, red fish, blue fish']
+t.sendKeys '$F,d$3bP'
+t.expect ['one fish, two fish, blue fish, red fish']
+# undo doesn't move cursor, and paste still has stuff in register
+t.sendKeys 'uP'
+t.expect ['one fish, two fish, blue fish, red fish']
+
+# test an edge case
+t = new TestCase ['word']
+t.sendKeys 'de'
+t.expect ['']
+t.sendKeys 'P'
+t.expect ['word']
+t.sendKeys 'u'
+t.expect ['']

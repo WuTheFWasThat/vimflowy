@@ -22,7 +22,10 @@ class Register
 
   paste: (options) ->
     if @type == TYPES.CHARS
-      return @view.addCharsAfterCursor @chars
+      if options.before
+        return @view.addCharsAtCursor @chars
+      else
+        return @view.addCharsAfterCursor @chars
     else if @type == TYPES.LINES
       return
 
