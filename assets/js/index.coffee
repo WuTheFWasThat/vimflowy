@@ -4,10 +4,18 @@
 
 data = new Data
 
+keybindingsDiv = $('#keybindings')
+
 if localStorage?
   # localStorage['data'] = '{"line":"","children":["sdaasd"]}'
   if localStorage['data'] and localStorage['data'].length
     data.load JSON.parse localStorage['data']
+
+  showKeyBindings = true
+  if localStorage.getItem('showKeyBindings') != null
+    showKeyBindings = localStorage['showKeyBindings'] == 'true'
+  if showKeyBindings
+    keybindingsDiv.addClass 'active'
 
 setInterval (() ->
   localStorage['data'] = JSON.stringify (do data.serialize)
@@ -26,7 +34,7 @@ $(window).on('paste', (e) ->
 
 keyhandler = new KeyHandler
 do keyhandler.listen
-keybinder = new KeyBindings $('#mode'), $('#keybindings'), view
+keybinder = new KeyBindings $('#mode'), keybindingsDiv, view
 keyhandler.on 'keydown', keybinder.handleKey.bind(keybinder)
 
 $(document).ready ->

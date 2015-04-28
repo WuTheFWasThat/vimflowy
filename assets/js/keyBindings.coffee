@@ -395,6 +395,8 @@ class KeyBindings
 
       if binding == 'HELP'
         @keybindingsDiv.toggleClass 'active'
+        if localStorage?
+          localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if info.motion
         keyIndex = 0 # easier to just redo the work (number case is annoying)
