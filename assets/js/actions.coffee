@@ -19,8 +19,8 @@
       view.setCur @row, (@col + @chars.length), @options.cursor
       view.drawRow @row
     rewind: (view) ->
-      reverse = new DelChars @row, @col, @chars.length
-      reverse.apply view
+      view.data.deleteChars @row, @col, @chars.length
+      view.drawRow @row
 
   class DelChars extends Action
     constructor: (row, col, nchars, options = {}) ->

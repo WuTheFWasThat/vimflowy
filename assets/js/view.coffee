@@ -122,7 +122,10 @@ class View
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
 
   addCharsAfterCursor: (chars, options) ->
-    @act new actions.AddChars @cursor.row, (@cursor.col+1), chars, options
+    col = @cursor.col
+    if col < (@data.rowLength @cursor.row)
+      col += 1
+    @act new actions.AddChars @cursor.row, col, chars, options
 
   delChars: (row, col, nchars, options) ->
     delAction = new actions.DelChars row, col, nchars, options
@@ -203,8 +206,11 @@ class View
   unindentBlock: () ->
     @unindent @cursor.row, {recursive: true}
 
-  paste: () ->
-    do @register.paste
+  pasteBefore: () ->
+    @register.paste {before: true}
+
+  pasteAfter: () ->
+    @register.paste {}
 
   # RENDERING
 

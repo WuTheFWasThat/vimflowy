@@ -146,9 +146,12 @@ class KeyBindings
       key: 's'
       insert: true
 
-    PASTE:
-      display: 'Paste'
+    PASTE_AFTER:
+      display: 'Paste after cursor'
       key: 'p'
+    PASTE_BEFORE:
+      display: 'Paste before cursor'
+      key: 'P'
 
     INDENT_RIGHT:
       display: 'Indent right'
@@ -503,8 +506,11 @@ class KeyBindings
           else if binding == 'INDENT_BLOCK_LEFT'
             @view.unindentBlock {recursive: true}
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
-          else if binding == 'PASTE'
-            do @view.paste
+          else if binding == 'PASTE_AFTER'
+            do @view.pasteAfter
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
+          else if binding == 'PASTE_BEFORE'
+            do @view.pasteBefore
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
