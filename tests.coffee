@@ -531,11 +531,24 @@ t.sendKeys 'otwo'
 t.sendKey 'esc'
 t.expect ['one', 'two']
 # test j and k
-t.sendKeys 'kxjlx'
-t.expect ['ne', 'to']
+t.sendKeys 'kxjx'
+t.expect ['on', 'to']
 # don't go off the edge!
-t.sendKeys 'jxkkx'
-t.expect ['e', 't']
+t.sendKeys 'kkkxjjjx'
+t.expect ['o', 'o']
+
+# test that last line stays
+t = new TestCase ['unos', 'dos', 'tres', 'quatro']
+t.sendKeys '$jjjx'
+t.expect ['unos', 'dos', 'tres', 'quatr']
+
+t = new TestCase ['unos', 'dos', 'tres', 'quatro']
+t.sendKeys '$A'
+t.sendKey 'down'
+t.sendKey 'down'
+t.sendKey 'down'
+t.sendKey 'backspace'
+t.expect ['unos', 'dos', 'tres', 'quatr']
 
 # test o and O, edge cases
 t = new TestCase ['a', 's', 'd', 'f']
@@ -1162,3 +1175,10 @@ t.sendKeys 'P'
 t.expect ['word']
 t.sendKeys 'u'
 t.expect ['']
+
+# test x on empty row
+t = new TestCase ['empty', '']
+t.sendKeys 'ru'
+t.expect ['umpty', '']
+t.sendKeys 'jxk.'
+t.expect ['mpty', '']

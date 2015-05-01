@@ -5,7 +5,11 @@
 implement y and p for dd/cc
 implement J
 implement folding
+implement zoom
 implement ctrl+o
+ctrl+D/U
+search
+line numbers?
 
 ## KNOWN ISSUES: ##
 
