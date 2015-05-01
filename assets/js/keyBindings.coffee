@@ -252,9 +252,9 @@ class KeyBindings
       else if motion.type == 'RIGHT'
         cursor.right options
       else if motion.type == 'UP'
-        do cursor.up
+        cursor.up options
       else if motion.type == 'DOWN'
-        do cursor.down
+        cursor.down options
       else if motion.type == 'HOME'
         cursor.home options
       else if motion.type == 'END'
@@ -293,6 +293,7 @@ class KeyBindings
       @handleKey key
 
   handleKey: (key) ->
+    console.log 'key', key
     @queuedKeys.push key
     @queuedKeys = @processKeys @queuedKeys
 
@@ -376,6 +377,10 @@ class KeyBindings
           do @view.moveCursorLeft
         else if key == 'right'
           @view.moveCursorRight {cursor: 'pastEnd'}
+        else if key == 'up'
+          @view.moveCursorUp {cursor: 'pastEnd'}
+        else if key == 'down'
+          @view.moveCursorDown {cursor: 'pastEnd'}
         else if key == 'backspace'
           @view.delCharsBeforeCursor 1
         else if key == 'shift+enter'
@@ -408,7 +413,7 @@ class KeyBindings
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
 
         cursor = @handleMotion motion
-        @view.moveCursor cursor.row, cursor.col
+        @view.setCursor cursor
         return [keyIndex, SEQUENCE_ACTIONS.DROP]
       else if @mode == MODES.NORMAL
         if binding == 'DELETE' or binding == 'CHANGE'

@@ -1,29 +1,61 @@
 class Cursor
-  constructor: (data, row = 1, col = 0) ->
+  constructor: (data, row = 1, col = 0, movecol = 0) ->
     @data = data
     @row = row
     @col = col
 
+    @moveCol = movecol # -1 means last col
+
   clone: () ->
-    return new Cursor @data, @row, @col
+    return new Cursor @data, @row, @col, @moveCol
+
+  set: (row, col) ->
+    @setRow row
+    @setCol col
+
+  setRow: (row) ->
+    @row = row
+
+  setCol: (moveCol) ->
+    @moveCol = moveCol
+    rowlen = @data.rowLength @row
+
+    if moveCol < 0
+      @col = rowlen + moveCol + 1
+    else
+      @col = moveCol
+    console.log('setCol', @moveCol)
+
+  fromMoveCol: (option) ->
+    console.log('movecol', @moveCol)
+    rowlen = @data.rowLength @row
+    maxcol = rowlen - (if option == 'pastEnd' then 0 else 1)
+    if @moveCol < 0
+      @col = rowlen + @moveCol + 1
+    else
+      @col = Math.max(0, Math.min(maxcol, @moveCol))
+
+  _left: () ->
+    @setCol (@col - 1)
+
+  _right: () ->
+    @setCol (@col + 1)
 
   left: () ->
     if @col > 0
-      @col -= 1
+      do @_left
 
   right: (options) ->
     options?={}
     shift = if options.cursor == 'pastEnd' then 0 else 1
     if @col < (@data.rowLength @row) - shift
-      @col += 1
+      do @_right
 
   home: () ->
-    @col = 0
+    @setCol 0
 
-  end: (options) ->
-    options ?= {}
-    shift = if options.cursor == 'pastEnd' then 0 else 1
-    @col = (@data.rowLength @row) - shift
+  end: (options = {}) ->
+    @setCol (if options.cursor == 'pastEnd' then -1 else -2)
 
   wordRegex = /^[a-z0-9_]+$/i
 
@@ -56,46 +88,46 @@ class Cursor
   beginningWord: (options = {}) ->
     if @col == 0
       return
-    @col -= 1
+    do @_left
     while @col > 0 and @isInWhitespace @row, @col
-      @col -= 1
+      do @_left
 
     wordcheck = @getWordCheck options, (@data.getChar @row, @col)
     while @col > 0 and wordcheck @row, (@col-1)
-      @col -= 1
+      do @_left
 
   endWord: (options = {}) ->
     end = (@data.rowLength @row) - 1
     if @col == end
       if options.cursor == 'pastEnd'
-        @col += 1
+        do @_right
       return
 
-    @col += 1
+    do @_right
     while @col < end and @isInWhitespace @row, @col
-      @col += 1
+      do @_right
     wordcheck = @getWordCheck options, (@data.getChar @row, @col)
     while @col < end and wordcheck @row, (@col+1)
-      @col += 1
+      do @_right
 
     if options.cursor == 'pastEnd'
-      @col += 1
+      do @_right
 
   nextWord: (options = {}) ->
     end = (@data.rowLength @row) - 1
     if @col == end
       if options.cursor == 'pastEnd'
-        @col += 1
+        do @_right
       return
 
     wordcheck = @getWordCheck options, (@data.getChar @row, @col)
     while @col < end and wordcheck @row, (@col+1)
-      @col += 1
+      do @_right
     while @col < end and @isInWhitespace @row, (@col+1)
-      @col += 1
+      do @_right
 
     if @col < end or options.cursor == 'pastEnd'
-      @col += 1
+      do @_right
 
   nextChar: (char, options = {}) ->
     end = (@data.rowLength @row) - 1
@@ -116,11 +148,11 @@ class Cursor
     if found == null
       return
 
-    @col = found
+    @setCol found
     if options.cursor == 'pastEnd'
-      @col += 1
+      do @_right
     if options.beforeFound
-      @col -= 1
+      do @_left
 
   prevChar: (char, options = {}) ->
     if @col == 0
@@ -140,21 +172,21 @@ class Cursor
     if found == null
       return
 
-    @col = found
+    @setCol found
     if options.beforeFound
-      @col += 1
+      do @_right
 
-  up: () ->
+  up: (options) ->
     row = @data.prevVisible @row
     if row != null
       @row = row
-      @col = 0
+      @fromMoveCol options.cursor
 
-  down: () ->
+  down: (options) ->
     row = @data.nextVisible @row
     if row != null
       @row = row
-      @col = 0
+      @fromMoveCol options.cursor
 
 # exports
 module?.exports = Cursor

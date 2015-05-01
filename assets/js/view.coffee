@@ -44,8 +44,7 @@ class View
           action.rewind @
 
           # use final cursor
-          [@cursor.row, @cursor.col] = action.oldCursor
-          @setCur @cursor.row, @cursor.col
+          @cursor = action.oldCursor
       do @undrawCursors
       @drawRow @cursor.row
 
@@ -67,7 +66,7 @@ class View
         @history = @history.slice 0, (@historyIndex + 1)
         @actions = @actions.slice 0, @history[@historyIndex]
 
-    action.oldCursor = [@cursor.row, @cursor.col]
+    action.oldCursor = do @cursor.clone
     action.apply @
     @actions.push action
 
@@ -81,26 +80,22 @@ class View
       if col > 0
         col -= 1
 
-    @cursor.row = row
-    @cursor.col = col
-
     shift = if option == 'pastEnd' then 0 else 1
     rowLen = do @curRowLength
-    if rowLen > 0 and @cursor.col > rowLen - shift
-      @cursor.col = rowLen - shift
+    if rowLen > 0 and col > rowLen - shift
+      col = rowLen - shift
+
+    @cursor.set row, col
+
+  setCursor: (cursor) ->
+    oldrow = @cursor.row
+    @cursor = cursor
+    @drawRow oldrow
+    @drawRow @cursor.row
 
   moveCursorBackIfNeeded: () ->
     if @cursor.col > do @curRowLength - 1
       do @moveCursorLeft
-
-
-  moveCursor: (row, col) ->
-    oldrow = @cursor.row
-    @cursor.row = row
-    @cursor.col = col
-
-    @drawRow oldrow
-    @drawRow @cursor.row
 
   moveCursorLeft: () ->
     do @cursor.left
@@ -108,6 +103,20 @@ class View
 
   moveCursorRight: (options) ->
     @cursor.right options
+    @drawRow @cursor.row
+
+  moveCursorUp: (options) ->
+    oldrow = @cursor.row
+    @cursor.up options
+
+    @drawRow oldrow
+    @drawRow @cursor.row
+
+  moveCursorDown: (options) ->
+    oldrow = @cursor.row
+    @cursor.down options
+
+    @drawRow oldrow
     @drawRow @cursor.row
 
   moveCursorHome: () ->

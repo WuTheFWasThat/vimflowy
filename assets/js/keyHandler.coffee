@@ -86,4 +86,5 @@ class KeyHandler extends EventEmitter
 
       console.log('keycode', e.keyCode, 'key', key)
       self.emit 'keydown', key
+      return false
 
