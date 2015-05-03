@@ -949,6 +949,10 @@ t = new TestCase [
 ]
 
 # see that it handles deletion of everything correctly
+t = new TestCase [ 'row', 'row', 'row your boat' ]
+t.sendKeys '4dd'
+t.expect ['']
+
 t = new TestCase [
   { line: 'top row', children: [
     { line : 'middle row', children : [
@@ -1027,7 +1031,56 @@ t.sendKeys 'a row'
 t.sendKey 'esc'
 t.expect [
   { line: 'top row', children: [
-    'a row'
+    { line: 'middle row', children: [
+      'a row'
+    ] },
+  ] },
+]
+
+t = new TestCase [
+  { line: 'parent row', children: [
+    'child row 1'
+    'child row 2'
+  ] },
+]
+t.sendKeys 'j3dd'
+t.expect [ 'parent row' ]
+t.sendKeys 'u'
+t.expect [
+  { line: 'parent row', children: [
+    'child row 1'
+    'child row 2'
+  ] },
+]
+
+t = new TestCase [
+  { line: 'parent row', children: [
+    'child row 1'
+    { line: 'child row 2', children: [
+      'baby 1'
+      'baby 2'
+      'baby 3'
+    ] },
+  ] },
+]
+t.sendKeys '2j2cc' # despite the 2cc, deletes only one, but deletes all the children
+t.sendKeys 'deleted'
+t.sendKey 'esc'
+t.expect [
+  { line: 'parent row', children: [
+    'child row 1'
+    'deleted'
+  ] },
+]
+t.sendKeys 'u'
+t.expect [
+  { line: 'parent row', children: [
+    'child row 1'
+    { line: 'child row 2', children: [
+      'baby 1'
+      'baby 2'
+      'baby 3'
+    ] },
   ] },
 ]
 

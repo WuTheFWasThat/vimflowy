@@ -71,12 +71,16 @@ class Data
     return i
 
   attachChild: (id, child, index = -1) ->
+    @attachChildren id, [child], index
+
+  attachChildren: (id, new_children, index = -1) ->
     children = @getChildren id
     if index == -1
-      children.push child
+      children.push.apply children, new_children
     else
-      children.splice index, 0, child
-    @setParent child, id
+      children.splice.apply children, [index, 0].concat(new_children)
+    for child in new_children
+      @setParent child, id
 
   nextVisible: (id) ->
     if not @collapsed id

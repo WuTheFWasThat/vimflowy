@@ -24,10 +24,8 @@ class Cursor
       @col = rowlen + moveCol + 1
     else
       @col = moveCol
-    console.log('setCol', @moveCol)
 
   fromMoveCol: (option) ->
-    console.log('movecol', @moveCol)
     rowlen = @data.rowLength @row
     maxcol = rowlen - (if option == 'pastEnd' then 0 else 1)
     if @moveCol < 0
