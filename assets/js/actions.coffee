@@ -58,8 +58,8 @@
       view.data.deleteRow @newrow
       do view.render
 
-  class DeleteRows extends Action
-    constructor: (row, nrows, options = {}) ->
+  class DetachRows extends Action
+    constructor: (row, nrows = 1, options = {}) ->
       @row = row
       @nrows = nrows
       @options = options
@@ -71,7 +71,7 @@
       row = @row
 
       addNew = false
-      deleted = []
+      @deletedRows = []
 
       @created = null
 
@@ -87,7 +87,7 @@
           throw 'expected to delete at index'
         if info.parent != parent
           throw 'expected to delete at parent'
-        deleted.push row
+        @deletedRows.push row
 
         siblings = view.data.getChildren parent
         if index < siblings.length # keep deleting!
@@ -108,8 +108,8 @@
 
         row = next
 
-      view.setCur next, 0
-      @deleted = deleted
+      if @options.cursor != 'stay'
+        view.setCur next, 0
       @parent = parent
       @index = index
 
@@ -118,39 +118,31 @@
     rewind: (view) ->
       if @created != null
         view.data.deleteRow @created
-      view.data.attachChildren @parent, @deleted, @index
+      view.data.attachChildren @parent, @deletedRows, @index
       do view.render
 
-  class AttachRow extends Action
-    constructor: (parent, row, index = -1) ->
+  class AttachRows extends Action
+    constructor: (parent, rows, index = -1, options = {}) ->
       @parent = parent
-      @row = row
+      @rows = rows
       @index = index
+      @options = options
 
     apply: (view) ->
-      view.data.attachChild @parent, @row, @index
+      view.data.attachChildren @parent, @rows, @index
+
+      if @options.cursor != 'stay'
+        view.setCur @rows[0], 0
       do view.render
 
     rewind: (view) ->
-      view.data.detach @row
-      do view.render
-
-  class DetachRow extends Action
-    constructor: (row) ->
-      @row = row
-
-    apply: (view) ->
-      @result = view.data.detach @row
-      do view.render
-
-    rewind: (view) ->
-      view.data.attachChild @result.parent, @row, @result.index
+      for row in @rows
+        view.data.detach row
       do view.render
 
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRowSibling = InsertRowSibling
-  exports.DeleteRows = DeleteRows
-  exports.AttachRow = AttachRow
-  exports.DetachRow = DetachRow
+  exports.DetachRows = DetachRows
+  exports.AttachRows = AttachRows
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

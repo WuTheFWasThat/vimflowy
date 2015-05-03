@@ -2,7 +2,7 @@ class Register
   TYPES = {
     NONE: 0
     CHARS: 1
-    LINES: 2
+    ROWS: 2
   }
 
   constructor: (view) ->
@@ -14,11 +14,11 @@ class Register
     @type = TYPES.CHARS
     @chars = chars
 
-  saveLines: (lines) ->
-    # lines: array of row IDs
+  saveRows: (rows) ->
+    # rows: array of row IDs
 
-    @type = TYPES.LINES
-    @lines = lines
+    @type = TYPES.ROWS
+    @rows = rows
 
   paste: (options) ->
     if @type == TYPES.CHARS
@@ -26,8 +26,11 @@ class Register
         return @view.addCharsAtCursor @chars
       else
         return @view.addCharsAfterCursor @chars
-    else if @type == TYPES.LINES
-      return
+    else if @type == TYPES.ROWS
+      row = @view.cursor.row
+      if options.before
+        row = @view.data.prevVisible row, {allowRoot: true}
+      return @view.addRows row, @rows
 
 # exports
 module?.exports = Register

@@ -104,13 +104,14 @@ class Data
       return @lastVisible children[children.length - 1]
     return id
 
-  prevVisible: (id) ->
+  prevVisible: (id, options = {}) ->
     prevsib = @getSiblingBefore id
     if prevsib != null
       return @lastVisible prevsib
     parent = @getParent id
-    if parent == @root
-      return null
+    if not options.allowRoot
+      if parent == @root
+        return null
     return parent
 
   getSiblingBefore: (id) ->
