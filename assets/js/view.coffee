@@ -137,9 +137,10 @@ class View
     @act new actions.AddChars @cursor.row, col, chars, options
 
   delChars: (row, col, nchars, options) ->
-    delAction = new actions.DelChars row, col, nchars, options
-    @act delAction
-    @register.saveChars delAction.deletedChars
+    if (@data.rowLength row) > 0
+      delAction = new actions.DelChars row, col, nchars, options
+      @act delAction
+      @register.saveChars delAction.deletedChars
 
   delCharsBeforeCursor: (nchars) ->
     @delChars @cursor.row, (@cursor.col-nchars), nchars
@@ -161,8 +162,8 @@ class View
   newLineAbove: () ->
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
-  delLine: (options) ->
-    @act new actions.DeleteRow @cursor.row, options
+  delLines: (nrows, options) ->
+    @act new actions.DeleteRows @cursor.row, nrows, options
 
   clearLine: () ->
     # TODO:

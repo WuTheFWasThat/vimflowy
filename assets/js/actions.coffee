@@ -58,53 +58,67 @@
       view.data.deleteRow @newrow
       do view.render
 
-  class DeleteRow extends Action
-    constructor: (row, options = {}) ->
+  class DeleteRows extends Action
+    constructor: (row, nrows, options = {}) ->
       @row = row
+      @nrows = nrows
       @options = options
 
     apply: (view) ->
       # leaves dangling pointers, for both paste and undo
       # these get garbage collected when we serialize/deserialize
 
-      if @row == view.root
-        throw 'Cannot delete root'
+      row = @row
 
-      parent = view.data.getParent @row
+      addNew = false
+      deleted = []
 
-      index = view.data.detachChild parent, @row
+      @created = null
 
-      siblings = view.data.getChildren parent
-      if index < siblings.length
-        if @options.addNew
-            next = view.data.addChild parent, index
-            @nextCreated = true
-        else
-            next = siblings[index]
-      else if index > 0
-        if @options.addNew
-            next = view.data.addChild parent
-            @nextCreated = true
-        else
+      parent = view.data.getParent row
+      index = view.data.indexOf row
+
+      for i in [1..@nrows]
+        if row == view.root
+          throw 'Cannot delete root'
+
+        info = view.data.detach row
+        if info.index != index
+          throw 'expected to delete at index'
+        if info.parent != parent
+          throw 'expected to delete at parent'
+        deleted.push row
+
+        siblings = view.data.getChildren parent
+        if index < siblings.length # keep deleting!
+          if i == @nrows and @options.addNew
+              next = view.data.addChild parent, index
+              @created = next
+          else
+              next = siblings[index]
+        else # stop deleting
+          if index > 0
             next = siblings[index - 1]
-      else
-        next = parent
-        if @options.addNew or (next == view.data.root)
-            next = view.data.addChild parent
-            @nextCreated = true
+          else
+            next = parent
+          if @options.addNew or (next == view.data.root)
+              next = view.data.addChild parent
+              @created = next
+          break
+
+        row = next
 
       view.setCur next, 0
-
-      @next = next
+      @deleted = deleted
       @parent = parent
       @index = index
 
       do view.render
 
     rewind: (view) ->
-      if @nextCreated
-        view.data.deleteRow @next
-      view.data.attachChild @parent, @row, @index
+      if @created != null
+        view.data.deleteRow @created
+      view.data.attachChildren @parent, @deleted, @index
       do view.render
 
   class AttachRow extends Action
@@ -136,7 +150,7 @@
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRowSibling = InsertRowSibling
-  exports.DeleteRow = DeleteRow
+  exports.DeleteRows = DeleteRows
   exports.AttachRow = AttachRow
   exports.DetachRow = DetachRow
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

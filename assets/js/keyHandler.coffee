@@ -68,7 +68,7 @@ class KeyHandler extends EventEmitter
     self = @
     $(document).keydown (e) ->
       if e.keyCode of ignoreMap
-        return
+        return true
       else if e.keyCode of keyCodeMap
         key = keyCodeMap[e.keyCode]
 
@@ -80,6 +80,9 @@ class KeyHandler extends EventEmitter
 
         if e.ctrlKey
           key = 'ctrl+' + key
+
+        if e.metaKey
+          return true
       else
         # this is necessary for typing stuff..
         key = String.fromCharCode e.keyCode

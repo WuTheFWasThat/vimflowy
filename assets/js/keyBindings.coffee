@@ -420,14 +420,8 @@ class KeyBindings
 
           nkey = do nextKey
           if nkey == key
-            # e.g. dd, cc
-            # delete repeat lines
-            for i in [1..repeat]
-              options = {}
-              if i == repeat and binding == 'CHANGE'
-                options.addNew = true
-              @view.delLine options
-
+            # dd and cc
+            @view.delLines repeat, {addNew: binding == 'CHANGE'}
           else
             motion = getMotion nkey
             if not motion
