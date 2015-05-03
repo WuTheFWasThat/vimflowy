@@ -49,6 +49,9 @@ class Data
   collapsed: (row) ->
     return @structure[row].collapsed
 
+  setCollapsed: (row, collapsed) ->
+    @structure[row].collapsed = collapsed
+
   # structure manipulation
 
   indexOf: (child) ->
@@ -113,6 +116,9 @@ class Data
       if parent == @root
         return null
     return parent
+
+  toggleCollapsed: (id) ->
+    @setCollapsed id, (not @collapsed id)
 
   getSiblingBefore: (id) ->
     return @_getSiblingOffset id, -1

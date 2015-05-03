@@ -165,6 +165,9 @@ class KeyBindings
     INDENT_BLOCK_LEFT:
       display: 'Indent block left'
       key: '['
+    TOGGLE_FOLD:
+      display: 'Toggle whether a block is folded'
+      key: 'z'
 
   SEQUENCE_ACTIONS = {
     DROP: 0
@@ -510,6 +513,9 @@ class KeyBindings
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'PASTE_BEFORE'
             do @view.pasteBefore
+            return [keyIndex, SEQUENCE_ACTIONS.FINISH]
+          else if binding == 'TOGGLE_FOLD'
+            do @view.toggleFold
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
           return [keyIndex, SEQUENCE_ACTIONS.DROP]
