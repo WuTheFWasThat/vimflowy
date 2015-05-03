@@ -221,6 +221,12 @@ class View
   unindentBlock: () ->
     @unindent @cursor.row, {recursive: true}
 
+  toggleFold: () ->
+    @data.toggleCollapsed @cursor.row
+    # @renderTree @cursor.row
+    # TODO: optimize
+    do @render
+
   pasteBefore: () ->
     @register.paste {before: true}
 
@@ -236,14 +242,23 @@ class View
     $('.cursor').removeClass 'cursor'
 
   renderTree: (parentid, onto) ->
+    if not onto
+      onto = $('#' + (childrenDivID parentid))
 
     do onto.empty
+
+    if @data.collapsed parentid
+      return
+
     for id in @data.getChildren parentid
       el = $('<div>')
         .attr('id', containerDivID id)
         .addClass('node')
 
-      bullet = $('<i>').addClass('fa fa-circle bullet')
+      icon = 'fa-circle'
+      if (@data.getChildren id).length > 0
+        icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
+      bullet = $('<i>').addClass('fa ' + icon + ' bullet')
 
       elLine = $('<div>').addClass('node-text').attr('id', rowDivID id)
       @drawRow id, elLine
@@ -257,7 +272,7 @@ class View
   drawRow: (row, onto) ->
     console.log('drawing row', row, @cursor.row, @cursor.col)
     if not onto
-      onto = $('#node-' + row + '-row')
+      onto = $('#' + (rowDivID row))
     lineData = @data.lines[row]
 
     console.log lineData
