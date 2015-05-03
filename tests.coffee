@@ -1235,3 +1235,24 @@ t.sendKeys 'ru'
 t.expect ['umpty', '']
 t.sendKeys 'jxk.'
 t.expect ['mpty', '']
+
+# test pasting rows!
+t = new TestCase ['humpty', 'dumpty']
+t.sendKeys 'ddp'
+t.expect [
+ { line: 'dumpty', children: [
+   'humpty'
+ ] }
+]
+t.sendKeys 'u'
+t.expect ['dumpty']
+t.sendKeys 'u'
+t.expect ['humpty', 'dumpty']
+
+t = new TestCase ['humpty', 'dumpty']
+t.sendKeys 'jddP'
+t.expect [ 'dumpty', 'humpty' ]
+t.sendKeys 'u'
+t.expect ['humpty']
+t.sendKeys 'u'
+t.expect ['humpty', 'dumpty']

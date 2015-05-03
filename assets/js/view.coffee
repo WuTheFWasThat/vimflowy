@@ -152,20 +152,25 @@ class View
     @delCharsAfterCursor nchars, {cursor: 'pastEnd'}
     @addCharsAtCursor chars, options
 
-  newLineBelow: () ->
+  newRowBelow: () ->
     children = @data.getChildren @cursor.row
     if children.length > 0
       @act new actions.InsertRowSibling children[0], {before: true}
     else
       @act new actions.InsertRowSibling @cursor.row, {after: true}
 
-  newLineAbove: () ->
+  newRowAbove: () ->
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
-  delLines: (nrows, options) ->
-    @act new actions.DeleteRows @cursor.row, nrows, options
+  delRows: (nrows, options = {}) ->
+    delAction = new actions.DetachRows @cursor.row, nrows, options
+    @act delAction
+    @register.saveRows delAction.deletedRows
 
-  clearLine: () ->
+  addRows: (row, rows, options = {}) ->
+    @act new actions.AttachRows row, rows, options
+
+  clearRow: () ->
     # TODO:
     do @render
 
@@ -174,13 +179,13 @@ class View
     if sib == null
       return null # cannot indent
 
-    @act new actions.DetachRow id
-    @act new actions.AttachRow sib, id
+    @act new actions.DetachRows id, 1, {cursor: 'stay'}
+    @act new actions.AttachRows sib, [id], -1, {cursor: 'stay'}
 
     if not options.recursive
       for child in (@data.getChildren id).slice()
-        @act new actions.DetachRow child
-        @act new actions.AttachRow sib, child
+        @act new actions.DetachRows child, 1, {cursor: 'stay'}
+        @act new actions.AttachRows sib, [child], -1, {cursor: 'stay'}
 
   unindent: (id, options = {}) ->
     if not options.recursive
@@ -192,22 +197,22 @@ class View
       return
 
     p_i = @data.indexOf id
-    @act new actions.DetachRow id
+    @act new actions.DetachRows id, 1, {cursor: 'stay'}
 
     newparent = @data.getParent parent
 
     pp_i = @data.indexOf parent
-    @act new actions.AttachRow newparent, id, (pp_i+1)
+    @act new actions.AttachRows newparent, [id], (pp_i+1), {cursor: 'stay'}
 
     p_children = @data.getChildren parent
     for child in p_children.slice(p_i)
-      @act new actions.DetachRow child
-      @act new actions.AttachRow id, child
+      @act new actions.DetachRows child, 1, {cursor: 'stay'}
+      @act new actions.AttachRows id, [child], -1, {cursor: 'stay'}
 
-  indentLine: () ->
+  indentRow: () ->
     @indent @cursor.row
 
-  unindentLine: () ->
+  unindentRow: () ->
     @unindent @cursor.row
 
   indentBlock: () ->

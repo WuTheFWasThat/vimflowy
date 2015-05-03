@@ -386,11 +386,11 @@ class KeyBindings
         else if key == 'shift+enter'
           @view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
         else if key == 'enter'
-          do @view.newLineBelow
+          do @view.newRowBelow
         else if key == 'tab'
-          @view.indentLine {}
+          @view.indentRow {}
         else if key == 'shift+tab'
-          @view.unindentLine {}
+          @view.unindentRow {}
         else
           @view.addCharsAtCursor [key], {cursor: 'pastEnd'}
 
@@ -421,7 +421,7 @@ class KeyBindings
           nkey = do nextKey
           if nkey == key
             # dd and cc
-            @view.delLines repeat, {addNew: binding == 'CHANGE'}
+            @view.delRows repeat, {addNew: binding == 'CHANGE'}
           else
             motion = getMotion nkey
             if not motion
@@ -459,9 +459,9 @@ class KeyBindings
           else if binding == 'CHANGE_CHAR'
             @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}
           else if binding == 'INSERT_LINE_ABOVE'
-            do @view.newLineAbove
+            do @view.newRowAbove
           else if binding == 'INSERT_LINE_BELOW'
-            do @view.newLineBelow
+            do @view.newRowBelow
 
           @setMode MODES.INSERT
           return [keyIndex, SEQUENCE_ACTIONS.CONTINUE]
@@ -494,10 +494,10 @@ class KeyBindings
             do @view.moveCursorBackIfNeeded
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'INDENT_RIGHT'
-            @view.indentLine {}
+            @view.indentRow {}
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'INDENT_LEFT'
-            @view.unindentLine {}
+            @view.unindentRow {}
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'INDENT_BLOCK_RIGHT'
             @view.indentBlock {recursive: true}

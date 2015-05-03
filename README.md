@@ -2,12 +2,11 @@
 
 ## TODO ##
 
-implement y and p for dd/cc
-implement J
 implement folding
 implement zoom
+implement gg G ctrl+D/U
+implement J
 implement ctrl+o
-ctrl+D/U
 search
 line numbers?
 
