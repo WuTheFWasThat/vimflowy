@@ -45,8 +45,7 @@ class View
 
           # use final cursor
           @cursor = action.oldCursor
-      do @undrawCursors
-      @drawRow @cursor.row
+    do @render
 
   redo: () ->
     if @historyIndex < @history.length
@@ -57,9 +56,8 @@ class View
       for i in [oldIndex...newIndex]
           action = @actions[i]
           action.apply @
-
-      do @undrawCursors
       @drawRow @cursor.row
+    do @render
 
   act: (action) ->
     if @historyIndex + 1 != @history.length
@@ -69,6 +67,7 @@ class View
     action.oldCursor = do @cursor.clone
     action.apply @
     @actions.push action
+    do @render
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
@@ -163,28 +162,28 @@ class View
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
   delRows: (nrows, options = {}) ->
-    delAction = new actions.DetachRows @cursor.row, nrows, options
-    @act delAction
+    delAction = @detachRows @cursor.row, nrows, options
     @register.saveRows delAction.deletedRows
 
-  addRows: (row, rows, options = {}) ->
-    @act new actions.AttachRows row, rows, options
+  detachRows: (row, nrows, options = {}) ->
+    delAction = new actions.DetachRows row, nrows, options
+    @act delAction
+    return delAction
 
-  clearRow: () ->
-    # TODO:
-    do @render
+  addRows: (row, rows, index = -1, options = {}) ->
+    @act new actions.AttachRows row, rows, index, options
 
   indent: (id, options = {}) ->
     sib = @data.getSiblingBefore id
     if sib == null
       return null # cannot indent
 
-    @act new actions.DetachRows id, 1, {cursor: 'stay'}
+    @detachRows id, 1, {cursor: 'stay'}
     @act new actions.AttachRows sib, [id], -1, {cursor: 'stay'}
 
     if not options.recursive
       for child in (@data.getChildren id).slice()
-        @act new actions.DetachRows child, 1, {cursor: 'stay'}
+        @detachRows child, 1, {cursor: 'stay'}
         @act new actions.AttachRows sib, [child], -1, {cursor: 'stay'}
 
   unindent: (id, options = {}) ->
@@ -197,7 +196,7 @@ class View
       return
 
     p_i = @data.indexOf id
-    @act new actions.DetachRows id, 1, {cursor: 'stay'}
+    @detachRows id, 1, {cursor: 'stay'}
 
     newparent = @data.getParent parent
 
@@ -206,7 +205,7 @@ class View
 
     p_children = @data.getChildren parent
     for child in p_children.slice(p_i)
-      @act new actions.DetachRows child, 1, {cursor: 'stay'}
+      @detachRows child, 1, {cursor: 'stay'}
       @act new actions.AttachRows id, [child], -1, {cursor: 'stay'}
 
   indentRow: () ->
@@ -221,11 +220,8 @@ class View
   unindentBlock: () ->
     @unindent @cursor.row, {recursive: true}
 
-  toggleFold: () ->
-    @data.toggleCollapsed @cursor.row
-    # @renderTree @cursor.row
-    # TODO: optimize
-    do @render
+  toggleRow: () ->
+    @act new actions.ToggleRow @cursor.row
 
   pasteBefore: () ->
     @register.paste {before: true}
@@ -235,11 +231,9 @@ class View
 
   # RENDERING
 
+  # TODO: make the rendering do diffs (maybe data should track dirty bits)
   render: () ->
     @renderTree 0, @mainDiv
-
-  undrawCursors: () ->
-    $('.cursor').removeClass 'cursor'
 
   renderTree: (parentid, onto) ->
     if not onto
