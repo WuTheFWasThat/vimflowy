@@ -2,7 +2,6 @@
 
 ## TODO ##
 
-implement folding
 implement zoom
 implement gg G ctrl+D/U
 implement J
@@ -12,7 +11,6 @@ line numbers?
 
 ## KNOWN ISSUES: ##
 
-- j/k don't preserve the column
 - e/b/w don't cross onto next line
 
 Firstly, there are many known inconsistencies with vi.  Many are intentional.  Here is a list of known differences:
