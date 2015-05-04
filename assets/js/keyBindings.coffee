@@ -515,7 +515,7 @@ class KeyBindings
             do @view.pasteBefore
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
           else if binding == 'TOGGLE_FOLD'
-            do @view.toggleFold
+            do @view.toggleRow
             return [keyIndex, SEQUENCE_ACTIONS.FINISH]
 
           return [keyIndex, SEQUENCE_ACTIONS.DROP]

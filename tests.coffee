@@ -1239,11 +1239,7 @@ t.expect ['mpty', '']
 # test pasting rows!
 t = new TestCase ['humpty', 'dumpty']
 t.sendKeys 'ddp'
-t.expect [
- { line: 'dumpty', children: [
-   'humpty'
- ] }
-]
+t.expect [ 'dumpty', 'humpty' ]
 t.sendKeys 'u'
 t.expect ['dumpty']
 t.sendKeys 'u'
@@ -1256,3 +1252,59 @@ t.sendKeys 'u'
 t.expect ['humpty']
 t.sendKeys 'u'
 t.expect ['humpty', 'dumpty']
+
+t = new TestCase [
+  { line: 'herpy', children: [
+    { line: 'derpy', children: [
+      'burpy'
+    ] },
+  ] },
+]
+t.sendKeys 'jjddp'
+t.expect [
+  { line: 'herpy', children: [
+    'derpy',
+    'burpy'
+  ] },
+]
+
+t.sendKeys 'u'
+t.expect [
+  { line: 'herpy', children: [
+    'derpy',
+  ] },
+]
+t.sendKeys 'kp'
+t.expect [
+  { line: 'herpy', children: [
+    'burpy',
+    'derpy'
+  ] },
+]
+
+t.sendKeys 'u'
+t.expect [
+  { line: 'herpy', children: [
+    'derpy',
+  ] },
+]
+t.sendKeys 'P'
+t.expect [
+  'burpy'
+  { line: 'herpy', children: [
+    'derpy',
+  ] },
+]
+t.sendKeys 'u'
+t.expect [
+  { line: 'herpy', children: [
+    'derpy',
+  ] },
+]
+t.sendKeys 'jP'
+t.expect [
+  { line: 'herpy', children: [
+    'burpy',
+    'derpy',
+  ] },
+]

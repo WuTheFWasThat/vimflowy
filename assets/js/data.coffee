@@ -107,14 +107,13 @@ class Data
       return @lastVisible children[children.length - 1]
     return id
 
-  prevVisible: (id, options = {}) ->
+  prevVisible: (id) ->
     prevsib = @getSiblingBefore id
     if prevsib != null
       return @lastVisible prevsib
     parent = @getParent id
-    if not options.allowRoot
-      if parent == @root
-        return null
+    if parent == @root
+      return null
     return parent
 
   toggleCollapsed: (id) ->

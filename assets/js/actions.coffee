@@ -17,10 +17,8 @@
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
       view.setCur @row, (@col + @chars.length), @options.cursor
-      view.drawRow @row
     rewind: (view) ->
       view.data.deleteChars @row, @col, @chars.length
-      view.drawRow @row
 
   class DelChars extends Action
     constructor: (row, col, nchars, options = {}) ->
@@ -31,12 +29,8 @@
     apply: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
       view.setCur @row, @col, @options.cursor
-      view.drawRow @row
     rewind: (view) ->
       view.data.writeChars @row, @col, @deletedChars
-      view.drawRow @row
-
-  # TODO: make all the `do view.render` more efficient
 
   class InsertRowSibling extends Action
     constructor: (row, options) ->
@@ -52,11 +46,9 @@
         console.log @options
         throw 'InsertRowSibling needs valid option'
       view.setCur @newrow, 0
-      do view.render
 
     rewind: (view) ->
       view.data.deleteRow @newrow
-      do view.render
 
   class DetachRows extends Action
     constructor: (row, nrows = 1, options = {}) ->
@@ -113,13 +105,10 @@
       @parent = parent
       @index = index
 
-      do view.render
-
     rewind: (view) ->
       if @created != null
         view.data.deleteRow @created
       view.data.attachChildren @parent, @deletedRows, @index
-      do view.render
 
   class AttachRows extends Action
     constructor: (parent, rows, index = -1, options = {}) ->
@@ -133,16 +122,23 @@
 
       if @options.cursor != 'stay'
         view.setCur @rows[0], 0
-      do view.render
 
     rewind: (view) ->
       for row in @rows
         view.data.detach row
-      do view.render
+
+  class ToggleRow extends Action
+    constructor: (row) ->
+      @row = row
+    apply: (view) ->
+      view.data.toggleCollapsed @row
+    rewind: (view) ->
+      view.data.toggleCollapsed @row
 
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRowSibling = InsertRowSibling
   exports.DetachRows = DetachRows
   exports.AttachRows = AttachRows
+  exports.ToggleRow = ToggleRow
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})
