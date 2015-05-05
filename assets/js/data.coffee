@@ -28,14 +28,14 @@ class Data
 
   # data access
 
-  getRow: (row) ->
+  getLine: (row) ->
     return @lines[row]
 
   getChar: (row, col) ->
-    return @getRow(row)[col]
+    return @getLine(row)[col]
 
-  rowLength: (row) ->
-    return @getRow(row).length
+  getLength: (row) ->
+    return @getLine(row).length
 
   getParent: (row) ->
     return @structure[row].parent

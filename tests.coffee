@@ -20,11 +20,10 @@ class TestCase
     @keybinder = new KeyBindings null, null, @view
 
   sendKeys: (keys) ->
-    for key in keys
-      @sendKey key
+    @keybinder.handleKeys keys
 
   sendKey: (key) ->
-    @keybinder.handleKey key
+    @sendKeys [key]
 
   expect: (expected) ->
     serialized = do @data.serialize
@@ -1191,10 +1190,10 @@ t.expect ['fish, one two fish, red fish, blue fish']
 
 t = new TestCase ['one fish, two fish, red fish, blue fish']
 t.sendKeys '2dW2Whp'
-t.expect ['two fish, fish, red fish, blue fish']
+t.expect ['two fish, one fish, red fish, blue fish']
 # undo doesn't move cursor, and paste still has stuff in register
 t.sendKeys 'up'
-t.expect ['two fish, fish, red fish, blue fish']
+t.expect ['two fish, one fish, red fish, blue fish']
 
 t = new TestCase ['one fish, two fish, red fish, blue fish']
 t.sendKeys 'd2W2Whp'
@@ -1308,3 +1307,31 @@ t.expect [
     'derpy',
   ] },
 ]
+
+# test yank
+t = new TestCase ['lol']
+t.sendKeys 'yllp'
+t.expect ['loll']
+
+t = new TestCase ['lol']
+t.sendKeys 'y$P'
+t.expect ['lollol']
+
+t = new TestCase ['lol']
+t.sendKeys '$ybp'
+t.expect ['lollo']
+t.sendKeys 'u'
+t.expect ['lol']
+t.sendKeys 'P'
+t.expect ['lolol']
+
+t = new TestCase ['haha ... ha ... funny']
+t.sendKeys 'y3wP'
+t.expect ['haha ... ha haha ... ha ... funny']
+
+t = new TestCase ['haha ... ha ... funny']
+t.sendKeys 'yep'
+t.expect ['hhahaaha ... ha ... funny']
+# cursor ends at last character
+t.sendKeys 'yffp'
+t.expect ['hhahaaaha ... ha ... faha ... ha ... funny']

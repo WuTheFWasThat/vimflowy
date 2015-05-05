@@ -146,10 +146,9 @@ class KeyBindings
       key: 's'
       insert: true
 
-    # TODO
-    # YANK:
-    #   display: 'Yank (operator)'
-    #   key: 'y'
+    YANK:
+      display: 'Yank (operator)'
+      key: 'y'
     PASTE_AFTER:
       display: 'Paste after cursor'
       key: 'p'
@@ -302,12 +301,12 @@ class KeyBindings
 
   handleKeys: (keys) ->
     for key in keys
-      @handleKey key
+      @queuedKeys.push key
+      console.log('key', key)
+    @queuedKeys = @processKeys @queuedKeys
 
   handleKey: (key) ->
-    console.log 'key', key
-    @queuedKeys.push key
-    @queuedKeys = @processKeys @queuedKeys
+    @handleKeys [key]
 
   processKeys: (keys) ->
     index = -1
@@ -333,30 +332,25 @@ class KeyBindings
     keyIndex = 0
 
     nextKey = () ->
-      if keyIndex == keys.length
-        return null
+      if keyIndex == keys.length then return null
       return keys[keyIndex++]
 
     # useful when you expect a motion
     getMotion = (motionKey) =>
       if not motionKey
         motionKey = do nextKey
-        if motionKey == null
-          return [null, SEQUENCE.WAIT]
+        if motionKey == null then return [null, SEQUENCE.WAIT]
       [repeat, motionKey] = getRepeat motionKey
-      if motionKey == null
-        return [null, SEQUENCE.WAIT]
+      if motionKey == null then return [null, SEQUENCE.WAIT]
 
       motionBinding = @keyMap[motionKey]
       motionInfo = @bindings[motionBinding] || {}
-      if not motionInfo.motion
-        return [null, SEQUENCE.DROP]
+      if not motionInfo.motion then return [null, SEQUENCE.DROP]
 
       motion = {type: motionBinding, repeat: repeat}
       if motionInfo.find
         char = do nextKey
-        if char == null
-          return [null, SEQUENCE.WAIT]
+        if char == null then return [null, SEQUENCE.WAIT]
         motion.char = char
       return [motion, null]
 
@@ -368,13 +362,11 @@ class KeyBindings
         return [1, key]
       numStr = key
       key = do nextKey
-      if key == null
-        return [null, null]
+      if key == null then return [null, null]
       while key in continues
         numStr += key
         key = do nextKey
-        if key == null
-          return [null, null]
+        if key == null then return [null, null]
       return [parseInt(numStr), key]
 
     # hepler functions for return values
@@ -389,11 +381,9 @@ class KeyBindings
 
     # console.log('keys', keys)
     key = do nextKey
-    if key == null
-      return do seq_wait
+    if key == null then return do seq_wait
 
-    # if key not in @reverseBindings:
-    #     return
+    # if key not in @reverseBindings then return
 
     # name = @reverseBindings[key]
     # handler = @handlers[name]
@@ -418,19 +408,18 @@ class KeyBindings
         else if key == 'shift+enter'
           @view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
         else if key == 'enter'
-          do @view.newRowBelow
+          do @view.newLineBelow
         else if key == 'tab'
-          @view.indentRow {}
+          @view.indentLine {}
         else if key == 'shift+tab'
-          @view.unindentRow {}
+          @view.unindentLine {}
         else
           @view.addCharsAtCursor [key], {cursor: 'pastEnd'}
 
         return do seq_continue
     else if @mode == MODES.NORMAL
       [repeat, key] = getRepeat key
-      if key == null
-        return do seq_wait
+      if key == null then return do seq_wait
 
       binding = @keyMap[key]
       info = @bindings[binding] || {}
@@ -443,45 +432,56 @@ class KeyBindings
       else if info.motion
         keyIndex = 0 # easier to just redo the work (number case is annoying)
         [motion, action] = do getMotion
-        if motion == null
-          return [keyIndex, action]
+        if motion == null then return [keyIndex, action]
 
-        cursor = @handleMotion motion
+        cursor = do @view.cursor.clone
+        cursor.move motion
         @view.setCursor cursor
         return do seq_drop
       else if @mode == MODES.NORMAL
-        if binding == 'DELETE' or binding == 'CHANGE'
+        if binding == 'DELETE' or binding == 'CHANGE' or binding == 'YANK'
 
           nkey = do nextKey
-          if nkey == null
-            return do seq_wait
+          if nkey == null then return do seq_wait
+
           if nkey == key
             # dd and cc
-            @view.delRows repeat, {addNew: binding == 'CHANGE'}
+            if binding == 'YANK'
+              return # TODO: copy repeat blocks
+            @view.delBlocks repeat, {addNew: binding == 'CHANGE'}
           else
             [motion, action] = getMotion nkey
-            if motion == null
-              return [keyIndex, action]
+            if motion == null then return [keyIndex, action]
 
+            # TODO: yank between old and new cursor
+            cursor = do @view.cursor.clone
             for i in [1..repeat]
-              cursor = @handleMotion motion, {cursor: 'pastEnd'}
-              if cursor.col < @view.cursor.col
+              cursor.move motion, {cursor: 'pastEnd'}
+
+            if cursor.col < @view.cursor.col
+              if binding == 'YANK'
+                @view.yankCharsBeforeCursor (@view.cursor.col - cursor.col)
+              else
                 @view.delCharsBeforeCursor (@view.cursor.col - cursor.col)
-              else if cursor.col > @view.cursor.col
+            else if cursor.col > @view.cursor.col
+              if binding == 'YANK'
+                @view.yankCharsAfterCursor (cursor.col - @view.cursor.col)
+              else
                 cursorOption = if binding == 'CHANGE' then 'pastEnd' else ''
                 @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {cursor: cursorOption}
 
           if binding == 'CHANGE'
             @setMode MODES.INSERT
             return do seq_continue
-          else
+          else if binding == 'YANK'
+            return do seq_drop
+          else # binding == 'DELETE'
             return do seq_finish
-
         else if binding == 'REPLACE'
           replaceKey = do nextKey
           if replaceKey == null
             return do seq_wait
-          num = Math.min(repeat, do @view.curRowLength - @view.cursor.col)
+          num = Math.min(repeat, do @view.curLineLength - @view.cursor.col)
           newChars = (replaceKey for i in [1..num])
           @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
           return do seq_finish
@@ -497,9 +497,9 @@ class KeyBindings
           else if binding == 'CHANGE_CHAR'
             @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}
           else if binding == 'INSERT_LINE_ABOVE'
-            do @view.newRowAbove
+            do @view.newLineAbove
           else if binding == 'INSERT_LINE_BELOW'
-            do @view.newRowBelow
+            do @view.newLineBelow
 
           @setMode MODES.INSERT
           return do seq_continue
@@ -532,9 +532,9 @@ class KeyBindings
             @view.delCharsAfterCursor repeat
             do @view.moveCursorBackIfNeeded
           else if binding == 'INDENT_RIGHT'
-            @view.indentRow {}
+            @view.indentLine {}
           else if binding == 'INDENT_LEFT'
-            @view.unindentRow {}
+            @view.unindentLine {}
           else if binding == 'INDENT_BLOCK_RIGHT'
             @view.indentBlock {recursive: true}
           else if binding == 'INDENT_BLOCK_LEFT'
@@ -544,7 +544,7 @@ class KeyBindings
           else if binding == 'PASTE_BEFORE'
             do @view.pasteBefore
           else if binding == 'TOGGLE_FOLD'
-            do @view.toggleRow
+            do @view.toggleBlock
           return do seq_finish
 
 if module?

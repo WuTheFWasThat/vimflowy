@@ -25,20 +25,20 @@ class Register
       if options.before
         @view.addCharsAtCursor @chars
       else
-        @view.addCharsAfterCursor @chars
+        @view.addCharsAfterCursor @chars, {cursor: 'beforeEnd'}
     else if @type == TYPES.ROWS
       row = @view.cursor.row
       parent = @view.data.getParent row
       index = @view.data.indexOf row
 
       if options.before
-        @view.addRows parent, @rows, index
+        @view.attachBlocks parent, @rows, index
       else
         children = @view.data.getChildren row
         if children.length > 0
-          @view.addRows row, @rows, 0
+          @view.attachBlocks row, @rows, 0
         else
-          @view.addRows parent, @rows, (index + 1)
+          @view.attachBlocks parent, @rows, (index + 1)
 
 # exports
 module?.exports = Register
