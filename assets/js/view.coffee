@@ -71,8 +71,8 @@ class View
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
-  curRowLength: () ->
-    return @data.rowLength @cursor.row
+  curLineLength: () ->
+    return @data.getLength @cursor.row
 
   setCur: (row, col, option = '') ->
     if option == 'beforeEnd'
@@ -80,9 +80,9 @@ class View
         col -= 1
 
     shift = if option == 'pastEnd' then 0 else 1
-    rowLen = do @curRowLength
-    if rowLen > 0 and col > rowLen - shift
-      col = rowLen - shift
+    len = do @curLineLength
+    if len > 0 and col > len - shift
+      col = len - shift
 
     @cursor.set row, col
 
@@ -93,7 +93,7 @@ class View
     @drawRow @cursor.row
 
   moveCursorBackIfNeeded: () ->
-    if @cursor.col > do @curRowLength - 1
+    if @cursor.col > do @curLineLength - 1
       do @moveCursorLeft
 
   moveCursorLeft: () ->
@@ -131,12 +131,12 @@ class View
 
   addCharsAfterCursor: (chars, options) ->
     col = @cursor.col
-    if col < (@data.rowLength @cursor.row)
+    if col < (@data.getLength @cursor.row)
       col += 1
     @act new actions.AddChars @cursor.row, col, chars, options
 
   delChars: (row, col, nchars, options) ->
-    if (@data.rowLength row) > 0
+    if (@data.getLength row) > 0
       delAction = new actions.DelChars row, col, nchars, options
       @act delAction
       @register.saveChars delAction.deletedChars
@@ -151,40 +151,51 @@ class View
     @delCharsAfterCursor nchars, {cursor: 'pastEnd'}
     @addCharsAtCursor chars, options
 
-  newRowBelow: () ->
+  yankChars: (row, col, nchars) ->
+    line = @data.getLine row
+    if line.length > 0
+      @register.saveChars line.slice(col, col + nchars)
+
+  yankCharsBeforeCursor: (nchars) ->
+    @yankChars @cursor.row, (@cursor.col-nchars), nchars
+
+  yankCharsAfterCursor: (nchars) ->
+    @yankChars @cursor.row, @cursor.col, nchars
+
+  newLineBelow: () ->
     children = @data.getChildren @cursor.row
     if children.length > 0
       @act new actions.InsertRowSibling children[0], {before: true}
     else
       @act new actions.InsertRowSibling @cursor.row, {after: true}
 
-  newRowAbove: () ->
+  newLineAbove: () ->
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
-  delRows: (nrows, options = {}) ->
-    delAction = @detachRows @cursor.row, nrows, options
+  delBlocks: (nrows, options = {}) ->
+    delAction = @detachBlocks @cursor.row, nrows, options
     @register.saveRows delAction.deletedRows
 
-  detachRows: (row, nrows, options = {}) ->
-    delAction = new actions.DetachRows row, nrows, options
+  detachBlocks: (row, nrows, options = {}) ->
+    delAction = new actions.DetachBlocks row, nrows, options
     @act delAction
     return delAction
 
-  addRows: (row, rows, index = -1, options = {}) ->
-    @act new actions.AttachRows row, rows, index, options
+  attachBlocks: (row, rows, index = -1, options = {}) ->
+    @act new actions.AttachBlocks row, rows, index, options
 
   indent: (id, options = {}) ->
     sib = @data.getSiblingBefore id
     if sib == null
       return null # cannot indent
 
-    @detachRows id, 1, {cursor: 'stay'}
-    @act new actions.AttachRows sib, [id], -1, {cursor: 'stay'}
+    @detachBlocks id, 1, {cursor: 'stay'}
+    @attachBlocks sib, [id], -1, {cursor: 'stay'}
 
     if not options.recursive
       for child in (@data.getChildren id).slice()
-        @detachRows child, 1, {cursor: 'stay'}
-        @act new actions.AttachRows sib, [child], -1, {cursor: 'stay'}
+        @detachBlocks child, 1, {cursor: 'stay'}
+        @attachBlocks sib, [child], -1, {cursor: 'stay'}
 
   unindent: (id, options = {}) ->
     if not options.recursive
@@ -196,22 +207,22 @@ class View
       return
 
     p_i = @data.indexOf id
-    @detachRows id, 1, {cursor: 'stay'}
+    @detachBlocks id, 1, {cursor: 'stay'}
 
     newparent = @data.getParent parent
 
     pp_i = @data.indexOf parent
-    @act new actions.AttachRows newparent, [id], (pp_i+1), {cursor: 'stay'}
+    @attachBlocks newparent, [id], (pp_i+1), {cursor: 'stay'}
 
     p_children = @data.getChildren parent
     for child in p_children.slice(p_i)
-      @detachRows child, 1, {cursor: 'stay'}
-      @act new actions.AttachRows id, [child], -1, {cursor: 'stay'}
+      @detachBlocks child, 1, {cursor: 'stay'}
+      @attachBlocks id, [child], -1, {cursor: 'stay'}
 
-  indentRow: () ->
+  indentLine: () ->
     @indent @cursor.row
 
-  unindentRow: () ->
+  unindentLine: () ->
     @unindent @cursor.row
 
   indentBlock: () ->
@@ -220,8 +231,8 @@ class View
   unindentBlock: () ->
     @unindent @cursor.row, {recursive: true}
 
-  toggleRow: () ->
-    @act new actions.ToggleRow @cursor.row
+  toggleBlock: () ->
+    @act new actions.ToggleBlock @cursor.row
 
   pasteBefore: () ->
     @register.paste {before: true}

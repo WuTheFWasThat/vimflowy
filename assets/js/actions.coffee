@@ -50,7 +50,7 @@
     rewind: (view) ->
       view.data.deleteRow @newrow
 
-  class DetachRows extends Action
+  class DetachBlocks extends Action
     constructor: (row, nrows = 1, options = {}) ->
       @row = row
       @nrows = nrows
@@ -110,7 +110,7 @@
         view.data.deleteRow @created
       view.data.attachChildren @parent, @deletedRows, @index
 
-  class AttachRows extends Action
+  class AttachBlocks extends Action
     constructor: (parent, rows, index = -1, options = {}) ->
       @parent = parent
       @rows = rows
@@ -127,7 +127,7 @@
       for row in @rows
         view.data.detach row
 
-  class ToggleRow extends Action
+  class ToggleBlock extends Action
     constructor: (row) ->
       @row = row
     apply: (view) ->
@@ -138,7 +138,7 @@
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRowSibling = InsertRowSibling
-  exports.DetachRows = DetachRows
-  exports.AttachRows = AttachRows
-  exports.ToggleRow = ToggleRow
+  exports.DetachBlocks = DetachBlocks
+  exports.AttachBlocks = AttachBlocks
+  exports.ToggleBlock = ToggleBlock
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

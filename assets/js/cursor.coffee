@@ -18,7 +18,7 @@ class Cursor
 
   setCol: (moveCol) ->
     @moveCol = moveCol
-    rowlen = @data.rowLength @row
+    rowlen = @data.getLength @row
 
     if moveCol < 0
       @col = rowlen + moveCol + 1
@@ -26,10 +26,10 @@ class Cursor
       @col = moveCol
 
   fromMoveCol: (option) ->
-    rowlen = @data.rowLength @row
-    maxcol = rowlen - (if option == 'pastEnd' then 0 else 1)
+    len = @data.getLength @row
+    maxcol = len - (if option == 'pastEnd' then 0 else 1)
     if @moveCol < 0
-      @col = rowlen + @moveCol + 1
+      @col = len + @moveCol + 1
     else
       @col = Math.max(0, Math.min(maxcol, @moveCol))
 
@@ -46,7 +46,7 @@ class Cursor
   right: (options) ->
     options?={}
     shift = if options.cursor == 'pastEnd' then 0 else 1
-    if @col < (@data.rowLength @row) - shift
+    if @col < (@data.getLength @row) - shift
       do @_right
 
   home: () ->
@@ -95,7 +95,7 @@ class Cursor
       do @_left
 
   endWord: (options = {}) ->
-    end = (@data.rowLength @row) - 1
+    end = (@data.getLength @row) - 1
     if @col == end
       if options.cursor == 'pastEnd'
         do @_right
@@ -112,7 +112,7 @@ class Cursor
       do @_right
 
   nextWord: (options = {}) ->
-    end = (@data.rowLength @row) - 1
+    end = (@data.getLength @row) - 1
     if @col == end
       if options.cursor == 'pastEnd'
         do @_right
@@ -128,7 +128,7 @@ class Cursor
       do @_right
 
   nextChar: (char, options = {}) ->
-    end = (@data.rowLength @row) - 1
+    end = (@data.getLength @row) - 1
     if @col == end
       return
 
@@ -185,6 +185,50 @@ class Cursor
     if row != null
       @row = row
       @fromMoveCol options.cursor
+
+  move: (motion, options = {}) ->
+    motion.repeat ?= 1
+
+    for i in [1..motion.repeat]
+      if motion.type == 'LEFT'
+        @left options
+      else if motion.type == 'RIGHT'
+        @right options
+      else if motion.type == 'UP'
+        @up options
+      else if motion.type == 'DOWN'
+        @down options
+      else if motion.type == 'HOME'
+        @home options
+      else if motion.type == 'END'
+        @end options
+      else if motion.type == 'BEGINNING_WORD'
+        @beginningWord options
+      else if motion.type == 'END_WORD'
+        @endWord options
+      else if motion.type == 'NEXT_WORD'
+        @nextWord options
+      else if motion.type == 'BEGINNING_BLOCK'
+        options.block = true
+        @beginningWord options
+      else if motion.type == 'END_BLOCK'
+        options.block = true
+        @endWord options
+      else if motion.type == 'NEXT_BLOCK'
+        options.block = true
+        @nextWord options
+      else if motion.type == 'FIND_NEXT_CHAR'
+        @nextChar motion.char, options
+      else if motion.type == 'TO_NEXT_CHAR'
+        options.beforeFound = true
+        @nextChar motion.char, options
+      else if motion.type == 'FIND_PREV_CHAR'
+        @prevChar motion.char, options
+      else if motion.type == 'TO_PREV_CHAR'
+        options.beforeFound = true
+        @prevChar motion.char, options
+      else
+        throw 'Unexpected motion'
 
 # exports
 module?.exports = Cursor
