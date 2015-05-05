@@ -1335,3 +1335,36 @@ t.expect ['hhahaaha ... ha ... funny']
 # cursor ends at last character
 t.sendKeys 'yffp'
 t.expect ['hhahaaaha ... ha ... faha ... ha ... funny']
+
+# test line yank and paste
+t = new TestCase ['hey', 'yo', 'yo', 'yo', 'yo', 'yo']
+t.sendKeys 'yyjp'
+t.expect ['hey', 'yo', 'hey', 'yo', 'yo', 'yo', 'yo']
+t.sendKeys 'jjP'
+t.expect ['hey', 'yo', 'hey', 'yo', 'hey', 'yo', 'yo', 'yo']
+# this should only affect one of the pasted lines (verify it's a copy!)
+t.sendKeys 'x'
+t.expect ['hey', 'yo', 'hey', 'yo', 'ey', 'yo', 'yo', 'yo']
+t.sendKeys 'uu'
+t.expect ['hey', 'yo', 'hey', 'yo', 'yo', 'yo', 'yo']
+t.sendKeys 'u'
+t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yo']
+# the register now contains the 'h' from the 'x'
+t.sendKeys 'jjjjjp'
+t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yho']
+
+t = new TestCase ['hey', 'yo', 'yo', 'yo', 'yo', 'yo']
+t.sendKeys 'yyjp'
+t.expect ['hey', 'yo', 'hey', 'yo', 'yo', 'yo', 'yo']
+t.sendKeys 'jjP'
+t.expect ['hey', 'yo', 'hey', 'yo', 'hey', 'yo', 'yo', 'yo']
+t.sendKeys 'ry'
+t.expect ['hey', 'yo', 'hey', 'yo', 'yey', 'yo', 'yo', 'yo']
+t.sendKeys 'uu'
+t.expect ['hey', 'yo', 'hey', 'yo', 'yo', 'yo', 'yo']
+t.sendKeys 'u'
+t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yo']
+# splice does NOT replace register!
+t.sendKeys 'jjjjjp'
+t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yo', 'hey']
+

@@ -50,55 +50,67 @@
     rewind: (view) ->
       view.data.deleteRow @newrow
 
-  class DetachBlocks extends Action
+  class DetachBlock extends Action
+    constructor: (row, options = {}) ->
+      @row = row
+      @options = options
+
+    apply: (view) ->
+      @parent = view.data.getParent @row
+      @index = view.data.indexOf @row
+
+      if @row == view.root then throw 'Cannot delete root'
+
+      view.data.detach @row
+
+    rewind: (view) ->
+      view.data.attachChild @parent, @row, @index
+
+  class AttachBlock extends Action
+    constructor: (row, parent, index = -1, options = {}) ->
+      @row = row
+      @parent = parent
+      @index = index
+      @options = options
+
+    apply: (view) ->
+      view.data.attachChild @parent, @row, @index
+
+    rewind: (view) ->
+      view.data.detach @row
+
+  class DeleteBlocks extends Action
     constructor: (row, nrows = 1, options = {}) ->
       @row = row
       @nrows = nrows
       @options = options
 
     apply: (view) ->
-      # leaves dangling pointers, for both paste and undo
-      # these get garbage collected when we serialize/deserialize
-
       row = @row
-
-      addNew = false
-      @deletedRows = []
-
-      @created = null
-
       parent = view.data.getParent row
       index = view.data.indexOf row
+      siblings = view.data.getChildren parent
 
-      for i in [1..@nrows]
-        if row == view.root
-          throw 'Cannot delete root'
+      if row == view.root then throw 'Cannot delete root'
 
-        info = view.data.detach row
-        if info.index != index
-          throw 'expected to delete at index'
-        if info.parent != parent
-          throw 'expected to delete at parent'
-        @deletedRows.push row
+      @serialized_rows = []
+      delete_siblings = view.data.getSiblingRange row, 0, (@nrows-1)
+      for sib in delete_siblings
+        if sib == null then break
+        @serialized_rows.push view.data.serialize sib
+        view.data.deleteRow sib
 
-        siblings = view.data.getChildren parent
-        if index < siblings.length # keep deleting!
-          if i == @nrows and @options.addNew
-              next = view.data.addChild parent, index
-              @created = next
-          else
-              next = siblings[index]
-        else # stop deleting
-          if index > 0
-            next = siblings[index - 1]
-          else
-            next = parent
-          if @options.addNew or (next == view.data.root)
-              next = view.data.addChild parent
-              @created = next
-          break
+      @created = null
+      if @options.addNew
+        @created = view.data.addChild parent, index
 
-        row = next
+      if index < siblings.length
+        next = siblings[index]
+      else
+        next = if index == 0 then parent else siblings[index - 1]
+        if next == view.data.root
+          next = view.data.addChild parent
+          @created = next
 
       if @options.cursor != 'stay'
         view.setCur next, 0
@@ -108,24 +120,38 @@
     rewind: (view) ->
       if @created != null
         view.data.deleteRow @created
-      view.data.attachChildren @parent, @deletedRows, @index
+      index = @index
+      for serialized_row in @serialized_rows
+        view.data.loadTo serialized_row, @parent, index
+        index += 1
 
-  class AttachBlocks extends Action
-    constructor: (parent, rows, index = -1, options = {}) ->
+  class AddBlocks extends Action
+    constructor: (serialized_rows, parent, index = -1, options = {}) ->
+      @serialized_rows = serialized_rows
       @parent = parent
-      @rows = rows
       @index = index
+      @nrows = serialized_rows.length
       @options = options
 
     apply: (view) ->
-      view.data.attachChildren @parent, @rows, @index
+      index = @index
 
-      if @options.cursor != 'stay'
-        view.setCur @rows[0], 0
+      first = true
+      for serialized_row in @serialized_rows
+        row = view.data.loadTo serialized_row, @parent, index
+        index += 1
+
+        if @options.cursor == 'first' and first
+          view.setCur row, 0
+          first = false
+
+      if @options.cursor == 'last'
+        view.setCur row, 0
 
     rewind: (view) ->
-      for row in @rows
-        view.data.detach row
+      delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+      for sib in delete_siblings
+        view.data.deleteRow sib
 
   class ToggleBlock extends Action
     constructor: (row) ->
@@ -138,7 +164,9 @@
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRowSibling = InsertRowSibling
-  exports.DetachBlocks = DetachBlocks
-  exports.AttachBlocks = AttachBlocks
+  exports.DetachBlock = DetachBlock
+  exports.AttachBlock = AttachBlock
+  exports.DeleteBlocks = DeleteBlocks
+  exports.AddBlocks = AddBlocks
   exports.ToggleBlock = ToggleBlock
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

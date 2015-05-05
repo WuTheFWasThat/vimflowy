@@ -80,7 +80,7 @@ class View
         col -= 1
 
     shift = if option == 'pastEnd' then 0 else 1
-    len = do @curLineLength
+    len = @data.getLength row
     if len > 0 and col > len - shift
       col = len - shift
 
@@ -135,14 +135,15 @@ class View
       col += 1
     @act new actions.AddChars @cursor.row, col, chars, options
 
-  delChars: (row, col, nchars, options) ->
+  delChars: (row, col, nchars, options = {}) ->
     if (@data.getLength row) > 0
       delAction = new actions.DelChars row, col, nchars, options
       @act delAction
-      @register.saveChars delAction.deletedChars
+      if options.yank
+        @register.saveChars delAction.deletedChars
 
-  delCharsBeforeCursor: (nchars) ->
-    @delChars @cursor.row, (@cursor.col-nchars), nchars
+  delCharsBeforeCursor: (nchars, options) ->
+    @delChars @cursor.row, (@cursor.col-nchars), nchars, options
 
   delCharsAfterCursor: (nchars, options) ->
     @delChars @cursor.row, @cursor.col, nchars, options
@@ -173,29 +174,40 @@ class View
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
   delBlocks: (nrows, options = {}) ->
-    delAction = @detachBlocks @cursor.row, nrows, options
-    @register.saveRows delAction.deletedRows
+    action = new actions.DeleteBlocks @cursor.row, nrows, options
+    @act action
+    @register.saveRows action.serialized_rows
 
-  detachBlocks: (row, nrows, options = {}) ->
-    delAction = new actions.DetachBlocks row, nrows, options
-    @act delAction
-    return delAction
+  addBlocks: (serialized_rows, parent, index = -1, options = {}) ->
+    action = new actions.AddBlocks serialized_rows, parent, index, options
+    @act action
 
-  attachBlocks: (row, rows, index = -1, options = {}) ->
-    @act new actions.AttachBlocks row, rows, index, options
+  yankBlocks: (nrows) ->
+    siblings = @data.getSiblingRange @cursor.row, 0, (nrows-1)
+    siblings = siblings.filter ((x) -> return x != null)
+    serialized = siblings.map ((x) => return @data.serialize x)
+    @register.saveRows serialized
+
+  detachBlock: (row, options = {}) ->
+    action = new actions.DetachBlock row, options
+    @act action
+    return action
+
+  attachBlock: (row, parent, index = -1, options = {}) ->
+    @act new actions.AttachBlock row, parent, index, options
 
   indent: (id, options = {}) ->
     sib = @data.getSiblingBefore id
     if sib == null
       return null # cannot indent
 
-    @detachBlocks id, 1, {cursor: 'stay'}
-    @attachBlocks sib, [id], -1, {cursor: 'stay'}
+    @detachBlock id
+    @attachBlock id, sib, -1
 
     if not options.recursive
       for child in (@data.getChildren id).slice()
-        @detachBlocks child, 1, {cursor: 'stay'}
-        @attachBlocks sib, [child], -1, {cursor: 'stay'}
+        @detachBlock child
+        @attachBlock child, sib, -1
 
   unindent: (id, options = {}) ->
     if not options.recursive
@@ -205,19 +217,18 @@ class View
     parent = @data.getParent id
     if parent == @data.root
       return
-
     p_i = @data.indexOf id
-    @detachBlocks id, 1, {cursor: 'stay'}
 
     newparent = @data.getParent parent
-
     pp_i = @data.indexOf parent
-    @attachBlocks newparent, [id], (pp_i+1), {cursor: 'stay'}
+
+    @detachBlock id
+    @attachBlock id, newparent, (pp_i+1)
 
     p_children = @data.getChildren parent
     for child in p_children.slice(p_i)
-      @detachBlocks child, 1, {cursor: 'stay'}
-      @attachBlocks id, [child], -1, {cursor: 'stay'}
+      @detachBlock child, {cursor: 'stay'}
+      @attachBlock child, id, -1, {cursor: 'stay'}
 
   indentLine: () ->
     @indent @cursor.row
