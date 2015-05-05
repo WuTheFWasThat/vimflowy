@@ -405,6 +405,8 @@ class KeyBindings
           @view.moveCursorDown {cursor: 'pastEnd'}
         else if key == 'backspace'
           @view.delCharsBeforeCursor 1
+        else if key == 'shift+backspace'
+          @view.delCharsAfterCursor 1
         else if key == 'shift+enter'
           @view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
         else if key == 'enter'
@@ -447,13 +449,13 @@ class KeyBindings
           if nkey == key
             # dd and cc
             if binding == 'YANK'
-              return # TODO: copy repeat blocks
-            @view.delBlocks repeat, {addNew: binding == 'CHANGE'}
+              @view.yankBlocks repeat
+            else
+              @view.delBlocks repeat, {addNew: binding == 'CHANGE'}
           else
             [motion, action] = getMotion nkey
             if motion == null then return [keyIndex, action]
 
-            # TODO: yank between old and new cursor
             cursor = do @view.cursor.clone
             for i in [1..repeat]
               cursor.move motion, {cursor: 'pastEnd'}
@@ -462,13 +464,13 @@ class KeyBindings
               if binding == 'YANK'
                 @view.yankCharsBeforeCursor (@view.cursor.col - cursor.col)
               else
-                @view.delCharsBeforeCursor (@view.cursor.col - cursor.col)
+                @view.delCharsBeforeCursor (@view.cursor.col - cursor.col), {yank: true}
             else if cursor.col > @view.cursor.col
               if binding == 'YANK'
                 @view.yankCharsAfterCursor (cursor.col - @view.cursor.col)
               else
                 cursorOption = if binding == 'CHANGE' then 'pastEnd' else ''
-                @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {cursor: cursorOption}
+                @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {cursor: cursorOption, yank: true}
 
           if binding == 'CHANGE'
             @setMode MODES.INSERT
@@ -495,7 +497,7 @@ class KeyBindings
           else if binding == 'INSERT_END'
             @view.moveCursorEnd {cursor: 'pastEnd'}
           else if binding == 'CHANGE_CHAR'
-            @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}
+            @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
           else if binding == 'INSERT_LINE_ABOVE'
             do @view.newLineAbove
           else if binding == 'INSERT_LINE_BELOW'
@@ -527,9 +529,9 @@ class KeyBindings
           if binding == 'DELETE_LAST_CHAR'
             num = Math.min @view.cursor.col, repeat
             if num > 0
-              @view.delCharsBeforeCursor num
+              @view.delCharsBeforeCursor num, {yank: true}
           else if binding == 'DELETE_CHAR'
-            @view.delCharsAfterCursor repeat
+            @view.delCharsAfterCursor repeat, {yank: true}
             do @view.moveCursorBackIfNeeded
           else if binding == 'INDENT_RIGHT'
             @view.indentLine {}

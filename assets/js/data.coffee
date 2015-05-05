@@ -4,20 +4,11 @@ class Data
   constructor: () ->
     # defaults
 
-    @structure =
-      0: # always the root node
-        children: [1]
-        parent: 0
-        collapsed: false
-      1:
-        children: []
-        parent: 0
-        collapsed: false
-
-    @lines =
-      0: [] # document title?
-      1: []
-
+    # default document: a single blank line
+    @load {
+      line: ''
+      children: ['']
+    }
     return @
 
   getId: () ->
@@ -30,6 +21,9 @@ class Data
 
   getLine: (row) ->
     return @lines[row]
+
+  setLine: (row, line) ->
+    @lines[row] = line
 
   getChar: (row, col) ->
     return @getLine(row)[col]
@@ -46,6 +40,10 @@ class Data
   getChildren: (row) ->
     return @structure[row].children
 
+  getSiblings: (row) ->
+    parent = @getParent row
+    return @getChildren parent
+
   collapsed: (row) ->
     return @structure[row].collapsed
 
@@ -55,8 +53,7 @@ class Data
   # structure manipulation
 
   indexOf: (child) ->
-    parent = @getParent child
-    children = @getChildren parent
+    children = @getSiblings child
     return children.indexOf child
 
   detach: (id) ->
@@ -120,24 +117,30 @@ class Data
     @setCollapsed id, (not @collapsed id)
 
   getSiblingBefore: (id) ->
-    return @_getSiblingOffset id, -1
+    return @getSiblingOffset id, -1
 
   getSiblingAfter: (id) ->
-    return @_getSiblingOffset id, 1
+    return @getSiblingOffset id, 1
 
-  _getSiblingOffset: (id, offset) ->
-    if id == @root
-      console.log 'Cannot get siblings of root'
-      return null
-    parent = @getParent id
-    children = @getChildren parent
-    index = (children.indexOf id) + offset
-    if index >= children.length
-      return null
-    else if index < 0
-      return null
-    else
-      return children[index]
+  getSiblingOffset: (id, offset) ->
+    return (@getSiblingRange id, offset, offset)[0]
+
+  getSiblingRange: (id, min_offset, max_offset) ->
+    children = @getSiblings id
+    index = @indexOf id
+    return @getChildRange (@getParent id), (min_offset + index), (max_offset + index)
+
+  getChildRange: (id, min, max) ->
+    children = @getChildren id
+    indices = [min..max]
+
+    return indices.map (index) ->
+      if index >= children.length
+        return null
+      else if index < 0
+        return null
+      else
+        return children[index]
 
   addChild: (id, index = -1) ->
     child = do @getId
@@ -156,7 +159,7 @@ class Data
     if id == @root
       throw 'Cannot delete root'
 
-    for child in @getChildren id
+    for child in (@getChildren id).slice()
       @deleteRow child
 
     @detach id
@@ -206,33 +209,35 @@ class Data
     else
       return line
 
+  loadTo: (serialized, parent = 0, index = -1) ->
+    id = do @getId
+
+    @structure[id] = {
+      children: []
+    }
+
+    if id != 0
+      @attachChild parent, id, index
+    else
+      # parent should be 0
+      @structure[id].parent = 0
+
+    if typeof serialized == 'string'
+      @setLine id, (serialized.split '')
+    else
+      @setLine id, (serialized.line.split '')
+      @setCollapsed id, serialized.collapsed
+
+      for serialized_child in serialized.children
+        @loadTo serialized_child, id
+
+    return id
+
   load: (serialized) ->
-    id = 0
+    @structure = {}
+    @lines = {}
 
-    structure = {}
-    lines = {}
-
-    helper = (my_id, my_serialized, parent_id) ->
-      struct =
-        children: []
-        parent: parent_id
-
-      if typeof my_serialized == 'string'
-        lines[my_id] = my_serialized.split ''
-      else
-        lines[my_id] = my_serialized.line.split ''
-        struct.collapsed = my_serialized.collapsed
-
-        for child in my_serialized.children
-          id++
-          struct.children.push id
-          helper id, child, my_id
-      structure[my_id] = struct
-
-    helper 0, serialized, 0
-
-    @structure = structure
-    @lines = lines
+    @loadTo serialized
 
 # exports
 module?.exports = Data

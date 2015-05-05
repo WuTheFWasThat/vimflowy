@@ -14,11 +14,9 @@ class Register
     @type = TYPES.CHARS
     @chars = chars
 
-  saveRows: (rows) ->
-    # rows: array of row IDs
-
+  saveRows: (serialized_rows) ->
     @type = TYPES.ROWS
-    @rows = rows
+    @serialized_rows = serialized_rows
 
   paste: (options) ->
     if @type == TYPES.CHARS
@@ -32,13 +30,13 @@ class Register
       index = @view.data.indexOf row
 
       if options.before
-        @view.attachBlocks parent, @rows, index
+        @view.addBlocks @serialized_rows, parent, index, {cursor: 'first'}
       else
         children = @view.data.getChildren row
         if children.length > 0
-          @view.attachBlocks row, @rows, 0
+          @view.addBlocks @serialized_rows, row, 0, {cursor: 'first'}
         else
-          @view.attachBlocks parent, @rows, (index + 1)
+          @view.addBlocks @serialized_rows ,parent, (index + 1), {cursor: 'first'}
 
 # exports
 module?.exports = Register
