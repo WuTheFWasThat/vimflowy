@@ -72,8 +72,20 @@ t.sendKeys 'a purple'
 t.sendKey 'esc'
 t.expect ['yellowy purple']
 
-t = new TestCase ['hello']
+# test that redo doesn't go past latest
+t = new TestCase ['thing']
+t.sendKey 'x'
+t.expect ['hing']
+t.sendKeys 'u'
+t.expect ['thing']
+t.sendKey 'ctrl+r'
+t.sendKey 'ctrl+r'
+t.sendKey 'ctrl+r'
+t.expect ['hing']
+t.sendKeys 'u'
+t.expect ['thing']
 
+t = new TestCase ['hello']
 t.sendKey '$'
 # i + esc moves the cursor back a character
 for i in [1..3]
@@ -1368,3 +1380,50 @@ t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yo']
 t.sendKeys 'jjjjjp'
 t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yo', 'hey']
 
+t = new TestCase [
+  { line: 'hey', children: [
+    'yo'
+  ] }
+]
+t.sendKeys 'yyp'
+t.expect [
+  { line: 'hey', children: [
+    { line: 'hey', children: [
+      'yo'
+    ] },
+    'yo'
+  ] }
+]
+t.sendKeys 'p'
+t.expect [
+  { line: 'hey', children: [
+    { line: 'hey', children: [
+      { line: 'hey', children: [
+        'yo'
+      ] },
+      'yo'
+    ] },
+    'yo'
+  ] }
+]
+t.sendKeys 'u'
+t.expect [
+  { line: 'hey', children: [
+    { line: 'hey', children: [
+      'yo'
+    ] },
+    'yo'
+  ] }
+]
+t.sendKey 'ctrl+r'
+t.expect [
+  { line: 'hey', children: [
+    { line: 'hey', children: [
+      { line: 'hey', children: [
+        'yo'
+      ] },
+      'yo'
+    ] },
+    'yo'
+  ] }
+]

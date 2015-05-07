@@ -48,7 +48,7 @@ class View
     do @render
 
   redo: () ->
-    if @historyIndex < @history.length
+    if @historyIndex < @history.length - 1
       oldIndex = @history[@historyIndex]
       @historyIndex += 1
       newIndex = @history[@historyIndex]
@@ -286,12 +286,9 @@ class View
       onto.append el
 
   drawRow: (row, onto) ->
-    console.log('drawing row', row, @cursor.row, @cursor.col)
     if not onto
       onto = $('#' + (rowDivID row))
     lineData = @data.lines[row]
-
-    console.log lineData
 
     # ideally this takes up space but is unselectable (uncopyable)
     cursorChar = '&nbsp;'
