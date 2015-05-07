@@ -172,6 +172,13 @@ class KeyBindings
       display: 'Toggle whether a block is folded'
       key: 'z'
 
+    SCROLL_DOWN:
+      display: 'Scroll half window down'
+      key: 'ctrl+d'
+    SCROLL_UP:
+      display: 'Scroll half window down'
+      key: 'ctrl+u'
+
   SEQUENCE = {
     # wait for more keys
     WAIT: 0
@@ -523,6 +530,12 @@ class KeyBindings
             do @clearSequence
           for i in [1..repeat]
             @processKeys @lastSequence
+          return do seq_drop
+        else if binding == 'SCROLL_UP'
+          @view.scrollPages -0.5
+          return do seq_drop
+        else if binding == 'SCROLL_DOWN'
+          @view.scrollPages 0.5
           return do seq_drop
         else
           if binding == 'DELETE_LAST_CHAR'
