@@ -379,7 +379,6 @@ class KeyBindings
     seq_finish = () ->
       return [keyIndex, SEQUENCE.FINISH]
 
-    # console.log('keys', keys)
     key = do nextKey
     if key == null then return do seq_wait
 
@@ -547,6 +546,8 @@ class KeyBindings
             do @view.pasteBefore
           else if binding == 'TOGGLE_FOLD'
             do @view.toggleBlock
+          else # unknown
+            return do seq_drop
           return do seq_finish
 
 if module?

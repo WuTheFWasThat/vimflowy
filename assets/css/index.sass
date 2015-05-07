@@ -39,14 +39,19 @@ $bottom-bar-height: 25px
         background: #FFFFFF
 
 #contents
+    bottom: $bottom-bar-height
+    position: absolute
+    width: 100%
+    @include calc(height, '100% - #{$bottom-bar-height}')
+
     #keybindings
         position: absolute
-        @include calc(height, '100% - #{$bottom-bar-height}')
         top: 0
         background: #CCCCCC
         right: 0px
         width: 0%
-        overflow: scroll
+        height: 100%
+        overflow-y: scroll
 
         @include transition(width 0.2s ease-in-out)
 
@@ -62,8 +67,11 @@ $bottom-bar-height: 25px
             padding: 5px
 
     #view
+        $view-padding: 50px
+        @include calc(height, '100% - #{2 * $view-padding}')
+        overflow-y: scroll
         font-size: 10px;
-        padding: 50px
+        padding: $view-padding
         // TODO have word wrap be a setting?
         word-wrap: break-word
 

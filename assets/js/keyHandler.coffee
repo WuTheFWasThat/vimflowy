@@ -21,6 +21,7 @@ class KeyHandler extends EventEmitter
 
   ignoreMap =
     16: 'shift alone'
+    17: 'ctrl alone'
     91: 'command alone'
 
   keyCodeMap =
