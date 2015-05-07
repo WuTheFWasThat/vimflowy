@@ -558,7 +558,7 @@ class KeyBindings
           else if binding == 'PASTE_BEFORE'
             do @view.pasteBefore
           else if binding == 'TOGGLE_FOLD'
-            do @view.toggleBlock
+            do @view.toggleCurBlock
           else # unknown
             return do seq_drop
           return do seq_finish

@@ -235,8 +235,11 @@ class View
   unindentBlock: () ->
     @unindent @cursor.row, {recursive: true}
 
-  toggleBlock: () ->
-    @act new actions.ToggleBlock @cursor.row
+  toggleCurBlock: () ->
+    @toggleBlock @cursor.row
+
+  toggleBlock: (row) ->
+    @act new actions.ToggleBlock row
 
   pasteBefore: () ->
     @register.paste {before: true}
@@ -307,6 +310,8 @@ class View
       if (@data.getChildren id).length > 0
         icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
       bullet = $('<i>').addClass('fa ' + icon + ' bullet')
+      if (@data.getChildren id).length > 0
+        bullet.css({cursor: 'pointer'}).click @toggleBlock.bind(@, id)
 
       elLine = $('<div>').addClass('node-text').attr('id', rowDivID id)
       @drawRow id, elLine
