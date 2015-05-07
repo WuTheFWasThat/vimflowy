@@ -2,7 +2,6 @@
 # it also renders
 
 class View
-
   containerDivID = (id) ->
     return 'node-' + id
 
@@ -56,7 +55,6 @@ class View
       for i in [oldIndex...newIndex]
           action = @actions[i]
           action.apply @
-      @drawRow @cursor.row
     do @render
 
   act: (action) ->
@@ -89,8 +87,7 @@ class View
   setCursor: (cursor) ->
     oldrow = @cursor.row
     @cursor = cursor
-    @drawRow oldrow
-    @drawRow @cursor.row
+    do @render
 
   moveCursorBackIfNeeded: () ->
     if @cursor.col > do @curLineLength - 1
@@ -98,33 +95,29 @@ class View
 
   moveCursorLeft: () ->
     do @cursor.left
-    @drawRow @cursor.row
+    do @render
 
   moveCursorRight: (options) ->
     @cursor.right options
-    @drawRow @cursor.row
+    do @render
 
-  moveCursorUp: (options) ->
+  moveCursorUp: (options = {}) ->
     oldrow = @cursor.row
     @cursor.up options
+    do @render
 
-    @drawRow oldrow
-    @drawRow @cursor.row
-
-  moveCursorDown: (options) ->
+  moveCursorDown: (options = {}) ->
     oldrow = @cursor.row
     @cursor.down options
-
-    @drawRow oldrow
-    @drawRow @cursor.row
+    do @render
 
   moveCursorHome: () ->
     do @cursor.home
-    @drawRow @cursor.row
+    do @render
 
   moveCursorEnd: (options) ->
     @cursor.end options
-    @drawRow @cursor.row
+    do @render
 
   addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
@@ -253,9 +246,48 @@ class View
 
   # RENDERING
 
+  scrollPages: (npages) ->
+    # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
+    line_height = do $('.node-text').height
+    page_height = do $(document).height
+    height = npages * page_height
+    console.log('tot height', height)
+    console.log('line height', line_height)
+
+    numlines = Math.round(height / line_height)
+    if numlines > 0
+      for i in [1..numlines]
+        do @moveCursorDown
+    else
+      for i in [-1..numlines]
+        do @moveCursorUp
+
+    @scrollMain (line_height * numlines)
+
+  scrollMain: (amount) ->
+     @mainDiv.stop().animate({
+        scrollTop: @mainDiv[0].scrollTop + amount
+     }, 200)
+
+  scrollIntoView: (el) ->
+    elemTop = el.getBoundingClientRect().top
+    elemBottom = el.getBoundingClientRect().bottom
+
+    margin = 50
+    top_margin = margin
+    bottom_margin = margin + $('#bottom-bar').height()
+
+    if elemTop < top_margin
+       # scroll up
+       @scrollMain (elemTop - top_margin)
+    else if elemBottom > window.innerHeight - bottom_margin
+       # scroll down
+       @scrollMain (elemBottom - window.innerHeight + bottom_margin)
+
   # TODO: make the rendering do diffs (maybe data should track dirty bits)
   render: () ->
     @renderTree 0, @mainDiv
+    @scrollIntoView $('.cursor')[0]
 
   renderTree: (parentid, onto) ->
     if not onto
