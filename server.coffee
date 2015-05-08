@@ -26,8 +26,7 @@ app.get '/', (req, res) ->
 
 app.use (req, res, next) ->
   res.status 404
-  res.render 'errors/404',
-    url: _.escape req.url
+  res.render 'errors/404'
   return
 
 port = process.argv[2] or 8080
