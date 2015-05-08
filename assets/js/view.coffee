@@ -290,7 +290,9 @@ class View
   # TODO: make the rendering do diffs (maybe data should track dirty bits)
   render: () ->
     @renderTree 0, @mainDiv
-    @scrollIntoView $('.cursor')[0]
+    cursorDiv = $('.cursor')[0]
+    if cursorDiv
+      @scrollIntoView cursorDiv
 
   renderTree: (parentid, onto) ->
     if not onto
