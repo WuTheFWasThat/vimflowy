@@ -136,6 +136,7 @@ class View
         @register.saveChars delAction.deletedChars
 
   delCharsBeforeCursor: (nchars, options) ->
+    nchars = Math.min(@cursor.col, nchars)
     @delChars @cursor.row, (@cursor.col-nchars), nchars, options
 
   delCharsAfterCursor: (nchars, options) ->
@@ -165,6 +166,21 @@ class View
 
   newLineAbove: () ->
     @act new actions.InsertRowSibling @cursor.row, {before: true}
+
+  joinRows: (first, second, options = {}) ->
+    if (@data.getChildren second).length > 0
+      return
+
+    line = @data.getLine second
+    action = new actions.DeleteBlocks @cursor.row, 1, options
+    @act action
+
+    newCol = @data.getLength first
+    action = new actions.AddChars first, newCol, line, {cursor: 'stay'}
+    @act action
+
+    @setCur first, newCol, options.cursor
+    do @render
 
   delBlocks: (nrows, options = {}) ->
     action = new actions.DeleteBlocks @cursor.row, nrows, options
@@ -270,7 +286,7 @@ class View
   scrollMain: (amount) ->
      @mainDiv.stop().animate({
         scrollTop: @mainDiv[0].scrollTop + amount
-     }, 200)
+     }, 100)
 
   scrollIntoView: (el) ->
     elemTop = el.getBoundingClientRect().top

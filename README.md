@@ -4,10 +4,12 @@
 
 style stuff better
 
+yc -> clone?
+
 implement zoom
   gi, go?
 
-implement gg G ctrl+D/U
+implement gg G
   gp = go parent?
 rethink fold hotkeys (z+coaCOA)?
 
