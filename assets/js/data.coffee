@@ -82,7 +82,7 @@ class Data
     for child in new_children
       @setParent child, id
 
-  nextVisible: (id) ->
+  nextVisible: (id = @root) ->
     if not @collapsed id
       children = @getChildren id
       if children.length > 0
@@ -96,7 +96,7 @@ class Data
         return null
 
   # last thing visible nested within id
-  lastVisible: (id) ->
+  lastVisible: (id = @root) ->
     if @collapsed id
       return id
     children = @getChildren id

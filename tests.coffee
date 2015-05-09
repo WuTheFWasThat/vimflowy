@@ -1427,3 +1427,54 @@ t.expect [
     'yo'
   ] }
 ]
+
+# test backspace
+t = new TestCase ['abc']
+t.sendKey 'A'
+t.sendKey 'backspace'
+t.sendKey 'backspace'
+t.expect ['a']
+
+t = new TestCase ['abc', 'def']
+t.sendKeys 'jli'
+t.sendKey 'backspace'
+t.expect ['abc', 'ef']
+t.sendKey 'backspace'
+t.expect ['abcef']
+t.sendKey 'backspace'
+t.expect ['abef']
+t.sendKey 'backspace'
+t.expect ['aef']
+t.sendKey 'backspace'
+t.expect ['ef']
+t.sendKey 'backspace'
+t.expect ['ef']
+t.sendKey 'esc'
+t.sendKey 'u'
+t.expect ['abc', 'def']
+
+t = new TestCase ['ab', 'cd']
+t.sendKeys 'jA'
+t.sendKey 'backspace'
+t.sendKey 'backspace'
+t.expect ['ab', '']
+t.sendKey 'backspace'
+t.expect ['ab']
+t.sendKey 'backspace'
+t.expect ['a']
+
+t = new TestCase [
+  'ab'
+  { line: 'bc', children: [
+    'cd'
+  ] },
+]
+t.sendKeys 'j'
+t.sendKey 'backspace'
+# cannot backspace when there are children
+t.expect [
+  'ab'
+  { line: 'bc', children: [
+    'cd'
+  ] },
+]

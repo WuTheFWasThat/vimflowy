@@ -159,9 +159,11 @@ class KeyBindings
     INDENT_RIGHT:
       display: 'Indent right'
       key: '>'
+      alternateKeys: ['tab']
     INDENT_LEFT:
       display: 'Indent left'
       key: '<'
+      alternateKeys: ['shift+tab']
     INDENT_BLOCK_RIGHT:
       display: 'Indent block right'
       key: ']'
@@ -204,8 +206,6 @@ class KeyBindings
 
     @mode = ''
     @setMode MODES.NORMAL
-
-    @operator = undefined
 
     @queuedKeys = [] # queue so that we can read group of keys, like 123 or fy
     @curSequence = [] # current key sequence
@@ -410,7 +410,13 @@ class KeyBindings
         else if key == 'down'
           @view.moveCursorDown {cursor: 'pastEnd'}
         else if key == 'backspace'
-          @view.delCharsBeforeCursor 1
+          if @view.cursor.col == 0
+            row = @view.cursor.row
+            sib = @view.data.prevVisible row
+            if sib != null
+              @view.joinRows sib, row, {cursor: 'pastEnd'}
+          else
+            @view.delCharsBeforeCursor 1, {cursor: 'pastEnd'}
         else if key == 'shift+backspace'
           @view.delCharsAfterCursor 1
         else if key == 'shift+enter'

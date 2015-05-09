@@ -16,7 +16,8 @@
       @options = options
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
-      view.setCur @row, (@col + @chars.length), @options.cursor
+      if @options.cursor != 'stay'
+        view.setCur @row, (@col + @chars.length), @options.cursor
     rewind: (view) ->
       view.data.deleteChars @row, @col, @chars.length
 
