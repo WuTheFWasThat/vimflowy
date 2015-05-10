@@ -1,157 +1,116 @@
 # binds keys to manipulation of view/data
 
 class KeyBindings
-
-  MODES =
-    NORMAL: 0
-    INSERT: 1
-    EX: 2
-
-  defaultVimKeyBindings =
+  keyDefinitions =
     HELP:
       display: 'Show/hide key bindings'
-      key: '?'
 
     INSERT:
       display: 'Insert at character'
-      key: 'i'
       insert: true
       fn: () -> return
     INSERT_AFTER:
       display: 'Insert after character'
-      key: 'a'
       insert: true
       fn: () ->
         @view.moveCursorRight {cursor: 'pastEnd'}
     INSERT_HOME:
       display: 'Insert at beginning of line'
-      key: 'I'
       insert: true
       fn: () ->
         do @view.moveCursorHome
     INSERT_END:
       display: 'Insert after end of line'
-      key: 'A'
       insert: true
       fn: () ->
         @view.moveCursorEnd {cursor: 'pastEnd'}
     INSERT_LINE_BELOW:
       display: 'Insert on new line after current line'
-      key: 'o'
       insert: true
       fn: () ->
         do @view.newLineBelow
     INSERT_LINE_ABOVE:
       display: 'Insert on new line before current line'
-      key: 'O'
       insert: true
       fn: () ->
         do @view.newLineAbove
     REPLACE:
       display: 'Replace character'
-      key: 'r'
 
     EX:
       display: 'Enter EX mode'
-      key: ':'
 
     UNDO:
       display: 'Undo'
-      key: 'u'
       drop: true
       fn: () ->
         for i in [1..@repeat]
           do @view.undo
     REDO:
       display: 'Redo'
-      key: 'ctrl+r'
       drop: true
       fn: () ->
         for i in [1..@repeat]
           do @view.redo
     REPEAT:
       display: 'Repeat last command'
-      key: '.'
 
     LEFT:
       display: 'Move cursor left'
-      key: 'h'
       motion: true
-      alternateKeys: ['left']
     RIGHT:
       display: 'Move cursor right'
-      key: 'l'
       motion: true
-      alternateKeys: ['right']
     UP:
       display: 'Move cursor up'
-      key: 'k'
       motion: true
-      alternateKeys: ['up']
     DOWN:
       display: 'Move cursor down'
-      key: 'j'
       motion: true
-      alternateKeys: ['down']
     HOME:
       display: 'Move cursor to beginning of line'
-      key: '0'
       motion: true
-      alternateKeys: ['^']
     END:
       display: 'Move cursor to end of line'
-      key: '$'
       motion: true
     BEGINNING_WORD:
       display: 'Move cursor to the first word-beginning before it'
-      key: 'b'
       motion: true
     END_WORD:
       display: 'Move cursor to the first word-ending after it'
-      key: 'e'
       motion: true
     NEXT_WORD:
       display: 'Move cursor to the beginning of the next word'
-      key: 'w'
       motion: true
     BEGINNING_BLOCK:
       display: 'Move cursor to the first block-beginning before it'
-      key: 'B'
       motion: true
     END_BLOCK:
       display: 'Move cursor to the first block-ending after it'
-      key: 'E'
       motion: true
     NEXT_BLOCK:
       display: 'Move cursor to the beginning of the next block'
-      key: 'W'
       motion: true
     FIND_NEXT_CHAR:
       display: 'Move cursor to next occurrence of character in line'
-      key: 'f'
       motion: true
       find: true
     FIND_PREV_CHAR:
       display: 'Move cursor to previous occurrence of character in line'
-      key: 'F'
       motion: true
       find: true
     TO_NEXT_CHAR:
       display: 'Move cursor to just before next occurrence of character in line'
-      key: 't'
       motion: true
       find: true
     TO_PREV_CHAR:
       display: 'Move cursor to just after previous occurrence of character in line'
-      key: 'T'
       motion: true
       find: true
     GO:
       display: 'Various commands for navigation (operator)'
-      key: 'g'
     GO_END:
       display: 'Go to end of visible document'
-      key: 'G'
       drop: true
       fn: () ->
         row = do @view.data.lastVisible
@@ -159,26 +118,21 @@ class KeyBindings
         do @view.render
     DELETE:
       display: 'Delete (operator)'
-      key: 'd'
     CHANGE:
       display: 'Change (operator)'
-      key: 'c'
     DELETE_CHAR:
       display: 'Delete character'
-      key: 'x'
       fn: () ->
         @view.delCharsAfterCursor @repeat, {yank: true}
         do @view.moveCursorBackIfNeeded
     DELETE_LAST_CHAR:
       display: 'Delete last character'
-      key: 'X'
       fn: () ->
         num = Math.min @view.cursor.col, @repeat
         if num > 0
           @view.delCharsBeforeCursor num, {yank: true}
     CHANGE_CHAR:
       display: 'Change character'
-      key: 's'
       insert: true
       fn: () ->
         @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
@@ -186,57 +140,104 @@ class KeyBindings
 
     YANK:
       display: 'Yank (operator)'
-      key: 'y'
     PASTE_AFTER:
       display: 'Paste after cursor'
-      key: 'p'
       fn: () ->
         do @view.pasteAfter
     PASTE_BEFORE:
       display: 'Paste before cursor'
-      key: 'P'
       fn: () ->
         do @view.pasteBefore
 
     INDENT_RIGHT:
       display: 'Indent right'
-      key: '>'
-      alternateKeys: ['tab']
       fn: () ->
         @view.indentLine {}
     INDENT_LEFT:
       display: 'Indent left'
-      key: '<'
-      alternateKeys: ['shift+tab']
       fn: () ->
         @view.unindentLine {}
     INDENT_BLOCK_RIGHT:
       display: 'Indent block right'
-      key: ']'
       fn: () ->
         @view.indentBlock {recursive: true}
     INDENT_BLOCK_LEFT:
       display: 'Indent block left'
-      key: '['
       fn: () ->
         @view.unindentBlock {recursive: true}
     TOGGLE_FOLD:
       display: 'Toggle whether a block is folded'
-      key: 'z'
       fn: () ->
         do @view.toggleCurBlock
     SCROLL_DOWN:
       display: 'Scroll half window down'
-      key: 'ctrl+d'
       drop: true
       fn: () ->
         @view.scrollPages 0.5
     SCROLL_UP:
       display: 'Scroll half window down'
-      key: 'ctrl+u'
       drop: true
       fn: () ->
         @view.scrollPages -0.5
+
+  MODES =
+    NORMAL: 0
+    INSERT: 1
+    EX: 2
+
+  defaultVimKeyBindings =
+    '?': 'HELP'
+    'i': 'INSERT'
+    'a': 'INSERT_AFTER'
+    'I': 'INSERT_HOME'
+    'A': 'INSERT_END'
+    'o': 'INSERT_LINE_BELOW'
+    'O': 'INSERT_LINE_ABOVE'
+    'r': 'REPLACE'
+    ':': 'EX'
+    'u': 'UNDO'
+    'ctrl+r': 'REDO'
+    '.': 'REPEAT'
+    'h': 'LEFT'
+    'left': 'LEFT'
+    'l': 'RIGHT'
+    'right': 'RIGHT'
+    'k': 'UP'
+    'up': 'UP'
+    'j': 'DOWN'
+    'down': 'DOWN'
+    '0': 'HOME'
+    '^': 'HOME'
+    '$': 'END'
+    'b': 'BEGINNING_WORD'
+    'e': 'END_WORD'
+    'w': 'NEXT_WORD'
+    'B': 'BEGINNING_BLOCK'
+    'E': 'END_BLOCK'
+    'W': 'NEXT_BLOCK'
+    'f': 'FIND_NEXT_CHAR'
+    'F': 'FIND_PREV_CHAR'
+    't': 'TO_NEXT_CHAR'
+    'T': 'TO_PREV_CHAR'
+    'g': 'GO'
+    'G': 'GO_END'
+    'd': 'DELETE'
+    'c': 'CHANGE'
+    'x': 'DELETE_CHAR'
+    'X': 'DELETE_LAST_CHAR'
+    's': 'CHANGE_CHAR'
+    'y': 'YANK'
+    'p': 'PASTE_AFTER'
+    'P': 'PASTE_BEFORE'
+    '>': 'INDENT_RIGHT'
+    'tab': 'INDENT_RIGHT'
+    '<': 'INDENT_LEFT'
+    'shift+tab': 'INDENT_LEFT'
+    ']': 'INDENT_BLOCK_RIGHT'
+    '[': 'INDENT_BLOCK_LEFT'
+    'z': 'TOGGLE_FOLD'
+    'ctrl+d': 'SCROLL_DOWN'
+    'ctrl+u': 'SCROLL_UP'
 
   SEQUENCE = {
     # wait for more keys
@@ -252,8 +253,13 @@ class KeyBindings
   constructor: (modeDiv, keybindingsDiv, view) ->
     @view = view
 
-    @bindings = defaultVimKeyBindings
-    do @buildKeyMap
+    @bindings = keyDefinitions
+    @keyMap = defaultVimKeyBindings
+
+    for k,v of @keyMap
+      if not @bindings[v].keys
+        @bindings[v].keys = []
+      @bindings[v].keys.push k
 
     if keybindingsDiv
       @keybindingsDiv = keybindingsDiv
@@ -273,25 +279,11 @@ class KeyBindings
     for k,v of @bindings
       row = $('<tr>')
       row.append $('<td>').text v.display
-      row.append $('<td>').text v.key
+      row.append $('<td>').text v.keys[0]
+      # row.append $('<td>').text v.keys.join(' OR ')
       table.append row
 
     @keybindingsDiv.empty().append(table)
-
-
-  buildKeyMap: () ->
-    # reverse of bindings map
-    # key -> 'STRING_DESCRIBING_ACTION'
-    keyMap = {}
-
-    # TODO: ensure no collision
-    for k, v of @bindings
-        keyMap[v.key] = k
-        if v.alternateKeys
-          for key in v.alternateKeys
-            keyMap[key] = k
-
-    @keyMap = keyMap
 
   setMode: (mode) ->
     @mode = mode
