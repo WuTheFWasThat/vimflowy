@@ -47,9 +47,17 @@ class KeyBindings
     UNDO:
       display: 'Undo'
       key: 'u'
+      fn: () ->
+        for i in [1..@repeat]
+          do @view.undo
+        return SEQUENCE.DROP
     REDO:
       display: 'Redo'
       key: 'ctrl+r'
+      fn: () ->
+        for i in [1..@repeat]
+          do @view.redo
+        return SEQUENCE.DROP
     REPEAT:
       display: 'Repeat last command'
       key: '.'
@@ -128,6 +136,17 @@ class KeyBindings
       key: 'T'
       motion: true
       find: true
+    GO:
+      display: 'Various commands for navigation (operator)'
+      key: 'g'
+    GO_END:
+      display: 'Go to end of visible document'
+      key: 'G'
+      fn: () ->
+        row = do @view.data.lastVisible
+        @view.setCur row, 0
+        do @view.render
+        return SEQUENCE.DROP
 
     DELETE:
       display: 'Delete (operator)'
@@ -138,9 +157,18 @@ class KeyBindings
     DELETE_CHAR:
       display: 'Delete character'
       key: 'x'
+      fn: () ->
+        @view.delCharsAfterCursor @repeat, {yank: true}
+        do @view.moveCursorBackIfNeeded
+        return SEQUENCE.FINISH
     DELETE_LAST_CHAR:
       display: 'Delete last character'
       key: 'X'
+      fn: () ->
+        num = Math.min @view.cursor.col, @repeat
+        if num > 0
+          @view.delCharsBeforeCursor num, {yank: true}
+        return SEQUENCE.FINISH
     CHANGE_CHAR:
       display: 'Change character'
       key: 's'
@@ -152,34 +180,61 @@ class KeyBindings
     PASTE_AFTER:
       display: 'Paste after cursor'
       key: 'p'
+      fn: () ->
+        do @view.pasteAfter
+        return SEQUENCE.FINISH
     PASTE_BEFORE:
       display: 'Paste before cursor'
       key: 'P'
+      fn: () ->
+        do @view.pasteBefore
+        return SEQUENCE.FINISH
 
     INDENT_RIGHT:
       display: 'Indent right'
       key: '>'
       alternateKeys: ['tab']
+      fn: () ->
+        @view.indentLine {}
+        return SEQUENCE.FINISH
     INDENT_LEFT:
       display: 'Indent left'
       key: '<'
       alternateKeys: ['shift+tab']
+      fn: () ->
+        @view.unindentLine {}
+        return SEQUENCE.FINISH
     INDENT_BLOCK_RIGHT:
       display: 'Indent block right'
       key: ']'
+      fn: () ->
+        @view.indentBlock {recursive: true}
+        return SEQUENCE.FINISH
     INDENT_BLOCK_LEFT:
       display: 'Indent block left'
       key: '['
+      fn: () ->
+        @view.unindentBlock {recursive: true}
+        return SEQUENCE.FINISH
     TOGGLE_FOLD:
       display: 'Toggle whether a block is folded'
       key: 'z'
+      fn: () ->
+        do @view.toggleCurBlock
+        return SEQUENCE.FINISH
 
     SCROLL_DOWN:
       display: 'Scroll half window down'
       key: 'ctrl+d'
+      fn: () ->
+        @view.scrollPages 0.5
+        return SEQUENCE.DROP
     SCROLL_UP:
       display: 'Scroll half window down'
       key: 'ctrl+u'
+      fn: () ->
+        @view.scrollPages -0.5
+        return SEQUENCE.DROP
 
   SEQUENCE = {
     # wait for more keys
@@ -333,6 +388,36 @@ class KeyBindings
         do @registerSequence
     return keys
 
+  processInsertMode: (key) ->
+    if key == 'left'
+      do @view.moveCursorLeft
+    else if key == 'right'
+      @view.moveCursorRight {cursor: 'pastEnd'}
+    else if key == 'up'
+      @view.moveCursorUp {cursor: 'pastEnd'}
+    else if key == 'down'
+      @view.moveCursorDown {cursor: 'pastEnd'}
+    else if key == 'backspace'
+      if @view.cursor.col == 0
+        row = @view.cursor.row
+        sib = @view.data.prevVisible row
+        if sib != null
+          @view.joinRows sib, row, {cursor: 'pastEnd'}
+      else
+        @view.delCharsBeforeCursor 1, {cursor: 'pastEnd'}
+    else if key == 'shift+backspace'
+      @view.delCharsAfterCursor 1
+    else if key == 'shift+enter'
+      @view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
+    else if key == 'enter'
+      do @view.newLineBelow
+    else if key == 'tab'
+      @view.indentLine {}
+    else if key == 'shift+tab'
+      @view.unindentLine {}
+    else
+      @view.addCharsAtCursor [key], {cursor: 'pastEnd'}
+
   # returns index processed up to
   processOnce: (keys) ->
 
@@ -401,42 +486,23 @@ class KeyBindings
         do @view.moveCursorLeft
         return do seq_finish
       else
-        if key == 'left'
-          do @view.moveCursorLeft
-        else if key == 'right'
-          @view.moveCursorRight {cursor: 'pastEnd'}
-        else if key == 'up'
-          @view.moveCursorUp {cursor: 'pastEnd'}
-        else if key == 'down'
-          @view.moveCursorDown {cursor: 'pastEnd'}
-        else if key == 'backspace'
-          if @view.cursor.col == 0
-            row = @view.cursor.row
-            sib = @view.data.prevVisible row
-            if sib != null
-              @view.joinRows sib, row, {cursor: 'pastEnd'}
-          else
-            @view.delCharsBeforeCursor 1, {cursor: 'pastEnd'}
-        else if key == 'shift+backspace'
-          @view.delCharsAfterCursor 1
-        else if key == 'shift+enter'
-          @view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
-        else if key == 'enter'
-          do @view.newLineBelow
-        else if key == 'tab'
-          @view.indentLine {}
-        else if key == 'shift+tab'
-          @view.unindentLine {}
-        else
-          @view.addCharsAtCursor [key], {cursor: 'pastEnd'}
-
+        @processInsertMode key
         return do seq_continue
-    else if @mode == MODES.NORMAL
+
+    if @mode == MODES.NORMAL
       [repeat, key] = getRepeat key
       if key == null then return do seq_wait
 
       binding = @keyMap[key]
       info = @bindings[binding] || {}
+      if info.fn
+        context = {
+          view: @view,
+          repeat: repeat,
+        }
+        seq_action = info.fn.call context
+        return_index = if seq_action == SEQUENCE.WAIT then 0 else keyIndex
+        return [return_index, seq_action]
 
       if binding == 'HELP'
         @keybindingsDiv.toggleClass 'active'
@@ -517,18 +583,8 @@ class KeyBindings
 
           @setMode MODES.INSERT
           return do seq_continue
-
-
         else if binding == 'EX'
           @setMode MODES.EX
-          return do seq_drop
-        else if binding == 'UNDO'
-          for i in [1..repeat]
-            do @view.undo
-          return do seq_drop
-        else if binding == 'REDO'
-          for i in [1..repeat]
-            do @view.redo
           return do seq_drop
         else if binding == 'REPEAT'
           if @curSequence.length != 0
@@ -537,37 +593,8 @@ class KeyBindings
           for i in [1..repeat]
             @processKeys @lastSequence
           return do seq_drop
-        else if binding == 'SCROLL_UP'
-          @view.scrollPages -0.5
-          return do seq_drop
-        else if binding == 'SCROLL_DOWN'
-          @view.scrollPages 0.5
-          return do seq_drop
         else
-          if binding == 'DELETE_LAST_CHAR'
-            num = Math.min @view.cursor.col, repeat
-            if num > 0
-              @view.delCharsBeforeCursor num, {yank: true}
-          else if binding == 'DELETE_CHAR'
-            @view.delCharsAfterCursor repeat, {yank: true}
-            do @view.moveCursorBackIfNeeded
-          else if binding == 'INDENT_RIGHT'
-            @view.indentLine {}
-          else if binding == 'INDENT_LEFT'
-            @view.unindentLine {}
-          else if binding == 'INDENT_BLOCK_RIGHT'
-            @view.indentBlock {recursive: true}
-          else if binding == 'INDENT_BLOCK_LEFT'
-            @view.unindentBlock {recursive: true}
-          else if binding == 'PASTE_AFTER'
-            do @view.pasteAfter
-          else if binding == 'PASTE_BEFORE'
-            do @view.pasteBefore
-          else if binding == 'TOGGLE_FOLD'
-            do @view.toggleCurBlock
-          else # unknown
-            return do seq_drop
-          return do seq_finish
+          return do seq_drop
 
 if module?
   Cursor = require('./cursor.coffee')
