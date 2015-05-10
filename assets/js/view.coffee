@@ -44,7 +44,6 @@ class View
 
           # use final cursor
           @cursor = action.oldCursor
-    do @render
 
   redo: () ->
     if @historyIndex < @history.length - 1
@@ -55,7 +54,6 @@ class View
       for i in [oldIndex...newIndex]
           action = @actions[i]
           action.apply @
-    do @render
 
   act: (action) ->
     if @historyIndex + 1 != @history.length
@@ -65,7 +63,6 @@ class View
     action.oldCursor = do @cursor.clone
     action.apply @
     @actions.push action
-    do @render
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
@@ -87,7 +84,6 @@ class View
   setCursor: (cursor) ->
     oldrow = @cursor.row
     @cursor = cursor
-    do @render
 
   moveCursorBackIfNeeded: () ->
     if @cursor.col > do @curLineLength - 1
@@ -95,29 +91,23 @@ class View
 
   moveCursorLeft: () ->
     do @cursor.left
-    do @render
 
   moveCursorRight: (options) ->
     @cursor.right options
-    do @render
 
   moveCursorUp: (options = {}) ->
     oldrow = @cursor.row
     @cursor.up options
-    do @render
 
   moveCursorDown: (options = {}) ->
     oldrow = @cursor.row
     @cursor.down options
-    do @render
 
   moveCursorHome: () ->
     do @cursor.home
-    do @render
 
   moveCursorEnd: (options) ->
     @cursor.end options
-    do @render
 
   addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
@@ -180,7 +170,6 @@ class View
     @act action
 
     @setCur first, newCol, options.cursor
-    do @render
 
   delBlocks: (nrows, options = {}) ->
     action = new actions.DeleteBlocks @cursor.row, nrows, options
