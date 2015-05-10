@@ -186,49 +186,5 @@ class Cursor
       @row = row
       @fromMoveCol options.cursor
 
-  move: (motion, options = {}) ->
-    motion.repeat ?= 1
-
-    for i in [1..motion.repeat]
-      if motion.type == 'LEFT'
-        @left options
-      else if motion.type == 'RIGHT'
-        @right options
-      else if motion.type == 'UP'
-        @up options
-      else if motion.type == 'DOWN'
-        @down options
-      else if motion.type == 'HOME'
-        @home options
-      else if motion.type == 'END'
-        @end options
-      else if motion.type == 'BEGINNING_WORD'
-        @beginningWord options
-      else if motion.type == 'END_WORD'
-        @endWord options
-      else if motion.type == 'NEXT_WORD'
-        @nextWord options
-      else if motion.type == 'BEGINNING_BLOCK'
-        options.block = true
-        @beginningWord options
-      else if motion.type == 'END_BLOCK'
-        options.block = true
-        @endWord options
-      else if motion.type == 'NEXT_BLOCK'
-        options.block = true
-        @nextWord options
-      else if motion.type == 'FIND_NEXT_CHAR'
-        @nextChar motion.char, options
-      else if motion.type == 'TO_NEXT_CHAR'
-        options.beforeFound = true
-        @nextChar motion.char, options
-      else if motion.type == 'FIND_PREV_CHAR'
-        @prevChar motion.char, options
-      else if motion.type == 'TO_PREV_CHAR'
-        options.beforeFound = true
-        @prevChar motion.char, options
-      else
-        throw 'Unexpected motion'
-
 # exports
 module?.exports = Cursor

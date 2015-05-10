@@ -1,6 +1,15 @@
 # binds keys to manipulation of view/data
 
 class KeyBindings
+
+  # display:
+  #   is displayed in keybindings help screen
+  # fn:
+  #   takes a view and mutates it
+  # motion:
+  #   if the key can be used as a motion, then this is a function
+  #   taking a cursor and mutating it
+  #
   keyDefinitions =
     HELP:
       display: 'Show/hide key bindings'
@@ -57,55 +66,76 @@ class KeyBindings
 
     LEFT:
       display: 'Move cursor left'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.left options
     RIGHT:
       display: 'Move cursor right'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.right options
     UP:
       display: 'Move cursor up'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.up options
     DOWN:
       display: 'Move cursor down'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.down options
     HOME:
       display: 'Move cursor to beginning of line'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.home options
     END:
       display: 'Move cursor to end of line'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.end options
     BEGINNING_WORD:
       display: 'Move cursor to the first word-beginning before it'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.beginningWord options
     END_WORD:
       display: 'Move cursor to the first word-ending after it'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.endWord options
     NEXT_WORD:
       display: 'Move cursor to the beginning of the next word'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.nextWord options
     BEGINNING_BLOCK:
       display: 'Move cursor to the first block-beginning before it'
-      motion: true
+      motion: (cursor, options) ->
+        options.block = true
+        cursor.beginningWord options
     END_BLOCK:
       display: 'Move cursor to the first block-ending after it'
-      motion: true
+      motion: (cursor, options) ->
+        options.block = true
+        cursor.endWord options
     NEXT_BLOCK:
       display: 'Move cursor to the beginning of the next block'
-      motion: true
+      motion: (cursor, options) ->
+        options.block = true
+        cursor.nextWord options
     FIND_NEXT_CHAR:
       display: 'Move cursor to next occurrence of character in line'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.nextChar options.char, options
       find: true
     FIND_PREV_CHAR:
       display: 'Move cursor to previous occurrence of character in line'
-      motion: true
+      motion: (cursor, options) ->
+        cursor.prevChar options.char, options
       find: true
     TO_NEXT_CHAR:
       display: 'Move cursor to just before next occurrence of character in line'
-      motion: true
+      motion: (cursor, options) ->
+        options.beforeFound = true
+        cursor.nextChar options.char, options
       find: true
     TO_PREV_CHAR:
       display: 'Move cursor to just after previous occurrence of character in line'
-      motion: true
+      motion: (cursor, options) ->
+        options.beforeFound = true
+        cursor.prevChar options.char, options
       find: true
     GO:
       display: 'Various commands for navigation (operator)'
@@ -385,11 +415,12 @@ class KeyBindings
       motionInfo = @bindings[motionBinding] || {}
       if not motionInfo.motion then return [null, SEQUENCE.DROP]
 
-      motion = {type: motionBinding, repeat: repeat}
+      motion = motionInfo.motion
       if motionInfo.find
         char = do nextKey
         if char == null then return [null, SEQUENCE.WAIT]
         motion.char = char
+      motion.repeat = repeat
       return [motion, null]
 
     # takes key, returns repeat number and key
@@ -408,13 +439,16 @@ class KeyBindings
       return [parseInt(numStr), key]
 
     # hepler functions for return values
-    seq_wait = () ->
+    seq_wait = () =>
       return [0, SEQUENCE.WAIT]
-    seq_drop = () ->
+    seq_drop = () =>
+      do @view.render
       return [keyIndex, SEQUENCE.DROP]
-    seq_continue = () ->
+    seq_continue = () =>
+      do @view.render
       return [keyIndex, SEQUENCE.CONTINUE]
-    seq_finish = () ->
+    seq_finish = () =>
+      do @view.render
       return [keyIndex, SEQUENCE.FINISH]
 
     key = do nextKey
@@ -441,6 +475,15 @@ class KeyBindings
 
       binding = @keyMap[key]
       info = @bindings[binding] || {}
+
+      if info.motion
+        [motion, action] = getMotion key
+        if motion == null then return [keyIndex, action]
+
+        for j in [1..repeat]
+          motion @view.cursor, {char: motion.char}
+        return do seq_drop
+
       if info.fn
         context = {
           view: @view,
@@ -452,23 +495,14 @@ class KeyBindings
           @setMode MODES.INSERT
           return do seq_continue
         if info.drop
-          return [keyIndex, SEQUENCE.DROP]
+          return do seq_drop
         else
-          return [keyIndex, SEQUENCE.FINISH]
+          return do seq_finish
 
       if binding == 'HELP'
         @keybindingsDiv.toggleClass 'active'
         if localStorage?
           localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
-        return do seq_drop
-      else if info.motion
-        keyIndex = 0 # easier to just redo the work (number case is annoying)
-        [motion, action] = do getMotion
-        if motion == null then return [keyIndex, action]
-
-        cursor = do @view.cursor.clone
-        cursor.move motion
-        @view.setCursor cursor
         return do seq_drop
       else if @mode == MODES.NORMAL
         if binding == 'DELETE' or binding == 'CHANGE' or binding == 'YANK'
@@ -488,7 +522,8 @@ class KeyBindings
 
             cursor = do @view.cursor.clone
             for i in [1..repeat]
-              cursor.move motion, {cursor: 'pastEnd'}
+              for j in [1..motion.repeat]
+                motion cursor, {char: motion.char, cursor: 'pastEnd'}
 
             if cursor.col < @view.cursor.col
               if binding == 'YANK'
