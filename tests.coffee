@@ -1222,6 +1222,9 @@ t.sendKeys 'p'
 t.expect ['word']
 t.sendKeys 'u'
 t.expect ['']
+# repeat still knows what to do
+t.sendKeys '.'
+t.expect ['word']
 
 # test paste behind
 t = new TestCase ['one fish, two fish, red fish, blue fish']
@@ -1476,5 +1479,28 @@ t.expect [
   'ab'
   { line: 'bc', children: [
     'cd'
+  ] },
+]
+
+# test go to end
+t = new TestCase ['always to front']
+t.sendKeys '$Gx'
+t.expect ['lways to front']
+
+t = new TestCase ['a', 'ab', 'abc']
+t.sendKeys '$Gx'
+t.expect ['a', 'ab', 'bc']
+
+t = new TestCase [
+  'ab'
+  { line: 'bc', children: [
+    'cd'
+  ] },
+]
+t.sendKeys 'Gx'
+t.expect [
+  'ab'
+  { line: 'bc', children: [
+    'd'
   ] },
 ]
