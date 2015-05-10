@@ -16,26 +16,37 @@ class KeyBindings
       display: 'Insert at character'
       key: 'i'
       insert: true
+      fn: () -> return
     INSERT_AFTER:
       display: 'Insert after character'
       key: 'a'
       insert: true
+      fn: () ->
+        @view.moveCursorRight {cursor: 'pastEnd'}
     INSERT_HOME:
       display: 'Insert at beginning of line'
       key: 'I'
       insert: true
+      fn: () ->
+        do @view.moveCursorHome
     INSERT_END:
       display: 'Insert after end of line'
       key: 'A'
       insert: true
+      fn: () ->
+        @view.moveCursorEnd {cursor: 'pastEnd'}
     INSERT_LINE_BELOW:
       display: 'Insert on new line after current line'
       key: 'o'
       insert: true
+      fn: () ->
+        do @view.newLineBelow
     INSERT_LINE_ABOVE:
       display: 'Insert on new line before current line'
       key: 'O'
       insert: true
+      fn: () ->
+        do @view.newLineAbove
     REPLACE:
       display: 'Replace character'
       key: 'r'
@@ -47,21 +58,20 @@ class KeyBindings
     UNDO:
       display: 'Undo'
       key: 'u'
+      drop: true
       fn: () ->
         for i in [1..@repeat]
           do @view.undo
-        return SEQUENCE.DROP
     REDO:
       display: 'Redo'
       key: 'ctrl+r'
+      drop: true
       fn: () ->
         for i in [1..@repeat]
           do @view.redo
-        return SEQUENCE.DROP
     REPEAT:
       display: 'Repeat last command'
       key: '.'
-
 
     LEFT:
       display: 'Move cursor left'
@@ -142,12 +152,11 @@ class KeyBindings
     GO_END:
       display: 'Go to end of visible document'
       key: 'G'
+      drop: true
       fn: () ->
         row = do @view.data.lastVisible
         @view.setCur row, 0
         do @view.render
-        return SEQUENCE.DROP
-
     DELETE:
       display: 'Delete (operator)'
       key: 'd'
@@ -160,7 +169,6 @@ class KeyBindings
       fn: () ->
         @view.delCharsAfterCursor @repeat, {yank: true}
         do @view.moveCursorBackIfNeeded
-        return SEQUENCE.FINISH
     DELETE_LAST_CHAR:
       display: 'Delete last character'
       key: 'X'
@@ -168,11 +176,13 @@ class KeyBindings
         num = Math.min @view.cursor.col, @repeat
         if num > 0
           @view.delCharsBeforeCursor num, {yank: true}
-        return SEQUENCE.FINISH
     CHANGE_CHAR:
       display: 'Change character'
       key: 's'
       insert: true
+      fn: () ->
+        @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
+
 
     YANK:
       display: 'Yank (operator)'
@@ -182,13 +192,11 @@ class KeyBindings
       key: 'p'
       fn: () ->
         do @view.pasteAfter
-        return SEQUENCE.FINISH
     PASTE_BEFORE:
       display: 'Paste before cursor'
       key: 'P'
       fn: () ->
         do @view.pasteBefore
-        return SEQUENCE.FINISH
 
     INDENT_RIGHT:
       display: 'Indent right'
@@ -196,45 +204,39 @@ class KeyBindings
       alternateKeys: ['tab']
       fn: () ->
         @view.indentLine {}
-        return SEQUENCE.FINISH
     INDENT_LEFT:
       display: 'Indent left'
       key: '<'
       alternateKeys: ['shift+tab']
       fn: () ->
         @view.unindentLine {}
-        return SEQUENCE.FINISH
     INDENT_BLOCK_RIGHT:
       display: 'Indent block right'
       key: ']'
       fn: () ->
         @view.indentBlock {recursive: true}
-        return SEQUENCE.FINISH
     INDENT_BLOCK_LEFT:
       display: 'Indent block left'
       key: '['
       fn: () ->
         @view.unindentBlock {recursive: true}
-        return SEQUENCE.FINISH
     TOGGLE_FOLD:
       display: 'Toggle whether a block is folded'
       key: 'z'
       fn: () ->
         do @view.toggleCurBlock
-        return SEQUENCE.FINISH
-
     SCROLL_DOWN:
       display: 'Scroll half window down'
       key: 'ctrl+d'
+      drop: true
       fn: () ->
         @view.scrollPages 0.5
-        return SEQUENCE.DROP
     SCROLL_UP:
       display: 'Scroll half window down'
       key: 'ctrl+u'
+      drop: true
       fn: () ->
         @view.scrollPages -0.5
-        return SEQUENCE.DROP
 
   SEQUENCE = {
     # wait for more keys
@@ -314,53 +316,6 @@ class KeyBindings
   clearSequence: () ->
     @curSequence = []
 
-  handleMotion: (motion, options = {}) ->
-    motion.repeat ?= 1
-
-    cursor = do @view.cursor.clone
-
-    for i in [1..motion.repeat]
-      if motion.type == 'LEFT'
-        cursor.left options
-      else if motion.type == 'RIGHT'
-        cursor.right options
-      else if motion.type == 'UP'
-        cursor.up options
-      else if motion.type == 'DOWN'
-        cursor.down options
-      else if motion.type == 'HOME'
-        cursor.home options
-      else if motion.type == 'END'
-        cursor.end options
-      else if motion.type == 'BEGINNING_WORD'
-        cursor.beginningWord options
-      else if motion.type == 'END_WORD'
-        cursor.endWord options
-      else if motion.type == 'NEXT_WORD'
-        cursor.nextWord options
-      else if motion.type == 'BEGINNING_BLOCK'
-        options.block = true
-        cursor.beginningWord options
-      else if motion.type == 'END_BLOCK'
-        options.block = true
-        cursor.endWord options
-      else if motion.type == 'NEXT_BLOCK'
-        options.block = true
-        cursor.nextWord options
-      else if motion.type == 'FIND_NEXT_CHAR'
-        cursor.nextChar motion.char, options
-      else if motion.type == 'TO_NEXT_CHAR'
-        options.beforeFound = true
-        cursor.nextChar motion.char, options
-      else if motion.type == 'FIND_PREV_CHAR'
-        cursor.prevChar motion.char, options
-      else if motion.type == 'TO_PREV_CHAR'
-        options.beforeFound = true
-        cursor.prevChar motion.char, options
-      else
-        return null
-    return cursor
-
   handleKeys: (keys) ->
     for key in keys
       @queuedKeys.push key
@@ -431,7 +386,6 @@ class KeyBindings
     getMotion = (motionKey) =>
       if not motionKey
         motionKey = do nextKey
-        if motionKey == null then return [null, SEQUENCE.WAIT]
       [repeat, motionKey] = getRepeat motionKey
       if motionKey == null then return [null, SEQUENCE.WAIT]
 
@@ -500,9 +454,15 @@ class KeyBindings
           view: @view,
           repeat: repeat,
         }
-        seq_action = info.fn.call context
-        return_index = if seq_action == SEQUENCE.WAIT then 0 else keyIndex
-        return [return_index, seq_action]
+        info.fn.call context
+
+        if info.insert
+          @setMode MODES.INSERT
+          return do seq_continue
+        if info.drop
+          return [keyIndex, SEQUENCE.DROP]
+        else
+          return [keyIndex, SEQUENCE.FINISH]
 
       if binding == 'HELP'
         @keybindingsDiv.toggleClass 'active'
@@ -565,24 +525,6 @@ class KeyBindings
           newChars = (replaceKey for i in [1..num])
           @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
           return do seq_finish
-        else if info.insert
-          if binding == 'INSERT'
-            # do nothing
-          else if binding == 'INSERT_AFTER'
-            @view.moveCursorRight {cursor: 'pastEnd'}
-          else if binding == 'INSERT_HOME'
-            do @view.moveCursorHome
-          else if binding == 'INSERT_END'
-            @view.moveCursorEnd {cursor: 'pastEnd'}
-          else if binding == 'CHANGE_CHAR'
-            @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
-          else if binding == 'INSERT_LINE_ABOVE'
-            do @view.newLineAbove
-          else if binding == 'INSERT_LINE_BELOW'
-            do @view.newLineBelow
-
-          @setMode MODES.INSERT
-          return do seq_continue
         else if binding == 'EX'
           @setMode MODES.EX
           return do seq_drop
