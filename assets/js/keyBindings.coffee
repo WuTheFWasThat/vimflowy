@@ -6,6 +6,9 @@ class KeyBindings
   #   is displayed in keybindings help screen
   # fn:
   #   takes a view and mutates it
+  # continue:
+  #   either a function which takes next key
+  #   or a dictionary from keyDefinitions to functions
   # motion:
   #   if the key can be used as a motion, then this is a function
   #   taking a cursor and mutating it
@@ -13,7 +16,11 @@ class KeyBindings
   keyDefinitions =
     HELP:
       display: 'Show/hide key bindings'
-
+      drop: true
+      fn: () ->
+        @keybindingsDiv.toggleClass 'active'
+        if localStorage?
+          localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
     INSERT:
       display: 'Insert at character'
       insert: true
@@ -45,9 +52,13 @@ class KeyBindings
         do @view.newLineAbove
     REPLACE:
       display: 'Replace character'
+      continue: (char) ->
+        num = Math.min(@repeat, do @view.curLineLength - @view.cursor.col)
+        newChars = (char for i in [1..num])
+        @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
 
-    EX:
-      display: 'Enter EX mode'
+    # EX:
+    #   display: 'Enter EX mode'
 
     UNDO:
       display: 'Undo'
@@ -61,8 +72,8 @@ class KeyBindings
       fn: () ->
         for i in [1..@repeat]
           do @view.redo
-    REPEAT:
-      display: 'Repeat last command'
+    REPLAY:
+      display: 'Replay last command'
 
     LEFT:
       display: 'Move cursor left'
@@ -117,28 +128,37 @@ class KeyBindings
         cursor.nextWord options
     FIND_NEXT_CHAR:
       display: 'Move cursor to next occurrence of character in line'
-      motion: (cursor, options) ->
-        cursor.nextChar options.char, options
-      find: true
+      motion:
+        continue: (char, cursor, options) ->
+          cursor.nextChar char, options
     FIND_PREV_CHAR:
       display: 'Move cursor to previous occurrence of character in line'
-      motion: (cursor, options) ->
-        cursor.prevChar options.char, options
-      find: true
+      motion:
+        continue: (char, cursor, options) ->
+          cursor.prevChar char, options
     TO_NEXT_CHAR:
       display: 'Move cursor to just before next occurrence of character in line'
-      motion: (cursor, options) ->
-        options.beforeFound = true
-        cursor.nextChar options.char, options
-      find: true
+      motion:
+        continue: (char, cursor, options) ->
+          options.beforeFound = true
+          cursor.nextChar char, options
     TO_PREV_CHAR:
       display: 'Move cursor to just after previous occurrence of character in line'
-      motion: (cursor, options) ->
-        options.beforeFound = true
-        cursor.prevChar options.char, options
-      find: true
+      motion:
+        continue: (char, cursor, options) ->
+          options.beforeFound = true
+          cursor.prevChar char, options
     GO:
       display: 'Various commands for navigation (operator)'
+      continue:
+        bindings:
+          GO:
+            display: 'Go to the beginning of visible document'
+            drop: true
+            fn: () ->
+              row = do @view.data.nextVisible
+              @view.setCur row, 0
+              do @view.render
     GO_END:
       display: 'Go to end of visible document'
       drop: true
@@ -167,9 +187,13 @@ class KeyBindings
       fn: () ->
         @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
 
-
     YANK:
       display: 'Yank (operator)'
+      # continue:
+      #   bindings:
+      #     'YANK': () ->
+      #       @view.yankBlocks @repeat
+      #   motion:
     PASTE_AFTER:
       display: 'Paste after cursor'
       fn: () ->
@@ -224,10 +248,10 @@ class KeyBindings
     'o': 'INSERT_LINE_BELOW'
     'O': 'INSERT_LINE_ABOVE'
     'r': 'REPLACE'
-    ':': 'EX'
+    # ':': 'EX'
     'u': 'UNDO'
     'ctrl+r': 'REDO'
-    '.': 'REPEAT'
+    '.': 'REPLAY'
     'h': 'LEFT'
     'left': 'LEFT'
     'l': 'RIGHT'
@@ -284,12 +308,9 @@ class KeyBindings
     @view = view
 
     @bindings = keyDefinitions
-    @keyMap = defaultVimKeyBindings
-
-    for k,v of @keyMap
-      if not @bindings[v].keys
-        @bindings[v].keys = []
-      @bindings[v].keys.push k
+    @keyMap = {}
+    for k, v of defaultVimKeyBindings
+      @keyMap[k] = v
 
     if keybindingsDiv
       @keybindingsDiv = keybindingsDiv
@@ -305,14 +326,27 @@ class KeyBindings
     @lastSequence = [] # last key sequence
 
   buildBindingsDiv: () ->
-    table = $('<table>')
-    for k,v of @bindings
-      row = $('<tr>')
-      row.append $('<td>').text v.display
-      row.append $('<td>').text v.keys[0]
-      # row.append $('<td>').text v.keys.join(' OR ')
-      table.append row
+    typeToKeys = {}
+    for k,v of @keyMap
+      if not typeToKeys[v]
+        typeToKeys[v] = []
+      typeToKeys[v].push k
 
+    table = $('<table>')
+
+    buildTableContents = (bindings, onto) ->
+      for k,v of bindings
+        row = $('<tr>')
+        row.append $('<td>').text typeToKeys[k][0]
+        display_cell = $('<td>').text v.display
+
+        row.append display_cell
+        if v.continue and v.continue.bindings
+          buildTableContents v.continue.bindings, display_cell
+        # row.append $('<td>').text typeToKeys[k].join(' OR ')
+        onto.append row
+
+    buildTableContents @bindings, table
     @keybindingsDiv.empty().append(table)
 
   setMode: (mode) ->
@@ -406,8 +440,6 @@ class KeyBindings
 
     # useful when you expect a motion
     getMotion = (motionKey) =>
-      if not motionKey
-        motionKey = do nextKey
       [repeat, motionKey] = getRepeat motionKey
       if motionKey == null then return [null, SEQUENCE.WAIT]
 
@@ -415,16 +447,23 @@ class KeyBindings
       motionInfo = @bindings[motionBinding] || {}
       if not motionInfo.motion then return [null, SEQUENCE.DROP]
 
-      motion = motionInfo.motion
-      if motionInfo.find
+      fn = null
+      args = []
+
+      if typeof motionInfo.motion == 'function'
+        fn = motionInfo.motion
+      else if typeof motionInfo.motion == 'object'
         char = do nextKey
         if char == null then return [null, SEQUENCE.WAIT]
-        motion.char = char
-      motion.repeat = repeat
-      return [motion, null]
+        fn = motionInfo.motion.continue.bind @, char
+
+      fn.repeat = repeat
+      return [fn, null]
 
     # takes key, returns repeat number and key
-    getRepeat = (key) =>
+    getRepeat = (key = null) =>
+      if key == null
+        key = do nextKey
       begins = [1..9].map ((x) -> return do x.toString)
       continues = [0..9].map ((x) -> return do x.toString)
       if key not in begins
@@ -451,45 +490,47 @@ class KeyBindings
       do @view.render
       return [keyIndex, SEQUENCE.FINISH]
 
-    key = do nextKey
-    if key == null then return do seq_wait
-
-    # if key not in @reverseBindings then return
-
-    # name = @reverseBindings[key]
-    # handler = @handlers[name]
-    # do handler
-
-    if @mode == MODES.INSERT
-      if key == 'esc' or key == 'ctrl+c'
-        @setMode MODES.NORMAL
-        do @view.moveCursorLeft
-        return do seq_finish
-      else
-        @processInsertMode key
-        return do seq_continue
-
-    if @mode == MODES.NORMAL
-      [repeat, key] = getRepeat key
+    processNormalMode = (bindings) =>
+      [repeat, key] = do getRepeat
       if key == null then return do seq_wait
 
       binding = @keyMap[key]
-      info = @bindings[binding] || {}
+      if not binding of bindings
+        return do seq_drop
+      info = bindings[binding] || {}
 
       if info.motion
         [motion, action] = getMotion key
         if motion == null then return [keyIndex, action]
 
         for j in [1..repeat]
-          motion @view.cursor, {char: motion.char}
+          motion @view.cursor, {}
         return do seq_drop
 
-      if info.fn
+      fn = null
+      args = []
+
+      if info.continue
+        if typeof info.continue == 'function'
+          key = do nextKey
+          if key == null then return do seq_wait
+
+          fn = info.continue
+          args.push key
+        else # a dictionary
+          return processNormalMode(info.continue.bindings)
+
+          # TODO
+      else if info.fn
+        fn = info.fn
+
+      if fn
         context = {
           view: @view,
           repeat: repeat,
+          keybindingsDiv: @keybindingsDiv,
         }
-        info.fn.call context
+        fn.apply context, args
 
         if info.insert
           @setMode MODES.INSERT
@@ -499,71 +540,75 @@ class KeyBindings
         else
           return do seq_finish
 
-      if binding == 'HELP'
-        @keybindingsDiv.toggleClass 'active'
-        if localStorage?
-          localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
-        return do seq_drop
-      else if @mode == MODES.NORMAL
-        if binding == 'DELETE' or binding == 'CHANGE' or binding == 'YANK'
+      if binding == 'DELETE' or binding == 'CHANGE' or binding == 'YANK'
+        nkey = do nextKey
+        if nkey == null then return do seq_wait
 
-          nkey = do nextKey
-          if nkey == null then return do seq_wait
-
-          if nkey == key
-            # dd and cc
-            if binding == 'YANK'
-              @view.yankBlocks repeat
-            else
-              @view.delBlocks repeat, {addNew: binding == 'CHANGE'}
+        if nkey == key
+          # dd and cc
+          if binding == 'YANK'
+            @view.yankBlocks repeat
           else
-            [motion, action] = getMotion nkey
-            if motion == null then return [keyIndex, action]
-
-            cursor = do @view.cursor.clone
-            for i in [1..repeat]
-              for j in [1..motion.repeat]
-                motion cursor, {char: motion.char, cursor: 'pastEnd'}
-
-            if cursor.col < @view.cursor.col
-              if binding == 'YANK'
-                @view.yankCharsBeforeCursor (@view.cursor.col - cursor.col)
-              else
-                @view.delCharsBeforeCursor (@view.cursor.col - cursor.col), {yank: true}
-            else if cursor.col > @view.cursor.col
-              if binding == 'YANK'
-                @view.yankCharsAfterCursor (cursor.col - @view.cursor.col)
-              else
-                cursorOption = if binding == 'CHANGE' then 'pastEnd' else ''
-                @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {cursor: cursorOption, yank: true}
-
-          if binding == 'CHANGE'
-            @setMode MODES.INSERT
-            return do seq_continue
-          else if binding == 'YANK'
-            return do seq_drop
-          else # binding == 'DELETE'
-            return do seq_finish
-        else if binding == 'REPLACE'
-          replaceKey = do nextKey
-          if replaceKey == null
-            return do seq_wait
-          num = Math.min(repeat, do @view.curLineLength - @view.cursor.col)
-          newChars = (replaceKey for i in [1..num])
-          @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
-          return do seq_finish
-        else if binding == 'EX'
-          @setMode MODES.EX
-          return do seq_drop
-        else if binding == 'REPEAT'
-          if @curSequence.length != 0
-            console.log('cursequence nontrivial while replaying', @curSequence)
-            do @clearSequence
-          for i in [1..repeat]
-            @processKeys @lastSequence
-          return do seq_drop
+            @view.delBlocks repeat, {addNew: binding == 'CHANGE'}
         else
+          [motion, action] = getMotion nkey
+          if motion == null then return [keyIndex, action]
+
+          cursor = do @view.cursor.clone
+          for i in [1..repeat]
+            for j in [1..motion.repeat]
+              motion cursor, {cursor: 'pastEnd'}
+
+          if cursor.col < @view.cursor.col
+            if binding == 'YANK'
+              @view.yankCharsBeforeCursor (@view.cursor.col - cursor.col)
+            else
+              @view.delCharsBeforeCursor (@view.cursor.col - cursor.col), {yank: true}
+          else if cursor.col > @view.cursor.col
+            if binding == 'YANK'
+              @view.yankCharsAfterCursor (cursor.col - @view.cursor.col)
+            else
+              cursorOption = if binding == 'CHANGE' then 'pastEnd' else ''
+              @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {cursor: cursorOption, yank: true}
+
+        if binding == 'CHANGE'
+          @setMode MODES.INSERT
+          return do seq_continue
+        else if binding == 'YANK'
           return do seq_drop
+        else # binding == 'DELETE'
+          return do seq_finish
+      else if binding == 'REPLAY'
+        if @curSequence.length != 0
+          console.log('cursequence nontrivial while replaying', @curSequence)
+          do @clearSequence
+        for i in [1..repeat]
+          @processKeys @lastSequence
+        return do seq_drop
+      else
+        return do seq_drop
+
+
+    # if key not in @reverseBindings then return
+
+    # name = @reverseBindings[key]
+    # handler = @handlers[name]
+    # do handler
+
+    if @mode == MODES.INSERT
+      key = do nextKey
+      if key == null then return do seq_wait
+
+      if key == 'esc' or key == 'ctrl+c'
+        @setMode MODES.NORMAL
+        do @view.moveCursorLeft
+        return do seq_finish
+      else
+        @processInsertMode key
+        return do seq_continue
+
+    if @mode == MODES.NORMAL
+      return processNormalMode @bindings
 
 if module?
   Cursor = require('./cursor.coffee')
