@@ -5,11 +5,16 @@ class Data
     # defaults
 
     # default document: a single blank line
+    @viewRoot = 0
+
     @load {
       line: ''
       children: ['']
     }
     return @
+
+  changeViewRoot: (row) ->
+    @viewRoot = row
 
   getId: () ->
     id = 0
@@ -39,6 +44,9 @@ class Data
 
   getChildren: (row) ->
     return @structure[row].children
+
+  hasChildren: (row) ->
+    return (@structure[row].children.length > 0)
 
   getSiblings: (row) ->
     parent = @getParent row
@@ -82,7 +90,7 @@ class Data
     for child in new_children
       @setParent child, id
 
-  nextVisible: (id = @root) ->
+  nextVisible: (id = @viewRoot) ->
     if not @collapsed id
       children = @getChildren id
       if children.length > 0
@@ -92,11 +100,11 @@ class Data
       if nextsib != null
         return nextsib
       id = @getParent id
-      if id == @root
+      if id == @viewRoot
         return null
 
   # last thing visible nested within id
-  lastVisible: (id = @root) ->
+  lastVisible: (id = @viewRoot) ->
     if @collapsed id
       return id
     children = @getChildren id
@@ -109,7 +117,7 @@ class Data
     if prevsib != null
       return @lastVisible prevsib
     parent = @getParent id
-    if parent == @root
+    if parent == @viewRoot
       return null
     return parent
 
@@ -156,8 +164,8 @@ class Data
     return child
 
   deleteRow: (id) ->
-    if id == @root
-      throw 'Cannot delete root'
+    if id == @viewRoot
+      throw 'Cannot delete view root'
 
     for child in (@getChildren id).slice()
       @deleteRow child
@@ -167,8 +175,8 @@ class Data
     delete @lines[id]
 
   _insertSiblingHelper: (id, after) ->
-    if id == @root
-      console.log 'Cannot insert sibling of root'
+    if id == @viewRoot
+      console.log 'Cannot insert sibling of view root'
       return null
 
     newId = do @getId
@@ -203,24 +211,26 @@ class Data
         line: line
         children: children
       }
+      if id == @root and @viewRoot != @root
+        struct.viewRoot = @viewRoot
       if @collapsed id
         struct.collapsed = true
       return struct
     else
       return line
 
-  loadTo: (serialized, parent = 0, index = -1) ->
+  loadTo: (serialized, parent = @root, index = -1) ->
     id = do @getId
 
     @structure[id] = {
       children: []
     }
 
-    if id != 0
+    if id != @root
       @attachChild parent, id, index
     else
       # parent should be 0
-      @structure[id].parent = 0
+      @structure[id].parent = @root
 
     if typeof serialized == 'string'
       @setLine id, (serialized.split '')
@@ -236,6 +246,10 @@ class Data
   load: (serialized) ->
     @structure = {}
     @lines = {}
+    if serialized.viewRoot
+      @viewRoot = serialized.viewRoot
+    else
+      @viewRoot = @root
 
     @loadTo serialized
 

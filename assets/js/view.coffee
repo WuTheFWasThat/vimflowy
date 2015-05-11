@@ -109,6 +109,29 @@ class View
   moveCursorEnd: (options) ->
     @cursor.end options
 
+  changeView: (row) ->
+    if @data.hasChildren row
+      if @data.collapsed row
+        @toggleBlock row
+      @act new actions.ChangeView row
+      return true
+    return false
+
+  rootInto: () ->
+    # try changing to cursor
+    if @changeView @cursor.row
+      firstchild = (@data.getChildren @cursor.row)[0]
+      @setCur firstchild, 0
+      return true
+    parent = @data.getParent @cursor.row
+    if @changeView parent
+      return true
+
+  rootUp: () ->
+    if @data.viewRoot != @data.root
+      parent = @data.getParent @data.viewRoot
+      @changeView parent
+
   addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
 
@@ -158,7 +181,7 @@ class View
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
   joinRows: (first, second, options = {}) ->
-    if (@data.getChildren second).length > 0
+    if @data.hasChildren second
       return
 
     line = @data.getLine second
@@ -209,7 +232,7 @@ class View
 
   unindent: (id, options = {}) ->
     if not options.recursive
-      if (@data.getChildren id).length > 0
+      if @data.hasChildren id
         return
 
     parent = @data.getParent id
@@ -294,7 +317,7 @@ class View
 
   # TODO: make the rendering do diffs (maybe data should track dirty bits)
   render: () ->
-    @renderTree 0, @mainDiv
+    @renderTree @data.viewRoot, @mainDiv
     cursorDiv = $('.cursor')[0]
     if cursorDiv
       @scrollIntoView cursorDiv
@@ -314,10 +337,10 @@ class View
         .addClass('node')
 
       icon = 'fa-circle'
-      if (@data.getChildren id).length > 0
+      if @data.hasChildren id
         icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
       bullet = $('<i>').addClass('fa ' + icon + ' bullet')
-      if (@data.getChildren id).length > 0
+      if @data.hasChildren id
         bullet.css({cursor: 'pointer'}).click @toggleBlock.bind(@, id)
 
       elLine = $('<div>').addClass('node-text').attr('id', rowDivID id)

@@ -219,6 +219,14 @@ class KeyBindings
       display: 'Indent block left'
       fn: () ->
         @view.unindentBlock {recursive: true}
+    ZOOM_IN:
+      display: 'Zoom in onto cursor'
+      fn: () ->
+        do @view.rootInto
+    ZOOM_OUT:
+      display: 'Zoom out by one level'
+      fn: () ->
+        do @view.rootUp
     TOGGLE_FOLD:
       display: 'Toggle whether a block is folded'
       fn: () ->
@@ -292,6 +300,8 @@ class KeyBindings
     'z': 'TOGGLE_FOLD'
     'ctrl+d': 'SCROLL_DOWN'
     'ctrl+u': 'SCROLL_UP'
+    'ctrl+h': 'ZOOM_OUT'
+    'ctrl+l': 'ZOOM_IN'
 
   SEQUENCE = {
     # wait for more keys
