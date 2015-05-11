@@ -14,9 +14,6 @@ class TestCase
 
     @view = new View null, @data
     @view.render = -> return
-    @view.renderHelper = -> return
-    @view.drawRow = -> return
-    @view.undrawCursors = -> return
     @keybinder = new KeyBindings null, null, @view
 
   sendKeys: (keys) ->

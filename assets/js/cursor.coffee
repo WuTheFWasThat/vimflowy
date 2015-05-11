@@ -1,10 +1,12 @@
 class Cursor
-  constructor: (data, row = 1, col = 0, movecol = 0) ->
+  constructor: (data, row = null, col = null, moveCol = null) ->
     @data = data
-    @row = row
-    @col = col
+    @row = if row == null then (@data.getChildren @data.viewRoot)[0] else row
+    @col = if col == null then 0 else col
+    console.log('CURSOR"', @row, @col)
 
-    @moveCol = movecol # -1 means last col
+    # -1 means last col
+    @moveCol = if moveCol == null then col else moveCol
 
   clone: () ->
     return new Cursor @data, @row, @col, @moveCol
