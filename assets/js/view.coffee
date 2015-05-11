@@ -15,7 +15,8 @@ class View
     @mainDiv = mainDiv
     @data = data
 
-    @cursor = new Cursor @data
+    row = (@data.getChildren @data.viewRoot)[0]
+    @cursor = new Cursor @data, row, 0
     @register = new Register @
 
     @actions = [] # full action history
@@ -275,8 +276,6 @@ class View
   pasteAfter: () ->
     @register.paste {}
 
-  # RENDERING
-
   scrollPages: (npages) ->
     # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
     line_height = do $('.node-text').height
@@ -315,9 +314,39 @@ class View
        # scroll down
        @scrollMain (elemBottom - window.innerHeight + bottom_margin)
 
+  # RENDERING
+
   # TODO: make the rendering do diffs (maybe data should track dirty bits)
   render: () ->
-    @renderTree @data.viewRoot, @mainDiv
+    do @mainDiv.empty
+
+    crumbs = []
+    row = @data.viewRoot
+    while row != @data.root
+      crumbs.push row
+      row = @data.getParent row
+
+    makeCrumb = (row, line) =>
+      return $('<span>').addClass('crumb').append(
+        $('<a>').text(line).click (() =>
+          @changeView row
+          do @render
+        )
+      )
+
+    crumbsDiv = $('<div>').attr('id', 'breadcrumbs')
+
+    crumbsDiv.append(makeCrumb @data.root, 'Home')
+    for row in crumbs by -1
+      line = (@data.getLine row).join('')
+      crumbsDiv.append(makeCrumb row, line)
+
+    @mainDiv.append crumbsDiv
+
+    contentDiv = $('<div>')
+    @mainDiv.append contentDiv
+    @renderTree @data.viewRoot, contentDiv
+
     cursorDiv = $('.cursor')[0]
     if cursorDiv
       @scrollIntoView cursorDiv
@@ -344,7 +373,7 @@ class View
         bullet.css({cursor: 'pointer'}).click @toggleBlock.bind(@, id)
 
       elLine = $('<div>').addClass('node-text').attr('id', rowDivID id)
-      @drawRow id, elLine
+      @renderLine id, elLine
 
       children = $('<div>').addClass('node-children').attr('id', childrenDivID id)
       @renderTree id, children
@@ -352,7 +381,7 @@ class View
       el.append(bullet).append(elLine).append(children)
       onto.append el
 
-  drawRow: (row, onto) ->
+  renderLine: (row, onto) ->
     if not onto
       onto = $('#' + (rowDivID row))
     lineData = @data.lines[row]

@@ -1,4 +1,6 @@
 $color-white: #FFFFFF
+$color-black: #000000
+$color-link-blue: #8888FF
 
 $content-color: $color-white
 
@@ -67,6 +69,24 @@ $bottom-bar-height: 25px
             padding: 5px
 
     #view
+        #breadcrumbs
+            font-size: 20px;
+            margin-bottom: 20px;
+            .crumb:not(:last-child)
+               color: $color-link-blue
+               cursor: pointer
+            .crumb:not(:last-child)::after
+               color: $color-black
+               font-family: FontAwesome
+               // chevron-right
+               // content: '\f054'
+               // angle-right
+               content: '\f105'
+               // angle-double-right
+               // content: '\f101'
+               margin-right: 20px
+               margin-left: 20px
+
         $view-padding: 50px
         @include calc(height, '100% - #{2 * $view-padding}')
         overflow-y: scroll
