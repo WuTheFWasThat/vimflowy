@@ -1522,3 +1522,94 @@ t.expect ['a', 'ab', 'ab']
 t.sendKeys 'ggx'
 t.expect ['', 'ab', 'ab']
 
+# test collapsing
+t = new TestCase [
+  { line: 'first', children: [
+    'second'
+  ] },
+  'third'
+]
+t.sendKeys 'z'
+t.expect [
+  { line: 'first', collapsed: true, children: [
+    'second'
+  ] },
+  'third'
+]
+t.sendKeys 'jx'
+t.expect [
+  { line: 'first', collapsed: true, children: [
+    'second'
+  ] },
+  'hird'
+]
+t.sendKeys 'uu'
+t.expect [
+  { line: 'first', children: [
+    'second'
+  ] },
+  'third'
+]
+
+# test changing view root
+t = new TestCase [
+  { line: 'first', children: [
+    'second'
+  ] },
+  'third'
+]
+t.sendKey 'ctrl+l'
+t.expect [
+  { line: 'first', children: [
+    'second'
+  ] },
+  'third'
+]
+t.sendKeys 'jjx'
+t.expect [
+  { line: 'first', children: [
+    'econd'
+  ] },
+  'third'
+]
+# zoom out stays on same line
+t.sendKey 'ctrl+h'
+t.sendKeys 'x'
+t.expect [
+  { line: 'first', children: [
+    'cond'
+  ] },
+  'third'
+]
+t.sendKeys 'jx'
+t.expect [
+  { line: 'first', children: [
+    'cond'
+  ] },
+  'hird'
+]
+
+# zoom in on collapsed uncollapses
+t = new TestCase [
+  { line: 'first', children: [
+    { line: 'second', children: [
+      'third'
+    ] },
+  ] },
+]
+t.sendKeys 'zjx'
+t.expect [
+  { line: 'irst', collapsed: true, children: [
+    { line: 'second', children: [
+      'third'
+    ] },
+  ] },
+]
+t.sendKey 'ctrl+l'
+t.expect [
+  { line: 'irst', children: [
+    { line: 'second', children: [
+      'third'
+    ] },
+  ] },
+]

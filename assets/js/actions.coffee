@@ -162,6 +162,15 @@
     rewind: (view) ->
       view.data.toggleCollapsed @row
 
+  class ChangeView extends Action
+    constructor: (root) ->
+      @newroot = root
+    apply: (view) ->
+      @oldroot = view.data.root
+      view.data.changeViewRoot @newroot
+    rewind: (view) ->
+      view.data.changeViewRoot @oldroot
+
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRowSibling = InsertRowSibling
@@ -170,4 +179,5 @@
   exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
   exports.ToggleBlock = ToggleBlock
+  exports.ChangeView = ChangeView
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})
