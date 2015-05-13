@@ -237,7 +237,7 @@ class View
         return
 
     parent = @data.getParent id
-    if parent == @data.root
+    if parent == @data.viewRoot
       return
     p_i = @data.indexOf id
 
@@ -252,17 +252,23 @@ class View
       @detachBlock child, {cursor: 'stay'}
       @attachBlock child, id, -1, {cursor: 'stay'}
 
-  indentLine: () ->
-    @indent @cursor.row
+  indentCurrent: (options) ->
+    @indent @cursor.row, options
 
-  unindentLine: () ->
-    @unindent @cursor.row
+  unindentCurrent: (options) ->
+    @unindent @cursor.row, options
 
-  indentBlock: () ->
-    @indent @cursor.row, {recursive: true}
+  swapDown: (row, options) ->
+    # TODO: write test cases
 
-  unindentBlock: () ->
-    @unindent @cursor.row, {recursive: true}
+  swapUp: (row, options) ->
+    # TODO: write test cases
+
+  swapCurrentDown: (options) ->
+    @swapDown @cursor.row, options
+
+  swapCurrentUp: (options) ->
+    @swapUp @cursor.row, options
 
   toggleCurBlock: () ->
     @toggleBlock @cursor.row
