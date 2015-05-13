@@ -3,7 +3,6 @@ class Cursor
     @data = data
     @row = if row == null then (@data.getChildren @data.viewRoot)[0] else row
     @col = if col == null then 0 else col
-    console.log('CURSOR"', @row, @col)
 
     # -1 means last col
     @moveCol = if moveCol == null then col else moveCol

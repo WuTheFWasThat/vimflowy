@@ -750,7 +750,8 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKeys 'k<'
+t.sendKeys 'k'
+t.sendKey 'shift+tab'
 t.expect [
   { line: 'top row', children: [
     'middle row',
@@ -759,7 +760,7 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKeys '<'
+t.sendKey 'shift+tab'
 t.expect [
   { line: 'top row', children: [
     'middle row',
@@ -768,7 +769,8 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKeys 'k<'
+t.sendKeys 'k'
+t.sendKey 'shift+tab'
 t.expect [
   'top row',
   { line: 'middle row', children: [
@@ -777,7 +779,7 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKeys ']'
+t.sendKey 'ctrl+l'
 t.expect [
   { line: 'top row', children: [
     { line: 'middle row', children: [
@@ -805,7 +807,8 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKeys 'j['
+t.sendKeys 'j'
+t.sendKey 'ctrl+h'
 t.expect [
   { line: 'top row', children: [
     'middle row'
@@ -1103,7 +1106,8 @@ t = new TestCase [
     ] },
   ] },
 ]
-t.sendKeys 'j['
+t.sendKeys 'j'
+t.sendKey 'ctrl+h'
 t.expect [
   'a',
   { line: 'ab', children: [
@@ -1113,7 +1117,7 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKeys ']'
+t.sendKey 'ctrl+l'
 t.expect [
   { line: 'a', children: [
     { line: 'ab', children: [
@@ -1555,7 +1559,7 @@ t = new TestCase [
   ] },
   'third'
 ]
-t.sendKey 'ctrl+l'
+t.sendKey ']'
 t.expect [
   { line: 'first', children: [
     'second'
@@ -1570,7 +1574,7 @@ t.expect [
   'third'
 ]
 # zoom out stays on same line
-t.sendKey 'ctrl+h'
+t.sendKey '['
 t.sendKeys 'x'
 t.expect [
   { line: 'first', children: [
@@ -1602,9 +1606,36 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKey 'ctrl+l'
+t.sendKey ']'
 t.expect [
   { line: 'irst', children: [
+    { line: 'second', children: [
+      'third'
+    ] },
+  ] },
+]
+
+# can't unindent too far out when zoomed in
+t = new TestCase [
+  { line: 'first', children: [
+    { line: 'second', children: [
+      'third'
+    ] },
+  ] },
+]
+t.sendKeys 'jj'
+t.sendKey 'shift+tab'
+t.expect [
+  { line: 'first', children: [
+    'second'
+    'third'
+  ] },
+]
+t.sendKey 'u'
+t.sendKey ']'
+t.sendKey 'shift+tab'
+t.expect [
+  { line: 'first', children: [
     { line: 'second', children: [
       'third'
     ] },

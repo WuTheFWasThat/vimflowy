@@ -204,21 +204,30 @@ class KeyBindings
         do @view.pasteBefore
 
     INDENT_RIGHT:
-      display: 'Indent right'
+      display: 'Indent row right'
       fn: () ->
-        @view.indentLine {}
+        @view.indentCurrent {}
     INDENT_LEFT:
-      display: 'Indent left'
+      display: 'Indent row left'
       fn: () ->
-        @view.unindentLine {}
+        @view.unindentCurrent {}
     INDENT_BLOCK_RIGHT:
       display: 'Indent block right'
       fn: () ->
-        @view.indentBlock {recursive: true}
+        @view.indentCurrent {recursive: true}
     INDENT_BLOCK_LEFT:
       display: 'Indent block left'
       fn: () ->
-        @view.unindentBlock {recursive: true}
+        @view.unindentCurrent {recursive: true}
+    SWAP_BLOCK_DOWN:
+      display: 'Move block one row downwards'
+      fn: () ->
+        do @view.swapCurrentDown
+    SWAP_BLOCK_UP:
+      display: 'Move lbock one row upwards'
+      fn: () ->
+        do @view.swapCurrentUp
+
     ZOOM_IN:
       display: 'Zoom in onto cursor'
       fn: () ->
@@ -291,17 +300,23 @@ class KeyBindings
     'y': 'YANK'
     'p': 'PASTE_AFTER'
     'P': 'PASTE_BEFORE'
-    '>': 'INDENT_RIGHT'
+
     'tab': 'INDENT_RIGHT'
-    '<': 'INDENT_LEFT'
     'shift+tab': 'INDENT_LEFT'
-    ']': 'INDENT_BLOCK_RIGHT'
-    '[': 'INDENT_BLOCK_LEFT'
+    '>': 'INDENT_RIGHT'
+    '<': 'INDENT_LEFT'
+    'ctrl+l': 'INDENT_BLOCK_RIGHT'
+    'ctrl+h': 'INDENT_BLOCK_LEFT'
+    'ctrl+j': 'SWAP_BLOCK_DOWN'
+    'ctrl+k': 'SWAP_BLOCK_UP'
+
     'z': 'TOGGLE_FOLD'
+    '[': 'ZOOM_OUT'
+    ']': 'ZOOM_IN'
+    'ctrl+left': 'ZOOM_OUT'
+    'ctrl+right': 'ZOOM_IN'
     'ctrl+d': 'SCROLL_DOWN'
     'ctrl+u': 'SCROLL_UP'
-    'ctrl+h': 'ZOOM_OUT'
-    'ctrl+l': 'ZOOM_IN'
 
   SEQUENCE = {
     # wait for more keys
@@ -433,9 +448,9 @@ class KeyBindings
     else if key == 'enter'
       do @view.newLineBelow
     else if key == 'tab'
-      @view.indentLine {}
+      @view.indentCurrent {}
     else if key == 'shift+tab'
-      @view.unindentLine {}
+      @view.unindentCurrent {}
     else
       @view.addCharsAtCursor [key], {cursor: 'pastEnd'}
 
