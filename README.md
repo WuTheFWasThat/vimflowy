@@ -6,11 +6,7 @@ style stuff better
 
 yc -> clone?
 
-implement zoom
-  gi, go?
-
-implement gg G
-  gp = go parent?
+gp = go parent?
 rethink fold hotkeys (z+coaCOA)?
 
 implement some form of marks (m[a-z] or m[string]?  'a or '[string])

@@ -219,12 +219,20 @@ class KeyBindings
       display: 'Indent block left'
       fn: () ->
         @view.unindentCurrent {recursive: true}
-    SWAP_BLOCK_DOWN:
-      display: 'Move block one row downwards'
+    MOVE_BLOCK_RIGHT:
+      display: 'Move block right'
+      fn: () ->
+        @view.indentCurrent {recursive: true, strict: true}
+    MOVE_BLOCK_LEFT:
+      display: 'Move block left'
+      fn: () ->
+        @view.unindentCurrent {recursive: true, strict: true}
+    MOVE_BLOCK_DOWN:
+      display: 'Move block down'
       fn: () ->
         do @view.swapCurrentDown
-    SWAP_BLOCK_UP:
-      display: 'Move lbock one row upwards'
+    MOVE_BLOCK_UP:
+      display: 'Move block up'
       fn: () ->
         do @view.swapCurrentUp
 
@@ -303,12 +311,12 @@ class KeyBindings
 
     'tab': 'INDENT_RIGHT'
     'shift+tab': 'INDENT_LEFT'
-    '>': 'INDENT_RIGHT'
-    '<': 'INDENT_LEFT'
-    'ctrl+l': 'INDENT_BLOCK_RIGHT'
-    'ctrl+h': 'INDENT_BLOCK_LEFT'
-    'ctrl+j': 'SWAP_BLOCK_DOWN'
-    'ctrl+k': 'SWAP_BLOCK_UP'
+    '>': 'INDENT_BLOCK_RIGHT'
+    '<': 'INDENT_BLOCK_LEFT'
+    'ctrl+l': 'MOVE_BLOCK_RIGHT'
+    'ctrl+h': 'MOVE_BLOCK_LEFT'
+    'ctrl+j': 'MOVE_BLOCK_DOWN'
+    'ctrl+k': 'MOVE_BLOCK_UP'
 
     'z': 'TOGGLE_FOLD'
     '[': 'ZOOM_OUT'
