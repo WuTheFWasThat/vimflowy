@@ -218,18 +218,23 @@ class View
   attachBlock: (row, parent, index = -1, options = {}) ->
     @act new actions.AttachBlock row, parent, index, options
 
+  moveBlock: (row, parent, index = -1, options = {}) ->
+    @detachBlock row, options
+    @attachBlock row, parent, index, options
+
   indent: (id, options = {}) ->
     sib = @data.getSiblingBefore id
     if sib == null
       return null # cannot indent
 
-    @detachBlock id
-    @attachBlock id, sib, -1
+    if @data.collapsed sib
+      @toggleBlock sib
+
+    @moveBlock id, sib, -1
 
     if not options.recursive
       for child in (@data.getChildren id).slice()
-        @detachBlock child
-        @attachBlock child, sib, -1
+        @moveBlock child, sib, -1
 
   unindent: (id, options = {}) ->
     if not options.recursive
@@ -240,17 +245,17 @@ class View
     if parent == @data.viewRoot
       return
     p_i = @data.indexOf id
+    if (options.strict) and (p_i != (@data.getChildren parent).length - 1)
+      return
 
     newparent = @data.getParent parent
     pp_i = @data.indexOf parent
 
-    @detachBlock id
-    @attachBlock id, newparent, (pp_i+1)
+    @moveBlock id, newparent, (pp_i+1)
 
     p_children = @data.getChildren parent
     for child in p_children.slice(p_i)
-      @detachBlock child, {cursor: 'stay'}
-      @attachBlock child, id, -1, {cursor: 'stay'}
+      @moveBlock child, id, -1
 
   indentCurrent: (options) ->
     @indent @cursor.row, options
@@ -258,17 +263,37 @@ class View
   unindentCurrent: (options) ->
     @unindent @cursor.row, options
 
-  swapDown: (row, options) ->
-    # TODO: write test cases
+  swapDown: (row) ->
+    next = @data.nextVisible (@data.lastVisible row)
+    if next == null
+      return
 
-  swapUp: (row, options) ->
-    # TODO: write test cases
+    @detachBlock row
+    if (@data.hasChildren next) and (not @data.collapsed next)
+      # make it the first child
+      @attachBlock row, next, 0
+    else
+      # make it the next sibling
+      parent = @data.getParent next
+      p_i = @data.indexOf next
+      @attachBlock row, parent, (p_i+1)
 
-  swapCurrentDown: (options) ->
-    @swapDown @cursor.row, options
+  swapUp: (row) ->
+    prev = @data.prevVisible row
+    if prev == null
+      return
 
-  swapCurrentUp: (options) ->
-    @swapUp @cursor.row, options
+    @detachBlock row
+    # make it the previous sibling
+    parent = @data.getParent prev
+    p_i = @data.indexOf prev
+    @attachBlock row, parent, p_i
+
+  swapCurrentDown: () ->
+    @swapDown @cursor.row
+
+  swapCurrentUp: () ->
+    @swapUp @cursor.row
 
   toggleCurBlock: () ->
     @toggleBlock @cursor.row
