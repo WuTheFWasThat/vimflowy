@@ -682,6 +682,21 @@ t.sendKey 'esc'
 t.sendKeys 'u'
 t.expect threeRows
 
+t = new TestCase [
+  { line: 'a', collapsed: true, children: [
+    's', 'd'
+  ] },
+  'f'
+]
+t.sendKeys 'oo'
+t.expect [
+  { line: 'a', collapsed: true, children: [
+    's', 'd'
+  ] },
+  'o'
+  'f'
+]
+
 t = new TestCase threeRows
 t.sendKeys '>'
 t.expect threeRows
