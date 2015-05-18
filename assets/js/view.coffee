@@ -173,7 +173,7 @@ class View
 
   newLineBelow: () ->
     children = @data.getChildren @cursor.row
-    if children.length > 0
+    if (not @data.collapsed @cursor.row) and children.length > 0
       @act new actions.InsertRowSibling children[0], {before: true}
     else
       @act new actions.InsertRowSibling @cursor.row, {after: true}
