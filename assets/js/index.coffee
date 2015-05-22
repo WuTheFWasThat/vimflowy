@@ -30,6 +30,7 @@ $(window).on('paste', (e) ->
     chars = text.split ''
     # TODO: deal with this better when there are multiple lines
     view.addCharsAtCursor chars
+    do view.render
 )
 
 keyhandler = new KeyHandler
