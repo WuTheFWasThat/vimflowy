@@ -1,6 +1,7 @@
 class KeyHandler extends EventEmitter
 
   shiftMap =
+    '`': '~'
     '1': '!'
     '2': '@'
     '3': '#'
@@ -15,14 +16,20 @@ class KeyHandler extends EventEmitter
     '=': '+'
     '[': '{'
     ']': '}'
-    '/': '?'
+    ';': ':'
+    '\'': '"'
+    '\\': '|'
+    '[': '{'
+    ']': '}'
     '.': '>'
     ',': '<'
+    '/': '?'
 
   ignoreMap =
     16: 'shift alone'
     17: 'ctrl alone'
-    91: 'command alone'
+    91: 'left command alone'
+    93: 'right command alone'
 
   keyCodeMap =
     8: 'backspace'
@@ -46,14 +53,18 @@ class KeyHandler extends EventEmitter
     56: '8'
     57: '9'
 
+    186: ';'
     187: '='
     188: ','
     189: '-'
     190: '.'
     191: '/'
+    192: '`'
 
     219: '['
+    220: '\\'
     221: ']'
+    222: '\''
 
   for i in [1..26]
     keyCode = i + 64
