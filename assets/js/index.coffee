@@ -35,7 +35,11 @@ $(window).on('paste', (e) ->
 
 keyhandler = new KeyHandler
 do keyhandler.listen
-keybinder = new KeyBindings $('#mode'), keybindingsDiv, view
+keybinder = new KeyBindings view, {
+  modeDiv: $('#mode')
+  keyBindingsDiv: keybindingsDiv
+  menuDiv: $('#menu')
+}
 keyhandler.on 'keydown', keybinder.handleKey.bind(keybinder)
 
 $(document).ready ->

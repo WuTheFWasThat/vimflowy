@@ -14,7 +14,7 @@ class TestCase
 
     @view = new View null, @data
     @view.render = -> return
-    @keybinder = new KeyBindings null, null, @view
+    @keybinder = new KeyBindings @view
 
   sendKeys: (keys) ->
     @keybinder.handleKeys keys
@@ -1485,6 +1485,15 @@ t.expect ['ab']
 t.sendKey 'backspace'
 t.expect ['a']
 
+t = new TestCase ['ab', 'cd']
+t.sendKeys 'i'
+t.sendKey 'shift+backspace'
+t.expect ['b', 'cd']
+t.sendKey 'shift+backspace'
+t.expect ['', 'cd']
+t.sendKey 'shift+backspace'
+t.expect ['', 'cd']
+
 t = new TestCase [
   'ab'
   { line: 'bc', children: [
@@ -1981,4 +1990,158 @@ t.expect [
     '2'
     '3'
   ] },
+]
+
+# test search
+t = new TestCase [
+  'blah',
+  'searchblah',
+  'blahsearchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+t.sendKeys '/search'
+t.sendKey 'enter'
+t.sendKeys 'dd'
+t.expect [
+  'blah',
+  'blahsearchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+
+# test search
+t = new TestCase [
+  'blah',
+  'searchblah',
+  'blahsearchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+t.sendKeys '/search'
+t.sendKey 'ctrl+j'
+t.sendKey 'enter'
+t.sendKeys 'dd'
+t.expect [
+  'blah',
+  'searchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+
+t = new TestCase [
+  'blah',
+  'searchblah',
+  'blahsearchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+t.sendKeys '/search'
+t.sendKey 'ctrl+j'
+t.sendKey 'ctrl+j'
+t.sendKey 'enter'
+t.sendKeys 'dd'
+t.expect [
+  'blah',
+  'searchblah',
+  'blahsearchblah',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+
+# test search canceling
+t = new TestCase [
+  'blah',
+  'searchblah',
+  'blahsearchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+t.sendKeys '/search'
+t.sendKey 'esc'
+t.sendKeys 'dd'
+t.expect [
+  'searchblah',
+  'blahsearchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+
+t = new TestCase [
+  'blah',
+  'searchblah',
+  'blahsearchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    'search',
+  ] }
+]
+t.sendKeys '/search'
+t.sendKey 'ctrl+k'
+t.sendKey 'enter'
+t.sendKeys 'dd'
+t.expect [
+  'blah',
+  'searchblah',
+  'blahsearchblah',
+  'search',
+  'surch',
+  { line: 'blahsearch', children: [
+    'blah',
+  ] }
+  { line: 'blah', children: [
+    # NOTE: a new line is created since it got changed to be the view root
+    '',
+  ] }
 ]

@@ -7,6 +7,7 @@
 #= require cursor
 #= require register
 #= require view
+#= require menu
 #= require keyBindings
 
 #= require index

@@ -1,6 +1,54 @@
 # a View consists of Data and a cursor
 # it also renders
 
+renderLine = (lineData, onto, options = {}) ->
+  options.cursors ?= {}
+  options.highlights ?= {}
+  defaultStyle = options.defaultStyle || ''
+
+  # ideally this takes up space but is unselectable (uncopyable)
+  cursorChar = '&nbsp;'
+
+  line = []
+  for char, i in lineData
+    x = char
+
+    if char == ' '
+      x = '&nbsp;'
+    else if char == '\n'
+      x = '<br/>'
+      if i of options.cursors
+        x = cursorChar + x
+
+    line.push x
+
+  # add cursor if at end
+  if lineData.length of options.cursors
+    line.push cursorChar
+
+  # if still empty, put a newline
+  if line.length == 0
+    line.push '<br/>'
+
+  do onto.empty
+
+  acc = ''
+  style = defaultStyle
+  for x, i in line
+    mystyle = defaultStyle
+    if i of options.cursors
+      mystyle = 'cursor'
+    if i of options.highlights
+      mystyle = 'highlight'
+    if mystyle != style
+      onto.append $('<span>').html(acc).addClass(style)
+      style = mystyle
+      acc = ''
+    acc += x
+
+  if acc.length
+    onto.append $('<span>').html(acc).addClass(style)
+
 class View
   containerDivID = (id) ->
     return 'node-' + id
@@ -67,6 +115,9 @@ class View
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
+  curLine: () ->
+    return @data.getLine @cursor.row
+
   curLineLength: () ->
     return @data.getLength @cursor.row
 
@@ -118,13 +169,13 @@ class View
       return true
     return false
 
-  rootInto: () ->
+  rootInto: (row = @cursor.row) ->
     # try changing to cursor
-    if @changeView @cursor.row
-      firstchild = (@data.getChildren @cursor.row)[0]
+    if @changeView row
+      firstchild = (@data.getChildren row)[0]
       @setCur firstchild, 0
       return true
-    parent = @data.getParent @cursor.row
+    parent = @data.getParent row
     if @changeView parent
       return true
 
@@ -307,13 +358,15 @@ class View
   pasteAfter: () ->
     @register.paste {}
 
+  find: (chars) ->
+    results = @data.find chars
+    return results
+
   scrollPages: (npages) ->
     # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
     line_height = do $('.node-text').height
     page_height = do $(document).height
     height = npages * page_height
-    console.log('tot height', height)
-    console.log('line height', line_height)
 
     numlines = Math.round(height / line_height)
     if numlines > 0
@@ -378,7 +431,7 @@ class View
     @mainDiv.append contentDiv
     @renderTree @data.viewRoot, contentDiv
 
-    cursorDiv = $('.cursor')[0]
+    cursorDiv = $('.cursor', @mainDiv)[0]
     if cursorDiv
       @scrollIntoView cursorDiv
 
@@ -416,47 +469,12 @@ class View
     if not onto
       onto = $('#' + (rowDivID row))
     lineData = @data.lines[row]
+    cursors = {}
+    if row == @cursor.row
+      cursors[@cursor.col] = true
 
-    # ideally this takes up space but is unselectable (uncopyable)
-    cursorChar = '&nbsp;'
+    renderLine lineData, onto, {cursors: cursors}
 
-    line = []
-    for char, i in lineData
-      x = char
-
-      if char == ' '
-        x = '&nbsp;'
-      else if char == '\n'
-        x = '<br/>'
-        if row == @cursor.row and i == @cursor.col
-          x = cursorChar + x
-
-      line.push x
-
-    # add cursor if at end
-    if row == @cursor.row and lineData.length == @cursor.col
-      line.push cursorChar
-
-    # if still empty, put a newline
-    if line.length == 0
-      line.push '<br/>'
-
-    do onto.empty
-
-    acc = ''
-    style = ''
-    for x, i in line
-      mystyle = ''
-      if row == @cursor.row and i == @cursor.col
-        mystyle = 'cursor'
-      if mystyle != style
-        onto.append $('<span>').html(acc).addClass(style)
-        style = mystyle
-        acc = ''
-      acc += x
-
-    if acc.length
-      onto.append $('<span>').html(acc).addClass(style)
 
 # imports
 if module?
