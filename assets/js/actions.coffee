@@ -95,11 +95,13 @@
       if row == view.root then throw 'Cannot delete root'
 
       @serialized_rows = []
+      @deleted_rows = []
       delete_siblings = view.data.getSiblingRange row, 0, (@nrows-1)
       for sib in delete_siblings
         if sib == null then break
         @serialized_rows.push view.data.serialize sib
-        view.data.deleteRow sib
+        @deleted_rows.push sib
+        view.data.detach sib
 
       @created = null
       if @options.addNew
@@ -122,8 +124,8 @@
       if @created != null
         view.data.deleteRow @created
       index = @index
-      for serialized_row in @serialized_rows
-        view.data.loadTo serialized_row, @parent, index
+      for row in @deleted_rows
+        view.data.attachChild @parent, row, index
         index += 1
 
   class AddBlocks extends Action
@@ -162,15 +164,6 @@
     rewind: (view) ->
       view.data.toggleCollapsed @row
 
-  class ChangeView extends Action
-    constructor: (root) ->
-      @newroot = root
-    apply: (view) ->
-      @oldroot = view.data.root
-      view.data.changeViewRoot @newroot
-    rewind: (view) ->
-      view.data.changeViewRoot @oldroot
-
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRowSibling = InsertRowSibling
@@ -179,5 +172,4 @@
   exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
   exports.ToggleBlock = ToggleBlock
-  exports.ChangeView = ChangeView
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

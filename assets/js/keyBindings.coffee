@@ -254,7 +254,7 @@ class KeyBindings
       fn: () ->
         @view.scrollPages 0.5
     SCROLL_UP:
-      display: 'Scroll half window down'
+      display: 'Scroll half window up'
       drop: true
       fn: () ->
         @view.scrollPages -0.5
@@ -267,7 +267,6 @@ class KeyBindings
         results = []
 
         selectRow = (row) ->
-          view.cursor.setRow row
           view.rootInto row
 
         for found in view.find text
@@ -518,6 +517,7 @@ class KeyBindings
     else if key == 'enter'
       do @menu.select
       do @view.render
+      do @view.save # b/c could've zoomed
       @setMode MODES.NORMAL
     else if key == 'backspace'
       if view.cursor.col != 0

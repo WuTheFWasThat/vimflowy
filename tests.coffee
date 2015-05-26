@@ -847,6 +847,21 @@ t.expect [
 
 # test delete behavior
 t = new TestCase [
+  'a row'
+  'another row'
+  'a third row'
+]
+t.sendKeys 'ddjdd'
+t.expect [
+  'another row'
+]
+t.sendKeys 'ux'
+t.expect [
+  'another row'
+  ' third row'
+]
+
+t = new TestCase [
   { line: 'top row', children: [
     { line : 'middle row', children : [
       'bottom row'
