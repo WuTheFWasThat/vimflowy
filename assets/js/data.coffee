@@ -202,6 +202,37 @@ class Data
     removed = @lines[row].splice col, num
     return removed
 
+  orderedLines: () ->
+    ids = []
+
+    helper = (id) =>
+      ids.push id
+      for child in @getChildren id
+        helper child
+    helper @root
+    return ids
+
+  find: (chars) ->
+    results = [] # list of (row_id, index) pairs
+    if chars.length == 0
+      return results
+
+    for id in do @orderedLines
+      line = @lines[id]
+      for i in [0..line.length-chars.length]
+        match = true
+        for j in [0...chars.length]
+          if line[i+j] != chars[j]
+            match = false
+            break
+        if match
+          results.push {
+            row: id
+            index: i
+          }
+          break
+    return results
+
   # important: serialized automatically garbage collects
   serialize: (id = @root) ->
     line = @lines[id].join('')

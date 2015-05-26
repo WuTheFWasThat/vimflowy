@@ -68,6 +68,12 @@ $bottom-bar-height: 25px
             border: 1px solid
             padding: 5px
 
+    #view, #menu
+        $content-padding: 50px
+        padding: $content-padding
+        @include calc(height, '100% - #{2 * $content-padding}')
+        overflow-y: scroll
+
     #view
         #breadcrumbs
             font-size: 20px;
@@ -83,11 +89,7 @@ $bottom-bar-height: 25px
                margin-right: 20px
                margin-left: 20px
 
-        $view-padding: 50px
-        @include calc(height, '100% - #{2 * $view-padding}')
-        overflow-y: scroll
         font-size: 10px;
-        padding: $view-padding
         // TODO have word wrap be a setting?
         word-wrap: break-word
 

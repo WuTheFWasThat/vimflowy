@@ -258,11 +258,38 @@ class KeyBindings
       drop: true
       fn: () ->
         @view.scrollPages -0.5
+    SEARCH:
+      display: 'Search'
+      drop: true
+      menu: (view, text) ->
+        # a list of {contents, highlights, fn ]
+        # SEE: menu.coffee
+        results = []
+
+        selectRow = (row) ->
+          view.cursor.setRow row
+          view.rootInto row
+
+        for found in view.find text
+          row = found.row
+          index = found.index
+
+          highlights = {}
+          for i in [index ... index + text.length]
+            highlights[i] = true
+
+          results.push {
+            contents: view.data.getLine row
+            highlights: highlights
+            fn: selectRow.bind(@, row)
+          }
+        return results
 
   MODES =
     NORMAL: 0
     INSERT: 1
     EX: 2
+    MENU: 3
 
   defaultVimKeyBindings =
     '?': 'HELP'
@@ -326,6 +353,8 @@ class KeyBindings
     'ctrl+d': 'SCROLL_DOWN'
     'ctrl+u': 'SCROLL_UP'
 
+    '/': 'SEARCH'
+
   SEQUENCE = {
     # wait for more keys
     WAIT: 0
@@ -337,7 +366,7 @@ class KeyBindings
     FINISH: 3
   }
 
-  constructor: (modeDiv, keybindingsDiv, view) ->
+  constructor: (view, divs = {}) ->
     @view = view
 
     @bindings = keyDefinitions
@@ -345,11 +374,15 @@ class KeyBindings
     for k, v of defaultVimKeyBindings
       @keyMap[k] = v
 
-    if keybindingsDiv
-      @keybindingsDiv = keybindingsDiv
+    if divs.keyBindingsDiv
+      @keybindingsDiv = divs.keyBindingsDiv
       do @buildBindingsDiv
 
-    @modeDiv = modeDiv
+    if divs.menuDiv
+      @menuDiv = divs.menuDiv
+
+    if divs.modeDiv
+      @modeDiv = divs.modeDiv
 
     @mode = ''
     @setMode MODES.NORMAL
@@ -389,6 +422,12 @@ class KeyBindings
         if v == mode
           @modeDiv.text k
           break
+    if @menuDiv
+      @menuDiv.toggleClass 'hidden', (mode != MODES.MENU)
+    if @keybindingsDiv
+      @keybindingsDiv.toggleClass 'hidden', (mode == MODES.MENU)
+    if @view.mainDiv
+      @view.mainDiv.toggleClass 'hidden', (mode == MODES.MENU)
 
   getKey: (name) ->
     return @bindings[name].key
@@ -433,34 +472,63 @@ class KeyBindings
     return keys
 
   processInsertMode: (key) ->
+    view = @view
     if key == 'left'
-      do @view.moveCursorLeft
+      do view.moveCursorLeft
     else if key == 'right'
-      @view.moveCursorRight {cursor: 'pastEnd'}
-    else if key == 'up'
-      @view.moveCursorUp {cursor: 'pastEnd'}
-    else if key == 'down'
-      @view.moveCursorDown {cursor: 'pastEnd'}
+      view.moveCursorRight {cursor: 'pastEnd'}
+    else if key == 'up' or key == 'ctrl+k'
+      view.moveCursorUp {cursor: 'pastEnd'}
+    else if key == 'down' or key == 'ctrl+j'
+      view.moveCursorDown {cursor: 'pastEnd'}
     else if key == 'backspace'
-      if @view.cursor.col == 0
-        row = @view.cursor.row
-        sib = @view.data.prevVisible row
+      if view.cursor.col == 0
+        row = view.cursor.row
+        sib = view.data.prevVisible row
         if sib != null
-          @view.joinRows sib, row, {cursor: 'pastEnd'}
+          view.joinRows sib, row, {cursor: 'pastEnd'}
       else
-        @view.delCharsBeforeCursor 1, {cursor: 'pastEnd'}
+        view.delCharsBeforeCursor 1, {cursor: 'pastEnd'}
     else if key == 'shift+backspace'
-      @view.delCharsAfterCursor 1
+      view.delCharsAfterCursor 1
     else if key == 'shift+enter'
-      @view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
+      view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
     else if key == 'enter'
-      do @view.newLineBelow
+      do view.newLineBelow
     else if key == 'tab'
-      @view.indentCurrent {}
+      view.indentCurrent {}
     else if key == 'shift+tab'
-      @view.unindentCurrent {}
+      view.unindentCurrent {}
     else
-      @view.addCharsAtCursor [key], {cursor: 'pastEnd'}
+      view.addCharsAtCursor [key], {cursor: 'pastEnd'}
+
+  processMenuMode: (key) ->
+    view = @menu.view
+
+    if key == 'left'
+      do view.moveCursorLeft
+      do @menu.render
+    else if key == 'right'
+      view.moveCursorRight {cursor: 'pastEnd'}
+      do @menu.render
+    else if key == 'up' or key == 'ctrl+k' or key == 'shift+tab'
+      do @menu.up
+    else if key == 'down' or key == 'ctrl+j' or key == 'tab'
+      do @menu.down
+    else if key == 'enter'
+      do @menu.select
+      do @view.render
+      @setMode MODES.NORMAL
+    else if key == 'backspace'
+      if view.cursor.col != 0
+        view.delCharsBeforeCursor 1, {cursor: 'pastEnd'}
+      do @menu.update
+    else if key == 'shift+backspace'
+      view.delCharsAfterCursor 1
+      do @menu.update
+    else
+      view.addCharsAtCursor [key], {cursor: 'pastEnd'}
+      do @menu.update
 
   # returns index processed up to
   processOnce: (keys) ->
@@ -513,8 +581,9 @@ class KeyBindings
     # hepler functions for return values
     seq_wait = () =>
       return [0, SEQUENCE.WAIT]
-    seq_drop = () =>
-      do @view.render
+    seq_drop = (render = true) =>
+      if render
+        do @view.render
       return [keyIndex, SEQUENCE.DROP]
     seq_continue = () =>
       do @view.render
@@ -539,6 +608,11 @@ class KeyBindings
         for j in [1..repeat]
           motion @view.cursor, {}
         return do seq_drop
+      else if info.menu
+        @setMode MODES.MENU
+        @menu = new Menu @menuDiv, (info.menu.bind @, @view)
+        do @menu.render
+        return seq_drop false
 
       fn = null
       args = []
@@ -630,7 +704,8 @@ class KeyBindings
 
     if @mode == MODES.INSERT
       key = do nextKey
-      if key == null then return do seq_wait
+      if key == null then throw 'Got no key in insert mode'
+      # if key == null then return do seq_wait
 
       if key == 'esc' or key == 'ctrl+c'
         @setMode MODES.NORMAL
@@ -643,8 +718,20 @@ class KeyBindings
     if @mode == MODES.NORMAL
       return processNormalMode @bindings
 
+    if @mode = MODES.MENU
+      key = do nextKey
+      if key == null then throw 'Got no key in menu mode'
+
+      if key == 'esc' or key == 'ctrl+c'
+        @setMode MODES.NORMAL
+        do @view.render
+      else
+        @processMenuMode key
+      return seq_drop false
+
 if module?
   Cursor = require('./cursor.coffee')
+  Menu = require('./menu.coffee')
   actions = require('./actions.coffee')
 
 # exports

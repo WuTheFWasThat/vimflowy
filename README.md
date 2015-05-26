@@ -2,6 +2,8 @@
 
 ## TODO ##
 
+break up tests into multiple files...
+
 style stuff better
 
 yc -> clone?
@@ -12,9 +14,10 @@ rethink fold hotkeys (z+coaCOA)?
 implement some form of marks (m[a-z] or m[string]?  'a or '[string])
 implement J
 implement ctrl+o
-search
 find/replace?
 line numbers?
+
+if 2 tabs are open, should it sync?
 
 ## KNOWN ISSUES: ##
 
