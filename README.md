@@ -2,7 +2,16 @@
 
 ## TODO ##
 
+fix undo/redo with changing views (in general, cursor position is a bit weird?)
+ - i think view change shouldn't be an action.  instead, view and cursor should be saved before/after performing other actions
+
+allow viewing of collapsed stuff
+
+make hotkeys customizable
+
 break up tests into multiple files...
+
+do something better if 2 tabs are open
 
 style stuff better
 
@@ -17,7 +26,6 @@ implement ctrl+o
 find/replace?
 line numbers?
 
-if 2 tabs are open, should it sync?
 
 ## KNOWN ISSUES: ##
 

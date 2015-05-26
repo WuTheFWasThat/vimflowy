@@ -68,7 +68,9 @@ class View
     @register = new Register @
 
     @actions = [] # full action history
-    @history = [0] # indices into actions
+    @history = [{
+      index: 0
+    }]
     @historyIndex = 0 # index into indices
 
     return @
@@ -76,40 +78,50 @@ class View
   # ACTIONS
 
   save: () ->
-    if @history[@historyIndex] == @actions.length
+    if @history[@historyIndex].index == @actions.length
         return
     @historyIndex += 1
-    @history.push @actions.length
+    @history.push {
+      index: @actions.length
+    }
 
   undo: () ->
     if @historyIndex > 0
-      oldIndex = @history[@historyIndex]-1
+      oldState = @history[@historyIndex]
       @historyIndex -= 1
-      newIndex = @history[@historyIndex]-1
+      newState = @history[@historyIndex]
 
-      for i in [oldIndex...newIndex]
+      for i in [(oldState.index-1)...(newState.index-1)]
           action = @actions[i]
           action.rewind @
 
-          # use final cursor
-          @cursor = action.oldCursor
+      # use final cursor
+      @setCursor newState.cursor
+      @changeView newState.viewRoot
 
   redo: () ->
     if @historyIndex < @history.length - 1
-      oldIndex = @history[@historyIndex]
+      oldState = @history[@historyIndex]
       @historyIndex += 1
-      newIndex = @history[@historyIndex]
+      newState = @history[@historyIndex]
 
-      for i in [oldIndex...newIndex]
+      @setCursor oldState.cursor
+      @changeView oldState.viewRoot
+
+      for i in [oldState.index...newState.index]
           action = @actions[i]
           action.apply @
 
   act: (action) ->
     if @historyIndex + 1 != @history.length
         @history = @history.slice 0, (@historyIndex + 1)
-        @actions = @actions.slice 0, @history[@historyIndex]
+        @actions = @actions.slice 0, @history[@historyIndex].index
 
-    action.oldCursor = do @cursor.clone
+    state = @history[@historyIndex]
+    if @actions.length == state.index
+      state.cursor = do @cursor.clone
+      state.viewRoot = @data.viewRoot
+
     action.apply @
     @actions.push action
 
@@ -165,7 +177,7 @@ class View
     if @data.hasChildren row
       if @data.collapsed row
         @toggleBlock row
-      @act new actions.ChangeView row
+      @data.changeViewRoot row
       return true
     return false
 
@@ -177,7 +189,9 @@ class View
       return true
     parent = @data.getParent row
     if @changeView parent
+      @setCur row, 0
       return true
+    throw 'Failed to root into'
 
   rootUp: () ->
     if @data.viewRoot != @data.root
@@ -414,6 +428,7 @@ class View
       return $('<span>').addClass('crumb').append(
         $('<a>').text(line).click (() =>
           @changeView row
+          do @save
           do @render
         )
       )

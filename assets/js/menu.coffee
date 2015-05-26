@@ -47,7 +47,7 @@ class Menu
       'margin-bottom': '20px'
     ).appendTo @div
     searchRow.append $('<i>').addClass('fa fa-search').css(
-      'margin-right': '20px'
+      'margin-right': '10px'
     )
 
     searchBox = $('<span>').addClass('searchBox').appendTo searchRow
