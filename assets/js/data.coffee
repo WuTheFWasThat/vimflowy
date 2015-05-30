@@ -121,6 +121,27 @@ class Data
       return null
     return parent
 
+  # given viewRoot, throws exception
+  firstVisibleAncestor: (id) ->
+    answer = id
+    cur = id
+    while true
+      cur = @getParent cur
+      if cur == @viewRoot
+        return answer
+      if cur == @root
+        throw 'Id not even in tree under viewRoot'
+      if @collapsed cur
+        answer = cur
+
+    prevsib = @getSiblingBefore id
+    if prevsib != null
+      return @lastVisible prevsib
+    parent = @getParent id
+    if parent == @viewRoot
+      return null
+    return parent
+
   toggleCollapsed: (id) ->
     @setCollapsed id, (not @collapsed id)
 

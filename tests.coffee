@@ -1793,7 +1793,7 @@ t.expect [
   'hird'
 ]
 
-# zoom in on collapsed uncollapses
+# zoom in on collapsed works but doesn't uncollapse
 t = new TestCase [
   { line: 'first', children: [
     { line: 'second', children: [
@@ -1809,10 +1809,19 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKey ']'
+t.sendKeys ']x'
 t.expect [
-  { line: 'irst', children: [
-    { line: 'second', children: [
+  { line: 'irst', collapsed: true, children: [
+    { line: 'econd', children: [
+      'third'
+    ] },
+  ] },
+]
+# but now zoom out moves the cursor, since otherwise it's hidden
+t.sendKeys '[x'
+t.expect [
+  { line: 'rst', collapsed: true, children: [
+    { line: 'econd', children: [
       'third'
     ] },
   ] },

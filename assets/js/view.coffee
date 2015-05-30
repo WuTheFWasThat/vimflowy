@@ -182,8 +182,6 @@ class View
 
   changeView: (row) ->
     if @data.hasChildren row
-      if @data.collapsed row
-        @toggleBlock row
       @data.changeViewRoot row
       return true
     return false
@@ -203,7 +201,9 @@ class View
   rootUp: () ->
     if @data.viewRoot != @data.root
       parent = @data.getParent @data.viewRoot
+      # was collapsed, so cursor gets put on old root
       @changeView parent
+      @cursor.setRow (@data.firstVisibleAncestor @cursor.row)
 
   addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
@@ -451,19 +451,19 @@ class View
 
     contentDiv = $('<div>')
     @mainDiv.append contentDiv
-    @renderTree @data.viewRoot, contentDiv
+    @renderTree @data.viewRoot, contentDiv, {ignoreCollapse: true}
 
     cursorDiv = $('.cursor', @mainDiv)[0]
     if cursorDiv
       @scrollIntoView cursorDiv
 
-  renderTree: (parentid, onto) ->
+  renderTree: (parentid, onto, options = {}) ->
     if not onto
       onto = $('#' + (childrenDivID parentid))
 
     do onto.empty
 
-    if @data.collapsed parentid
+    if (not options.ignoreCollapse) and (@data.collapsed parentid)
       return
 
     for id in @data.getChildren parentid

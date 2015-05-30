@@ -1,13 +1,17 @@
-# vimflowy?? #
+# vimflowy
+
+This is a productivity tool which draws great inspiration from workflowy and vim
 
 ## TODO ##
 
-fix undo/redo with changing views (in general, cursor position is a bit weird?)
- - i think view change shouldn't be an action.  instead, view and cursor should be saved before/after performing other actions
-
-allow viewing of collapsed stuff
+fix paste under collapsed
+test ctrl+l under collapsed
 
 make hotkeys customizable
+
+scale better:
+ - make lines load on demand instead of all at once
+ - limit search results
 
 break up tests into multiple files...
 
@@ -25,7 +29,6 @@ implement J
 implement ctrl+o
 find/replace?
 line numbers?
-
 
 ## KNOWN ISSUES: ##
 
