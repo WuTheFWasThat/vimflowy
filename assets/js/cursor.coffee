@@ -30,7 +30,7 @@ class Cursor
     len = @data.getLength @row
     maxcol = len - (if option == 'pastEnd' then 0 else 1)
     if @moveCol < 0
-      @col = len + @moveCol + 1
+      @col = Math.max(0, len + @moveCol + 1)
     else
       @col = Math.max(0, Math.min(maxcol, @moveCol))
 

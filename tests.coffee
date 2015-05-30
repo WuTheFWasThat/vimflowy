@@ -845,6 +845,33 @@ t.expect [
   ] },
 ]
 
+# test $ behavior
+t = new TestCase [
+  'a row'
+  'another row'
+  'a third row'
+]
+t.sendKeys '$jx'
+t.expect [
+  'a row'
+  'another ro'
+  'a third row'
+]
+t.sendKeys 'd0x'
+t.expect [
+  'a row'
+  ''
+  'a third row'
+]
+# test tricky -1 on empty row case
+t.sendKeys 'j$k'
+t.sendKeys 'iab'
+t.expect [
+  'a row'
+  'ab'
+  'a third row'
+]
+
 # test delete behavior
 t = new TestCase [
   'a row'
