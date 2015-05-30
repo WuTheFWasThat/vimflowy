@@ -163,16 +163,17 @@ class Data
 
     return child
 
-  deleteRow: (id) ->
-    if id == @viewRoot
-      throw 'Cannot delete view root'
+  # this is never used, since data structure is basically persistent
+  # deleteRow: (id) ->
+  #   if id == @viewRoot
+  #     throw 'Cannot delete view root'
 
-    for child in (@getChildren id).slice()
-      @deleteRow child
+  #   for child in (@getChildren id).slice()
+  #     @deleteRow child
 
-    @detach id
-    delete @structure[id]
-    delete @lines[id]
+  #   @detach id
+  #   delete @structure[id]
+  #   delete @lines[id]
 
   _insertSiblingHelper: (id, after) ->
     if id == @viewRoot

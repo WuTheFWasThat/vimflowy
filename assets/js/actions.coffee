@@ -7,6 +7,8 @@
       return
     rewind: (view) ->
       return
+    reapply: (view) ->
+      return @apply view
 
   class AddChars extends Action
     constructor: (row, col, chars, options = {}) ->
@@ -49,7 +51,10 @@
       view.setCur @newrow, 0
 
     rewind: (view) ->
-      view.data.deleteRow @newrow
+      @rewinded = view.data.detach @newrow
+
+    reapply: (view) ->
+      view.data.attachChild @rewinded.parent, @newrow, @rewinded.index
 
   class DetachBlock extends Action
     constructor: (row, options = {}) ->
@@ -122,11 +127,17 @@
 
     rewind: (view) ->
       if @created != null
-        view.data.deleteRow @created
+        @created_rewinded = view.data.detach @created
       index = @index
       for row in @deleted_rows
         view.data.attachChild @parent, row, index
         index += 1
+
+    reapply: (view) ->
+      for row in @deleted_rows
+        view.data.detach row
+      if @created != null
+        view.data.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 
   class AddBlocks extends Action
     constructor: (serialized_rows, parent, index = -1, options = {}) ->
@@ -152,9 +163,15 @@
         view.setCur row, 0
 
     rewind: (view) ->
-      delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
-      for sib in delete_siblings
-        view.data.deleteRow sib
+      @delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+      for sib in @delete_siblings
+        view.data.detach sib
+
+    reapply: (view) ->
+      index = @index
+      for sib in @delete_siblings
+        view.data.attachChild @parent, sib, index
+        index += 1
 
   class ToggleBlock extends Action
     constructor: (row) ->

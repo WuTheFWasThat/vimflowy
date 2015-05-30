@@ -85,6 +85,10 @@ class View
       index: @actions.length
     }
 
+  restoreViewState: (state) ->
+    @setCursor do state.cursor.clone
+    @changeView state.viewRoot
+
   undo: () ->
     if @historyIndex > 0
       oldState = @history[@historyIndex]
@@ -95,9 +99,7 @@ class View
           action = @actions[i]
           action.rewind @
 
-      # use final cursor
-      @setCursor newState.cursor
-      @changeView newState.viewRoot
+      @restoreViewState newState.before
 
   redo: () ->
     if @historyIndex < @history.length - 1
@@ -105,12 +107,12 @@ class View
       @historyIndex += 1
       newState = @history[@historyIndex]
 
-      @setCursor oldState.cursor
-      @changeView oldState.viewRoot
-
       for i in [oldState.index...newState.index]
           action = @actions[i]
-          action.apply @
+          action.reapply @
+      @restoreViewState oldState.after
+
+    do @moveCursorBackIfNeeded
 
   act: (action) ->
     if @historyIndex + 1 != @history.length
@@ -119,11 +121,17 @@ class View
 
     state = @history[@historyIndex]
     if @actions.length == state.index
-      state.cursor = do @cursor.clone
-      state.viewRoot = @data.viewRoot
+      state.before = {
+        cursor: do @cursor.clone
+        viewRoot: @data.viewRoot
+      }
 
     action.apply @
     @actions.push action
+    state.after = {
+      cursor: do @cursor.clone
+      viewRoot: @data.viewRoot
+    }
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
@@ -146,7 +154,6 @@ class View
     @cursor.set row, col
 
   setCursor: (cursor) ->
-    oldrow = @cursor.row
     @cursor = cursor
 
   moveCursorBackIfNeeded: () ->
