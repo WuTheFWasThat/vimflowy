@@ -1072,6 +1072,140 @@ t.expect [
   ] },
 ]
 
+# cursor goes back where it was
+t = new TestCase [
+  'top row',
+  'middle row'
+  'bottom row'
+]
+t.sendKeys 'dd'
+t.sendKeys 'jj'
+t.sendKeys 'ux'
+t.expect
+t.expect [
+  'op row',
+  'middle row',
+  'bottom row',
+]
+
+# cursor goes back where it was after redo and undo again
+t = new TestCase [
+  'top row',
+  'middle row'
+  'bottom row'
+]
+t.sendKeys 'dd'
+t.sendKeys 'jj'
+t.sendKeys 'u'
+t.sendKey 'ctrl+r'
+t.sendKeys 'ux'
+t.expect
+t.expect [
+  'op row',
+  'middle row',
+  'bottom row',
+]
+
+# test redo in tricky case
+t = new TestCase [ 'a row' ]
+t.sendKeys 'cc'
+t.sendKeys 'new row'
+t.sendKey 'esc'
+t.expect [ 'new row' ]
+t.sendKeys 'u'
+t.sendKey 'ctrl+r'
+t.sendKeys 'x'
+t.expect [ 'new ro' ]
+t.sendKeys 'uu'
+t.expect [ 'a row' ]
+t.sendKey 'ctrl+r'
+t.expect [ 'new row' ]
+t.sendKey 'ctrl+r'
+t.expect [ 'new ro' ]
+
+# test redo in trickier case
+t = new TestCase [ 'a row' ]
+t.sendKeys 'cc'
+t.sendKeys 'new row'
+t.sendKey 'esc'
+t.expect [ 'new row' ]
+t.sendKeys 'u'
+t.sendKey 'ctrl+r'
+t.sendKeys 'x'
+t.expect [ 'new ro' ]
+t.sendKeys 'uu'
+t.expect [ 'a row' ]
+# to demonstrate we're not relying on getId behavior
+t.data.getId = () ->
+    id = 0
+    while @lines[id]
+      id++
+    return id+1
+t.sendKey 'ctrl+r'
+t.expect [ 'new row' ]
+t.sendKey 'ctrl+r'
+t.expect [ 'new ro' ]
+
+# test redo in another tricky case
+t = new TestCase [ 'a row' ]
+t.sendKeys 'yyp'
+t.expect [
+  'a row'
+  'a row'
+]
+t.sendKeys 'u'
+t.sendKey 'ctrl+r'
+t.sendKeys 'x'
+t.expect [
+  'a row'
+  ' row'
+]
+t.sendKeys 'uu'
+t.expect [ 'a row' ]
+t.sendKey 'ctrl+r'
+t.expect [
+  'a row'
+  'a row'
+]
+t.sendKey 'ctrl+r'
+t.expect [
+  'a row'
+  ' row'
+]
+
+# test redo in another trickier case
+t = new TestCase [ 'a row' ]
+t.sendKeys 'yyp'
+t.expect [
+  'a row'
+  'a row'
+]
+t.sendKeys 'u'
+t.sendKey 'ctrl+r'
+t.sendKeys 'x'
+t.expect [
+  'a row'
+  ' row'
+]
+t.sendKeys 'uu'
+t.expect [ 'a row' ]
+# to demonstrate we're not relying on getId behavior
+t.data.getId = () ->
+    id = 0
+    while @lines[id]
+      id++
+    return id+1
+t.sendKey 'ctrl+r'
+t.expect [
+  'a row'
+  'a row'
+]
+t.sendKey 'ctrl+r'
+t.expect [
+  'a row'
+  ' row'
+]
+
 t = new TestCase [
   { line: 'top row', children: [
     { line: 'middle row', children: [
