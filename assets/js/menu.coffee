@@ -2,7 +2,14 @@ class Menu
   constructor: (div, fn) ->
     @div = div
     @fn = fn
-    @view = new View null, (new Data)
+
+    data = new Data (new store.InMemoryDataStore)
+    data.load {
+      line: ''
+      children: ['']
+    }
+
+    @view = new View null, data
     @selection = 0
 
     # list of results:
@@ -103,6 +110,7 @@ class Menu
 if module?
   View = require('./view.coffee')
   Data = require('./data.coffee')
+  store = require('./datastore.coffee')
 
 # exports
 module?.exports = Menu

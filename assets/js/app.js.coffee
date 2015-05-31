@@ -2,6 +2,7 @@
 
 #= require eventEmitter
 #= require keyHandler
+#= require datastore
 #= require data
 #= require actions
 #= require cursor

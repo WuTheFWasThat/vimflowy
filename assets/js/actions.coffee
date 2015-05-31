@@ -46,8 +46,7 @@
       else if @options.before
         @newrow = view.data.insertSiblingBefore @row
       else
-        console.log @options
-        throw 'InsertRowSibling needs valid option'
+        throw ('InsertRowSibling needs valid options: ' + JSON.stringify @options)
       view.setCur @newrow, 0
 
     rewind: (view) ->
@@ -95,7 +94,6 @@
       row = @row
       parent = view.data.getParent row
       index = view.data.indexOf row
-      siblings = view.data.getChildren parent
 
       if row == view.root then throw 'Cannot delete root'
 
@@ -111,6 +109,8 @@
       @created = null
       if @options.addNew
         @created = view.data.addChild parent, index
+
+      siblings = view.data.getChildren parent
 
       if index < siblings.length
         next = siblings[index]

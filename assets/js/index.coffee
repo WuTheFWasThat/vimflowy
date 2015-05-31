@@ -2,20 +2,27 @@
 
 # mapping from id to line
 
-data = new Data
-
 keybindingsDiv = $('#keybindings')
+
+serialized_data = {
+  line: ''
+  children: ['']
+}
 
 if localStorage?
   # localStorage['data'] = '{"line":"","children":["sdaasd"]}'
   if localStorage['data'] and localStorage['data'].length
-    data.load JSON.parse localStorage['data']
+    serialized_data = JSON.parse localStorage['data']
 
   showKeyBindings = true
   if localStorage.getItem('showKeyBindings') != null
     showKeyBindings = localStorage['showKeyBindings'] == 'true'
   if showKeyBindings
     keybindingsDiv.addClass 'active'
+
+data = new Data (new InMemoryDataStore)
+data.load serialized_data
+console.log('loaded', serialized_data)
 
 setInterval (() ->
   localStorage['data'] = JSON.stringify (do data.serialize)

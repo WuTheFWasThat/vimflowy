@@ -1,64 +1,61 @@
 class Data
   root: 0
 
-  constructor: () ->
+  constructor: (store) ->
+    @store = store
     # defaults
 
     # default document: a single blank line
     @viewRoot = 0
-
-    @load {
-      line: ''
-      children: ['']
-    }
     return @
 
   changeViewRoot: (row) ->
     @viewRoot = row
 
-  getId: () ->
-    id = 0
-    while @lines[id]
-      id++
-    return id
-
-  # data access
+  #########
+  # lines #
+  #########
 
   getLine: (row) ->
-    return @lines[row]
-
-  setLine: (row, line) ->
-    @lines[row] = line
+    return @store.getLine row
 
   getChar: (row, col) ->
     return @getLine(row)[col]
 
+  writeChars: (row, col, chars) ->
+    args = [col, 0].concat chars
+    line = @getLine row
+    [].splice.apply line, args
+    @store.setLine row, line
+
+  deleteChars: (row, col, num) ->
+    line = @getLine row
+    deleted = line.splice col, num
+    @store.setLine row, line
+    return deleted
+
   getLength: (row) ->
     return @getLine(row).length
 
-  getParent: (row) ->
-    return @structure[row].parent
+  #############
+  # structure #
+  #############
 
-  setParent: (row, parent) ->
-    @structure[row].parent = parent
+  getParent: (row) ->
+    return @store.getParent row
 
   getChildren: (row) ->
-    return @structure[row].children
+    return @store.getChildren row
 
   hasChildren: (row) ->
-    return (@structure[row].children.length > 0)
+    return ((@getChildren row).length > 0)
 
   getSiblings: (row) ->
     parent = @getParent row
     return @getChildren parent
 
   collapsed: (row) ->
-    return @structure[row].collapsed
-
-  setCollapsed: (row, collapsed) ->
-    @structure[row].collapsed = collapsed
-
-  # structure manipulation
+    return @store.getCollapsed row
 
   indexOf: (child) ->
     children = @getSiblings child
@@ -66,17 +63,17 @@ class Data
 
   detach: (id) ->
     parent = @getParent id
-    index = @detachChild parent, id
+    children = @getChildren parent
+    i = children.indexOf id
+    children.splice i, 1
+
+    @store.setChildren parent, children
+
     return {
       parent: parent
-      index: index
+      index: i
     }
 
-  detachChild: (id, child) ->
-    children = @getChildren id
-    i = children.indexOf child
-    children.splice i, 1
-    return i
 
   attachChild: (id, child, index = -1) ->
     @attachChildren id, [child], index
@@ -88,7 +85,8 @@ class Data
     else
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
-      @setParent child, id
+      @store.setParent child, id
+    @store.setChildren id, children
 
   nextVisible: (id = @viewRoot) ->
     if not @collapsed id
@@ -143,7 +141,7 @@ class Data
     return parent
 
   toggleCollapsed: (id) ->
-    @setCollapsed id, (not @collapsed id)
+    @store.setCollapsed id, (not @collapsed id)
 
   getSiblingBefore: (id) ->
     return @getSiblingOffset id, -1
@@ -172,16 +170,8 @@ class Data
         return children[index]
 
   addChild: (id, index = -1) ->
-    child = do @getId
-
-    @lines[child] = []
-    @structure[child] =
-      collapsed: false
-      children: []
-      parent: id
-
+    child = do @store.getNew
     @attachChild id, child, index
-
     return child
 
   # this is never used, since data structure is basically persistent
@@ -193,15 +183,13 @@ class Data
   #     @deleteRow child
 
   #   @detach id
-  #   delete @structure[id]
-  #   delete @lines[id]
+  #   @store.delete id
 
   _insertSiblingHelper: (id, after) ->
     if id == @viewRoot
       console.log 'Cannot insert sibling of view root'
       return null
 
-    newId = do @getId
     parent = @getParent id
     children = @getChildren parent
     index = children.indexOf id
@@ -213,16 +201,6 @@ class Data
 
   insertSiblingBefore: (id) ->
     return @_insertSiblingHelper id, 0
-
-  # data manipulation
-
-  writeChars: (row, col, chars) ->
-    args = [col, 0].concat chars
-    [].splice.apply @lines[row], args
-
-  deleteChars: (row, col, num) ->
-    removed = @lines[row].splice col, num
-    return removed
 
   orderedLines: () ->
     ids = []
@@ -240,7 +218,7 @@ class Data
       return results
 
     for id in do @orderedLines
-      line = @lines[id]
+      line = @getLine id
       for i in [0..line.length-chars.length]
         match = true
         for j in [0...chars.length]
@@ -257,8 +235,8 @@ class Data
 
   # important: serialized automatically garbage collects
   serialize: (id = @root) ->
-    line = @lines[id].join('')
-    if @structure[id].children.length
+    line = (@getLine id).join('')
+    if @hasChildren id
       children = (@serialize childid for childid in @getChildren id)
       struct = {
         line: line
@@ -273,23 +251,19 @@ class Data
       return line
 
   loadTo: (serialized, parent = @root, index = -1) ->
-    id = do @getId
-
-    @structure[id] = {
-      children: []
-    }
+    id = do @store.getNew
 
     if id != @root
       @attachChild parent, id, index
     else
       # parent should be 0
-      @structure[id].parent = @root
+      @store.setParent id, @root
 
     if typeof serialized == 'string'
-      @setLine id, (serialized.split '')
+      @store.setLine id, (serialized.split '')
     else
-      @setLine id, (serialized.line.split '')
-      @setCollapsed id, serialized.collapsed
+      @store.setLine id, (serialized.line.split '')
+      @store.setCollapsed id, serialized.collapsed
 
       for serialized_child in serialized.children
         @loadTo serialized_child, id
@@ -297,8 +271,6 @@ class Data
     return id
 
   load: (serialized) ->
-    @structure = {}
-    @lines = {}
     if serialized.viewRoot
       @viewRoot = serialized.viewRoot
     else
