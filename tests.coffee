@@ -2383,3 +2383,76 @@ t.expect [
     '',
   ] }
 ]
+
+# test J and K
+t = new TestCase [
+  { line: 'one', children: [
+    'uno',
+  ] }
+  { line: 'two', children: [
+    'dos',
+  ] }
+  { line: 'tacos', children: [
+    'tacos',
+  ] }
+]
+t.sendKeys 'xJx'
+t.expect [
+  { line: 'ne', children: [
+    'uno',
+  ] }
+  { line: 'wo', children: [
+    'dos',
+  ] }
+  { line: 'tacos', children: [
+    'tacos',
+  ] }
+]
+t.sendKeys 'JxJx'
+t.expect [
+  { line: 'ne', children: [
+    'uno',
+  ] }
+  { line: 'wo', children: [
+    'dos',
+  ] }
+  { line: 'cos', children: [
+    'tacos',
+  ] }
+]
+t.sendKeys 'Kx'
+t.expect [
+  { line: 'ne', children: [
+    'uno',
+  ] }
+  { line: 'o', children: [
+    'dos',
+  ] }
+  { line: 'cos', children: [
+    'tacos',
+  ] }
+]
+t.sendKeys 'Kx'
+t.expect [
+  { line: 'e', children: [
+    'uno',
+  ] }
+  { line: 'o', children: [
+    'dos',
+  ] }
+  { line: 'cos', children: [
+    'tacos',
+  ] }
+]
+t.sendKeys 'Kx'
+t.expect [
+  { line: '', children: [
+    'uno',
+  ] }
+  { line: 'o', children: [
+    'dos',
+  ] }
+  { line: 'cos', children: [
+    'tacos',
+  ] }
+]
