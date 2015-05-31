@@ -490,7 +490,7 @@ class View
   renderLine: (row, onto) ->
     if not onto
       onto = $('#' + (rowDivID row))
-    lineData = @data.lines[row]
+    lineData = @data.getLine row
     cursors = {}
     if row == @cursor.row
       cursors[@cursor.col] = true
