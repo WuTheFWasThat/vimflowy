@@ -180,6 +180,20 @@ class View
   moveCursorEnd: (options) ->
     @cursor.end options
 
+  movePreviousSibling: (options = {}) ->
+    prevsib = @data.getSiblingBefore @cursor.row
+    if prevsib != null
+      @cursor.setRow prevsib
+
+  moveNextSibling: (options = {}) ->
+    nextsib = @data.getSiblingAfter @cursor.row
+    if nextsib != null
+      @cursor.setRow nextsib
+
+  moveCursorDown: (options = {}) ->
+    oldrow = @cursor.row
+    @cursor.down options
+
   changeView: (row) ->
     if @data.hasChildren row
       @data.changeViewRoot row

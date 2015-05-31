@@ -148,6 +148,22 @@ class KeyBindings
         continue: (char, cursor, options) ->
           options.beforeFound = true
           cursor.prevChar char, options
+
+    # TODO: this should be a motion?
+    NEXT_SIBLING:
+      display: 'Move cursor to the next sibling of the current line'
+      drop: true
+      fn: () ->
+        do @view.moveNextSibling
+
+    # TODO: this should be a motion?
+    PREV_SIBLING:
+      display: 'Move cursor to the previous sibling of the current line'
+      drop: true
+      fn: () ->
+        do @view.movePreviousSibling
+
+    # TODO: this should be a motion?
     GO:
       display: 'Various commands for navigation (operator)'
       continue:
@@ -159,6 +175,7 @@ class KeyBindings
               row = do @view.data.nextVisible
               @view.setCur row, 0
               do @view.render
+    # TODO: this should be a motion?
     GO_END:
       display: 'Go to end of visible document'
       drop: true
@@ -343,6 +360,11 @@ class KeyBindings
     'ctrl+h': 'MOVE_BLOCK_LEFT'
     'ctrl+j': 'MOVE_BLOCK_DOWN'
     'ctrl+k': 'MOVE_BLOCK_UP'
+
+    'H': 'ZOOM_OUT'
+    'L': 'ZOOM_IN'
+    'J': 'NEXT_SIBLING'
+    'K': 'PREV_SIBLING'
 
     'z': 'TOGGLE_FOLD'
     '[': 'ZOOM_OUT'
