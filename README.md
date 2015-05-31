@@ -2,31 +2,33 @@
 
 This is a productivity tool which draws great inspiration from workflowy and vim
 
+There is a demo [here](https://vimflowy.bitballoon.com)
+
 ## TODO ##
 
-make hotkeys customizable
+fixes
+- make block unindent move to parent's next sibling regardless
+- warn another tab if something has been modified??
+- scale better:
+  - limit search results
+- break up tests into multiple files...
+- style stuff better
+- rethink fold hotkeys (z+coaCOA)?
 
-scale better:
- - limit search results
-
-warn another tab if something has been modified??
-
-break up tests into multiple files...
-
-style stuff better
-
-there should be a way to yank just 1 line without children?
-
-yc -> clone?
-
-gp = go parent?
-rethink fold hotkeys (z+coaCOA)?
-
-implement some form of marks (m[a-z] or m[string]?  'a or '[string])
-implement J
-implement ctrl+o
-find/replace?
-line numbers?
+Features
+- make hotkeys customizable
+- visual mode
+- visual line mode
+- macros
+- there should be a way to yank just 1 line without children?
+- yc -> clone?
+- gp = go parent?
+- implement some form of marks (m[a-z] or m[string]?  'a or '[string])
+  - tagging, e.g. @mark that links to it
+- implement J
+- implement ctrl+o, `g,`, `g;`
+- find/replace?
+- line numbers?
 
 ## KNOWN ISSUES: ##
 
@@ -43,3 +45,5 @@ Known (intentional) inconsistencies with vi:
 
 ## CONTRIBUTE: ##
 
+Please send pull requests!
+You may contact me at [githubusername]@gmail.com as well
