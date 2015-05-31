@@ -4,29 +4,35 @@
 
 keybindingsDiv = $('#keybindings')
 
-serialized_data = {
+default_data = {
   line: ''
   children: ['']
 }
 
 if localStorage?
-  # localStorage['data'] = '{"line":"","children":["sdaasd"]}'
-  if localStorage['data'] and localStorage['data'].length
-    serialized_data = JSON.parse localStorage['data']
-
+  console.log('localstorage yay')
   showKeyBindings = true
   if localStorage.getItem('showKeyBindings') != null
     showKeyBindings = localStorage['showKeyBindings'] == 'true'
   if showKeyBindings
     keybindingsDiv.addClass 'active'
 
-data = new Data (new InMemoryDataStore)
-data.load serialized_data
-console.log('loaded', serialized_data)
+  datastore = new dataStore.LocalStorageLazy
+  data = new Data datastore
 
-setInterval (() ->
-  localStorage['data'] = JSON.stringify (do data.serialize)
-), 1000
+  if localStorage.getItem('saved') == null
+    console.log('no save')
+    data.load default_data
+    localStorage['saved'] = 'true'
+  else
+    console.log('saved before')
+
+else
+  alert('You need local storage support for data to be persisted')
+  datastore = new dataStore.InMemory
+
+  data = new Data datastore
+  data.load default_data
 
 
 view = new View $('#view'), data

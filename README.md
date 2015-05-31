@@ -7,10 +7,9 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 make hotkeys customizable
 
 scale better:
- - make lines load on demand instead of all at once
  - limit search results
 
-do something better if 2 tabs are open
+warn another tab if something has been modified??
 
 break up tests into multiple files...
 
