@@ -3,7 +3,7 @@ class Menu
     @div = div
     @fn = fn
 
-    data = new Data (new store.InMemoryDataStore)
+    data = new Data (new dataStore.InMemory)
     data.load {
       line: ''
       children: ['']
@@ -110,7 +110,7 @@ class Menu
 if module?
   View = require('./view.coffee')
   Data = require('./data.coffee')
-  store = require('./datastore.coffee')
+  dataStore = require('./datastore.coffee')
 
 # exports
 module?.exports = Menu

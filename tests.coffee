@@ -1,14 +1,14 @@
 require 'coffee-script/register'
 assert = require 'assert'
 
-store = require './assets/js/datastore.coffee'
+dataStore = require './assets/js/datastore.coffee'
 Data = require './assets/js/data.coffee'
 View = require './assets/js/view.coffee'
 KeyBindings = require './assets/js/keyBindings.coffee'
 
 class TestCase
   constructor: (serialized = ['']) ->
-    @store = new store.InMemoryDataStore
+    @store = new dataStore.InMemory
     @data = new Data @store
     @data.load
       line: ''
