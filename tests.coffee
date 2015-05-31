@@ -1626,6 +1626,38 @@ t.expect [
   ] }
 ]
 
+# test paste on collapsed
+t = new TestCase [
+  { line: 'hey', collapsed: true, children: [
+    'yo'
+  ] }
+]
+t.sendKeys 'yyp'
+t.expect [
+  { line: 'hey', collapsed: true, children: [
+    'yo'
+  ] }
+  { line: 'hey', collapsed: true, children: [
+    'yo'
+  ] },
+]
+
+# test paste preserves collapsedness
+t = new TestCase [
+  { line: 'hey', collapsed: true, children: [
+    'yo'
+  ] }
+]
+t.sendKeys 'yyzp'
+t.expect [
+  { line: 'hey', children: [
+    { line: 'hey', collapsed: true, children: [
+      'yo'
+    ] },
+    'yo'
+  ] }
+]
+
 # test backspace
 t = new TestCase ['abc']
 t.sendKey 'A'
@@ -2174,6 +2206,25 @@ t.expect [
   { line: '1', children: [
     '2'
     '3'
+  ] },
+]
+
+t = new TestCase [
+  { line: '1', collapsed: true, children: [
+    '2'
+  ] },
+  { line: '3', children: [
+    '4'
+  ] },
+]
+t.sendKeys 'j'
+t.sendKey 'ctrl+l'
+t.expect [
+  { line: '1', children: [
+    '2'
+    { line: '3', children: [
+      '4'
+    ] },
   ] },
 ]
 
