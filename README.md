@@ -4,20 +4,19 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 
 ## TODO ##
 
-fix paste under collapsed
-test ctrl+l under collapsed
-
 make hotkeys customizable
 
 scale better:
  - make lines load on demand instead of all at once
  - limit search results
 
-break up tests into multiple files...
-
 do something better if 2 tabs are open
 
+break up tests into multiple files...
+
 style stuff better
+
+there should be a way to yank just 1 line without children?
 
 yc -> clone?
 

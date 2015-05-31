@@ -33,7 +33,7 @@ class Register
         @view.addBlocks @serialized_rows, parent, index, {cursor: 'first'}
       else
         children = @view.data.getChildren row
-        if children.length > 0
+        if (not @view.data.collapsed row) and (children.length > 0)
           @view.addBlocks @serialized_rows, row, 0, {cursor: 'first'}
         else
           @view.addBlocks @serialized_rows ,parent, (index + 1), {cursor: 'first'}
