@@ -2,7 +2,7 @@
 
 This is a productivity tool which draws great inspiration from workflowy and vim
 
-There is a demo [here](https://vimflowy.bitballoon.com)
+Try it out here [here](https://vimflowy.bitballoon.com)!
 
 ## TODO ##
 
@@ -30,6 +30,9 @@ Features
 - find/replace?
 - line numbers?
 
+Other
+- make a video
+
 ## KNOWN ISSUES: ##
 
 - e/b/w don't cross onto next line
@@ -47,3 +50,7 @@ Known (intentional) inconsistencies with vi:
 
 Please send pull requests!
 You may contact me at [githubusername]@gmail.com as well
+
+## LICENSE ##
+
+MIT: http://wuthefwasthat.mit-license.org/
