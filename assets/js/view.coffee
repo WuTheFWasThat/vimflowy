@@ -490,7 +490,10 @@ class View
         icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
       bullet = $('<i>').addClass('fa ' + icon + ' bullet')
       if @data.hasChildren id
-        bullet.css({cursor: 'pointer'}).click @toggleBlock.bind(@, id)
+        bullet.css({cursor: 'pointer'}).click ((id) =>
+          @toggleBlock id
+          do @render
+        ).bind(@, id)
 
       elLine = $('<div>').addClass('node-text').attr('id', rowDivID id)
       @renderLine id, elLine
