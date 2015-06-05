@@ -220,6 +220,11 @@ class KeyBindings
       fn: () ->
         do @view.pasteBefore
 
+    JOIN_LINE:
+      display: 'Join current line with line below'
+      fn: () ->
+        do @view.joinAtCursor
+
     INDENT_RIGHT:
       display: 'Indent row right'
       fn: () ->
@@ -343,6 +348,7 @@ class KeyBindings
     'y': 'YANK'
     'p': 'PASTE_AFTER'
     'P': 'PASTE_BEFORE'
+    'J': 'JOIN_LINE'
 
     'tab': 'INDENT_RIGHT'
     'shift+tab': 'INDENT_LEFT'
@@ -353,10 +359,10 @@ class KeyBindings
     'ctrl+j': 'MOVE_BLOCK_DOWN'
     'ctrl+k': 'MOVE_BLOCK_UP'
 
-    'H': 'ZOOM_OUT'
-    'L': 'ZOOM_IN'
-    'J': 'NEXT_SIBLING'
-    'K': 'PREV_SIBLING'
+    'alt+h': 'ZOOM_OUT'
+    'alt+l': 'ZOOM_IN'
+    'alt+j': 'NEXT_SIBLING'
+    'alt+k': 'PREV_SIBLING'
 
     'z': 'TOGGLE_FOLD'
     '[': 'ZOOM_OUT'
@@ -415,8 +421,11 @@ class KeyBindings
 
     buildTableContents = (bindings, onto) ->
       for k,v of bindings
+        keys = typeToKeys[k]
+        if not keys
+          continue
         row = $('<tr>')
-        row.append $('<td>').text typeToKeys[k][0]
+        row.append $('<td>').text keys[0]
         display_cell = $('<td>').text v.display
 
         row.append display_cell
