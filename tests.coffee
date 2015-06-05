@@ -1305,40 +1305,42 @@ t = new TestCase [
 t.sendKeys 'j'
 t.sendKey '<'
 t.expect [
-  'a',
-  { line: 'ab', children: [
-    'abc',
+  { line : 'a', children : [
     { line : 'ad', children : [
       'ade'
     ] },
+  ] },
+  { line: 'ab', children: [
+    'abc',
   ] },
 ]
 t.sendKey '>'
 t.expect [
   { line: 'a', children: [
+    { line : 'ad', children : [
+      'ade'
+    ] },
     { line: 'ab', children: [
       'abc',
-      { line : 'ad', children : [
-        'ade'
-      ] },
     ] },
   ] }
 ]
 t.sendKeys 'u'
 t.expect [
-  'a',
-  { line: 'ab', children: [
-    'abc',
+  { line : 'a', children : [
     { line : 'ad', children : [
       'ade'
     ] },
+  ] },
+  { line: 'ab', children: [
+    'abc',
   ] },
 ]
 t.sendKeys 'u'
 t.expect [
   { line: 'a', children: [
     { line : 'ab', children : [
-      'abc'
+        'abc'
     ] },
     { line : 'ad', children : [
       'ade'
@@ -2147,7 +2149,7 @@ t.expect [
   '...'
 ]
 
-# test ctrl+h vs. <
+# test ctrl+h
 t = new TestCase [
   { line: '1', children: [
     '2'
@@ -2158,26 +2160,30 @@ t = new TestCase [
   ] },
 ]
 t.sendKeys 'jj'
-# strict unindent does nothing
 t.sendKey 'ctrl+h'
 t.expect [
   { line: '1', children: [
     '2'
-    { line: '3', children: [
-      '4'
-    ] },
     '5'
-  ] },
-]
-# unindent works
-t.sendKeys '<'
-t.expect [
-  { line: '1', children: [
-    '2'
   ] },
   { line: '3', children: [
     '4'
-    '5'
+  ] },
+]
+
+# test regular tab
+t = new TestCase [
+  '0',
+  { line: '1', children: [
+    '2'
+  ] },
+]
+t.sendKeys 'j'
+t.sendKey 'tab'
+t.expect [
+  { line: '0', children: [
+    '1'
+    '2'
   ] },
 ]
 

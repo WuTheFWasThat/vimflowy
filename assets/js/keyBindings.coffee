@@ -223,27 +223,19 @@ class KeyBindings
     INDENT_RIGHT:
       display: 'Indent row right'
       fn: () ->
-        @view.indentCurrent {}
+        do @view.indent
     INDENT_LEFT:
       display: 'Indent row left'
       fn: () ->
-        @view.unindentCurrent {}
-    INDENT_BLOCK_RIGHT:
-      display: 'Indent block right'
-      fn: () ->
-        @view.indentCurrent {recursive: true}
-    INDENT_BLOCK_LEFT:
-      display: 'Indent block left'
-      fn: () ->
-        @view.unindentCurrent {recursive: true}
+        do @view.unindent
     MOVE_BLOCK_RIGHT:
       display: 'Move block right'
       fn: () ->
-        @view.indentCurrent {recursive: true, strict: true}
+        do @view.indentBlock
     MOVE_BLOCK_LEFT:
       display: 'Move block left'
       fn: () ->
-        @view.unindentCurrent {recursive: true, strict: true}
+        do @view.unindentBlock
     MOVE_BLOCK_DOWN:
       display: 'Move block down'
       fn: () ->
@@ -354,8 +346,8 @@ class KeyBindings
 
     'tab': 'INDENT_RIGHT'
     'shift+tab': 'INDENT_LEFT'
-    '>': 'INDENT_BLOCK_RIGHT'
-    '<': 'INDENT_BLOCK_LEFT'
+    '>': 'MOVE_BLOCK_RIGHT'
+    '<': 'MOVE_BLOCK_LEFT'
     'ctrl+l': 'MOVE_BLOCK_RIGHT'
     'ctrl+h': 'MOVE_BLOCK_LEFT'
     'ctrl+j': 'MOVE_BLOCK_DOWN'
@@ -517,9 +509,9 @@ class KeyBindings
     else if key == 'enter'
       do view.newLineBelow
     else if key == 'tab'
-      view.indentCurrent {}
+      do view.indent
     else if key == 'shift+tab'
-      view.unindentCurrent {}
+      do view.unindent
     else
       view.addCharsAtCursor [key], {cursor: 'pastEnd'}
 

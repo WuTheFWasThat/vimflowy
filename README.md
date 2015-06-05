@@ -7,13 +7,12 @@ Try it out here [here](https://vimflowy.bitballoon.com)!
 ## TODO ##
 
 fixes
-- make block unindent move to parent's next sibling regardless
 - warn another tab if something has been modified??
 - scale better:
   - limit search results
 - break up tests into multiple files...
 - style stuff better
-- rethink fold hotkeys (z+coaCOA)?
+- rethink default fold hotkeys (z+coaCOA)?
 
 Features
 - make hotkeys customizable
