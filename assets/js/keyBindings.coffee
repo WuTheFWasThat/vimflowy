@@ -495,18 +495,13 @@ class KeyBindings
     else if key == 'down' or key == 'ctrl+j'
       view.moveCursorDown {cursor: 'pastEnd'}
     else if key == 'backspace'
-      if view.cursor.col == 0
-        row = view.cursor.row
-        sib = view.data.prevVisible row
-        if sib != null
-          view.joinRows sib, row, {cursor: 'pastEnd'}
-      else
-        view.delCharsBeforeCursor 1, {cursor: 'pastEnd'}
+      do view.deleteAtCursor
     else if key == 'shift+backspace'
       view.delCharsAfterCursor 1
     else if key == 'shift+enter'
       view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
     else if key == 'enter'
+      # TODO: newLineAtCursor
       do view.newLineBelow
     else if key == 'tab'
       do view.indent
@@ -534,8 +529,7 @@ class KeyBindings
       do @view.save # b/c could've zoomed
       @setMode MODES.NORMAL
     else if key == 'backspace'
-      if view.cursor.col != 0
-        view.delCharsBeforeCursor 1, {cursor: 'pastEnd'}
+      do view.deleteAtCursor
       do @menu.update
     else if key == 'shift+backspace'
       view.delCharsAfterCursor 1
