@@ -308,7 +308,7 @@ class View
     @detachBlock row, options
     @attachBlock row, parent, index, options
 
-  indent: (id, options = {}) ->
+  indentBlock: (id = @cursor.row) ->
     sib = @data.getSiblingBefore id
     if sib == null
       return null # cannot indent
@@ -317,37 +317,45 @@ class View
       @toggleBlock sib
 
     @moveBlock id, sib, -1
+    return sib
 
-    if not options.recursive
-      for child in (@data.getChildren id).slice()
-        @moveBlock child, sib, -1
-
-  unindent: (id, options = {}) ->
-    if not options.recursive
-      if @data.hasChildren id
-        return
-
+  unindentBlock: (id = @cursor.row, options = {}) ->
     parent = @data.getParent id
     if parent == @data.viewRoot
-      return
+      return null
     p_i = @data.indexOf id
     if (options.strict) and (p_i != (@data.getChildren parent).length - 1)
-      return
+      return null
 
     newparent = @data.getParent parent
     pp_i = @data.indexOf parent
 
     @moveBlock id, newparent, (pp_i+1)
+    return newparent
+
+  indent: (id = @cursor.row) ->
+    sib = @data.getSiblingBefore id
+
+    newparent = @indentBlock id
+    if newparent == null
+      return
+    for child in (@data.getChildren id).slice()
+      @moveBlock child, sib, -1
+
+  unindent: (id = @cursor.row) ->
+    if @data.hasChildren id
+      return
+
+    parent = @data.getParent id
+    p_i = @data.indexOf id
+
+    newparent = @unindentBlock id
+    if newparent == null
+      return
 
     p_children = @data.getChildren parent
     for child in p_children.slice(p_i)
       @moveBlock child, id, -1
-
-  indentCurrent: (options) ->
-    @indent @cursor.row, options
-
-  unindentCurrent: (options) ->
-    @unindent @cursor.row, options
 
   swapDown: (row) ->
     next = @data.nextVisible (@data.lastVisible row)
