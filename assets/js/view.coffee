@@ -281,6 +281,18 @@ class View
 
     @setCur first, newCol, options.cursor
 
+  # implements proper "backspace" behavior
+  deleteAtCursor: () ->
+    if @cursor.col == 0
+      row = @cursor.row
+      sib = @data.prevVisible row
+      if sib != null
+        for child in @data.getChildren row
+          @moveBlock child, sib
+        @joinRows sib, row, {cursor: 'pastEnd'}
+    else
+      @delCharsBeforeCursor 1, {cursor: 'pastEnd'}
+
   delBlocks: (nrows, options = {}) ->
     action = new actions.DeleteBlocks @cursor.row, nrows, options
     @act action

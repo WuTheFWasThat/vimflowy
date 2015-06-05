@@ -1707,18 +1707,37 @@ t.sendKey 'shift+backspace'
 t.expect ['', 'cd']
 
 t = new TestCase [
-  'ab'
-  { line: 'bc', children: [
-    'cd'
+  { line: 'ab', children: [
+    'bc'
+  ] },
+  { line: 'cd', children: [
+    'de'
   ] },
 ]
-t.sendKeys 'j'
+t.sendKeys 'jji'
 t.sendKey 'backspace'
 # cannot backspace when there are children
 t.expect [
-  'ab'
-  { line: 'bc', children: [
-    'cd'
+  { line: 'ab', children: [
+    { line: 'bccd', children: [
+      'de'
+    ] },
+  ] },
+]
+t.sendKey 'backspace'
+t.sendKey 'backspace'
+t.sendKey 'backspace'
+t.expect [
+  { line: 'abcd', children: [
+    'de'
+  ] },
+]
+t.sendKey 'backspace'
+t.sendKey 'backspace'
+t.sendKey 'backspace'
+t.expect [
+  { line: 'cd', children: [
+    'de'
   ] },
 ]
 

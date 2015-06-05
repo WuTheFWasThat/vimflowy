@@ -2,7 +2,7 @@
 
 This is a productivity tool which draws great inspiration from workflowy and vim
 
-Try it out here [here](https://vimflowy.bitballoon.com)!
+Try it out [here](https://vimflowy.bitballoon.com)!
 
 ## TODO ##
 
@@ -25,7 +25,7 @@ Features
 - implement some form of marks (m[a-z] or m[string]?  'a or '[string])
   - tagging, e.g. @mark that links to it
 - implement J
-- implement ctrl+o, `g,`, `g;`
+- implement `ctrl+o`, `g,`, `g;`
 - find/replace?
 - line numbers?
 
