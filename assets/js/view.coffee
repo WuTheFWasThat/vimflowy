@@ -80,6 +80,12 @@ class View
   save: () ->
     if @history[@historyIndex].index == @actions.length
         return
+    state = @history[@historyIndex]
+    state.after = {
+      cursor: do @cursor.clone
+      viewRoot: @data.viewRoot
+    }
+
     @historyIndex += 1
     @history.push {
       index: @actions.length
@@ -128,10 +134,6 @@ class View
 
     action.apply @
     @actions.push action
-    state.after = {
-      cursor: do @cursor.clone
-      viewRoot: @data.viewRoot
-    }
 
   # CURSOR MOVEMENT AND DATA MANIPULATION
 
@@ -268,12 +270,15 @@ class View
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
   joinRows: (first, second, options = {}) ->
-    if @data.hasChildren second
-      return
+    for child in @data.getChildren second by -1
+      # NOTE: if first is collapsed, should we uncollapse?
+      @moveBlock child, first, 0
 
     line = @data.getLine second
-    action = new actions.DeleteBlocks @cursor.row, 1, options
-    @act action
+    if options.delimiter
+      if line[0] != options.delimiter
+        line = [options.delimiter].concat line
+    @detachBlock second
 
     newCol = @data.getLength first
     action = new actions.AddChars first, newCol, line, {cursor: 'stay'}
@@ -281,14 +286,18 @@ class View
 
     @setCur first, newCol, options.cursor
 
+  joinAtCursor: () ->
+    row = @cursor.row
+    sib = @data.nextVisible row
+    if sib != null
+      @joinRows row, sib, {cursor: 'pastEnd', delimiter: ' '}
+
   # implements proper "backspace" behavior
   deleteAtCursor: () ->
     if @cursor.col == 0
       row = @cursor.row
       sib = @data.prevVisible row
       if sib != null
-        for child in @data.getChildren row
-          @moveBlock child, sib
         @joinRows sib, row, {cursor: 'pastEnd'}
     else
       @delCharsBeforeCursor 1, {cursor: 'pastEnd'}

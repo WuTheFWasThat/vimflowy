@@ -24,7 +24,6 @@ Features
 - gp = go parent?
 - implement some form of marks (m[a-z] or m[string]?  'a or '[string])
   - tagging, e.g. @mark that links to it
-- implement J
 - implement `ctrl+o`, `g,`, `g;`
 - find/replace?
 - line numbers?

@@ -1697,15 +1697,6 @@ t.expect ['ab']
 t.sendKey 'backspace'
 t.expect ['a']
 
-t = new TestCase ['ab', 'cd']
-t.sendKeys 'i'
-t.sendKey 'shift+backspace'
-t.expect ['b', 'cd']
-t.sendKey 'shift+backspace'
-t.expect ['', 'cd']
-t.sendKey 'shift+backspace'
-t.expect ['', 'cd']
-
 t = new TestCase [
   { line: 'ab', children: [
     'bc'
@@ -1738,6 +1729,87 @@ t.sendKey 'backspace'
 t.expect [
   { line: 'cd', children: [
     'de'
+  ] },
+]
+
+t = new TestCase [
+  { line: 'ab', children: [
+    'cd'
+  ] },
+]
+t.sendKeys 'ji'
+t.sendKey 'backspace'
+t.expect [
+  'abcd'
+]
+t.sendKey 'esc'
+t.sendKeys 'u'
+t.expect [
+  { line: 'ab', children: [
+    'cd'
+  ] }
+]
+t.sendKey 'ctrl+r'
+t.expect [
+  'abcd'
+]
+t.sendKey 'x'
+t.expect [
+  'acd'
+]
+
+# test shift+backspace
+t = new TestCase ['ab', 'cd']
+t.sendKeys 'i'
+t.sendKey 'shift+backspace'
+t.expect ['b', 'cd']
+t.sendKey 'shift+backspace'
+t.expect ['', 'cd']
+t.sendKey 'shift+backspace'
+t.expect ['', 'cd']
+
+# test J join
+t = new TestCase ['ab', 'cd']
+t.sendKeys 'J'
+t.expect ['ab cd']
+t.sendKeys 'x'
+t.expect ['abcd']
+
+t = new TestCase ['ab', ' cd']
+t.sendKeys 'J'
+t.expect ['ab cd']
+t.sendKeys 'x'
+t.expect ['abcd']
+
+t = new TestCase [
+  { line: 'ab', children: [
+    'cd'
+  ] },
+]
+t.sendKeys 'J'
+t.expect ['ab cd']
+t.sendKeys 'x'
+t.expect ['abcd']
+
+t = new TestCase [
+  'ab'
+  { line: 'cd', children: [
+    'ef'
+    'gh'
+  ] },
+]
+t.sendKeys 'J'
+t.expect [
+  { line: 'ab cd', children: [
+    'ef'
+    'gh'
+  ] },
+]
+t.sendKeys 'x'
+t.expect [
+  { line: 'abcd', children: [
+    'ef'
+    'gh'
   ] },
 ]
 
@@ -2409,7 +2481,7 @@ t.expect [
   ] }
 ]
 
-# test J and K
+# test alt+j and alt+k
 t = new TestCase [
   { line: 'one', children: [
     'uno',
@@ -2421,7 +2493,9 @@ t = new TestCase [
     'tacos',
   ] }
 ]
-t.sendKeys 'xJx'
+t.sendKeys 'x'
+t.sendKey 'alt+j'
+t.sendKeys 'x'
 t.expect [
   { line: 'ne', children: [
     'uno',
@@ -2433,7 +2507,10 @@ t.expect [
     'tacos',
   ] }
 ]
-t.sendKeys 'JxJx'
+t.sendKey 'alt+j'
+t.sendKeys 'x'
+t.sendKey 'alt+j'
+t.sendKeys 'x'
 t.expect [
   { line: 'ne', children: [
     'uno',
@@ -2445,7 +2522,8 @@ t.expect [
     'tacos',
   ] }
 ]
-t.sendKeys 'Kx'
+t.sendKey 'alt+k'
+t.sendKeys 'x'
 t.expect [
   { line: 'ne', children: [
     'uno',
@@ -2457,7 +2535,8 @@ t.expect [
     'tacos',
   ] }
 ]
-t.sendKeys 'Kx'
+t.sendKey 'alt+k'
+t.sendKeys 'x'
 t.expect [
   { line: 'e', children: [
     'uno',
@@ -2469,7 +2548,8 @@ t.expect [
     'tacos',
   ] }
 ]
-t.sendKeys 'Kx'
+t.sendKey 'alt+k'
+t.sendKeys 'x'
 t.expect [
   { line: '', children: [
     'uno',

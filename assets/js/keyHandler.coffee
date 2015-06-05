@@ -87,6 +87,9 @@ class KeyHandler extends EventEmitter
         if e.ctrlKey
           key = 'ctrl+' + key
 
+        if e.altKey
+          key = 'alt+' + key
+
         if e.shiftKey
           if key of shiftMap
             key = shiftMap[key]
