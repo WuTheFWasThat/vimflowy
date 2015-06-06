@@ -1,5 +1,61 @@
 # binds keys to manipulation of view/data
 
+# imports
+if module?
+  EventEmitter = require('./eventEmitter.coffee')
+  Cursor = require('./cursor.coffee')
+  Menu = require('./menu.coffee')
+  actions = require('./actions.coffee')
+
+# manages a stream of keys, with the ability to
+# - queue keys
+# - wait for more keys
+# - flush sequences of keys
+# - save sequences of relevant keys
+class KeyStream extends EventEmitter
+  constructor: (keys = []) ->
+    super
+
+    @queue = [] # queue so that we can read group of keys, like 123 or fy
+    @lastSequence = [] # last key sequence
+    @index = 0
+    @waiting = false
+
+    @enqueue keys
+
+  empty: () ->
+    return @queue.length == 0
+
+  done: () ->
+    return @index == @queue.length
+
+  rewind: () ->
+    @index = 0
+
+  enqueue: (keys = []) ->
+    for key in keys
+      @queue.push key
+      @waiting = false
+
+  dequeue: () ->
+    if @index == @queue.length then return null
+    return @queue[@index++]
+
+  # means we are waiting for another key before we can do things
+  wait: () ->
+    @waiting = true
+    do @rewind
+
+  save: () ->
+    processed = do @forget
+    @lastSequence = processed
+    @emit 'save'
+
+  forget: () ->
+    dropped = @queue.splice 0, @index
+    @index = 0
+    return dropped
+
 class KeyBindings
 
   # display:
@@ -174,7 +230,6 @@ class KeyBindings
             fn: () ->
               row = do @view.data.nextVisible
               @view.setCur row, 0
-              do @view.render
     # TODO: this should be a motion?
     GO_END:
       display: 'Go to end of visible document'
@@ -182,7 +237,6 @@ class KeyBindings
       fn: () ->
         row = do @view.data.lastVisible
         @view.setCur row, 0
-        do @view.render
     DELETE:
       display: 'Delete (operator)'
     CHANGE:
@@ -374,17 +428,6 @@ class KeyBindings
 
     '/': 'SEARCH'
 
-  SEQUENCE = {
-    # wait for more keys
-    WAIT: 0
-    # drop the current sequence (bogus input)
-    DROP: 1
-    # continue the sequence
-    CONTINUE: 2
-    # finish the sequence
-    FINISH: 3
-  }
-
   constructor: (view, divs = {}) ->
     @view = view
 
@@ -406,9 +449,9 @@ class KeyBindings
     @mode = ''
     @setMode MODES.NORMAL
 
-    @queuedKeys = [] # queue so that we can read group of keys, like 123 or fy
-    @curSequence = [] # current key sequence
-    @lastSequence = [] # last key sequence
+    @keyStream = new KeyStream
+    @keyStream.on 'save', () =>
+      do @view.save
 
   buildBindingsDiv: () ->
     typeToKeys = {}
@@ -454,44 +497,17 @@ class KeyBindings
   getKey: (name) ->
     return @bindings[name].key
 
-  continueSequence: (keys) ->
-    for key in keys
-      @curSequence.push key
-
-  registerSequence: () ->
-    @lastSequence = @curSequence
-    do @clearSequence
-    do @view.save
-
-  clearSequence: () ->
-    @curSequence = []
-
   handleKeys: (keys) ->
-    for key in keys
-      @queuedKeys.push key
-      console.log('key', key)
-    @queuedKeys = @processKeys @queuedKeys
+    @keyStream.enqueue keys
+    @processKeys @keyStream
 
   handleKey: (key) ->
     @handleKeys [key]
 
-  processKeys: (keys) ->
-    index = -1
-    while keys.length and index != 0
-      [index, seqAction] = @processOnce keys
-
-      if seqAction == SEQUENCE.WAIT
-        break
-
-      processed = keys.splice 0, index
-      if seqAction == SEQUENCE.DROP
-        do @clearSequence
-      else if seqAction == SEQUENCE.CONTINUE
-        @continueSequence processed
-      else if seqAction == SEQUENCE.FINISH
-        @continueSequence processed
-        do @registerSequence
-    return keys
+  processKeys: (keyStream) ->
+    while not keyStream.done() and not keyStream.waiting
+      @processOnce keyStream
+    do @view.render
 
   processInsertMode: (key) ->
     view = @view
@@ -534,7 +550,6 @@ class KeyBindings
       do @menu.down
     else if key == 'enter'
       do @menu.select
-      do @view.render
       do @view.save # b/c could've zoomed
       @setMode MODES.NORMAL
     else if key == 'backspace'
@@ -547,23 +562,20 @@ class KeyBindings
       view.addCharsAtCursor [key], {cursor: 'pastEnd'}
       do @menu.update
 
-  # returns index processed up to
-  processOnce: (keys) ->
-
-    keyIndex = 0
-
-    nextKey = () ->
-      if keyIndex == keys.length then return null
-      return keys[keyIndex++]
+  processOnce: (keyStream) ->
 
     # useful when you expect a motion
     getMotion = (motionKey) =>
       [repeat, motionKey] = getRepeat motionKey
-      if motionKey == null then return [null, SEQUENCE.WAIT]
+      if motionKey == null
+        do keyStream.wait
+        return null
 
       motionBinding = @keyMap[motionKey]
       motionInfo = @bindings[motionBinding] || {}
-      if not motionInfo.motion then return [null, SEQUENCE.DROP]
+      if not motionInfo.motion
+        do keyStream.forget
+        return null
 
       fn = null
       args = []
@@ -571,80 +583,66 @@ class KeyBindings
       if typeof motionInfo.motion == 'function'
         fn = motionInfo.motion
       else if typeof motionInfo.motion == 'object'
-        char = do nextKey
-        if char == null then return [null, SEQUENCE.WAIT]
+        char = do keyStream.dequeue
+        if char == null
+          do keyStream.wait
+          return null
         fn = motionInfo.motion.continue.bind @, char
 
       fn.repeat = repeat
-      return [fn, null]
+      return fn
 
     # takes key, returns repeat number and key
     getRepeat = (key = null) =>
       if key == null
-        key = do nextKey
+        key = do keyStream.dequeue
       begins = [1..9].map ((x) -> return do x.toString)
       continues = [0..9].map ((x) -> return do x.toString)
       if key not in begins
         return [1, key]
       numStr = key
-      key = do nextKey
+      key = do keyStream.dequeue
       if key == null then return [null, null]
       while key in continues
         numStr += key
-        key = do nextKey
+        key = do keyStream.dequeue
         if key == null then return [null, null]
       return [parseInt(numStr), key]
 
-    # hepler functions for return values
-    seq_wait = () =>
-      return [0, SEQUENCE.WAIT]
-    seq_drop = (render = true) =>
-      if render
-        do @view.render
-      return [keyIndex, SEQUENCE.DROP]
-    seq_continue = () =>
-      do @view.render
-      return [keyIndex, SEQUENCE.CONTINUE]
-    seq_finish = () =>
-      do @view.render
-      return [keyIndex, SEQUENCE.FINISH]
-
     processNormalMode = (bindings) =>
       [repeat, key] = do getRepeat
-      if key == null then return do seq_wait
+      if key == null then return do keyStream.wait
 
       binding = @keyMap[key]
       if not binding of bindings
-        return do seq_drop
+        return do keyStream.forget
       info = bindings[binding] || {}
 
       if info.motion
-        [motion, action] = getMotion key
-        if motion == null then return [keyIndex, action]
+        motion = getMotion key
+        if motion == null then return
 
         for j in [1..repeat]
           motion @view.cursor, {}
-        return do seq_drop
+        return do keyStream.forget
       else if info.menu
         @setMode MODES.MENU
         @menu = new Menu @menuDiv, (info.menu.bind @, @view)
         do @menu.render
-        return seq_drop false
+        return do keyStream.forget
 
       fn = null
       args = []
 
       if info.continue
         if typeof info.continue == 'function'
-          key = do nextKey
-          if key == null then return do seq_wait
+          key = do keyStream.dequeue
+          if key == null then return do keyStream.wait
 
           fn = info.continue
           args.push key
         else # a dictionary
           return processNormalMode(info.continue.bindings)
-
-          # TODO
       else if info.fn
         fn = info.fn
 
@@ -658,15 +656,15 @@ class KeyBindings
 
         if info.insert
           @setMode MODES.INSERT
-          return do seq_continue
+          return
         if info.drop
-          return do seq_drop
+          return do keyStream.forget
         else
-          return do seq_finish
+          return do keyStream.save
 
       if binding == 'DELETE' or binding == 'CHANGE' or binding == 'YANK'
-        nkey = do nextKey
-        if nkey == null then return do seq_wait
+        nkey = do keyStream.dequeue
+        if nkey == null then return do keyStream.wait
 
         if nkey == key
           # dd and cc
@@ -675,8 +673,8 @@ class KeyBindings
           else
             @view.delBlocks repeat, {addNew: binding == 'CHANGE'}
         else
-          [motion, action] = getMotion nkey
-          if motion == null then return [keyIndex, action]
+          motion = getMotion nkey
+          if motion == null then return
 
           cursor = do @view.cursor.clone
           for i in [1..repeat]
@@ -697,21 +695,20 @@ class KeyBindings
 
         if binding == 'CHANGE'
           @setMode MODES.INSERT
-          return do seq_continue
+          return
         else if binding == 'YANK'
-          return do seq_drop
+          return do keyStream.forget
         else # binding == 'DELETE'
-          return do seq_finish
+          return do keyStream.save
       else if binding == 'REPLAY'
-        if @curSequence.length != 0
-          console.log('cursequence nontrivial while replaying', @curSequence)
-          do @clearSequence
         for i in [1..repeat]
-          @processKeys @lastSequence
-        return do seq_drop
+          newStream = new KeyStream @keyStream.lastSequence
+          newStream.on 'save', () =>
+            do @view.save
+          @processKeys newStream
+        return do keyStream.forget
       else
-        return do seq_drop
-
+        return do keyStream.forget
 
     # if key not in @reverseBindings then return
 
@@ -720,36 +717,30 @@ class KeyBindings
     # do handler
 
     if @mode == MODES.INSERT
-      key = do nextKey
+      key = do keyStream.dequeue
       if key == null then throw 'Got no key in insert mode'
-      # if key == null then return do seq_wait
+      # if key == null then return do keyStream.wait
 
       if key == 'esc' or key == 'ctrl+c'
         @setMode MODES.NORMAL
         do @view.moveCursorLeft
-        return do seq_finish
+        return do keyStream.save
       else
         @processInsertMode key
-        return do seq_continue
+        return
 
     if @mode == MODES.NORMAL
       return processNormalMode @bindings
 
     if @mode = MODES.MENU
-      key = do nextKey
+      key = do keyStream.dequeue
       if key == null then throw 'Got no key in menu mode'
 
       if key == 'esc' or key == 'ctrl+c'
         @setMode MODES.NORMAL
-        do @view.render
       else
         @processMenuMode key
-      return seq_drop false
-
-if module?
-  Cursor = require('./cursor.coffee')
-  Menu = require('./menu.coffee')
-  actions = require('./actions.coffee')
+      return do keyStream.forget
 
 # exports
 module?.exports = KeyBindings
