@@ -31,3 +31,6 @@ class EventEmitter
   removeAllListeners: (event) ->
     delete @events[event]
     return @
+
+# exports
+module?.exports = EventEmitter
