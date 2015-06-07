@@ -378,7 +378,7 @@ class View
     for child in p_children.slice(p_i)
       @moveBlock child, id, -1
 
-  swapDown: (row) ->
+  swapDown: (row = @cursor.row) ->
     next = @data.nextVisible (@data.lastVisible row)
     if next == null
       return
@@ -393,7 +393,7 @@ class View
       p_i = @data.indexOf next
       @attachBlock row, parent, (p_i+1)
 
-  swapUp: (row) ->
+  swapUp: (row = @cursor.row) ->
     prev = @data.prevVisible row
     if prev == null
       return
@@ -403,12 +403,6 @@ class View
     parent = @data.getParent prev
     p_i = @data.indexOf prev
     @attachBlock row, parent, p_i
-
-  swapCurrentDown: () ->
-    @swapDown @cursor.row
-
-  swapCurrentUp: () ->
-    @swapUp @cursor.row
 
   toggleCurBlock: () ->
     @toggleBlock @cursor.row
