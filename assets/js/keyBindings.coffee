@@ -351,6 +351,10 @@ class KeyBindings
             fn: selectRow.bind(@, row)
           }
         return results
+    RECORD_MACRO:
+      display: 'Begin/stop recording a macro'
+    PLAY_MACRO:
+      display: 'Play a macro'
 
   MODES =
     NORMAL: 0
@@ -427,6 +431,8 @@ class KeyBindings
     'ctrl+u': 'SCROLL_UP'
 
     '/': 'SEARCH'
+    'q': 'RECORD_MACRO'
+    '@': 'PLAY_MACRO'
 
   constructor: (view, divs = {}) ->
     @view = view
@@ -448,6 +454,10 @@ class KeyBindings
 
     @mode = ''
     @setMode MODES.NORMAL
+
+    @macros = {}
+    @recording = null
+    @recording_key = null
 
     @keyStream = new KeyStream
     @keyStream.on 'save', () =>
@@ -497,12 +507,12 @@ class KeyBindings
   getKey: (name) ->
     return @bindings[name].key
 
-  handleKeys: (keys) ->
-    @keyStream.enqueue keys
-    @processKeys @keyStream
-
   handleKey: (key) ->
-    @handleKeys [key]
+    console.log('handling', key)
+    @keyStream.enqueue [key]
+    if @recording
+      @recording.enqueue [key]
+    @processKeys @keyStream
 
   processKeys: (keyStream) ->
     while not keyStream.done() and not keyStream.waiting
@@ -660,6 +670,32 @@ class KeyBindings
         if info.drop
           return do keyStream.forget
         else
+          return do keyStream.save
+
+      if binding == 'RECORD_MACRO'
+        if @recording == null
+          nkey = do keyStream.dequeue
+          if nkey == null then return do keyStream.wait
+          @recording = new KeyStream
+          @recording_key = nkey
+        else
+          macro = @recording.queue
+          do macro.pop # pop off the RECORD_MACRO itself
+          @macros[@recording_key] = macro
+          @recording = null
+          @recording_key = null
+        return do keyStream.forget
+      if binding == 'PLAY_MACRO'
+          nkey = do keyStream.dequeue
+          if nkey == null then return do keyStream.wait
+          recording = @macros[nkey]
+          if recording == undefined then return do keyStream.forget
+
+          for i in [1..repeat]
+            # the recording shouldn't save, (i.e. no @view.save)
+            recordKeyStream = new KeyStream recording
+            @processKeys recordKeyStream
+          # but we should save the macro-playing sequence itself
           return do keyStream.save
 
       if binding == 'DELETE' or binding == 'CHANGE' or binding == 'YANK'
