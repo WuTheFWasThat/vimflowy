@@ -21,7 +21,8 @@ class KeyStream extends EventEmitter
     @index = 0
     @waiting = false
 
-    @enqueue keys
+    for key in keys
+      @enqueue key
 
   empty: () ->
     return @queue.length == 0
@@ -32,10 +33,9 @@ class KeyStream extends EventEmitter
   rewind: () ->
     @index = 0
 
-  enqueue: (keys = []) ->
-    for key in keys
-      @queue.push key
-      @waiting = false
+  enqueue: (key) ->
+    @queue.push key
+    @waiting = false
 
   dequeue: () ->
     if @index == @queue.length then return null
@@ -298,11 +298,11 @@ class KeyBindings
     MOVE_BLOCK_DOWN:
       display: 'Move block down'
       fn: () ->
-        do @view.swapCurrentDown
+        do @view.swapDown
     MOVE_BLOCK_UP:
       display: 'Move block up'
       fn: () ->
-        do @view.swapCurrentUp
+        do @view.swapUp
 
     ZOOM_IN:
       display: 'Zoom in onto cursor'
@@ -509,9 +509,9 @@ class KeyBindings
 
   handleKey: (key) ->
     console.log('handling', key)
-    @keyStream.enqueue [key]
+    @keyStream.enqueue key
     if @recording
-      @recording.enqueue [key]
+      @recording.enqueue key
     @processKeys @keyStream
 
   processKeys: (keyStream) ->

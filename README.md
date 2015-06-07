@@ -4,37 +4,47 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 
 Try it out [here](https://vimflowy.bitballoon.com)!
 
+# NOTES #
+
+- The app is entirely local - the storage is localStorage, so it should be used in only one browser
+- Currently, weird things happen when you use it in multiple tabs
+
 ## TODO ##
 
-Fixes
-
-- User-facing stuff
+UI
+  - generally style stuff better
+  - customizable stylesheets?  e.g. one vim-flavored and one workflowy-flavored, light and dark background
+  - click location to move cursor
+  - mouse drag to make cursor select area?
+  - mouse drag bullets around?
   - warn another tab if something has been modified??
+
+Fixes
   - scale better:
     - limit search results
-  - style stuff better
   - rethink default fold hotkeys (z+coaCOA)?
 
-- Internal stuff
+Internal stuff
   - break up tests into multiple files...
   - add logging?
   - rethink data/view separation
 
 Features
-- make hotkeys customizable
-- visual mode
-- visual line mode
-- there should be a way to yank just 1 line without children?
-- yc -> clone?
-- gp = go parent?
-- implement some form of marks (m[a-z] or m[string]?  'a or '[string])
-  - tagging, e.g. @mark that links to it
-- implement `ctrl+o`, `g,`, `g;`
-- find/replace?
-- line numbers?
+  - data import and export mechanism
+  - make hotkeys customizable
+  - visual mode
+  - visual line mode
+  - there should be a way to yank just 1 line without children?
+  - yc -> clone?
+  - gp = go parent?
+  - implement some form of marks (m[a-z] or m[string]?  'a or '[string])
+    - tagging, e.g. @mark that links to it
+  - implement `ctrl+o`, `g,`, `g;`
+  - find/replace?
+  - line numbers?
 
 Other
-- make a video
+  - make a video
 
 ## KNOWN ISSUES: ##
 
