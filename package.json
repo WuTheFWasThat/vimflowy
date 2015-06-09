@@ -18,7 +18,7 @@
     "express": "latest",
     "jade": "latest",
     "nodemon": "latest",
-    "node-sass": "=1.2.3",
+    "node-sass": "latest",
     "underscore": "latest"
   }
 }
