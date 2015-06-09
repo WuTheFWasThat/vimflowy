@@ -2,7 +2,7 @@
 
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <out_folder, e.g. /Users/jeffwu/Documents>"
-  exit 1
+  return 1 2>/dev/null || exit 1 # Work when sourced
 fi
 
 rm -rf public/assets
@@ -44,7 +44,7 @@ if wait_for_start $SERVER_OUT; then
     cp -r public/* $TMP_FOLDER/
 else
     echo "Server could not start"
-    exit 2
+    return 2 2>/dev/null || exit 2 # Work when sourced
 fi
 
 (
