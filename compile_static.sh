@@ -40,7 +40,7 @@ wait_for_start(){
 }
 
 if wait_for_start $SERVER_OUT; then
-    curl localhost:8080 > $TMP_FOLDER/index.html
+    curl -s localhost:8080 > $TMP_FOLDER/index.html
     cp -r public/* $TMP_FOLDER/
 else
     echo "Server could not start"
@@ -49,7 +49,7 @@ fi
 
 (
     cd $TMP_FOLDER
-    zip -r vimflowy.zip .
+    zip -q -r vimflowy.zip .
 )
 mv $TMP_FOLDER/vimflowy.zip $OUTPUT_FOLDER/vimflowy.zip
 rm -rf $TMP_FOLDER
