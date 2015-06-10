@@ -5,17 +5,16 @@ if [ $# -lt 1 ]; then
   return 1 2>/dev/null || exit 1 # Work when sourced
 fi
 
+PORT=8081
 rm -rf public/assets
 SERVER_OUT=$(mktemp /tmp/tmp.out.XXXXXXXXXX)
 rm $SERVER_OUT
 mkfifo $SERVER_OUT
-NODE_ENV=production coffee server.coffee 2>&1 >$SERVER_OUT &
+NODE_ENV=production coffee server.coffee $PORT 2>&1 >$SERVER_OUT &
 NODE_PID=$!
 
 OUTPUT_FOLDER=$1
-TMP_FOLDER=$(mktemp /tmp/tmp.XXXXXXXXXX)
-rm -rf $TMP_FOLDER
-mkdir -p $TMP_FOLDER
+TMP_FOLDER=$(mktemp -d /tmp/tmp.XXXXXXXXXX)
 
 wait_for_start(){
     echo "Waiting for server start..." >/dev/stderr
@@ -33,14 +32,14 @@ wait_for_start(){
             *EADDRINUSE*)
                 echo "Server port in use" >/dev/stderr
                 return 1;;
-        esac 
+        esac
     fi
     echo "Server started successfully" >/dev/stderr
     return 0;
 }
 
 if wait_for_start $SERVER_OUT; then
-    curl -s localhost:8080 > $TMP_FOLDER/index.html
+    curl -s localhost:$PORT > $TMP_FOLDER/index.html
     cp -r public/* $TMP_FOLDER/
 else
     echo "Server could not start"
@@ -56,3 +55,5 @@ rm -rf $TMP_FOLDER
 
 kill $NODE_PID
 rm $SERVER_OUT
+
+echo "Success!  Result at $OUTPUT_FOLDER/vimflowy.zip"
