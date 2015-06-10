@@ -536,8 +536,7 @@ class KeyBindings
     else if key == 'shift+enter'
       view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
     else if key == 'enter'
-      # TODO: newLineAtCursor
-      do view.newLineBelow
+      do view.newLineAtCursor
     else if key == 'tab'
       do view.indent
     else if key == 'shift+tab'
