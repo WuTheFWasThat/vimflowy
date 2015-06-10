@@ -28,7 +28,7 @@ wait_for_start(){
         esac
     done <"$1"
     line=""
-    if read -t 0.3 line <"$1"; then # bashism
+    if read -t 1 line <"$1"; then # bashism
         case ${line} in
             *EADDRINUSE*)
                 echo "Server port in use" >/dev/stderr
