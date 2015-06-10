@@ -6,14 +6,14 @@ if [ $# -lt 1 ]; then
 fi
 
 rm -rf public/assets
-SERVER_OUT=$(mktemp --tmpdir=/tmp tmp.XXXXXXXXXX)
+SERVER_OUT=$(mktemp /tmp/tmp.out.XXXXXXXXXX)
 rm $SERVER_OUT
 mkfifo $SERVER_OUT
 NODE_ENV=production coffee server.coffee 2>&1 >$SERVER_OUT &
 NODE_PID=$!
 
 OUTPUT_FOLDER=$1
-TMP_FOLDER=$(mktemp --tmpdir=/tmp tmp.XXXXXXXXXX)
+TMP_FOLDER=$(mktemp /tmp/tmp.XXXXXXXXXX)
 rm -rf $TMP_FOLDER
 mkdir -p $TMP_FOLDER
 
