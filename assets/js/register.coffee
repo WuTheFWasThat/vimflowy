@@ -1,5 +1,5 @@
 class Register
-  TYPES = {
+  this.TYPES = {
     NONE: 0
     CHARS: 1
     ROWS: 2
@@ -7,24 +7,41 @@ class Register
 
   constructor: (view) ->
     @view = view
-    @type = TYPES.NONE
+    @type = Register.TYPES.NONE
     return @
 
   saveChars: (chars) ->
-    @type = TYPES.CHARS
+    @type = Register.TYPES.CHARS
     @chars = chars
 
   saveRows: (serialized_rows) ->
-    @type = TYPES.ROWS
+    @type = Register.TYPES.ROWS
     @serialized_rows = serialized_rows
+  
+  serialize: () ->
+    data = ''
+    if @type==Register.TYPES.CHARS
+      data = @chars
+    else if @type==Register.TYPES.ROWS
+      data = @serialized_rows
+    return {type: @type, data: data}
+
+  deserialize: (serialized) ->
+    delete @chars
+    delete @serialized_rows
+    @type = serialized.type
+    if @type==Register.TYPES.CHARS
+      @chars = serialized.data
+    else if @type==Register.TYPES.ROWS
+      @serialized_rows = serialized.data
 
   paste: (options) ->
-    if @type == TYPES.CHARS
+    if @type == Register.TYPES.CHARS
       if options.before
         @view.addCharsAtCursor @chars
       else
         @view.addCharsAfterCursor @chars, {cursor: 'beforeEnd'}
-    else if @type == TYPES.ROWS
+    else if @type == Register.TYPES.ROWS
       row = @view.cursor.row
       parent = @view.data.getParent row
       index = @view.data.indexOf row
