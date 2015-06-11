@@ -1386,6 +1386,18 @@ t.sendKeys ' goo'
 t.sendKey 'esc'
 t.expect ['hello', 'world of goo']
 
+t = new TestCase
+t.sendKey 'i'
+t.sendKeys 'helloworld'
+t.sendKey 'left'
+t.sendKey 'left'
+t.sendKey 'left'
+t.sendKey 'left'
+t.sendKey 'left'
+t.sendKey 'enter'
+t.sendKey 'esc'
+t.expect ['hello', 'world']
+
 # test pasting!
 t = new TestCase ['px']
 t.sendKeys 'xp'
