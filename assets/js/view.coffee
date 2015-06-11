@@ -270,10 +270,11 @@ class View
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
   newLineAtCursor: () ->
-    @delCharsBeforeCursor Infinity, {yank: true}
+    delAction = new actions.DelChars @cursor.row, 0, @cursor.col
+    @act delAction
     row = @cursor.row
     sibling = @act new actions.InsertRowSibling @cursor.row, {before: true}
-    @register.paste {}
+    @addCharsAfterCursor delAction.deletedChars, {cursor: 'beforeEnd'}
     @setCur row, 0
 
   joinRows: (first, second, options = {}) ->
