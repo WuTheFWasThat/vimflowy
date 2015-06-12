@@ -41,16 +41,17 @@ $bottom-bar-height: 25px
         background: #FFFFFF
 
 #contents
+    display: flex
+    flex-direction: row;
     bottom: $bottom-bar-height
     position: absolute
     width: 100%
     @include calc(height, '100% - #{$bottom-bar-height}')
 
     #keybindings
-        position: absolute
-        top: 0
+        position: relative
+        flex: 0 1 auto;
         background: #CCCCCC
-        right: 0px
         width: 0%
         height: 100%
         overflow-y: scroll
@@ -58,7 +59,7 @@ $bottom-bar-height: 25px
         @include transition(width 0.2s ease-in-out)
 
         &.active
-          width: 300px
+          min-width: 300px
           // @include calc( width, '100% - 100px')
 
         table
@@ -75,6 +76,7 @@ $bottom-bar-height: 25px
         overflow-y: scroll
 
     #view
+        flex: 1 1 auto;
         #breadcrumbs
             font-size: 20px;
             margin-bottom: 20px;
@@ -90,6 +92,3 @@ $bottom-bar-height: 25px
                margin-left: 20px
 
         font-size: 10px;
-        // TODO have word wrap be a setting?
-        word-wrap: break-word
-
