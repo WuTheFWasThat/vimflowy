@@ -13,9 +13,7 @@ renderLine = (lineData, onto, options = {}) ->
   for char, i in lineData
     x = char
 
-    if char == ' '
-      x = '&nbsp;'
-    else if char == '\n'
+    if char == '\n'
       x = '<br/>'
       if i of options.cursors
         x = cursorChar + x
