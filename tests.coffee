@@ -5,6 +5,7 @@ dataStore = require './assets/js/datastore.coffee'
 Data = require './assets/js/data.coffee'
 View = require './assets/js/view.coffee'
 KeyBindings = require './assets/js/keyBindings.coffee'
+Register = require './assets/js/register.coffee'
 
 class TestCase
   constructor: (serialized = ['']) ->
@@ -17,6 +18,7 @@ class TestCase
     @view = new View null, @data
     @view.render = -> return
     @keybinder = new KeyBindings @view
+    @register = @view.register
 
   sendKeys: (keys) ->
     for key in keys
@@ -29,6 +31,16 @@ class TestCase
     serialized = do @data.serialize
     assert.deepEqual serialized.children, expected,
       'Expected \n' + JSON.stringify(serialized.children, null, 2) +
+      'To match \n' + JSON.stringify(expected, null, 2) +
+      '\n!'
+
+  setRegister: (value) ->
+    @register.deserialize value
+
+  expectRegister: (expected) ->
+    current = do @register.serialize
+    assert.deepEqual current, expected,
+      'Expected \n' + JSON.stringify(current, null, 2) +
       'To match \n' + JSON.stringify(expected, null, 2) +
       '\n!'
 
@@ -1385,6 +1397,66 @@ t.sendKey 'shift+tab'
 t.sendKeys ' goo'
 t.sendKey 'esc'
 t.expect ['hello', 'world of goo']
+
+t = new TestCase # split a line in the middle and test register clobbering
+t.setRegister {type: Register.TYPES.CHARS, data: 'unchanged'}
+t.sendKey 'i'
+t.sendKeys 'helloworld'
+t.sendKey 'left'
+t.sendKey 'left'
+t.sendKey 'left'
+t.sendKey 'left'
+t.sendKey 'left'
+t.sendKey 'enter'
+t.sendKey 'esc'
+t.expect ['hello', 'world']
+t.expectRegister {type: Register.TYPES.CHARS, data: 'unchanged'}
+
+t = new TestCase # enter at the end of a line
+t.sendKey 'i'
+t.sendKeys 'hello'
+t.sendKey 'enter'
+t.sendKey 'esc'
+t.expect ['hello', '']
+t.sendKey 'u'
+t.expect ['']
+
+t = new TestCase # enter at the beginning of a line
+t.sendKey 'i'
+t.sendKey 'enter'
+t.sendKeys 'hello'
+t.sendKey 'esc'
+t.expect ['', 'hello']
+t.sendKey 'u'
+t.expect ['']
+
+t = new TestCase # Split line with children
+t.sendKey 'i'
+t.sendKeys 'helloworld'
+t.sendKey 'enter'
+t.sendKeys 'of goo'
+t.sendKey 'esc'
+t.sendKey 'tab'
+t.expect [
+ { line: 'helloworld', children: [
+   'of goo'
+ ] }
+]
+t.sendKey 'up'
+t.sendKey 'I'
+t.sendKey 'right'
+t.sendKey 'right'
+t.sendKey 'right'
+t.sendKey 'right'
+t.sendKey 'right'
+t.sendKey 'enter'
+t.sendKey 'esc'
+t.expect [
+ 'hello',
+ { line: 'world', children: [
+   'of goo'
+ ] }
+]
 
 # test pasting!
 t = new TestCase ['px']

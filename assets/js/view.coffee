@@ -269,6 +269,14 @@ class View
   newLineAbove: () ->
     @act new actions.InsertRowSibling @cursor.row, {before: true}
 
+  newLineAtCursor: () ->
+    delAction = new actions.DelChars @cursor.row, 0, @cursor.col
+    @act delAction
+    row = @cursor.row
+    sibling = @act new actions.InsertRowSibling @cursor.row, {before: true}
+    @addCharsAfterCursor delAction.deletedChars, {cursor: 'beforeEnd'}
+    @setCur row, 0
+
   joinRows: (first, second, options = {}) ->
     for child in @data.getChildren second by -1
       # NOTE: if first is collapsed, should we uncollapse?
