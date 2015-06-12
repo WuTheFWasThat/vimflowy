@@ -20,9 +20,9 @@ class Register
   
   serialize: () ->
     data = ''
-    if @type==Register.TYPES.CHARS
+    if @type == Register.TYPES.CHARS
       data = @chars
-    else if @type==Register.TYPES.ROWS
+    else if @type == Register.TYPES.ROWS
       data = @serialized_rows
     return {type: @type, data: data}
 
@@ -30,9 +30,9 @@ class Register
     delete @chars
     delete @serialized_rows
     @type = serialized.type
-    if @type==Register.TYPES.CHARS
+    if @type == Register.TYPES.CHARS
       @chars = serialized.data
-    else if @type==Register.TYPES.ROWS
+    else if @type == Register.TYPES.ROWS
       @serialized_rows = serialized.data
 
   paste: (options) ->
