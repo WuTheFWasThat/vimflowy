@@ -32,6 +32,11 @@ else
 
 view = new View $('#view'), data
 
+changeStylesheet = (newSheet) ->
+    url = "/assets/#{newSheet}.css?reload=#{new Date().getTime()}"
+    $('#main-stylesheet').each () ->
+        this.href = url
+
 $(window).on('paste', (e) ->
     e.preventDefault()
     text = (e.originalEvent || e).clipboardData.getData('text/plain')
