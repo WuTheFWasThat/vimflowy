@@ -1,5 +1,3 @@
-#= require constants
-
 #= require eventEmitter
 #= require keyHandler
 #= require datastore
