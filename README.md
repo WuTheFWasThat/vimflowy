@@ -29,7 +29,3 @@ Known (intentional) inconsistencies with vi (WONTFIX without further discussion)
 
 Please send pull requests!
 You may contact me at [githubusername]@gmail.com as well
-
-## LICENSE ##
-
-MIT: http://wuthefwasthat.mit-license.org/
