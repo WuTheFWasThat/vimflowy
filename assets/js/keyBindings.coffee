@@ -88,17 +88,17 @@ class KeyBindings
       display: 'Insert after character'
       insert: true
       fn: () ->
-        @view.moveCursorRight {cursor: 'pastEnd'}
+        @view.cursor.right {cursor: 'pastEnd'}
     INSERT_HOME:
       display: 'Insert at beginning of line'
       insert: true
       fn: () ->
-        do @view.moveCursorHome
+        do @view.cursor.home
     INSERT_END:
       display: 'Insert after end of line'
       insert: true
       fn: () ->
-        @view.moveCursorEnd {cursor: 'pastEnd'}
+        @view.cursor.end {cursor: 'pastEnd'}
     INSERT_LINE_BELOW:
       display: 'Insert on new line after current line'
       insert: true
@@ -249,7 +249,6 @@ class KeyBindings
       display: 'Delete character'
       fn: () ->
         @view.delCharsAfterCursor @repeat, {yank: true}
-        do @view.moveCursorBackIfNeeded
     DELETE_LAST_CHAR:
       display: 'Delete last character'
       fn: () ->
@@ -526,13 +525,13 @@ class KeyBindings
   processInsertMode: (key) ->
     view = @view
     if key == 'left'
-      do view.moveCursorLeft
+      do view.cursor.left
     else if key == 'right'
-      view.moveCursorRight {cursor: 'pastEnd'}
+      view.cursor.right {cursor: 'pastEnd'}
     else if key == 'up' or key == 'ctrl+k'
-      view.moveCursorUp {cursor: 'pastEnd'}
+      view.cursor.up {cursor: 'pastEnd'}
     else if key == 'down' or key == 'ctrl+j'
-      view.moveCursorDown {cursor: 'pastEnd'}
+      view.cursor.down {cursor: 'pastEnd'}
     else if key == 'backspace'
       do view.deleteAtCursor
     else if key == 'shift+backspace'
@@ -552,10 +551,10 @@ class KeyBindings
     view = @menu.view
 
     if key == 'left'
-      do view.moveCursorLeft
+      do view.cursor.left
       do @menu.render
     else if key == 'right'
-      view.moveCursorRight {cursor: 'pastEnd'}
+      view.cursor.right {cursor: 'pastEnd'}
       do @menu.render
     else if key == 'up' or key == 'ctrl+k' or key == 'shift+tab'
       do @menu.up
@@ -760,7 +759,7 @@ class KeyBindings
 
       if key == 'esc' or key == 'ctrl+c'
         @setMode MODES.NORMAL
-        do @view.moveCursorLeft
+        do @view.cursor.left
         return do keyStream.save
       else
         @processInsertMode key

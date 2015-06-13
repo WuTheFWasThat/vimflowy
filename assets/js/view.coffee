@@ -90,7 +90,7 @@ class View
     }
 
   restoreViewState: (state) ->
-    @setCursor do state.cursor.clone
+    @cursor =  do state.cursor.clone
     @changeView state.viewRoot
 
   undo: () ->
@@ -115,8 +115,6 @@ class View
           action = @actions[i]
           action.reapply @
       @restoreViewState oldState.after
-
-    do @moveCursorBackIfNeeded
 
   act: (action) ->
     if @historyIndex + 1 != @history.length
@@ -152,37 +150,6 @@ class View
       col = len - shift
 
     @cursor.set row, col
-
-  setCursor: (cursor) ->
-    @cursor = cursor
-
-  moveCursorBackIfNeeded: () ->
-    if @cursor.col > do @curLineLength - 1
-      do @moveCursorLeft
-
-  moveCursorLeft: () ->
-    do @cursor.left
-
-  moveCursorRight: (options) ->
-    @cursor.right options
-
-  moveCursorUp: (options = {}) ->
-    oldrow = @cursor.row
-    @cursor.up options
-
-  moveCursorDown: (options = {}) ->
-    oldrow = @cursor.row
-    @cursor.down options
-
-  moveCursorHome: () ->
-    do @cursor.home
-
-  moveCursorEnd: (options) ->
-    @cursor.end options
-
-  moveCursorDown: (options = {}) ->
-    oldrow = @cursor.row
-    @cursor.down options
 
   changeView: (row) ->
     if @data.hasChildren row
@@ -437,10 +404,10 @@ class View
     numlines = Math.round(height / line_height)
     if numlines > 0
       for i in [1..numlines]
-        do @moveCursorDown
+        do @cursor.down
     else
       for i in [-1..numlines]
-        do @moveCursorUp
+        do @cursor.up
 
     @scrollMain (line_height * numlines)
 
@@ -544,7 +511,6 @@ class View
       cursors[@cursor.col] = true
 
     renderLine lineData, onto, {cursors: cursors}
-
 
 # imports
 if module?

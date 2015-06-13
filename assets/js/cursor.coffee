@@ -50,6 +50,10 @@ class Cursor
     if @col < (@data.getLength @row) - shift
       do @_right
 
+  # backIfNeeded: () ->
+  #   if @col > (@data.getLength @row) - 1
+  #     do @left
+
   home: () ->
     @setCol 0
 
