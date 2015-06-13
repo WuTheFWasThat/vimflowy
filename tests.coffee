@@ -182,6 +182,30 @@ t = new TestCase ['the']
 t.sendKeys '0db'
 t.expect ['the']
 
+t = new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'G$'
+t.sendKeys 'x'
+t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'bx'
+t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'es', '']
+t.sendKeys 'bx'
+t.expect ['', 'a word', '', '  ', '', 'the', '', 'ords', 'es', '']
+t.sendKeys 'bx'
+t.expect ['', 'a word', '', '  ', '', 'he', '', 'ords', 'es', '']
+t.sendKeys 'bx'
+t.expect ['', 'a ord', '', '  ', '', 'he', '', 'ords', 'es', '']
+t.sendKeys 'bx'
+t.expect ['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']
+t.sendKeys 'bx'
+t.expect ['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']
+t.sendKeys 'ib'
+t.expect ['b', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']
+
+# TODO:
+# t = new TestCase ['', 'the']
+# t.sendKeys 'j0db'
+# t.expect ['the']
+
 # test the shit out of e
 t = new TestCase ['the quick brown fox   jumped   over the lazy dog']
 t.sendKeys 'ex'
@@ -210,6 +234,24 @@ t = new TestCase ['the']
 t.sendKeys '$de'
 t.expect ['th']
 
+t = new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'x'
+t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'ex'
+t.expect ['', ' word', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'ex'
+t.expect ['', ' wor', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'ex'
+t.expect ['', ' wor', '', '  ', '', 'th', '', 'words', 'yes', '']
+t.sendKeys 'ex'
+t.expect ['', ' wor', '', '  ', '', 'th', '', 'word', 'yes', '']
+t.sendKeys 'ex'
+t.expect ['', ' wor', '', '  ', '', 'th', '', 'word', 'ye', '']
+t.sendKeys 'ex'
+t.expect ['', ' wor', '', '  ', '', 'th', '', 'word', 'ye', '']
+t.sendKeys 'ie'
+t.expect ['', ' wor', '', '  ', '', 'th', '', 'word', 'ye', 'e']
+
 # test the shit out of w
 t = new TestCase ['the quick brown fox   jumped   over the lazy dog']
 t.sendKeys 'wx'
@@ -234,9 +276,32 @@ t.sendKeys 'wx'
 t.expect ['the uick rown ox   umped   thlazy o']
 t.sendKeys '5wx'
 t.expect ['the uick rown ox   umped   thlazy ']
+
+t = new TestCase ['the']
+t.sendKeys 'dw'
+t.expect ['']
+
 t = new TestCase ['the']
 t.sendKeys '$dw'
 t.expect ['th']
+
+t = new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'x'
+t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'wx'
+t.expect ['', ' word', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'wx'
+t.expect ['', ' ord', '', '  ', '', 'the', '', 'words', 'yes', '']
+t.sendKeys 'wx'
+t.expect ['', ' ord', '', '  ', '', 'he', '', 'words', 'yes', '']
+t.sendKeys 'wx'
+t.expect ['', ' ord', '', '  ', '', 'he', '', 'ords', 'yes', '']
+t.sendKeys 'wx'
+t.expect ['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']
+t.sendKeys 'wx'
+t.expect ['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']
+t.sendKeys 'iw'
+t.expect ['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', 'w']
 
 # test blocks vs. words!
 t = new TestCase ['ah... yes ... it (ahem) was me!']

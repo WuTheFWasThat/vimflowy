@@ -198,22 +198,22 @@ class KeyBindings
       display: 'Move cursor to next occurrence of character in line'
       motion: true
       continue: (char, cursor, option) ->
-        cursor.nextChar char, {cursor: option}
+        cursor.findNextChar char, {cursor: option}
     FIND_PREV_CHAR:
       display: 'Move cursor to previous occurrence of character in line'
       motion: true
       continue: (char, cursor, option) ->
-        cursor.prevChar char, {cursor: option}
+        cursor.findPrevChar char, {cursor: option}
     TO_NEXT_CHAR:
       display: 'Move cursor to just before next occurrence of character in line'
       motion: true
       continue: (char, cursor, option) ->
-        cursor.nextChar char, {cursor: option, beforeFound: true}
+        cursor.findNextChar char, {cursor: option, beforeFound: true}
     TO_PREV_CHAR:
       display: 'Move cursor to just after previous occurrence of character in line'
       motion: true
       continue: (char, cursor, option) ->
-        cursor.prevChar char, {cursor: option, beforeFound: true}
+        cursor.findPrevChar char, {cursor: option, beforeFound: true}
 
     NEXT_SIBLING:
       display: 'Move cursor to the next sibling of the current line'

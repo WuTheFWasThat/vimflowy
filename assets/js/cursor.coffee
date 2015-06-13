@@ -11,20 +11,12 @@ class Cursor
     return new Cursor @data, @row, @col, @moveCol
 
   set: (row, col) ->
-    @setRow row
-    @setCol col
-
-  setRow: (row) ->
     @row = row
+    @_setCol col
 
-  setCol: (moveCol) ->
+  _setCol: (moveCol) ->
     @moveCol = moveCol
-    rowlen = @data.getLength @row
-
-    if moveCol < 0
-      @col = rowlen + moveCol + 1
-    else
-      @col = moveCol
+    @fromMoveCol 'pastEnd'
 
   fromMoveCol: (option) ->
     len = @data.getLength @row
@@ -35,17 +27,16 @@ class Cursor
       @col = Math.max(0, Math.min(maxcol, @moveCol))
 
   _left: () ->
-    @setCol (@col - 1)
+    @_setCol (@col - 1)
 
   _right: () ->
-    @setCol (@col + 1)
+    @_setCol (@col + 1)
 
   left: () ->
     if @col > 0
       do @_left
 
-  right: (options) ->
-    options?={}
+  right: (options = {}) ->
     shift = if options.cursor == 'pastEnd' then 0 else 1
     if @col < (@data.getLength @row) - shift
       do @_right
@@ -54,11 +45,51 @@ class Cursor
   #   if @col > (@data.getLength @row) - 1
   #     do @left
 
+  atVisibleEnd: () ->
+    if @col < (@data.getLength @row) - 1
+      return false
+    else
+      nextrow = @data.nextVisible @row
+      if nextrow != null
+        return false
+    return true
+
+  nextChar: () ->
+    if @col < (@data.getLength @row) - 1
+      do @_right
+      return true
+    else
+      nextrow = @data.nextVisible @row
+      if nextrow != null
+        @set nextrow, 0
+        return true
+    return false
+
+  atVisibleStart: () ->
+    if @col > 0
+      return false
+    else
+      prevrow = @data.prevVisible @row
+      if prevrow != null
+        return false
+    return true
+
+  prevChar: () ->
+    if @col > 0
+      do @_left
+      return true
+    else
+      prevrow = @data.prevVisible @row
+      if prevrow != null
+        @set prevrow, -1
+        return true
+    return false
+
   home: () ->
-    @setCol 0
+    @_setCol 0
 
   end: (options = {}) ->
-    @setCol (if options.cursor == 'pastEnd' then -1 else -2)
+    @_setCol (if options.cursor == 'pastEnd' then -1 else -2)
 
   visibleHome: () ->
     row = do @data.nextVisible
@@ -71,7 +102,7 @@ class Cursor
   wordRegex = /^[a-z0-9_]+$/i
 
   isWhitespace = (char) ->
-    return char == ' '
+    return (char == ' ') or (char == undefined)
 
   isInWhitespace: (row, col) ->
     char = @data.getChar row, col
@@ -97,26 +128,27 @@ class Cursor
       return ((row, col) => @isInWord row, col, matchChar)
 
   beginningWord: (options = {}) ->
-    if @col == 0
+    if do @atVisibleStart
       return
-    do @_left
-    while @col > 0 and @isInWhitespace @row, @col
-      do @_left
+    do @prevChar
+    while (not do @atVisibleStart) and @isInWhitespace @row, @col
+      do @prevChar
 
     wordcheck = @getWordCheck options, (@data.getChar @row, @col)
-    while @col > 0 and wordcheck @row, (@col-1)
+    while (@col > 0) and wordcheck @row, (@col-1)
       do @_left
 
   endWord: (options = {}) ->
-    end = (@data.getLength @row) - 1
-    if @col == end
+    if do @atVisibleEnd
       if options.cursor == 'pastEnd'
         do @_right
       return
 
-    do @_right
-    while @col < end and @isInWhitespace @row, @col
-      do @_right
+    do @nextChar
+    while (not do @atVisibleEnd) and @isInWhitespace @row, @col
+      do @nextChar
+
+    end = (@data.getLength @row) - 1
     wordcheck = @getWordCheck options, (@data.getChar @row, @col)
     while @col < end and wordcheck @row, (@col+1)
       do @_right
@@ -125,22 +157,25 @@ class Cursor
       do @_right
 
   nextWord: (options = {}) ->
-    end = (@data.getLength @row) - 1
-    if @col == end
+    if do @atVisibleEnd
       if options.cursor == 'pastEnd'
         do @_right
       return
 
+    end = (@data.getLength @row) - 1
     wordcheck = @getWordCheck options, (@data.getChar @row, @col)
     while @col < end and wordcheck @row, (@col+1)
       do @_right
-    while @col < end and @isInWhitespace @row, (@col+1)
+
+    do @nextChar
+    while (not do @atVisibleEnd) and @isInWhitespace @row, @col
+      do @nextChar
+
+    end = (@data.getLength @row) - 1
+    if @col == end and options.cursor == 'pastEnd'
       do @_right
 
-    if @col < end or options.cursor == 'pastEnd'
-      do @_right
-
-  nextChar: (char, options = {}) ->
+  findNextChar: (char, options = {}) ->
     end = (@data.getLength @row) - 1
     if @col == end
       return
@@ -159,13 +194,13 @@ class Cursor
     if found == null
       return
 
-    @setCol found
+    @_setCol found
     if options.cursor == 'pastEnd'
       do @_right
     if options.beforeFound
       do @_left
 
-  prevChar: (char, options = {}) ->
+  findPrevChar: (char, options = {}) ->
     if @col == 0
       return
 
@@ -183,7 +218,7 @@ class Cursor
     if found == null
       return
 
-    @setCol found
+    @_setCol found
     if options.beforeFound
       do @_right
 

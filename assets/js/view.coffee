@@ -174,7 +174,7 @@ class View
       parent = @data.getParent @data.viewRoot
       # was collapsed, so cursor gets put on old root
       @changeView parent
-      @cursor.setRow (@data.firstVisibleAncestor @cursor.row)
+      @cursor.set (@data.firstVisibleAncestor @cursor.row), 0
 
   addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
