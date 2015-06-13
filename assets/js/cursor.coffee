@@ -56,6 +56,14 @@ class Cursor
   end: (options = {}) ->
     @setCol (if options.cursor == 'pastEnd' then -1 else -2)
 
+  visibleHome: () ->
+    row = do @data.nextVisible
+    @set row, 0
+
+  visibleEnd: () ->
+    row = do @data.lastVisible
+    @set row, 0
+
   wordRegex = /^[a-z0-9_]+$/i
 
   isWhitespace = (char) ->
@@ -175,16 +183,28 @@ class Cursor
     if options.beforeFound
       do @_right
 
-  up: (options) ->
+  up: (options = {}) ->
     row = @data.prevVisible @row
     if row != null
       @row = row
       @fromMoveCol options.cursor
 
-  down: (options) ->
+  down: (options = {}) ->
     row = @data.nextVisible @row
     if row != null
       @row = row
+      @fromMoveCol options.cursor
+
+  prevSibling: (options = {}) ->
+    prevsib = @data.getSiblingBefore @row
+    if prevsib != null
+      @row = prevsib
+      @fromMoveCol options.cursor
+
+  nextSibling: (options = {}) ->
+    nextsib = @data.getSiblingAfter @row
+    if nextsib != null
+      @row = nextsib
       @fromMoveCol options.cursor
 
 # exports

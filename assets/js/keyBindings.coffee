@@ -60,11 +60,14 @@ class KeyBindings
 
   # display:
   #   is displayed in keybindings help screen
+  #
+  # each should have 1 of the following four
   # fn:
   #   takes a view and mutates it
   # continue:
-  #   either a function which takes next key
-  #   or a dictionary from keyDefinitions to functions
+  #   a function which takes next key
+  # bindings:
+  #   a dictionary from keyDefinitions to functions
   # motion:
   #   if the key can be used as a motion, then this is a function
   #   taking a cursor and mutating it
@@ -133,110 +136,111 @@ class KeyBindings
 
     LEFT:
       display: 'Move cursor left'
-      motion: (cursor, options) ->
-        cursor.left options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.left {cursor: option}
     RIGHT:
       display: 'Move cursor right'
-      motion: (cursor, options) ->
-        cursor.right options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.right {cursor: option}
     UP:
       display: 'Move cursor up'
-      motion: (cursor, options) ->
-        cursor.up options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.up {cursor: option}
     DOWN:
       display: 'Move cursor down'
-      motion: (cursor, options) ->
-        cursor.down options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.down {cursor: option}
     HOME:
       display: 'Move cursor to beginning of line'
-      motion: (cursor, options) ->
-        cursor.home options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.home {cursor: option}
     END:
       display: 'Move cursor to end of line'
-      motion: (cursor, options) ->
-        cursor.end options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.end {cursor: option}
     BEGINNING_WORD:
       display: 'Move cursor to the first word-beginning before it'
-      motion: (cursor, options) ->
-        cursor.beginningWord options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.beginningWord {cursor: option}
     END_WORD:
       display: 'Move cursor to the first word-ending after it'
-      motion: (cursor, options) ->
-        cursor.endWord options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.endWord {cursor: option}
     NEXT_WORD:
       display: 'Move cursor to the beginning of the next word'
-      motion: (cursor, options) ->
-        cursor.nextWord options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.nextWord {cursor: option}
     BEGINNING_BLOCK:
       display: 'Move cursor to the first block-beginning before it'
-      motion: (cursor, options) ->
-        options.block = true
-        cursor.beginningWord options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.beginningWord {cursor: option, block: true}
     END_BLOCK:
       display: 'Move cursor to the first block-ending after it'
-      motion: (cursor, options) ->
-        options.block = true
-        cursor.endWord options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.endWord {cursor: option, block: true}
     NEXT_BLOCK:
       display: 'Move cursor to the beginning of the next block'
-      motion: (cursor, options) ->
-        options.block = true
-        cursor.nextWord options
+      motion: true
+      fn: (cursor, option) ->
+        cursor.nextWord {cursor: option, block: true}
     FIND_NEXT_CHAR:
       display: 'Move cursor to next occurrence of character in line'
-      motion:
-        continue: (char, cursor, options) ->
-          cursor.nextChar char, options
+      motion: true
+      continue: (char, cursor, option) ->
+        cursor.nextChar char, {cursor: option}
     FIND_PREV_CHAR:
       display: 'Move cursor to previous occurrence of character in line'
-      motion:
-        continue: (char, cursor, options) ->
-          cursor.prevChar char, options
+      motion: true
+      continue: (char, cursor, option) ->
+        cursor.prevChar char, {cursor: option}
     TO_NEXT_CHAR:
       display: 'Move cursor to just before next occurrence of character in line'
-      motion:
-        continue: (char, cursor, options) ->
-          options.beforeFound = true
-          cursor.nextChar char, options
+      motion: true
+      continue: (char, cursor, option) ->
+        cursor.nextChar char, {cursor: option, beforeFound: true}
     TO_PREV_CHAR:
       display: 'Move cursor to just after previous occurrence of character in line'
-      motion:
-        continue: (char, cursor, options) ->
-          options.beforeFound = true
-          cursor.prevChar char, options
+      motion: true
+      continue: (char, cursor, option) ->
+        cursor.prevChar char, {cursor: option, beforeFound: true}
 
-    # TODO: this should be a motion?
     NEXT_SIBLING:
       display: 'Move cursor to the next sibling of the current line'
-      drop: true
-      fn: () ->
-        do @view.moveNextSibling
+      motion: true
+      fn: (cursor, option) ->
+        cursor.nextSibling {cursor: option}
 
-    # TODO: this should be a motion?
     PREV_SIBLING:
       display: 'Move cursor to the previous sibling of the current line'
-      drop: true
-      fn: () ->
-        do @view.movePreviousSibling
+      motion: true
+      fn: (cursor, option) ->
+        cursor.prevSibling {cursor: option}
 
-    # TODO: this should be a motion?
     GO:
       display: 'Various commands for navigation (operator)'
-      continue:
-        bindings:
-          GO:
-            display: 'Go to the beginning of visible document'
-            drop: true
-            fn: () ->
-              row = do @view.data.nextVisible
-              @view.setCur row, 0
-    # TODO: this should be a motion?
+      motion: true
+      bindings:
+        GO:
+          display: 'Go to the beginning of visible document'
+          motion: true
+          fn: (cursor, option) ->
+            do cursor.visibleHome
     GO_END:
       display: 'Go to end of visible document'
-      drop: true
-      fn: () ->
-        row = do @view.data.lastVisible
-        @view.setCur row, 0
+      motion: true
+      fn: (cursor, option) ->
+        do cursor.visibleEnd
     DELETE:
       display: 'Delete (operator)'
     CHANGE:
@@ -574,30 +578,34 @@ class KeyBindings
   processOnce: (keyStream) ->
 
     # useful when you expect a motion
-    getMotion = (motionKey) =>
+    getMotion = (motionKey, bindings = @bindings) =>
       [repeat, motionKey] = getRepeat motionKey
       if motionKey == null
         do keyStream.wait
         return null
 
-      motionBinding = @keyMap[motionKey]
-      motionInfo = @bindings[motionBinding] || {}
-      if not motionInfo.motion
+      binding = @keyMap[motionKey]
+      info = bindings[binding] || {}
+      if not info.motion
         do keyStream.forget
         return null
 
       fn = null
-      args = []
 
-      if typeof motionInfo.motion == 'function'
-        fn = motionInfo.motion
-      else if typeof motionInfo.motion == 'object'
-        char = do keyStream.dequeue
-        if char == null
+      if info.continue
+        key = do keyStream.dequeue
+        if key == null
           do keyStream.wait
           return null
-        fn = motionInfo.motion.continue.bind @, char
+        fn = info.continue.bind @, key
 
+      else if info.bindings
+        answer = (getMotion null, info.bindings)
+        return answer
+      else if info.fn
+        fn = info.fn
+
+      # TODO: this is weird... just return another argument
       fn.repeat = repeat
       return fn
 
@@ -632,7 +640,7 @@ class KeyBindings
         if motion == null then return
 
         for j in [1..repeat]
-          motion @view.cursor, {}
+          motion @view.cursor, ''
         return do keyStream.forget
       else if info.menu
         @setMode MODES.MENU
@@ -644,14 +652,13 @@ class KeyBindings
       args = []
 
       if info.continue
-        if typeof info.continue == 'function'
-          key = do keyStream.dequeue
-          if key == null then return do keyStream.wait
+        key = do keyStream.dequeue
+        if key == null then return do keyStream.wait
 
-          fn = info.continue
-          args.push key
-        else # a dictionary
-          return processNormalMode(info.continue.bindings)
+        fn = info.continue
+        args.push key
+      else if info.bindings
+        return processNormalMode info.bindings
       else if info.fn
         fn = info.fn
 
@@ -714,19 +721,14 @@ class KeyBindings
           cursor = do @view.cursor.clone
           for i in [1..repeat]
             for j in [1..motion.repeat]
-              motion cursor, {cursor: 'pastEnd'}
+              motion cursor, 'pastEnd'
 
-          if cursor.col < @view.cursor.col
-            if binding == 'YANK'
-              @view.yankCharsBeforeCursor (@view.cursor.col - cursor.col)
-            else
-              @view.delCharsBeforeCursor (@view.cursor.col - cursor.col), {yank: true}
-          else if cursor.col > @view.cursor.col
-            if binding == 'YANK'
-              @view.yankCharsAfterCursor (cursor.col - @view.cursor.col)
-            else
-              cursorOption = if binding == 'CHANGE' then 'pastEnd' else ''
-              @view.delCharsAfterCursor (cursor.col - @view.cursor.col), {cursor: cursorOption, yank: true}
+          if binding == 'YANK'
+            @view.yankBetween @view.cursor, cursor
+          else if binding == 'CHANGE'
+            @view.deleteBetween @view.cursor, cursor, {cursor: 'pastEnd', yank: true}
+          else
+            @view.deleteBetween @view.cursor, cursor, {yank: true}
 
         if binding == 'CHANGE'
           @setMode MODES.INSERT

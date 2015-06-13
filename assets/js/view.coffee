@@ -180,16 +180,6 @@ class View
   moveCursorEnd: (options) ->
     @cursor.end options
 
-  movePreviousSibling: (options = {}) ->
-    prevsib = @data.getSiblingBefore @cursor.row
-    if prevsib != null
-      @cursor.setRow prevsib
-
-  moveNextSibling: (options = {}) ->
-    nextsib = @data.getSiblingAfter @cursor.row
-    if nextsib != null
-      @cursor.setRow nextsib
-
   moveCursorDown: (options = {}) ->
     oldrow = @cursor.row
     @cursor.down options
@@ -229,7 +219,7 @@ class View
     @act new actions.AddChars @cursor.row, col, chars, options
 
   delChars: (row, col, nchars, options = {}) ->
-    if (@data.getLength row) > 0
+    if ((@data.getLength row) > 0) and (nchars > 0)
       delAction = new actions.DelChars row, col, nchars, options
       @act delAction
       if options.yank
@@ -251,11 +241,23 @@ class View
     if line.length > 0
       @register.saveChars line.slice(col, col + nchars)
 
-  yankCharsBeforeCursor: (nchars) ->
-    @yankChars @cursor.row, (@cursor.col-nchars), nchars
+  yankBetween: (cursor1, cursor2) ->
+    if cursor2.row != cursor1.row
+      console.log('not yet implemented')
+      return
 
-  yankCharsAfterCursor: (nchars) ->
-    @yankChars @cursor.row, @cursor.col, nchars
+    if cursor2.col < cursor1.col
+      [cursor1, cursor2] = [cursor2, cursor1]
+    @yankChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col)
+
+  deleteBetween: (cursor1, cursor2, options) ->
+    if cursor2.row != cursor1.row
+      console.log('not yet implemented')
+      return
+
+    if cursor2.col < cursor1.col
+      [cursor1, cursor2] = [cursor2, cursor1]
+    @delChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col), options
 
   newLineBelow: () ->
     children = @data.getChildren @cursor.row
