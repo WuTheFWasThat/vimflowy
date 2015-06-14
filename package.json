@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "NODE_ENV=development nodemon -e coffee,jade,sass server.coffee",
-    "test": "coffee tests/run.coffee"
+    "test": "./tests/run.coffee"
   },
   "dependencies": {
     "async": "latest",
