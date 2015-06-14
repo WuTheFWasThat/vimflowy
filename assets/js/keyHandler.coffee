@@ -28,6 +28,7 @@ class KeyHandler extends EventEmitter
   ignoreMap =
     16: 'shift alone'
     17: 'ctrl alone'
+    18: 'alt alone'
     91: 'left command alone'
     93: 'right command alone'
 

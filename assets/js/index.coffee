@@ -10,7 +10,6 @@ default_data = {
 }
 
 if localStorage?
-  console.log('localstorage yay')
   showKeyBindings = true
   if localStorage.getItem('showKeyBindings') != null
     showKeyBindings = localStorage['showKeyBindings'] == 'true'
@@ -21,19 +20,15 @@ if localStorage?
   data = new Data datastore
 
   if localStorage.getItem('saved') == null
-    console.log('no save')
     data.load default_data
     localStorage['saved'] = 'true'
-  else
-    console.log('saved before')
 
 else
-  alert('You need local storage support for data to be persisted')
+  alert('You need local storage support for data to be persisted!')
   datastore = new dataStore.InMemory
 
   data = new Data datastore
   data.load default_data
-
 
 view = new View $('#view'), data
 
@@ -41,9 +36,11 @@ $(window).on('paste', (e) ->
     e.preventDefault()
     text = (e.originalEvent || e).clipboardData.getData('text/plain')
     chars = text.split ''
-    # TODO: deal with this better when there are multiple lines
     view.addCharsAtCursor chars
+    # TODO: deal with this better when there are multiple lines
+    # TODO: put in insert mode?
     do view.render
+    do view.save
 )
 
 keyhandler = new KeyHandler

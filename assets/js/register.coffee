@@ -1,5 +1,5 @@
 class Register
-  this.TYPES = {
+  @TYPES = {
     NONE: 0
     CHARS: 1
     ROWS: 2
@@ -17,7 +17,7 @@ class Register
   saveRows: (serialized_rows) ->
     @type = Register.TYPES.ROWS
     @serialized_rows = serialized_rows
-  
+
   serialize: () ->
     data = ''
     if @type == Register.TYPES.CHARS

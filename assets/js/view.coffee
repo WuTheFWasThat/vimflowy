@@ -7,7 +7,7 @@ renderLine = (lineData, onto, options = {}) ->
   defaultStyle = options.defaultStyle || ''
 
   # ideally this takes up space but is unselectable (uncopyable)
-  cursorChar = '&nbsp;'
+  cursorChar = ' '
 
   line = []
   for char, i in lineData
@@ -445,8 +445,9 @@ class View
 
     makeCrumb = (row, line) =>
       return $('<span>').addClass('crumb').append(
-        $('<a>').text(line).click (() =>
+        $('<a>').html(line).click (() =>
           @changeView row
+          @cursor.set (@data.firstVisibleAncestor @cursor.row), 0
           do @save
           do @render
         )
@@ -454,7 +455,7 @@ class View
 
     crumbsDiv = $('<div>').attr('id', 'breadcrumbs')
 
-    crumbsDiv.append(makeCrumb @data.root, 'Home')
+    crumbsDiv.append(makeCrumb @data.root, $('<icon>').addClass('fa fa-home'))
     for row in crumbs by -1
       line = (@data.getLine row).join('')
       crumbsDiv.append(makeCrumb row, line)
