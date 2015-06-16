@@ -306,11 +306,14 @@ class Data
         content = (line for line in exportLines jsonContent).join "\n"
     else
         throw "Invalid export format"
-    $("a#export").attr("download", filename)
-    $("a#export").attr("href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}")
-    $("a#export")[0].click()
-    $("a#export").attr("download", null)
-    $("a#export").attr("href", null)
+    do @saveFile filename, mimetype, content
+
+  saveFile: (filename, mimetype, content) ->
+    $("#export").attr("download", filename)
+    $("#export").attr("href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}")
+    $("#export")[0].click()
+    $("#export").attr("download", null)
+    $("#export").attr("href", null)
 
 # exports
 module?.exports = Data
