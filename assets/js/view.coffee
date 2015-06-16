@@ -46,21 +46,70 @@ renderLine = (lineData, onto, options = {}) ->
     info.text = x
     line.push info
 
+  # collect set of words, { word: word, start: start, end: end }
+  words = []
+  word = ''
+  word_start = 0
+
+  lineData.push ' ' # to make end condition easier
+  for char, i in lineData
+    if char == '\n' or char == ' '
+      if i != word_start
+        words.push {
+          word: word
+          start: word_start
+          end: i - 1
+        }
+      word_start = i + 1
+      word = ''
+    else
+      word += char
+
+  urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
+  url_words = words.filter (w) ->
+    return urlRegex.test w.word
+
+  for url_word in url_words
+    line[url_word.start].url_start = url_word.word
+    line[url_word.end].url_end = url_word.word
+    # console.log 'url word', url_word
+
   do onto.empty
 
   acc = ''
   style = defaultStyle
+  url_onto = null
+
   for x in line
     mystyle = defaultStyle
     if x.cursor
       mystyle = 'cursor'
     if x.highlighted
       mystyle = 'highlight'
+
+    if x.url_start
+      if acc.length
+        onto.append $('<span>').html(acc).addClass(style)
+        acc = ''
+      url_onto = $('<a>').attr('href', x.url_start)
+
     if mystyle != style
-      onto.append $('<span>').html(acc).addClass(style)
+      if acc.length
+        if url_onto
+          url_onto.append $('<span>').html(acc).addClass(style)
+        else
+          onto.append $('<span>').html(acc).addClass(style)
+        acc = ''
       style = mystyle
-      acc = ''
+
     acc += x.text
+
+    if x.url_end
+      url_onto.append $('<span>').html(acc).addClass(style)
+      acc = ''
+
+      onto.append url_onto
+      url_onto = null
 
   if acc.length
     onto.append $('<span>').html(acc).addClass(style)
