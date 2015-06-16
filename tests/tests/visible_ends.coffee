@@ -55,3 +55,58 @@ t.expect ['a', 'ab', 'ab']
 t.sendKeys 'ggx'
 t.expect ['', 'ab', 'ab']
 
+# with zoom
+t = new TestCase [
+  'ab'
+  { line: 'bc', children: [
+    'dc'
+    'cd'
+  ] },
+  'de'
+]
+t.sendKeys 'j]Gx'
+t.expect [
+  'ab'
+  { line: 'bc', children: [
+    'dc'
+    'd'
+  ] },
+  'de'
+]
+t.sendKeys 'ggx'
+t.expect [
+  'ab'
+  { line: 'bc', children: [
+    'c'
+    'd'
+  ] },
+  'de'
+]
+
+# with zoom onto collapsed
+t = new TestCase [
+  'ab'
+  { line: 'bc', collapsed: true, children: [
+    'dc'
+    'cd'
+  ] },
+  'de'
+]
+t.sendKeys 'j]Gx'
+t.expect [
+  'ab'
+  { line: 'bc', collapsed: true, children: [
+    'dc'
+    'd'
+  ] },
+  'de'
+]
+t.sendKeys 'ggx'
+t.expect [
+  'ab'
+  { line: 'bc', collapsed: true, children: [
+    'c'
+    'd'
+  ] },
+  'de'
+]

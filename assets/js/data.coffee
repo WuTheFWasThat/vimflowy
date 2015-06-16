@@ -57,6 +57,9 @@ class Data
   collapsed: (row) ->
     return @store.getCollapsed row
 
+  viewable: (row) -> # whether currently viewable
+    return (not @collapsed row) or (row == @viewRoot)
+
   indexOf: (child) ->
     children = @getSiblings child
     return children.indexOf child
@@ -89,7 +92,7 @@ class Data
     @store.setChildren id, children
 
   nextVisible: (id = @viewRoot) ->
-    if not @collapsed id
+    if @viewable id
       children = @getChildren id
       if children.length > 0
         return children[0]
@@ -103,7 +106,7 @@ class Data
 
   # last thing visible nested within id
   lastVisible: (id = @viewRoot) ->
-    if @collapsed id
+    if not @viewable id
       return id
     children = @getChildren id
     if children.length > 0
