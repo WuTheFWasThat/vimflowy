@@ -306,7 +306,7 @@ class Data
         content = (line for line in exportLines jsonContent).join "\n"
     else
         throw "Invalid export format"
-    do @saveFile filename, mimetype, content
+    @saveFile filename, mimetype, content
 
   saveFile: (filename, mimetype, content) ->
     $("#export").attr("download", filename)
