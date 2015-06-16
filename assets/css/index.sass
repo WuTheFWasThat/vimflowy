@@ -72,7 +72,10 @@ $bottom-bar-height: 25px
     #view, #menu
         $content-padding: 50px
         padding: $content-padding
+
         @include calc(height, '100% - #{2 * $content-padding}')
+        width: 100%
+
         overflow-y: scroll
 
     #view

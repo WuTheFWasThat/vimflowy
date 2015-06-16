@@ -9,8 +9,28 @@ renderLine = (lineData, onto, options = {}) ->
   # ideally this takes up space but is unselectable (uncopyable)
   cursorChar = ' '
 
+  # array of dicts:
+  # {
+  #   text: text
+  #   column: column
+  #   cursor: true/false
+  #   highlighted: true/false
+  # }
   line = []
+
+  # add cursor if at end
+  if lineData.length of options.cursors
+    lineData.push cursorChar
+
+  # if still empty, put a newline
+  if lineData.length == 0
+    lineData.push '\n'
+
   for char, i in lineData
+    info = {
+      column: i
+    }
+
     x = char
 
     if char == '\n'
@@ -18,34 +38,48 @@ renderLine = (lineData, onto, options = {}) ->
       if i of options.cursors
         x = cursorChar + x
 
-    line.push x
+    if i of options.cursors
+      info.cursor = true
+    if i of options.highlights
+      info.highlighted = true
 
-  # add cursor if at end
-  if lineData.length of options.cursors
-    line.push cursorChar
-
-  # if still empty, put a newline
-  if line.length == 0
-    line.push '<br/>'
+    info.text = x
+    line.push info
 
   do onto.empty
 
   acc = ''
   style = defaultStyle
-  for x, i in line
+  for x in line
     mystyle = defaultStyle
-    if i of options.cursors
+    if x.cursor
       mystyle = 'cursor'
-    if i of options.highlights
+    if x.highlighted
       mystyle = 'highlight'
     if mystyle != style
       onto.append $('<span>').html(acc).addClass(style)
       style = mystyle
       acc = ''
-    acc += x
+    acc += x.text
 
   if acc.length
     onto.append $('<span>').html(acc).addClass(style)
+
+  # NOTE: the following renders each character separately
+  # it makes it so we can click individual characters to move the cursor
+  # however, it seems to make rendering laggy
+
+  # for x in line
+  #   mystyle = defaultStyle
+  #   if x.cursor
+  #     mystyle = 'cursor'
+  #   if x.highlighted
+  #     mystyle = 'highlight'
+
+  #   charDiv = $('<span>').html(x.text).addClass(mystyle)
+  #   if options.onclick?
+  #     charDiv.on('click', options.onclick.bind @, x)
+  #   onto.append charDiv
 
 class View
   containerDivID = (id) ->
@@ -511,7 +545,12 @@ class View
     if row == @cursor.row
       cursors[@cursor.col] = true
 
-    renderLine lineData, onto, {cursors: cursors}
+    renderLine lineData, onto, {
+      cursors: cursors
+      onclick: (x) =>
+        @setCur row, x.column
+        do @render
+    }
 
 # imports
 if module?
