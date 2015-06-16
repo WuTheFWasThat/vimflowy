@@ -354,6 +354,10 @@ class KeyBindings
             fn: selectRow.bind(@, row)
           }
         return results
+    EXPORT:
+      display: 'Save a file'
+      fn: () ->
+        @view.data.export "vimflowy.txt"
     RECORD_MACRO:
       display: 'Begin/stop recording a macro'
     PLAY_MACRO:
@@ -424,6 +428,8 @@ class KeyBindings
     'alt+l': 'ZOOM_IN'
     'alt+j': 'NEXT_SIBLING'
     'alt+k': 'PREV_SIBLING'
+
+    'ctrl+s': 'EXPORT'
 
     'z': 'TOGGLE_FOLD'
     '[': 'ZOOM_OUT'
