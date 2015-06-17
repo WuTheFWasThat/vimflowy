@@ -309,11 +309,14 @@ class Data
     @saveFile filename, mimetype, content
 
   saveFile: (filename, mimetype, content) ->
+    if not $?
+      return content # Tests are running
     $("#export").attr("download", filename)
     $("#export").attr("href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}")
     $("#export")[0].click()
     $("#export").attr("download", null)
     $("#export").attr("href", null)
+    return content
 
 # exports
 module?.exports = Data
