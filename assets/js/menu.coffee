@@ -90,7 +90,7 @@ class Menu
 
         icon = 'fa-circle'
         if i == @selection
-          resultDiv.css 'background-color', '#EEEEEE'
+          resultDiv.addClass 'menuSelected'
           icon = 'fa-arrow-circle-right'
         resultDiv.append $('<i>').addClass('fa ' + icon + ' bullet').css(
           'margin-right': '20px'

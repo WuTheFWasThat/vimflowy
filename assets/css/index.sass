@@ -1,19 +1,9 @@
-$color-white: #FFFFFF
-$color-black: #000000
-$color-link-blue: #8888FF
-
-$content-color: $color-white
-
 body, html
     margin: 0
-    color: #000
-    background: $content-color
     font-family: 'Monaco', monospace
 
 $bottom-bar-height: 25px
 #bottom-bar
-
-    background-color: $color-white
     z-index: 1
     position: absolute
     bottom: 0px
@@ -35,10 +25,6 @@ $bottom-bar-height: 25px
     #mode
         font-size: 12px
         width: $mode-width
-        background: #AAAAAA
-
-    #exInput
-        background: #FFFFFF
 
 #contents
     display: flex
@@ -54,7 +40,7 @@ $bottom-bar-height: 25px
         background: #CCCCCC
         width: 0%
         height: 100%
-        overflow-y: scroll
+        overflow-y: auto
 
         @include transition(width 0.2s ease-in-out)
 
@@ -76,7 +62,7 @@ $bottom-bar-height: 25px
         @include calc(height, '100% - #{2 * $content-padding}')
         width: 100%
 
-        overflow-y: scroll
+        overflow-y: hidden
 
     #view
         flex: 1 1 auto;
@@ -84,10 +70,8 @@ $bottom-bar-height: 25px
             font-size: 20px;
             margin-bottom: 20px;
             .crumb:not(:last-child)
-               color: $color-link-blue
                cursor: pointer
             .crumb:not(:last-child)::after
-               color: $color-black
                font-family: FontAwesome
                // angle-right
                content: '\f105'
