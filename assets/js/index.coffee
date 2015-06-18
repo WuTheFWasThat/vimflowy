@@ -32,6 +32,9 @@ else
 
 view = new View $('#view'), data
 
+changeStyle = (theme) ->
+  $('body').removeClass().addClass(theme)
+
 $(window).on('paste', (e) ->
     e.preventDefault()
     text = (e.originalEvent || e).clipboardData.getData('text/plain')
