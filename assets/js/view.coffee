@@ -242,22 +242,33 @@ class View
 
   rootInto: (row = @cursor.row) ->
     # try changing to cursor
-    if @changeView row
-      firstchild = (@data.getChildren row)[0]
-      @setCur firstchild, 0
+    if @reroot row
       return true
     parent = @data.getParent row
-    if @changeView parent
-      @setCur row, 0
+    if @reroot parent
+      @cursor.setRow row
       return true
     throw 'Failed to root into'
 
   rootUp: () ->
     if @data.viewRoot != @data.root
       parent = @data.getParent @data.viewRoot
-      # was collapsed, so cursor gets put on old root
-      @changeView parent
-      @cursor.set (@data.firstVisibleAncestor @cursor.row), 0
+      @reroot parent
+
+  rootDown: () ->
+    newroot = @data.oldestVisibleAncestor @cursor.row
+    if @reroot newroot
+      return true
+    return false
+
+  reroot: (newroot = @data.root) ->
+    if @changeView newroot
+      newrow = @data.youngestVisibleAncestor @cursor.row
+      if newrow == null # not visible, need to reset cursor
+        newrow = (@data.getChildren newroot)[0]
+      @cursor.setRow newrow
+      return true
+    return false
 
   addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
@@ -529,8 +540,7 @@ class View
     makeCrumb = (row, line) =>
       return $('<span>').addClass('crumb').append(
         $('<a>').html(line).click (() =>
-          @changeView row
-          @cursor.set (@data.firstVisibleAncestor @cursor.row), 0
+          @reroot row
           do @save
           do @render
         )
