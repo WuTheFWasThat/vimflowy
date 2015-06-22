@@ -485,8 +485,8 @@ class View
   pasteAfter: () ->
     @register.paste {}
 
-  find: (chars) ->
-    results = @data.find chars
+  find: (chars, nresults = 10) ->
+    results = @data.find chars, nresults
     return results
 
   scrollPages: (npages) ->

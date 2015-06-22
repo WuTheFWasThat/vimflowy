@@ -220,7 +220,7 @@ class Data
     helper @root
     return ids
 
-  find: (chars) ->
+  find: (chars, nresults = 10) ->
     results = [] # list of (row_id, index) pairs
     if chars.length == 0
       return results
@@ -239,6 +239,8 @@ class Data
             index: i
           }
           break
+      if nresults > 0 and results.length == nresults
+        break
     return results
 
   # important: serialized automatically garbage collects

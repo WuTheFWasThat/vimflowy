@@ -134,7 +134,7 @@ class KeyBindings
       display: 'Search'
       drop: true
       menu: (view, text) ->
-        # a list of {contents, highlights, fn ]
+        # a list of {contents, highlights, fn}
         # SEE: menu.coffee
         results = []
 
