@@ -40,7 +40,7 @@ $bottom-bar-height: 25px
         background: #CCCCCC
         width: 0%
         height: 100%
-        overflow-y: scroll
+        overflow-y: auto
 
         @include transition(width 0.2s ease-in-out)
 
@@ -62,7 +62,7 @@ $bottom-bar-height: 25px
         @include calc(height, '100% - #{2 * $content-padding}')
         width: 100%
 
-        overflow-y: scroll
+        overflow-y: hidden
 
     #view
         flex: 1 1 auto;
