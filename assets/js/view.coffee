@@ -9,8 +9,28 @@ renderLine = (lineData, onto, options = {}) ->
   # ideally this takes up space but is unselectable (uncopyable)
   cursorChar = ' '
 
+  # array of dicts:
+  # {
+  #   text: text
+  #   column: column
+  #   cursor: true/false
+  #   highlighted: true/false
+  # }
   line = []
+
+  # add cursor if at end
+  if lineData.length of options.cursors
+    lineData.push cursorChar
+
+  # if still empty, put a newline
+  if lineData.length == 0
+    lineData.push '\n'
+
   for char, i in lineData
+    info = {
+      column: i
+    }
+
     x = char
 
     if char == '\n'
@@ -18,34 +38,97 @@ renderLine = (lineData, onto, options = {}) ->
       if i of options.cursors
         x = cursorChar + x
 
-    line.push x
+    if i of options.cursors
+      info.cursor = true
+    if i of options.highlights
+      info.highlighted = true
 
-  # add cursor if at end
-  if lineData.length of options.cursors
-    line.push cursorChar
+    info.text = x
+    line.push info
 
-  # if still empty, put a newline
-  if line.length == 0
-    line.push '<br/>'
+  # collect set of words, { word: word, start: start, end: end }
+  words = []
+  word = ''
+  word_start = 0
+
+  lineData.push ' ' # to make end condition easier
+  for char, i in lineData
+    if char == '\n' or char == ' '
+      if i != word_start
+        words.push {
+          word: word
+          start: word_start
+          end: i - 1
+        }
+      word_start = i + 1
+      word = ''
+    else
+      word += char
+
+  urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
+  url_words = words.filter (w) ->
+    return urlRegex.test w.word
+
+  for url_word in url_words
+    line[url_word.start].url_start = url_word.word
+    line[url_word.end].url_end = url_word.word
+    # console.log 'url word', url_word
 
   do onto.empty
 
   acc = ''
   style = defaultStyle
-  for x, i in line
+  url_onto = null
+
+  for x in line
     mystyle = defaultStyle
-    if i of options.cursors
+    if x.cursor
       mystyle = 'cursor'
-    if i of options.highlights
+    if x.highlighted
       mystyle = 'highlight'
+
+    if x.url_start
+      if acc.length
+        onto.append $('<span>').html(acc).addClass(style)
+        acc = ''
+      url_onto = $('<a>').attr('href', x.url_start)
+
     if mystyle != style
-      onto.append $('<span>').html(acc).addClass(style)
+      if acc.length
+        if url_onto
+          url_onto.append $('<span>').html(acc).addClass(style)
+        else
+          onto.append $('<span>').html(acc).addClass(style)
+        acc = ''
       style = mystyle
+
+    acc += x.text
+
+    if x.url_end
+      url_onto.append $('<span>').html(acc).addClass(style)
       acc = ''
-    acc += x
+
+      onto.append url_onto
+      url_onto = null
 
   if acc.length
     onto.append $('<span>').html(acc).addClass(style)
+
+  # NOTE: the following renders each character separately
+  # it makes it so we can click individual characters to move the cursor
+  # however, it seems to make rendering laggy
+
+  # for x in line
+  #   mystyle = defaultStyle
+  #   if x.cursor
+  #     mystyle = 'cursor'
+  #   if x.highlighted
+  #     mystyle = 'highlight'
+
+  #   charDiv = $('<span>').html(x.text).addClass(mystyle)
+  #   if options.onclick?
+  #     charDiv.on('click', options.onclick.bind @, x)
+  #   onto.append charDiv
 
 class View
   containerDivID = (id) ->
@@ -159,22 +242,33 @@ class View
 
   rootInto: (row = @cursor.row) ->
     # try changing to cursor
-    if @changeView row
-      firstchild = (@data.getChildren row)[0]
-      @setCur firstchild, 0
+    if @reroot row
       return true
     parent = @data.getParent row
-    if @changeView parent
-      @setCur row, 0
+    if @reroot parent
+      @cursor.setRow row
       return true
     throw 'Failed to root into'
 
   rootUp: () ->
     if @data.viewRoot != @data.root
       parent = @data.getParent @data.viewRoot
-      # was collapsed, so cursor gets put on old root
-      @changeView parent
-      @cursor.set (@data.firstVisibleAncestor @cursor.row), 0
+      @reroot parent
+
+  rootDown: () ->
+    newroot = @data.oldestVisibleAncestor @cursor.row
+    if @reroot newroot
+      return true
+    return false
+
+  reroot: (newroot = @data.root) ->
+    if @changeView newroot
+      newrow = @data.youngestVisibleAncestor @cursor.row
+      if newrow == null # not visible, need to reset cursor
+        newrow = (@data.getChildren newroot)[0]
+      @cursor.setRow newrow
+      return true
+    return false
 
   addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
@@ -391,8 +485,8 @@ class View
   pasteAfter: () ->
     @register.paste {}
 
-  find: (chars) ->
-    results = @data.find chars
+  find: (chars, nresults = 10) ->
+    results = @data.find chars, nresults
     return results
 
   scrollPages: (npages) ->
@@ -446,8 +540,7 @@ class View
     makeCrumb = (row, line) =>
       return $('<span>').addClass('crumb').append(
         $('<a>').html(line).click (() =>
-          @changeView row
-          @cursor.set (@data.firstVisibleAncestor @cursor.row), 0
+          @reroot row
           do @save
           do @render
         )
@@ -511,7 +604,12 @@ class View
     if row == @cursor.row
       cursors[@cursor.col] = true
 
-    renderLine lineData, onto, {cursors: cursors}
+    renderLine lineData, onto, {
+      cursors: cursors
+      onclick: (x) =>
+        @setCur row, x.column
+        do @render
+    }
 
 # imports
 if module?

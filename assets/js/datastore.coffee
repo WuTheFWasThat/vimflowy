@@ -93,6 +93,8 @@
     _collapsedKey_: (row) ->
       return 'save:' + row + ':collapsed'
 
+    _IDKey_: 'lastID'
+
     _setLocalStorage_: (key, value) ->
       console.log('setting local storage', key, value)
       localStorage.setItem key, JSON.stringify value
@@ -148,9 +150,10 @@
       @_setLocalStorage_ (@_collapsedKey_ row), collapsed
 
     getId: () ->
-      id = 0
+      id = @_getLocalStorage_ @_IDKey_, 0
       while (localStorage.getItem @_lineKey_ id) != null
         id++
+      @_setLocalStorage_ @_IDKey_, (id + 1)
       return id
 
     # delete: (id) ->

@@ -10,13 +10,17 @@ class Cursor
   clone: () ->
     return new Cursor @data, @row, @col, @moveCol
 
-  set: (row, col) ->
+  set: (row, col, option) ->
     @row = row
-    @_setCol col
+    @setCol col, option
 
-  _setCol: (moveCol) ->
+  setRow: (row, option) ->
+    @row = row
+    @fromMoveCol option
+
+  setCol: (moveCol, option = 'pastEnd') ->
     @moveCol = moveCol
-    @fromMoveCol 'pastEnd'
+    @fromMoveCol option
 
   fromMoveCol: (option) ->
     len = @data.getLength @row
@@ -27,10 +31,10 @@ class Cursor
       @col = Math.max(0, Math.min(maxcol, @moveCol))
 
   _left: () ->
-    @_setCol (@col - 1)
+    @setCol (@col - 1)
 
   _right: () ->
-    @_setCol (@col + 1)
+    @setCol (@col + 1)
 
   left: () ->
     if @col > 0
@@ -86,10 +90,10 @@ class Cursor
     return false
 
   home: () ->
-    @_setCol 0
+    @setCol 0
 
   end: (options = {}) ->
-    @_setCol (if options.cursor == 'pastEnd' then -1 else -2)
+    @setCol (if options.cursor == 'pastEnd' then -1 else -2)
 
   visibleHome: () ->
     row = do @data.nextVisible
@@ -194,7 +198,7 @@ class Cursor
     if found == null
       return
 
-    @_setCol found
+    @setCol found
     if options.cursor == 'pastEnd'
       do @_right
     if options.beforeFound
@@ -218,33 +222,29 @@ class Cursor
     if found == null
       return
 
-    @_setCol found
+    @setCol found
     if options.beforeFound
       do @_right
 
   up: (options = {}) ->
     row = @data.prevVisible @row
     if row != null
-      @row = row
-      @fromMoveCol options.cursor
+      @setRow row, options.cursor
 
   down: (options = {}) ->
     row = @data.nextVisible @row
     if row != null
-      @row = row
-      @fromMoveCol options.cursor
+      @setRow row, options.cursor
 
   prevSibling: (options = {}) ->
     prevsib = @data.getSiblingBefore @row
     if prevsib != null
-      @row = prevsib
-      @fromMoveCol options.cursor
+      @setRow prevsib, options.cursor
 
   nextSibling: (options = {}) ->
     nextsib = @data.getSiblingAfter @row
     if nextsib != null
-      @row = nextsib
-      @fromMoveCol options.cursor
+      @setRow nextsib, options.cursor
 
 # exports
 module?.exports = Cursor

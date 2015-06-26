@@ -57,6 +57,9 @@ class Data
   collapsed: (row) ->
     return @store.getCollapsed row
 
+  viewable: (row) -> # whether currently viewable
+    return (not @collapsed row) or (row == @viewRoot)
+
   indexOf: (child) ->
     children = @getSiblings child
     return children.indexOf child
@@ -89,7 +92,7 @@ class Data
     @store.setChildren id, children
 
   nextVisible: (id = @viewRoot) ->
-    if not @collapsed id
+    if @viewable id
       children = @getChildren id
       if children.length > 0
         return children[0]
@@ -103,7 +106,7 @@ class Data
 
   # last thing visible nested within id
   lastVisible: (id = @viewRoot) ->
-    if @collapsed id
+    if not @viewable id
       return id
     children = @getChildren id
     if children.length > 0
@@ -119,8 +122,21 @@ class Data
       return null
     return parent
 
-  # given viewRoot, throws exception
-  firstVisibleAncestor: (id) ->
+  # finds oldest ancestor that is visible (viewRoot itself not considered visible)
+  # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
+  oldestVisibleAncestor: (id) ->
+    last = id
+    while true
+      cur = @getParent last
+      if cur == @viewRoot
+        return last
+      if cur == @root
+        return null
+      last = cur
+
+  # finds closest ancestor that is visible (viewRoot itself not considered visible)
+  # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
+  youngestVisibleAncestor: (id) ->
     answer = id
     cur = id
     while true
@@ -128,17 +144,9 @@ class Data
       if cur == @viewRoot
         return answer
       if cur == @root
-        throw 'Id not even in tree under viewRoot'
+        return null
       if @collapsed cur
         answer = cur
-
-    prevsib = @getSiblingBefore id
-    if prevsib != null
-      return @lastVisible prevsib
-    parent = @getParent id
-    if parent == @viewRoot
-      return null
-    return parent
 
   toggleCollapsed: (id) ->
     @store.setCollapsed id, (not @collapsed id)
@@ -212,7 +220,7 @@ class Data
     helper @root
     return ids
 
-  find: (chars) ->
+  find: (chars, nresults = 10) ->
     results = [] # list of (row_id, index) pairs
     if chars.length == 0
       return results
@@ -231,6 +239,8 @@ class Data
             index: i
           }
           break
+      if nresults > 0 and results.length == nresults
+        break
     return results
 
   # important: serialized automatically garbage collects
