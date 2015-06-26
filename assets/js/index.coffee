@@ -1,3 +1,4 @@
+#= require settings
 # data structure:
 
 # mapping from id to line
@@ -7,6 +8,7 @@ keybindingsDiv = $('#keybindings')
 default_data = {
   line: ''
   children: ['']
+  settings: Settings.default_settings
 }
 
 if localStorage?
@@ -31,9 +33,8 @@ else
   data.load default_data
 
 view = new View $('#view'), data
-
-changeStyle = (theme) ->
-  $('body').removeClass().addClass(theme)
+settings = new Settings $('#settings'), data
+do settings.loadRenderSettings
 
 $(window).on('paste', (e) ->
     e.preventDefault()
@@ -57,3 +58,4 @@ keyhandler.on 'keydown', keybinder.handleKey.bind(keybinder)
 
 $(document).ready ->
   do view.render
+  do settings.bind

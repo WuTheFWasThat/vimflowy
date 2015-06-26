@@ -37,6 +37,16 @@ class Data
   getLength: (row) ->
     return @getLine(row).length
 
+  ############
+  # settings #
+  ############
+
+  getSetting: (setting) ->
+    return @store.getSetting setting
+
+  setSetting: (setting, value) ->
+    return @store.setSetting setting, value
+
   #############
   # structure #
   #############

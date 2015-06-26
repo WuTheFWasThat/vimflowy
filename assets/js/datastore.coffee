@@ -19,6 +19,10 @@
       throw 'Not implemented'
     setCollapsed: (row, collapsed) ->
       throw 'Not implemented'
+    getSetting: (setting) ->
+      throw 'Not implemented'
+    setSetting: (setting, value) ->
+      throw 'Not implemented'
     getId: () ->
       throw 'Not implemented'
     getNew: () ->
@@ -35,6 +39,7 @@
       @parents = {}
       @children = {}
       @collapsed = {}
+      @settings = {}
       return
 
     getLine: (row) ->
@@ -61,6 +66,12 @@
     setCollapsed: (row, collapsed) ->
       @collapsed[row] = collapsed
 
+    getSetting: (setting) ->
+      return @settings[setting]
+
+    setSetting: (setting, value) ->
+      @settings[setting] = value
+
     getId: () ->
       id = 0
       while @lines[id]
@@ -79,6 +90,7 @@
       @parents = {}
       @children = {}
       @collapsed = {}
+      @settings = {}
       return
 
     _lineKey_: (row) ->
@@ -92,6 +104,9 @@
 
     _collapsedKey_: (row) ->
       return 'save:' + row + ':collapsed'
+
+    _settingKey_: (setting) ->
+      return 'save:setting:' + setting
 
     _IDKey_: 'lastID'
 
@@ -148,6 +163,15 @@
     setCollapsed: (row, collapsed) ->
       @collapsed[row] = collapsed
       @_setLocalStorage_ (@_collapsedKey_ row), collapsed
+
+    getSetting: (setting) ->
+      if not (setting of @settings)
+        @settings[setting] = @_getLocalStorage_ @_settingKey_ setting
+      return @settings[setting]
+
+    setSetting: (setting, value) ->
+      @settings[settings] = value
+      @_setLocalStorage_ (@_settingKey_ setting), value
 
     getId: () ->
       id = @_getLocalStorage_ @_IDKey_, 0
