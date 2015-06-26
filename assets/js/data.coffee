@@ -288,5 +288,51 @@ class Data
 
     @loadTo serialized
 
+  export: (filename, mimetype) ->
+    filename ||= 'vimflowy.json'
+    if not mimetype? # Infer mimetype from file extension
+        mimetype = @mimetypeLookup filename
+    content = @exportContent mimetype
+    @saveFile filename, mimetype, content
+  exportContent: (mimetype) ->
+    jsonContent = do @serialize
+    if mimetype == 'application/json'
+        delete jsonContent.viewRoot
+        return JSON.stringify(jsonContent, undefined, 2)
+    else if mimetype == 'text/plain'
+        # Workflowy compatible plaintext export
+        #   Ignores 'collapsed' and viewRoot
+        indent = "  "
+        exportLines = (node) ->
+            if typeof(node) == 'string'
+              return ["- #{node}"]
+            lines = []
+            lines.push "- #{node.line}"
+            for child in node.children ? []
+                for line in exportLines child
+                    lines.push "#{indent}#{line}"
+            return lines
+        return(exportLines jsonContent).join "\n"
+    else
+        throw "Invalid export format"
+   mimetypeLookup: (filename) ->
+     parts = filename.split '.'
+     extension = parts[parts.length - 1] ? ''
+     extensionLookup =
+       'json': 'application/json'
+       'txt': 'text/plain'
+       '': 'text/plain'
+     return extensionLookup[extension.toLowerCase()]
+
+  saveFile: (filename, mimetype, content) ->
+    if not $?
+      throw "Tried to save a file from the console, impossible"
+    $("#export").attr("download", filename)
+    $("#export").attr("href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}")
+    $("#export")[0].click()
+    $("#export").attr("download", null)
+    $("#export").attr("href", null)
+    return content
+
 # exports
 module?.exports = Data
