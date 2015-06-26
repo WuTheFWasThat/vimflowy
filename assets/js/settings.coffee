@@ -4,6 +4,7 @@ class Settings
   constructor: (mainDiv, data) ->
     @mainDiv = mainDiv
     @data = data
+    do @populateDefaultSettings # TODO: Move into data.coffee in case we ever add an asynchronous datastore
   bind: () ->
     settings = this
     @mainDiv.find("#theme-selection").on 'input', (e) ->
@@ -11,10 +12,11 @@ class Settings
       settings.data.setSetting('theme', theme)
       settings.changeStyle(theme)
   loadRenderSettings: () ->
-    theme = @getSetting 'theme'
+    theme = @data.getSetting 'theme'
     @changeStyle(theme)
     @mainDiv.find("#theme-selection").val theme
-  getSetting: (setting) -> # TODO: make data.coffee populate default settings directly during setup instead
-    @data.getSetting(setting) ? @default_settings[setting]
+  populateDefaultSettings: () ->
+    for setting in @default_settings when not (@data.getSetting setting)?
+      @data.setSetting setting, @default_settings[setting]
   changeStyle: (theme) ->
     $('body').removeClass().addClass(theme)
