@@ -170,7 +170,7 @@
       return @settings[setting]
 
     setSetting: (setting, value) ->
-      @settings[settings] = value
+      @settings[setting] = value
       @_setLocalStorage_ (@_settingKey_ setting), value
 
     getId: () ->
