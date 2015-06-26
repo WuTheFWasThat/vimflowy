@@ -80,6 +80,83 @@ class KeyBindings
         @keybindingsDiv.toggleClass 'active'
         if localStorage?
           localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
+
+    ZOOM_IN:
+      display: 'Zoom in by one level'
+      fn: () ->
+        do @view.rootDown
+    ZOOM_OUT:
+      display: 'Zoom out by one level'
+      fn: () ->
+        do @view.rootUp
+    ZOOM_IN_ALL:
+      display: 'Zoom in onto cursor'
+      fn: () ->
+        do @view.rootInto
+    ZOOM_OUT_ALL:
+      display: 'Zoom out to home'
+      fn: () ->
+        do @view.reroot
+
+    INDENT_RIGHT:
+      display: 'Indent row right'
+      fn: () ->
+        do @view.indent
+    INDENT_LEFT:
+      display: 'Indent row left'
+      fn: () ->
+        do @view.unindent
+    MOVE_BLOCK_RIGHT:
+      display: 'Move block right'
+      fn: () ->
+        do @view.indentBlock
+    MOVE_BLOCK_LEFT:
+      display: 'Move block left'
+      fn: () ->
+        do @view.unindentBlock
+    MOVE_BLOCK_DOWN:
+      display: 'Move block down'
+      fn: () ->
+        do @view.swapDown
+    MOVE_BLOCK_UP:
+      display: 'Move block up'
+      fn: () ->
+        do @view.swapUp
+
+    TOGGLE_FOLD:
+      display: 'Toggle whether a block is folded'
+      fn: () ->
+        do @view.toggleCurBlock
+
+    # content-based navigation
+
+    SEARCH:
+      display: 'Search'
+      drop: true
+      menu: (view, text) ->
+        # a list of {contents, highlights, fn}
+        # SEE: menu.coffee
+        results = []
+
+        selectRow = (row) ->
+          view.rootInto row
+
+        for found in view.find text
+          row = found.row
+          index = found.index
+
+          highlights = {}
+          for i in [index ... index + text.length]
+            highlights[i] = true
+
+          results.push {
+            contents: view.data.getLine row
+            highlights: highlights
+            fn: selectRow.bind(@, row)
+          }
+        return results
+
+    # traditional vim stuff
     INSERT:
       display: 'Insert at character'
       insert: true
@@ -282,43 +359,6 @@ class KeyBindings
       fn: () ->
         do @view.joinAtCursor
 
-    INDENT_RIGHT:
-      display: 'Indent row right'
-      fn: () ->
-        do @view.indent
-    INDENT_LEFT:
-      display: 'Indent row left'
-      fn: () ->
-        do @view.unindent
-    MOVE_BLOCK_RIGHT:
-      display: 'Move block right'
-      fn: () ->
-        do @view.indentBlock
-    MOVE_BLOCK_LEFT:
-      display: 'Move block left'
-      fn: () ->
-        do @view.unindentBlock
-    MOVE_BLOCK_DOWN:
-      display: 'Move block down'
-      fn: () ->
-        do @view.swapDown
-    MOVE_BLOCK_UP:
-      display: 'Move block up'
-      fn: () ->
-        do @view.swapUp
-
-    ZOOM_IN:
-      display: 'Zoom in onto cursor'
-      fn: () ->
-        do @view.rootInto
-    ZOOM_OUT:
-      display: 'Zoom out by one level'
-      fn: () ->
-        do @view.rootUp
-    TOGGLE_FOLD:
-      display: 'Toggle whether a block is folded'
-      fn: () ->
-        do @view.toggleCurBlock
     SCROLL_DOWN:
       display: 'Scroll half window down'
       drop: true
@@ -354,6 +394,10 @@ class KeyBindings
             fn: selectRow.bind(@, row)
           }
         return results
+    EXPORT:
+      display: 'Save a file'
+      fn: () ->
+        @view.data.export "vimflowy.txt"
     RECORD_MACRO:
       display: 'Begin/stop recording a macro'
     PLAY_MACRO:
@@ -425,15 +469,20 @@ class KeyBindings
     'alt+j': 'NEXT_SIBLING'
     'alt+k': 'PREV_SIBLING'
 
+    'ctrl+s': 'EXPORT'
+
     'z': 'TOGGLE_FOLD'
     '[': 'ZOOM_OUT'
     ']': 'ZOOM_IN'
+    '{': 'ZOOM_OUT_ALL'
+    '}': 'ZOOM_IN_ALL'
     'ctrl+left': 'ZOOM_OUT'
     'ctrl+right': 'ZOOM_IN'
     'ctrl+d': 'SCROLL_DOWN'
     'ctrl+u': 'SCROLL_UP'
 
     '/': 'SEARCH'
+    'ctrl+f': 'SEARCH'
     'q': 'RECORD_MACRO'
     '@': 'PLAY_MACRO'
 

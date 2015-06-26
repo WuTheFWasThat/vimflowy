@@ -73,6 +73,77 @@ t.expect [
   ] },
 ]
 
+# test full zoom
+t = new TestCase [
+  { line: 'first', children: [
+    { line: 'second', children: [
+      { line: 'third', children: [
+        'fourth'
+      ] },
+    ] },
+  ] },
+]
+t.sendKeys 'jjj}x'
+t.expect [
+  { line: 'first', children: [
+    { line: 'second', children: [
+      { line: 'third', children: [
+        'ourth'
+      ] },
+    ] },
+  ] },
+]
+
+t = new TestCase [
+  { line: 'first', children: [
+    { line: 'second', children: [
+      { line: 'third', children: [
+        'fourth'
+      ] },
+    ] },
+  ] },
+]
+t.sendKeys '$x$' # second dollar needed, since x ruins it
+t.expect [
+  { line: 'firs', children: [
+    { line: 'second', children: [
+      { line: 'third', children: [
+        'fourth'
+      ] },
+    ] },
+  ] },
+]
+t.sendKeys 'jj}x' # keeps the fact that column is last line!
+t.expect [
+  { line: 'firs', children: [
+    { line: 'second', children: [
+      { line: 'third', children: [
+        'fourt'
+      ] },
+    ] },
+  ] },
+]
+t.sendKeys '{x' # keeps cursor on fourth row
+t.expect [
+  { line: 'firs', children: [
+    { line: 'second', children: [
+      { line: 'third', children: [
+        'four'
+      ] },
+    ] },
+  ] },
+]
+t.sendKeys 'gg$x' # but we can go back up now
+t.expect [
+  { line: 'fir', children: [
+    { line: 'second', children: [
+      { line: 'third', children: [
+        'four'
+      ] },
+    ] },
+  ] },
+]
+
 # can't unindent too far out when zoomed in
 t = new TestCase [
   { line: 'first', children: [
@@ -90,7 +161,14 @@ t.expect [
   ] },
 ]
 t.sendKey 'u'
-t.sendKey ']'
+t.expect [
+  { line: 'first', children: [
+    { line: 'second', children: [
+      'third'
+    ] },
+  ] },
+]
+t.sendKey '}'
 t.sendKey 'shift+tab'
 t.expect [
   { line: 'first', children: [

@@ -132,8 +132,21 @@ class Data
       return null
     return parent
 
-  # given viewRoot, throws exception
-  firstVisibleAncestor: (id) ->
+  # finds oldest ancestor that is visible (viewRoot itself not considered visible)
+  # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
+  oldestVisibleAncestor: (id) ->
+    last = id
+    while true
+      cur = @getParent last
+      if cur == @viewRoot
+        return last
+      if cur == @root
+        return null
+      last = cur
+
+  # finds closest ancestor that is visible (viewRoot itself not considered visible)
+  # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
+  youngestVisibleAncestor: (id) ->
     answer = id
     cur = id
     while true
@@ -141,17 +154,9 @@ class Data
       if cur == @viewRoot
         return answer
       if cur == @root
-        throw 'Id not even in tree under viewRoot'
+        return null
       if @collapsed cur
         answer = cur
-
-    prevsib = @getSiblingBefore id
-    if prevsib != null
-      return @lastVisible prevsib
-    parent = @getParent id
-    if parent == @viewRoot
-      return null
-    return parent
 
   toggleCollapsed: (id) ->
     @store.setCollapsed id, (not @collapsed id)
@@ -225,7 +230,7 @@ class Data
     helper @root
     return ids
 
-  find: (chars) ->
+  find: (chars, nresults = 10) ->
     results = [] # list of (row_id, index) pairs
     if chars.length == 0
       return results
@@ -244,6 +249,8 @@ class Data
             index: i
           }
           break
+      if nresults > 0 and results.length == nresults
+        break
     return results
 
   # important: serialized automatically garbage collects
@@ -290,6 +297,52 @@ class Data
       @viewRoot = @root
 
     @loadTo serialized
+
+  export: (filename, mimetype) ->
+    filename ||= 'vimflowy.json'
+    if not mimetype? # Infer mimetype from file extension
+        mimetype = @mimetypeLookup filename
+    content = @exportContent mimetype
+    @saveFile filename, mimetype, content
+  exportContent: (mimetype) ->
+    jsonContent = do @serialize
+    if mimetype == 'application/json'
+        delete jsonContent.viewRoot
+        return JSON.stringify(jsonContent, undefined, 2)
+    else if mimetype == 'text/plain'
+        # Workflowy compatible plaintext export
+        #   Ignores 'collapsed' and viewRoot
+        indent = "  "
+        exportLines = (node) ->
+            if typeof(node) == 'string'
+              return ["- #{node}"]
+            lines = []
+            lines.push "- #{node.line}"
+            for child in node.children ? []
+                for line in exportLines child
+                    lines.push "#{indent}#{line}"
+            return lines
+        return(exportLines jsonContent).join "\n"
+    else
+        throw "Invalid export format"
+   mimetypeLookup: (filename) ->
+     parts = filename.split '.'
+     extension = parts[parts.length - 1] ? ''
+     extensionLookup =
+       'json': 'application/json'
+       'txt': 'text/plain'
+       '': 'text/plain'
+     return extensionLookup[extension.toLowerCase()]
+
+  saveFile: (filename, mimetype, content) ->
+    if not $?
+      throw "Tried to save a file from the console, impossible"
+    $("#export").attr("download", filename)
+    $("#export").attr("href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}")
+    $("#export")[0].click()
+    $("#export").attr("download", null)
+    $("#export").attr("href", null)
+    return content
 
 # exports
 module?.exports = Data
