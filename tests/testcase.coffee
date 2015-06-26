@@ -45,7 +45,7 @@ class TestCase
       '\n!'
 
   expectExport: (fileExtension, expected) ->
-    export_ = @data.export "vimflowy.#{fileExtension}"
+    export_ = @data.exportContent fileExtension
     assert.equal export_, expected,
       "Expected \n#{export_}\n To match \n#{expected}\n!"
 
