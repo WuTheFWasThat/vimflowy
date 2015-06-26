@@ -372,7 +372,7 @@ class KeyBindings
     EXPORT:
       display: 'Save a file'
       fn: () ->
-        @view.data.export "vimflowy.txt"
+        do @view.data.export
     RECORD_MACRO:
       display: 'Begin/stop recording a macro'
     PLAY_MACRO:

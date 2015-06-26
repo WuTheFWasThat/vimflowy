@@ -1,12 +1,17 @@
+@import '../utils'
+@import '../constants'
+
+$background-color: $color-black
+$foreground-color: #EEEEEE
 body.dark-theme
-    color: #EEEEEE
-    background-color: $color-black
+    color: $foreground-color
+    background-color: $background-color
 
     #breadcrumbs
         .crumb:not(:last-child)
-             color: $color-link-blue
+            color: $color-link-blue
         .crumb:not(:last-child)::after
-             color: $color-white
+            color: $foreground-color
 
     .cursor
         background-color: #AAA
@@ -27,6 +32,12 @@ body.dark-theme
 
     #keybindings
         table
-            background-color: $color-black
+            background-color: $background-color
         tbody
-            background-color: $color-black
+            background-color: $background-color
+    
+    .modal-dialog > div
+        @include linear-gradient(#555, #333)
+
+    #settings-link
+        color: $color-link-blue

@@ -1,3 +1,5 @@
+@import '../utils'
+@import '../constants'
 $content-color: $color-white
 
 body.default-theme
@@ -6,9 +8,9 @@ body.default-theme
 
     #breadcrumbs
         .crumb:not(:last-child)
-             color: $color-link-blue
+            color: $color-link-blue
         .crumb:not(:last-child)::after
-             color: $color-black
+            color: $color-black
 
     .cursor
         background-color: #AAA
@@ -26,3 +28,9 @@ body.default-theme
 
     #bottom-bar
         background-color: $content-color
+
+    .modal-dialog > div
+        @include linear-gradient(#FFF, #999)
+
+    #settings-link
+        color: $color-link-blue

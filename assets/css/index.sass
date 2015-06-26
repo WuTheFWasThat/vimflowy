@@ -14,7 +14,7 @@ $bottom-bar-height: 25px
     $vertical-padding: 5px
     $horizontal-padding: 15px
 
-    & > div
+    & > div, & > a
         position: relative
         float: left
         height: $bottom-bar-height - 2 * $vertical-padding
@@ -26,9 +26,16 @@ $bottom-bar-height: 25px
         font-size: 12px
         width: $mode-width
 
+    $settings-link-width: 50px
+
+    #settings-link
+        font-size: 12px
+        width: $settings-link-width
+        float: right
+
 #contents
     display: flex
-    flex-direction: row;
+    flex-direction: row
     bottom: $bottom-bar-height
     position: absolute
     width: 100%
@@ -36,7 +43,7 @@ $bottom-bar-height: 25px
 
     #keybindings
         position: relative
-        flex: 0 1 auto;
+        flex: 0 1 auto
         background: #CCCCCC
         width: 0%
         height: 100%
@@ -45,15 +52,14 @@ $bottom-bar-height: 25px
         @include transition(width 0.2s ease-in-out)
 
         &.active
-          min-width: 300px
-          // @include calc( width, '100% - 100px')
+            min-width: 300px
 
         table
-          width: 100%
-          td
-            font-size: 10px;
-            border: 1px solid
-            padding: 5px
+            width: 100%
+            td
+                font-size: 10px
+                border: 1px solid
+                padding: 5px
 
     #view, #menu
         $content-padding: 50px
@@ -65,17 +71,17 @@ $bottom-bar-height: 25px
         overflow-y: hidden
 
     #view
-        flex: 1 1 auto;
+        flex: 1 1 auto
         #breadcrumbs
-            font-size: 20px;
-            margin-bottom: 20px;
+            font-size: 20px
+            margin-bottom: 20px
             .crumb:not(:last-child)
-               cursor: pointer
+                cursor: pointer
             .crumb:not(:last-child)::after
-               font-family: FontAwesome
-               // angle-right
-               content: '\f105'
-               margin-right: 20px
-               margin-left: 20px
+                font-family: FontAwesome
+                // angle-right
+                content: '\f105'
+                margin-right: 20px
+                margin-left: 20px
 
-        font-size: 10px;
+        font-size: 10px

@@ -9,6 +9,9 @@ class Data
     @viewRoot = 0
     return @
 
+  registerSettings: (settings) -> # Otherwise a circular dependency
+    @settings = settings
+
   changeViewRoot: (row) ->
     @viewRoot = row
 
@@ -36,6 +39,16 @@ class Data
 
   getLength: (row) ->
     return @getLine(row).length
+
+  ############
+  # settings #
+  ############
+
+  getSetting: (setting) ->
+    return @store.getSetting setting
+
+  setSetting: (setting, value) ->
+    return @store.setSetting setting, value
 
   #############
   # structure #
@@ -289,7 +302,7 @@ class Data
     @loadTo serialized
 
   export: (filename, mimetype) ->
-    filename ||= 'vimflowy.json'
+    filename ||= @settings?.getSetting?('export_filename') || 'vimflowy.json'
     if not mimetype? # Infer mimetype from file extension
         mimetype = @mimetypeLookup filename
     content = @exportContent mimetype

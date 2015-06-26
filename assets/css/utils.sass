@@ -3,11 +3,27 @@
   #{$property}: -webkit-calc(#{$expression})
   #{$property}: calc(#{$expression})
 
+@mixin linear-gradient($from, $to)
+  background: $from
+  background: -moz-linear-gradient(#{$from}, #{$to})
+  background: -webkit-linear-gradient(#{$from}, #{$to})
+  background: -o-linear-gradient(#{$from}, #{$to})
+
 @mixin transition($transition)
   -moz-transition:    $transition
   -o-transition:      $transition
   -webkit-transition: $transition
   transition:         $transition
+
+@mixin box-shadow($shadow)
+  -moz-box-shadow:    $shadow
+  -webkit-box-shadow: $shadow
+  box-shadow:         $shadow
+
+@mixin border-radius($radius)
+  -webkit-border-radius: $radius
+  -moz-border-radius:    $radius
+  border-radius:         $radius
 
 .unselectable
   -moz-user-select: -moz-none
@@ -28,3 +44,40 @@
 .hidden
   display: none
   visibility: hidden
+
+.modal-dialog
+  position: fixed
+  top: 0
+  right: 0
+  bottom: 0
+  left: 0
+  background: rgba(0, 0, 0, 0.8)
+  z-index: 99999
+  opacity: 0
+  @include transition(opacity 400ms ease-in)
+  pointer-events: none
+  &:target
+    opacity: 1
+    pointer-events: auto
+  & > div
+    width: 400px
+    position: relative
+    margin: 10% auto
+    padding: 5px 20px 13px 20px
+    border-radius: 10px
+  .close
+    font-family: Arial, Helvetica, sans-serif
+    background: #606061
+    color: #FFFFFF
+    line-height: 25px
+    position: absolute
+    right: -12px
+    text-align: center
+    top: -10px
+    width: 24px
+    text-decoration: none
+    font-weight: bold
+    @include border-radius(12px)
+    @include box-shadow(1px 1px 3px #000)
+  .close:hover
+    background: #00d9ff
