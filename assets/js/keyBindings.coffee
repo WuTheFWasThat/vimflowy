@@ -369,31 +369,6 @@ class KeyBindings
       drop: true
       fn: () ->
         @view.scrollPages -0.5
-    SEARCH:
-      display: 'Search'
-      drop: true
-      menu: (view, text) ->
-        # a list of {contents, highlights, fn ]
-        # SEE: menu.coffee
-        results = []
-
-        selectRow = (row) ->
-          view.rootInto row
-
-        for found in view.find text
-          row = found.row
-          index = found.index
-
-          highlights = {}
-          for i in [index ... index + text.length]
-            highlights[i] = true
-
-          results.push {
-            contents: view.data.getLine row
-            highlights: highlights
-            fn: selectRow.bind(@, row)
-          }
-        return results
     EXPORT:
       display: 'Save a file'
       fn: () ->
