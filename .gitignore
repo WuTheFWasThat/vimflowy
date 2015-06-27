@@ -5,3 +5,4 @@ npm-debug.log
 *.swn
 *.swo
 dist/
+.sass-cache

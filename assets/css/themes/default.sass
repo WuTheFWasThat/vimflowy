@@ -1,0 +1,36 @@
+@import '../utils'
+@import '../constants'
+$content-color: $color-white
+
+body.default-theme
+    color: #000
+    background: $content-color
+
+    #breadcrumbs
+        .crumb:not(:last-child)
+            color: $color-link-blue
+        .crumb:not(:last-child)::after
+            color: $color-black
+
+    .cursor
+        background-color: #AAA
+        // background-color: #888
+        // color: $content-color
+
+    .highlight
+        background-color: #FFA
+
+    .menuSelected
+        background-color: #EEEEEE
+
+    #mode
+        background: #AAAAAA
+
+    #bottom-bar
+        background-color: $content-color
+
+    .modal-dialog > div
+        @include linear-gradient(#FFF, #999)
+
+    #settings-link
+        color: $color-link-blue

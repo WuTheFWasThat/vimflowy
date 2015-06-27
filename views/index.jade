@@ -8,9 +8,24 @@ block content
     #menu.hidden
     #view
     #keybindings
+    .modal-dialog#settings
+        div
+            a.close(title="Close" href="#close") X
+            h2 Settings
+            div
+                span Visual Theme: 
+                select#theme-selection
+                    option(value="default-theme" selected=selected) Default theme
+                    option(value="dark-theme") Dark
+            div
+                span Export Format: 
+                select#export-fileformat-selection
+                    option(value="vimflowy.json" selected=selected) JSON
+                    option(value="vimflowy.txt") Text
 
   #bottom-bar
     #mode.center
     #exInput
+    a#settings-link.center(href="#settings") Settings
 
   a#export.hidden

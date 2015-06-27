@@ -1,0 +1,43 @@
+@import '../utils'
+@import '../constants'
+
+$background-color: $color-black
+$foreground-color: #EEEEEE
+body.dark-theme
+    color: $foreground-color
+    background-color: $background-color
+
+    #breadcrumbs
+        .crumb:not(:last-child)
+            color: $color-link-blue
+        .crumb:not(:last-child)::after
+            color: $foreground-color
+
+    .cursor
+        background-color: #AAA
+        color: $color-black
+
+    .highlight
+        background-color: #770
+
+    .menuSelected
+        background-color: #333
+
+    #mode
+        background: #222222
+
+    #bottom-bar
+        background-color: #444444
+        border-top: 1px solid #999
+
+    #keybindings
+        table
+            background-color: $background-color
+        tbody
+            background-color: $background-color
+    
+    .modal-dialog > div
+        @include linear-gradient(#555, #333)
+
+    #settings-link
+        color: $color-link-blue
