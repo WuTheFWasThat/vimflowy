@@ -2,16 +2,19 @@
 @import '../constants'
 
 $background-color: $color-black
-$foreground-color: #EEEEEE
+$secondary-background-color: #222222
+$text-color: #EEEEEE
+$trim-color: #EEEEEE
+
 body.dark-theme
-    color: $foreground-color
+    color: $text-color
     background-color: $background-color
 
     #breadcrumbs
         .crumb:not(:last-child)
             color: $color-link-blue
         .crumb:not(:last-child)::after
-            color: $foreground-color
+            color: $text-color
 
     .cursor
         background-color: #AAA
@@ -24,20 +27,23 @@ body.dark-theme
         background-color: #333
 
     #mode
-        background: #222222
+        background: $secondary-background-color
 
     #bottom-bar
         background-color: #444444
         border-top: 1px solid #999
 
     #keybindings
-        table
-            background-color: $background-color
-        tbody
-            background-color: $background-color
-    
-    .modal-dialog > div
-        @include linear-gradient(#555, #333)
+        table, tbody
+            background-color: $secondary-background-color
+
+    .modal-contents
+        background-color: $secondary-background-color
+        border: 1px solid $trim-color
 
     #settings-link
-        color: $color-link-blue
+        background: $secondary-background-color
+        color: $text-color
+
+    .searchBox
+        border: 1px solid $trim-color

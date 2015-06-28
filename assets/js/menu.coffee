@@ -48,17 +48,13 @@ class Menu
 
     do @div.empty
 
-    searchRow = $('<div>').css(
-      'padding': '10px'
-      'border': '1px solid black'
-      'margin-bottom': '20px'
-    ).appendTo @div
-    searchRow.append $('<i>').addClass('fa fa-search').css(
+    searchBox = $('<div>').addClass('searchBox').appendTo @div
+    searchBox.append $('<i>').addClass('fa fa-search').css(
       'margin-right': '10px'
     )
 
-    searchBox = $('<span>').addClass('searchBox').appendTo searchRow
-    @view.renderLine @view.cursor.row, searchBox
+    searchRow = $('<span>').appendTo searchBox
+    @view.renderLine @view.cursor.row, searchRow
 
     if @results.length == 0
       message = ''

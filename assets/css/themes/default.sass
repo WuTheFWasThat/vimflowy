@@ -1,10 +1,13 @@
 @import '../utils'
 @import '../constants'
-$content-color: $color-white
+$background-color: $color-white
+$secondary-background-color: #AAAAAA
+$text-color: $color-black
+$trim-color: $color-black
 
 body.default-theme
-    color: #000
-    background: $content-color
+    color: $text-color
+    background: $background-color
 
     #breadcrumbs
         .crumb:not(:last-child)
@@ -13,9 +16,9 @@ body.default-theme
             color: $color-black
 
     .cursor
-        background-color: #AAA
+        background-color: $secondary-background-color
         // background-color: #888
-        // color: $content-color
+        // color: $background-color
 
     .highlight
         background-color: #FFA
@@ -24,13 +27,18 @@ body.default-theme
         background-color: #EEEEEE
 
     #mode
-        background: #AAAAAA
+        background: $secondary-background-color
 
     #bottom-bar
-        background-color: $content-color
+        background-color: $background-color
 
     .modal-dialog > div
-        @include linear-gradient(#FFF, #999)
+        background-color: $background-color
+        border: 1px solid $trim-color
 
     #settings-link
-        color: $color-link-blue
+        background: $secondary-background-color
+        color: $text-color
+
+    .searchBox
+        border: 1px solid $trim-color
