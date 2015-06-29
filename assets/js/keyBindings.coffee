@@ -7,6 +7,7 @@ if module?
   Menu = require('./menu.coffee')
   actions = require('./actions.coffee')
 
+
 # manages a stream of keys, with the ability to
 # - queue keys
 # - wait for more keys
@@ -68,10 +69,10 @@ class KeyBindings
   #   a function which takes next key
   # bindings:
   #   a dictionary from keyDefinitions to functions
+  #   if the key is 'MOTION', the function takes a cursor # TODO: make that less janky
   # motion:
   #   if the key can be used as a motion, then this is a function
   #   taking a cursor and mutating it
-  #
   keyDefinitions =
     HELP:
       display: 'Show/hide key bindings'
@@ -318,10 +319,6 @@ class KeyBindings
       motion: true
       fn: (cursor, option) ->
         do cursor.visibleEnd
-    DELETE:
-      display: 'Delete (operator)'
-    CHANGE:
-      display: 'Change (operator)'
     DELETE_CHAR:
       display: 'Delete character'
       fn: () ->
@@ -337,14 +334,44 @@ class KeyBindings
       insert: true
       fn: () ->
         @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
+    DELETE:
+      display: 'Delete (operator)'
+      bindings:
+        DELETE:
+          display: 'Delete blocks'
+          fn: () ->
+            @view.delBlocks @repeat, {addNew: false}
+        MOTION:
+          display: 'Delete from cursor with motion'
+          fn: (cursor) ->
+            @view.deleteBetween @view.cursor, cursor, {yank: true}
+    CHANGE:
+      display: 'Change (operator)'
+      bindings:
+        CHANGE:
+          display: 'Delete blocks, and enter insert mode'
+          insert: true
+          fn: () ->
+            @view.delBlocks @repeat, {addNew: true}
+        MOTION:
+          display: 'Delete from cursor with motion, and enter insert mode'
+          insert: true
+          fn: (cursor) ->
+            @view.deleteBetween @view.cursor, cursor, {cursor: 'pastEnd', yank: true}
 
     YANK:
       display: 'Yank (operator)'
-      # continue:
-      #   bindings:
-      #     'YANK': () ->
-      #       @view.yankBlocks @repeat
-      #   motion:
+      bindings:
+        YANK:
+          display: 'Yank blocks'
+          drop: true
+          fn: () ->
+            @view.yankBlocks @repeat
+        MOTION:
+          display: 'Yank from cursor with motion'
+          drop: true
+          fn: (cursor) ->
+            @view.yankBetween @view.cursor, cursor
     PASTE_AFTER:
       display: 'Paste after cursor'
       fn: () ->
@@ -501,16 +528,19 @@ class KeyBindings
 
     buildTableContents = (bindings, onto) ->
       for k,v of bindings
-        keys = typeToKeys[k]
-        if not keys
-          continue
+        if k == 'MOTION'
+          keys = ['<MOTION>']
+        else
+          keys = typeToKeys[k]
+          if not keys
+            continue
         row = $('<tr>')
         row.append $('<td>').text keys[0]
-        display_cell = $('<td>').text v.display
+        display_cell = $('<td>').css('width', '100%').text v.display
 
         row.append display_cell
-        if v.continue and v.continue.bindings
-          buildTableContents v.continue.bindings, display_cell
+        if v.bindings
+          buildTableContents v.bindings, display_cell
         # row.append $('<td>').text typeToKeys[k].join(' OR ')
         onto.append row
 
@@ -649,14 +679,33 @@ class KeyBindings
         if key == null then return [null, null]
       return [parseInt(numStr), key]
 
-    processNormalMode = (bindings) =>
-      [repeat, key] = do getRepeat
+    processNormalMode = (bindings, repeat=1) =>
+      [newrepeat, key] = do getRepeat
       if key == null then return do keyStream.wait
+      # TODO: something better for passing repeat through?
+      repeat = repeat * newrepeat
 
       binding = @keyMap[key]
-      if not binding of bindings
-        return do keyStream.forget
-      info = bindings[binding] || {}
+      fn = null
+      args = []
+
+      if not (binding of bindings)
+        if 'MOTION' of bindings
+          info = bindings['MOTION']
+
+          motion = getMotion key
+          if motion == null then return do keyStream.forget
+
+          cursor = do @view.cursor.clone
+          for i in [1..repeat]
+            for j in [1..motion.repeat]
+              motion cursor, 'pastEnd'
+
+          args.push cursor
+        else
+          return do keyStream.forget
+      else
+        info = bindings[binding] || {}
 
       if info.motion
         motion = getMotion key
@@ -671,9 +720,6 @@ class KeyBindings
         do @menu.render
         return do keyStream.forget
 
-      fn = null
-      args = []
-
       if info.continue
         key = do keyStream.dequeue
         if key == null then return do keyStream.wait
@@ -681,7 +727,7 @@ class KeyBindings
         fn = info.continue
         args.push key
       else if info.bindings
-        return processNormalMode info.bindings
+        return processNormalMode info.bindings, repeat
       else if info.fn
         fn = info.fn
 
@@ -690,6 +736,7 @@ class KeyBindings
           view: @view,
           repeat: repeat,
           keybindingsDiv: @keybindingsDiv,
+          setMode: @setMode
         }
         fn.apply context, args
 
@@ -727,40 +774,7 @@ class KeyBindings
           # but we should save the macro-playing sequence itself
           return do keyStream.save
 
-      if binding == 'DELETE' or binding == 'CHANGE' or binding == 'YANK'
-        nkey = do keyStream.dequeue
-        if nkey == null then return do keyStream.wait
-
-        if nkey == key
-          # dd and cc
-          if binding == 'YANK'
-            @view.yankBlocks repeat
-          else
-            @view.delBlocks repeat, {addNew: binding == 'CHANGE'}
-        else
-          motion = getMotion nkey
-          if motion == null then return
-
-          cursor = do @view.cursor.clone
-          for i in [1..repeat]
-            for j in [1..motion.repeat]
-              motion cursor, 'pastEnd'
-
-          if binding == 'YANK'
-            @view.yankBetween @view.cursor, cursor
-          else if binding == 'CHANGE'
-            @view.deleteBetween @view.cursor, cursor, {cursor: 'pastEnd', yank: true}
-          else
-            @view.deleteBetween @view.cursor, cursor, {yank: true}
-
-        if binding == 'CHANGE'
-          @setMode MODES.INSERT
-          return
-        else if binding == 'YANK'
-          return do keyStream.forget
-        else # binding == 'DELETE'
-          return do keyStream.save
-      else if binding == 'REPLAY'
+      if binding == 'REPLAY'
         for i in [1..repeat]
           newStream = new KeyStream @keyStream.lastSequence
           newStream.on 'save', () =>
