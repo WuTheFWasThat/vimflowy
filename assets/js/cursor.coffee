@@ -236,6 +236,14 @@ class Cursor
     if row != null
       @setRow row, options.cursor
 
+  parent: (options = {}) ->
+    row = @data.getParent @row
+    if row == @data.root
+      return
+    if row == @data.viewRoot
+      @data.changeViewRoot @data.getParent row
+    @setRow row, options.cursor
+
   prevSibling: (options = {}) ->
     prevsib = @data.getSiblingBefore @row
     if prevsib != null

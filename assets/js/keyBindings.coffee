@@ -263,6 +263,11 @@ keyDefinitions =
         motion: true
         fn: (cursor, option) ->
           do cursor.visibleHome
+      PARENT:
+        display: 'Go to the parent of current line'
+        motion: true
+        fn: (cursor, option) ->
+          do cursor.parent
   GO_END:
     display: 'Go to end of visible document'
     motion: true
@@ -445,6 +450,7 @@ class KeyBindings
     'TO_PREV_CHAR'      : ['T']
 
     'GO'                : ['g']
+    'PARENT'            : ['p']
     'GO_END'            : ['G']
     'DELETE'            : ['d']
     'CHANGE'            : ['c']
@@ -698,6 +704,7 @@ class KeyBindings
         if 'MOTION' of bindings
           info = bindings['MOTION']
 
+          # note: this uses original bindings to determine what's a motion
           motion = getMotion key
           if motion == null then return do keyStream.forget
 
@@ -712,14 +719,19 @@ class KeyBindings
       else
         info = bindings[key] || {}
 
+      if info.bindings
+        return processNormalMode info.bindings, repeat
+
       if info.motion
-        motion = getMotion key
+        # note: this uses *new* bindings to determine what's a motion
+        motion = getMotion key, bindings
         if motion == null then return
 
         for j in [1..repeat]
           motion @view.cursor, ''
         return do keyStream.forget
-      else if info.menu
+
+      if info.menu
         @setMode MODES.MENU
         @menu = new Menu @menuDiv, (info.menu.bind @, @view)
         do @menu.render
@@ -731,8 +743,6 @@ class KeyBindings
 
         fn = info.continue
         args.push key
-      else if info.bindings
-        return processNormalMode info.bindings, repeat
       else if info.fn
         fn = info.fn
 
