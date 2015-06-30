@@ -6,7 +6,355 @@ if module?
   Cursor = require('./cursor.coffee')
   Menu = require('./menu.coffee')
   actions = require('./actions.coffee')
+  _ = require('underscore')
 
+# display:
+#   is displayed in keybindings help screen
+#
+# each should have 1 of the following four
+# fn:
+#   takes a view and mutates it
+#   if this is a motion, takes an extra cursor argument first
+# continue:
+#   a function which takes next key
+# bindings:
+#   a dictionary from keyDefinitions to functions
+#   if the key is 'MOTION', the function takes a cursor # TODO: make that less janky
+# motion:
+#   if the binding is a motion
+keyDefinitions =
+  HELP:
+    display: 'Show/hide key bindings'
+    drop: true
+    fn: () ->
+      @keybindingsDiv.toggleClass 'active'
+      if localStorage?
+        localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
+
+  ZOOM_IN:
+    display: 'Zoom in by one level'
+    fn: () ->
+      do @view.rootDown
+  ZOOM_OUT:
+    display: 'Zoom out by one level'
+    fn: () ->
+      do @view.rootUp
+  ZOOM_IN_ALL:
+    display: 'Zoom in onto cursor'
+    fn: () ->
+      do @view.rootInto
+  ZOOM_OUT_ALL:
+    display: 'Zoom out to home'
+    fn: () ->
+      do @view.reroot
+
+  INDENT_RIGHT:
+    display: 'Indent row right'
+    fn: () ->
+      do @view.indent
+  INDENT_LEFT:
+    display: 'Indent row left'
+    fn: () ->
+      do @view.unindent
+  MOVE_BLOCK_RIGHT:
+    display: 'Move block right'
+    fn: () ->
+      do @view.indentBlock
+  MOVE_BLOCK_LEFT:
+    display: 'Move block left'
+    fn: () ->
+      do @view.unindentBlock
+  MOVE_BLOCK_DOWN:
+    display: 'Move block down'
+    fn: () ->
+      do @view.swapDown
+  MOVE_BLOCK_UP:
+    display: 'Move block up'
+    fn: () ->
+      do @view.swapUp
+
+  TOGGLE_FOLD:
+    display: 'Toggle whether a block is folded'
+    fn: () ->
+      do @view.toggleCurBlock
+
+  # content-based navigation
+
+  SEARCH:
+    display: 'Search'
+    drop: true
+    menu: (view, text) ->
+      # a list of {contents, highlights, fn}
+      # SEE: menu.coffee
+      results = []
+
+      selectRow = (row) ->
+        view.rootInto row
+
+      for found in view.find text
+        row = found.row
+        index = found.index
+
+        highlights = {}
+        for i in [index ... index + text.length]
+          highlights[i] = true
+
+        results.push {
+          contents: view.data.getLine row
+          highlights: highlights
+          fn: selectRow.bind(@, row)
+        }
+      return results
+
+  # traditional vim stuff
+  INSERT:
+    display: 'Insert at character'
+    insert: true
+    fn: () -> return
+  INSERT_AFTER:
+    display: 'Insert after character'
+    insert: true
+    fn: () ->
+      @view.cursor.right {cursor: 'pastEnd'}
+  INSERT_HOME:
+    display: 'Insert at beginning of line'
+    insert: true
+    fn: () ->
+      do @view.cursor.home
+  INSERT_END:
+    display: 'Insert after end of line'
+    insert: true
+    fn: () ->
+      @view.cursor.end {cursor: 'pastEnd'}
+  INSERT_LINE_BELOW:
+    display: 'Insert on new line after current line'
+    insert: true
+    fn: () ->
+      do @view.newLineBelow
+  INSERT_LINE_ABOVE:
+    display: 'Insert on new line before current line'
+    insert: true
+    fn: () ->
+      do @view.newLineAbove
+  REPLACE:
+    display: 'Replace character'
+    continue: (char) ->
+      num = Math.min(@repeat, do @view.curLineLength - @view.cursor.col)
+      newChars = (char for i in [1..num])
+      @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
+
+  # EX:
+  #   display: 'Enter EX mode'
+
+  UNDO:
+    display: 'Undo'
+    drop: true
+    fn: () ->
+      for i in [1..@repeat]
+        do @view.undo
+  REDO:
+    display: 'Redo'
+    drop: true
+    fn: () ->
+      for i in [1..@repeat]
+        do @view.redo
+  REPLAY:
+    display: 'Replay last command'
+
+  LEFT:
+    display: 'Move cursor left'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.left {cursor: option}
+  RIGHT:
+    display: 'Move cursor right'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.right {cursor: option}
+  UP:
+    display: 'Move cursor up'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.up {cursor: option}
+  DOWN:
+    display: 'Move cursor down'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.down {cursor: option}
+  HOME:
+    display: 'Move cursor to beginning of line'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.home {cursor: option}
+  END:
+    display: 'Move cursor to end of line'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.end {cursor: option}
+  BEGINNING_WORD:
+    display: 'Move cursor to the first word-beginning before it'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.beginningWord {cursor: option}
+  END_WORD:
+    display: 'Move cursor to the first word-ending after it'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.endWord {cursor: option}
+  NEXT_WORD:
+    display: 'Move cursor to the beginning of the next word'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.nextWord {cursor: option}
+  BEGINNING_BLOCK:
+    display: 'Move cursor to the first block-beginning before it'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.beginningWord {cursor: option, block: true}
+  END_BLOCK:
+    display: 'Move cursor to the first block-ending after it'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.endWord {cursor: option, block: true}
+  NEXT_BLOCK:
+    display: 'Move cursor to the beginning of the next block'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.nextWord {cursor: option, block: true}
+  FIND_NEXT_CHAR:
+    display: 'Move cursor to next occurrence of character in line'
+    motion: true
+    continue: (char, cursor, option) ->
+      cursor.findNextChar char, {cursor: option}
+  FIND_PREV_CHAR:
+    display: 'Move cursor to previous occurrence of character in line'
+    motion: true
+    continue: (char, cursor, option) ->
+      cursor.findPrevChar char, {cursor: option}
+  TO_NEXT_CHAR:
+    display: 'Move cursor to just before next occurrence of character in line'
+    motion: true
+    continue: (char, cursor, option) ->
+      cursor.findNextChar char, {cursor: option, beforeFound: true}
+  TO_PREV_CHAR:
+    display: 'Move cursor to just after previous occurrence of character in line'
+    motion: true
+    continue: (char, cursor, option) ->
+      cursor.findPrevChar char, {cursor: option, beforeFound: true}
+
+  NEXT_SIBLING:
+    display: 'Move cursor to the next sibling of the current line'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.nextSibling {cursor: option}
+
+  PREV_SIBLING:
+    display: 'Move cursor to the previous sibling of the current line'
+    motion: true
+    fn: (cursor, option) ->
+      cursor.prevSibling {cursor: option}
+
+  GO:
+    display: 'Various commands for navigation (operator)'
+    motion: true
+    bindings:
+      GO:
+        display: 'Go to the beginning of visible document'
+        motion: true
+        fn: (cursor, option) ->
+          do cursor.visibleHome
+  GO_END:
+    display: 'Go to end of visible document'
+    motion: true
+    fn: (cursor, option) ->
+      do cursor.visibleEnd
+  DELETE_CHAR:
+    display: 'Delete character'
+    fn: () ->
+      @view.delCharsAfterCursor @repeat, {yank: true}
+  DELETE_LAST_CHAR:
+    display: 'Delete last character'
+    fn: () ->
+      num = Math.min @view.cursor.col, @repeat
+      if num > 0
+        @view.delCharsBeforeCursor num, {yank: true}
+  CHANGE_CHAR:
+    display: 'Change character'
+    insert: true
+    fn: () ->
+      @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
+  DELETE:
+    display: 'Delete (operator)'
+    bindings:
+      DELETE:
+        display: 'Delete blocks'
+        fn: () ->
+          @view.delBlocks @repeat, {addNew: false}
+      MOTION:
+        display: 'Delete from cursor with motion'
+        fn: (cursor) ->
+          @view.deleteBetween @view.cursor, cursor, {yank: true}
+  CHANGE:
+    display: 'Change (operator)'
+    bindings:
+      CHANGE:
+        display: 'Delete blocks, and enter insert mode'
+        insert: true
+        fn: () ->
+          @view.delBlocks @repeat, {addNew: true}
+      MOTION:
+        display: 'Delete from cursor with motion, and enter insert mode'
+        insert: true
+        fn: (cursor) ->
+          @view.deleteBetween @view.cursor, cursor, {cursor: 'pastEnd', yank: true}
+
+  YANK:
+    display: 'Yank (operator)'
+    bindings:
+      YANK:
+        display: 'Yank blocks'
+        drop: true
+        fn: () ->
+          @view.yankBlocks @repeat
+      MOTION:
+        display: 'Yank from cursor with motion'
+        drop: true
+        fn: (cursor) ->
+          @view.yankBetween @view.cursor, cursor
+  PASTE_AFTER:
+    display: 'Paste after cursor'
+    fn: () ->
+      do @view.pasteAfter
+  PASTE_BEFORE:
+    display: 'Paste before cursor'
+    fn: () ->
+      do @view.pasteBefore
+
+  JOIN_LINE:
+    display: 'Join current line with line below'
+    fn: () ->
+      do @view.joinAtCursor
+
+  SCROLL_DOWN:
+    display: 'Scroll half window down'
+    drop: true
+    fn: () ->
+      @view.scrollPages 0.5
+  SCROLL_UP:
+    display: 'Scroll half window up'
+    drop: true
+    fn: () ->
+      @view.scrollPages -0.5
+  EXPORT:
+    display: 'Save a file'
+    fn: () ->
+      do @view.data.export
+  RECORD_MACRO:
+    display: 'Begin/stop recording a macro'
+  PLAY_MACRO:
+    display: 'Play a macro'
+
+# end of keyDefinitions
 
 # manages a stream of keys, with the ability to
 # - queue keys
@@ -59,352 +407,6 @@ class KeyStream extends EventEmitter
 
 class KeyBindings
 
-  # display:
-  #   is displayed in keybindings help screen
-  #
-  # each should have 1 of the following four
-  # fn:
-  #   takes a view and mutates it
-  # continue:
-  #   a function which takes next key
-  # bindings:
-  #   a dictionary from keyDefinitions to functions
-  #   if the key is 'MOTION', the function takes a cursor # TODO: make that less janky
-  # motion:
-  #   if the key can be used as a motion, then this is a function
-  #   taking a cursor and mutating it
-  keyDefinitions =
-    HELP:
-      display: 'Show/hide key bindings'
-      drop: true
-      fn: () ->
-        @keybindingsDiv.toggleClass 'active'
-        if localStorage?
-          localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
-
-    ZOOM_IN:
-      display: 'Zoom in by one level'
-      fn: () ->
-        do @view.rootDown
-    ZOOM_OUT:
-      display: 'Zoom out by one level'
-      fn: () ->
-        do @view.rootUp
-    ZOOM_IN_ALL:
-      display: 'Zoom in onto cursor'
-      fn: () ->
-        do @view.rootInto
-    ZOOM_OUT_ALL:
-      display: 'Zoom out to home'
-      fn: () ->
-        do @view.reroot
-
-    INDENT_RIGHT:
-      display: 'Indent row right'
-      fn: () ->
-        do @view.indent
-    INDENT_LEFT:
-      display: 'Indent row left'
-      fn: () ->
-        do @view.unindent
-    MOVE_BLOCK_RIGHT:
-      display: 'Move block right'
-      fn: () ->
-        do @view.indentBlock
-    MOVE_BLOCK_LEFT:
-      display: 'Move block left'
-      fn: () ->
-        do @view.unindentBlock
-    MOVE_BLOCK_DOWN:
-      display: 'Move block down'
-      fn: () ->
-        do @view.swapDown
-    MOVE_BLOCK_UP:
-      display: 'Move block up'
-      fn: () ->
-        do @view.swapUp
-
-    TOGGLE_FOLD:
-      display: 'Toggle whether a block is folded'
-      fn: () ->
-        do @view.toggleCurBlock
-
-    # content-based navigation
-
-    SEARCH:
-      display: 'Search'
-      drop: true
-      menu: (view, text) ->
-        # a list of {contents, highlights, fn}
-        # SEE: menu.coffee
-        results = []
-
-        selectRow = (row) ->
-          view.rootInto row
-
-        for found in view.find text
-          row = found.row
-          index = found.index
-
-          highlights = {}
-          for i in [index ... index + text.length]
-            highlights[i] = true
-
-          results.push {
-            contents: view.data.getLine row
-            highlights: highlights
-            fn: selectRow.bind(@, row)
-          }
-        return results
-
-    # traditional vim stuff
-    INSERT:
-      display: 'Insert at character'
-      insert: true
-      fn: () -> return
-    INSERT_AFTER:
-      display: 'Insert after character'
-      insert: true
-      fn: () ->
-        @view.cursor.right {cursor: 'pastEnd'}
-    INSERT_HOME:
-      display: 'Insert at beginning of line'
-      insert: true
-      fn: () ->
-        do @view.cursor.home
-    INSERT_END:
-      display: 'Insert after end of line'
-      insert: true
-      fn: () ->
-        @view.cursor.end {cursor: 'pastEnd'}
-    INSERT_LINE_BELOW:
-      display: 'Insert on new line after current line'
-      insert: true
-      fn: () ->
-        do @view.newLineBelow
-    INSERT_LINE_ABOVE:
-      display: 'Insert on new line before current line'
-      insert: true
-      fn: () ->
-        do @view.newLineAbove
-    REPLACE:
-      display: 'Replace character'
-      continue: (char) ->
-        num = Math.min(@repeat, do @view.curLineLength - @view.cursor.col)
-        newChars = (char for i in [1..num])
-        @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
-
-    # EX:
-    #   display: 'Enter EX mode'
-
-    UNDO:
-      display: 'Undo'
-      drop: true
-      fn: () ->
-        for i in [1..@repeat]
-          do @view.undo
-    REDO:
-      display: 'Redo'
-      drop: true
-      fn: () ->
-        for i in [1..@repeat]
-          do @view.redo
-    REPLAY:
-      display: 'Replay last command'
-
-    LEFT:
-      display: 'Move cursor left'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.left {cursor: option}
-    RIGHT:
-      display: 'Move cursor right'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.right {cursor: option}
-    UP:
-      display: 'Move cursor up'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.up {cursor: option}
-    DOWN:
-      display: 'Move cursor down'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.down {cursor: option}
-    HOME:
-      display: 'Move cursor to beginning of line'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.home {cursor: option}
-    END:
-      display: 'Move cursor to end of line'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.end {cursor: option}
-    BEGINNING_WORD:
-      display: 'Move cursor to the first word-beginning before it'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.beginningWord {cursor: option}
-    END_WORD:
-      display: 'Move cursor to the first word-ending after it'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.endWord {cursor: option}
-    NEXT_WORD:
-      display: 'Move cursor to the beginning of the next word'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.nextWord {cursor: option}
-    BEGINNING_BLOCK:
-      display: 'Move cursor to the first block-beginning before it'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.beginningWord {cursor: option, block: true}
-    END_BLOCK:
-      display: 'Move cursor to the first block-ending after it'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.endWord {cursor: option, block: true}
-    NEXT_BLOCK:
-      display: 'Move cursor to the beginning of the next block'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.nextWord {cursor: option, block: true}
-    FIND_NEXT_CHAR:
-      display: 'Move cursor to next occurrence of character in line'
-      motion: true
-      continue: (char, cursor, option) ->
-        cursor.findNextChar char, {cursor: option}
-    FIND_PREV_CHAR:
-      display: 'Move cursor to previous occurrence of character in line'
-      motion: true
-      continue: (char, cursor, option) ->
-        cursor.findPrevChar char, {cursor: option}
-    TO_NEXT_CHAR:
-      display: 'Move cursor to just before next occurrence of character in line'
-      motion: true
-      continue: (char, cursor, option) ->
-        cursor.findNextChar char, {cursor: option, beforeFound: true}
-    TO_PREV_CHAR:
-      display: 'Move cursor to just after previous occurrence of character in line'
-      motion: true
-      continue: (char, cursor, option) ->
-        cursor.findPrevChar char, {cursor: option, beforeFound: true}
-
-    NEXT_SIBLING:
-      display: 'Move cursor to the next sibling of the current line'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.nextSibling {cursor: option}
-
-    PREV_SIBLING:
-      display: 'Move cursor to the previous sibling of the current line'
-      motion: true
-      fn: (cursor, option) ->
-        cursor.prevSibling {cursor: option}
-
-    GO:
-      display: 'Various commands for navigation (operator)'
-      motion: true
-      bindings:
-        GO:
-          display: 'Go to the beginning of visible document'
-          motion: true
-          fn: (cursor, option) ->
-            do cursor.visibleHome
-    GO_END:
-      display: 'Go to end of visible document'
-      motion: true
-      fn: (cursor, option) ->
-        do cursor.visibleEnd
-    DELETE_CHAR:
-      display: 'Delete character'
-      fn: () ->
-        @view.delCharsAfterCursor @repeat, {yank: true}
-    DELETE_LAST_CHAR:
-      display: 'Delete last character'
-      fn: () ->
-        num = Math.min @view.cursor.col, @repeat
-        if num > 0
-          @view.delCharsBeforeCursor num, {yank: true}
-    CHANGE_CHAR:
-      display: 'Change character'
-      insert: true
-      fn: () ->
-        @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
-    DELETE:
-      display: 'Delete (operator)'
-      bindings:
-        DELETE:
-          display: 'Delete blocks'
-          fn: () ->
-            @view.delBlocks @repeat, {addNew: false}
-        MOTION:
-          display: 'Delete from cursor with motion'
-          fn: (cursor) ->
-            @view.deleteBetween @view.cursor, cursor, {yank: true}
-    CHANGE:
-      display: 'Change (operator)'
-      bindings:
-        CHANGE:
-          display: 'Delete blocks, and enter insert mode'
-          insert: true
-          fn: () ->
-            @view.delBlocks @repeat, {addNew: true}
-        MOTION:
-          display: 'Delete from cursor with motion, and enter insert mode'
-          insert: true
-          fn: (cursor) ->
-            @view.deleteBetween @view.cursor, cursor, {cursor: 'pastEnd', yank: true}
-
-    YANK:
-      display: 'Yank (operator)'
-      bindings:
-        YANK:
-          display: 'Yank blocks'
-          drop: true
-          fn: () ->
-            @view.yankBlocks @repeat
-        MOTION:
-          display: 'Yank from cursor with motion'
-          drop: true
-          fn: (cursor) ->
-            @view.yankBetween @view.cursor, cursor
-    PASTE_AFTER:
-      display: 'Paste after cursor'
-      fn: () ->
-        do @view.pasteAfter
-    PASTE_BEFORE:
-      display: 'Paste before cursor'
-      fn: () ->
-        do @view.pasteBefore
-
-    JOIN_LINE:
-      display: 'Join current line with line below'
-      fn: () ->
-        do @view.joinAtCursor
-
-    SCROLL_DOWN:
-      display: 'Scroll half window down'
-      drop: true
-      fn: () ->
-        @view.scrollPages 0.5
-    SCROLL_UP:
-      display: 'Scroll half window up'
-      drop: true
-      fn: () ->
-        @view.scrollPages -0.5
-    EXPORT:
-      display: 'Save a file'
-      fn: () ->
-        do @view.data.export
-    RECORD_MACRO:
-      display: 'Begin/stop recording a macro'
-    PLAY_MACRO:
-      display: 'Play a macro'
-
   MODES =
     NORMAL: 0
     INSERT: 1
@@ -412,89 +414,101 @@ class KeyBindings
     MENU: 3
 
   defaultVimKeyBindings =
-    '?': 'HELP'
-    'i': 'INSERT'
-    'a': 'INSERT_AFTER'
-    'I': 'INSERT_HOME'
-    'A': 'INSERT_END'
-    'o': 'INSERT_LINE_BELOW'
-    'O': 'INSERT_LINE_ABOVE'
-    'r': 'REPLACE'
-    # ':': 'EX'
-    'u': 'UNDO'
-    'ctrl+r': 'REDO'
-    '.': 'REPLAY'
-    'h': 'LEFT'
-    'left': 'LEFT'
-    'l': 'RIGHT'
-    'right': 'RIGHT'
-    'k': 'UP'
-    'up': 'UP'
-    'j': 'DOWN'
-    'down': 'DOWN'
-    '0': 'HOME'
-    '^': 'HOME'
-    '$': 'END'
-    'b': 'BEGINNING_WORD'
-    'e': 'END_WORD'
-    'w': 'NEXT_WORD'
-    'B': 'BEGINNING_BLOCK'
-    'E': 'END_BLOCK'
-    'W': 'NEXT_BLOCK'
-    'f': 'FIND_NEXT_CHAR'
-    'F': 'FIND_PREV_CHAR'
-    't': 'TO_NEXT_CHAR'
-    'T': 'TO_PREV_CHAR'
-    'g': 'GO'
-    'G': 'GO_END'
-    'd': 'DELETE'
-    'c': 'CHANGE'
-    'x': 'DELETE_CHAR'
-    'X': 'DELETE_LAST_CHAR'
-    's': 'CHANGE_CHAR'
-    'y': 'YANK'
-    'p': 'PASTE_AFTER'
-    'P': 'PASTE_BEFORE'
-    'J': 'JOIN_LINE'
+    'HELP'              : ['?']
+    'INSERT'            : ['i']
+    'INSERT_HOME'       : ['I']
+    'INSERT_AFTER'      : ['a']
+    'INSERT_END'        : ['A']
+    'INSERT_LINE_BELOW' : ['o']
+    'INSERT_LINE_ABOVE' : ['O']
 
-    'tab': 'INDENT_RIGHT'
-    'shift+tab': 'INDENT_LEFT'
-    '>': 'MOVE_BLOCK_RIGHT'
-    '<': 'MOVE_BLOCK_LEFT'
-    'ctrl+l': 'MOVE_BLOCK_RIGHT'
-    'ctrl+h': 'MOVE_BLOCK_LEFT'
-    'ctrl+j': 'MOVE_BLOCK_DOWN'
-    'ctrl+k': 'MOVE_BLOCK_UP'
+    'REPLACE'           : ['r']
+    'UNDO'              : ['u']
+    'REDO'              : ['ctrl+r']
+    'REPLAY'            : ['.']
 
-    'alt+h': 'ZOOM_OUT'
-    'alt+l': 'ZOOM_IN'
-    'alt+j': 'NEXT_SIBLING'
-    'alt+k': 'PREV_SIBLING'
+    'LEFT'              : ['h', 'left']
+    'RIGHT'             : ['l', 'right']
+    'UP'                : ['k', 'up']
+    'DOWN'              : ['j', 'down']
+    'HOME'              : ['0', '^']
+    'END'               : ['$']
+    'BEGINNING_WORD'    : ['b']
+    'END_WORD'          : ['e']
+    'NEXT_WORD'         : ['w']
+    'BEGINNING_BLOCK'   : ['B']
+    'END_BLOCK'         : ['E']
+    'NEXT_BLOCK'        : ['W']
+    'FIND_NEXT_CHAR'    : ['f']
+    'FIND_PREV_CHAR'    : ['F']
+    'TO_NEXT_CHAR'      : ['t']
+    'TO_PREV_CHAR'      : ['T']
 
-    'ctrl+s': 'EXPORT'
+    'GO'                : ['g']
+    'GO_END'            : ['G']
+    'DELETE'            : ['d']
+    'CHANGE'            : ['c']
+    'DELETE_CHAR'       : ['x']
+    'DELETE_LAST_CHAR'  : ['X']
+    'CHANGE_CHAR'       : ['s']
+    'YANK'              : ['y']
+    'PASTE_AFTER'       : ['p']
+    'PASTE_BEFORE'      : ['P']
+    'JOIN_LINE'         : ['J']
 
-    'z': 'TOGGLE_FOLD'
-    '[': 'ZOOM_OUT'
-    ']': 'ZOOM_IN'
-    '{': 'ZOOM_OUT_ALL'
-    '}': 'ZOOM_IN_ALL'
-    'ctrl+left': 'ZOOM_OUT'
-    'ctrl+right': 'ZOOM_IN'
-    'ctrl+d': 'SCROLL_DOWN'
-    'ctrl+u': 'SCROLL_UP'
+    'INDENT_RIGHT'      : ['tab']
+    'INDENT_LEFT'       : ['shift+tab']
+    'MOVE_BLOCK_RIGHT'  : ['>', 'ctrl+l']
+    'MOVE_BLOCK_LEFT'   : ['<', 'ctrl+h']
+    'MOVE_BLOCK_DOWN'   : ['ctrl+j']
+    'MOVE_BLOCK_UP'     : ['ctrl+k']
 
-    '/': 'SEARCH'
-    'ctrl+f': 'SEARCH'
-    'q': 'RECORD_MACRO'
-    '@': 'PLAY_MACRO'
+    'NEXT_SIBLING'      : ['alt+j']
+    'PREV_SIBLING'      : ['alt+k']
+
+    'TOGGLE_FOLD'       : ['z']
+    'ZOOM_OUT'          : ['[', 'alt+h', 'ctrl+left']
+    'ZOOM_IN'           : [']', 'alt+l', 'ctrl+right']
+    'ZOOM_OUT_ALL'      : ['{']
+    'ZOOM_IN_ALL'       : ['}']
+    'SCROLL_DOWN'       : ['ctrl+d']
+    'SCROLL_UP'         : ['ctrl+u']
+
+    'SEARCH'            : ['/', 'ctrl+f']
+    'RECORD_MACRO'      : ['q']
+    'PLAY_MACRO'        : ['@']
+
+    'EXPORT'            : ['ctrl+s']
+
+
+  # takes keyDefinitions and keyMaps, and combines them
+  getBindings = (definitions, keyMap) ->
+    bindings = {}
+    for name, v of definitions
+      if name == 'MOTION'
+        keys = ['MOTION']
+      else if (name of keyMap)
+        keys = keyMap[name]
+      else
+        throw "Error:  keyMap missing key for #{name}"
+
+      v = _.clone v
+      v.name = name
+      if v.bindings
+        v.bindings = getBindings v.bindings, keyMap
+
+      for key in keys
+        if key of bindings
+          throw "Error:  Duplicate binding on key #{key}"
+        bindings[key] = v
+    return bindings
 
   constructor: (view, divs = {}) ->
     @view = view
 
-    @bindings = keyDefinitions
-    @keyMap = {}
-    for k, v of defaultVimKeyBindings
-      @keyMap[k] = v
+    @keyMap = _.clone defaultVimKeyBindings
+
+    @bindings = getBindings keyDefinitions, @keyMap
 
     if divs.keyBindingsDiv
       @keybindingsDiv = divs.keyBindingsDiv
@@ -518,33 +532,29 @@ class KeyBindings
       do @view.save
 
   buildBindingsDiv: () ->
-    typeToKeys = {}
-    for k,v of @keyMap
-      if not typeToKeys[v]
-        typeToKeys[v] = []
-      typeToKeys[v].push k
-
     table = $('<table>')
 
-    buildTableContents = (bindings, onto) ->
-      for k,v of bindings
+    buildTableContents = (definitions, onto) =>
+      for k,v of definitions
         if k == 'MOTION'
           keys = ['<MOTION>']
         else
-          keys = typeToKeys[k]
+          keys = @keyMap[k]
           if not keys
             continue
         row = $('<tr>')
-        row.append $('<td>').text keys[0]
-        display_cell = $('<td>').css('width', '100%').text v.display
 
-        row.append display_cell
+        # row.append $('<td>').text keys[0]
+        row.append $('<td>').text keys.join(' OR ')
+
+        display_cell = $('<td>').css('width', '100%').text v.display
         if v.bindings
           buildTableContents v.bindings, display_cell
-        # row.append $('<td>').text typeToKeys[k].join(' OR ')
+        row.append display_cell
+
         onto.append row
 
-    buildTableContents @bindings, table
+    buildTableContents keyDefinitions, table
     @keybindingsDiv.empty().append(table)
 
   setMode: (mode) ->
@@ -560,9 +570,6 @@ class KeyBindings
       @keybindingsDiv.toggleClass 'hidden', (mode == MODES.MENU)
     if @view.mainDiv
       @view.mainDiv.toggleClass 'hidden', (mode == MODES.MENU)
-
-  getKey: (name) ->
-    return @bindings[name].key
 
   handleKey: (key) ->
     console.log('handling', key)
@@ -637,8 +644,7 @@ class KeyBindings
         do keyStream.wait
         return null
 
-      binding = @keyMap[motionKey]
-      info = bindings[binding] || {}
+      info = bindings[motionKey] || {}
       if not info.motion
         do keyStream.forget
         return null
@@ -685,11 +691,10 @@ class KeyBindings
       # TODO: something better for passing repeat through?
       repeat = repeat * newrepeat
 
-      binding = @keyMap[key]
       fn = null
       args = []
 
-      if not (binding of bindings)
+      if not (key of bindings)
         if 'MOTION' of bindings
           info = bindings['MOTION']
 
@@ -705,7 +710,7 @@ class KeyBindings
         else
           return do keyStream.forget
       else
-        info = bindings[binding] || {}
+        info = bindings[key] || {}
 
       if info.motion
         motion = getMotion key
@@ -748,7 +753,7 @@ class KeyBindings
         else
           return do keyStream.save
 
-      if binding == 'RECORD_MACRO'
+      if info.name == 'RECORD_MACRO'
         if @recording == null
           nkey = do keyStream.dequeue
           if nkey == null then return do keyStream.wait
@@ -761,7 +766,7 @@ class KeyBindings
           @recording = null
           @recording_key = null
         return do keyStream.forget
-      if binding == 'PLAY_MACRO'
+      if info.name == 'PLAY_MACRO'
           nkey = do keyStream.dequeue
           if nkey == null then return do keyStream.wait
           recording = @macros[nkey]
@@ -774,7 +779,7 @@ class KeyBindings
           # but we should save the macro-playing sequence itself
           return do keyStream.save
 
-      if binding == 'REPLAY'
+      if info.name == 'REPLAY'
         for i in [1..repeat]
           newStream = new KeyStream @keyStream.lastSequence
           newStream.on 'save', () =>
