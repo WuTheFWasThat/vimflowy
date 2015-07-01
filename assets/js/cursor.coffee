@@ -126,7 +126,7 @@ class Cursor
       return not wordRegex.test matchChar
 
   getWordCheck: (options, matchChar) ->
-    if options.block
+    if options.whitespaceWord
       return ((row, col) => not @isInWhitespace row, col)
     else
       return ((row, col) => @isInWord row, col, matchChar)

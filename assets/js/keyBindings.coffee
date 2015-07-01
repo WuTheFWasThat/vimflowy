@@ -19,6 +19,7 @@ if module?
 #   a function which takes next key
 # bindings:
 #   a dictionary from keyDefinitions to functions
+#   *SPECIAL KEYS*
 #   if the key is 'MOTION', the function takes a cursor # TODO: make that less janky
 # motion:
 #   if the binding is a motion
@@ -206,21 +207,21 @@ keyDefinitions =
     motion: true
     fn: (cursor, option) ->
       cursor.nextWord {cursor: option}
-  BEGINNING_BLOCK:
-    display: 'Move cursor to the first block-beginning before it'
+  BEGINNING_WWORD:
+    display: 'Move cursor to the first Word-beginning before it'
     motion: true
     fn: (cursor, option) ->
-      cursor.beginningWord {cursor: option, block: true}
-  END_BLOCK:
-    display: 'Move cursor to the first block-ending after it'
+      cursor.beginningWord {cursor: option, whitespaceWord: true}
+  END_WWORD:
+    display: 'Move cursor to the first Word-ending after it'
     motion: true
     fn: (cursor, option) ->
-      cursor.endWord {cursor: option, block: true}
-  NEXT_BLOCK:
-    display: 'Move cursor to the beginning of the next block'
+      cursor.endWord {cursor: option, whitespaceWord: true}
+  NEXT_WWORD:
+    display: 'Move cursor to the beginning of the next Word'
     motion: true
     fn: (cursor, option) ->
-      cursor.nextWord {cursor: option, block: true}
+      cursor.nextWord {cursor: option, whitespaceWord: true}
   FIND_NEXT_CHAR:
     display: 'Move cursor to next occurrence of character in line'
     motion: true
@@ -419,72 +420,73 @@ class KeyBindings
     MENU: 3
 
   defaultVimKeyBindings =
-    'HELP'              : ['?']
-    'INSERT'            : ['i']
-    'INSERT_HOME'       : ['I']
-    'INSERT_AFTER'      : ['a']
-    'INSERT_END'        : ['A']
-    'INSERT_LINE_BELOW' : ['o']
-    'INSERT_LINE_ABOVE' : ['O']
+    NORMAL:
+      'HELP'              : ['?']
+      'INSERT'            : ['i']
+      'INSERT_HOME'       : ['I']
+      'INSERT_AFTER'      : ['a']
+      'INSERT_END'        : ['A']
+      'INSERT_LINE_BELOW' : ['o']
+      'INSERT_LINE_ABOVE' : ['O']
 
-    'REPLACE'           : ['r']
-    'UNDO'              : ['u']
-    'REDO'              : ['ctrl+r']
-    'REPLAY'            : ['.']
+      'REPLACE'           : ['r']
+      'UNDO'              : ['u']
+      'REDO'              : ['ctrl+r']
+      'REPLAY'            : ['.']
 
-    'LEFT'              : ['h', 'left']
-    'RIGHT'             : ['l', 'right']
-    'UP'                : ['k', 'up']
-    'DOWN'              : ['j', 'down']
-    'HOME'              : ['0', '^']
-    'END'               : ['$']
-    'BEGINNING_WORD'    : ['b']
-    'END_WORD'          : ['e']
-    'NEXT_WORD'         : ['w']
-    'BEGINNING_BLOCK'   : ['B']
-    'END_BLOCK'         : ['E']
-    'NEXT_BLOCK'        : ['W']
-    'FIND_NEXT_CHAR'    : ['f']
-    'FIND_PREV_CHAR'    : ['F']
-    'TO_NEXT_CHAR'      : ['t']
-    'TO_PREV_CHAR'      : ['T']
+      'LEFT'              : ['h', 'left']
+      'RIGHT'             : ['l', 'right']
+      'UP'                : ['k', 'up']
+      'DOWN'              : ['j', 'down']
+      'HOME'              : ['0', '^']
+      'END'               : ['$']
+      'BEGINNING_WORD'    : ['b']
+      'END_WORD'          : ['e']
+      'NEXT_WORD'         : ['w']
+      'BEGINNING_WWORD'   : ['B']
+      'END_WWORD'         : ['E']
+      'NEXT_WWORD'        : ['W']
+      'FIND_NEXT_CHAR'    : ['f']
+      'FIND_PREV_CHAR'    : ['F']
+      'TO_NEXT_CHAR'      : ['t']
+      'TO_PREV_CHAR'      : ['T']
 
-    'GO'                : ['g']
-    'PARENT'            : ['p']
-    'GO_END'            : ['G']
-    'DELETE'            : ['d']
-    'CHANGE'            : ['c']
-    'DELETE_CHAR'       : ['x']
-    'DELETE_LAST_CHAR'  : ['X']
-    'CHANGE_CHAR'       : ['s']
-    'YANK'              : ['y']
-    'PASTE_AFTER'       : ['p']
-    'PASTE_BEFORE'      : ['P']
-    'JOIN_LINE'         : ['J']
+      'GO'                : ['g']
+      'PARENT'            : ['p']
+      'GO_END'            : ['G']
+      'DELETE'            : ['d']
+      'CHANGE'            : ['c']
+      'DELETE_CHAR'       : ['x']
+      'DELETE_LAST_CHAR'  : ['X']
+      'CHANGE_CHAR'       : ['s']
+      'YANK'              : ['y']
+      'PASTE_AFTER'       : ['p']
+      'PASTE_BEFORE'      : ['P']
+      'JOIN_LINE'         : ['J']
 
-    'INDENT_RIGHT'      : ['tab']
-    'INDENT_LEFT'       : ['shift+tab']
-    'MOVE_BLOCK_RIGHT'  : ['>', 'ctrl+l']
-    'MOVE_BLOCK_LEFT'   : ['<', 'ctrl+h']
-    'MOVE_BLOCK_DOWN'   : ['ctrl+j']
-    'MOVE_BLOCK_UP'     : ['ctrl+k']
+      'INDENT_RIGHT'      : ['tab']
+      'INDENT_LEFT'       : ['shift+tab']
+      'MOVE_BLOCK_RIGHT'  : ['>', 'ctrl+l']
+      'MOVE_BLOCK_LEFT'   : ['<', 'ctrl+h']
+      'MOVE_BLOCK_DOWN'   : ['ctrl+j']
+      'MOVE_BLOCK_UP'     : ['ctrl+k']
 
-    'NEXT_SIBLING'      : ['alt+j']
-    'PREV_SIBLING'      : ['alt+k']
+      'NEXT_SIBLING'      : ['alt+j']
+      'PREV_SIBLING'      : ['alt+k']
 
-    'TOGGLE_FOLD'       : ['z']
-    'ZOOM_OUT'          : ['[', 'alt+h', 'ctrl+left']
-    'ZOOM_IN'           : [']', 'alt+l', 'ctrl+right']
-    'ZOOM_OUT_ALL'      : ['{']
-    'ZOOM_IN_ALL'       : ['}']
-    'SCROLL_DOWN'       : ['ctrl+d']
-    'SCROLL_UP'         : ['ctrl+u']
+      'TOGGLE_FOLD'       : ['z']
+      'ZOOM_OUT'          : ['[', 'alt+h', 'ctrl+left']
+      'ZOOM_IN'           : [']', 'alt+l', 'ctrl+right']
+      'ZOOM_OUT_ALL'      : ['{']
+      'ZOOM_IN_ALL'       : ['}']
+      'SCROLL_DOWN'       : ['ctrl+d']
+      'SCROLL_UP'         : ['ctrl+u']
 
-    'SEARCH'            : ['/', 'ctrl+f']
-    'RECORD_MACRO'      : ['q']
-    'PLAY_MACRO'        : ['@']
+      'SEARCH'            : ['/', 'ctrl+f']
+      'RECORD_MACRO'      : ['q']
+      'PLAY_MACRO'        : ['@']
 
-    'EXPORT'            : ['ctrl+s']
+      'EXPORT'            : ['ctrl+s']
 
 
   # takes keyDefinitions and keyMaps, and combines them
@@ -496,7 +498,8 @@ class KeyBindings
       else if (name of keyMap)
         keys = keyMap[name]
       else
-        throw "Error:  keyMap missing key for #{name}"
+        # throw "Error:  keyMap missing key for #{name}"
+        continue
 
       v = _.clone v
       v.name = name
@@ -512,9 +515,10 @@ class KeyBindings
   constructor: (view, divs = {}) ->
     @view = view
 
-    @keyMap = _.clone defaultVimKeyBindings
+    @keyMaps = _.clone defaultVimKeyBindings
 
-    @bindings = getBindings keyDefinitions, @keyMap
+    @bindings = {}
+    @bindings[MODES.NORMAL] = getBindings keyDefinitions, @keyMaps.NORMAL
 
     if divs.keyBindingsDiv
       @keybindingsDiv = divs.keyBindingsDiv
@@ -545,7 +549,7 @@ class KeyBindings
         if k == 'MOTION'
           keys = ['<MOTION>']
         else
-          keys = @keyMap[k]
+          keys = @keyMaps.NORMAL[k]
           if not keys
             continue
         row = $('<tr>')
@@ -589,30 +593,39 @@ class KeyBindings
       @processOnce keyStream
     do @view.render
 
-  processInsertMode: (key) ->
-    view = @view
-    if key == 'left'
-      do view.cursor.left
-    else if key == 'right'
-      view.cursor.right {cursor: 'pastEnd'}
-    else if key == 'up' or key == 'ctrl+k'
-      view.cursor.up {cursor: 'pastEnd'}
-    else if key == 'down' or key == 'ctrl+j'
-      view.cursor.down {cursor: 'pastEnd'}
-    else if key == 'backspace'
-      do view.deleteAtCursor
-    else if key == 'shift+backspace'
-      view.delCharsAfterCursor 1
-    else if key == 'shift+enter'
-      view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
-    else if key == 'enter'
-      do view.newLineAtCursor
-    else if key == 'tab'
-      do view.indent
-    else if key == 'shift+tab'
-      do view.unindent
+  processInsertMode: (keyStream) ->
+    key = do keyStream.dequeue
+    if key == null then throw 'Got no key in insert mode'
+    # if key == null then return do keyStream.wait
+
+    if key == 'esc' or key == 'ctrl+c'
+      @setMode MODES.NORMAL
+      do @view.cursor.left
+      return do keyStream.save
     else
-      view.addCharsAtCursor [key], {cursor: 'pastEnd'}
+      view = @view
+      if key == 'left'
+        do view.cursor.left
+      else if key == 'right'
+        view.cursor.right {cursor: 'pastEnd'}
+      else if key == 'up' or key == 'ctrl+k'
+        view.cursor.up {cursor: 'pastEnd'}
+      else if key == 'down' or key == 'ctrl+j'
+        view.cursor.down {cursor: 'pastEnd'}
+      else if key == 'backspace'
+        do view.deleteAtCursor
+      else if key == 'shift+backspace'
+        view.delCharsAfterCursor 1
+      else if key == 'shift+enter'
+        view.addCharsAtCursor ['\n'], {cursor: 'pastEnd'}
+      else if key == 'enter'
+        do view.newLineAtCursor
+      else if key == 'tab'
+        do view.indent
+      else if key == 'shift+tab'
+        do view.unindent
+      else
+        view.addCharsAtCursor [key], {cursor: 'pastEnd'}
 
   processMenuMode: (key) ->
     view = @menu.view
@@ -644,7 +657,7 @@ class KeyBindings
   processOnce: (keyStream) ->
 
     # useful when you expect a motion
-    getMotion = (motionKey, bindings = @bindings) =>
+    getMotion = (motionKey, bindings = @bindings[MODES.NORMAL]) =>
       [repeat, motionKey] = getRepeat motionKey
       if motionKey == null
         do keyStream.wait
@@ -806,20 +819,10 @@ class KeyBindings
     # do handler
 
     if @mode == MODES.INSERT
-      key = do keyStream.dequeue
-      if key == null then throw 'Got no key in insert mode'
-      # if key == null then return do keyStream.wait
-
-      if key == 'esc' or key == 'ctrl+c'
-        @setMode MODES.NORMAL
-        do @view.cursor.left
-        return do keyStream.save
-      else
-        @processInsertMode key
-        return
+      return @processInsertMode keyStream
 
     if @mode == MODES.NORMAL
-      return processNormalMode @bindings
+      return processNormalMode @bindings[MODES.NORMAL]
 
     if @mode = MODES.MENU
       key = do keyStream.dequeue
