@@ -717,19 +717,21 @@ class KeyBindings
       view.addCharsAtCursor [key], {cursor: 'pastEnd'}
       do @menu.update
 
-  processOnce: (keyStream) ->
+  processNormalMode: (keyStream, bindings = @bindings[MODES.NORMAL], repeat = 1) ->
 
     # useful when you expect a motion
-    getMotion = (motionKey, bindings = @bindings[MODES.NORMAL]) =>
-      [repeat, motionKey] = getRepeat motionKey
+    getMotion = (motionKey, bindings, repeat = 1) =>
+      [motionRepeat, motionKey] = getRepeat motionKey
+      repeat = repeat * motionRepeat
+
       if motionKey == null
         do keyStream.wait
-        return null
+        return [null, repeat]
 
       info = bindings[motionKey] || {}
       if not info.motion
         do keyStream.forget
-        return null
+        return [null, repeat]
 
       fn = null
 
@@ -737,18 +739,16 @@ class KeyBindings
         key = do keyStream.dequeue
         if key == null
           do keyStream.wait
-          return null
+          return [null, repeat]
         fn = info.continue.bind @, key
 
       else if info.bindings
-        answer = (getMotion null, info.bindings)
+        answer = (getMotion null, info.bindings, repeat)
         return answer
       else if info.fn
         fn = info.fn
 
-      # TODO: this is weird... just return another argument
-      fn.repeat = repeat
-      return fn
+      return [fn, repeat]
 
     # takes key, returns repeat number and key
     getRepeat = (key = null) =>
@@ -767,125 +767,119 @@ class KeyBindings
         if key == null then return [null, null]
       return [parseInt(numStr), key]
 
-    processNormalMode = (bindings, repeat=1) =>
-      [newrepeat, key] = do getRepeat
-      if key == null then return do keyStream.wait
-      # TODO: something better for passing repeat through?
-      repeat = repeat * newrepeat
+    [newrepeat, key] = do getRepeat
+    if key == null then return do keyStream.wait
+    # TODO: something better for passing repeat through?
+    repeat = repeat * newrepeat
 
-      fn = null
-      args = []
+    fn = null
+    args = []
 
-      if not (key of bindings)
-        if 'MOTION' of bindings
-          info = bindings['MOTION']
+    if not (key of bindings)
+      if 'MOTION' of bindings
+        info = bindings['MOTION']
 
-          # note: this uses original bindings to determine what's a motion
-          motion = getMotion key
-          if motion == null then return do keyStream.forget
+        # note: this uses original bindings to determine what's a motion
+        [motion, repeat] = getMotion key, @bindings[MODES.NORMAL], repeat
+        if motion == null then return do keyStream.forget
 
-          cursor = do @view.cursor.clone
-          for i in [1..repeat]
-            for j in [1..motion.repeat]
-              motion cursor, 'pastEnd'
-
-          args.push cursor
-        else
-          return do keyStream.forget
-      else
-        info = bindings[key] || {}
-
-      if info.bindings
-        return processNormalMode info.bindings, repeat
-
-      if info.motion
-        # note: this uses *new* bindings to determine what's a motion
-        motion = getMotion key, bindings
-        if motion == null then return
-
-        for j in [1..repeat]
-          motion @view.cursor, ''
-        return do keyStream.forget
-
-      if info.menu
-        @setMode MODES.MENU
-        @menu = new Menu @menuDiv, (info.menu.bind @, @view)
-        do @menu.render
-        return do keyStream.forget
-
-      if info.continue
-        key = do keyStream.dequeue
-        if key == null then return do keyStream.wait
-
-        fn = info.continue
-        args.push key
-      else if info.fn
-        fn = info.fn
-
-      if fn
-        context = {
-          view: @view,
-          repeat: repeat,
-          keybindingsDiv: @keybindingsDiv,
-          setMode: @setMode
-        }
-        fn.apply context, args
-
-        if info.insert
-          @setMode MODES.INSERT
-          return
-        if info.drop
-          return do keyStream.forget
-        else
-          return do keyStream.save
-
-      if info.name == 'RECORD_MACRO'
-        if @recording == null
-          nkey = do keyStream.dequeue
-          if nkey == null then return do keyStream.wait
-          @recording = new KeyStream
-          @recording_key = nkey
-        else
-          macro = @recording.queue
-          do macro.pop # pop off the RECORD_MACRO itself
-          @macros[@recording_key] = macro
-          @recording = null
-          @recording_key = null
-        return do keyStream.forget
-      if info.name == 'PLAY_MACRO'
-          nkey = do keyStream.dequeue
-          if nkey == null then return do keyStream.wait
-          recording = @macros[nkey]
-          if recording == undefined then return do keyStream.forget
-
-          for i in [1..repeat]
-            # the recording shouldn't save, (i.e. no @view.save)
-            recordKeyStream = new KeyStream recording
-            @processKeys recordKeyStream
-          # but we should save the macro-playing sequence itself
-          return do keyStream.save
-
-      if info.name == 'REPLAY'
+        cursor = do @view.cursor.clone
         for i in [1..repeat]
-          newStream = new KeyStream @keyStream.lastSequence
-          newStream.on 'save', () =>
-            do @view.save
-          @processKeys newStream
-        return do keyStream.forget
+          motion cursor, 'pastEnd'
+
+        args.push cursor
       else
         return do keyStream.forget
+    else
+      info = bindings[key] || {}
 
-    # if key not in @reverseBindings then return
+    if info.bindings
+      return @processNormalMode keyStream, info.bindings, repeat
 
-    # name = @reverseBindings[key]
-    # handler = @handlers[name]
-    # do handler
+    if info.motion
+      # note: this uses *new* bindings to determine what's a motion
+      [motion, repeat] = getMotion key, bindings, repeat
+      if motion == null then return
 
+      for j in [1..repeat]
+        motion @view.cursor, ''
+      return do keyStream.forget
+
+    if info.menu
+      @setMode MODES.MENU
+      @menu = new Menu @menuDiv, (info.menu.bind @, @view)
+      do @menu.render
+      return do keyStream.forget
+
+    if info.continue
+      key = do keyStream.dequeue
+      if key == null then return do keyStream.wait
+
+      fn = info.continue
+      args.push key
+    else if info.fn
+      fn = info.fn
+
+    if fn
+      context = {
+        view: @view,
+        repeat: repeat,
+        keybindingsDiv: @keybindingsDiv,
+        setMode: @setMode
+      }
+      fn.apply context, args
+
+      if info.insert
+        @setMode MODES.INSERT
+        return
+      if info.drop
+        return do keyStream.forget
+      else
+        return do keyStream.save
+
+    if info.name == 'RECORD_MACRO'
+      if @recording == null
+        nkey = do keyStream.dequeue
+        if nkey == null then return do keyStream.wait
+        @recording = new KeyStream
+        @recording_key = nkey
+      else
+        macro = @recording.queue
+        do macro.pop # pop off the RECORD_MACRO itself
+        @macros[@recording_key] = macro
+        @recording = null
+        @recording_key = null
+      return do keyStream.forget
+    if info.name == 'PLAY_MACRO'
+        nkey = do keyStream.dequeue
+        if nkey == null then return do keyStream.wait
+        recording = @macros[nkey]
+        if recording == undefined then return do keyStream.forget
+
+        for i in [1..repeat]
+          # the recording shouldn't save, (i.e. no @view.save)
+          recordKeyStream = new KeyStream recording
+          @processKeys recordKeyStream
+        # but we should save the macro-playing sequence itself
+        return do keyStream.save
+
+    if info.name == 'REPLAY'
+      for i in [1..repeat]
+        newStream = new KeyStream @keyStream.lastSequence
+        newStream.on 'save', () =>
+          do @view.save
+        @processKeys newStream
+      return do keyStream.forget
+    else
+      return do keyStream.forget
+
+
+  processOnce: (keyStream) ->
     if @mode == MODES.INSERT
       return @processInsertMode keyStream
 
     if @mode == MODES.NORMAL
-      return processNormalMode @bindings[MODES.NORMAL]
+      return @processNormalMode keyStream
 
     if @mode = MODES.MENU
       key = do keyStream.dequeue
