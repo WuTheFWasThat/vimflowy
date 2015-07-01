@@ -8,6 +8,12 @@ if module?
   actions = require('./actions.coffee')
   _ = require('underscore')
 
+MODES =
+  NORMAL: 0
+  INSERT: 1
+  EX: 2
+  MENU: 3
+
 # display:
 #   is displayed in keybindings help screen
 #
@@ -23,6 +29,8 @@ if module?
 #   if the key is 'MOTION', the function takes a cursor # TODO: make that less janky
 # motion:
 #   if the binding is a motion
+# to_mode:
+#   mode to switch to
 keyDefinitions =
   HELP:
     display: 'Show/hide key bindings'
@@ -110,31 +118,31 @@ keyDefinitions =
   # traditional vim stuff
   INSERT:
     display: 'Insert at character'
-    insert: true
+    to_mode: MODES.INSERT
     fn: () -> return
   INSERT_AFTER:
     display: 'Insert after character'
-    insert: true
+    to_mode: MODES.INSERT
     fn: () ->
       @view.cursor.right {cursor: 'pastEnd'}
   INSERT_HOME:
     display: 'Insert at beginning of line'
-    insert: true
+    to_mode: MODES.INSERT
     fn: () ->
       do @view.cursor.home
   INSERT_END:
     display: 'Insert after end of line'
-    insert: true
+    to_mode: MODES.INSERT
     fn: () ->
       @view.cursor.end {cursor: 'pastEnd'}
   INSERT_LINE_BELOW:
     display: 'Insert on new line after current line'
-    insert: true
+    to_mode: MODES.INSERT
     fn: () ->
       do @view.newLineBelow
   INSERT_LINE_ABOVE:
     display: 'Insert on new line before current line'
-    insert: true
+    to_mode: MODES.INSERT
     fn: () ->
       do @view.newLineAbove
   REPLACE:
@@ -286,7 +294,7 @@ keyDefinitions =
         @view.delCharsBeforeCursor num, {yank: true}
   CHANGE_CHAR:
     display: 'Change character'
-    insert: true
+    to_mode: MODES.INSERT
     fn: () ->
       @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
   DELETE:
@@ -305,12 +313,12 @@ keyDefinitions =
     bindings:
       CHANGE:
         display: 'Delete blocks, and enter insert mode'
-        insert: true
+        to_mode: MODES.INSERT
         fn: () ->
           @view.delBlocks @repeat, {addNew: true}
       MOTION:
         display: 'Delete from cursor with motion, and enter insert mode'
-        insert: true
+        to_mode: MODES.INSERT
         fn: (cursor) ->
           @view.deleteBetween @view.cursor, cursor, {cursor: 'pastEnd', yank: true}
 
@@ -360,13 +368,13 @@ keyDefinitions =
   PLAY_MACRO:
     display: 'Play a macro'
 
+  # for everything but normal mode
+  EXIT_MODE:
+    display: 'Exit back to normal mode'
+    to_mode: MODES.NORMAL
+
   # for insert mode
 
-  EXIT_INSERT:
-    display: 'Exit insert mode'
-    normal: true
-    fn: () ->
-       do @view.cursor.left
   BACKSPACE:
     display: 'Delete a character before the cursor (i.e. backspace key)'
     fn: () ->
@@ -380,6 +388,23 @@ keyDefinitions =
     fn: () ->
       do @view.newLineAtCursor
 
+  # for menu mode
+  MENU_SELECT:
+    display: 'Select current menu selection'
+    to_mode: MODES.NORMAL
+    fn: () ->
+      do @menu.select
+      do @view.save # b/c could've zoomed
+  MENU_UP:
+    display: 'Select previous menu selection'
+    fn: () ->
+      console.log('menu up')
+      do @menu.up
+  MENU_DOWN:
+    display: 'Select next menu selection'
+    fn: () ->
+      console.log('menu down')
+      do @menu.down
 
 # end of keyDefinitions
 
@@ -434,13 +459,31 @@ class KeyStream extends EventEmitter
 
 class KeyBindings
 
-  MODES =
-    NORMAL: 0
-    INSERT: 1
-    EX: 2
-    MENU: 3
-
   defaultVimKeyBindings =
+    MENU:
+      'MENU_SELECT'       : ['enter']
+      'MENU_UP'           : ['ctrl+k', 'up', 'tab']
+      'MENU_DOWN'         : ['ctrl+j', 'down', 'shift+tab']
+
+      'LEFT'              : ['left']
+      'RIGHT'             : ['right']
+      'HOME'              : ['ctrl+a', 'home']
+      'END'               : ['ctrl+e', 'end']
+      'BEGINNING_WORD'    : ['alt+b']
+      'END_WORD'          : ['alt+f']
+      'NEXT_WORD'         : []
+      'BEGINNING_WWORD'   : []
+      'END_WWORD'         : []
+      'NEXT_WWORD'        : []
+      'FIND_NEXT_CHAR'    : []
+      'FIND_PREV_CHAR'    : []
+      'TO_NEXT_CHAR'      : []
+      'TO_PREV_CHAR'      : []
+
+      'BACKSPACE'         : ['backspace']
+      'DELKEY'            : ['shift+backspace']
+
+      'EXIT_MODE'         : ['esc', 'ctrl+c']
     INSERT:
       'LEFT'              : ['left']
       'RIGHT'             : ['right']
@@ -483,7 +526,7 @@ class KeyBindings
 
       'SEARCH'            : []
       'EXPORT'            : ['ctrl+s']
-      'EXIT_INSERT'       : ['esc', 'ctrl+c']
+      'EXIT_MODE'         : ['esc', 'ctrl+c']
     NORMAL:
       'HELP'              : ['?']
       'INSERT'            : ['i']
@@ -584,6 +627,7 @@ class KeyBindings
     @bindings = {}
     @bindings[MODES.NORMAL] = getBindings keyDefinitions, @keyMaps.NORMAL
     @bindings[MODES.INSERT] = getBindings keyDefinitions, @keyMaps.INSERT
+    @bindings[MODES.MENU]   = getBindings keyDefinitions, @keyMaps.MENU
 
     if divs.keyBindingsDiv
       @keybindingsDiv = divs.keyBindingsDiv
@@ -658,6 +702,14 @@ class KeyBindings
       @processOnce keyStream
     do @view.render
 
+  processOnce: (keyStream) ->
+    if @mode == MODES.INSERT
+      @processInsertMode keyStream
+    else if @mode == MODES.NORMAL
+      @processNormalMode keyStream
+    else if @mode = MODES.MENU
+      @processMenuMode keyStream
+
   processInsertMode: (keyStream) ->
     key = do keyStream.dequeue
     if key == null then throw 'Got no key in insert mode'
@@ -676,7 +728,7 @@ class KeyBindings
     if info.motion
       motion = info.fn
       motion @view.cursor, 'pastEnd'
-    else
+    else if info.fn
       fn = info.fn
       args = []
       context = {
@@ -686,36 +738,46 @@ class KeyBindings
       }
       fn.apply context, args
 
-      if info.normal
-        @setMode MODES.NORMAL
-        return do keyStream.save
+    if info.to_mode == MODES.NORMAL
+      do @view.cursor.left
+      @setMode MODES.NORMAL
+      return do keyStream.save
 
-  processMenuMode: (key) ->
+  processMenuMode: (keyStream) ->
+    key = do keyStream.dequeue
+    if key == null then throw 'Got no key in menu mode'
+
+    bindings = @bindings[MODES.MENU]
+
     view = @menu.view
 
-    if key == 'left'
-      do view.cursor.left
-      do @menu.render
-    else if key == 'right'
-      view.cursor.right {cursor: 'pastEnd'}
-      do @menu.render
-    else if key == 'up' or key == 'ctrl+k' or key == 'shift+tab'
-      do @menu.up
-    else if key == 'down' or key == 'ctrl+j' or key == 'tab'
-      do @menu.down
-    else if key == 'enter'
-      do @menu.select
-      do @view.save # b/c could've zoomed
-      @setMode MODES.NORMAL
-    else if key == 'backspace'
-      do view.deleteAtCursor
-      do @menu.update
-    else if key == 'shift+backspace'
-      view.delCharsAfterCursor 1
-      do @menu.update
-    else
+    if not (key of bindings)
+      if key == 'shift+enter'
+        key = '\n'
       view.addCharsAtCursor [key], {cursor: 'pastEnd'}
-      do @menu.update
+    else
+      info = bindings[key]
+
+      if info.motion
+        motion = info.fn
+        motion view.cursor, 'pastEnd'
+      else if info.fn
+        fn = info.fn
+        args = []
+        context = {
+          view: view,
+          menu: @menu
+          repeat: 1,
+          setMode: @setMode
+        }
+        fn.apply context, args
+
+      if info.to_mode == MODES.NORMAL
+        @setMode MODES.NORMAL
+
+    do @menu.update
+    do @menu.render
+    return do keyStream.forget
 
   processNormalMode: (keyStream, bindings = @bindings[MODES.NORMAL], repeat = 1) ->
 
@@ -829,7 +891,7 @@ class KeyBindings
       }
       fn.apply context, args
 
-      if info.insert
+      if info.to_mode == MODES.INSERT
         @setMode MODES.INSERT
         return
       if info.drop
@@ -871,24 +933,6 @@ class KeyBindings
         @processKeys newStream
       return do keyStream.forget
     else
-      return do keyStream.forget
-
-
-  processOnce: (keyStream) ->
-    if @mode == MODES.INSERT
-      return @processInsertMode keyStream
-
-    if @mode == MODES.NORMAL
-      return @processNormalMode keyStream
-
-    if @mode = MODES.MENU
-      key = do keyStream.dequeue
-      if key == null then throw 'Got no key in menu mode'
-
-      if key == 'esc' or key == 'ctrl+c'
-        @setMode MODES.NORMAL
-      else
-        @processMenuMode key
       return do keyStream.forget
 
 # exports

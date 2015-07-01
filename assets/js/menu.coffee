@@ -25,7 +25,6 @@ class Menu
       @selection = @results.length - 1
     else
       @selection = @selection - 1
-    do @render
 
   down: () ->
     if not @results.length
@@ -34,13 +33,13 @@ class Menu
       @selection = 0
     else
       @selection = @selection + 1
-    do @render
 
   update: () ->
     query = do @view.curLine
-    @results = @fn query
-    @selection = 0
-    do @render
+    if (JSON.stringify query) != (JSON.stringify @lastquery)
+      @lastquery = query
+      @results = @fn query
+      @selection = 0
 
   render: () ->
     if not @div
