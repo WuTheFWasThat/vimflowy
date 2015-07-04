@@ -5,10 +5,9 @@ t = new TestCase ['hello world']
 t.sendKeys 'vwx'
 t.expect ['orld']
 
-# TODO: FIX THIS
 t = new TestCase ['hello world']
 t.sendKeys 'vex'
-t.expect ['world']
+t.expect [' world']
 
 t = new TestCase ['hello world']
 t.sendKeys 'v$x'
@@ -37,10 +36,9 @@ t.sendKey 'esc'
 t.sendKeys 'x'
 t.expect ['hello worl']
 
-# TODO: FIX THIS
 # test that change works
 t = new TestCase ['hello world']
 t.sendKeys 'vec'
 t.sendKeys 'hi'
 t.sendKey 'esc'
-t.expect ['hiworld']
+t.expect ['hi world']

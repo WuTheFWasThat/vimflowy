@@ -18,13 +18,13 @@ class Cursor
     @row = row
     @fromMoveCol option
 
-  setCol: (moveCol, option = 'pastEnd') ->
+  setCol: (moveCol, option = {pastEnd: true}) ->
     @moveCol = moveCol
     @fromMoveCol option
 
-  fromMoveCol: (option) ->
+  fromMoveCol: (option = {}) ->
     len = @data.getLength @row
-    maxcol = len - (if option == 'pastEnd' then 0 else 1)
+    maxcol = len - (if option.pastEnd then 0 else 1)
     if @moveCol < 0
       @col = Math.max(0, len + @moveCol + 1)
     else
@@ -41,7 +41,7 @@ class Cursor
       do @_left
 
   right: (options = {}) ->
-    shift = if options.cursor == 'pastEnd' then 0 else 1
+    shift = if options.cursor.pastEnd then 0 else 1
     if @col < (@data.getLength @row) - shift
       do @_right
 
@@ -93,7 +93,7 @@ class Cursor
     @setCol 0
 
   end: (options = {}) ->
-    @setCol (if options.cursor == 'pastEnd' then -1 else -2)
+    @setCol (if options.cursor.pastEnd then -1 else -2)
 
   visibleHome: () ->
     row = do @data.nextVisible
@@ -144,7 +144,7 @@ class Cursor
 
   endWord: (options = {}) ->
     if do @atVisibleEnd
-      if options.cursor == 'pastEnd'
+      if options.cursor.pastEnd
         do @_right
       return
 
@@ -157,12 +157,17 @@ class Cursor
     while @col < end and wordcheck @row, (@col+1)
       do @_right
 
-    if options.cursor == 'pastEnd'
+    console.log('options', options.cursor)
+    if options.cursor.pastEndWord
+      do @_right
+
+    end = (@data.getLength @row) - 1
+    if @col == end and options.cursor.pastEnd
       do @_right
 
   nextWord: (options = {}) ->
     if do @atVisibleEnd
-      if options.cursor == 'pastEnd'
+      if options.cursor.pastEnd
         do @_right
       return
 
@@ -176,7 +181,7 @@ class Cursor
       do @nextChar
 
     end = (@data.getLength @row) - 1
-    if @col == end and options.cursor == 'pastEnd'
+    if @col == end and options.cursor.pastEnd
       do @_right
 
   findNextChar: (char, options = {}) ->
@@ -199,7 +204,7 @@ class Cursor
       return
 
     @setCol found
-    if options.cursor == 'pastEnd'
+    if options.cursor.pastEnd
       do @_right
     if options.beforeFound
       do @_left

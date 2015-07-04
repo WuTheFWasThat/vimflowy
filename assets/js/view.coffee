@@ -223,11 +223,11 @@ class View
     return @data.getLength @cursor.row
 
   setCur: (row, col, option = '') ->
-    if option == 'beforeEnd'
+    if option.beforeEnd
       if col > 0
         col -= 1
 
-    shift = if option == 'pastEnd' then 0 else 1
+    shift = if option.pastEnd then 0 else 1
     len = @data.getLength row
     if len > 0 and col > len - shift
       col = len - shift
@@ -294,7 +294,7 @@ class View
     @delChars @cursor.row, @cursor.col, nchars, options
 
   spliceCharsAfterCursor: (nchars, chars, options) ->
-    @delCharsAfterCursor nchars, {cursor: 'pastEnd'}
+    @delCharsAfterCursor nchars, {cursor: {pastEnd: true}}
     @addCharsAtCursor chars, options
 
   yankChars: (row, col, nchars) ->
@@ -338,7 +338,7 @@ class View
     @act delAction
     row = @cursor.row
     sibling = @act new actions.InsertRowSibling @cursor.row, {before: true}
-    @addCharsAfterCursor delAction.deletedChars, {cursor: 'beforeEnd'}
+    @addCharsAfterCursor delAction.deletedChars, {cursor: {beforeEnd: true}}
     @setCur row, 0
 
   joinRows: (first, second, options = {}) ->
@@ -362,7 +362,7 @@ class View
     row = @cursor.row
     sib = @data.nextVisible row
     if sib != null
-      @joinRows row, sib, {cursor: 'pastEnd', delimiter: ' '}
+      @joinRows row, sib, {cursor: {pastEnd: true}, delimiter: ' '}
 
   # implements proper "backspace" behavior
   deleteAtCursor: () ->
@@ -370,9 +370,9 @@ class View
       row = @cursor.row
       sib = @data.prevVisible row
       if sib != null
-        @joinRows sib, row, {cursor: 'pastEnd'}
+        @joinRows sib, row, {cursor: {pastEnd: true}}
     else
-      @delCharsBeforeCursor 1, {cursor: 'pastEnd'}
+      @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
   delBlocks: (nrows, options = {}) ->
     action = new actions.DeleteBlocks @cursor.row, nrows, options

@@ -40,7 +40,7 @@ class Register
       if options.before
         @view.addCharsAtCursor @chars
       else
-        @view.addCharsAfterCursor @chars, {cursor: 'beforeEnd'}
+        @view.addCharsAfterCursor @chars, {cursor: {beforeEnd: true}}
     else if @type == Register.TYPES.ROWS
       row = @view.cursor.row
       parent = @view.data.getParent row

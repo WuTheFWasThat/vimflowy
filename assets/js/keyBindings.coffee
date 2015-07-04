@@ -283,7 +283,7 @@ keyDefinitions =
     display: 'Insert after character'
     to_mode: MODES.INSERT
     fn: () ->
-      @view.cursor.right {cursor: 'pastEnd'}
+      @view.cursor.right {cursor: {pastEnd: true}}
   INSERT_HOME:
     display: 'Insert at beginning of line'
     to_mode: MODES.INSERT
@@ -293,7 +293,7 @@ keyDefinitions =
     display: 'Insert after end of line'
     to_mode: MODES.INSERT
     fn: () ->
-      @view.cursor.end {cursor: 'pastEnd'}
+      @view.cursor.end {cursor: {pastEnd: true}}
   INSERT_LINE_BELOW:
     display: 'Insert on new line after current line'
     to_mode: MODES.INSERT
@@ -309,7 +309,7 @@ keyDefinitions =
     continue: (char) ->
       num = Math.min(@repeat, do @view.curLineLength - @view.cursor.col)
       newChars = (char for i in [1..num])
-      @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
+      @view.spliceCharsAfterCursor num, newChars, {cursor: {beforeEnd: true}}
 
   UNDO:
     display: 'Undo'
@@ -452,7 +452,7 @@ keyDefinitions =
     display: 'Change character'
     to_mode: MODES.INSERT
     fn: () ->
-      @view.delCharsAfterCursor 1, {cursor: 'pastEnd'}, {yank: true}
+      @view.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
   DELETE:
     display: 'Delete (operator)'
     bindings:
@@ -478,7 +478,7 @@ keyDefinitions =
         to_mode: MODES.INSERT
         fn: (cursor, options = {}) ->
           options.yank = true
-          options.cursor = 'pastEnd'
+          options.cursor = {pastEnd: true}
           @view.deleteBetween @view.cursor, cursor, options
 
   YANK:
@@ -768,14 +768,14 @@ class KeyBindings
     if not (key of bindings)
       if key == 'shift+enter'
         key = '\n'
-      @view.addCharsAtCursor [key], {cursor: 'pastEnd'}
+      @view.addCharsAtCursor [key], {cursor: {pastEnd: true}}
       return
 
     info = bindings[key]
 
     if info.motion
       motion = info.fn
-      motion @view.cursor, 'pastEnd'
+      motion @view.cursor, {pastEnd: true}
     else if info.fn
       fn = info.fn
       args = []
@@ -805,7 +805,7 @@ class KeyBindings
         tmp = do @view.cursor.clone # this is necessary until we figure out multiline
 
         for i in [1..repeat]
-          motion tmp, 'pastEnd'
+          motion tmp, {pastEnd: true}
 
         if tmp.row == @view.cursor.row # only allow same-row movement
           @view.cursor = tmp
@@ -858,13 +858,13 @@ class KeyBindings
     if not (key of bindings)
       if key == 'shift+enter'
         key = '\n'
-      view.addCharsAtCursor [key], {cursor: 'pastEnd'}
+      view.addCharsAtCursor [key], {cursor: {pastEnd: true}}
     else
       info = bindings[key]
 
       if info.motion
         motion = info.fn
-        motion view.cursor, 'pastEnd'
+        motion view.cursor, {pastEnd: true}
       else if info.fn
         fn = info.fn
         args = []
@@ -951,7 +951,7 @@ class KeyBindings
 
         cursor = do @view.cursor.clone
         for i in [1..repeat]
-          motion cursor, 'pastEnd'
+          motion cursor, {pastEnd: true, pastEndWord: true}
 
         args.push cursor
       else
