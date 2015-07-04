@@ -14,6 +14,145 @@ MODES =
   EX: 2
   MENU: 3
 
+defaultVimKeyBindings = {}
+
+defaultVimKeyBindings[MODES.MENU] =
+  'MENU_SELECT'       : ['enter']
+  'MENU_UP'           : ['ctrl+k', 'up', 'tab']
+  'MENU_DOWN'         : ['ctrl+j', 'down', 'shift+tab']
+
+  'LEFT'              : ['left']
+  'RIGHT'             : ['right']
+  'HOME'              : ['ctrl+a', 'home']
+  'END'               : ['ctrl+e', 'end']
+  'BEGINNING_WORD'    : ['alt+b']
+  'END_WORD'          : ['alt+f']
+  'NEXT_WORD'         : []
+  'BEGINNING_WWORD'   : []
+  'END_WWORD'         : []
+  'NEXT_WWORD'        : []
+  'FIND_NEXT_CHAR'    : []
+  'FIND_PREV_CHAR'    : []
+  'TO_NEXT_CHAR'      : []
+  'TO_PREV_CHAR'      : []
+
+  'BACKSPACE'         : ['backspace']
+  'DELKEY'            : ['shift+backspace']
+
+  'EXIT_MODE'         : ['esc', 'ctrl+c']
+
+defaultVimKeyBindings[MODES.INSERT] =
+  'LEFT'              : ['left']
+  'RIGHT'             : ['right']
+  'UP'                : ['up']
+  'DOWN'              : ['down']
+  'HOME'              : ['ctrl+a', 'home']
+  'END'               : ['ctrl+e', 'end']
+  'BEGINNING_WORD'    : ['alt+b']
+  'END_WORD'          : ['alt+f']
+  'NEXT_WORD'         : []
+  'BEGINNING_WWORD'   : []
+  'END_WWORD'         : []
+  'NEXT_WWORD'        : []
+  'FIND_NEXT_CHAR'    : []
+  'FIND_PREV_CHAR'    : []
+  'TO_NEXT_CHAR'      : []
+  'TO_PREV_CHAR'      : []
+
+  'BACKSPACE'         : ['backspace']
+  'DELKEY'            : ['shift+backspace']
+  'SPLIT'             : ['enter']
+
+  'INDENT_RIGHT'      : ['tab']
+  'INDENT_LEFT'       : ['shift+tab']
+  'MOVE_BLOCK_RIGHT'  : []
+  'MOVE_BLOCK_LEFT'   : []
+  'MOVE_BLOCK_DOWN'   : []
+  'MOVE_BLOCK_UP'     : []
+
+  'NEXT_SIBLING'      : []
+  'PREV_SIBLING'      : []
+
+  'TOGGLE_FOLD'       : ['ctrl+z']
+  'ZOOM_OUT'          : ['ctrl+left']
+  'ZOOM_IN'           : ['ctrl+right']
+  'ZOOM_OUT_ALL'      : ['ctrl+shift+left']
+  'ZOOM_IN_ALL'       : ['ctrl+shift+right']
+  'SCROLL_DOWN'       : ['ctrl+d']
+  'SCROLL_UP'         : ['ctrl+u']
+
+  'SEARCH'            : []
+  'EXPORT'            : ['ctrl+s']
+  'EXIT_MODE'         : ['esc', 'ctrl+c']
+
+defaultVimKeyBindings[MODES.NORMAL] =
+  'HELP'              : ['?']
+  'INSERT'            : ['i']
+  'INSERT_HOME'       : ['I']
+  'INSERT_AFTER'      : ['a']
+  'INSERT_END'        : ['A']
+  'INSERT_LINE_BELOW' : ['o']
+  'INSERT_LINE_ABOVE' : ['O']
+
+  'REPLACE'           : ['r']
+  'UNDO'              : ['u']
+  'REDO'              : ['ctrl+r']
+  'REPLAY'            : ['.']
+
+  'LEFT'              : ['h', 'left']
+  'RIGHT'             : ['l', 'right']
+  'UP'                : ['k', 'up']
+  'DOWN'              : ['j', 'down']
+  'HOME'              : ['0', '^']
+  'END'               : ['$']
+  'BEGINNING_WORD'    : ['b']
+  'END_WORD'          : ['e']
+  'NEXT_WORD'         : ['w']
+  'BEGINNING_WWORD'   : ['B']
+  'END_WWORD'         : ['E']
+  'NEXT_WWORD'        : ['W']
+  'FIND_NEXT_CHAR'    : ['f']
+  'FIND_PREV_CHAR'    : ['F']
+  'TO_NEXT_CHAR'      : ['t']
+  'TO_PREV_CHAR'      : ['T']
+
+  'GO'                : ['g']
+  'PARENT'            : ['p']
+  'GO_END'            : ['G']
+  'DELETE'            : ['d']
+  'CHANGE'            : ['c']
+  'DELETE_CHAR'       : ['x']
+  'DELETE_LAST_CHAR'  : ['X']
+  'CHANGE_CHAR'       : ['s']
+  'YANK'              : ['y']
+  'PASTE_AFTER'       : ['p']
+  'PASTE_BEFORE'      : ['P']
+  'JOIN_LINE'         : ['J']
+
+  'INDENT_RIGHT'      : ['tab']
+  'INDENT_LEFT'       : ['shift+tab']
+  'MOVE_BLOCK_RIGHT'  : ['>', 'ctrl+l']
+  'MOVE_BLOCK_LEFT'   : ['<', 'ctrl+h']
+  'MOVE_BLOCK_DOWN'   : ['ctrl+j']
+  'MOVE_BLOCK_UP'     : ['ctrl+k']
+
+  'NEXT_SIBLING'      : ['alt+j']
+  'PREV_SIBLING'      : ['alt+k']
+
+  'TOGGLE_FOLD'       : ['z']
+  'ZOOM_IN'           : ['shift+enter', ']', 'alt+l', 'ctrl+right']
+  'ZOOM_OUT'          : ['enter', '[', 'alt+h', 'ctrl+left']
+  'ZOOM_OUT_ALL'      : ['{']
+  'ZOOM_IN_ALL'       : ['}']
+  'SCROLL_DOWN'       : ['ctrl+d']
+  'SCROLL_UP'         : ['ctrl+u']
+
+  'SEARCH'            : ['/', 'ctrl+f']
+  'RECORD_MACRO'      : ['q']
+  'PLAY_MACRO'        : ['@']
+
+  'EXPORT'            : ['ctrl+s']
+
 # display:
 #   is displayed in keybindings help screen
 #
@@ -39,6 +178,7 @@ keyDefinitions =
       @keybindingsDiv.toggleClass 'active'
       if localStorage?
         localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
+      do @buildBindingsDiv
 
   ZOOM_IN:
     display: 'Zoom in by one level'
@@ -459,143 +599,6 @@ class KeyStream extends EventEmitter
 
 class KeyBindings
 
-  defaultVimKeyBindings =
-    MENU:
-      'MENU_SELECT'       : ['enter']
-      'MENU_UP'           : ['ctrl+k', 'up', 'tab']
-      'MENU_DOWN'         : ['ctrl+j', 'down', 'shift+tab']
-
-      'LEFT'              : ['left']
-      'RIGHT'             : ['right']
-      'HOME'              : ['ctrl+a', 'home']
-      'END'               : ['ctrl+e', 'end']
-      'BEGINNING_WORD'    : ['alt+b']
-      'END_WORD'          : ['alt+f']
-      'NEXT_WORD'         : []
-      'BEGINNING_WWORD'   : []
-      'END_WWORD'         : []
-      'NEXT_WWORD'        : []
-      'FIND_NEXT_CHAR'    : []
-      'FIND_PREV_CHAR'    : []
-      'TO_NEXT_CHAR'      : []
-      'TO_PREV_CHAR'      : []
-
-      'BACKSPACE'         : ['backspace']
-      'DELKEY'            : ['shift+backspace']
-
-      'EXIT_MODE'         : ['esc', 'ctrl+c']
-    INSERT:
-      'LEFT'              : ['left']
-      'RIGHT'             : ['right']
-      'UP'                : ['up']
-      'DOWN'              : ['down']
-      'HOME'              : ['ctrl+a', 'home']
-      'END'               : ['ctrl+e', 'end']
-      'BEGINNING_WORD'    : ['alt+b']
-      'END_WORD'          : ['alt+f']
-      'NEXT_WORD'         : []
-      'BEGINNING_WWORD'   : []
-      'END_WWORD'         : []
-      'NEXT_WWORD'        : []
-      'FIND_NEXT_CHAR'    : []
-      'FIND_PREV_CHAR'    : []
-      'TO_NEXT_CHAR'      : []
-      'TO_PREV_CHAR'      : []
-
-      'BACKSPACE'         : ['backspace']
-      'DELKEY'            : ['shift+backspace']
-      'SPLIT'             : ['enter']
-
-      'INDENT_RIGHT'      : ['tab']
-      'INDENT_LEFT'       : ['shift+tab']
-      'MOVE_BLOCK_RIGHT'  : []
-      'MOVE_BLOCK_LEFT'   : []
-      'MOVE_BLOCK_DOWN'   : []
-      'MOVE_BLOCK_UP'     : []
-
-      'NEXT_SIBLING'      : []
-      'PREV_SIBLING'      : []
-
-      'TOGGLE_FOLD'       : ['ctrl+z']
-      'ZOOM_OUT'          : ['ctrl+left']
-      'ZOOM_IN'           : ['ctrl+right']
-      'ZOOM_OUT_ALL'      : ['ctrl+shift+left']
-      'ZOOM_IN_ALL'       : ['ctrl+shift+right']
-      'SCROLL_DOWN'       : ['ctrl+d']
-      'SCROLL_UP'         : ['ctrl+u']
-
-      'SEARCH'            : []
-      'EXPORT'            : ['ctrl+s']
-      'EXIT_MODE'         : ['esc', 'ctrl+c']
-    NORMAL:
-      'HELP'              : ['?']
-      'INSERT'            : ['i']
-      'INSERT_HOME'       : ['I']
-      'INSERT_AFTER'      : ['a']
-      'INSERT_END'        : ['A']
-      'INSERT_LINE_BELOW' : ['o']
-      'INSERT_LINE_ABOVE' : ['O']
-
-      'REPLACE'           : ['r']
-      'UNDO'              : ['u']
-      'REDO'              : ['ctrl+r']
-      'REPLAY'            : ['.']
-
-      'LEFT'              : ['h', 'left']
-      'RIGHT'             : ['l', 'right']
-      'UP'                : ['k', 'up']
-      'DOWN'              : ['j', 'down']
-      'HOME'              : ['0', '^']
-      'END'               : ['$']
-      'BEGINNING_WORD'    : ['b']
-      'END_WORD'          : ['e']
-      'NEXT_WORD'         : ['w']
-      'BEGINNING_WWORD'   : ['B']
-      'END_WWORD'         : ['E']
-      'NEXT_WWORD'        : ['W']
-      'FIND_NEXT_CHAR'    : ['f']
-      'FIND_PREV_CHAR'    : ['F']
-      'TO_NEXT_CHAR'      : ['t']
-      'TO_PREV_CHAR'      : ['T']
-
-      'GO'                : ['g']
-      'PARENT'            : ['p']
-      'GO_END'            : ['G']
-      'DELETE'            : ['d']
-      'CHANGE'            : ['c']
-      'DELETE_CHAR'       : ['x']
-      'DELETE_LAST_CHAR'  : ['X']
-      'CHANGE_CHAR'       : ['s']
-      'YANK'              : ['y']
-      'PASTE_AFTER'       : ['p']
-      'PASTE_BEFORE'      : ['P']
-      'JOIN_LINE'         : ['J']
-
-      'INDENT_RIGHT'      : ['tab']
-      'INDENT_LEFT'       : ['shift+tab']
-      'MOVE_BLOCK_RIGHT'  : ['>', 'ctrl+l']
-      'MOVE_BLOCK_LEFT'   : ['<', 'ctrl+h']
-      'MOVE_BLOCK_DOWN'   : ['ctrl+j']
-      'MOVE_BLOCK_UP'     : ['ctrl+k']
-
-      'NEXT_SIBLING'      : ['alt+j']
-      'PREV_SIBLING'      : ['alt+k']
-
-      'TOGGLE_FOLD'       : ['z']
-      'ZOOM_OUT'          : ['[', 'alt+h', 'ctrl+left']
-      'ZOOM_IN'           : [']', 'alt+l', 'ctrl+right']
-      'ZOOM_OUT_ALL'      : ['{']
-      'ZOOM_IN_ALL'       : ['}']
-      'SCROLL_DOWN'       : ['ctrl+d']
-      'SCROLL_UP'         : ['ctrl+u']
-
-      'SEARCH'            : ['/', 'ctrl+f']
-      'RECORD_MACRO'      : ['q']
-      'PLAY_MACRO'        : ['@']
-
-      'EXPORT'            : ['ctrl+s']
-
-
   # takes keyDefinitions and keyMaps, and combines them
   getBindings = (definitions, keyMap) ->
     bindings = {}
@@ -619,27 +622,26 @@ class KeyBindings
         bindings[key] = v
     return bindings
 
-  constructor: (view, divs = {}) ->
+  constructor: (view, options = {}) ->
     @view = view
 
-    @keyMaps = _.clone defaultVimKeyBindings
+    @keyMaps = JSON.parse JSON.stringify defaultVimKeyBindings
 
     @bindings = {}
-    @bindings[MODES.NORMAL] = getBindings keyDefinitions, @keyMaps.NORMAL
-    @bindings[MODES.INSERT] = getBindings keyDefinitions, @keyMaps.INSERT
-    @bindings[MODES.MENU]   = getBindings keyDefinitions, @keyMaps.MENU
+    @bindings[MODES.NORMAL] = getBindings keyDefinitions, @keyMaps[MODES.NORMAL]
+    @bindings[MODES.INSERT] = getBindings keyDefinitions, @keyMaps[MODES.INSERT]
+    @bindings[MODES.MENU]   = getBindings keyDefinitions, @keyMaps[MODES.MENU]
 
-    if divs.keyBindingsDiv
-      @keybindingsDiv = divs.keyBindingsDiv
-      do @buildBindingsDiv
+    if options.keyBindingsDiv
+      @keybindingsDiv = options.keyBindingsDiv
 
-    if divs.menuDiv
-      @menuDiv = divs.menuDiv
+    if options.menuDiv
+      @menuDiv = options.menuDiv
 
-    if divs.modeDiv
-      @modeDiv = divs.modeDiv
+    if options.modeDiv
+      @modeDiv = options.modeDiv
 
-    @mode = ''
+    @mode = null
     @setMode MODES.NORMAL
 
     @macros = {}
@@ -651,6 +653,11 @@ class KeyBindings
       do @view.save
 
   buildBindingsDiv: () ->
+    if not (localStorage? and localStorage['showKeyBindings'])
+      return
+
+    modeKeymap = @keyMaps[@mode] || {}
+
     table = $('<table>')
 
     buildTableContents = (definitions, onto) =>
@@ -658,9 +665,13 @@ class KeyBindings
         if k == 'MOTION'
           keys = ['<MOTION>']
         else
-          keys = @keyMaps.NORMAL[k]
+          keys = modeKeymap[k]
           if not keys
             continue
+
+        if keys.length == 0
+          continue
+
         row = $('<tr>')
 
         # row.append $('<td>').text keys[0]
@@ -689,6 +700,7 @@ class KeyBindings
       @keybindingsDiv.toggleClass 'hidden', (mode == MODES.MENU)
     if @view.mainDiv
       @view.mainDiv.toggleClass 'hidden', (mode == MODES.MENU)
+    do @buildBindingsDiv
 
   handleKey: (key) ->
     console.log('handling', key)
@@ -887,6 +899,9 @@ class KeyBindings
         view: @view,
         repeat: repeat,
         keybindingsDiv: @keybindingsDiv,
+        buildBindingsDiv: @buildBindingsDiv,
+        keyMaps: @keyMaps,
+        mode: @mode,
         setMode: @setMode
       }
       fn.apply context, args
