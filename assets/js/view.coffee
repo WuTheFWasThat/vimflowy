@@ -84,7 +84,7 @@ renderLine = (lineData, onto, options = {}) ->
     mystyle = defaultStyle
     if x.cursor
       mystyle = 'cursor'
-    if x.highlighted
+    else if x.highlighted
       mystyle = 'highlight'
 
     if x.url_start
@@ -302,23 +302,26 @@ class View
     if line.length > 0
       @register.saveChars line.slice(col, col + nchars)
 
-  yankBetween: (cursor1, cursor2) ->
+  yankBetween: (cursor1, cursor2, options = {}) ->
     if cursor2.row != cursor1.row
       console.log('not yet implemented')
       return
 
     if cursor2.col < cursor1.col
       [cursor1, cursor2] = [cursor2, cursor1]
-    @yankChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col)
 
-  deleteBetween: (cursor1, cursor2, options) ->
+    offset = if options.includeEnd then 1 else 0
+    @yankChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
+
+  deleteBetween: (cursor1, cursor2, options = {}) ->
     if cursor2.row != cursor1.row
       console.log('not yet implemented')
       return
 
     if cursor2.col < cursor1.col
       [cursor1, cursor2] = [cursor2, cursor1]
-    @delChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col), options
+    offset = if options.includeEnd then 1 else 0
+    @delChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset), options
 
   newLineBelow: () ->
     children = @data.getChildren @cursor.row
@@ -601,11 +604,21 @@ class View
       onto = $('#' + (rowDivID row))
     lineData = @data.getLine row
     cursors = {}
+    highlights = {}
+
     if row == @cursor.row
       cursors[@cursor.col] = true
 
+      if @anchor
+        if row == @anchor.row
+          for i in [@cursor.col..@anchor.col]
+            highlights[i] = true
+        else
+          console.log('multiline not implemented')
+
     renderLine lineData, onto, {
       cursors: cursors
+      highlights: highlights
       onclick: (x) =>
         @setCur row, x.column
         do @render

@@ -11,79 +11,10 @@ if module?
 MODES =
   NORMAL: 0
   INSERT: 1
-  EX: 2
+  VISUAL: 2
   MENU: 3
 
 defaultVimKeyBindings = {}
-
-defaultVimKeyBindings[MODES.MENU] =
-  'MENU_SELECT'       : ['enter']
-  'MENU_UP'           : ['ctrl+k', 'up', 'tab']
-  'MENU_DOWN'         : ['ctrl+j', 'down', 'shift+tab']
-
-  'LEFT'              : ['left']
-  'RIGHT'             : ['right']
-  'HOME'              : ['ctrl+a', 'home']
-  'END'               : ['ctrl+e', 'end']
-  'BEGINNING_WORD'    : ['alt+b']
-  'END_WORD'          : ['alt+f']
-  'NEXT_WORD'         : []
-  'BEGINNING_WWORD'   : []
-  'END_WWORD'         : []
-  'NEXT_WWORD'        : []
-  'FIND_NEXT_CHAR'    : []
-  'FIND_PREV_CHAR'    : []
-  'TO_NEXT_CHAR'      : []
-  'TO_PREV_CHAR'      : []
-
-  'BACKSPACE'         : ['backspace']
-  'DELKEY'            : ['shift+backspace']
-
-  'EXIT_MODE'         : ['esc', 'ctrl+c']
-
-defaultVimKeyBindings[MODES.INSERT] =
-  'LEFT'              : ['left']
-  'RIGHT'             : ['right']
-  'UP'                : ['up']
-  'DOWN'              : ['down']
-  'HOME'              : ['ctrl+a', 'home']
-  'END'               : ['ctrl+e', 'end']
-  'BEGINNING_WORD'    : ['alt+b']
-  'END_WORD'          : ['alt+f']
-  'NEXT_WORD'         : []
-  'BEGINNING_WWORD'   : []
-  'END_WWORD'         : []
-  'NEXT_WWORD'        : []
-  'FIND_NEXT_CHAR'    : []
-  'FIND_PREV_CHAR'    : []
-  'TO_NEXT_CHAR'      : []
-  'TO_PREV_CHAR'      : []
-
-  'BACKSPACE'         : ['backspace']
-  'DELKEY'            : ['shift+backspace']
-  'SPLIT'             : ['enter']
-
-  'INDENT_RIGHT'      : ['tab']
-  'INDENT_LEFT'       : ['shift+tab']
-  'MOVE_BLOCK_RIGHT'  : []
-  'MOVE_BLOCK_LEFT'   : []
-  'MOVE_BLOCK_DOWN'   : []
-  'MOVE_BLOCK_UP'     : []
-
-  'NEXT_SIBLING'      : []
-  'PREV_SIBLING'      : []
-
-  'TOGGLE_FOLD'       : ['ctrl+z']
-  'ZOOM_OUT'          : ['ctrl+left']
-  'ZOOM_IN'           : ['ctrl+right']
-  'ZOOM_OUT_ALL'      : ['ctrl+shift+left']
-  'ZOOM_IN_ALL'       : ['ctrl+shift+right']
-  'SCROLL_DOWN'       : ['ctrl+d']
-  'SCROLL_UP'         : ['ctrl+u']
-
-  'SEARCH'            : []
-  'EXPORT'            : ['ctrl+s']
-  'EXIT_MODE'         : ['esc', 'ctrl+c']
 
 defaultVimKeyBindings[MODES.NORMAL] =
   'HELP'              : ['?']
@@ -151,7 +82,95 @@ defaultVimKeyBindings[MODES.NORMAL] =
   'RECORD_MACRO'      : ['q']
   'PLAY_MACRO'        : ['@']
 
+  'ENTER_VISUAL'      : ['v']
+
   'EXPORT'            : ['ctrl+s']
+
+defaultVimKeyBindings[MODES.INSERT] =
+  'LEFT'              : ['left']
+  'RIGHT'             : ['right']
+  'UP'                : ['up']
+  'DOWN'              : ['down']
+  'HOME'              : ['ctrl+a', 'home']
+  'END'               : ['ctrl+e', 'end']
+  'BEGINNING_WORD'    : ['alt+b']
+  'END_WORD'          : ['alt+f']
+  'NEXT_WORD'         : []
+  'BEGINNING_WWORD'   : []
+  'END_WWORD'         : []
+  'NEXT_WWORD'        : []
+  'FIND_NEXT_CHAR'    : []
+  'FIND_PREV_CHAR'    : []
+  'TO_NEXT_CHAR'      : []
+  'TO_PREV_CHAR'      : []
+
+  'BACKSPACE'         : ['backspace']
+  'DELKEY'            : ['shift+backspace']
+  'SPLIT'             : ['enter']
+
+  'INDENT_RIGHT'      : ['tab']
+  'INDENT_LEFT'       : ['shift+tab']
+  'MOVE_BLOCK_RIGHT'  : []
+  'MOVE_BLOCK_LEFT'   : []
+  'MOVE_BLOCK_DOWN'   : []
+  'MOVE_BLOCK_UP'     : []
+
+  'NEXT_SIBLING'      : []
+  'PREV_SIBLING'      : []
+
+  'TOGGLE_FOLD'       : ['ctrl+z']
+  'ZOOM_OUT'          : ['ctrl+left']
+  'ZOOM_IN'           : ['ctrl+right']
+  'ZOOM_OUT_ALL'      : ['ctrl+shift+left']
+  'ZOOM_IN_ALL'       : ['ctrl+shift+right']
+  'SCROLL_DOWN'       : ['ctrl+d']
+  'SCROLL_UP'         : ['ctrl+u']
+
+  'SEARCH'            : []
+  'EXPORT'            : ['ctrl+s']
+  'EXIT_MODE'         : ['esc', 'ctrl+c']
+
+defaultVimKeyBindings[MODES.VISUAL] =
+  'YANK'              : ['y']
+  'DELETE'            : ['d', 'x']
+  'CHANGE'            : ['c']
+  'SWAP_CURSOR'       : ['o', 'O']
+  'EXIT_MODE'         : ['esc', 'ctrl+c']
+  # 'REPLACE'           : ['r']
+  # 'SWAP_CASE'         : ['~']
+
+# defaultVimKeyBindings[MODES.VISUAL_LINE] =
+#   'INDENT_RIGHT'      : ['>']
+#   'INDENT_LEFT'       : ['<']
+#   'YANK'              : ['y']
+#   'DELETE'            : ['d']
+#   'CHANGE'            : ['c']
+#   'REPLACE'           : ['r']
+
+defaultVimKeyBindings[MODES.MENU] =
+  'MENU_SELECT'       : ['enter']
+  'MENU_UP'           : ['ctrl+k', 'up', 'tab']
+  'MENU_DOWN'         : ['ctrl+j', 'down', 'shift+tab']
+
+  'LEFT'              : ['left']
+  'RIGHT'             : ['right']
+  'HOME'              : ['ctrl+a', 'home']
+  'END'               : ['ctrl+e', 'end']
+  'BEGINNING_WORD'    : ['alt+b']
+  'END_WORD'          : ['alt+f']
+  'NEXT_WORD'         : []
+  'BEGINNING_WWORD'   : []
+  'END_WWORD'         : []
+  'NEXT_WWORD'        : []
+  'FIND_NEXT_CHAR'    : []
+  'FIND_PREV_CHAR'    : []
+  'TO_NEXT_CHAR'      : []
+  'TO_PREV_CHAR'      : []
+
+  'BACKSPACE'         : ['backspace']
+  'DELKEY'            : ['shift+backspace']
+
+  'EXIT_MODE'         : ['esc', 'ctrl+c']
 
 # display:
 #   is displayed in keybindings help screen
@@ -291,9 +310,6 @@ keyDefinitions =
       num = Math.min(@repeat, do @view.curLineLength - @view.cursor.col)
       newChars = (char for i in [1..num])
       @view.spliceCharsAfterCursor num, newChars, {cursor: 'beforeEnd'}
-
-  # EX:
-  #   display: 'Enter EX mode'
 
   UNDO:
     display: 'Undo'
@@ -446,8 +462,9 @@ keyDefinitions =
           @view.delBlocks @repeat, {addNew: false}
       MOTION:
         display: 'Delete from cursor with motion'
-        fn: (cursor) ->
-          @view.deleteBetween @view.cursor, cursor, {yank: true}
+        fn: (cursor, options = {}) ->
+          options.yank = true
+          @view.deleteBetween @view.cursor, cursor, options
   CHANGE:
     display: 'Change (operator)'
     bindings:
@@ -459,8 +476,10 @@ keyDefinitions =
       MOTION:
         display: 'Delete from cursor with motion, and enter insert mode'
         to_mode: MODES.INSERT
-        fn: (cursor) ->
-          @view.deleteBetween @view.cursor, cursor, {cursor: 'pastEnd', yank: true}
+        fn: (cursor, options = {}) ->
+          options.yank = true
+          options.cursor = 'pastEnd'
+          @view.deleteBetween @view.cursor, cursor, options
 
   YANK:
     display: 'Yank (operator)'
@@ -473,8 +492,8 @@ keyDefinitions =
       MOTION:
         display: 'Yank from cursor with motion'
         drop: true
-        fn: (cursor) ->
-          @view.yankBetween @view.cursor, cursor
+        fn: (cursor, options = {}) ->
+          @view.yankBetween @view.cursor, cursor, options
   PASTE_AFTER:
     display: 'Paste after cursor'
     fn: () ->
@@ -512,6 +531,20 @@ keyDefinitions =
   EXIT_MODE:
     display: 'Exit back to normal mode'
     to_mode: MODES.NORMAL
+    fn: () -> return
+
+  # for visual mode
+  ENTER_VISUAL:
+    display: 'Enter visual mode'
+    to_mode: MODES.VISUAL
+    fn: () ->
+      @view.anchor = do @view.cursor.clone
+  SWAP_CURSOR:
+    display: 'Swap cursor to other end of selection, in visual mode'
+    fn: () ->
+      tmp = @view.anchor
+      @view.anchor = @view.cursor
+      @view.cursor = tmp
 
   # for insert mode
 
@@ -629,6 +662,7 @@ class KeyBindings
 
     @bindings = {}
     @bindings[MODES.NORMAL] = getBindings keyDefinitions, @keyMaps[MODES.NORMAL]
+    @bindings[MODES.VISUAL] = getBindings keyDefinitions, @keyMaps[MODES.VISUAL]
     @bindings[MODES.INSERT] = getBindings keyDefinitions, @keyMaps[MODES.INSERT]
     @bindings[MODES.MENU]   = getBindings keyDefinitions, @keyMaps[MODES.MENU]
 
@@ -715,11 +749,13 @@ class KeyBindings
     do @view.render
 
   processOnce: (keyStream) ->
-    if @mode == MODES.INSERT
-      @processInsertMode keyStream
-    else if @mode == MODES.NORMAL
+    if @mode == MODES.NORMAL
       @processNormalMode keyStream
-    else if @mode = MODES.MENU
+    else if @mode == MODES.INSERT
+      @processInsertMode keyStream
+    else if @mode == MODES.VISUAL
+      @processVisualMode keyStream
+    else if @mode == MODES.MENU
       @processMenuMode keyStream
 
   processInsertMode: (keyStream) ->
@@ -754,6 +790,62 @@ class KeyBindings
       do @view.cursor.left
       @setMode MODES.NORMAL
       return do keyStream.save
+
+  processVisualMode: (keyStream) ->
+    key = do keyStream.dequeue
+    if key == null then throw 'Got no key in visual mode'
+    # if key == null then return do keyStream.wait
+
+    bindings = @bindings[MODES.VISUAL]
+
+    if not (key of bindings)
+      [motion, repeat] = @getMotion keyStream, key
+      if motion != null
+
+        tmp = do @view.cursor.clone # this is necessary until we figure out multiline
+
+        for i in [1..repeat]
+          motion tmp, 'pastEnd'
+
+        if tmp.row == @view.cursor.row # only allow same-row movement
+          @view.cursor = tmp
+      return
+
+    info = bindings[key]
+
+    args = []
+    to_normal = false
+    context = {
+      view: @view,
+      repeat: 1,
+      setMode: @setMode
+    }
+
+    if info.bindings
+      # TODO: all of this is a terrible hack...
+      info = info.bindings['MOTION']
+      fn = info.fn
+      args.push @view.anchor, {includeEnd: true}
+
+      to_mode = MODES.NORMAL
+    else
+      fn = info.fn
+
+    if info.to_mode?
+      to_mode = info.to_mode
+    else
+      to_mode = null
+
+    fn.apply context, args
+
+    if to_mode != null
+      @view.anchor = null
+      @setMode to_mode
+      if to_mode == MODES.NORMAL
+        do @view.cursor.backIfNeeded
+      return do keyStream.save
+
+    return do keyStream.forget
 
   processMenuMode: (keyStream) ->
     key = do keyStream.dequeue
@@ -791,57 +883,57 @@ class KeyBindings
     do @menu.render
     return do keyStream.forget
 
-  processNormalMode: (keyStream, bindings = @bindings[MODES.NORMAL], repeat = 1) ->
-
-    # useful when you expect a motion
-    getMotion = (motionKey, bindings, repeat = 1) =>
-      [motionRepeat, motionKey] = getRepeat motionKey
-      repeat = repeat * motionRepeat
-
-      if motionKey == null
-        do keyStream.wait
-        return [null, repeat]
-
-      info = bindings[motionKey] || {}
-      if not info.motion
-        do keyStream.forget
-        return [null, repeat]
-
-      fn = null
-
-      if info.continue
-        key = do keyStream.dequeue
-        if key == null
-          do keyStream.wait
-          return [null, repeat]
-        fn = info.continue.bind @, key
-
-      else if info.bindings
-        answer = (getMotion null, info.bindings, repeat)
-        return answer
-      else if info.fn
-        fn = info.fn
-
-      return [fn, repeat]
-
-    # takes key, returns repeat number and key
-    getRepeat = (key = null) =>
-      if key == null
-        key = do keyStream.dequeue
-      begins = [1..9].map ((x) -> return do x.toString)
-      continues = [0..9].map ((x) -> return do x.toString)
-      if key not in begins
-        return [1, key]
-      numStr = key
+  # takes keyStream, key, returns repeat number and key
+  getRepeat: (keyStream, key = null) ->
+    if key == null
+      key = do keyStream.dequeue
+    begins = [1..9].map ((x) -> return do x.toString)
+    continues = [0..9].map ((x) -> return do x.toString)
+    if key not in begins
+      return [1, key]
+    numStr = key
+    key = do keyStream.dequeue
+    if key == null then return [null, null]
+    while key in continues
+      numStr += key
       key = do keyStream.dequeue
       if key == null then return [null, null]
-      while key in continues
-        numStr += key
-        key = do keyStream.dequeue
-        if key == null then return [null, null]
-      return [parseInt(numStr), key]
+    return [parseInt(numStr), key]
 
-    [newrepeat, key] = do getRepeat
+  # useful when you expect a motion
+  getMotion: (keyStream, motionKey, bindings = @bindings[MODES.NORMAL], repeat = 1) =>
+    [motionRepeat, motionKey] = @getRepeat keyStream, motionKey
+    repeat = repeat * motionRepeat
+
+    if motionKey == null
+      do keyStream.wait
+      return [null, repeat]
+
+    info = bindings[motionKey] || {}
+    if not info.motion
+      do keyStream.forget
+      return [null, repeat]
+
+    fn = null
+
+    if info.continue
+      key = do keyStream.dequeue
+      if key == null
+        do keyStream.wait
+        return [null, repeat]
+      fn = info.continue.bind @, key
+
+    else if info.bindings
+      answer = (@getMotion keyStream, null, info.bindings, repeat)
+      return answer
+    else if info.fn
+      fn = info.fn
+
+    return [fn, repeat]
+
+
+  processNormalMode: (keyStream, bindings = @bindings[MODES.NORMAL], repeat = 1) ->
+    [newrepeat, key] = @getRepeat keyStream
     if key == null then return do keyStream.wait
     # TODO: something better for passing repeat through?
     repeat = repeat * newrepeat
@@ -854,7 +946,7 @@ class KeyBindings
         info = bindings['MOTION']
 
         # note: this uses original bindings to determine what's a motion
-        [motion, repeat] = getMotion key, @bindings[MODES.NORMAL], repeat
+        [motion, repeat] = @getMotion keyStream, key, @bindings[MODES.NORMAL], repeat
         if motion == null then return do keyStream.forget
 
         cursor = do @view.cursor.clone
@@ -872,7 +964,7 @@ class KeyBindings
 
     if info.motion
       # note: this uses *new* bindings to determine what's a motion
-      [motion, repeat] = getMotion key, bindings, repeat
+      [motion, repeat] = @getMotion keyStream, key, bindings, repeat
       if motion == null then return
 
       for j in [1..repeat]
@@ -906,9 +998,12 @@ class KeyBindings
       }
       fn.apply context, args
 
-      if info.to_mode == MODES.INSERT
-        @setMode MODES.INSERT
-        return
+      if info.to_mode
+        @setMode info.to_mode
+        if info.to_mode == MODES.INSERT
+          return
+        else
+          return do keyStream.forget
       if info.drop
         return do keyStream.forget
       else
