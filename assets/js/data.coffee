@@ -3,10 +3,7 @@ class Data
 
   constructor: (store) ->
     @store = store
-    # defaults
-
-    # default document: a single blank line
-    @viewRoot = 0
+    @viewRoot = do @store.getLastViewRoot
     return @
 
   registerSettings: (settings) -> # Otherwise a circular dependency
@@ -14,6 +11,7 @@ class Data
 
   changeViewRoot: (row) ->
     @viewRoot = row
+    @store.setLastViewRoot row
 
   #########
   # lines #

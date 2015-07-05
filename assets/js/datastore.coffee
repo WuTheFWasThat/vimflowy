@@ -30,6 +30,10 @@
       @setLine id, []
       @setChildren id, []
       return id
+    setLastViewRoot: (row) ->
+      throw 'Not implemented'
+    getLastViewRoot: () ->
+      throw 'Not implemented'
     # delete: (id) ->
     #  throw 'Not implemented'
 
@@ -72,6 +76,12 @@
     setSetting: (setting, value) ->
       @settings[setting] = value
 
+    setLastViewRoot: (row) ->
+      return # no point in remembering
+
+    getLastViewRoot: () ->
+      return 0
+
     getId: () ->
       id = 0
       while @lines[id]
@@ -108,7 +118,9 @@
     _settingKey_: (setting) ->
       return 'save:setting:' + setting
 
-    _IDKey_: 'lastID'
+    _lastViewrootKey_: 'save:lastviewroot'
+
+    _IDKey_: 'save:lastID'
 
     _setLocalStorage_: (key, value) ->
       console.log('setting local storage', key, value)
@@ -172,6 +184,16 @@
     setSetting: (setting, value) ->
       @settings[setting] = value
       @_setLocalStorage_ (@_settingKey_ setting), value
+
+    setLastViewRoot: (row) ->
+      @_setLocalStorage_ @_lastViewrootKey_ , row
+
+    getLastViewRoot: () ->
+      id = @_getLocalStorage_ @_lastViewrootKey_ , 0
+      if (localStorage.getItem @_lineKey_ id) == null
+        console.log 'GOT INVALID VIEW ROOT', id
+        id = 0
+      return id
 
     getId: () ->
       id = @_getLocalStorage_ @_IDKey_, 0
