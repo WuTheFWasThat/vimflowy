@@ -77,44 +77,6 @@ renderLine = (lineData, options = {}) ->
 
   results = []
 
-  # acc = ''
-  # style = defaultStyle
-  # urlNodeResults = null
-
-  # for x in line
-  #   mystyle = defaultStyle
-  #   if x.cursor
-  #     mystyle = 'cursor'
-  #   else if x.highlighted
-  #     mystyle = 'highlight'
-
-  #   if x.url_start
-  #     if acc.length
-  #       results.push virtualDom.h 'span', {className: style}, acc
-  #       acc = ''
-  #     urlNodeResults = []
-
-  #   if mystyle != style
-  #     if acc.length
-  #       if urlNodeResults
-  #         urlNodeResults.push virtualDom.h 'span', {className: style}, acc
-  #       else
-  #         results.push virtualDom.h 'span', {className: style}, acc
-  #       acc = ''
-  #     style = mystyle
-
-  #   acc += x.text
-
-  #   if x.url_end
-  #     urlNodeResults.push virtualDom.h 'span', {className: style}, acc
-  #     results.push virtualDom.h 'a', {href: x.url_end}, urlNodeResults
-  #     acc = ''
-
-  #     urlNodeResults = null
-
-  # if acc.length
-  #   results.push virtualDom.h 'span', {className: style}, acc
-
   url = null
 
   for x in line
@@ -127,10 +89,15 @@ renderLine = (lineData, options = {}) ->
     if x.url_start
       url = x.url_start
 
+    divtype = if url == null then 'span' else 'a'
+
+    divoptions = {className: style}
     if url != null
-      results.push virtualDom.h 'a', {href: url, className: style}, x.text
-    else
-      results.push virtualDom.h 'span', {className: style}, x.text
+      divoptions.href = url
+    if options.onclick?
+      divoptions.onclick = options.onclick.bind @, x
+
+    results.push virtualDom.h divtype, divoptions, x.text
 
     if x.break
       results.push virtualDom.h 'div'
@@ -139,22 +106,6 @@ renderLine = (lineData, options = {}) ->
       url = null
 
   return results
-
-  # NOTE: the following renders each character separately
-  # it makes it so we can click individual characters to move the cursor
-  # however, it seems to make rendering laggy
-
-  # for x in line
-  #   mystyle = defaultStyle
-  #   if x.cursor
-  #     mystyle = 'cursor'
-  #   if x.highlighted
-  #     mystyle = 'highlight'
-
-  #   charDiv = $('<span>').html(x.text).addClass(mystyle)
-  #   if options.onclick?
-  #     charDiv.on('click', options.onclick.bind @, x)
-  #   onto.append charDiv
 
 class View
   containerDivID = (id) ->
@@ -597,6 +548,7 @@ class View
 
     contentsNode = virtualDom.h 'div', {
       id: 'treecontents'
+      className: 'unselectable'
     }, contentsChildren
 
     return virtualDom.h 'div', {
