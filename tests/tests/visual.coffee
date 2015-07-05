@@ -62,3 +62,10 @@ t.sendKeys 'vllx'
 t.expect [ '4567' ]
 t.sendKeys '.'
 t.expect [ '7' ]
+
+# test repeat
+t = new TestCase [ '1234' ]
+t.sendKeys 'xvly'
+t.expect [ '234' ]
+t.sendKeys '.'
+t.expect [ '24' ]

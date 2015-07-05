@@ -401,35 +401,38 @@ class View
     @detachBlock row, options
     @attachBlock row, parent, index, options
 
-  indentBlock: (id = @cursor.row) ->
-    sib = @data.getSiblingBefore id
-    if sib == null
+  indentBlocks: (id, numblocks = 1) ->
+    newparent = @data.getSiblingBefore id
+    if newparent == null
       return null # cannot indent
 
-    if @data.collapsed sib
-      @toggleBlock sib
+    if @data.collapsed newparent
+      @toggleBlock newparent
 
-    @moveBlock id, sib, -1
-    return sib
+    siblings = @data.getSiblingRange id, 0, (numblocks-1)
+    for sib in siblings
+      @moveBlock sib, newparent, -1
+    return newparent
 
-  unindentBlock: (id = @cursor.row, options = {}) ->
+  unindentBlocks: (id, numblocks = 1, options = {}) ->
     parent = @data.getParent id
     if parent == @data.viewRoot
       return null
-    p_i = @data.indexOf id
-    if (options.strict) and (p_i != (@data.getChildren parent).length - 1)
-      return null
+
+    siblings = @data.getSiblingRange id, 0, (numblocks-1)
 
     newparent = @data.getParent parent
     pp_i = @data.indexOf parent
 
-    @moveBlock id, newparent, (pp_i+1)
+    for sib in siblings
+      pp_i += 1
+      @moveBlock sib, newparent, pp_i
     return newparent
 
   indent: (id = @cursor.row) ->
     sib = @data.getSiblingBefore id
 
-    newparent = @indentBlock id
+    newparent = @indentBlocks id
     if newparent == null
       return
     for child in (@data.getChildren id).slice()
@@ -442,7 +445,7 @@ class View
     parent = @data.getParent id
     p_i = @data.indexOf id
 
-    newparent = @unindentBlock id
+    newparent = @unindentBlocks id
     if newparent == null
       return
 

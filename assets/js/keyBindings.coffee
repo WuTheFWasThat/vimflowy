@@ -148,8 +148,8 @@ defaultVimKeyBindings[MODES.VISUAL_LINE] =
   'DELETE'            : ['d', 'x']
   'CHANGE'            : ['c']
   'SWAP_CURSOR'       : ['o', 'O']
-  # 'INDENT_RIGHT'      : ['>']
-  # 'INDENT_LEFT'       : ['<']
+  'MOVE_BLOCK_RIGHT'  : ['>']
+  'MOVE_BLOCK_LEFT'   : ['<']
   'EXIT_MODE'         : ['esc', 'ctrl+c']
   # 'REPLACE'           : ['r']
   # 'SWAP_CASE'         : ['~']
@@ -233,12 +233,14 @@ keyDefinitions =
       do @view.unindent
   MOVE_BLOCK_RIGHT:
     display: 'Move block right'
+    finishes_visual_line: true
     fn: () ->
-      do @view.indentBlock
+      @view.indentBlocks @view.cursor.row, @repeat
   MOVE_BLOCK_LEFT:
     display: 'Move block left'
+    finishes_visual_line: true
     fn: () ->
-      do @view.unindentBlock
+      @view.unindentBlocks @view.cursor.row, @repeat
   MOVE_BLOCK_DOWN:
     display: 'Move block down'
     fn: () ->
@@ -465,10 +467,12 @@ keyDefinitions =
     bindings:
       DELETE:
         display: 'Delete blocks'
+        finishes_visual_line: true
         fn: () ->
           @view.delBlocks @repeat, {addNew: false}
       MOTION:
         display: 'Delete from cursor with motion'
+        finishes_visual: true
         fn: (cursor, options = {}) ->
           options.yank = true
           @view.deleteBetween @view.cursor, cursor, options
@@ -477,11 +481,13 @@ keyDefinitions =
     bindings:
       CHANGE:
         display: 'Delete blocks, and enter insert mode'
+        finishes_visual_line: true
         to_mode: MODES.INSERT
         fn: () ->
           @view.delBlocks @repeat, {addNew: true}
       MOTION:
         display: 'Delete from cursor with motion, and enter insert mode'
+        finishes_visual: true
         to_mode: MODES.INSERT
         fn: (cursor, options = {}) ->
           options.yank = true
@@ -494,11 +500,13 @@ keyDefinitions =
       YANK:
         display: 'Yank blocks'
         drop: true
+        finishes_visual_line: true
         fn: () ->
           @view.yankBlocks @repeat
       MOTION:
         display: 'Yank from cursor with motion'
         drop: true
+        finishes_visual: true
         fn: (cursor, options = {}) ->
           @view.yankBetween @view.cursor, cursor, options
   PASTE_AFTER:
@@ -839,13 +847,14 @@ class KeyBindings
     if info.bindings
       # this is a bit of a bad hack...
       info = info.bindings['MOTION']
-      fn = info.fn
+
+    if info.finishes_visual
       args.push @view.anchor, {includeEnd: true}
       to_mode = if info.to_mode? then info.to_mode else MODES.NORMAL
     else
-      fn = info.fn
       to_mode = if info.to_mode? then info.to_mode else null
 
+    fn = info.fn
     fn.apply context, args
 
     if to_mode != null
@@ -853,7 +862,10 @@ class KeyBindings
       @setMode to_mode
       if to_mode == MODES.NORMAL
         do @view.cursor.backIfNeeded
-        return do keyStream.save
+        if info.drop # for yank
+          return do keyStream.forget
+        else
+          return do keyStream.save
       else if to_mode == MODES.INSERT
         return
 
@@ -886,11 +898,12 @@ class KeyBindings
         for i in [1..repeat]
           motion @view.cursor, {pastEnd: true}
       return
-    else if info.bindings
+
+    if info.bindings
       # this is a bit of a bad hack...
       info = info.bindings[key]
-      fn = info.fn
 
+    if info.finishes_visual_line
       # set cursor to be earlier one and delete difference
       index1 = @view.data.indexOf @view.cursor.row
       index2 = @view.data.indexOf @view.anchor.row
@@ -899,9 +912,9 @@ class KeyBindings
       context.repeat = Math.abs(index2 - index1) + 1
       to_mode = if info.to_mode? then info.to_mode else MODES.NORMAL
     else
-      fn = info.fn
       to_mode = if info.to_mode? then info.to_mode else null
 
+    fn = info.fn
     fn.apply context, args
 
     if to_mode != null
@@ -910,7 +923,10 @@ class KeyBindings
       @view.lineSelect = false
       if to_mode == MODES.NORMAL
         do @view.cursor.backIfNeeded
-        return do keyStream.save
+        if info.drop # for yank
+          return do keyStream.forget
+        else
+          return do keyStream.save
       else if to_mode == MODES.INSERT
         return
 

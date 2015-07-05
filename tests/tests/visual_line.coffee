@@ -34,6 +34,13 @@ t.expect [ '4', '5', '6', '7' ]
 t.sendKeys '.'
 t.expect [ '7' ]
 
+# yank doesn't save
+t = new TestCase [ '1', '2' ]
+t.sendKeys 'xjVy'
+t.expect [ '', '2' ]
+t.sendKeys '.' # this is the x, not the y
+t.expect [ '', '' ]
+
 # test children
 t = new TestCase [
   { line: 'nest', children: [
@@ -126,6 +133,103 @@ t.expect [
   ] }
   { line: 'nest 2', children: [
     'egg 2'
+  ] }
+  { line: 'nest 3', children: [
+    'egg 3'
+  ] }
+]
+
+# test indent
+t = new TestCase [
+  { line: 'nest', children: [
+    'egg'
+  ] }
+  { line: 'nest 2', children: [
+    'egg 2'
+    'egg 2 2'
+  ] }
+  { line: 'nest 3', children: [
+    'egg 3'
+  ] }
+]
+# does nothing when can't indent
+t.sendKeys 'jVj>'
+t.expect [
+  { line: 'nest', children: [
+    'egg'
+  ] }
+  { line: 'nest 2', children: [
+    'egg 2'
+    'egg 2 2'
+  ] }
+  { line: 'nest 3', children: [
+    'egg 3'
+  ] }
+]
+# now can indent
+t.sendKeys 'jVj>'
+t.expect [
+  { line: 'nest', children: [
+    'egg'
+    { line: 'nest 2', children: [
+      'egg 2'
+      'egg 2 2'
+    ] }
+    { line: 'nest 3', children: [
+      'egg 3'
+    ] }
+  ] }
+]
+# does nothing again
+t.sendKeys 'jV>'
+t.expect [
+  { line: 'nest', children: [
+    'egg'
+    { line: 'nest 2', children: [
+      'egg 2'
+      'egg 2 2'
+    ] }
+    { line: 'nest 3', children: [
+      'egg 3'
+    ] }
+  ] }
+]
+# unindent
+t.sendKeys 'V<'
+t.expect [
+  { line: 'nest', children: [
+    'egg'
+    { line: 'nest 2', children: [
+      'egg 2 2'
+    ] }
+    'egg 2'
+    { line: 'nest 3', children: [
+      'egg 3'
+    ] }
+  ] }
+]
+# undo ignores things that didn't happen
+t.sendKeys 'u'
+t.expect [
+  { line: 'nest', children: [
+    'egg'
+    { line: 'nest 2', children: [
+      'egg 2'
+      'egg 2 2'
+    ] }
+    { line: 'nest 3', children: [
+      'egg 3'
+    ] }
+  ] }
+]
+t.sendKeys 'u'
+t.expect [
+  { line: 'nest', children: [
+    'egg'
+  ] }
+  { line: 'nest 2', children: [
+    'egg 2'
+    'egg 2 2'
   ] }
   { line: 'nest 3', children: [
     'egg 3'

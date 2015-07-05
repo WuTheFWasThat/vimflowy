@@ -264,3 +264,72 @@ t.expect [
   ] },
 ]
 
+# test multi >
+t = new TestCase [
+  { line: 'mama', children: [
+    { line : 'oldest kid', children : [
+      'grandkid'
+    ] },
+    'middle kid'
+    'young kid'
+  ] },
+]
+t.sendKeys 'jjj2>'
+t.expect [
+  { line: 'mama', children: [
+    { line : 'oldest kid', children : [
+      'grandkid'
+      'middle kid'
+      'young kid'
+    ] },
+  ] },
+]
+
+# a bit trickier
+t = new TestCase [
+  { line: 'mama', children: [
+    { line : 'oldest kid', collapsed: true, children : [
+      'grandkid'
+    ] },
+    { line : 'middle kid', children : [
+      'grandkid 2'
+    ] },
+    'young kid'
+  ] },
+]
+t.sendKeys 'jj2>'
+t.expect [
+  { line: 'mama', children: [
+    { line : 'oldest kid', children : [
+      'grandkid'
+      { line : 'middle kid', children : [
+        'grandkid 2'
+      ] },
+      'young kid'
+    ] },
+  ] },
+]
+t.sendKeys 'u'
+t.expect [
+  { line: 'mama', children: [
+    { line : 'oldest kid', collapsed: true, children : [
+      'grandkid'
+    ] },
+    { line : 'middle kid', children : [
+      'grandkid 2'
+    ] },
+    'young kid'
+  ] },
+]
+t.sendKeys 'k2<'
+t.expect [
+  { line : 'mama', children : [
+    'young kid'
+  ] },
+  { line : 'oldest kid', collapsed: true, children : [
+    'grandkid'
+  ] },
+  { line : 'middle kid', children : [
+    'grandkid 2'
+  ] },
+]
