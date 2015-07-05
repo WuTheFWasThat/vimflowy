@@ -4,29 +4,35 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 
 Try it out [here](https://vimflowy.bitballoon.com)!
 
-# NOTES #
+(Video coming eventually...)
+
+## FEATURES ##
+
+- Workflowy features
+  - bullets, sub-bullets
+  - collapsing
+  - zooming
+- Vim features
+  - Modal editing (normal, insert, a limited visual and visual line)
+  - keybindings for everything
+  - Undo!  Full history kept within a session
+  - Macros
+- Extras
+  - Search
+  - Data export
+  - Different themes
+  - Lazy loads data, for big documents
+
+## NOTES ##
 
 - The app is entirely local - the storage is localStorage, so it should be used in only one browser
 - Currently, weird things happen when you use it in multiple tabs
-
-## KNOWN ISSUES: ##
-
-Known (intentional) inconsistencies with vi (WONTFIX without further discussion):
-- undoing operations always puts your cursor where it was.  (This is not true in vim: try going to the middle of a line and typing d0u)
-- in vim, cw works like ciw, which is inconsistent/counterintuitive
-- 5$ doesn't work
-- 100rx will replace as many as it can
-- t and T work when you use them repeatedly
-- I goes to the beginning of the line, irrespective of whitespace
-- yank (y) never moves the cursor (in vim, yb and yh move the cursor to the start of the yank region)
-- e/b/w skip lines with only whitespace
-- macros
-  - redo operator (.) redoes entire macros rather than the last sequence (easy to fix, but not desired IMO)
-  - not implemented using registers (weird quirk of vim IMO)
+- There are many [known inconsistencies with vim](vim_inconsistencies.md), mostly intentional.
 
 ## CONTRIBUTE: ##
 
-Please send pull requests!
+Please send pull requests!  Remember - for new keybindings, write new tests!
+
 You may contact me at [githubusername]@gmail.com as well
 
 ## LICENSE ##
