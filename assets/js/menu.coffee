@@ -52,8 +52,8 @@ class Menu
       'margin-right': '10px'
     )
 
-    searchRow = $('<span>').appendTo searchBox
-    @view.renderLine @view.cursor.row, searchRow
+    searchRow = virtualDom.create virtualDom.h 'span', {}, (@view.virtualRenderLine @view.cursor.row)
+    searchBox.append searchRow
 
     if @results.length == 0
       message = ''
@@ -90,11 +90,13 @@ class Menu
         resultDiv.append $('<i>').addClass('fa ' + icon + ' bullet').css(
           'margin-right': '20px'
         )
-        resultLineDiv = $('<span>').appendTo resultDiv
-        renderLine result.contents, resultLineDiv, {
+
+        contents = renderLine result.contents, {
           highlights: result.highlights
           defaultStyle: defaultStyle
         }
+        resultLineDiv = virtualDom.create virtualDom.h 'span', {}, contents
+        resultDiv.append resultLineDiv
 
   select: () ->
     if not @results.length

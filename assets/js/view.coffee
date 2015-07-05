@@ -1,7 +1,7 @@
 # a View consists of Data and a cursor
 # it also renders
-
-renderLine = (lineData, onto, options = {}) ->
+#
+renderLine = (lineData, options = {}) ->
   options.cursors ?= {}
   options.highlights ?= {}
   defaultStyle = options.defaultStyle || ''
@@ -34,7 +34,8 @@ renderLine = (lineData, onto, options = {}) ->
     x = char
 
     if char == '\n'
-      x = '<br/>'
+      x = ''
+      info.break = true
       if i of options.cursors
         x = cursorChar + x
 
@@ -74,45 +75,70 @@ renderLine = (lineData, onto, options = {}) ->
     line[url_word.end].url_end = url_word.word
     # console.log 'url word', url_word
 
-  do onto.empty
+  results = []
 
-  acc = ''
-  style = defaultStyle
-  url_onto = null
+  # acc = ''
+  # style = defaultStyle
+  # urlNodeResults = null
+
+  # for x in line
+  #   mystyle = defaultStyle
+  #   if x.cursor
+  #     mystyle = 'cursor'
+  #   else if x.highlighted
+  #     mystyle = 'highlight'
+
+  #   if x.url_start
+  #     if acc.length
+  #       results.push virtualDom.h 'span', {className: style}, acc
+  #       acc = ''
+  #     urlNodeResults = []
+
+  #   if mystyle != style
+  #     if acc.length
+  #       if urlNodeResults
+  #         urlNodeResults.push virtualDom.h 'span', {className: style}, acc
+  #       else
+  #         results.push virtualDom.h 'span', {className: style}, acc
+  #       acc = ''
+  #     style = mystyle
+
+  #   acc += x.text
+
+  #   if x.url_end
+  #     urlNodeResults.push virtualDom.h 'span', {className: style}, acc
+  #     results.push virtualDom.h 'a', {href: x.url_end}, urlNodeResults
+  #     acc = ''
+
+  #     urlNodeResults = null
+
+  # if acc.length
+  #   results.push virtualDom.h 'span', {className: style}, acc
+
+  url = null
 
   for x in line
-    mystyle = defaultStyle
+    style = defaultStyle
     if x.cursor
-      mystyle = 'cursor'
+      style = 'cursor'
     else if x.highlighted
-      mystyle = 'highlight'
+      style = 'highlight'
 
     if x.url_start
-      if acc.length
-        onto.append $('<span>').html(acc).addClass(style)
-        acc = ''
-      url_onto = $('<a>').attr('href', x.url_start)
+      url = x.url_start
 
-    if mystyle != style
-      if acc.length
-        if url_onto
-          url_onto.append $('<span>').html(acc).addClass(style)
-        else
-          onto.append $('<span>').html(acc).addClass(style)
-        acc = ''
-      style = mystyle
+    if url != null
+      results.push virtualDom.h 'a', {href: url, className: style}, x.text
+    else
+      results.push virtualDom.h 'span', {className: style}, x.text
 
-    acc += x.text
+    if x.break
+      results.push virtualDom.h 'div'
 
     if x.url_end
-      url_onto.append $('<span>').html(acc).addClass(style)
-      acc = ''
+      url = null
 
-      onto.append url_onto
-      url_onto = null
-
-  if acc.length
-    onto.append $('<span>').html(acc).addClass(style)
+  return results
 
   # NOTE: the following renders each character separately
   # it makes it so we can click individual characters to move the cursor
@@ -153,6 +179,11 @@ class View
       index: 0
     }]
     @historyIndex = 0 # index into indices
+
+    if @mainDiv?
+      @vtree = do @virtualRender
+      @vnode = virtualDom.create @vtree
+      @mainDiv.append @vnode
 
     return @
 
@@ -533,10 +564,7 @@ class View
 
   # RENDERING
 
-  # TODO: make the rendering do diffs (maybe data should track dirty bits)
-  render: () ->
-    do @mainDiv.empty
-
+  virtualRender: () ->
     crumbs = []
     row = @data.viewRoot
     while row != @data.root
@@ -544,39 +572,52 @@ class View
       row = @data.getParent row
 
     makeCrumb = (row, line) =>
-      return $('<span>').addClass('crumb').append(
-        $('<a>').html(line).click (() =>
-          @reroot row
-          do @save
-          do @render
-        )
-      )
+      return virtualDom.h 'span', {
+        className: 'crumb'
+      }, [
+        virtualDom.h 'a', {
+          onclick: () =>
+            @reroot row
+            do @save
+            do @render
+        }, [ line ]
+      ]
 
-    crumbsDiv = $('<div>').attr('id', 'breadcrumbs')
-
-    crumbsDiv.append(makeCrumb @data.root, $('<icon>').addClass('fa fa-home'))
+    crumbNodes = []
+    crumbNodes.push(makeCrumb @data.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
     for row in crumbs by -1
       line = (@data.getLine row).join('')
-      crumbsDiv.append(makeCrumb row, line)
+      crumbNodes.push(makeCrumb row, line)
 
-    @mainDiv.append crumbsDiv
+    breadcrumbsNode = virtualDom.h 'div', {
+      id: 'breadcrumbs'
+    }, crumbNodes
 
-    contentDiv = $('<div>')
-    @mainDiv.append contentDiv
-    @renderTree @data.viewRoot, contentDiv, {ignoreCollapse: true}
+    contentsChildren = @virtualRenderTree @data.viewRoot, {ignoreCollapse: true}
+
+    contentsNode = virtualDom.h 'div', {
+      id: 'treecontents'
+    }, contentsChildren
+
+    return virtualDom.h 'div', {
+    }, [breadcrumbsNode, contentsNode]
+
+  render: () ->
+    vtree = do @virtualRender
+    patches = virtualDom.diff @vtree, vtree
+    @vnode = virtualDom.patch @vnode, patches
+    @vtree = vtree
 
     cursorDiv = $('.cursor', @mainDiv)[0]
     if cursorDiv
       @scrollIntoView cursorDiv
+    return
 
-  renderTree: (parentid, onto, options = {}) ->
-    if not onto
-      onto = $('#' + (childrenDivID parentid))
-
-    do onto.empty
-
+  virtualRenderTree: (parentid, options = {}) ->
     if (not options.ignoreCollapse) and (@data.collapsed parentid)
       return
+
+    childrenNodes = []
 
     highlighted = {}
     if @lineSelect
@@ -589,34 +630,47 @@ class View
           highlighted[i] = true
 
     for i, id of @data.getChildren parentid
-      el = $('<div>')
-        .attr('id', containerDivID id)
-        .addClass('node')
-      if i of highlighted
-        el.addClass('highlight')
 
       icon = 'fa-circle'
       if @data.hasChildren id
         icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
-      bullet = $('<i>').addClass('fa ' + icon + ' bullet')
+
+      bulletOpts = {
+        className: 'fa ' + icon + ' bullet'
+      }
       if @data.hasChildren id
-        bullet.css({cursor: 'pointer'}).click ((id) =>
+        bulletOpts.style = {cursor: 'pointer'}
+        bulletOpts.onclick = ((id) =>
           @toggleBlock id
           do @render
         ).bind(@, id)
 
-      elLine = $('<div>').addClass('node-text').attr('id', rowDivID id)
-      @renderLine id, elLine
+      bullet = virtualDom.h 'i', bulletOpts
 
-      children = $('<div>').addClass('node-children').attr('id', childrenDivID id)
-      @renderTree id, children
+      elLine = virtualDom.h 'div', {
+        id: rowDivID id
+        className: 'node-text'
+      }, @virtualRenderLine id
 
-      el.append(bullet).append(elLine).append(children)
-      onto.append el
+      children = virtualDom.h 'div', {
+        id: childrenDivID id
+        className: 'node-children'
+      }, (@virtualRenderTree id)
 
-  renderLine: (row, onto) ->
-    if not onto
-      onto = $('#' + (rowDivID row))
+      className = 'node'
+      if i of highlighted
+        className += ' highlight'
+
+      childNode = virtualDom.h 'div', {
+        id: containerDivID id
+        className: className
+      }, [bullet, elLine, children]
+
+      childrenNodes.push childNode
+    return childrenNodes
+
+  virtualRenderLine: (row) ->
+
     lineData = @data.getLine row
     cursors = {}
     highlights = {}
@@ -631,13 +685,15 @@ class View
         else
           console.log('multiline not implemented')
 
-    renderLine lineData, onto, {
+    lineContents = renderLine lineData, {
       cursors: cursors
       highlights: highlights
       onclick: (x) =>
         @setCur row, x.column
         do @render
     }
+
+    return lineContents
 
 # imports
 if module?
