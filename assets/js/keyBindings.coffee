@@ -9,10 +9,11 @@ if module?
   _ = require('underscore')
 
 MODES =
-  NORMAL: 0
-  INSERT: 1
-  VISUAL: 2
-  MENU: 3
+  NORMAL      : 1
+  INSERT      : 2
+  VISUAL      : 3
+  VISUAL_LINE : 4
+  MENU        : 5
 
 defaultVimKeyBindings = {}
 
@@ -83,6 +84,7 @@ defaultVimKeyBindings[MODES.NORMAL] =
   'PLAY_MACRO'        : ['@']
 
   'ENTER_VISUAL'      : ['v']
+  'ENTER_VISUAL_LINE' : ['V']
 
   'EXPORT'            : ['ctrl+s']
 
@@ -139,13 +141,18 @@ defaultVimKeyBindings[MODES.VISUAL] =
   # 'REPLACE'           : ['r']
   # 'SWAP_CASE'         : ['~']
 
-# defaultVimKeyBindings[MODES.VISUAL_LINE] =
-#   'INDENT_RIGHT'      : ['>']
-#   'INDENT_LEFT'       : ['<']
-#   'YANK'              : ['y']
-#   'DELETE'            : ['d']
-#   'CHANGE'            : ['c']
-#   'REPLACE'           : ['r']
+defaultVimKeyBindings[MODES.VISUAL_LINE] =
+  'NEXT_SIBLING'      : ['j', 'down']
+  'PREV_SIBLING'      : ['k', 'up']
+  'YANK'              : ['y']
+  'DELETE'            : ['d', 'x']
+  'CHANGE'            : ['c']
+  'SWAP_CURSOR'       : ['o', 'O']
+  # 'INDENT_RIGHT'      : ['>']
+  # 'INDENT_LEFT'       : ['<']
+  'EXIT_MODE'         : ['esc', 'ctrl+c']
+  # 'REPLACE'           : ['r']
+  # 'SWAP_CASE'         : ['~']
 
 defaultVimKeyBindings[MODES.MENU] =
   'MENU_SELECT'       : ['enter']
@@ -539,12 +546,16 @@ keyDefinitions =
     to_mode: MODES.VISUAL
     fn: () ->
       @view.anchor = do @view.cursor.clone
-  SWAP_CURSOR:
-    display: 'Swap cursor to other end of selection, in visual mode'
+  ENTER_VISUAL_LINE:
+    display: 'Enter visual line mode'
+    to_mode: MODES.VISUAL_LINE
     fn: () ->
-      tmp = @view.anchor
-      @view.anchor = @view.cursor
-      @view.cursor = tmp
+      @view.lineSelect = true
+      @view.anchor = do @view.cursor.clone
+  SWAP_CURSOR:
+    display: 'Swap cursor to other end of selection, in visual and visual line mode'
+    fn: () ->
+      [@view.anchor, @view.cursor] = [@view.cursor, @view.anchor]
 
   # for insert mode
 
@@ -661,10 +672,8 @@ class KeyBindings
     @keyMaps = JSON.parse JSON.stringify defaultVimKeyBindings
 
     @bindings = {}
-    @bindings[MODES.NORMAL] = getBindings keyDefinitions, @keyMaps[MODES.NORMAL]
-    @bindings[MODES.VISUAL] = getBindings keyDefinitions, @keyMaps[MODES.VISUAL]
-    @bindings[MODES.INSERT] = getBindings keyDefinitions, @keyMaps[MODES.INSERT]
-    @bindings[MODES.MENU]   = getBindings keyDefinitions, @keyMaps[MODES.MENU]
+    for mode_name, mode of MODES
+      @bindings[mode] = getBindings keyDefinitions, @keyMaps[mode]
 
     if options.keyBindingsDiv
       @keybindingsDiv = options.keyBindingsDiv
@@ -755,8 +764,12 @@ class KeyBindings
       @processInsertMode keyStream
     else if @mode == MODES.VISUAL
       @processVisualMode keyStream
+    else if @mode == MODES.VISUAL_LINE
+      @processVisualLineMode keyStream
     else if @mode == MODES.MENU
       @processMenuMode keyStream
+    else
+      throw "Invalid mode #{mode}"
 
   processInsertMode: (keyStream) ->
     key = do keyStream.dequeue
@@ -799,6 +812,8 @@ class KeyBindings
     bindings = @bindings[MODES.VISUAL]
 
     if not (key of bindings)
+      # getMotion using normal mode motions
+      # TODO: make this relationship more explicit via a separate motions dictionary
       [motion, repeat] = @getMotion keyStream, key
       if motion != null
 
@@ -814,27 +829,22 @@ class KeyBindings
     info = bindings[key]
 
     args = []
-    to_normal = false
     context = {
       view: @view,
       repeat: 1,
       setMode: @setMode
     }
 
+    to_mode = null
     if info.bindings
-      # TODO: all of this is a terrible hack...
+      # this is a bit of a bad hack...
       info = info.bindings['MOTION']
       fn = info.fn
       args.push @view.anchor, {includeEnd: true}
-
-      to_mode = MODES.NORMAL
+      to_mode = if info.to_mode? then info.to_mode else MODES.NORMAL
     else
       fn = info.fn
-
-    if info.to_mode?
-      to_mode = info.to_mode
-    else
-      to_mode = null
+      to_mode = if info.to_mode? then info.to_mode else null
 
     fn.apply context, args
 
@@ -843,7 +853,66 @@ class KeyBindings
       @setMode to_mode
       if to_mode == MODES.NORMAL
         do @view.cursor.backIfNeeded
-      return do keyStream.save
+        return do keyStream.save
+      else if to_mode == MODES.INSERT
+        return
+
+    return do keyStream.forget
+
+  processVisualLineMode: (keyStream) ->
+    key = do keyStream.dequeue
+    if key == null then throw 'Got no key in visual line mode'
+    # if key == null then return do keyStream.wait
+
+    bindings = @bindings[MODES.VISUAL_LINE]
+
+    if not (key of bindings)
+      return do keyStream.forget
+
+    info = bindings[key]
+
+    args = []
+    context = {
+      view: @view,
+      repeat: 1,
+      setMode: @setMode
+    }
+
+    to_mode = null
+    if info.motion
+      [motion, repeat] = @getMotion keyStream, key
+      if motion != null
+        motion = info.fn
+        for i in [1..repeat]
+          motion @view.cursor, {pastEnd: true}
+      return
+    else if info.bindings
+      # this is a bit of a bad hack...
+      info = info.bindings[key]
+      fn = info.fn
+
+      # set cursor to be earlier one and delete difference
+      index1 = @view.data.indexOf @view.cursor.row
+      index2 = @view.data.indexOf @view.anchor.row
+      if index2 < index1
+        @view.cursor = @view.anchor
+      context.repeat = Math.abs(index2 - index1) + 1
+      to_mode = if info.to_mode? then info.to_mode else MODES.NORMAL
+    else
+      fn = info.fn
+      to_mode = if info.to_mode? then info.to_mode else null
+
+    fn.apply context, args
+
+    if to_mode != null
+      @view.anchor = null
+      @setMode to_mode
+      @view.lineSelect = false
+      if to_mode == MODES.NORMAL
+        do @view.cursor.backIfNeeded
+        return do keyStream.save
+      else if to_mode == MODES.INSERT
+        return
 
     return do keyStream.forget
 
@@ -1000,10 +1069,10 @@ class KeyBindings
 
       if info.to_mode
         @setMode info.to_mode
-        if info.to_mode == MODES.INSERT
-          return
-        else
+        if info.to_mode == MODES.MENU
           return do keyStream.forget
+        else
+          return
       if info.drop
         return do keyStream.forget
       else

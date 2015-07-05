@@ -575,10 +575,22 @@ class View
     if (not options.ignoreCollapse) and (@data.collapsed parentid)
       return
 
-    for id in @data.getChildren parentid
+    highlighted = {}
+    if @lineSelect
+      if parentid == @data.getParent @cursor.row
+        index1 = @data.indexOf @cursor.row
+        index2 = @data.indexOf @anchor.row
+        if index2 < index1
+          [index1, index2] = [index2, index1]
+        for i in [index1..index2]
+          highlighted[i] = true
+
+    for i, id of @data.getChildren parentid
       el = $('<div>')
         .attr('id', containerDivID id)
         .addClass('node')
+      if i of highlighted
+        el.addClass('highlight')
 
       icon = 'fa-circle'
       if @data.hasChildren id
@@ -609,7 +621,7 @@ class View
     if row == @cursor.row
       cursors[@cursor.col] = true
 
-      if @anchor
+      if @anchor and not @lineSelect
         if row == @anchor.row
           for i in [@cursor.col..@anchor.col]
             highlights[i] = true
