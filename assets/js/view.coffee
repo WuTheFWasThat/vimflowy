@@ -494,9 +494,11 @@ class View
     @scrollMain (line_height * numlines)
 
   scrollMain: (amount) ->
-     @mainDiv.stop().animate({
-        scrollTop: @mainDiv[0].scrollTop + amount
-     }, 100)
+     # # animate.  seems to not actually be great though
+     # @mainDiv.stop().animate({
+     #     scrollTop: @mainDiv[0].scrollTop + amount
+     #  }, 50)
+     @mainDiv.scrollTop(@mainDiv.scrollTop() + amount)
 
   scrollIntoView: (el) ->
     elemTop = el.getBoundingClientRect().top
