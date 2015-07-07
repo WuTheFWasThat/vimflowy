@@ -204,14 +204,6 @@ class View
   curLineLength: () ->
     return @data.getLength @cursor.row
 
-  setCur: (row, col, option = '') ->
-    shift = if option.pastEnd then 0 else 1
-    len = @data.getLength row
-    if len > 0 and col > len - shift
-      col = len - shift
-
-    @cursor.set row, col
-
   changeView: (row) ->
     if @data.hasChildren row
       @data.changeViewRoot row
@@ -322,7 +314,7 @@ class View
     row = @cursor.row
     sibling = @act new actions.InsertRowSibling @cursor.row, {before: true}
     @addCharsAfterCursor delAction.deletedChars
-    @setCur row, 0
+    @cursor.set row, 0
 
   joinRows: (first, second, options = {}) ->
     for child in @data.getChildren second by -1
@@ -339,7 +331,7 @@ class View
     action = new actions.AddChars first, newCol, line
     @act action
 
-    @setCur first, newCol, options.cursor
+    @cursor.set first, newCol, options.cursor
 
   joinAtCursor: () ->
     row = @cursor.row
@@ -645,7 +637,7 @@ class View
       cursors: cursors
       highlights: highlights
       onclick: (x) =>
-        @setCur row, x.column
+        @cursor.set row, x.column
         do @render
     }
 

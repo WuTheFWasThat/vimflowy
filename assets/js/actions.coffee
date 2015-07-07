@@ -12,8 +12,8 @@
 
   class AddChars extends Action
     # options:
-    #   setCur: if you wish to set the cursor, set to 'beginning' or 'end'
-    #           indicating where the cursor should go to
+    #   setCursor: if you wish to set the cursor, set to 'beginning' or 'end'
+    #              indicating where the cursor should go to
 
     constructor: (row, col, chars, options = {}) ->
       @row = row
@@ -29,9 +29,9 @@
 
       shift = if @options.cursor.pastEnd then 1 else 0
       if @options.setCursor == 'beginning'
-        view.setCur @row, (@col + shift), @options.cursor
+        view.cursor.set @row, (@col + shift), @options.cursor
       else if @options.setCursor == 'end'
-        view.setCur @row, (@col + shift + @chars.length - 1), @options.cursor
+        view.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
     rewind: (view) ->
       view.data.deleteChars @row, @col, @chars.length
 
@@ -43,12 +43,13 @@
 
       @options = options
       @options.setCursor ?= 'before'
+      @options.cursor ?= {}
     apply: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
       if @options.setCursor == 'before'
-        view.setCur @row, @col, @options.cursor
+        view.cursor.set @row, @col, @options.cursor
       else if @options.setCursor == 'after'
-        view.setCur @row, (@col + 1), @options.cursor
+        view.cursor.set @row, (@col + 1), @options.cursor
     rewind: (view) ->
       view.data.writeChars @row, @col, @deletedChars
 
@@ -64,7 +65,7 @@
         @newrow = view.data.insertSiblingBefore @row
       else
         throw ('InsertRowSibling needs valid options: ' + JSON.stringify @options)
-      view.setCur @newrow, 0
+      view.cursor.set @newrow, 0
 
     rewind: (view) ->
       @rewinded = view.data.detach @newrow
@@ -137,7 +138,7 @@
           next = view.data.addChild parent
           @created = next
 
-      view.setCur next, 0
+      view.cursor.set next, 0
       @parent = parent
       @index = index
 
@@ -157,8 +158,8 @@
 
   class AddBlocks extends Action
     # options:
-    #   setCur: if you wish to set the cursor, set to 'first' or 'last',
-    #           indicating which block the cursor should go to
+    #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
+    #              indicating which block the cursor should go to
 
     constructor: (serialized_rows, parent, index = -1, options = {}) ->
       @serialized_rows = serialized_rows
@@ -176,11 +177,11 @@
         index += 1
 
         if @options.setCursor == 'first' and first
-          view.setCur row, 0
+          view.cursor.set row, 0
           first = false
 
       if @options.setCursor == 'last'
-        view.setCur row, 0
+        view.cursor.set row, 0
 
     rewind: (view) ->
       @delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)

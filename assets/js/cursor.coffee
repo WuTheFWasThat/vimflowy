@@ -11,10 +11,11 @@ class Cursor
     return new Cursor @data, @row, @col, @moveCol
 
   # cursorOptions:
-  #   - pastEnd:  means whether we're on the column or past it.
-  #               generally true when in insert mode but not in normal mode
-  #               effectively decides whether we can go past last column or not
-  #
+  #   - pastEnd:      means whether we're on the column or past it.
+  #                   generally true when in insert mode but not in normal mode
+  #                   effectively decides whether we can go past last column or not
+  #   - pastEndWord:  whether we consider the end of a word to be after the last letter
+  #                   is true in normal mode (for de), false in visual (for vex)
 
   set: (row, col, cursorOptions) ->
     @row = row
@@ -27,6 +28,10 @@ class Cursor
   setCol: (moveCol, cursorOptions = {pastEnd: true}) ->
     @moveCol = moveCol
     @fromMoveCol cursorOptions
+    # if cursorOptions moved us, we should respect it
+    # this is the time to do so, since we're setting moveCol
+    if @moveCol >= 0
+      @moveCol = @col
 
   fromMoveCol: (cursorOptions = {}) ->
     len = @data.getLength @row
