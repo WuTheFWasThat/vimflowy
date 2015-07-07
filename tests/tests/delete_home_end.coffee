@@ -52,8 +52,7 @@ t.expect ['some ']
 t.sendKey 'ctrl+y'
 t.expect ['some random text']
 t.sendKey 's'
-# TODO: fix
-# t.expect ['some random texts']
+t.expect ['some random texts']
 
 # not undoable when nothing
 t = new TestCase ['some random text']

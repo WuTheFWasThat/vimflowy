@@ -35,25 +35,25 @@ class Register
     else if @type == Register.TYPES.ROWS
       @serialized_rows = serialized.data
 
-  paste: (options) ->
+  paste: (options = {}) ->
     if @type == Register.TYPES.CHARS
       if options.before
-        @view.addCharsAtCursor @chars
+        @view.addCharsAtCursor @chars, {cursor: options.cursor}
       else
-        @view.addCharsAfterCursor @chars, {cursor: {beforeEnd: true}}
+        @view.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
     else if @type == Register.TYPES.ROWS
       row = @view.cursor.row
       parent = @view.data.getParent row
       index = @view.data.indexOf row
 
       if options.before
-        @view.addBlocks @serialized_rows, parent, index, {cursor: 'first'}
+        @view.addBlocks @serialized_rows, parent, index, {setCursor: 'first'}
       else
         children = @view.data.getChildren row
         if (not @view.data.collapsed row) and (children.length > 0)
-          @view.addBlocks @serialized_rows, row, 0, {cursor: 'first'}
+          @view.addBlocks @serialized_rows, row, 0, {setCursor: 'first'}
         else
-          @view.addBlocks @serialized_rows ,parent, (index + 1), {cursor: 'first'}
+          @view.addBlocks @serialized_rows ,parent, (index + 1), {setCursor: 'first'}
 
 # exports
 module?.exports = Register

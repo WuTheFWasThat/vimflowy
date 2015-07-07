@@ -10,21 +10,27 @@ class Cursor
   clone: () ->
     return new Cursor @data, @row, @col, @moveCol
 
-  set: (row, col, option) ->
-    @row = row
-    @setCol col, option
+  # cursorOptions:
+  #   - pastEnd:  means whether we're on the column or past it.
+  #               generally true when in insert mode but not in normal mode
+  #               effectively decides whether we can go past last column or not
+  #
 
-  setRow: (row, option) ->
+  set: (row, col, cursorOptions) ->
     @row = row
-    @fromMoveCol option
+    @setCol col, cursorOptions
 
-  setCol: (moveCol, option = {pastEnd: true}) ->
+  setRow: (row, cursorOptions) ->
+    @row = row
+    @fromMoveCol cursorOptions
+
+  setCol: (moveCol, cursorOptions = {pastEnd: true}) ->
     @moveCol = moveCol
-    @fromMoveCol option
+    @fromMoveCol cursorOptions
 
-  fromMoveCol: (option = {}) ->
+  fromMoveCol: (cursorOptions = {}) ->
     len = @data.getLength @row
-    maxcol = len - (if option.pastEnd then 0 else 1)
+    maxcol = len - (if cursorOptions.pastEnd then 0 else 1)
     if @moveCol < 0
       @col = Math.max(0, len + @moveCol + 1)
     else
@@ -40,8 +46,8 @@ class Cursor
     if @col > 0
       do @_left
 
-  right: (options = {}) ->
-    shift = if options.cursor.pastEnd then 0 else 1
+  right: (cursorOptions = {}) ->
+    shift = if cursorOptions.pastEnd then 0 else 1
     if @col < (@data.getLength @row) - shift
       do @_right
 
@@ -93,8 +99,8 @@ class Cursor
     @setCol 0
     return @
 
-  end: (options = {cursor: {}}) ->
-    @setCol (if options.cursor.pastEnd then -1 else -2)
+  end: (cursorOptions = {cursor: {}}) ->
+    @setCol (if cursorOptions.pastEnd then -1 else -2)
     return @
 
   visibleHome: () ->
@@ -232,33 +238,33 @@ class Cursor
     if options.beforeFound
       do @_right
 
-  up: (options = {}) ->
+  up: (cursorOptions = {}) ->
     row = @data.prevVisible @row
     if row != null
-      @setRow row, options.cursor
+      @setRow row, cursorOptions
 
-  down: (options = {}) ->
+  down: (cursorOptions = {}) ->
     row = @data.nextVisible @row
     if row != null
-      @setRow row, options.cursor
+      @setRow row, cursorOptions
 
-  parent: (options = {}) ->
+  parent: (cursorOptions = {}) ->
     row = @data.getParent @row
     if row == @data.root
       return
     if row == @data.viewRoot
       @data.changeViewRoot @data.getParent row
-    @setRow row, options.cursor
+    @setRow row, cursorOptions
 
-  prevSibling: (options = {}) ->
+  prevSibling: (cursorOptions = {}) ->
     prevsib = @data.getSiblingBefore @row
     if prevsib != null
-      @setRow prevsib, options.cursor
+      @setRow prevsib, cursorOptions
 
-  nextSibling: (options = {}) ->
+  nextSibling: (cursorOptions = {}) ->
     nextsib = @data.getSiblingAfter @row
     if nextsib != null
-      @setRow nextsib, options.cursor
+      @setRow nextsib, cursorOptions
 
 # exports
 module?.exports = Cursor

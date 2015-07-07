@@ -205,10 +205,6 @@ class View
     return @data.getLength @cursor.row
 
   setCur: (row, col, option = '') ->
-    if option.beforeEnd
-      if col > 0
-        col -= 1
-
     shift = if option.pastEnd then 0 else 1
     len = @data.getLength row
     if len > 0 and col > len - shift
@@ -285,6 +281,8 @@ class View
     if line.length > 0
       @register.saveChars line.slice(col, col + nchars)
 
+  # options:
+  #   - includeEnd says whether to also delete cursor2 location
   yankBetween: (cursor1, cursor2, options = {}) ->
     if cursor2.row != cursor1.row
       console.log('not yet implemented')
@@ -296,6 +294,8 @@ class View
     offset = if options.includeEnd then 1 else 0
     @yankChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
 
+  # options:
+  #   - includeEnd says whether to also delete cursor2 location
   deleteBetween: (cursor1, cursor2, options = {}) ->
     if cursor2.row != cursor1.row
       console.log('not yet implemented')
@@ -321,7 +321,7 @@ class View
     @act delAction
     row = @cursor.row
     sibling = @act new actions.InsertRowSibling @cursor.row, {before: true}
-    @addCharsAfterCursor delAction.deletedChars, {cursor: {beforeEnd: true}}
+    @addCharsAfterCursor delAction.deletedChars
     @setCur row, 0
 
   joinRows: (first, second, options = {}) ->
@@ -336,7 +336,7 @@ class View
     @detachBlock second
 
     newCol = @data.getLength first
-    action = new actions.AddChars first, newCol, line, {cursor: 'stay'}
+    action = new actions.AddChars first, newCol, line
     @act action
 
     @setCur first, newCol, options.cursor
@@ -468,11 +468,12 @@ class View
   toggleBlock: (row) ->
     @act new actions.ToggleBlock row
 
-  pasteBefore: () ->
-    @register.paste {before: true}
+  pasteBefore: (options = {}) ->
+    options.before = true
+    @register.paste options
 
-  pasteAfter: () ->
-    @register.paste {}
+  pasteAfter: (options = {}) ->
+    @register.paste options
 
   find: (chars, nresults = 10) ->
     results = @data.find chars, nresults

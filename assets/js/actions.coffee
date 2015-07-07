@@ -11,15 +11,27 @@
       return @apply view
 
   class AddChars extends Action
+    # options:
+    #   setCur: if you wish to set the cursor, set to 'beginning' or 'end'
+    #           indicating where the cursor should go to
+
     constructor: (row, col, chars, options = {}) ->
       @row = row
       @col = col
       @chars = chars
+
       @options = options
+      @options.setCursor ?= 'end'
+      @options.cursor ?= {}
+
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
-      if @options.cursor != 'stay'
-        view.setCur @row, (@col + @chars.length), @options.cursor
+
+      shift = if @options.cursor.pastEnd then 1 else 0
+      if @options.setCursor == 'beginning'
+        view.setCur @row, (@col + shift), @options.cursor
+      else if @options.setCursor == 'end'
+        view.setCur @row, (@col + shift + @chars.length - 1), @options.cursor
     rewind: (view) ->
       view.data.deleteChars @row, @col, @chars.length
 
@@ -28,10 +40,15 @@
       @row = row
       @col = col
       @nchars = nchars
+
       @options = options
+      @options.setCursor ?= 'before'
     apply: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
-      view.setCur @row, @col, @options.cursor
+      if @options.setCursor == 'before'
+        view.setCur @row, @col, @options.cursor
+      else if @options.setCursor == 'after'
+        view.setCur @row, (@col + 1), @options.cursor
     rewind: (view) ->
       view.data.writeChars @row, @col, @deletedChars
 
@@ -120,8 +137,7 @@
           next = view.data.addChild parent
           @created = next
 
-      if @options.cursor != 'stay'
-        view.setCur next, 0
+      view.setCur next, 0
       @parent = parent
       @index = index
 
@@ -140,6 +156,10 @@
         view.data.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 
   class AddBlocks extends Action
+    # options:
+    #   setCur: if you wish to set the cursor, set to 'first' or 'last',
+    #           indicating which block the cursor should go to
+
     constructor: (serialized_rows, parent, index = -1, options = {}) ->
       @serialized_rows = serialized_rows
       @parent = parent
@@ -155,11 +175,11 @@
         row = view.data.loadTo serialized_row, @parent, index
         index += 1
 
-        if @options.cursor == 'first' and first
+        if @options.setCursor == 'first' and first
           view.setCur row, 0
           first = false
 
-      if @options.cursor == 'last'
+      if @options.setCursor == 'last'
         view.setCur row, 0
 
     rewind: (view) ->

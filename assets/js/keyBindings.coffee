@@ -296,7 +296,7 @@ keyDefinitions =
     display: 'Insert after character'
     to_mode: MODES.INSERT
     fn: () ->
-      @view.cursor.right {cursor: {pastEnd: true}}
+      @view.cursor.right {pastEnd: true}
   INSERT_HOME:
     display: 'Insert at beginning of line'
     to_mode: MODES.INSERT
@@ -306,7 +306,7 @@ keyDefinitions =
     display: 'Insert after end of line'
     to_mode: MODES.INSERT
     fn: () ->
-      @view.cursor.end {cursor: {pastEnd: true}}
+      @view.cursor.end {pastEnd: true}
   INSERT_LINE_BELOW:
     display: 'Insert on new line after current line'
     to_mode: MODES.INSERT
@@ -322,7 +322,7 @@ keyDefinitions =
     continue: (char) ->
       num = Math.min(@repeat, do @view.curLineLength - @view.cursor.col)
       newChars = (char for i in [1..num])
-      @view.spliceCharsAfterCursor num, newChars, {cursor: {beforeEnd: true}}
+      @view.spliceCharsAfterCursor num, newChars, {setCursor: 'end'}
 
   UNDO:
     display: 'Undo'
@@ -342,95 +342,95 @@ keyDefinitions =
   LEFT:
     display: 'Move cursor left'
     motion: true
-    fn: (cursor, option) ->
-      cursor.left {cursor: option}
+    fn: (cursor, options) ->
+      cursor.left options
   RIGHT:
     display: 'Move cursor right'
     motion: true
-    fn: (cursor, option) ->
-      cursor.right {cursor: option}
+    fn: (cursor, options) ->
+      cursor.right options
   UP:
     display: 'Move cursor up'
     motion: true
-    fn: (cursor, option) ->
-      cursor.up {cursor: option}
+    fn: (cursor, options) ->
+      cursor.up options
   DOWN:
     display: 'Move cursor down'
     motion: true
-    fn: (cursor, option) ->
-      cursor.down {cursor: option}
+    fn: (cursor, options) ->
+      cursor.down options
   HOME:
     display: 'Move cursor to beginning of line'
     motion: true
-    fn: (cursor, option) ->
-      cursor.home {cursor: option}
+    fn: (cursor, options) ->
+      cursor.home options
   END:
     display: 'Move cursor to end of line'
     motion: true
-    fn: (cursor, option) ->
-      cursor.end {cursor: option}
+    fn: (cursor, options) ->
+      cursor.end options
   BEGINNING_WORD:
     display: 'Move cursor to the first word-beginning before it'
     motion: true
-    fn: (cursor, option) ->
-      cursor.beginningWord {cursor: option}
+    fn: (cursor, options) ->
+      cursor.beginningWord {cursor: options}
   END_WORD:
     display: 'Move cursor to the first word-ending after it'
     motion: true
-    fn: (cursor, option) ->
-      cursor.endWord {cursor: option}
+    fn: (cursor, options) ->
+      cursor.endWord {cursor: options}
   NEXT_WORD:
     display: 'Move cursor to the beginning of the next word'
     motion: true
-    fn: (cursor, option) ->
-      cursor.nextWord {cursor: option}
+    fn: (cursor, options) ->
+      cursor.nextWord {cursor: options}
   BEGINNING_WWORD:
     display: 'Move cursor to the first Word-beginning before it'
     motion: true
-    fn: (cursor, option) ->
-      cursor.beginningWord {cursor: option, whitespaceWord: true}
+    fn: (cursor, options) ->
+      cursor.beginningWord {cursor: options, whitespaceWord: true}
   END_WWORD:
     display: 'Move cursor to the first Word-ending after it'
     motion: true
-    fn: (cursor, option) ->
-      cursor.endWord {cursor: option, whitespaceWord: true}
+    fn: (cursor, options) ->
+      cursor.endWord {cursor: options, whitespaceWord: true}
   NEXT_WWORD:
     display: 'Move cursor to the beginning of the next Word'
     motion: true
-    fn: (cursor, option) ->
-      cursor.nextWord {cursor: option, whitespaceWord: true}
+    fn: (cursor, options) ->
+      cursor.nextWord {cursor: options, whitespaceWord: true}
   FIND_NEXT_CHAR:
     display: 'Move cursor to next occurrence of character in line'
     motion: true
-    continue: (char, cursor, option) ->
-      cursor.findNextChar char, {cursor: option}
+    continue: (char, cursor, options) ->
+      cursor.findNextChar char, {cursor: options}
   FIND_PREV_CHAR:
     display: 'Move cursor to previous occurrence of character in line'
     motion: true
-    continue: (char, cursor, option) ->
-      cursor.findPrevChar char, {cursor: option}
+    continue: (char, cursor, options) ->
+      cursor.findPrevChar char, {cursor: options}
   TO_NEXT_CHAR:
     display: 'Move cursor to just before next occurrence of character in line'
     motion: true
-    continue: (char, cursor, option) ->
-      cursor.findNextChar char, {cursor: option, beforeFound: true}
+    continue: (char, cursor, options) ->
+      cursor.findNextChar char, {cursor: options, beforeFound: true}
   TO_PREV_CHAR:
     display: 'Move cursor to just after previous occurrence of character in line'
     motion: true
-    continue: (char, cursor, option) ->
-      cursor.findPrevChar char, {cursor: option, beforeFound: true}
+    continue: (char, cursor, options) ->
+      cursor.findPrevChar char, {cursor: options, beforeFound: true}
 
   NEXT_SIBLING:
     display: 'Move cursor to the next sibling of the current line'
     motion: true
-    fn: (cursor, option) ->
-      cursor.nextSibling {cursor: option}
+    fn: (cursor, options) ->
+      cursor.nextSibling options
 
   PREV_SIBLING:
     display: 'Move cursor to the previous sibling of the current line'
     motion: true
-    fn: (cursor, option) ->
-      cursor.prevSibling {cursor: option}
+    fn: (cursor, options) ->
+      cursor.prevSibling options
 
   GO:
     display: 'Various commands for navigation (operator)'
@@ -439,18 +439,18 @@ keyDefinitions =
       GO:
         display: 'Go to the beginning of visible document'
         motion: true
-        fn: (cursor, option) ->
-          do cursor.visibleHome
+        fn: (cursor, options) ->
+          cursor.visibleHome options
       PARENT:
         display: 'Go to the parent of current line'
         motion: true
-        fn: (cursor, option) ->
-          do cursor.parent
+        fn: (cursor, options) ->
+          cursor.parent options
   GO_END:
     display: 'Go to end of visible document'
     motion: true
-    fn: (cursor, option) ->
-      do cursor.visibleEnd
+    fn: (cursor, options) ->
+      cursor.visibleEnd options
   DELETE_CHAR:
     display: 'Delete character'
     fn: () ->
@@ -473,7 +473,7 @@ keyDefinitions =
     fn: (options = {}) ->
       options.yank = true
       options.cursor ?= {}
-      @view.deleteBetween @view.cursor, @view.cursor.clone().home(), options
+      @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
   DELETE_TO_END:
     display: 'Delete to the end of the line'
     # macro: ['DELETE', 'END']
@@ -481,7 +481,7 @@ keyDefinitions =
       options.yank = true
       options.cursor ?= {}
       options.includeEnd = true
-      @view.deleteBetween @view.cursor, @view.cursor.clone().end(options), options
+      @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
   DELETE:
     display: 'Delete (operator)'
     bindings:
@@ -535,8 +535,8 @@ keyDefinitions =
       do @view.pasteAfter
   PASTE_BEFORE:
     display: 'Paste before cursor'
-    fn: () ->
-      do @view.pasteBefore
+    fn: (options) ->
+      @view.pasteBefore options
 
   JOIN_LINE:
     display: 'Join current line with line below'
