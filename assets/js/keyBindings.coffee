@@ -18,166 +18,170 @@ MODES =
 defaultVimKeyBindings = {}
 
 defaultVimKeyBindings[MODES.NORMAL] =
-  'HELP'              : ['?']
-  'INSERT'            : ['i']
-  'INSERT_HOME'       : ['I']
-  'INSERT_AFTER'      : ['a']
-  'INSERT_END'        : ['A']
-  'INSERT_LINE_BELOW' : ['o']
-  'INSERT_LINE_ABOVE' : ['O']
+  HELP              : ['?']
+  INSERT            : ['i']
+  INSERT_HOME       : ['I']
+  INSERT_AFTER      : ['a']
+  INSERT_END        : ['A']
+  INSERT_LINE_BELOW : ['o']
+  INSERT_LINE_ABOVE : ['O']
 
-  'REPLACE'           : ['r']
-  'UNDO'              : ['u']
-  'REDO'              : ['ctrl+r']
-  'REPLAY'            : ['.']
+  REPLACE           : ['r']
+  UNDO              : ['u']
+  REDO              : ['ctrl+r']
+  REPLAY            : ['.']
 
-  'LEFT'              : ['h', 'left']
-  'RIGHT'             : ['l', 'right']
-  'UP'                : ['k', 'up']
-  'DOWN'              : ['j', 'down']
-  'HOME'              : ['0', '^']
-  'END'               : ['$']
-  'BEGINNING_WORD'    : ['b']
-  'END_WORD'          : ['e']
-  'NEXT_WORD'         : ['w']
-  'BEGINNING_WWORD'   : ['B']
-  'END_WWORD'         : ['E']
-  'NEXT_WWORD'        : ['W']
-  'FIND_NEXT_CHAR'    : ['f']
-  'FIND_PREV_CHAR'    : ['F']
-  'TO_NEXT_CHAR'      : ['t']
-  'TO_PREV_CHAR'      : ['T']
+  LEFT              : ['h', 'left']
+  RIGHT             : ['l', 'right']
+  UP                : ['k', 'up']
+  DOWN              : ['j', 'down']
+  HOME              : ['0', '^']
+  END               : ['$']
+  BEGINNING_WORD    : ['b']
+  END_WORD          : ['e']
+  NEXT_WORD         : ['w']
+  BEGINNING_WWORD   : ['B']
+  END_WWORD         : ['E']
+  NEXT_WWORD        : ['W']
+  FIND_NEXT_CHAR    : ['f']
+  FIND_PREV_CHAR    : ['F']
+  TO_NEXT_CHAR      : ['t']
+  TO_PREV_CHAR      : ['T']
 
-  'GO'                : ['g']
-  'PARENT'            : ['p']
-  'GO_END'            : ['G']
-  'DELETE'            : ['d']
-  'CHANGE'            : ['c']
-  'DELETE_CHAR'       : ['x']
-  'DELETE_LAST_CHAR'  : ['X']
-  'CHANGE_CHAR'       : ['s']
-  'YANK'              : ['y']
-  'PASTE_AFTER'       : ['p']
-  'PASTE_BEFORE'      : ['P']
-  'JOIN_LINE'         : ['J']
+  GO                : ['g']
+  PARENT            : ['p']
+  GO_END            : ['G']
+  DELETE            : ['d']
+  DELETE_TO_END     : ['D']
+  CHANGE            : ['c']
+  DELETE_CHAR       : ['x']
+  DELETE_LAST_CHAR  : ['X']
+  CHANGE_CHAR       : ['s']
+  YANK              : ['y']
+  PASTE_AFTER       : ['p']
+  PASTE_BEFORE      : ['P']
+  JOIN_LINE         : ['J']
 
-  'INDENT_RIGHT'      : ['tab']
-  'INDENT_LEFT'       : ['shift+tab']
-  'MOVE_BLOCK_RIGHT'  : ['>', 'ctrl+l']
-  'MOVE_BLOCK_LEFT'   : ['<', 'ctrl+h']
-  'MOVE_BLOCK_DOWN'   : ['ctrl+j']
-  'MOVE_BLOCK_UP'     : ['ctrl+k']
+  INDENT_RIGHT      : ['tab']
+  INDENT_LEFT       : ['shift+tab']
+  MOVE_BLOCK_RIGHT  : ['>', 'ctrl+l']
+  MOVE_BLOCK_LEFT   : ['<', 'ctrl+h']
+  MOVE_BLOCK_DOWN   : ['ctrl+j']
+  MOVE_BLOCK_UP     : ['ctrl+k']
 
-  'NEXT_SIBLING'      : ['alt+j']
-  'PREV_SIBLING'      : ['alt+k']
+  NEXT_SIBLING      : ['alt+j']
+  PREV_SIBLING      : ['alt+k']
 
-  'TOGGLE_FOLD'       : ['z']
-  'ZOOM_IN'           : ['shift+enter', ']', 'alt+l', 'ctrl+right']
-  'ZOOM_OUT'          : ['enter', '[', 'alt+h', 'ctrl+left']
-  'ZOOM_OUT_ALL'      : ['{']
-  'ZOOM_IN_ALL'       : ['}']
-  'SCROLL_DOWN'       : ['ctrl+d']
-  'SCROLL_UP'         : ['ctrl+u']
+  TOGGLE_FOLD       : ['z']
+  ZOOM_IN           : ['shift+enter', ']', 'alt+l', 'ctrl+right']
+  ZOOM_OUT          : ['enter', '[', 'alt+h', 'ctrl+left']
+  ZOOM_OUT_ALL      : ['{']
+  ZOOM_IN_ALL       : ['}']
+  SCROLL_DOWN       : ['ctrl+d', 'page down']
+  SCROLL_UP         : ['ctrl+u', 'page up']
 
-  'SEARCH'            : ['/', 'ctrl+f']
-  'RECORD_MACRO'      : ['q']
-  'PLAY_MACRO'        : ['@']
+  SEARCH            : ['/', 'ctrl+f']
+  RECORD_MACRO      : ['q']
+  PLAY_MACRO        : ['@']
 
-  'ENTER_VISUAL'      : ['v']
-  'ENTER_VISUAL_LINE' : ['V']
+  ENTER_VISUAL      : ['v']
+  ENTER_VISUAL_LINE : ['V']
 
-  'EXPORT'            : ['ctrl+s']
+  EXPORT            : ['ctrl+s']
 
 defaultVimKeyBindings[MODES.INSERT] =
-  'LEFT'              : ['left']
-  'RIGHT'             : ['right']
-  'UP'                : ['up']
-  'DOWN'              : ['down']
-  'HOME'              : ['ctrl+a', 'home']
-  'END'               : ['ctrl+e', 'end']
-  'BEGINNING_WORD'    : ['alt+b']
-  'END_WORD'          : ['alt+f']
-  'NEXT_WORD'         : []
-  'BEGINNING_WWORD'   : []
-  'END_WWORD'         : []
-  'NEXT_WWORD'        : []
-  'FIND_NEXT_CHAR'    : []
-  'FIND_PREV_CHAR'    : []
-  'TO_NEXT_CHAR'      : []
-  'TO_PREV_CHAR'      : []
+  LEFT              : ['left']
+  RIGHT             : ['right']
+  UP                : ['up']
+  DOWN              : ['down']
+  HOME              : ['ctrl+a', 'home']
+  END               : ['ctrl+e', 'end']
+  DELETE_TO_HOME    : ['ctrl+u']
+  DELETE_TO_END     : ['ctrl+k']
+  PASTE_BEFORE      : ['ctrl+y']
+  BEGINNING_WORD    : ['alt+b']
+  END_WORD          : ['alt+f']
+  NEXT_WORD         : []
+  BEGINNING_WWORD   : []
+  END_WWORD         : []
+  NEXT_WWORD        : []
+  FIND_NEXT_CHAR    : []
+  FIND_PREV_CHAR    : []
+  TO_NEXT_CHAR      : []
+  TO_PREV_CHAR      : []
 
-  'BACKSPACE'         : ['backspace']
-  'DELKEY'            : ['shift+backspace']
-  'SPLIT'             : ['enter']
+  BACKSPACE         : ['backspace']
+  DELKEY            : ['shift+backspace']
+  SPLIT             : ['enter']
 
-  'INDENT_RIGHT'      : ['tab']
-  'INDENT_LEFT'       : ['shift+tab']
-  'MOVE_BLOCK_RIGHT'  : []
-  'MOVE_BLOCK_LEFT'   : []
-  'MOVE_BLOCK_DOWN'   : []
-  'MOVE_BLOCK_UP'     : []
+  INDENT_RIGHT      : ['tab']
+  INDENT_LEFT       : ['shift+tab']
+  MOVE_BLOCK_RIGHT  : []
+  MOVE_BLOCK_LEFT   : []
+  MOVE_BLOCK_DOWN   : []
+  MOVE_BLOCK_UP     : []
 
-  'NEXT_SIBLING'      : []
-  'PREV_SIBLING'      : []
+  NEXT_SIBLING      : []
+  PREV_SIBLING      : []
 
-  'TOGGLE_FOLD'       : ['ctrl+z']
-  'ZOOM_OUT'          : ['ctrl+left']
-  'ZOOM_IN'           : ['ctrl+right']
-  'ZOOM_OUT_ALL'      : ['ctrl+shift+left']
-  'ZOOM_IN_ALL'       : ['ctrl+shift+right']
-  'SCROLL_DOWN'       : ['ctrl+d']
-  'SCROLL_UP'         : ['ctrl+u']
+  TOGGLE_FOLD       : ['ctrl+z']
+  ZOOM_OUT          : ['ctrl+left']
+  ZOOM_IN           : ['ctrl+right']
+  ZOOM_OUT_ALL      : ['ctrl+shift+left']
+  ZOOM_IN_ALL       : ['ctrl+shift+right']
+  SCROLL_DOWN       : ['page down', 'ctrl+down']
+  SCROLL_UP         : ['page up', 'ctrl+up']
 
-  'SEARCH'            : []
-  'EXPORT'            : ['ctrl+s']
-  'EXIT_MODE'         : ['esc', 'ctrl+c']
+  SEARCH            : []
+  EXPORT            : ['ctrl+s']
+  EXIT_MODE         : ['esc', 'ctrl+c']
 
 defaultVimKeyBindings[MODES.VISUAL] =
-  'YANK'              : ['y']
-  'DELETE'            : ['d', 'x']
-  'CHANGE'            : ['c']
-  'SWAP_CURSOR'       : ['o', 'O']
-  'EXIT_MODE'         : ['esc', 'ctrl+c']
-  # 'REPLACE'           : ['r']
-  # 'SWAP_CASE'         : ['~']
+  YANK              : ['y']
+  DELETE            : ['d', 'x']
+  CHANGE            : ['c']
+  SWAP_CURSOR       : ['o', 'O']
+  EXIT_MODE         : ['esc', 'ctrl+c']
+  # REPLACE           : ['r']
+  # SWAP_CASE         : ['~']
 
 defaultVimKeyBindings[MODES.VISUAL_LINE] =
-  'NEXT_SIBLING'      : ['j', 'down']
-  'PREV_SIBLING'      : ['k', 'up']
-  'YANK'              : ['y']
-  'DELETE'            : ['d', 'x']
-  'CHANGE'            : ['c']
-  'SWAP_CURSOR'       : ['o', 'O']
-  'MOVE_BLOCK_RIGHT'  : ['>']
-  'MOVE_BLOCK_LEFT'   : ['<']
-  'EXIT_MODE'         : ['esc', 'ctrl+c']
-  # 'REPLACE'           : ['r']
-  # 'SWAP_CASE'         : ['~']
+  NEXT_SIBLING      : ['j', 'down']
+  PREV_SIBLING      : ['k', 'up']
+  YANK              : ['y']
+  DELETE            : ['d', 'x']
+  CHANGE            : ['c']
+  SWAP_CURSOR       : ['o', 'O']
+  MOVE_BLOCK_RIGHT  : ['>']
+  MOVE_BLOCK_LEFT   : ['<']
+  EXIT_MODE         : ['esc', 'ctrl+c']
+  # REPLACE           : ['r']
+  # SWAP_CASE         : ['~']
 
 defaultVimKeyBindings[MODES.MENU] =
-  'MENU_SELECT'       : ['enter']
-  'MENU_UP'           : ['ctrl+k', 'up', 'tab']
-  'MENU_DOWN'         : ['ctrl+j', 'down', 'shift+tab']
+  MENU_SELECT       : ['enter']
+  MENU_UP           : ['ctrl+k', 'up', 'tab']
+  MENU_DOWN         : ['ctrl+j', 'down', 'shift+tab']
 
-  'LEFT'              : ['left']
-  'RIGHT'             : ['right']
-  'HOME'              : ['ctrl+a', 'home']
-  'END'               : ['ctrl+e', 'end']
-  'BEGINNING_WORD'    : ['alt+b']
-  'END_WORD'          : ['alt+f']
-  'NEXT_WORD'         : []
-  'BEGINNING_WWORD'   : []
-  'END_WWORD'         : []
-  'NEXT_WWORD'        : []
-  'FIND_NEXT_CHAR'    : []
-  'FIND_PREV_CHAR'    : []
-  'TO_NEXT_CHAR'      : []
-  'TO_PREV_CHAR'      : []
+  LEFT              : ['left']
+  RIGHT             : ['right']
+  HOME              : ['ctrl+a', 'home']
+  END               : ['ctrl+e', 'end']
+  BEGINNING_WORD    : ['alt+b']
+  END_WORD          : ['alt+f']
+  NEXT_WORD         : []
+  BEGINNING_WWORD   : []
+  END_WWORD         : []
+  NEXT_WWORD        : []
+  FIND_NEXT_CHAR    : []
+  FIND_PREV_CHAR    : []
+  TO_NEXT_CHAR      : []
+  TO_PREV_CHAR      : []
 
-  'BACKSPACE'         : ['backspace']
-  'DELKEY'            : ['shift+backspace']
+  BACKSPACE         : ['backspace']
+  DELKEY            : ['shift+backspace']
 
-  'EXIT_MODE'         : ['esc', 'ctrl+c']
+  EXIT_MODE         : ['esc', 'ctrl+c']
 
 # display:
 #   is displayed in keybindings help screen
@@ -462,6 +466,22 @@ keyDefinitions =
     to_mode: MODES.INSERT
     fn: () ->
       @view.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
+  DELETE_TO_HOME:
+    display: 'Delete to the beginning of the line'
+    # TODO: something like this would be nice...
+    # macro: ['DELETE', 'HOME']
+    fn: (options = {}) ->
+      options.yank = true
+      options.cursor ?= {}
+      @view.deleteBetween @view.cursor, @view.cursor.clone().home(), options
+  DELETE_TO_END:
+    display: 'Delete to the end of the line'
+    # macro: ['DELETE', 'END']
+    fn: (options = {}) ->
+      options.yank = true
+      options.cursor ?= {}
+      options.includeEnd = true
+      @view.deleteBetween @view.cursor, @view.cursor.clone().end(options), options
   DELETE:
     display: 'Delete (operator)'
     bindings:
@@ -590,12 +610,10 @@ keyDefinitions =
   MENU_UP:
     display: 'Select previous menu selection'
     fn: () ->
-      console.log('menu up')
       do @menu.up
   MENU_DOWN:
     display: 'Select next menu selection'
     fn: () ->
-      console.log('menu down')
       do @menu.down
 
 # end of keyDefinitions
@@ -799,7 +817,7 @@ class KeyBindings
       motion @view.cursor, {pastEnd: true}
     else if info.fn
       fn = info.fn
-      args = []
+      args = [{cursor: {pastEnd: true}}]
       context = {
         view: @view,
         repeat: 1,

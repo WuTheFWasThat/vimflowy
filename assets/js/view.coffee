@@ -262,7 +262,8 @@ class View
     @act new actions.AddChars @cursor.row, col, chars, options
 
   delChars: (row, col, nchars, options = {}) ->
-    if ((@data.getLength row) > 0) and (nchars > 0)
+    n = @data.getLength row
+    if (n > 0) and (nchars > 0) and (col < n)
       delAction = new actions.DelChars row, col, nchars, options
       @act delAction
       if options.yank

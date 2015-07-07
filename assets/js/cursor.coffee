@@ -91,9 +91,11 @@ class Cursor
 
   home: () ->
     @setCol 0
+    return @
 
-  end: (options = {}) ->
+  end: (options = {cursor: {}}) ->
     @setCol (if options.cursor.pastEnd then -1 else -2)
+    return @
 
   visibleHome: () ->
     row = do @data.nextVisible
@@ -157,7 +159,6 @@ class Cursor
     while @col < end and wordcheck @row, (@col+1)
       do @_right
 
-    console.log('options', options.cursor)
     if options.cursor.pastEndWord
       do @_right
 

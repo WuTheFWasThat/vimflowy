@@ -305,6 +305,7 @@ class Data
         mimetype = @mimetypeLookup filename
     content = @exportContent mimetype
     @saveFile filename, mimetype, content
+
   exportContent: (mimetype) ->
     jsonContent = do @serialize
     if mimetype == 'application/json'
@@ -326,6 +327,7 @@ class Data
         return(exportLines jsonContent).join "\n"
     else
         throw "Invalid export format"
+
    mimetypeLookup: (filename) ->
      parts = filename.split '.'
      extension = parts[parts.length - 1] ? ''

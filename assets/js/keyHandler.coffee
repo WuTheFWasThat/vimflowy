@@ -38,6 +38,8 @@ class KeyHandler extends EventEmitter
     13: 'enter'
     27: 'esc'
 
+    33: 'page up'
+    34: 'page down'
     37: 'left'
     38: 'up'
     39: 'right'
