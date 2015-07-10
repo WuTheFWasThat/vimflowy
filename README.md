@@ -13,15 +13,18 @@ Try it out [here](https://vimflowy.bitballoon.com)!
   - collapsing
   - zooming
 - Vim features
-  - Modal editing (normal, insert, a limited visual and visual line)
+  - modal editing
+    - insert and normal mode
+    - visual mode (only within a line)
+    - visual line (only within siblings)
   - keybindings for everything
-  - Undo!  Full history kept within a session
-  - Macros
+  - undo!  Full history kept within a session
+  - macros
 - Extras
-  - Search
-  - Data export
-  - Different themes
-  - Lazy loads data, for big documents
+  - (inefficient) search
+  - data export
+  - different themes
+  - lazy loads data, for big documents
 
 ## NOTES ##
 
@@ -29,9 +32,31 @@ Try it out [here](https://vimflowy.bitballoon.com)!
 - Currently, weird things happen when you use it in multiple tabs
 - There are many [known inconsistencies with vim](vim_inconsistencies.md), mostly intentional.
 
+## SET UP: ##
+
+#### INSTALL: ####
+
+Assuming you have node and npm
+
+    git clone https://github.com/WuTheFWasThat/vimflowy.git
+    cd vimflowy
+    npm install
+
+#### START: ####
+
+Just run
+
+    npm start
+
+And you can visit the app at `http://localhost:8080/`
+
+#### RUN TESTS: ####
+
+    npm test
+
 ## CONTRIBUTE: ##
 
-Please send pull requests!  Remember - for new keybindings, write new tests!
+Please send pull requests!  Remember to write tests when appropriate!
 
 You may contact me at [githubusername]@gmail.com as well
 
