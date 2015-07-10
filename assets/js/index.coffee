@@ -18,12 +18,12 @@ if localStorage?
   if showKeyBindings
     keybindingsDiv.addClass 'active'
 
-  datastore = new dataStore.LocalStorageLazy
+  docname = window.location.pathname.split('/')[1]
+  datastore = new dataStore.LocalStorageLazy docname
   data = new Data datastore
 
-  if localStorage.getItem('saved') == null
+  if (do datastore.lastSave) == 0
     data.load default_data
-    localStorage['saved'] = 'true'
 
 else
   alert('You need local storage support for data to be persisted!')

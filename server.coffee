@@ -26,6 +26,9 @@ app.set 'view engine', 'jade'
 app.get '/', (req, res) ->
   res.render 'index'
 
+app.get '/:docname', (req, res) ->
+  res.render 'index'
+
 app.use (req, res, next) ->
   res.status 404
   res.render 'errors/404'

@@ -95,36 +95,40 @@
     #   delete @collapsed[id]
 
   class LocalStorageLazy extends DataStore
-    constructor: () ->
+    constructor: (prefix='') ->
+      @prefix = "#{prefix}save"
+
       @lines = {}
       @parents = {}
       @children = {}
       @collapsed = {}
       @settings = {}
+
+      @_lineKey_ = (row) ->
+        return "#{@prefix}:#{row}:line"
+
+      @_parentKey_ = (row) ->
+        return "#{@prefix}:#{row}:parent"
+
+      @_childrenKey_ = (row) ->
+        return "#{@prefix}:#{row}:children"
+
+      @_collapsedKey_ = (row) ->
+        return "#{@prefix}:#{row}:collapsed"
+
+      @_settingKey_ = (setting) ->
+        return "#{@prefix}:setting:#{setting}"
+
+      @_lastSaveKey_ = "#{@prefix}:lastSave"
+      @_lastViewrootKey_ = "#{@prefix}:lastviewroot"
+      @_IDKey_ = "#{@prefix}:lastID"
+
       return
-
-    _lineKey_: (row) ->
-      return 'save:' + row + ':line'
-
-    _parentKey_: (row) ->
-      return 'save:' + row + ':parent'
-
-    _childrenKey_: (row) ->
-      return 'save:' + row + ':children'
-
-    _collapsedKey_: (row) ->
-      return 'save:' + row + ':collapsed'
-
-    _settingKey_: (setting) ->
-      return 'save:setting:' + setting
-
-    _lastViewrootKey_: 'save:lastviewroot'
-
-    _IDKey_: 'save:lastID'
 
     _setLocalStorage_: (key, value) ->
       console.log('setting local storage', key, value)
       localStorage.setItem key, JSON.stringify value
+      localStorage.setItem @_lastSaveKey_, (do Date.now)
 
     _getLocalStorage_: (key, default_value = null) ->
       console.log('getting from local storage', key, default_value)
@@ -139,6 +143,9 @@
       catch
         console.log('parse failure??')
         return default_value
+
+    lastSave: () ->
+      return @_getLocalStorage_ @_lastSaveKey_, 0
 
     getLine: (row) ->
       if not (row of @lines)
