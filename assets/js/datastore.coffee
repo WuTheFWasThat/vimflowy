@@ -1,5 +1,6 @@
 if module?
   global._ = require('lodash')
+  global.constants = require('constants')
   global.Logger = require('./logger.coffee')
 
 ((exports) ->
@@ -104,6 +105,7 @@ if module?
   class LocalStorageLazy extends DataStore
     constructor: (prefix='') ->
       super prefix
+      @lastSave = Date.now()
       @cache = {}
 
     get: (key, default_value=null) ->
@@ -116,9 +118,18 @@ if module?
       @_setLocalStorage_ key, value
 
     _setLocalStorage_: (key, value) ->
+      if (do @getLastSave) > @lastSave
+        alert '
+          This document has been modified (in another tab) since opening it in this tab.
+          Please refresh to continue!
+        '
+        throw new constants.ValidError 'Last save disagrees with cache'
+
+      @lastSave = Date.now()
+      localStorage.setItem @_lastSaveKey_, @lastSave
+
       Logger.logger.debug 'setting local storage', key, value
       localStorage.setItem key, JSON.stringify value
-      localStorage.setItem @_lastSaveKey_, (do Date.now)
 
     _getLocalStorage_: (key, default_value) ->
       Logger.logger.debug 'getting from local storage', key, default_value
@@ -134,7 +145,9 @@ if module?
         Logger.logger.debug 'parse failure:', stored
         return default_value
 
-    lastSave: () ->
+    # determine last time saved (for multiple tab detection)
+    # doesn't cache!
+    getLastSave: () ->
       @_getLocalStorage_ @_lastSaveKey_, 0
 
     getId: () ->

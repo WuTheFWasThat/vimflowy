@@ -382,9 +382,10 @@ if module?
       @keyMaps = keyMaps
 
       do @render_hotkeys
-      @settings.setSetting 'hotkeys', hotkey_settings
-      # TODO: update keybindings table
       return null
+
+    save_settings: (hotkey_settings) ->
+      @settings.setSetting 'hotkeys', hotkey_settings
 
     # apply default hotkeys
     apply_default_hotkey_settings: () ->
@@ -392,6 +393,7 @@ if module?
         if err # there shouldn't be an error
           Logger.logger.error "Failed to apply empty hotkeys settings!"
           throw "Failed to apply empty hotkeys settings!"
+        @save_settings {}
 
     # build table to visualize hotkeys
     buildTable: (keyMap) ->

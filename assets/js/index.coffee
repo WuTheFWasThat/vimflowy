@@ -93,6 +93,7 @@ create_view = (data) ->
                 return view.showMessage "Failed to parse JSON: #{e}", {text_class: 'error'}
             err = keyBindings.apply_hotkey_settings hotkey_settings
             if err then return view.showMessage err, {text_class: 'error'}
+            keyBindings.save_settings hotkey_settings
             keyBindings.renderModeTable view.mode # TODO: do this elsewhere?
             view.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
 
@@ -156,7 +157,7 @@ else if localStorage?
   datastore = new dataStore.LocalStorageLazy docname
   data = new Data datastore
 
-  if (do datastore.lastSave) == 0
+  if (do datastore.getLastSave) == 0
     data.load constants.default_data
 
   create_view data
@@ -170,9 +171,14 @@ else
   create_view data
 
 window.onerror = (msg, url, line, col, err) ->
+    if err instanceof constants.ValidError
+        Logger.logger.info "Caught valid error: '#{msg}' from #{url}:#{line}"
+        Logger.logger.info "Error: ", err, err.stack
+        return
+
     Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"
     if err != undefined
-        Logger.logger.error 'Error: ', err, err.stack
+        Logger.logger.error "Error: ", err, err.stack
     message = 'An error was caught.  Please refresh the page to avoid weird state. \n\n'
     message += 'Please help out vimflowy and report the bug.  If your data is not sensitive, '
     message += 'please open the javascript console and save the log as debug information.'
