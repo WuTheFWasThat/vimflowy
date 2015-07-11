@@ -15,6 +15,7 @@ app = express()
 connect_assets = require('connect-assets')(
   helperContext: app.locals
   buildDir: ((if env is 'production' then 'public/assets' else false))
+  compress: false
 )
 app.use connect_assets
 
