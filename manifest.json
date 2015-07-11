@@ -1,0 +1,13 @@
+{
+  "name": "Vimflowy",
+  "description": "Productivity tool inspired by vim and workflowy",
+  "version": "0.1",
+  "manifest_version": 2,
+  "app": {
+    "background": {
+      "scripts": ["background.js"]
+    }
+  },
+  "permissions": [ "storage" ],
+  "author": "Jeff Wu"
+}

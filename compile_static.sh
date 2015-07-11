@@ -46,6 +46,12 @@ else
     return 2 2>/dev/null || exit 2 # Work when sourced
 fi
 
+# unnecessary manifest.json from connect-assets.  chrome app upload complains about it
+rm -rf $TMP_FOLDER/assets/manifest.json
+
+cp manifest.json $TMP_FOLDER/
+cp background.js $TMP_FOLDER/
+
 (
     cd $TMP_FOLDER
     zip -q -r vimflowy.zip .

@@ -206,10 +206,8 @@ keyDefinitions =
     drop: true
     fn: () ->
       @keybindingsDiv.toggleClass 'active'
-      if localStorage?
-        localStorage['showKeyBindings'] = @keybindingsDiv.hasClass 'active'
+      @view.data.store.setSetting 'showKeybindings', @keybindingsDiv.hasClass 'active'
       do @buildBindingsDiv
-
   ZOOM_IN:
     display: 'Zoom in by one level'
     fn: () ->
@@ -722,7 +720,7 @@ class KeyBindings
       do @view.save
 
   buildBindingsDiv: () ->
-    if not (localStorage? and localStorage['showKeyBindings'])
+    if not (@view.data.store.getSetting 'showKeyBindings')
       return
 
     modeKeymap = @keyMaps[@mode] || {}

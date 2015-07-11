@@ -213,7 +213,7 @@
     #   delete @structure[id]
     #   delete @lines[id]
 
-
   exports.InMemory = InMemory
   exports.LocalStorageLazy = LocalStorageLazy
+  # TODO: exports.ChromeStorageLazy = ChromeStorageLazy
 )(if typeof exports isnt 'undefined' then exports else window.dataStore = {})

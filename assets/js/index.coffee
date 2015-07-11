@@ -11,26 +11,35 @@ default_data = {
   settings: Settings.default_settings
 }
 
-if localStorage?
-  showKeyBindings = true
-  if localStorage.getItem('showKeyBindings') != null
-    showKeyBindings = localStorage['showKeyBindings'] == 'true'
-  if showKeyBindings
-    keybindingsDiv.addClass 'active'
+load_defaults = false
 
+if chrome?.storage?.sync
+  # TODO
+  # console.log('using chrome storage')
+  # datastore = new dataStore.ChromeStorageLazy
+  datastore = new dataStore.InMemory
+  data = new Data datastore
+  load_defaults = true
+else if localStorage?
   docname = window.location.pathname.split('/')[1]
   datastore = new dataStore.LocalStorageLazy docname
   data = new Data datastore
 
   if (do datastore.lastSave) == 0
-    data.load default_data
-
+    load_defaults = true
 else
   alert('You need local storage support for data to be persisted!')
   datastore = new dataStore.InMemory
 
   data = new Data datastore
+  load_defaults = true
+
+if load_defaults
   data.load default_data
+  datastore.setSetting 'showKeyBindings', true
+
+if datastore.getSetting 'showKeyBindings'
+  keybindingsDiv.addClass 'active'
 
 view = new View $('#view'), data
 settings = new Settings $('#settings'), data
