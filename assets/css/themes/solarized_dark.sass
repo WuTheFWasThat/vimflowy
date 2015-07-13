@@ -1,0 +1,73 @@
+@import '../utils'
+@import '../constants'
+
+body.solarized_dark-theme
+
+    $color-brblack: #002b36
+    $color-black: #073642
+    $color-brgreen: #586e75
+    $color-bryellow: #657b83
+    $color-brblue: #839496
+    $color-brcyan: #93a1a1
+    $color-white: #eee8d5
+    $color-brwhite: #fdf6e3
+    $color-yellow: #b58900
+    $color-brred: #cb4b16
+    $color-red: #dc322f
+    $color-magenta: #d33682
+    $color-brmagenta: #6c71c4
+    $color-blue: #268bd2
+    $color-cyan: #2aa198
+    $color-green: #859900
+
+    $bg-color: $color-black
+    $secondary-bg-color: $color-black
+    $text-color: $color-brblue
+    $trim-color: $color-brcyan
+    $cursor-bg-color: $color-white
+    $cursor-color: $bg-color
+    $breadcrumbs-color: $color-brmagenta
+    $highlight-bg-color: $color-brgreen
+    $menu-selected-bg-color: $color-brblack
+
+    color: $text-color
+    background-color: $bg-color
+
+    #breadcrumbs
+        .crumb:not(:last-child)
+            color: $breadcrumbs-color
+        .crumb:not(:last-child)::after
+            color: $text-color
+
+    .cursor
+        background-color: $cursor-bg-color
+        color: $cursor-color
+
+    .highlight
+        background-color: $highlight-bg-color
+
+    .menuSelected
+        background-color: $menu-selected-bg-color
+
+    #mode
+        background: $secondary-bg-color
+
+    #bottom-bar
+        background-color: $bg-color
+        border-top: 1px solid $trim-color
+
+    #keybindings
+        background: $secondary-bg-color !important
+        table, tbody
+            background-color: $secondary-bg-color
+
+    .modal-contents
+        background-color: $secondary-bg-color
+        border: 1px solid $trim-color
+
+    #settings-link
+        background: $secondary-bg-color
+        color: $text-color
+
+    .searchBox
+        border: 1px solid $trim-color
