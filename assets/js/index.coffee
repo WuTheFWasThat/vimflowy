@@ -7,12 +7,11 @@ view = null
 create_view = (data) ->
   keybindingsDiv = $('#keybindings')
 
-  if datastore.getSetting 'showKeyBindings'
-    keybindingsDiv.addClass 'active'
-
-  view = new View $('#view'), data
-  settings = new Settings $('#settings'), data
-  do settings.loadRenderSettings
+  view = new View data, {
+    mainDiv: $('#view'),
+    settingsDiv: $('#settings')
+    keybindingsDiv: keybindingsDiv
+  }
 
   $(window).on('paste', (e) ->
       e.preventDefault()
@@ -36,16 +35,13 @@ create_view = (data) ->
 
   $(document).ready ->
     do view.render
-    do settings.bind
 
 load_defaults = (data) ->
   default_data = {
     line: ''
     children: ['']
-    settings: Settings.default_settings
   }
   data.load default_data
-  data.store.setSetting 'showKeyBindings', true
 
 if chrome?.storage?.sync
   console.log('using chrome storage')

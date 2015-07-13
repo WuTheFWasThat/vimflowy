@@ -9,7 +9,8 @@ class Menu
       children: ['']
     }
 
-    @view = new View null, data
+    # a bit of a overkill-y hack, use an entire View object internally
+    @view = new View data
     @selection = 0
 
     # list of results:

@@ -15,7 +15,7 @@ class TestCase
       line: ''
       children: serialized
 
-    @view = new View null, @data
+    @view = new View @data
     @view.render = -> return
     @keybinder = new KeyBindings @view
     @register = @view.register
@@ -45,7 +45,7 @@ class TestCase
       '\n!'
 
   expectExport: (fileExtension, expected) ->
-    export_ = @data.exportContent fileExtension
+    export_ = @view.exportContent fileExtension
     assert.equal export_, expected,
       "Expected \n#{export_}\n To match \n#{expected}\n!"
 

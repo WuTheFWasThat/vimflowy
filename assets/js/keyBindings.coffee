@@ -206,7 +206,7 @@ keyDefinitions =
     drop: true
     fn: () ->
       @keybindingsDiv.toggleClass 'active'
-      @view.data.store.setSetting 'showKeybindings', @keybindingsDiv.hasClass 'active'
+      @view.data.store.setSetting 'showKeyBindings', @keybindingsDiv.hasClass 'active'
       do @buildBindingsDiv
   ZOOM_IN:
     display: 'Zoom in by one level'
@@ -554,7 +554,7 @@ keyDefinitions =
   EXPORT:
     display: 'Save a file'
     fn: () ->
-      do @view.data.export
+      do @view.export
   RECORD_MACRO:
     display: 'Begin/stop recording a macro'
   PLAY_MACRO:
@@ -720,7 +720,9 @@ class KeyBindings
       do @view.save
 
   buildBindingsDiv: () ->
-    if not (@view.data.store.getSetting 'showKeyBindings')
+    if not @keybindingsDiv
+      return
+    if not (@view.settings.getSetting 'showKeyBindings')
       return
 
     modeKeymap = @keyMaps[@mode] || {}

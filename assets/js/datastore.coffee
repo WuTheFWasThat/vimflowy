@@ -116,8 +116,9 @@
       @_collapsedKey_ = (row) ->
         return "#{@prefix}:#{row}:collapsed"
 
+      # no prefix, meaning it's global
       @_settingKey_ = (setting) ->
-        return "#{@prefix}:setting:#{setting}"
+        return "settings:#{setting}"
 
       @_lastSaveKey_ = "#{@prefix}:lastSave"
       @_lastViewrootKey_ = "#{@prefix}:lastviewroot"
