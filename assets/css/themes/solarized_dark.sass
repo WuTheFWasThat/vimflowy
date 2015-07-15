@@ -1,34 +1,37 @@
 @import '../utils'
 @import '../constants'
 
+// See:
+//   https://github.com/altercation/solarized/blob/master/vim-colors-solarized/colors/solarized.vim
+//   http://ethanschoonover.com/solarized
+$solarized-color-base03: #002b36
+$solarized-color-base02: #073642
+$solarized-color-base01: #586e75
+$solarized-color-base00: #657b83
+$solarized-color-base0: #839496
+$solarized-color-base1: #93a1a1
+$solarized-color-base2: #eee8d5
+$solarized-color-brwhite: #fdf6e3
+$solarized-color-yellow: #b58900
+$solarized-color-orange: #cb4b16
+$solarized-color-red: #dc322f
+$solarized-color-magenta: #d33682
+$solarized-color-violet: #6c71c4
+$solarized-color-blue: #268bd2
+$solarized-color-cyan: #2aa198
+$solarized-color-green: #859900
+
+$bg-color: $solarized-color-base02
+$secondary-bg-color: $solarized-color-base03
+$text-color: $solarized-color-base0
+$trim-color: $solarized-color-base1
+$cursor-bg-color: $solarized-color-base2
+$cursor-color: $bg-color
+$breadcrumbs-color: $solarized-color-violet
+$highlight-bg-color: $solarized-color-base01
+$menu-selected-bg-color: $solarized-color-base03
+
 body.solarized_dark-theme
-
-    $color-brblack: #002b36
-    $color-black: #073642
-    $color-brgreen: #586e75
-    $color-bryellow: #657b83
-    $color-brblue: #839496
-    $color-brcyan: #93a1a1
-    $color-white: #eee8d5
-    $color-brwhite: #fdf6e3
-    $color-yellow: #b58900
-    $color-brred: #cb4b16
-    $color-red: #dc322f
-    $color-magenta: #d33682
-    $color-brmagenta: #6c71c4
-    $color-blue: #268bd2
-    $color-cyan: #2aa198
-    $color-green: #859900
-
-    $bg-color: $color-black
-    $secondary-bg-color: $color-black
-    $text-color: $color-brblue
-    $trim-color: $color-brcyan
-    $cursor-bg-color: $color-white
-    $cursor-color: $bg-color
-    $breadcrumbs-color: $color-brmagenta
-    $highlight-bg-color: $color-brgreen
-    $menu-selected-bg-color: $color-brblack
 
     color: $text-color
     background-color: $bg-color
@@ -55,6 +58,10 @@ body.solarized_dark-theme
     #bottom-bar
         background-color: $bg-color
         border-top: 1px solid $trim-color
+
+    .link
+        text-decoration: none
+        color: $solarized-color-blue
 
     #keybindings
         background: $secondary-bg-color !important

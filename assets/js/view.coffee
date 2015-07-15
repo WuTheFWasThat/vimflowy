@@ -89,7 +89,10 @@ renderLine = (lineData, options = {}) ->
     if x.url_start
       url = x.url_start
 
-    divtype = if url == null then 'span' else 'a'
+    divtype = 'span'
+    if url != null
+      divtype = 'a'
+      style += ' link'
 
     divoptions = {className: style}
     if url != null
@@ -601,7 +604,6 @@ class View
 
     contentsNode = virtualDom.h 'div', {
       id: 'treecontents'
-      className: 'unselectable'
     }, contentsChildren
 
     return virtualDom.h 'div', {
