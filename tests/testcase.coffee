@@ -27,26 +27,29 @@ class TestCase
   sendKey: (key) ->
     @sendKeys [key]
 
+  expectDeepEqual: (actual, expected) ->
+    assert.deepEqual actual, expected,
+      "Expected \n #{JSON.stringify(actual, null, 2)}" +
+      "To match \n #{JSON.stringify(expected, null, 2)}"
+
   expect: (expected) ->
-    serialized = do @data.serialize
-    assert.deepEqual serialized.children, expected,
-      'Expected \n' + JSON.stringify(serialized.children, null, 2) +
-      'To match \n' + JSON.stringify(expected, null, 2) +
-      '\n!'
+    serialized = @data.serialize @data.root, true
+    @expectDeepEqual serialized.children, expected
 
   setRegister: (value) ->
     @register.deserialize value
 
   expectRegister: (expected) ->
     current = do @register.serialize
-    assert.deepEqual current, expected,
-      'Expected \n' + JSON.stringify(current, null, 2) +
-      'To match \n' + JSON.stringify(expected, null, 2) +
-      '\n!'
+    @expectDeepEqual current, expected
 
   expectExport: (fileExtension, expected) ->
     export_ = @view.exportContent fileExtension
     assert.equal export_, expected,
       "Expected \n#{export_}\n To match \n#{expected}\n!"
+
+  expectMarks: (expected) ->
+    marks = do @view.data.store.getAllMarks
+    @expectDeepEqual marks, expected
 
 module.exports = TestCase

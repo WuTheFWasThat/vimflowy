@@ -1,8 +1,12 @@
+if module?
+  _ = require('underscore')
+
 ((exports) ->
   class DataStore
     constructor: () ->
       return
 
+    # get and set values for a given row
     getLine: (row) ->
       throw 'Not implemented'
     setLine: (row, line) ->
@@ -15,14 +19,28 @@
       throw 'Not implemented'
     setChildren: (row, children) ->
       throw 'Not implemented'
+    getMark: (row) ->
+      throw 'Not implemented'
+    setMark: (row, marks) ->
+      throw 'Not implemented'
     getCollapsed: (row) ->
       throw 'Not implemented'
     setCollapsed: (row, collapsed) ->
       throw 'Not implemented'
+
+    # get global settings
     getSetting: (setting) ->
       throw 'Not implemented'
     setSetting: (setting, value) ->
       throw 'Not implemented'
+
+    # maintain global marks datastructure
+    getAllMarks: () ->
+      throw 'Not implemented'
+    setAllMarks: (marks) ->
+      throw 'Not implemented'
+
+    # get next row ID
     getId: () ->
       throw 'Not implemented'
     getNew: () ->
@@ -30,10 +48,13 @@
       @setLine id, []
       @setChildren id, []
       return id
+
+    # get last view (for page reload)
     setLastViewRoot: (row) ->
       throw 'Not implemented'
     getLastViewRoot: () ->
       throw 'Not implemented'
+
     # delete: (id) ->
     #  throw 'Not implemented'
 
@@ -43,7 +64,10 @@
       @parents = {}
       @children = {}
       @collapsed = {}
+      @marks = {}
+
       @settings = {}
+      @allMarks = {}
       return
 
     getLine: (row) ->
@@ -70,6 +94,12 @@
     setCollapsed: (row, collapsed) ->
       @collapsed[row] = collapsed
 
+    getMark: (row) ->
+      return @marks[row]
+
+    setMark: (row, mark) ->
+      @marks[row] = mark
+
     getSetting: (setting) ->
       return @settings[setting]
 
@@ -81,6 +111,12 @@
 
     getLastViewRoot: () ->
       return 0
+
+    getAllMarks: () ->
+      return _.clone @allMarks
+
+    setAllMarks: (marks) ->
+      @allMarks = marks
 
     getId: () ->
       id = 0
@@ -102,6 +138,7 @@
       @parents = {}
       @children = {}
       @collapsed = {}
+      @marks = {}
       @settings = {}
 
       @_lineKey_ = (row) ->
@@ -116,12 +153,16 @@
       @_collapsedKey_ = (row) ->
         return "#{@prefix}:#{row}:collapsed"
 
+      @_markKey_ = (row) ->
+        return "#{@prefix}:#{row}:mark"
+
       # no prefix, meaning it's global
       @_settingKey_ = (setting) ->
         return "settings:#{setting}"
 
       @_lastSaveKey_ = "#{@prefix}:lastSave"
       @_lastViewrootKey_ = "#{@prefix}:lastviewroot"
+      @_allMarksKey_ = "#{@prefix}:marks"
       @_IDKey_ = "#{@prefix}:lastID"
 
       return
@@ -184,6 +225,15 @@
       @collapsed[row] = collapsed
       @_setLocalStorage_ (@_collapsedKey_ row), collapsed
 
+    getMark: (row) ->
+      if not (row of @marks)
+        @marks[row] = @_getLocalStorage_ @_markKey_ row, ''
+      return @marks[row]
+
+    setMark: (row, mark) ->
+      @marks[row] = mark
+      @_setLocalStorage_ (@_markKey_ row), mark
+
     getSetting: (setting) ->
       if not (setting of @settings)
         @settings[setting] = @_getLocalStorage_ @_settingKey_ setting
@@ -195,6 +245,12 @@
 
     setLastViewRoot: (row) ->
       @_setLocalStorage_ @_lastViewrootKey_ , row
+
+    getAllMarks: () ->
+      return @_getLocalStorage_ @_allMarksKey_, {}
+
+    setAllMarks: (marks) ->
+      return @_setLocalStorage_ @_allMarksKey_, marks
 
     getLastViewRoot: () ->
       id = @_getLocalStorage_ @_lastViewrootKey_ , 0

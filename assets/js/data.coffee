@@ -241,22 +241,56 @@ class Data
         break
     return results
 
+  #########
+  # marks #
+  #########
+
+  getMark: (id) ->
+    return @store.getMark id
+
+  setMark: (id, mark = '') ->
+    oldmark = @store.getMark id
+
+    allMarks = do @store.getAllMarks
+    if mark
+      allMarks[mark] = id
+    if oldmark
+      delete allMarks[oldmark]
+    @store.setAllMarks allMarks
+
+    @store.setMark id, mark
+
+  getAllMarks: () ->
+    return do @store.getAllMarks
+
+  #################
+  # serialization #
+  #################
+
   # important: serialized automatically garbage collects
-  serialize: (id = @root) ->
+  serialize: (id = @root, pretty=false) ->
     line = (@getLine id).join('')
-    if @hasChildren id
-      children = (@serialize childid for childid in @getChildren id)
-      struct = {
-        line: line
-        children: children
-      }
-      if id == @root and @viewRoot != @root
-        struct.viewRoot = @viewRoot
-      if @collapsed id
-        struct.collapsed = true
-      return struct
-    else
-      return line
+
+    children = (@serialize childid, pretty for childid in @getChildren id)
+    struct = {
+      line: line
+      children: children
+    }
+
+    if id == @root and @viewRoot != @root
+      struct.viewRoot = @viewRoot
+
+    if @collapsed id
+      struct.collapsed = true
+
+    mark = @store.getMark id
+    if mark
+      struct.mark = mark
+
+    if pretty
+      if children.length == 0 and not mark
+        return line
+    return struct
 
   loadTo: (serialized, parent = @root, index = -1) ->
     id = do @store.getNew
@@ -272,6 +306,9 @@ class Data
     else
       @store.setLine id, (serialized.line.split '')
       @store.setCollapsed id, serialized.collapsed
+
+      if serialized.mark
+        @setMark id, serialized.mark
 
       for serialized_child in serialized.children
         @loadTo serialized_child, id

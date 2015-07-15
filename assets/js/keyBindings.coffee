@@ -5,6 +5,9 @@ if module?
   EventEmitter = require('./eventEmitter.coffee')
   Cursor = require('./cursor.coffee')
   Menu = require('./menu.coffee')
+  Data = require('./data.coffee')
+  View = require('./view.coffee')
+  dataStore = require('./datastore.coffee')
   actions = require('./actions.coffee')
   _ = require('underscore')
 
@@ -14,6 +17,7 @@ MODES =
   VISUAL      : 3
   VISUAL_LINE : 4
   MENU        : 5
+  MARK        : 6
 
 defaultVimKeyBindings = {}
 
@@ -25,11 +29,6 @@ defaultVimKeyBindings[MODES.NORMAL] =
   INSERT_END        : ['A']
   INSERT_LINE_BELOW : ['o']
   INSERT_LINE_ABOVE : ['O']
-
-  REPLACE           : ['r']
-  UNDO              : ['u']
-  REDO              : ['ctrl+r']
-  REPLAY            : ['.']
 
   LEFT              : ['h', 'left']
   RIGHT             : ['l', 'right']
@@ -57,6 +56,7 @@ defaultVimKeyBindings[MODES.NORMAL] =
   DELETE_CHAR       : ['x']
   DELETE_LAST_CHAR  : ['X']
   CHANGE_CHAR       : ['s']
+  REPLACE           : ['r']
   YANK              : ['y']
   PASTE_AFTER       : ['p']
   PASTE_BEFORE      : ['P']
@@ -81,6 +81,11 @@ defaultVimKeyBindings[MODES.NORMAL] =
   SCROLL_UP         : ['ctrl+u', 'page up']
 
   SEARCH            : ['/', 'ctrl+f']
+  MARK              : ['m']
+
+  UNDO              : ['u']
+  REDO              : ['ctrl+r']
+  REPLAY            : ['.']
   RECORD_MACRO      : ['q']
   PLAY_MACRO        : ['@']
 
@@ -177,6 +182,19 @@ defaultVimKeyBindings[MODES.MENU] =
   FIND_PREV_CHAR    : []
   TO_NEXT_CHAR      : []
   TO_PREV_CHAR      : []
+
+  BACKSPACE         : ['backspace']
+  DELKEY            : ['shift+backspace']
+
+  EXIT_MODE         : ['esc', 'ctrl+c']
+
+defaultVimKeyBindings[MODES.MARK] =
+  FINISH_MARK       : ['enter']
+
+  LEFT              : ['left']
+  RIGHT             : ['right']
+  HOME              : ['ctrl+a', 'home']
+  END               : ['ctrl+e', 'end']
 
   BACKSPACE         : ['backspace']
   DELKEY            : ['shift+backspace']
@@ -284,6 +302,17 @@ keyDefinitions =
           fn: selectRow.bind(@, row)
         }
       return results
+
+  MARK:
+    display: 'Mark a line'
+    drop: true
+    to_mode: MODES.MARK
+  FINISH_MARK:
+    display: 'Finish typing mark'
+    to_mode: MODES.NORMAL
+    fn: () ->
+      mark = (do @view.curLine).join ''
+      @original_view.data.setMark @markrow, mark
 
   # traditional vim stuff
   INSERT:
@@ -794,6 +823,8 @@ class KeyBindings
       @processVisualLineMode keyStream
     else if @mode == MODES.MENU
       @processMenuMode keyStream
+    else if @mode == MODES.MARK
+      @processMarkMode keyStream
     else
       throw "Invalid mode #{mode}"
 
@@ -986,6 +1017,43 @@ class KeyBindings
     do @menu.render
     return do keyStream.forget
 
+  processMarkMode: (keyStream) ->
+    key = do keyStream.dequeue
+    if key == null then throw 'Got no key in menu mode'
+
+    bindings = @bindings[MODES.MARK]
+
+    view = @markview
+
+    if not (key of bindings)
+      # must be non-whitespace
+      if /^\w*$/.test(key)
+        view.addCharsAtCursor [key], {cursor: {pastEnd: true}}
+    else
+      info = bindings[key]
+
+      if info.motion
+        motion = info.fn
+        motion view.cursor, {pastEnd: true}
+      else if info.fn
+        fn = info.fn
+        args = []
+        context = {
+          view: view,
+          markrow: @markrow,
+          original_view: @view, # hack for now
+          repeat: 1,
+          setMode: @setMode
+        }
+        fn.apply context, args
+
+      if info.to_mode == MODES.NORMAL
+        @markview = null
+        @markrow = null
+        @setMode MODES.NORMAL
+
+    return do keyStream.forget
+
   # takes keyStream, key, returns repeat number and key
   getRepeat: (keyStream, key = null) ->
     if key == null
@@ -1101,16 +1169,22 @@ class KeyBindings
       }
       fn.apply context, args
 
-      if info.to_mode
-        @setMode info.to_mode
-        if info.to_mode == MODES.MENU
-          return do keyStream.forget
-        else
-          return
-      if info.drop
+    if info.to_mode
+      @setMode info.to_mode
+
+      if info.to_mode == MODES.MARK
+        data = new Data (new dataStore.InMemory)
+        data.load {
+          line: ''
+          children: ['']
+        }
+        @markview = new View data
+        @markrow = @view.cursor.row
+
+      if info.to_mode == MODES.MENU
         return do keyStream.forget
       else
-        return do keyStream.save
+        return
 
     if info.name == 'RECORD_MACRO'
       if @recording == null
@@ -1145,8 +1219,11 @@ class KeyBindings
           do @view.save
         @processKeys newStream
       return do keyStream.forget
-    else
+
+    if info.drop
       return do keyStream.forget
+    else
+      return do keyStream.save
 
 # exports
 module?.exports = KeyBindings
