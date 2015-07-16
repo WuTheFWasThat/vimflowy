@@ -312,7 +312,7 @@ keyDefinitions =
     to_mode: MODES.NORMAL
     fn: () ->
       mark = (do @view.curLine).join ''
-      @original_view.data.setMark @markrow, mark
+      @original_view.setMark @original_view.markrow, mark
 
   # traditional vim stuff
   INSERT:
@@ -1023,7 +1023,7 @@ class KeyBindings
 
     bindings = @bindings[MODES.MARK]
 
-    view = @markview
+    view = @view.markview
 
     if not (key of bindings)
       # must be non-whitespace
@@ -1039,20 +1039,20 @@ class KeyBindings
         fn = info.fn
         args = []
         context = {
-          view: view,
-          markrow: @markrow,
-          original_view: @view, # hack for now
-          repeat: 1,
+          view: view
+          original_view: @view # hack for now
+          repeat: 1
           setMode: @setMode
         }
         fn.apply context, args
 
       if info.to_mode == MODES.NORMAL
-        @markview = null
-        @markrow = null
+        @view.markview = null
+        @view.markrow = null
         @setMode MODES.NORMAL
 
-    return do keyStream.forget
+    # no harm in saving.  important for setMark, and nothing else does anything
+    return do keyStream.save
 
   # takes keyStream, key, returns repeat number and key
   getRepeat: (keyStream, key = null) ->
@@ -1178,8 +1178,8 @@ class KeyBindings
           line: ''
           children: ['']
         }
-        @markview = new View data
-        @markrow = @view.cursor.row
+        @view.markview = new View data
+        @view.markrow = @view.cursor.row
 
       if info.to_mode == MODES.MENU
         return do keyStream.forget

@@ -4,6 +4,7 @@ $background-color: $color-white
 $secondary-background-color: #AAAAAA
 $text-color: $color-black
 $trim-color: $color-black
+$subtle-background: #EEEEEE
 
 body.default-theme
     color: $text-color
@@ -24,7 +25,7 @@ body.default-theme
         background-color: #CCC // #FFA
 
     .menuSelected
-        background-color: #EEEEEE
+        background-color: $subtle-background
 
     .link
         text-decoration: none
@@ -46,3 +47,10 @@ body.default-theme
 
     .searchBox
         border: 1px solid $trim-color
+
+    .mark
+        border: 1px solid $trim-color
+        background-color: $subtle-background
+        &.active
+            background-color: #FFFF88
+

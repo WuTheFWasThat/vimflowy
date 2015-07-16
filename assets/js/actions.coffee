@@ -202,6 +202,16 @@
     rewind: (view) ->
       view.data.toggleCollapsed @row
 
+  class SetMark extends Action
+    constructor: (row, mark) ->
+      @row = row
+      @mark = mark
+    apply: (view) ->
+      @oldmark = view.data.getMark @row
+      view.data.setMark @row, @mark
+    rewind: (view) ->
+      view.data.setMark @row, @oldmark
+
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRowSibling = InsertRowSibling
@@ -210,4 +220,5 @@
   exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
   exports.ToggleBlock = ToggleBlock
+  exports.SetMark = SetMark
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

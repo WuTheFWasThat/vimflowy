@@ -1,9 +1,10 @@
 # a View consists of Data and a cursor
 # it also renders
-#
+
 renderLine = (lineData, options = {}) ->
   options.cursors ?= {}
   options.highlights ?= {}
+  options.marks ?= {}
   defaultStyle = options.defaultStyle || ''
 
   # ideally this takes up space but is unselectable (uncopyable)
@@ -66,6 +67,7 @@ renderLine = (lineData, options = {}) ->
     else
       word += char
 
+  # gather words that are urls
   urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
   url_words = words.filter (w) ->
     return urlRegex.test w.word
@@ -75,9 +77,18 @@ renderLine = (lineData, options = {}) ->
     line[url_word.end].url_end = url_word.word
     # console.log 'url word', url_word
 
+  # gather words that are marks
+  for word in words
+    if word.word[0] == '@'
+      mark = word.word[1..]
+      if mark of options.marks
+        line[word.start].mark_start = options.marks[mark]
+        line[word.end].mark_end = options.marks[mark]
+
   results = []
 
   url = null
+  markrow = null
 
   for x in line
     style = defaultStyle
@@ -89,15 +100,25 @@ renderLine = (lineData, options = {}) ->
     if x.url_start
       url = x.url_start
 
+    if x.mark_start
+      markrow = x.mark_start
+
     divtype = 'span'
     if url != null
+      divtype = 'a'
+      style += ' link'
+    if markrow != null
       divtype = 'a'
       style += ' link'
 
     divoptions = {className: style}
     if url != null
       divoptions.href = url
-    if options.onclick?
+
+    if markrow != null
+      console.log('markrow', markrow)
+      divoptions.onclick = options.onclickmark.bind @, markrow
+    else if options.onclick?
       divoptions.onclick = options.onclick.bind @, x
 
     results.push virtualDom.h divtype, divoptions, x.text
@@ -107,6 +128,8 @@ renderLine = (lineData, options = {}) ->
 
     if x.url_end
       url = null
+    if x.mark_end
+      markrow = null
 
   return results
 
@@ -531,6 +554,9 @@ class View
     results = @data.find chars, nresults
     return results
 
+  setMark: (row, mark) ->
+    @act new actions.SetMark row, mark
+
   scrollPages: (npages) ->
     # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
     line_height = do $('.node-text').height
@@ -682,7 +708,9 @@ class View
     cursors = {}
     highlights = {}
 
-    if row == @cursor.row
+    marking = @markrow == row
+
+    if row == @cursor.row and not marking
       cursors[@cursor.col] = true
 
       if @anchor and not @lineSelect
@@ -692,15 +720,35 @@ class View
         else
           console.log('multiline not implemented')
 
+    results = []
+
+    if marking
+        markresults = @markview.virtualRenderLine @markview.cursor.row
+        results.push virtualDom.h 'span', {
+          className: 'mark active'
+        }, markresults
+    else
+        mark = @data.getMark row
+        if mark
+          results.push virtualDom.h 'span', {
+            className: 'mark'
+          }, mark
+
     lineContents = renderLine lineData, {
       cursors: cursors
       highlights: highlights
       onclick: (x) =>
         @cursor.set row, x.column
         do @render
+      marks: (do @data.getAllMarks)
+      onclickmark: (row) =>
+        @rootInto row
+        do @save
+        do @render
     }
+    [].push.apply results, lineContents
 
-    return lineContents
+    return results
 
 # imports
 if module?

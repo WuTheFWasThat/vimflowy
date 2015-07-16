@@ -246,10 +246,14 @@ class Data
   #########
 
   getMark: (id) ->
-    return @store.getMark id
+    return (@store.getMark id) || ''
 
   setMark: (id, mark = '') ->
     oldmark = @store.getMark id
+
+    # buggy if:
+    # oldmark = mark
+    # allMarks had mark already
 
     allMarks = do @store.getAllMarks
     if mark
