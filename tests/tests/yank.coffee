@@ -1,10 +1,12 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
+Register = require '../../assets/js/register.coffee'
 
 # test pasting!
 t = new TestCase ['px']
 t.sendKeys 'xp'
 t.expect ['xp']
+t.expectRegisterType Register.TYPES.CHARS
 t.sendKeys 'xp'
 t.expect ['xp']
 
@@ -26,7 +28,10 @@ t = new TestCase ['one fish, two fish, red fish, blue fish']
 t.sendKeys 'd2W2Whp'
 t.expect ['two fish, one fish, red fish, blue fish']
 # undo doesn't move cursor, and paste still has stuff in register
-t.sendKeys 'up'
+t.sendKeys 'u'
+# type hasnt changed
+t.expectRegisterType Register.TYPES.CHARS
+t.sendKeys 'p'
 t.expect ['two fish, one fish, red fish, blue fish']
 
 # test an edge case
@@ -60,12 +65,18 @@ t.expect ['']
 
 # test pasting rows!
 t = new TestCase ['humpty', 'dumpty']
-t.sendKeys 'ddp'
+t.sendKeys 'dd'
+t.expectRegisterType Register.TYPES.ROWS
+t.expect [ 'dumpty' ]
+t.sendKeys 'p'
+t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
 t.expect [ 'dumpty', 'humpty' ]
 t.sendKeys 'u'
 t.expect ['dumpty']
 t.sendKeys 'u'
 t.expect ['humpty', 'dumpty']
+t.sendKeys 'p'
+t.expect ['humpty', 'humpty', 'dumpty']
 
 t = new TestCase ['humpty', 'dumpty']
 t.sendKeys 'jddP'
@@ -271,3 +282,46 @@ t.expect [
   ] }
 ]
 
+# test second paste
+t = new TestCase [
+  { line: 'hey', collapsed: true, children: [
+    'yo'
+  ] }
+  'me'
+  'cool'
+]
+t.sendKeys 'Vjd'
+t.expect [
+  'cool'
+]
+t.expectRegisterType Register.TYPES.ROWS
+t.sendKeys 'p'
+t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
+t.expect [
+  'cool'
+  { line: 'hey', collapsed: true, children: [
+    'yo'
+  ] }
+  'me'
+]
+t.sendKeys 'zryjrh'
+t.expect [
+  'cool'
+  { line: 'yey', children: [
+    'ho'
+  ] }
+  'me'
+]
+# second paste should be original thing
+t.sendKeys 'P'
+t.expect [
+  'cool'
+  { line: 'yey', children: [
+    { line: 'hey', collapsed: true, children: [
+      'yo'
+    ] }
+    'me'
+    'ho'
+  ] }
+  'me'
+]

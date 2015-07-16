@@ -435,7 +435,7 @@ class View
   delBlocks: (nrows, options = {}) ->
     action = new actions.DeleteBlocks @cursor.row, nrows, options
     @act action
-    @register.saveRows action.serialized_rows
+    @register.saveRows action.deleted_rows
 
   addBlocks: (serialized_rows, parent, index = -1, options = {}) ->
     action = new actions.AddBlocks serialized_rows, parent, index, options
@@ -445,12 +445,17 @@ class View
     siblings = @data.getSiblingRange @cursor.row, 0, (nrows-1)
     siblings = siblings.filter ((x) -> return x != null)
     serialized = siblings.map ((x) => return @data.serialize x)
-    @register.saveRows serialized
+    @register.saveSerializedRows serialized
 
   detachBlock: (row, options = {}) ->
     action = new actions.DetachBlock row, options
     @act action
     return action
+
+  attachBlocks: (rows, parent, index, options = {}) ->
+    for row in rows
+      @attachBlock row, parent, index, options
+      index += 1
 
   attachBlock: (row, parent, index = -1, options = {}) ->
     @act new actions.AttachBlock row, parent, index, options

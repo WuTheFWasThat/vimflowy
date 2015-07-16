@@ -115,12 +115,10 @@
 
       if row == view.root then throw 'Cannot delete root'
 
-      @serialized_rows = []
       @deleted_rows = []
       delete_siblings = view.data.getSiblingRange row, 0, (@nrows-1)
       for sib in delete_siblings
         if sib == null then break
-        @serialized_rows.push view.data.serialize sib
         @deleted_rows.push sib
         view.data.detach sib
 

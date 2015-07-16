@@ -43,6 +43,10 @@ class TestCase
     current = do @register.serialize
     @expectDeepEqual current, expected
 
+  expectRegisterType: (expected) ->
+    current = do @register.serialize
+    @expectDeepEqual current.type, expected
+
   expectExport: (fileExtension, expected) ->
     export_ = @view.exportContent fileExtension
     assert.equal export_, expected,
