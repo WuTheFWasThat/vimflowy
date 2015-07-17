@@ -49,6 +49,9 @@ class Register
       else
         @view.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
     else if @type == Register.TYPES.ROWS
+      # now that rows are in action, must switch to serialized version
+      @saveSerializedRows (@view.data.serialize row for row in @rows)
+
       row = @view.cursor.row
       parent = @view.data.getParent row
       index = @view.data.indexOf row
@@ -63,9 +66,6 @@ class Register
           @view.attachBlocks @rows ,parent, (index + 1)
 
       @view.cursor.set @rows[0], 0
-
-      # now that rows are in action, must switch to serialized version
-      @saveSerializedRows (@view.data.serialize row for row in @rows)
     else if @type == Register.TYPES.SERIALIZED_ROWS
       row = @view.cursor.row
       parent = @view.data.getParent row

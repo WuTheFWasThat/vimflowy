@@ -134,13 +134,6 @@ if module?
     constructor: (prefix='') ->
       @prefix = "#{prefix}save"
 
-      @lines = {}
-      @parents = {}
-      @children = {}
-      @collapsed = {}
-      @marks = {}
-      @settings = {}
-
       @_lineKey_ = (row) ->
         return "#{@prefix}:#{row}:line"
 
@@ -165,6 +158,13 @@ if module?
       @_allMarksKey_ = "#{@prefix}:marks"
       @_IDKey_ = "#{@prefix}:lastID"
 
+      @lines = {}
+      @parents = {}
+      @children = {}
+      @collapsed = {}
+      @marks = {}
+      @settings = {}
+      @allMarks = @_getLocalStorage_ @_allMarksKey_, {}
       return
 
     _setLocalStorage_: (key, value) ->
@@ -247,9 +247,10 @@ if module?
       @_setLocalStorage_ @_lastViewrootKey_ , row
 
     getAllMarks: () ->
-      return @_getLocalStorage_ @_allMarksKey_, {}
+      return _.clone @allMarks
 
     setAllMarks: (marks) ->
+      @allMarks = _.clone marks
       return @_setLocalStorage_ @_allMarksKey_, marks
 
     getLastViewRoot: () ->

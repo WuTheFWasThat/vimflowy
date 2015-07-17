@@ -148,6 +148,7 @@ class View
     @mainDiv = options.mainDiv
     @settingsDiv = options.settingsDiv
     @keybindingsDiv = options.keybindingsDiv
+    @messageDiv = options.messageDiv
 
     row = (@data.getChildren @data.viewRoot)[0]
     @cursor = new Cursor @data, row, 0
@@ -168,6 +169,16 @@ class View
       @settings = new Settings @data.store, {mainDiv: @settingsDiv, keybindingsDiv: @keybindingsDiv}
       do @settings.loadRenderSettings
     return @
+
+  showMessage: (message, options = {}) ->
+    options.time ?= 5000
+    console.log('MESSAGE', message)
+    if @messageDiv
+      clearTimeout @messageDivTimeout
+      @messageDiv.text(message)
+      @messageDivTimeout = setTimeout (() =>
+        @messageDiv.text('')
+      ), options.time
 
   ##########
   # EXPORT
@@ -560,7 +571,13 @@ class View
     return results
 
   setMark: (row, mark) ->
-    @act new actions.SetMark row, mark
+    allMarks = do @data.store.getAllMarks
+    if not (mark of allMarks)
+      @act new actions.SetMark row, mark
+      return true
+    else
+      @showMessage "Mark '#{mark}' is already taken"
+      return false
 
   scrollPages: (npages) ->
     # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height

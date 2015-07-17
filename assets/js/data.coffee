@@ -35,6 +35,37 @@ class Data
   getLength: (row) ->
     return @getLine(row).length
 
+  #########
+  # marks #
+  #########
+
+  getMark: (id) ->
+    return (@store.getMark id) || ''
+
+  _updateAllMarks: (id, mark = '') ->
+    allMarks = do @store.getAllMarks
+
+    if mark of allMarks
+      return false
+
+    oldmark = @store.getMark id
+    if oldmark
+      delete allMarks[oldmark]
+
+    if mark
+      allMarks[mark] = id
+    @store.setAllMarks allMarks
+    return true
+
+  setMark: (id, mark = '') ->
+    # update allMarks mapping
+    if @_updateAllMarks id, mark
+      # update row's mark
+      @store.setMark id, mark
+
+  getAllMarks: () ->
+    return do @store.getAllMarks
+
   #############
   # structure #
   #############
@@ -63,6 +94,10 @@ class Data
     return children.indexOf child
 
   detach: (id) ->
+    # detach a block from the graph
+    # though it is detached, it remembers its old parent
+    # and remembers its old mark
+
     parent = @getParent id
     children = @getChildren parent
     i = children.indexOf id
@@ -70,12 +105,20 @@ class Data
 
     @store.setChildren parent, children
 
+    mark = @getMark id
+    if mark
+      # set the mark in allMarks, but not for the row
+      # that way, when re-attaching, we can try to re-apply the mark
+      @_updateAllMarks id, ''
+
     return {
       parent: parent
       index: i
     }
 
 
+  # attaches a detached child to a parent
+  # the child should not have a parent already
   attachChild: (id, child, index = -1) ->
     @attachChildren id, [child], index
 
@@ -87,6 +130,14 @@ class Data
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
       @store.setParent child, id
+
+      # try to restore the mark of child
+      mark = @getMark child
+      if mark
+        if not (@_updateAllMarks child, mark)
+          # don't call @setMark, since that will mess up allMarks
+          @store.setMark child, ''
+
     @store.setChildren id, children
 
   nextVisible: (id = @viewRoot) ->
@@ -240,32 +291,6 @@ class Data
       if nresults > 0 and results.length == nresults
         break
     return results
-
-  #########
-  # marks #
-  #########
-
-  getMark: (id) ->
-    return (@store.getMark id) || ''
-
-  setMark: (id, mark = '') ->
-    oldmark = @store.getMark id
-
-    # buggy if:
-    # oldmark = mark
-    # allMarks had mark already
-
-    allMarks = do @store.getAllMarks
-    if mark
-      allMarks[mark] = id
-    if oldmark
-      delete allMarks[oldmark]
-    @store.setAllMarks allMarks
-
-    @store.setMark id, mark
-
-  getAllMarks: () ->
-    return do @store.getAllMarks
 
   #################
   # serialization #

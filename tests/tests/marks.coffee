@@ -95,22 +95,73 @@ t.expect [
   { line: 'another line', children: [], mark: 'halo' }
 ]
 
-# WEIRD CASES:
+# paste reapplies marks
+t = new TestCase [
+  { line: 'line 1', children: [], mark: 'mark1' }
+  { line: 'line 2', children: [], mark: 'mark2' }
+]
+t.expectMarks {'mark1': 1, 'mark2': 2}
+t.sendKeys 'dd'
+t.expect [
+  { line: 'line 2', children: [], mark: 'mark2' }
+]
+t.expectMarks {'mark2': 2}
+t.sendKeys 'p'
+t.expect [
+  { line: 'line 2', children: [], mark: 'mark2' }
+  { line: 'line 1', children: [], mark: 'mark1' }
+]
+t.expectMarks {'mark2': 2, 'mark1': 1}
 
 # try to mark again something that's already there
-# ???
+t = new TestCase [
+  { line: 'line 1', children: [], mark: 'mark1' }
+  { line: 'line 2', children: [], mark: 'mark2' }
+]
+t.sendKeys 'mmark2'
+t.sendKey 'enter'
+# does nothing due to mark2 being taken
+t.expect [
+  { line: 'line 1', children: [], mark: 'mark1' }
+  { line: 'line 2', children: [], mark: 'mark2' }
+]
+t.expectMarks {'mark1': 1, 'mark2': 2}
 
-# delete line with mark
-# - should no longer be possible to reference that
-# -> detachBlock should remove mark from allMarks
+# once line is deleted, we can mark though
+t.sendKeys 'jdd'
+t.expect [
+  { line: 'line 1', children: [], mark: 'mark1' }
+]
+t.expectMarks {'mark1': 1}
 
-# delete line with mark
-# paste line
-# - should still have mark
+t.sendKeys 'mmark2'
+t.sendKey 'enter'
+t.expect [
+  { line: 'line 1', children: [], mark: 'mark2' }
+]
+t.expectMarks {'mark2': 1}
 
-# delete line with mark
-# mark with that mark
-# paste line
-# - should not have mark
+# paste can't reapply the mark
+t.sendKeys 'p'
+t.expect [
+  { line: 'line 1', children: [], mark: 'mark2' }
+  'line 2'
+]
+t.expectMarks {'mark2': 1}
 
-# -> attachBlock should try to use mark.  if it doesn't exist, take it.  otherwise, do nothing
+t.sendKeys 'kmmark3'
+t.sendKey 'enter'
+t.expect [
+  { line: 'line 1', children: [], mark: 'mark3' }
+  'line 2'
+]
+t.expectMarks {'mark3': 1}
+
+# paste can now reapply the mark
+t.sendKeys 'p'
+t.expect [
+  { line: 'line 1', children: [], mark: 'mark3' }
+  { line: 'line 2', children: [], mark: 'mark2' }
+  'line 2'
+]
+t.expectMarks {'mark3': 1, 'mark2': 3}

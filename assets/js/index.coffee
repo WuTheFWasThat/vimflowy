@@ -10,6 +10,7 @@ create_view = (data) ->
   view = new View data, {
     mainDiv: $('#view'),
     settingsDiv: $('#settings')
+    messageDiv: $('#message')
     keybindingsDiv: keybindingsDiv
   }
 
