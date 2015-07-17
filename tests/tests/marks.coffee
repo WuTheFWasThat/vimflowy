@@ -165,3 +165,51 @@ t.expect [
   'line 2'
 ]
 t.expectMarks {'mark3': 1, 'mark2': 3}
+
+# test going to mark under cursor
+t = new TestCase [
+  { line: '@mark2 @mark3', children: [
+    'line'
+    { line: 'line', mark: 'mark3', children: [] }
+  ] }
+  { line: 'stuff', mark: 'mark2', children: [
+    'more stuff'
+  ] }
+]
+t.sendKeys 'gmx'
+t.expectViewRoot 4
+t.expect [
+  { line: '@mark2 @mark3', children: [
+    'line'
+    { line: 'line', mark: 'mark3', children: [] }
+  ] }
+  { line: 'stuff', mark: 'mark2', children: [
+    'ore stuff'
+  ] }
+]
+# goes nowhere
+t.sendKeys '$gmx'
+t.expect [
+  { line: '@mark2 @mark3', children: [
+    'line'
+    { line: 'line', mark: 'mark3', children: [] }
+  ] }
+  { line: 'stuff', mark: 'mark2', children: [
+    'ore stuf'
+  ] }
+]
+# back to top
+t.sendKeys '{gg'
+t.expectViewRoot 0
+t.expectCursor 1, 0
+t.sendKeys '$gmx'
+t.expectCursor 3, 2
+t.expect [
+  { line: '@mark2 @mark3', children: [
+    'line'
+    { line: 'lin', mark: 'mark3', children: [] }
+  ] }
+  { line: 'stuff', mark: 'mark2', children: [
+    'ore stuf'
+  ] }
+]

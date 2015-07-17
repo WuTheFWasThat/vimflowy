@@ -1,3 +1,6 @@
+if module?
+  utils = require('./utils.coffee')
+
 class Cursor
   constructor: (data, row = null, col = null, moveCol = null) ->
     @data = data
@@ -111,26 +114,25 @@ class Cursor
   visibleHome: () ->
     row = do @data.nextVisible
     @set row, 0
+    return @
 
   visibleEnd: () ->
     row = do @data.lastVisible
     @set row, 0
+    return @
 
   wordRegex = /^[a-z0-9_]+$/i
 
-  isWhitespace = (char) ->
-    return (char == ' ') or (char == undefined)
-
   isInWhitespace: (row, col) ->
     char = @data.getChar row, col
-    return isWhitespace char
+    return utils.isWhitespace char
 
   isInWord: (row, col, matchChar) ->
-    if isWhitespace matchChar
+    if utils.isWhitespace matchChar
       return false
 
     char = @data.getChar row, col
-    if isWhitespace char
+    if utils.isWhitespace char
       return false
 
     if wordRegex.test char

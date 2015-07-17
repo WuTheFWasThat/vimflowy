@@ -1,3 +1,10 @@
+# imports
+if module?
+  Cursor = require('./cursor.coffee')
+  actions = require('./actions.coffee')
+  Register = require('./register.coffee')
+  utils = require('./utils.coffee')
+
 # a View consists of Data and a cursor
 # it also renders
 
@@ -333,6 +340,20 @@ class View
       @cursor.setRow newrow
       return true
     return false
+
+  # go to the mark under the cursor, if it exists
+  goMark: () ->
+    word = @data.getWord @cursor.row, @cursor.col
+    if word.length < 1 or word[0] != '@'
+      return false
+    mark = word[1..]
+    allMarks = do @data.getAllMarks
+    if mark of allMarks
+      row = allMarks[mark]
+      @rootInto row
+      return true
+    else
+      return false
 
   addCharsAtCursor: (chars, options) ->
     @act new actions.AddChars @cursor.row, @cursor.col, chars, options
@@ -771,12 +792,6 @@ class View
     [].push.apply results, lineContents
 
     return results
-
-# imports
-if module?
-  Cursor = require('./cursor.coffee')
-  actions = require('./actions.coffee')
-  Register = require('./register.coffee')
 
 # exports
 module?.exports = View

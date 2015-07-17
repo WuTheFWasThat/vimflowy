@@ -1,3 +1,7 @@
+# imports
+if module?
+  utils = require('./utils.coffee')
+
 class Data
   root: 0
 
@@ -19,6 +23,22 @@ class Data
 
   getChar: (row, col) ->
     return @getLine(row)[col]
+
+  # get word at this location
+  # if on a whitespace character, return nothing
+  getWord: (row, col) ->
+    line = @getLine row
+
+    if utils.isWhitespace line[col]
+      return ''
+
+    start = col
+    end = col
+    while (start > 0) and not (utils.isWhitespace line[start-1])
+      start -= 1
+    while (end < line.length - 1) and not (utils.isWhitespace line[end+1])
+      end += 1
+    return line[start..end].join('')
 
   writeChars: (row, col, chars) ->
     args = [col, 0].concat chars

@@ -36,6 +36,13 @@ class TestCase
     serialized = @data.serialize @data.root, true
     @expectDeepEqual serialized.children, expected
 
+  expectViewRoot: (expected) ->
+    assert.equal @data.viewRoot, expected
+
+  expectCursor: (row, col) ->
+    assert.equal @view.cursor.row, row
+    assert.equal @view.cursor.col, col
+
   setRegister: (value) ->
     @register.deserialize value
 

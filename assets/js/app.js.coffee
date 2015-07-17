@@ -1,5 +1,6 @@
 #= require constants
-
+#= require utils
+#
 #= require eventEmitter
 #= require keyHandler
 #= require datastore

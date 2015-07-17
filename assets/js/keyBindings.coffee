@@ -473,6 +473,10 @@ keyDefinitions =
         motion: true
         fn: (cursor, options) ->
           cursor.parent options
+      MARK:
+        display: 'Go to the mark indicated by the cursor, if it exists'
+        fn: () ->
+          do @view.goMark
   GO_END:
     display: 'Go to end of visible document'
     motion: true
