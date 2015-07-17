@@ -14,6 +14,14 @@ renderLine = (lineData, options = {}) ->
   options.marks ?= {}
   defaultStyle = options.defaultStyle || ''
 
+  results = []
+
+  if options.mark
+    results.push virtualDom.h 'span', {
+      className: 'mark'
+    }, options.mark
+
+
   # ideally this takes up space but is unselectable (uncopyable)
   cursorChar = ' '
 
@@ -91,8 +99,6 @@ renderLine = (lineData, options = {}) ->
       if mark of options.marks
         line[word.start].mark_start = options.marks[mark]
         line[word.end].mark_end = options.marks[mark]
-
-  results = []
 
   url = null
   markrow = null
@@ -765,6 +771,7 @@ class View
 
     results = []
 
+    mark = null
     if marking
         markresults = @markview.virtualRenderLine @markview.cursor.row
         results.push virtualDom.h 'span', {
@@ -772,10 +779,6 @@ class View
         }, markresults
     else
         mark = @data.getMark row
-        if mark
-          results.push virtualDom.h 'span', {
-            className: 'mark'
-          }, mark
 
     lineContents = renderLine lineData, {
       cursors: cursors
@@ -784,6 +787,7 @@ class View
         @cursor.set row, x.column
         do @render
       marks: (do @data.getAllMarks)
+      mark: mark
       onclickmark: (row) =>
         @rootInto row
         do @save

@@ -289,6 +289,19 @@ class Data
     helper @root
     return ids
 
+  # find marks that start with the prefix
+  findMarks: (prefix, nresults = 10) ->
+    results = [] # list of rows
+    for mark, row of (do @getAllMarks)
+      if (mark.indexOf prefix) == 0
+        results.push {
+          row: row
+          mark: mark
+        }
+        if nresults > 0 and results.length == nresults
+          break
+    return results
+
   find: (chars, nresults = 10) ->
     results = [] # list of (row_id, index) pairs
     if chars.length == 0

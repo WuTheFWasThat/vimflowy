@@ -82,6 +82,7 @@ defaultVimKeyBindings[MODES.NORMAL] =
 
   SEARCH            : ['/', 'ctrl+f']
   MARK              : ['m']
+  MARK_SEARCH       : ['\'', '`']
 
   UNDO              : ['u']
   REDO              : ['ctrl+r']
@@ -137,7 +138,6 @@ defaultVimKeyBindings[MODES.INSERT] =
   SCROLL_DOWN       : ['page down', 'ctrl+down']
   SCROLL_UP         : ['page up', 'ctrl+up']
 
-  SEARCH            : []
   EXPORT            : ['ctrl+s']
   EXIT_MODE         : ['esc', 'ctrl+c']
 
@@ -218,6 +218,12 @@ defaultVimKeyBindings[MODES.MARK] =
 #   if the binding is a motion
 # to_mode:
 #   mode to switch to
+#
+# for menu mode functions,
+# menu:
+#   function taking a view and chars, and
+#   returning a list of {contents, renderOptions, fn}
+#   SEE: menu.coffee
 keyDefinitions =
   HELP:
     display: 'Show/hide key bindings'
@@ -280,25 +286,25 @@ keyDefinitions =
   SEARCH:
     display: 'Search'
     drop: true
-    menu: (view, text) ->
-      # a list of {contents, highlights, fn}
-      # SEE: menu.coffee
+    menu: (view, chars) ->
       results = []
 
       selectRow = (row) ->
         view.rootInto row
 
-      for found in view.find text
+      for found in view.find chars
         row = found.row
         index = found.index
 
         highlights = {}
-        for i in [index ... index + text.length]
+        for i in [index ... index + chars.length]
           highlights[i] = true
 
         results.push {
           contents: view.data.getLine row
-          highlights: highlights
+          renderOptions: {
+            highlights: highlights
+          }
           fn: selectRow.bind(@, row)
         }
       return results
@@ -313,6 +319,27 @@ keyDefinitions =
     fn: () ->
       mark = (do @view.curLine).join ''
       @original_view.setMark @original_view.markrow, mark
+  MARK_SEARCH:
+    display: 'Go to (search for) a mark'
+    drop: true
+    menu: (view, chars) ->
+      results = []
+
+      selectRow = (row) ->
+        view.rootInto row
+
+      text = chars.join('')
+      for found in view.data.findMarks text
+        row = found.row
+        mark = found.mark
+        results.push {
+          contents: view.data.getLine row
+          renderOptions: {
+            mark: mark
+          }
+          fn: selectRow.bind(@, row)
+        }
+      return results
 
   # traditional vim stuff
   INSERT:
@@ -1149,6 +1176,7 @@ class KeyBindings
     if info.menu
       @setMode MODES.MENU
       @menu = new Menu @menuDiv, (info.menu.bind @, @view)
+      do @menu.update
       do @menu.render
       return do keyStream.forget
 

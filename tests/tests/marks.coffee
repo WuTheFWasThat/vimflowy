@@ -213,3 +213,65 @@ t.expect [
     'ore stuf'
   ] }
 ]
+
+# search for marks
+t = new TestCase [
+  { line: 'whoo', mark: 'hip', children: [] }
+  { line: 'yay', mark: 'hooray', children: [
+    'hip'
+    'hip'
+    { line: 'hooray', mark: 'yay', children: [] }
+  ] }
+  { line: 'awesome', mark: 'whoo', children: [] }
+]
+t.sendKeys '`w'
+t.sendKey 'enter'
+t.sendKeys 'x'
+t.expect [
+  { line: 'whoo', mark: 'hip', children: [] }
+  { line: 'yay', mark: 'hooray', children: [
+    'hip'
+    'hip'
+    { line: 'hooray', mark: 'yay', children: [] }
+  ] }
+  { line: 'wesome', mark: 'whoo', children: [] }
+]
+
+t.sendKeys '`r'
+t.sendKey 'enter'
+t.sendKeys 'x'
+# goes nowhere
+t.expect [
+  { line: 'whoo', mark: 'hip', children: [] }
+  { line: 'yay', mark: 'hooray', children: [
+    'hip'
+    'hip'
+    { line: 'hooray', mark: 'yay', children: [] }
+  ] }
+  { line: 'esome', mark: 'whoo', children: [] }
+]
+
+t.sendKeys '`ho'
+t.sendKey 'enter'
+t.sendKeys 'x'
+t.expect [
+  { line: 'whoo', mark: 'hip', children: [] }
+  { line: 'yay', mark: 'hooray', children: [
+    'ip'
+    'hip'
+    { line: 'hooray', mark: 'yay', children: [] }
+  ] }
+  { line: 'esome', mark: 'whoo', children: [] }
+]
+t.sendKeys '`hi'
+t.sendKey 'enter'
+t.sendKeys 'x'
+t.expect [
+  { line: 'hoo', mark: 'hip', children: [] }
+  { line: 'yay', mark: 'hooray', children: [
+    'ip'
+    'hip'
+    { line: 'hooray', mark: 'yay', children: [] }
+  ] }
+  { line: 'esome', mark: 'whoo', children: [] }
+]

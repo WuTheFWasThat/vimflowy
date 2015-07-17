@@ -15,7 +15,7 @@ class Menu
 
     # list of results:
     #   contents: a line of contents
-    #   highlights: lines to highlight
+    #   renderOptions: options for renderLine
     #   fn: call if selected
     @results = []
 
@@ -76,9 +76,6 @@ class Menu
       )
     else
       for result, i in @results
-        defaultStyle = ''
-        # if i == @selection
-        #   defaultStyle = 'cursor'
 
         resultDiv = $('<div>').css(
           'margin-bottom': '10px'
@@ -92,10 +89,8 @@ class Menu
           'margin-right': '20px'
         )
 
-        contents = renderLine result.contents, {
-          highlights: result.highlights
-          defaultStyle: defaultStyle
-        }
+        renderOptions = result.renderOptions || {}
+        contents = renderLine result.contents, renderOptions
         resultLineDiv = virtualDom.create virtualDom.h 'span', {}, contents
         resultDiv.append resultLineDiv
 
