@@ -13,6 +13,7 @@ Try it out [here](https://vimflowy.bitballoon.com)!
   - collapsing
   - zooming
 - Vim features
+  - most of the standard movement/operators
   - modal editing
     - insert and normal mode
     - visual mode (only within a line)
@@ -22,7 +23,9 @@ Try it out [here](https://vimflowy.bitballoon.com)!
   - macros
 - Extras
   - (inefficient) search
+  - marks (not quite like vim's)
   - data export
+  - multiple documents (by visiting /documentname)
   - different themes
   - lazy loads data, for big documents
 

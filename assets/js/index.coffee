@@ -37,13 +37,6 @@ create_view = (data) ->
   $(document).ready ->
     do view.render
 
-load_defaults = (data) ->
-  default_data = {
-    line: ''
-    children: ['']
-  }
-  data.load default_data
-
 if chrome?.storage?.sync
   console.log('using chrome storage')
 
@@ -56,7 +49,7 @@ if chrome?.storage?.sync
     if results.save
       data.load results.save
     else
-      load_defaults data
+      data.load constants.default_data
 
     # save every 5 seconds
     setInterval (() ->
@@ -74,7 +67,7 @@ else if localStorage?
   data = new Data datastore
 
   if (do datastore.lastSave) == 0
-    load_defaults data
+    data.load constants.default_data
 
   create_view data
 else
@@ -82,7 +75,7 @@ else
   datastore = new dataStore.InMemory
 
   data = new Data datastore
-  load_defaults data
+  data.load constants.default_data
 
   create_view data
 

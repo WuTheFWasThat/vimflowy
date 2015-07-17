@@ -73,10 +73,10 @@ defaultVimKeyBindings[MODES.NORMAL] =
   PREV_SIBLING      : ['alt+k']
 
   TOGGLE_FOLD       : ['z']
-  ZOOM_IN           : ['shift+enter', ']', 'alt+l', 'ctrl+right']
-  ZOOM_OUT          : ['enter', '[', 'alt+h', 'ctrl+left']
-  ZOOM_OUT_ALL      : ['{']
-  ZOOM_IN_ALL       : ['}']
+  ZOOM_IN           : [']', 'alt+l', 'ctrl+right']
+  ZOOM_OUT          : ['[', 'alt+h', 'ctrl+left']
+  ZOOM_IN_ALL       : ['enter', '}']
+  ZOOM_OUT_ALL      : ['shift+enter', '{']
   SCROLL_DOWN       : ['ctrl+d', 'page down']
   SCROLL_UP         : ['ctrl+u', 'page up']
 
