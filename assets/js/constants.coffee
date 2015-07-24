@@ -1,16 +1,8 @@
 ((exports) ->
 
   exports.default_data = { line: '', children: [
-    { line: 'Welcome to vimflowy!', children: [
-      # 'If this is your first time here, I highly recommend you read everything.  Otherwise, you can delete everything by pressing VGd'
-      { line: 'If you don\'t use vim', children: [
-        'Sorry!  I plan on eventually having default bindings for normal people (as well as emacs users)... ' +
-        'But for now, if you want to use vimflowy, you should first learn vim.  Perhaps http://vim-adventures.com/'
-      ] }
-      { line: 'Otherwise', children: [
-        'You should feel right at home!  (I hope you know to use j and k to move up and down!)'
-      ] }
-    ] }
+    'Welcome to vimflowy!'
+    '(I hope you know to use j and k to move up and down!)'
     { line: 'Features', children: [
       { line: 'Nested bullets', children: [
         { line: 'Use enter to zoom in to a bullet', children: [
@@ -66,12 +58,13 @@
           'Use u to undo and ctrl+r to redo'
           'And use . to repeat the last command'
           'You can define and use macros, just like in vim'
+          'ctrl+o and ctrl+i will cycle through your zoom/jump history'
         ] }
       ] }
       { line: 'Search', collapsed: true, children: [
         'Press / to start searching, and then just type what you want to find'
-        'ctrl+j and ctrl+k let you page through the results'
-        'enter lets you select what you want, and esc lets you quit'
+        'ctrl+j and ctrl+k to page through the results'
+        'enter to select what you want, and esc to cancel'
       ] }
       { line: 'Marks', mark: 'mark', collapsed: true, children: [
         { line: 'I am marked!', mark: 'im_a_mark', children: [] }
@@ -81,7 +74,6 @@
           'Click the tag to jump to the marked location.'
           'Alternatively, when your cursor is over the tag, type gm to jump to the mark'
         ] }
-        'ctrl+o and ctrl+i will cycle through your zoom/jump history'
       ] }
       { line: 'Customizable', collapsed: true, children: [
         'Different color themes (see Settings)'
@@ -98,6 +90,7 @@
       'Make many documents.  Just visit /documentname'
     ] }
     'Press i to enter insert mode and start adding your own content!'
+    'For more info, visit https://github.com/WuTheFWasThat/vimflowy'
     # Please report bugs!
   ] }
 

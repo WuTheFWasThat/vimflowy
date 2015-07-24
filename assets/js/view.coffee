@@ -68,9 +68,16 @@ renderLine = (lineData, options = {}) ->
   word = ''
   word_start = 0
 
+  isWhitespace = (char) ->
+    return char == '\n' or char == ' '
+  isPunctuation = (char) ->
+    return char == '.' or char == ',' or char == '!' or char == '?'
+
   lineData.push ' ' # to make end condition easier
   for char, i in lineData
-    if char == '\n' or char == ' '
+    # TODO  or (isPunctuation char)
+    # problem is URLs have dots in them...
+    if (isWhitespace char)
       if i != word_start
         words.push {
           word: word

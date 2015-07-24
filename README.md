@@ -6,6 +6,11 @@ Try it out [here](https://vimflowy.bitballoon.com)!
 
 (Video coming eventually...)
 
+For now, it really is aimed at vim users, who should feel quite at home.
+I plan on eventually having default bindings for normal people (as well as emacs users),
+and very customizable bindings for those who want to go crazy with them.
+But for now, if you want to use vimflowy, you should first learn vim.  Perhaps http://vim-adventures.com/?
+
 ## FEATURES ##
 
 - Workflowy features
@@ -20,6 +25,7 @@ Try it out [here](https://vimflowy.bitballoon.com)!
     - visual line (only within siblings)
   - keybindings for everything
   - undo!  Full history kept within a session
+  - ctrl+o and ctrl+i to move through jump history
   - macros
 - Extras
   - (inefficient) search
