@@ -81,7 +81,7 @@
           'Click the tag to jump to the marked location.'
           'Alternatively, when your cursor is over the tag, type gm to jump to the mark'
         ] }
-        # 'ctrl+o and ctrl+i will cycle through your zoom/jump history'
+        'ctrl+o and ctrl+i will cycle through your zoom/jump history'
       ] }
       { line: 'Customizable', collapsed: true, children: [
         'Different color themes (see Settings)'

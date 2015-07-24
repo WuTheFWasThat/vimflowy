@@ -20,47 +20,63 @@ class TestCase
     @keybinder = new KeyBindings @view
     @register = @view.register
 
-  sendKeys: (keys) ->
-    for key in keys
-      @keybinder.handleKey key
-
-  sendKey: (key) ->
-    @sendKeys [key]
-
-  expectDeepEqual: (actual, expected) ->
+  _expectDeepEqual: (actual, expected) ->
     assert.deepEqual actual, expected,
       "Expected \n #{JSON.stringify(actual, null, 2)}" +
       "To match \n #{JSON.stringify(expected, null, 2)}"
 
+  sendKeys: (keys) ->
+    for key in keys
+      @keybinder.handleKey key
+    return @
+
+  sendKey: (key) ->
+    @sendKeys [key]
+    return @
+
   expect: (expected) ->
     serialized = @data.serialize @data.root, true
-    @expectDeepEqual serialized.children, expected
+    @_expectDeepEqual serialized.children, expected
+    return @
 
   expectViewRoot: (expected) ->
     assert.equal @data.viewRoot, expected
+    return @
 
   expectCursor: (row, col) ->
     assert.equal @view.cursor.row, row
     assert.equal @view.cursor.col, col
+    return @
+
+  expectJumpIndex: (index, historyLength = null) ->
+    assert.equal @view.jumpIndex, index
+    if historyLength != null
+      assert.equal @view.jumpHistory.length, historyLength
+    return @
 
   setRegister: (value) ->
     @register.deserialize value
+    return @
 
   expectRegister: (expected) ->
     current = do @register.serialize
-    @expectDeepEqual current, expected
+    @_expectDeepEqual current, expected
+    return @
 
   expectRegisterType: (expected) ->
     current = do @register.serialize
-    @expectDeepEqual current.type, expected
+    @_expectDeepEqual current.type, expected
+    return @
 
   expectExport: (fileExtension, expected) ->
     export_ = @view.exportContent fileExtension
     assert.equal export_, expected,
       "Expected \n#{export_}\n To match \n#{expected}\n!"
+    return @
 
   expectMarks: (expected) ->
     marks = do @view.data.store.getAllMarks
-    @expectDeepEqual marks, expected
+    @_expectDeepEqual marks, expected
+    return @
 
 module.exports = TestCase

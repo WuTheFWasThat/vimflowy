@@ -83,6 +83,8 @@ defaultVimKeyBindings[MODES.NORMAL] =
   SEARCH            : ['/', 'ctrl+f']
   MARK              : ['m']
   MARK_SEARCH       : ['\'', '`']
+  JUMP_PREVIOUS     : ['ctrl+o']
+  JUMP_NEXT         : ['ctrl+i']
 
   UNDO              : ['u']
   REDO              : ['ctrl+r']
@@ -340,6 +342,16 @@ keyDefinitions =
           fn: selectRow.bind(@, row)
         }
       return results
+  JUMP_PREVIOUS:
+    display: 'Jump to previous location'
+    drop: true
+    fn: () ->
+      do @view.jumpPrevious
+  JUMP_NEXT:
+    display: 'Jump to next location'
+    drop: true
+    fn: () ->
+      do @view.jumpNext
 
   # traditional vim stuff
   INSERT:

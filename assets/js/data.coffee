@@ -106,7 +106,11 @@ class Data
   collapsed: (row) ->
     return @store.getCollapsed row
 
-  viewable: (row) -> # whether currently viewable
+  toggleCollapsed: (id) ->
+    @store.setCollapsed id, (not @collapsed id)
+
+  # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
+  viewable: (row) ->
     return (not @collapsed row) or (row == @viewRoot)
 
   indexOf: (child) ->
@@ -135,7 +139,6 @@ class Data
       parent: parent
       index: i
     }
-
 
   # attaches a detached child to a parent
   # the child should not have a parent already
@@ -217,8 +220,15 @@ class Data
       if @collapsed cur
         answer = cur
 
-  toggleCollapsed: (id) ->
-    @store.setCollapsed id, (not @collapsed id)
+  # returns whether a row is actually reachable from the root node
+  # if something is not detached, it will have a parent, but the parent wont mention it as a child
+  isAttached: (id) ->
+    while true
+      if id == @root
+        return true
+      if (@indexOf id) == -1
+        return false
+      id = @getParent id
 
   getSiblingBefore: (id) ->
     return @getSiblingOffset id, -1

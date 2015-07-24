@@ -129,7 +129,6 @@ renderLine = (lineData, options = {}) ->
       divoptions.href = url
 
     if markrow != null
-      console.log('markrow', markrow)
       divoptions.onclick = options.onclickmark.bind @, markrow
     else if options.onclick?
       divoptions.onclick = options.onclick.bind @, x
@@ -172,6 +171,12 @@ class View
       index: 0
     }]
     @historyIndex = 0 # index into indices
+
+    @jumpHistory = [{
+      viewRoot: @data.viewRoot
+      cursor_before: do @cursor.clone
+    }]
+    @jumpIndex = 0 # index into jump history
 
     if @mainDiv?
       @vtree = do @virtualRender
@@ -263,7 +268,7 @@ class View
 
   restoreViewState: (state) ->
     @cursor =  do state.cursor.clone
-    @changeView state.viewRoot
+    @_changeView state.viewRoot
 
   undo: () ->
     if @historyIndex > 0
@@ -303,22 +308,102 @@ class View
     action.apply @
     @actions.push action
 
-  # CURSOR MOVEMENT AND DATA MANIPULATION
-
   curLine: () ->
     return @data.getLine @cursor.row
 
   curLineLength: () ->
     return @data.getLength @cursor.row
 
-  changeView: (row) ->
+  addToJumpHistory: (jump_fn) ->
+    jump = @jumpHistory[@jumpIndex]
+    jump.cursor_after = do @cursor.clone
+
+    @jumpHistory = @jumpHistory.slice 0, (@jumpIndex+1)
+
+    do jump_fn
+
+    @jumpHistory.push {
+      viewRoot: @data.viewRoot
+      cursor_before: do @cursor.clone
+    }
+    @jumpIndex += 1
+
+  # try going to jump, return true if succeeds
+  tryJump: (jump) ->
+    if jump.viewRoot == @data.viewRoot
+      return false # not moving, don't jump
+
+    if not @data.isAttached jump.viewRoot
+      return false # invalid location
+
+    children = @data.getChildren jump.viewRoot
+    if not children.length
+      return false # can't root, don't jump
+
+    @data.changeViewRoot jump.viewRoot
+    @cursor.setRow children[0]
+
+    if @data.isAttached jump.cursor_after.row
+      # if the row is attached and under the view root, switch to it
+      cursor_row = @data.youngestVisibleAncestor jump.cursor_after.row
+      if cursor_row != null
+        @cursor.setRow cursor_row
+    return true
+
+  jumpPrevious: () ->
+    jumpIndex = @jumpIndex
+
+    jump = @jumpHistory[jumpIndex]
+    jump.cursor_after = do @cursor.clone
+
+    while true
+      if jumpIndex == 0
+        return false
+      jumpIndex -= 1
+      oldjump = @jumpHistory[jumpIndex]
+      if @tryJump oldjump
+        @jumpIndex = jumpIndex
+        return true
+
+  jumpNext: () ->
+    jumpIndex = @jumpIndex
+
+    jump = @jumpHistory[jumpIndex]
+    jump.cursor_after = do @cursor.clone
+
+    while true
+      if jumpIndex == @jumpHistory.length - 1
+        return false
+      jumpIndex += 1
+      newjump = @jumpHistory[jumpIndex]
+      if @tryJump newjump
+        @jumpIndex = jumpIndex
+        return true
+
+  # try to change the view root to row
+  # fails if there is no child
+  # records in jump history
+  _changeView: (row) ->
+    if row == @data.viewRoot
+      return true # not moving, do nothing
     if @data.hasChildren row
-      @data.changeViewRoot row
+      @addToJumpHistory () =>
+        @data.changeViewRoot row
       return true
     return false
 
+  # try to root into newroot, updating the cursor
+  reroot: (newroot = @data.root) ->
+    if @_changeView newroot
+      newrow = @data.youngestVisibleAncestor @cursor.row
+      if newrow == null # not visible, need to reset cursor
+        newrow = (@data.getChildren newroot)[0]
+      @cursor.setRow newrow
+      return true
+    return false
+
+  # try rerooting to row, otherwise reroot to its parent
   rootInto: (row = @cursor.row) ->
-    # try changing to cursor
     if @reroot row
       return true
     parent = @data.getParent row
@@ -335,15 +420,6 @@ class View
   rootDown: () ->
     newroot = @data.oldestVisibleAncestor @cursor.row
     if @reroot newroot
-      return true
-    return false
-
-  reroot: (newroot = @data.root) ->
-    if @changeView newroot
-      newrow = @data.youngestVisibleAncestor @cursor.row
-      if newrow == null # not visible, need to reset cursor
-        newrow = (@data.getChildren newroot)[0]
-      @cursor.setRow newrow
       return true
     return false
 
