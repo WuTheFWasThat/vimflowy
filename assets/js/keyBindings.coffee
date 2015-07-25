@@ -319,7 +319,7 @@ keyDefinitions =
     display: 'Finish typing mark'
     to_mode: MODES.NORMAL
     fn: () ->
-      mark = (do @view.curLine).join ''
+      mark = (do @view.curText).join ''
       @original_view.setMark @original_view.markrow, mark
   MARK_SEARCH:
     display: 'Go to (search for) a mark'
@@ -881,7 +881,7 @@ class KeyBindings
     if not (key of bindings)
       if key == 'shift+enter'
         key = '\n'
-      @view.addCharsAtCursor [key], {cursor: {pastEnd: true}}
+      @view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
       return
 
     info = bindings[key]
@@ -1035,7 +1035,7 @@ class KeyBindings
     if not (key of bindings)
       if key == 'shift+enter'
         key = '\n'
-      view.addCharsAtCursor [key], {cursor: {pastEnd: true}}
+      view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
     else
       info = bindings[key]
 
@@ -1071,7 +1071,7 @@ class KeyBindings
     if not (key of bindings)
       # must be non-whitespace
       if /^\w*$/.test(key)
-        view.addCharsAtCursor [key], {cursor: {pastEnd: true}}
+        view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
     else
       info = bindings[key]
 
@@ -1219,7 +1219,7 @@ class KeyBindings
       if info.to_mode == MODES.MARK
         data = new Data (new dataStore.InMemory)
         data.load {
-          line: ''
+          text: ''
           children: ['']
         }
         @view.markview = new View data

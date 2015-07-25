@@ -1,5 +1,6 @@
 # imports
 if module?
+  _ = require('underscore')
   utils = require('./utils.coffee')
 
 class Data
@@ -18,38 +19,63 @@ class Data
   # lines #
   #########
 
+  lineProperties = ['bold', 'italic']
+
+  # an array of objects:
+  # {
+  #   char: 'a'
+  #   bold: true
+  #   italic: false
+  # }
+  # in the case where all properties are false, it may be simply the character (to save space)
   getLine: (row) ->
-    return @store.getLine row
+    return (@store.getLine row).map (obj) ->
+      if typeof obj == 'string'
+        obj = {
+          char: obj
+        }
+      return obj
+
+  getText: (row, col) ->
+    return @getLine(row).map ((obj) -> obj.char)
 
   getChar: (row, col) ->
-    return @getLine(row)[col]
+    return @getLine(row)[col]?.char
+
+  setLine: (row, line) ->
+    return (@store.setLine row, (line.map (obj) ->
+      if _.all lineProperties.map ((property) => (not obj[property]))
+        return obj.char
+      else
+        return obj
+    ))
 
   # get word at this location
   # if on a whitespace character, return nothing
   getWord: (row, col) ->
-    line = @getLine row
+    text = @getText row
 
-    if utils.isWhitespace line[col]
+    if utils.isWhitespace text[col]
       return ''
 
     start = col
     end = col
-    while (start > 0) and not (utils.isWhitespace line[start-1])
+    while (start > 0) and not (utils.isWhitespace text[start-1])
       start -= 1
-    while (end < line.length - 1) and not (utils.isWhitespace line[end+1])
+    while (end < text.length - 1) and not (utils.isWhitespace text[end+1])
       end += 1
-    return line[start..end].join('')
+    return text[start..end].join('')
 
   writeChars: (row, col, chars) ->
     args = [col, 0].concat chars
     line = @getLine row
     [].splice.apply line, args
-    @store.setLine row, line
+    @setLine row, line
 
   deleteChars: (row, col, num) ->
     line = @getLine row
     deleted = line.splice col, num
-    @store.setLine row, line
+    @setLine row, line
     return deleted
 
   getLength: (row) ->
@@ -312,17 +338,17 @@ class Data
           break
     return results
 
-  find: (chars, nresults = 10) ->
+  find: (query, nresults = 10) ->
     results = [] # list of (row_id, index) pairs
-    if chars.length == 0
+    if query.length == 0
       return results
 
     for id in do @orderedLines
-      line = @getLine id
-      for i in [0..line.length-chars.length]
+      line = @getText id
+      for i in [0..line.length-query.length]
         match = true
-        for j in [0...chars.length]
-          if line[i+j] != chars[j]
+        for j in [0...query.length]
+          if line[i+j] != query[j]
             match = false
             break
         if match
@@ -341,11 +367,12 @@ class Data
 
   # important: serialized automatically garbage collects
   serialize: (id = @root, pretty=false) ->
-    line = (@getLine id).join('')
+    line = @getLine id
+    text = (@getText id).join('')
 
     children = (@serialize childid, pretty for childid in @getChildren id)
     struct = {
-      line: line
+      text: text
       children: children
     }
 
@@ -361,7 +388,7 @@ class Data
 
     if pretty
       if children.length == 0 and not mark
-        return line
+        return text
     return struct
 
   loadTo: (serialized, parent = @root, index = -1) ->
@@ -374,9 +401,11 @@ class Data
       @store.setParent id, @root
 
     if typeof serialized == 'string'
-      @store.setLine id, (serialized.split '')
+      @setLine id, (serialized.split '')
     else
-      @store.setLine id, (serialized.line.split '')
+      text = (serialized.text.split '')
+      # get bold and italic
+      @setLine id, text
       @store.setCollapsed id, serialized.collapsed
 
       if serialized.mark

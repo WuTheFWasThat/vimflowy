@@ -37,10 +37,10 @@ t.sendKey 'backspace'
 t.expect ['a']
 
 t = new TestCase [
-  { line: 'ab', children: [
+  { text: 'ab', children: [
     'bc'
   ] },
-  { line: 'cd', children: [
+  { text: 'cd', children: [
     'de'
   ] },
 ]
@@ -48,8 +48,8 @@ t.sendKeys 'jji'
 t.sendKey 'backspace'
 # cannot backspace when there are children
 t.expect [
-  { line: 'ab', children: [
-    { line: 'bccd', children: [
+  { text: 'ab', children: [
+    { text: 'bccd', children: [
       'de'
     ] },
   ] },
@@ -58,7 +58,7 @@ t.sendKey 'backspace'
 t.sendKey 'backspace'
 t.sendKey 'backspace'
 t.expect [
-  { line: 'abcd', children: [
+  { text: 'abcd', children: [
     'de'
   ] },
 ]
@@ -66,13 +66,13 @@ t.sendKey 'backspace'
 t.sendKey 'backspace'
 t.sendKey 'backspace'
 t.expect [
-  { line: 'cd', children: [
+  { text: 'cd', children: [
     'de'
   ] },
 ]
 
 t = new TestCase [
-  { line: 'ab', children: [
+  { text: 'ab', children: [
     'cd'
   ] },
 ]
@@ -84,7 +84,7 @@ t.expect [
 t.sendKey 'esc'
 t.sendKeys 'u'
 t.expect [
-  { line: 'ab', children: [
+  { text: 'ab', children: [
     'cd'
   ] }
 ]
@@ -121,7 +121,7 @@ t.sendKeys 'x'
 t.expect ['abcd']
 
 t = new TestCase [
-  { line: 'ab', children: [
+  { text: 'ab', children: [
     'cd'
   ] },
 ]
@@ -132,21 +132,21 @@ t.expect ['abcd']
 
 t = new TestCase [
   'ab'
-  { line: 'cd', children: [
+  { text: 'cd', children: [
     'ef'
     'gh'
   ] },
 ]
 t.sendKeys 'J'
 t.expect [
-  { line: 'ab cd', children: [
+  { text: 'ab cd', children: [
     'ef'
     'gh'
   ] },
 ]
 t.sendKeys 'x'
 t.expect [
-  { line: 'abcd', children: [
+  { text: 'abcd', children: [
     'ef'
     'gh'
   ] },

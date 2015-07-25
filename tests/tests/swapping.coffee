@@ -3,13 +3,13 @@ TestCase = require '../testcase.coffee'
 
 # test swapping
 t = new TestCase [
-  { line: 'move', children: [
+  { text: 'move', children: [
     'me'
   ] },
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -19,12 +19,12 @@ t = new TestCase [
 t.sendKey 'ctrl+j'
 t.expect [
   'one',
-  { line: 'move', children: [
+  { text: 'move', children: [
     'me'
   ] },
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -34,12 +34,12 @@ t.expect [
 t.sendKey 'ctrl+j'
 t.expect [
   'one',
-  { line: 'uno', children: [
-    { line: 'move', children: [
+  { text: 'uno', children: [
+    { text: 'move', children: [
       'me'
     ] },
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -49,12 +49,12 @@ t.expect [
 t.sendKey 'ctrl+j'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'move', children: [
+    { text: 'move', children: [
       'me'
     ] },
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -64,10 +64,10 @@ t.expect [
 t.sendKey 'ctrl+j'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
-      { line: 'move', children: [
+    { text: 'dos', children: [
+      { text: 'move', children: [
         'me'
       ] },
       'three'
@@ -79,11 +79,11 @@ t.expect [
 t.sendKey 'ctrl+j'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
-      { line: 'move', children: [
+      { text: 'move', children: [
         'me'
       ] },
       'tres'
@@ -94,12 +94,12 @@ t.expect [
 t.sendKey 'ctrl+j'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
-      { line: 'move', children: [
+      { text: 'move', children: [
         'me'
       ] },
     ] },
@@ -109,15 +109,15 @@ t.expect [
 t.sendKey 'ctrl+j'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
   ] },
   '...'
-  { line: 'move', children: [
+  { text: 'move', children: [
     'me'
   ] },
 ]
@@ -125,15 +125,15 @@ t.expect [
 t.sendKey 'ctrl+j'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
   ] },
   '...'
-  { line: 'move', children: [
+  { text: 'move', children: [
     'me'
   ] },
 ]
@@ -141,14 +141,14 @@ t.expect [
 t.sendKey 'ctrl+k'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
   ] },
-  { line: 'move', children: [
+  { text: 'move', children: [
     'me'
   ] },
   '...'
@@ -157,11 +157,11 @@ t.expect [
 t.sendKey 'ctrl+k'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
-      { line: 'move', children: [
+      { text: 'move', children: [
         'me'
       ] },
       'tres'
@@ -172,10 +172,10 @@ t.expect [
 t.sendKey 'ctrl+k'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
-      { line: 'move', children: [
+    { text: 'dos', children: [
+      { text: 'move', children: [
         'me'
       ] },
       'three'
@@ -187,12 +187,12 @@ t.expect [
 t.sendKey 'ctrl+k'
 t.expect [
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'move', children: [
+    { text: 'move', children: [
       'me'
     ] },
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -202,12 +202,12 @@ t.expect [
 t.sendKey 'ctrl+k'
 t.expect [
   'one',
-  { line: 'uno', children: [
-    { line: 'move', children: [
+  { text: 'uno', children: [
+    { text: 'move', children: [
       'me'
     ] },
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -217,12 +217,12 @@ t.expect [
 t.sendKey 'ctrl+k'
 t.expect [
   'one',
-  { line: 'move', children: [
+  { text: 'move', children: [
     'me'
   ] },
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -231,13 +231,13 @@ t.expect [
 ]
 t.sendKey 'ctrl+k'
 t.expect [
-  { line: 'move', children: [
+  { text: 'move', children: [
     'me'
   ] },
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -246,13 +246,13 @@ t.expect [
 ]
 t.sendKey 'ctrl+k'
 t.expect [
-  { line: 'move', children: [
+  { text: 'move', children: [
     'me'
   ] },
   'one',
-  { line: 'uno', children: [
+  { text: 'uno', children: [
     'two'
-    { line: 'dos', children: [
+    { text: 'dos', children: [
       'three'
       'tres'
     ] },
@@ -262,9 +262,9 @@ t.expect [
 
 # test ctrl+h
 t = new TestCase [
-  { line: '1', children: [
+  { text: '1', children: [
     '2'
-    { line: '3', children: [
+    { text: '3', children: [
       '4'
     ] },
     '5'
@@ -273,11 +273,11 @@ t = new TestCase [
 t.sendKeys 'jj'
 t.sendKey 'ctrl+h'
 t.expect [
-  { line: '1', children: [
+  { text: '1', children: [
     '2'
     '5'
   ] },
-  { line: '3', children: [
+  { text: '3', children: [
     '4'
   ] },
 ]
@@ -285,13 +285,13 @@ t.expect [
 # swap past collapsed makes sibling
 t = new TestCase [
   'line'
-  { line: '1', collapsed: true, children: [
+  { text: '1', collapsed: true, children: [
     '2'
   ] },
 ]
 t.sendKey 'ctrl+j'
 t.expect [
-  { line: '1', collapsed: true, children: [
+  { text: '1', collapsed: true, children: [
     '2'
   ] },
   'line'
@@ -299,33 +299,33 @@ t.expect [
 
 # indent uncollapses
 t = new TestCase [
-  { line: '1', collapsed: true, children: [
+  { text: '1', collapsed: true, children: [
     '2'
   ] },
   '3'
 ]
 t.sendKeys 'G>'
 t.expect [
-  { line: '1', children: [
+  { text: '1', children: [
     '2'
     '3'
   ] },
 ]
 
 t = new TestCase [
-  { line: '1', collapsed: true, children: [
+  { text: '1', collapsed: true, children: [
     '2'
   ] },
-  { line: '3', children: [
+  { text: '3', children: [
     '4'
   ] },
 ]
 t.sendKeys 'j'
 t.sendKey 'ctrl+l'
 t.expect [
-  { line: '1', children: [
+  { text: '1', children: [
     '2'
-    { line: '3', children: [
+    { text: '3', children: [
       '4'
     ] },
   ] },

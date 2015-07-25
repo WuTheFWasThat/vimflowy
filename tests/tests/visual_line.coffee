@@ -43,29 +43,29 @@ t.expect [ '', '' ]
 
 # test children
 t = new TestCase [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
   ] }
-  { line: 'nest 2', children: [
+  { text: 'nest 2', children: [
     'egg 2'
   ] }
-  { line: 'nest 3', children: [
+  { text: 'nest 3', children: [
     'egg 3'
   ] }
 ]
 t.sendKeys 'Vjx'
 t.expect [
-  { line: 'nest 3', children: [
+  { text: 'nest 3', children: [
     'egg 3'
   ] }
 ]
 t.sendKeys 'p'
 t.expect [
-  { line: 'nest 3', children: [
-    { line: 'nest', children: [
+  { text: 'nest 3', children: [
+    { text: 'nest', children: [
       'egg'
     ] }
-    { line: 'nest 2', children: [
+    { text: 'nest 2', children: [
       'egg 2'
     ] }
     'egg 3'
@@ -75,10 +75,10 @@ t.expect [
 t.sendKeys 'Vjjdp'
 t.expect [
   'nest 3'
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
   ] }
-  { line: 'nest 2', children: [
+  { text: 'nest 2', children: [
     'egg 2'
   ] }
   'egg 3'
@@ -87,10 +87,10 @@ t.expect [
 t.sendKeys 'x'
 t.expect [
   'nest 3'
-  { line: 'est', children: [
+  { text: 'est', children: [
     'egg'
   ] }
-  { line: 'nest 2', children: [
+  { text: 'nest 2', children: [
     'egg 2'
   ] }
   'egg 3'
@@ -98,10 +98,10 @@ t.expect [
 t.sendKeys 'u'
 t.expect [
   'nest 3'
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
   ] }
-  { line: 'nest 2', children: [
+  { text: 'nest 2', children: [
     'egg 2'
   ] }
   'egg 3'
@@ -110,11 +110,11 @@ t.sendKeys 'u'
 t.expect [ 'nest 3' ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'nest 3', children: [
-    { line: 'nest', children: [
+  { text: 'nest 3', children: [
+    { text: 'nest', children: [
       'egg'
     ] }
-    { line: 'nest 2', children: [
+    { text: 'nest 2', children: [
       'egg 2'
     ] }
     'egg 3'
@@ -122,60 +122,60 @@ t.expect [
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'nest 3', children: [
+  { text: 'nest 3', children: [
     'egg 3'
   ] }
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
   ] }
-  { line: 'nest 2', children: [
+  { text: 'nest 2', children: [
     'egg 2'
   ] }
-  { line: 'nest 3', children: [
+  { text: 'nest 3', children: [
     'egg 3'
   ] }
 ]
 
 # test indent
 t = new TestCase [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
   ] }
-  { line: 'nest 2', children: [
+  { text: 'nest 2', children: [
     'egg 2'
     'egg 2 2'
   ] }
-  { line: 'nest 3', children: [
+  { text: 'nest 3', children: [
     'egg 3'
   ] }
 ]
 # does nothing when can't indent
 t.sendKeys 'jVj>'
 t.expect [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
   ] }
-  { line: 'nest 2', children: [
+  { text: 'nest 2', children: [
     'egg 2'
     'egg 2 2'
   ] }
-  { line: 'nest 3', children: [
+  { text: 'nest 3', children: [
     'egg 3'
   ] }
 ]
 # now can indent
 t.sendKeys 'jVj>'
 t.expect [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
-    { line: 'nest 2', children: [
+    { text: 'nest 2', children: [
       'egg 2'
       'egg 2 2'
     ] }
-    { line: 'nest 3', children: [
+    { text: 'nest 3', children: [
       'egg 3'
     ] }
   ] }
@@ -183,13 +183,13 @@ t.expect [
 # does nothing again
 t.sendKeys 'jV>'
 t.expect [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
-    { line: 'nest 2', children: [
+    { text: 'nest 2', children: [
       'egg 2'
       'egg 2 2'
     ] }
-    { line: 'nest 3', children: [
+    { text: 'nest 3', children: [
       'egg 3'
     ] }
   ] }
@@ -197,13 +197,13 @@ t.expect [
 # unindent
 t.sendKeys 'V<'
 t.expect [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
-    { line: 'nest 2', children: [
+    { text: 'nest 2', children: [
       'egg 2 2'
     ] }
     'egg 2'
-    { line: 'nest 3', children: [
+    { text: 'nest 3', children: [
       'egg 3'
     ] }
   ] }
@@ -211,27 +211,27 @@ t.expect [
 # undo ignores things that didn't happen
 t.sendKeys 'u'
 t.expect [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
-    { line: 'nest 2', children: [
+    { text: 'nest 2', children: [
       'egg 2'
       'egg 2 2'
     ] }
-    { line: 'nest 3', children: [
+    { text: 'nest 3', children: [
       'egg 3'
     ] }
   ] }
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'nest', children: [
+  { text: 'nest', children: [
     'egg'
   ] }
-  { line: 'nest 2', children: [
+  { text: 'nest 2', children: [
     'egg 2'
     'egg 2 2'
   ] }
-  { line: 'nest 3', children: [
+  { text: 'nest 3', children: [
     'egg 3'
   ] }
 ]

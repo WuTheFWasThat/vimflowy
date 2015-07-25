@@ -2,8 +2,8 @@ require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
 threeRows = [
-  { line: 'top row', children: [
-    { line : 'middle row', children : [
+  { text: 'top row', children: [
+    { text: 'middle row', children : [
       'bottom row'
     ] },
   ] },
@@ -18,7 +18,7 @@ t.sendKeys 'j>'
 t.expect threeRows
 t.sendKeys '<'
 t.expect [
-  { line: 'top row', children: [
+  { text: 'top row', children: [
       'middle row',
       'bottom row',
   ] }
@@ -27,8 +27,8 @@ t.sendKeys 'u'
 t.expect threeRows
 
 t = new TestCase [
-  { line: 'top row', children: [
-    { line : 'middle row', children : [
+  { text: 'top row', children: [
+    { text: 'middle row', children : [
       'bottom row'
     ] },
   ] },
@@ -36,8 +36,8 @@ t = new TestCase [
 ]
 t.sendKeys '2jx'
 t.expect [
-  { line: 'top row', children: [
-    { line : 'middle row', children : [
+  { text: 'top row', children: [
+    { text: 'middle row', children : [
       'ottom row'
     ] },
   ] },
@@ -45,8 +45,8 @@ t.expect [
 ]
 t.sendKeys 'jx'
 t.expect [
-  { line: 'top row', children: [
-    { line : 'middle row', children : [
+  { text: 'top row', children: [
+    { text: 'middle row', children : [
       'ottom row'
     ] },
   ] },
@@ -54,8 +54,8 @@ t.expect [
 ]
 t.sendKeys '>>'
 t.expect [
-  { line: 'top row', children: [
-    { line : 'middle row', children : [
+  { text: 'top row', children: [
+    { text: 'middle row', children : [
       'ottom row',
       'nother row'
     ] },
@@ -63,8 +63,8 @@ t.expect [
 ]
 t.sendKeys 'uu'
 t.expect [
-  { line: 'top row', children: [
-    { line : 'middle row', children : [
+  { text: 'top row', children: [
+    { text: 'middle row', children : [
       'ottom row'
     ] },
   ] },
@@ -73,8 +73,8 @@ t.expect [
 t.sendKey 'ctrl+r'
 t.sendKey 'ctrl+r'
 t.expect [
-  { line: 'top row', children: [
-    { line : 'middle row', children : [
+  { text: 'top row', children: [
+    { text: 'middle row', children : [
       'ottom row',
       'nother row'
     ] },
@@ -83,18 +83,18 @@ t.expect [
 t.sendKeys 'k'
 t.sendKey 'shift+tab'
 t.expect [
-  { line: 'top row', children: [
+  { text: 'top row', children: [
     'middle row',
-    { line : 'ottom row', children : [
+    { text: 'ottom row', children : [
       'nother row'
     ] },
   ] },
 ]
 t.sendKey 'shift+tab'
 t.expect [
-  { line: 'top row', children: [
+  { text: 'top row', children: [
     'middle row',
-    { line : 'ottom row', children : [
+    { text: 'ottom row', children : [
       'nother row'
     ] },
   ] },
@@ -103,17 +103,17 @@ t.sendKeys 'k'
 t.sendKey 'shift+tab'
 t.expect [
   'top row',
-  { line: 'middle row', children: [
-    { line : 'ottom row', children : [
+  { text: 'middle row', children: [
+    { text: 'ottom row', children : [
       'nother row'
     ] },
   ] },
 ]
 t.sendKey 'ctrl+l'
 t.expect [
-  { line: 'top row', children: [
-    { line: 'middle row', children: [
-      { line : 'ottom row', children : [
+  { text: 'top row', children: [
+    { text: 'middle row', children: [
+      { text: 'ottom row', children : [
         'nother row'
       ] },
     ] },
@@ -122,17 +122,17 @@ t.expect [
 t.sendKeys 'u'
 t.expect [
   'top row',
-  { line: 'middle row', children: [
-    { line : 'ottom row', children : [
+  { text: 'middle row', children: [
+    { text: 'ottom row', children : [
       'nother row'
     ] },
   ] },
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'top row', children: [
+  { text: 'top row', children: [
     'middle row',
-    { line : 'ottom row', children : [
+    { text: 'ottom row', children : [
       'nother row'
     ] },
   ] },
@@ -140,18 +140,18 @@ t.expect [
 t.sendKeys 'j'
 t.sendKey 'ctrl+h'
 t.expect [
-  { line: 'top row', children: [
+  { text: 'top row', children: [
     'middle row'
   ] },
-  { line : 'ottom row', children : [
+  { text: 'ottom row', children : [
     'nother row'
   ] },
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'top row', children: [
+  { text: 'top row', children: [
     'middle row',
-    { line : 'ottom row', children : [
+    { text: 'ottom row', children : [
       'nother row'
     ] },
   ] },
@@ -159,11 +159,11 @@ t.expect [
 
 # test block indent
 t = new TestCase [
-  { line: 'a', children: [
-    { line : 'ab', children : [
+  { text: 'a', children: [
+    { text: 'ab', children : [
         'abc'
     ] },
-    { line : 'ad', children : [
+    { text: 'ad', children : [
       'ade'
     ] },
   ] },
@@ -171,44 +171,44 @@ t = new TestCase [
 t.sendKeys 'j'
 t.sendKey '<'
 t.expect [
-  { line : 'a', children : [
-    { line : 'ad', children : [
+  { text: 'a', children : [
+    { text: 'ad', children : [
       'ade'
     ] },
   ] },
-  { line: 'ab', children: [
+  { text: 'ab', children: [
     'abc',
   ] },
 ]
 t.sendKey '>'
 t.expect [
-  { line: 'a', children: [
-    { line : 'ad', children : [
+  { text: 'a', children: [
+    { text: 'ad', children : [
       'ade'
     ] },
-    { line: 'ab', children: [
+    { text: 'ab', children: [
       'abc',
     ] },
   ] }
 ]
 t.sendKeys 'u'
 t.expect [
-  { line : 'a', children : [
-    { line : 'ad', children : [
+  { text: 'a', children : [
+    { text: 'ad', children : [
       'ade'
     ] },
   ] },
-  { line: 'ab', children: [
+  { text: 'ab', children: [
     'abc',
   ] },
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'a', children: [
-    { line : 'ab', children : [
+  { text: 'a', children: [
+    { text: 'ab', children : [
         'abc'
     ] },
-    { line : 'ad', children : [
+    { text: 'ad', children : [
       'ade'
     ] },
   ] },
@@ -216,33 +216,33 @@ t.expect [
 
 # indent uncollapses
 t = new TestCase [
-  { line: '1', collapsed: true, children: [
+  { text: '1', collapsed: true, children: [
     '2'
   ] },
   '3'
 ]
 t.sendKeys 'G>'
 t.expect [
-  { line: '1', children: [
+  { text: '1', children: [
     '2'
     '3'
   ] },
 ]
 
 t = new TestCase [
-  { line: '1', collapsed: true, children: [
+  { text: '1', collapsed: true, children: [
     '2'
   ] },
-  { line: '3', children: [
+  { text: '3', children: [
     '4'
   ] },
 ]
 t.sendKeys 'j'
 t.sendKey 'ctrl+l'
 t.expect [
-  { line: '1', children: [
+  { text: '1', children: [
     '2'
-    { line: '3', children: [
+    { text: '3', children: [
       '4'
     ] },
   ] },
@@ -251,14 +251,14 @@ t.expect [
 # test regular tab
 t = new TestCase [
   '0',
-  { line: '1', children: [
+  { text: '1', children: [
     '2'
   ] },
 ]
 t.sendKeys 'j'
 t.sendKey 'tab'
 t.expect [
-  { line: '0', children: [
+  { text: '0', children: [
     '1'
     '2'
   ] },
@@ -266,8 +266,8 @@ t.expect [
 
 # test multi >
 t = new TestCase [
-  { line: 'mama', children: [
-    { line : 'oldest kid', children : [
+  { text: 'mama', children: [
+    { text: 'oldest kid', children : [
       'grandkid'
     ] },
     'middle kid'
@@ -276,8 +276,8 @@ t = new TestCase [
 ]
 t.sendKeys 'jjj2>'
 t.expect [
-  { line: 'mama', children: [
-    { line : 'oldest kid', children : [
+  { text: 'mama', children: [
+    { text: 'oldest kid', children : [
       'grandkid'
       'middle kid'
       'young kid'
@@ -287,11 +287,11 @@ t.expect [
 
 # a bit trickier
 t = new TestCase [
-  { line: 'mama', children: [
-    { line : 'oldest kid', collapsed: true, children : [
+  { text: 'mama', children: [
+    { text: 'oldest kid', collapsed: true, children : [
       'grandkid'
     ] },
-    { line : 'middle kid', children : [
+    { text: 'middle kid', children : [
       'grandkid 2'
     ] },
     'young kid'
@@ -299,10 +299,10 @@ t = new TestCase [
 ]
 t.sendKeys 'jj2>'
 t.expect [
-  { line: 'mama', children: [
-    { line : 'oldest kid', children : [
+  { text: 'mama', children: [
+    { text: 'oldest kid', children : [
       'grandkid'
-      { line : 'middle kid', children : [
+      { text: 'middle kid', children : [
         'grandkid 2'
       ] },
       'young kid'
@@ -311,11 +311,11 @@ t.expect [
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'mama', children: [
-    { line : 'oldest kid', collapsed: true, children : [
+  { text: 'mama', children: [
+    { text: 'oldest kid', collapsed: true, children : [
       'grandkid'
     ] },
-    { line : 'middle kid', children : [
+    { text: 'middle kid', children : [
       'grandkid 2'
     ] },
     'young kid'
@@ -323,13 +323,13 @@ t.expect [
 ]
 t.sendKeys 'k2<'
 t.expect [
-  { line : 'mama', children : [
+  { text: 'mama', children : [
     'young kid'
   ] },
-  { line : 'oldest kid', collapsed: true, children : [
+  { text: 'oldest kid', collapsed: true, children : [
     'grandkid'
   ] },
-  { line : 'middle kid', children : [
+  { text: 'middle kid', children : [
     'grandkid 2'
   ] },
 ]

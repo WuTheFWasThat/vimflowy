@@ -12,35 +12,35 @@ t.expect ['a', 'ab', 'bc']
 
 t = new TestCase [
   'ab'
-  { line: 'bc', children: [
+  { text: 'bc', children: [
     'cd'
   ] },
 ]
 t.sendKeys 'Gx'
 t.expect [
   'ab'
-  { line: 'bc', children: [
+  { text: 'bc', children: [
     'd'
   ] },
 ]
 t.sendKeys 'ggx'
 t.expect [
   'b'
-  { line: 'bc', children: [
+  { text: 'bc', children: [
     'd'
   ] },
 ]
 
 t = new TestCase [
   'ab'
-  { line: 'bc', collapsed: true, children: [
+  { text: 'bc', collapsed: true, children: [
     'cd'
   ] },
 ]
 t.sendKeys 'Gx'
 t.expect [
   'ab'
-  { line: 'c', collapsed: true, children: [
+  { text: 'c', collapsed: true, children: [
     'cd'
   ] },
 ]
@@ -58,7 +58,7 @@ t.expect ['', 'ab', 'ab']
 # with zoom
 t = new TestCase [
   'ab'
-  { line: 'bc', children: [
+  { text: 'bc', children: [
     'dc'
     'cd'
   ] },
@@ -67,7 +67,7 @@ t = new TestCase [
 t.sendKeys 'j]Gx'
 t.expect [
   'ab'
-  { line: 'bc', children: [
+  { text: 'bc', children: [
     'dc'
     'd'
   ] },
@@ -76,7 +76,7 @@ t.expect [
 t.sendKeys 'ggx'
 t.expect [
   'ab'
-  { line: 'bc', children: [
+  { text: 'bc', children: [
     'c'
     'd'
   ] },
@@ -86,7 +86,7 @@ t.expect [
 # with zoom onto collapsed
 t = new TestCase [
   'ab'
-  { line: 'bc', collapsed: true, children: [
+  { text: 'bc', collapsed: true, children: [
     'dc'
     'cd'
   ] },
@@ -95,7 +95,7 @@ t = new TestCase [
 t.sendKeys 'j]Gx'
 t.expect [
   'ab'
-  { line: 'bc', collapsed: true, children: [
+  { text: 'bc', collapsed: true, children: [
     'dc'
     'd'
   ] },
@@ -104,7 +104,7 @@ t.expect [
 t.sendKeys 'ggx'
 t.expect [
   'ab'
-  { line: 'bc', collapsed: true, children: [
+  { text: 'bc', collapsed: true, children: [
     'c'
     'd'
   ] },

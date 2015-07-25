@@ -87,15 +87,15 @@ t.sendKeys 'u'
 t.expect ['humpty', 'dumpty']
 
 t = new TestCase [
-  { line: 'herpy', children: [
-    { line: 'derpy', children: [
+  { text: 'herpy', children: [
+    { text: 'derpy', children: [
       'burpy'
     ] },
   ] },
 ]
 t.sendKeys 'jjddp'
 t.expect [
-  { line: 'herpy', children: [
+  { text: 'herpy', children: [
     'derpy',
     'burpy'
   ] },
@@ -103,13 +103,13 @@ t.expect [
 
 t.sendKeys 'u'
 t.expect [
-  { line: 'herpy', children: [
+  { text: 'herpy', children: [
     'derpy',
   ] },
 ]
 t.sendKeys 'kp'
 t.expect [
-  { line: 'herpy', children: [
+  { text: 'herpy', children: [
     'burpy',
     'derpy'
   ] },
@@ -117,26 +117,26 @@ t.expect [
 
 t.sendKeys 'u'
 t.expect [
-  { line: 'herpy', children: [
+  { text: 'herpy', children: [
     'derpy',
   ] },
 ]
 t.sendKeys 'P'
 t.expect [
   'burpy'
-  { line: 'herpy', children: [
+  { text: 'herpy', children: [
     'derpy',
   ] },
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'herpy', children: [
+  { text: 'herpy', children: [
     'derpy',
   ] },
 ]
 t.sendKeys 'jP'
 t.expect [
-  { line: 'herpy', children: [
+  { text: 'herpy', children: [
     'burpy',
     'derpy',
   ] },
@@ -203,14 +203,14 @@ t.sendKeys 'jjjjjp'
 t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yo', 'hey']
 
 t = new TestCase [
-  { line: 'hey', children: [
+  { text: 'hey', children: [
     'yo'
   ] }
 ]
 t.sendKeys 'yyp'
 t.expect [
-  { line: 'hey', children: [
-    { line: 'hey', children: [
+  { text: 'hey', children: [
+    { text: 'hey', children: [
       'yo'
     ] },
     'yo'
@@ -218,9 +218,9 @@ t.expect [
 ]
 t.sendKeys 'p'
 t.expect [
-  { line: 'hey', children: [
-    { line: 'hey', children: [
-      { line: 'hey', children: [
+  { text: 'hey', children: [
+    { text: 'hey', children: [
+      { text: 'hey', children: [
         'yo'
       ] },
       'yo'
@@ -230,8 +230,8 @@ t.expect [
 ]
 t.sendKeys 'u'
 t.expect [
-  { line: 'hey', children: [
-    { line: 'hey', children: [
+  { text: 'hey', children: [
+    { text: 'hey', children: [
       'yo'
     ] },
     'yo'
@@ -239,9 +239,9 @@ t.expect [
 ]
 t.sendKey 'ctrl+r'
 t.expect [
-  { line: 'hey', children: [
-    { line: 'hey', children: [
-      { line: 'hey', children: [
+  { text: 'hey', children: [
+    { text: 'hey', children: [
+      { text: 'hey', children: [
         'yo'
       ] },
       'yo'
@@ -252,30 +252,30 @@ t.expect [
 
 # test paste on collapsed
 t = new TestCase [
-  { line: 'hey', collapsed: true, children: [
+  { text: 'hey', collapsed: true, children: [
     'yo'
   ] }
 ]
 t.sendKeys 'yyp'
 t.expect [
-  { line: 'hey', collapsed: true, children: [
+  { text: 'hey', collapsed: true, children: [
     'yo'
   ] }
-  { line: 'hey', collapsed: true, children: [
+  { text: 'hey', collapsed: true, children: [
     'yo'
   ] },
 ]
 
 # test paste preserves collapsedness
 t = new TestCase [
-  { line: 'hey', collapsed: true, children: [
+  { text: 'hey', collapsed: true, children: [
     'yo'
   ] }
 ]
 t.sendKeys 'yyzp'
 t.expect [
-  { line: 'hey', children: [
-    { line: 'hey', collapsed: true, children: [
+  { text: 'hey', children: [
+    { text: 'hey', collapsed: true, children: [
       'yo'
     ] },
     'yo'
@@ -284,7 +284,7 @@ t.expect [
 
 # test second paste
 t = new TestCase [
-  { line: 'hey', collapsed: true, children: [
+  { text: 'hey', collapsed: true, children: [
     'yo'
   ] }
   'me'
@@ -299,7 +299,7 @@ t.sendKeys 'p'
 t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
 t.expect [
   'cool'
-  { line: 'hey', collapsed: true, children: [
+  { text: 'hey', collapsed: true, children: [
     'yo'
   ] }
   'me'
@@ -307,7 +307,7 @@ t.expect [
 t.sendKeys 'zryjrh'
 t.expect [
   'cool'
-  { line: 'yey', children: [
+  { text: 'yey', children: [
     'ho'
   ] }
   'me'
@@ -316,8 +316,8 @@ t.expect [
 t.sendKeys 'P'
 t.expect [
   'cool'
-  { line: 'yey', children: [
-    { line: 'hey', collapsed: true, children: [
+  { text: 'yey', children: [
+    { text: 'hey', collapsed: true, children: [
       'yo'
     ] }
     'me'

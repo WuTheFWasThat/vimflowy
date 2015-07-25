@@ -36,20 +36,20 @@ renderLine = (lineData, options = {}) ->
 
   # add cursor if at end
   if lineData.length of options.cursors
-    lineData.push cursorChar
+    lineData.push {char: cursorChar}
 
   # if still empty, put a newline
   if lineData.length == 0
-    lineData.push '\n'
+    lineData.push {char: '\n'}
 
-  for char, i in lineData
+  for obj, i in lineData
     info = {
       column: i
     }
 
-    x = char
+    x = obj.char
 
-    if char == '\n'
+    if obj.char == '\n'
       x = ''
       info.break = true
       if i of options.cursors
@@ -73,11 +73,11 @@ renderLine = (lineData, options = {}) ->
   isPunctuation = (char) ->
     return char == '.' or char == ',' or char == '!' or char == '?'
 
-  lineData.push ' ' # to make end condition easier
-  for char, i in lineData
-    # TODO  or (isPunctuation char)
+  lineData.push {char: ' '} # to make end condition easier
+  for obj, i in lineData
+    # TODO  or (isPunctuation obj.char)
     # problem is URLs have dots in them...
-    if (isWhitespace char)
+    if (isWhitespace obj.char)
       if i != word_start
         words.push {
           word: word
@@ -87,7 +87,7 @@ renderLine = (lineData, options = {}) ->
       word_start = i + 1
       word = ''
     else
-      word += char
+      word += obj.char
 
   # gather words that are urls
   urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
@@ -229,7 +229,7 @@ class View
             if typeof(node) == 'string'
               return ["- #{node}"]
             lines = []
-            lines.push "- #{node.line}"
+            lines.push "- #{node.text}"
             for child in node.children ? []
                 for line in exportLines child
                     lines.push "#{indent}#{line}"
@@ -317,6 +317,9 @@ class View
 
   curLine: () ->
     return @data.getLine @cursor.row
+
+  curText: () ->
+    return @data.getText @cursor.row
 
   curLineLength: () ->
     return @data.getLength @cursor.row
@@ -527,8 +530,8 @@ class View
 
     line = @data.getLine second
     if options.delimiter
-      if line[0] != options.delimiter
-        line = [options.delimiter].concat line
+      if line[0].char != options.delimiter
+        line = [{char: options.delimiter}].concat line
     @detachBlock second
 
     newCol = @data.getLength first
@@ -736,7 +739,7 @@ class View
       crumbs.push row
       row = @data.getParent row
 
-    makeCrumb = (row, line) =>
+    makeCrumb = (row, text) =>
       return virtualDom.h 'span', {
         className: 'crumb'
       }, [
@@ -745,14 +748,14 @@ class View
             @reroot row
             do @save
             do @render
-        }, [ line ]
+        }, [ text ]
       ]
 
     crumbNodes = []
     crumbNodes.push(makeCrumb @data.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
     for row in crumbs by -1
-      line = (@data.getLine row).join('')
-      crumbNodes.push(makeCrumb row, line)
+      text = (@data.getText row).join('')
+      crumbNodes.push(makeCrumb row, text)
 
     breadcrumbsNode = virtualDom.h 'div', {
       id: 'breadcrumbs'

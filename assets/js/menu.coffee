@@ -5,7 +5,7 @@ class Menu
 
     data = new Data (new dataStore.InMemory)
     data.load {
-      line: ''
+      text: ''
       children: ['']
     }
 
@@ -36,7 +36,7 @@ class Menu
       @selection = @selection + 1
 
   update: () ->
-    query = do @view.curLine
+    query = do @view.curText
     if (JSON.stringify query) != (JSON.stringify @lastquery)
       @lastquery = query
       @results = @fn query

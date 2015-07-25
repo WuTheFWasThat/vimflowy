@@ -3,7 +3,7 @@ TestCase = require '../testcase.coffee'
 
 # test ctrl+o and ctrl+i!
 t = new TestCase [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'second'
   ] },
   'third'
@@ -41,7 +41,7 @@ t.expectViewRoot 0
 t.sendKeys 'p'
 t.expect [
   'third'
-  { line: 'first', children: [
+  { text: 'first', children: [
     'second'
   ] },
 ]
@@ -50,14 +50,14 @@ t.expectViewRoot 1
 t.sendKeys 'x'
 t.expect [
   'third'
-  { line: 'first', children: [
+  { text: 'first', children: [
     'econd'
   ] },
 ]
 
 # test more stuff
 t = new TestCase [
-  { line: 'okay', mark: 'goto', children: [
+  { text: 'okay', mark: 'goto', children: [
     'stuff'
   ] },
   'third'
@@ -77,10 +77,10 @@ t.expectJumpIndex 1, 2
 
 # erases history properly
 t = new TestCase [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'second'
   ] },
-  { line: 'third', children: [
+  { text: 'third', children: [
     'fourth'
   ] },
 ]
@@ -109,7 +109,7 @@ t.expectJumpIndex 4, 5
 t.sendKeys 'dd'
 t.expect [
   'first'
-  { line: 'third', children: [
+  { text: 'third', children: [
     'fourth'
   ] },
 ]
@@ -131,7 +131,7 @@ t.expectJumpIndex 2, 5
 
 # test cursor position
 t = new TestCase [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'second'
     'cursor'
   ] },
@@ -159,7 +159,7 @@ t.expectCursor 3, 0
 # still goes to cursor despite reordering
 t.sendKeys 'ddP'
 t.expect [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'cursor'
     'second'
   ] },
@@ -181,7 +181,7 @@ t.expectJumpIndex 3
 # doesn't go to cursor anymore
 t.sendKeys 'dd'
 t.expect [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'second'
   ] },
   'third'
@@ -192,7 +192,7 @@ t.expectCursor 2, 0
 t.sendKey 'ctrl+o'
 t.sendKeys 'Gp'
 t.expect [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'second'
   ] },
   'third'
@@ -234,7 +234,7 @@ t.sendKeys 'ook'
 t.sendKey 'tab'
 t.sendKey 'esc'
 t.expect [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'ok'
   ] }
   'third'

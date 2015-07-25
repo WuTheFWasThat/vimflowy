@@ -2,7 +2,7 @@ TestCase = require '../testcase.coffee'
 
 # Test export formats
 t = new TestCase [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'second'
   ] },
   'third'
@@ -10,17 +10,17 @@ t = new TestCase [
 t.expectExport 'text/plain', "- \n  - first\n    - second\n  - third"
 t.expectExport 'application/json',
   (JSON.stringify {
-    line: '', children: [
-      { line: 'first', children: [
-        { line: 'second', children: [] }
+    text: '', children: [
+      { text: 'first', children: [
+        { text: 'second', children: [] }
       ] },
-      { line: 'third', children: [] }
+      { text: 'third', children: [] }
   ]}, null, 2)
 
 
 # Make sure zoom does not affect export
 t = new TestCase [
-  { line: 'first', children: [
+  { text: 'first', children: [
     'second'
   ] },
   'third'
@@ -30,9 +30,9 @@ t.sendKey 'alt+l'
 t.expectExport 'text/plain', "- \n  - first\n    - second\n  - third"
 t.expectExport 'application/json',
   (JSON.stringify {
-    line: '', children: [
-      { line: 'first', children: [
-        { line: 'second', children: [] }
+    text: '', children: [
+      { text: 'first', children: [
+        { text: 'second', children: [] }
       ] },
-      { line: 'third', children: [] }
+      { text: 'third', children: [] }
   ]}, null, 2)

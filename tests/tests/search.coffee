@@ -8,10 +8,10 @@ t = new TestCase [
   'blahsearchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -23,10 +23,10 @@ t.expect [
   'blahsearchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -38,10 +38,10 @@ t = new TestCase [
   'blahsearchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -54,10 +54,10 @@ t.expect [
   'searchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -68,10 +68,10 @@ t = new TestCase [
   'blahsearchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -85,10 +85,10 @@ t.expect [
   'searchblah',
   'blahsearchblah',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -100,10 +100,10 @@ t = new TestCase [
   'blahsearchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -115,10 +115,10 @@ t.expect [
   'blahsearchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -129,10 +129,10 @@ t = new TestCase [
   'blahsearchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     'search',
   ] }
 ]
@@ -146,10 +146,10 @@ t.expect [
   'blahsearchblah',
   'search',
   'surch',
-  { line: 'blahsearch', children: [
+  { text: 'blahsearch', children: [
     'blah',
   ] }
-  { line: 'blah', children: [
+  { text: 'blah', children: [
     # NOTE: a new line is created since it got changed to be the view root
     '',
   ] }

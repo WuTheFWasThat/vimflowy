@@ -3,13 +3,13 @@ TestCase = require '../testcase.coffee'
 
 # test alt+j and alt+k
 t = new TestCase [
-  { line: 'one', children: [
+  { text: 'one', children: [
     'uno',
   ] }
-  { line: 'two', children: [
+  { text: 'two', children: [
     'dos',
   ] }
-  { line: 'tacos', children: [
+  { text: 'tacos', children: [
     'tacos',
   ] }
 ]
@@ -17,13 +17,13 @@ t.sendKeys 'x'
 t.sendKey 'alt+j'
 t.sendKeys 'x'
 t.expect [
-  { line: 'ne', children: [
+  { text: 'ne', children: [
     'uno',
   ] }
-  { line: 'wo', children: [
+  { text: 'wo', children: [
     'dos',
   ] }
-  { line: 'tacos', children: [
+  { text: 'tacos', children: [
     'tacos',
   ] }
 ]
@@ -32,52 +32,52 @@ t.sendKeys 'x'
 t.sendKey 'alt+j'
 t.sendKeys 'x'
 t.expect [
-  { line: 'ne', children: [
+  { text: 'ne', children: [
     'uno',
   ] }
-  { line: 'wo', children: [
+  { text: 'wo', children: [
     'dos',
   ] }
-  { line: 'cos', children: [
+  { text: 'cos', children: [
     'tacos',
   ] }
 ]
 t.sendKey 'alt+k'
 t.sendKeys 'x'
 t.expect [
-  { line: 'ne', children: [
+  { text: 'ne', children: [
     'uno',
   ] }
-  { line: 'o', children: [
+  { text: 'o', children: [
     'dos',
   ] }
-  { line: 'cos', children: [
+  { text: 'cos', children: [
     'tacos',
   ] }
 ]
 t.sendKey 'alt+k'
 t.sendKeys 'x'
 t.expect [
-  { line: 'e', children: [
+  { text: 'e', children: [
     'uno',
   ] }
-  { line: 'o', children: [
+  { text: 'o', children: [
     'dos',
   ] }
-  { line: 'cos', children: [
+  { text: 'cos', children: [
     'tacos',
   ] }
 ]
 t.sendKey 'alt+k'
 t.sendKeys 'x'
 t.expect [
-  { line: '', children: [
+  { text: '', children: [
     'uno',
   ] }
-  { line: 'o', children: [
+  { text: 'o', children: [
     'dos',
   ] }
-  { line: 'cos', children: [
+  { text: 'cos', children: [
     'tacos',
   ] }
 ]

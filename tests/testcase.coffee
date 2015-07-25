@@ -12,7 +12,7 @@ class TestCase
     @store = new dataStore.InMemory
     @data = new Data @store
     @data.load
-      line: ''
+      text: ''
       children: serialized
 
     @view = new View @data

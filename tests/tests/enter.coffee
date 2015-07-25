@@ -21,7 +21,7 @@ t.sendKeys 'world'
 t.sendKey 'tab'
 t.sendKey 'esc'
 t.expect [
- { line: 'hello', children: [
+ { text: 'hello', children: [
    'world'
  ] }
 ]
@@ -29,7 +29,7 @@ t.sendKey 'u'
 t.expect ['']
 t.sendKey 'ctrl+r'
 t.expect [
- { line: 'hello', children: [
+ { text: 'hello', children: [
    'world'
  ] }
 ]
@@ -79,7 +79,7 @@ t.sendKeys 'of goo'
 t.sendKey 'esc'
 t.sendKey 'tab'
 t.expect [
- { line: 'helloworld', children: [
+ { text: 'helloworld', children: [
    'of goo'
  ] }
 ]
@@ -94,7 +94,7 @@ t.sendKey 'enter'
 t.sendKey 'esc'
 t.expect [
  'hello',
- { line: 'world', children: [
+ { text: 'world', children: [
    'of goo'
  ] }
 ]
