@@ -1,15 +1,19 @@
-# vimflowy
+# ![Vimflowy](/public/images/vimflowy-32.png?raw=true) Vimflowy
 
-This is a productivity tool which draws great inspiration from workflowy and vim
+This is a productivity tool which draws great inspiration from workflowy and vim.
 
-Try it out [here](https://vimflowy.bitballoon.com)!
+[Try it out online] (https://vimflowy.bitballoon.com), or [download it as a local app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei)!
 
 (Video coming eventually...)
 
-For now, it really is aimed at vim users, who should feel quite at home.
-I plan on eventually having default bindings for normal people (as well as emacs users),
-and very customizable bindings for those who want to go crazy with them.
-But for now, if you want to use vimflowy, you should first learn vim.  Perhaps http://vim-adventures.com/?
+## NOTES ##
+
+- Vimflowy is currently aimed at vim users, who should feel at home.
+The plan is to eventually have very customizable bindings, and defaults for normal people (as well as emacs users).
+But for now, if you want to use vimflowy, you should first [learn vim](http://vim-adventures.com/)
+- The app is entirely local. The online version uses localStorage, so it should be used in only one browser
+- Currently, weird things happen when you use it in multiple tabs
+- There are many [known inconsistencies with vim](vim_inconsistencies.md), mostly intentional.
 
 ## FEATURES ##
 
@@ -35,13 +39,7 @@ But for now, if you want to use vimflowy, you should first learn vim.  Perhaps h
   - different themes
   - lazy loads data, for big documents
 
-## NOTES ##
-
-- The app is entirely local - the storage is localStorage, so it should be used in only one browser
-- Currently, weird things happen when you use it in multiple tabs
-- There are many [known inconsistencies with vim](vim_inconsistencies.md), mostly intentional.
-
-## SET UP: ##
+## SETUP: ##
 
 #### INSTALL: ####
 
@@ -63,12 +61,12 @@ And you can visit the app at `http://localhost:8080/`
 
     npm test
 
-## CONTRIBUTE: ##
+## CONTRIBUTE ##
 
 Please send pull requests!  Remember to write tests when appropriate!
 
 You may contact me at [githubusername]@gmail.com as well
 
-## LICENSE ##
+#### LICENSE ####
 
 MIT: http://wuthefwasthat.mit-license.org/
