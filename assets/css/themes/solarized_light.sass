@@ -2,17 +2,18 @@
 @import '../constants'
 @import '../solarized_constants'
 
-$bg-color: $solarized-color-base02
-$secondary-bg-color: $solarized-color-base03
-$text-color: $solarized-color-base0
-$trim-color: $solarized-color-base1
-$cursor-bg-color: $solarized-color-base2
+$bg-color: $solarized-color-base3
+$secondary-bg-color: $solarized-color-base2
+$text-color: $solarized-color-base00
+$trim-color: $solarized-color-base01
+$cursor-bg-color: $solarized-color-cyan
 $cursor-color: $bg-color
 $breadcrumbs-color: $solarized-color-violet
-$highlight-bg-color: $solarized-color-base01
-$menu-selected-bg-color: $solarized-color-base03
+$highlight-color: $text-color
+$highlight-bg-color: $secondary-bg-color
+$menu-selected-bg-color: $solarized-color-base1
 
-body.solarized_dark-theme
+body.solarized_light-theme
 
     color: $text-color
     background-color: $bg-color
@@ -29,6 +30,7 @@ body.solarized_dark-theme
 
     .highlight
         background-color: $highlight-bg-color
+        color: $highlight-color
 
     .menuSelected
         background-color: $menu-selected-bg-color
