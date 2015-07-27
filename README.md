@@ -21,6 +21,7 @@ But for now, if you want to use vimflowy, you should first [learn vim](http://vi
   - bullets, sub-bullets
   - collapsing
   - zooming
+  - bold and italic text
 - Vim features
   - most of the standard movement/operators
   - modal editing

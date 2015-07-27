@@ -12,9 +12,9 @@ t.expectExport 'application/json',
   (JSON.stringify {
     text: '', children: [
       { text: 'first', children: [
-        { text: 'second', children: [] }
+        { text: 'second' }
       ] },
-      { text: 'third', children: [] }
+      { text: 'third' }
   ]}, null, 2)
 
 
@@ -32,7 +32,7 @@ t.expectExport 'application/json',
   (JSON.stringify {
     text: '', children: [
       { text: 'first', children: [
-        { text: 'second', children: [] }
+        { text: 'second' }
       ] },
-      { text: 'third', children: [] }
+      { text: 'third' }
   ]}, null, 2)

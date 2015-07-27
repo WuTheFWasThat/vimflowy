@@ -100,7 +100,7 @@ class KeyHandler extends EventEmitter
           key = 'ctrl+' + key
 
         if e.metaKey
-          return true
+          key = 'meta+' + key
       else
         # this is necessary for typing stuff..
         key = String.fromCharCode e.keyCode

@@ -1,11 +1,14 @@
 if module?
   utils = require('./utils.coffee')
+  constants = require('./constants.coffee')
 
 class Cursor
   constructor: (data, row = null, col = null, moveCol = null) ->
     @data = data
     @row = if row == null then (@data.getChildren @data.viewRoot)[0] else row
     @col = if col == null then 0 else col
+    @properties = {}
+    do @_getPropertiesFromContext
 
     # -1 means last col
     @moveCol = if moveCol == null then col else moveCol
@@ -14,11 +17,12 @@ class Cursor
     return new Cursor @data, @row, @col, @moveCol
 
   # cursorOptions:
-  #   - pastEnd:      means whether we're on the column or past it.
-  #                   generally true when in insert mode but not in normal mode
-  #                   effectively decides whether we can go past last column or not
-  #   - pastEndWord:  whether we consider the end of a word to be after the last letter
-  #                   is true in normal mode (for de), false in visual (for vex)
+  #   - pastEnd:         means whether we're on the column or past it.
+  #                      generally true when in insert mode but not in normal mode
+  #                      effectively decides whether we can go past last column or not
+  #   - pastEndWord:     whether we consider the end of a word to be after the last letter
+  #                      is true in normal mode (for de), false in visual (for vex)
+  #   - keepProperties:  for movement, whether we should keep italic/bold state
 
   set: (row, col, cursorOptions) ->
     @row = row
@@ -26,23 +30,25 @@ class Cursor
 
   setRow: (row, cursorOptions) ->
     @row = row
-    @fromMoveCol cursorOptions
+    @_fromMoveCol cursorOptions
 
   setCol: (moveCol, cursorOptions = {pastEnd: true}) ->
     @moveCol = moveCol
-    @fromMoveCol cursorOptions
-    # if cursorOptions moved us, we should respect it
-    # this is the time to do so, since we're setting moveCol
+    @_fromMoveCol cursorOptions
+    # if moveCol was too far, fix it
+    # NOTE: this should happen for setting column, but not row
     if @moveCol >= 0
       @moveCol = @col
 
-  fromMoveCol: (cursorOptions = {}) ->
+  _fromMoveCol: (cursorOptions = {}) ->
     len = @data.getLength @row
     maxcol = len - (if cursorOptions.pastEnd then 0 else 1)
     if @moveCol < 0
       @col = Math.max(0, len + @moveCol + 1)
     else
       @col = Math.max(0, Math.min(maxcol, @moveCol))
+    if not cursorOptions.keepProperties
+      do @_getPropertiesFromContext
 
   _left: () ->
     @setCol (@col - 1)
@@ -272,6 +278,30 @@ class Cursor
     nextsib = @data.getSiblingAfter @row
     if nextsib != null
       @setRow nextsib, cursorOptions
+
+  # cursor properties
+
+  setProperty: (property, value) ->
+    @properties[property] = value
+
+  getProperty: (property) ->
+    return @properties[property]
+
+  toggleProperty: (property) ->
+    @setProperty property, (not (@getProperty property))
+
+  # get whether the cursor should be bold/italic based on surroundings
+  # NOTE: only relevant for insert mode.
+  _getPropertiesFromContext: () ->
+    line = @data.getLine @row
+    if line.length == 0
+      obj = {}
+    else if @col == 0
+      obj = line[@col]
+    else
+      obj = line[@col-1]
+    for property in constants.text_properties
+      @setProperty property, obj[property]
 
 # exports
 module?.exports = Cursor

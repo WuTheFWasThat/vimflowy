@@ -1,9 +1,12 @@
 # imports
 if module?
+  _ = require('underscore')
+
   Cursor = require('./cursor.coffee')
   actions = require('./actions.coffee')
   Register = require('./register.coffee')
   utils = require('./utils.coffee')
+  constants = require('./constants.coffee')
 
 # a View consists of Data and a cursor
 # it also renders
@@ -46,6 +49,8 @@ renderLine = (lineData, options = {}) ->
     info = {
       column: i
     }
+    for property in constants.text_properties
+      info[property] = obj[property]
 
     x = obj.char
 
@@ -60,7 +65,7 @@ renderLine = (lineData, options = {}) ->
     if i of options.highlights
       info.highlighted = true
 
-    info.text = x
+    info.char = x
     line.push info
 
   # collect set of words, { word: word, start: start, end: end }
@@ -117,6 +122,8 @@ renderLine = (lineData, options = {}) ->
     else if x.highlighted
       style = 'highlight'
 
+    classes = [style]
+
     if x.url_start
       url = x.url_start
 
@@ -126,12 +133,16 @@ renderLine = (lineData, options = {}) ->
     divtype = 'span'
     if url != null
       divtype = 'a'
-      style += ' link'
+      classes.push 'link'
     if markrow != null
       divtype = 'a'
-      style += ' link'
+      classes.push 'link'
+    if x.bold
+      classes.push 'bold'
+    if x.italic
+      classes.push 'italic'
 
-    divoptions = {className: style}
+    divoptions = {className: (classes.join ' ')}
     if url != null
       divoptions.href = url
 
@@ -140,7 +151,7 @@ renderLine = (lineData, options = {}) ->
     else if options.onclick?
       divoptions.onclick = options.onclick.bind @, x
 
-    results.push virtualDom.h divtype, divoptions, x.text
+    results.push virtualDom.h divtype, divoptions, x.char
 
     if x.break
       results.push virtualDom.h 'div'
@@ -458,21 +469,33 @@ class View
 
   delChars: (row, col, nchars, options = {}) ->
     n = @data.getLength row
+    deleted = []
     if (n > 0) and (nchars > 0) and (col < n)
       delAction = new actions.DelChars row, col, nchars, options
       @act delAction
+      deleted = delAction.deletedChars
       if options.yank
-        @register.saveChars delAction.deletedChars
+        @register.saveChars deleted
+    return deleted
 
   delCharsBeforeCursor: (nchars, options) ->
     nchars = Math.min(@cursor.col, nchars)
-    @delChars @cursor.row, (@cursor.col-nchars), nchars, options
+    return @delChars @cursor.row, (@cursor.col-nchars), nchars, options
 
   delCharsAfterCursor: (nchars, options) ->
-    @delChars @cursor.row, @cursor.col, nchars, options
+    return @delChars @cursor.row, @cursor.col, nchars, options
 
-  spliceCharsAfterCursor: (nchars, chars, options) ->
-    @delCharsAfterCursor nchars, {cursor: {pastEnd: true}}
+  # spliceCharsAfterCursor: (nchars, chars, options) ->
+  #   @delCharsAfterCursor nchars, {cursor: {pastEnd: true}}
+  #   @addCharsAtCursor chars, options
+
+  replaceCharsAfterCursor: (char, nchars, options) ->
+    deleted = @delCharsAfterCursor nchars, {cursor: {pastEnd: true}}
+    chars = []
+    for obj in deleted
+      newobj = _.clone obj
+      newobj.char = char
+      chars.push newobj
     @addCharsAtCursor chars, options
 
   yankChars: (row, col, nchars) ->
@@ -521,7 +544,7 @@ class View
     row = @cursor.row
     sibling = @act new actions.InsertRowSibling @cursor.row, {before: true}
     @addCharsAfterCursor delAction.deletedChars
-    @cursor.set row, 0
+    @cursor.set row, 0, {keepProperties: true}
 
   joinRows: (first, second, options = {}) ->
     for child in @data.getChildren second by -1

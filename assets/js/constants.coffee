@@ -14,6 +14,13 @@
         ] }
         'Use < and > to indent and unindent blocks'
         'Use tab and shift+tab to indent and unindent just a single line'
+        { text: 'Text formatting', collapsed: true, children: [
+          {
+            text:   'Bold (meta+b) and italicized (meta+i) text.  Bold italic!'
+            bold:   '....                                         ........... '
+            italic: '                  ..........                 ........... '
+          }
+        ] }
       ] }
       { text: 'All the normal vim goodness', collapsed: true, children: [
         { text: 'Most of vim\'s movement commands', collapsed: true, children: [
@@ -93,5 +100,7 @@
     'For more info, visit https://github.com/WuTheFWasThat/vimflowy'
     # Please report bugs!
   ] }
+
+  exports.text_properties = ['bold', 'italic']
 
 )(if typeof exports isnt 'undefined' then exports else window.constants = {})

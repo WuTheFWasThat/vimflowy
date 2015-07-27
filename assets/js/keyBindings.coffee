@@ -2,6 +2,8 @@
 
 # imports
 if module?
+  _ = require('underscore')
+
   EventEmitter = require('./eventEmitter.coffee')
   Cursor = require('./cursor.coffee')
   Menu = require('./menu.coffee')
@@ -9,7 +11,7 @@ if module?
   View = require('./view.coffee')
   dataStore = require('./datastore.coffee')
   actions = require('./actions.coffee')
-  _ = require('underscore')
+  constants = require('./constants.coffee')
 
 MODES =
   NORMAL      : 1
@@ -92,6 +94,9 @@ defaultVimKeyBindings[MODES.NORMAL] =
   RECORD_MACRO      : ['q']
   PLAY_MACRO        : ['@']
 
+  BOLD              : ['meta+b']
+  ITALIC            : ['meta+i']
+
   ENTER_VISUAL      : ['v']
   ENTER_VISUAL_LINE : ['V']
 
@@ -143,6 +148,9 @@ defaultVimKeyBindings[MODES.INSERT] =
   EXPORT            : ['ctrl+s']
   EXIT_MODE         : ['esc', 'ctrl+c']
 
+  BOLD              : ['meta+b']
+  ITALIC            : ['meta+i']
+
 defaultVimKeyBindings[MODES.VISUAL] =
   YANK              : ['y']
   DELETE            : ['d', 'x']
@@ -151,6 +159,8 @@ defaultVimKeyBindings[MODES.VISUAL] =
   EXIT_MODE         : ['esc', 'ctrl+c']
   # REPLACE           : ['r']
   # SWAP_CASE         : ['~']
+  BOLD              : ['meta+b']
+  ITALIC            : ['meta+i']
 
 defaultVimKeyBindings[MODES.VISUAL_LINE] =
   NEXT_SIBLING      : ['j', 'down']
@@ -164,6 +174,8 @@ defaultVimKeyBindings[MODES.VISUAL_LINE] =
   EXIT_MODE         : ['esc', 'ctrl+c']
   # REPLACE           : ['r']
   # SWAP_CASE         : ['~']
+  BOLD              : ['meta+b']
+  ITALIC            : ['meta+i']
 
 defaultVimKeyBindings[MODES.MENU] =
   MENU_SELECT       : ['enter']
@@ -386,9 +398,7 @@ keyDefinitions =
   REPLACE:
     display: 'Replace character'
     continue: (char) ->
-      num = Math.min(@repeat, do @view.curLineLength - @view.cursor.col)
-      newChars = (char for i in [1..num])
-      @view.spliceCharsAfterCursor num, newChars, {setCursor: 'end'}
+      @view.replaceCharsAfterCursor char, @repeat, {setCursor: 'end'}
 
   UNDO:
     display: 'Undo'
@@ -686,6 +696,31 @@ keyDefinitions =
     fn: () ->
       do @menu.down
 
+  # FORMATTING
+  BOLD:
+    display: 'Bold text'
+    fn: () ->
+      if @mode == MODES.NORMAL
+        console.log('bold ', @mode, 'not yet implemented')
+      else if @mode == MODES.VISUAL
+        console.log('bold ', @mode, 'not yet implemented')
+      else if @mode == MODES.VISUAL_LINE
+        console.log('bold ', @mode, 'not yet implemented')
+      else if @mode == MODES.INSERT
+        @view.cursor.toggleProperty 'bold'
+
+  ITALIC:
+    display: 'Bold text'
+    fn: () ->
+      if @mode == MODES.NORMAL
+        console.log('italic ', @mode, 'not yet implemented')
+      else if @mode == MODES.VISUAL
+        console.log('italic ', @mode, 'not yet implemented')
+      else if @mode == MODES.VISUAL_LINE
+        console.log('italic ', @mode, 'not yet implemented')
+      else if @mode == MODES.INSERT
+        @view.cursor.toggleProperty 'italic'
+
 # end of keyDefinitions
 
 # manages a stream of keys, with the ability to
@@ -881,7 +916,10 @@ class KeyBindings
     if not (key of bindings)
       if key == 'shift+enter'
         key = '\n'
-      @view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+      obj = {char: key}
+      for property in constants.text_properties
+        if @view.cursor.getProperty property then obj[property] = true
+      @view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
       return
 
     info = bindings[key]
@@ -896,6 +934,7 @@ class KeyBindings
         view: @view,
         repeat: 1,
         setMode: @setMode
+        mode: @mode
       }
       fn.apply context, args
 
@@ -933,6 +972,7 @@ class KeyBindings
       view: @view,
       repeat: 1,
       setMode: @setMode
+      mode: @mode
     }
 
     to_mode = null
@@ -980,6 +1020,7 @@ class KeyBindings
       view: @view,
       repeat: 1,
       setMode: @setMode
+      mode: @mode
     }
 
     to_mode = null

@@ -22,8 +22,8 @@ class TestCase
 
   _expectDeepEqual: (actual, expected) ->
     assert.deepEqual actual, expected,
-      "Expected \n #{JSON.stringify(actual, null, 2)}" +
-      "To match \n #{JSON.stringify(expected, null, 2)}"
+      "Expected \n #{JSON.stringify(expected, null, 2)}" +
+      "But got \n #{JSON.stringify(actual, null, 2)}"
 
   sendKeys: (keys) ->
     for key in keys

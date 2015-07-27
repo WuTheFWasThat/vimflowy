@@ -2,6 +2,7 @@
 if module?
   _ = require('underscore')
   utils = require('./utils.coffee')
+  constants = require('./constants.coffee')
 
 class Data
   root: 0
@@ -18,8 +19,6 @@ class Data
   #########
   # lines #
   #########
-
-  lineProperties = ['bold', 'italic']
 
   # an array of objects:
   # {
@@ -44,7 +43,8 @@ class Data
 
   setLine: (row, line) ->
     return (@store.setLine row, (line.map (obj) ->
-      if _.all lineProperties.map ((property) => (not obj[property]))
+      # if no properties are true, serialize just the character to save space
+      if _.all constants.text_properties.map ((property) => (not obj[property]))
         return obj.char
       else
         return obj
@@ -370,11 +370,17 @@ class Data
     line = @getLine id
     text = (@getText id).join('')
 
-    children = (@serialize childid, pretty for childid in @getChildren id)
     struct = {
       text: text
-      children: children
     }
+    children = (@serialize childid, pretty for childid in @getChildren id)
+    if children.length
+      struct.children = children
+
+    for property in constants.text_properties
+      if _.any (line.map ((obj) -> obj[property]))
+        struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
+        pretty = false
 
     if id == @root and @viewRoot != @root
       struct.viewRoot = @viewRoot
@@ -403,16 +409,22 @@ class Data
     if typeof serialized == 'string'
       @setLine id, (serialized.split '')
     else
-      text = (serialized.text.split '')
-      # get bold and italic
-      @setLine id, text
+      line = (serialized.text.split '').map((char) -> {char: char})
+      for property in constants.text_properties
+        if serialized[property]
+          for i, val of serialized[property]
+            if val == '.'
+              line[i][property] = true
+
+      @setLine id, line
       @store.setCollapsed id, serialized.collapsed
 
       if serialized.mark
         @setMark id, serialized.mark
 
-      for serialized_child in serialized.children
-        @loadTo serialized_child, id
+      if serialized.children
+        for serialized_child in serialized.children
+          @loadTo serialized_child, id
 
     return id
 
