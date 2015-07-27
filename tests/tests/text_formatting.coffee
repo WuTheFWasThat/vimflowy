@@ -174,7 +174,7 @@ t.expect [
   }
 ]
 
-# NORMAL MODE
+# test normal mode
 t = new TestCase [
   'test'
 ]
@@ -228,5 +228,102 @@ t.expect [
   {
     text:   'tet'
     bold:   '.. '
+  }
+]
+
+# visual mode
+t = new TestCase [
+  'hello world'
+]
+t.sendKeys 've'
+t.sendKey boldKey
+t.expect [
+  {
+    text: 'hello world'
+    bold: '.....      '
+  }
+]
+t.sendKey 'x'
+t.expect [
+  {
+    text: 'hell world'
+    bold: '....      '
+  }
+]
+t.sendKeys 'v$'
+t.sendKey strikethroughKey
+t.expect [
+  {
+    text:          'hell world'
+    bold:          '....      '
+    strikethrough: '    ......'
+  }
+]
+t.sendKeys 'x'
+t.expect [
+  {
+    text:          'hell worl'
+    bold:          '....     '
+    strikethrough: '    .....'
+  }
+]
+t.sendKeys 'vb'
+t.sendKey strikethroughKey
+t.expect [
+  {
+    text:          'hell worl'
+    bold:          '....     '
+    strikethrough: '    .    '
+  }
+]
+t.sendKeys 'hvb'
+t.sendKey boldKey
+t.expect [
+  {
+    text:          'hell worl'
+    bold:          '.....    '
+    strikethrough: '    .    '
+  }
+]
+t.sendKeys 'v'
+t.sendKey boldKey
+t.expect [
+  {
+    text:          'hell worl'
+    bold:          ' ....    '
+    strikethrough: '    .    '
+  }
+]
+t.sendKeys 'v$'
+t.sendKey strikethroughKey
+t.expect [
+  {
+    text:          'hell worl'
+    bold:          ' ....    '
+    strikethrough: '.........'
+  }
+]
+t.sendKeys 'v0'
+t.sendKey strikethroughKey
+t.expect [
+  {
+    text:          'hell worl'
+    bold:          ' ....    '
+  }
+]
+t.sendKeys 'u'
+t.expect [
+  {
+    text:          'hell worl'
+    bold:          ' ....    '
+    strikethrough: '.........'
+  }
+]
+t.sendKeys 'u'
+t.expect [
+  {
+    text:          'hell worl'
+    bold:          ' ....    '
+    strikethrough: '    .    '
   }
 ]

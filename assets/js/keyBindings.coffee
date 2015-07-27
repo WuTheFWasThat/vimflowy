@@ -223,6 +223,18 @@ defaultVimKeyBindings[MODES.MARK] =
 
   EXIT_MODE         : ['esc', 'ctrl+c']
 
+
+text_format_definition = (property) ->
+  return () ->
+    if @mode == MODES.NORMAL
+      @view.toggleRowProperty property
+    else if @mode == MODES.VISUAL
+      @view.toggleRowPropertyBetween property, @view.cursor, @view.anchor, {includeEnd: true}
+    else if @mode == MODES.VISUAL_LINE
+      console.log(property, @mode, 'not yet implemented')
+    else if @mode == MODES.INSERT
+      @view.cursor.toggleProperty property
+
 # display:
 #   is displayed in keybindings help screen
 #
@@ -707,52 +719,22 @@ keyDefinitions =
   # FORMATTING
   BOLD:
     display: 'Bold text'
-    fn: () ->
-      if @mode == MODES.NORMAL
-        @view.toggleRowProperty 'bold'
-      else if @mode == MODES.VISUAL
-        console.log('bold ', @mode, 'not yet implemented')
-      else if @mode == MODES.VISUAL_LINE
-        console.log('bold ', @mode, 'not yet implemented')
-      else if @mode == MODES.INSERT
-        @view.cursor.toggleProperty 'bold'
+    finishes_visual: true
+    fn: text_format_definition 'bold'
 
   ITALIC:
     display: 'Bold text'
-    fn: () ->
-      if @mode == MODES.NORMAL
-        @view.toggleRowProperty 'italic'
-      else if @mode == MODES.VISUAL
-        console.log('italic ', @mode, 'not yet implemented')
-      else if @mode == MODES.VISUAL_LINE
-        console.log('italic ', @mode, 'not yet implemented')
-      else if @mode == MODES.INSERT
-        @view.cursor.toggleProperty 'italic'
+    finishes_visual: true
+    fn: text_format_definition 'italic'
 
   UNDERLINE:
     display: 'Underline text'
-    fn: () ->
-      if @mode == MODES.NORMAL
-        @view.toggleRowProperty 'underline'
-      else if @mode == MODES.VISUAL
-        console.log('underline ', @mode, 'not yet implemented')
-      else if @mode == MODES.VISUAL_LINE
-        console.log('underline ', @mode, 'not yet implemented')
-      else if @mode == MODES.INSERT
-        console.log('underlining')
-        @view.cursor.toggleProperty 'underline'
+    finishes_visual: true
+    fn: text_format_definition 'underline'
 
   STRIKETHROUGH:
-    display: 'Strikethrough text'
-    fn: () ->
-      if @mode == MODES.NORMAL
-        @view.toggleRowProperty 'strikethrough'
-      else if @mode == MODES.VISUAL
-        console.log('strikethrough ', @mode, 'not yet implemented')
-      else if @mode == MODES.VISUAL_LINE
-        console.log('strikethrough ', @mode, 'not yet implemented')
-      else if @mode == MODES.INSERT
-        @view.cursor.toggleProperty 'strikethrough'
+    finishes_visual: true
+    fn: text_format_definition 'strikethrough'
 
 # end of keyDefinitions
 
@@ -967,6 +949,7 @@ class KeyBindings
         view: @view,
         repeat: 1,
         setMode: @setMode
+        buildBindingsDiv: @buildBindingsDiv
         mode: @mode
       }
       fn.apply context, args
@@ -996,6 +979,8 @@ class KeyBindings
 
         if tmp.row == @view.cursor.row # only allow same-row movement
           @view.cursor = tmp
+        else
+          @view.showMessage "Visual mode currently only works on one line"
       return
 
     info = bindings[key]
@@ -1005,6 +990,7 @@ class KeyBindings
       view: @view,
       repeat: 1,
       setMode: @setMode
+      buildBindingsDiv: @buildBindingsDiv
       mode: @mode
     }
 
@@ -1053,6 +1039,7 @@ class KeyBindings
       view: @view,
       repeat: 1,
       setMode: @setMode
+      buildBindingsDiv: @buildBindingsDiv
       mode: @mode
     }
 
@@ -1124,6 +1111,7 @@ class KeyBindings
           menu: @menu
           repeat: 1,
           setMode: @setMode
+          buildBindingsDiv: @buildBindingsDiv
         }
         fn.apply context, args
 
@@ -1160,6 +1148,7 @@ class KeyBindings
           original_view: @view # hack for now
           repeat: 1
           setMode: @setMode
+          buildBindingsDiv: @buildBindingsDiv
         }
         fn.apply context, args
 

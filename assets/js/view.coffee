@@ -502,21 +502,6 @@ class View
       chars.push newobj
     @addCharsAtCursor chars, options
 
-  toggleRowProperty: (property, row = @cursor.row) ->
-    @toggleProperty property, row, 0, (@data.getLength row)
-
-  toggleProperty: (property, row, col, n) ->
-    deleted = @delChars row, col, n, {setCursor: 'stay'}
-    all_were_true = _.all deleted.map ((obj) => return obj[property])
-    new_value = not all_were_true
-
-    chars = []
-    for obj in deleted
-      newobj = _.clone obj
-      newobj[property] = new_value
-      chars.push newobj
-    @addChars row, col, chars, {setCursor: 'stay'}
-
   yankChars: (row, col, nchars) ->
     line = @data.getLine row
     if line.length > 0
@@ -546,6 +531,33 @@ class View
       [cursor1, cursor2] = [cursor2, cursor1]
     offset = if options.includeEnd then 1 else 0
     @delChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset), options
+
+  # toggling text properties
+  toggleProperty: (property, row, col, n) ->
+    deleted = @delChars row, col, n, {setCursor: 'stay'}
+    all_were_true = _.all deleted.map ((obj) => return obj[property])
+    new_value = not all_were_true
+
+    chars = []
+    for obj in deleted
+      newobj = _.clone obj
+      newobj[property] = new_value
+      chars.push newobj
+    @addChars row, col, chars, {setCursor: 'stay'}
+
+  toggleRowProperty: (property, row = @cursor.row) ->
+    @toggleProperty property, row, 0, (@data.getLength row)
+
+  toggleRowPropertyBetween: (property, cursor1, cursor2, options) ->
+    if cursor2.row != cursor1.row
+      console.log('not yet implemented')
+      return
+
+    if cursor2.col < cursor1.col
+      [cursor1, cursor2] = [cursor2, cursor1]
+
+    offset = if options.includeEnd then 1 else 0
+    @toggleProperty property, cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
 
   newLineBelow: () ->
     children = @data.getChildren @cursor.row
