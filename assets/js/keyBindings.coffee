@@ -96,6 +96,8 @@ defaultVimKeyBindings[MODES.NORMAL] =
 
   BOLD              : ['meta+b']
   ITALIC            : ['meta+i']
+  UNDERLINE         : ['meta+u']
+  STRIKETHROUGH     : ['meta+-']
 
   ENTER_VISUAL      : ['v']
   ENTER_VISUAL_LINE : ['V']
@@ -150,6 +152,8 @@ defaultVimKeyBindings[MODES.INSERT] =
 
   BOLD              : ['meta+b']
   ITALIC            : ['meta+i']
+  UNDERLINE         : ['meta+u']
+  STRIKETHROUGH     : ['meta+-']
 
 defaultVimKeyBindings[MODES.VISUAL] =
   YANK              : ['y']
@@ -161,6 +165,8 @@ defaultVimKeyBindings[MODES.VISUAL] =
   # SWAP_CASE         : ['~']
   BOLD              : ['meta+b']
   ITALIC            : ['meta+i']
+  UNDERLINE         : ['meta+u']
+  STRIKETHROUGH     : ['meta+-']
 
 defaultVimKeyBindings[MODES.VISUAL_LINE] =
   NEXT_SIBLING      : ['j', 'down']
@@ -176,6 +182,8 @@ defaultVimKeyBindings[MODES.VISUAL_LINE] =
   # SWAP_CASE         : ['~']
   BOLD              : ['meta+b']
   ITALIC            : ['meta+i']
+  UNDERLINE         : ['meta+u']
+  STRIKETHROUGH     : ['meta+-']
 
 defaultVimKeyBindings[MODES.MENU] =
   MENU_SELECT       : ['enter']
@@ -701,7 +709,7 @@ keyDefinitions =
     display: 'Bold text'
     fn: () ->
       if @mode == MODES.NORMAL
-        console.log('bold ', @mode, 'not yet implemented')
+        @view.toggleRowProperty 'bold'
       else if @mode == MODES.VISUAL
         console.log('bold ', @mode, 'not yet implemented')
       else if @mode == MODES.VISUAL_LINE
@@ -713,13 +721,38 @@ keyDefinitions =
     display: 'Bold text'
     fn: () ->
       if @mode == MODES.NORMAL
-        console.log('italic ', @mode, 'not yet implemented')
+        @view.toggleRowProperty 'italic'
       else if @mode == MODES.VISUAL
         console.log('italic ', @mode, 'not yet implemented')
       else if @mode == MODES.VISUAL_LINE
         console.log('italic ', @mode, 'not yet implemented')
       else if @mode == MODES.INSERT
         @view.cursor.toggleProperty 'italic'
+
+  UNDERLINE:
+    display: 'Underline text'
+    fn: () ->
+      if @mode == MODES.NORMAL
+        @view.toggleRowProperty 'underline'
+      else if @mode == MODES.VISUAL
+        console.log('underline ', @mode, 'not yet implemented')
+      else if @mode == MODES.VISUAL_LINE
+        console.log('underline ', @mode, 'not yet implemented')
+      else if @mode == MODES.INSERT
+        console.log('underlining')
+        @view.cursor.toggleProperty 'underline'
+
+  STRIKETHROUGH:
+    display: 'Strikethrough text'
+    fn: () ->
+      if @mode == MODES.NORMAL
+        @view.toggleRowProperty 'strikethrough'
+      else if @mode == MODES.VISUAL
+        console.log('strikethrough ', @mode, 'not yet implemented')
+      else if @mode == MODES.VISUAL_LINE
+        console.log('strikethrough ', @mode, 'not yet implemented')
+      else if @mode == MODES.INSERT
+        @view.cursor.toggleProperty 'strikethrough'
 
 # end of keyDefinitions
 

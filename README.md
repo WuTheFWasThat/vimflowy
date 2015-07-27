@@ -21,7 +21,9 @@ But for now, if you want to use vimflowy, you should first [learn vim](http://vi
   - bullets, sub-bullets
   - collapsing
   - zooming
-  - bold and italic text
+  - text formatting
+    - bold, italic, and underline
+    - strike through text (task completion)
 - Vim features
   - most of the standard movement/operators
   - modal editing
@@ -33,11 +35,11 @@ But for now, if you want to use vimflowy, you should first [learn vim](http://vi
   - ctrl+o and ctrl+i to move through jump history
   - macros
 - Extras
-  - (inefficient) search
+  - search
   - marks (not quite like vim's)
   - data export
-  - multiple documents (by visiting /documentname)
   - different themes
+  - multiple documents in online version (by visiting /documentname)
   - lazy loads data, for big documents
 
 ## SETUP: ##

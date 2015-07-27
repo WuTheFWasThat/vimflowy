@@ -16,9 +16,17 @@
         'Use tab and shift+tab to indent and unindent just a single line'
         { text: 'Text formatting', collapsed: true, children: [
           {
-            text:   'Bold (meta+b) and italicized (meta+i) text.  Bold italic!'
-            bold:   '....                                         ........... '
-            italic: '                  ..........                 ........... '
+            text:      'Bold (meta+b), italicized (meta+i), and underlined (meta+u) text.  Bold italic underlined!'
+            bold:      '....                                                               ...................... '
+            italic:    '               ..........                                          ...................... '
+            underline: '                                        ..........                 ...................... '
+          }
+          {
+            text:          'Strike through (meta+-)!'
+            children: [ {
+              text:          'Try using it for todo lists'
+              strikethrough: '...........................'
+            } ]
           }
         ] }
       ] }
@@ -101,6 +109,6 @@
     # Please report bugs!
   ] }
 
-  exports.text_properties = ['bold', 'italic']
+  exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
 
 )(if typeof exports isnt 'undefined' then exports else window.constants = {})

@@ -3,8 +3,39 @@ TestCase = require '../testcase.coffee'
 
 boldKey = 'meta+b'
 italicizeKey = 'meta+i'
+underlineKey = 'meta+u'
+strikethroughKey = 'meta+-'
 
 # test insert mode
+t = new TestCase ['']
+t.sendKeys 'i'
+t.sendKey underlineKey
+t.sendKeys 'underline'
+t.sendKey underlineKey
+t.sendKeys ' '
+t.sendKey strikethroughKey
+t.sendKeys 'strikethrough'
+t.sendKey strikethroughKey
+t.sendKey 'esc'
+t.expect [
+  {
+    text:          'underline strikethrough'
+    underline:     '.........              '
+    strikethrough: '          .............'
+  }
+]
+t.sendKeys 'u'
+t.expect ['']
+# redo knows the format
+t.sendKey 'ctrl+r'
+t.expect [
+  {
+    text:          'underline strikethrough'
+    underline:     '.........              '
+    strikethrough: '          .............'
+  }
+]
+
 t = new TestCase ['']
 t.sendKeys 'i'
 t.sendKeys 'normal, '
@@ -140,5 +171,62 @@ t.expect [
     text:   'ibm'
     bold:   ' ..'
     italic: '. .'
+  }
+]
+
+# NORMAL MODE
+t = new TestCase [
+  'test'
+]
+t.sendKey strikethroughKey
+t.expect [
+  {
+    text:          'test'
+    strikethrough: '....'
+  }
+]
+t.sendKey strikethroughKey
+t.expect [
+  'test'
+]
+
+t = new TestCase [
+  {
+    text:   'test'
+    bold:   '... '
+  }
+]
+t.sendKeys 'll'
+t.sendKey boldKey
+t.expect [
+  {
+    text:   'test'
+    bold:   '....'
+  }
+]
+t.sendKey boldKey
+t.expect [
+  'test'
+]
+t.sendKeys 'u'
+t.expect [
+  {
+    text:   'test'
+    bold:   '....'
+  }
+]
+t.sendKeys 'u'
+t.expect [
+  {
+    text:   'test'
+    bold:   '... '
+  }
+]
+# cursor ends up where it was
+t.sendKeys 'x'
+t.expect [
+  {
+    text:   'tet'
+    bold:   '.. '
   }
 ]
