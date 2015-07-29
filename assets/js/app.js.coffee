@@ -12,6 +12,7 @@
 #= require register
 #= require view
 #= require menu
+#= require clipboard
 #= require keyBindings
 
 #= require index

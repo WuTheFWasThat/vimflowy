@@ -654,10 +654,25 @@ if module?
       drop: true
       fn: () ->
         @view.scrollPages -0.5
-    EXPORT:
+    EXPORT_FILE:
       display: 'Save a file'
       fn: () ->
-        do @view.export
+        do @view.exportFile
+    EXPORT_CLIPBOARD:
+      display: 'Save to clipboard'
+      fn: () ->
+        do @view.exportClipboard
+      available: if Clipboard? then Clipboard.available else false
+    IMPORT_FILE:
+      display: 'Import from a file'
+      fn: () ->
+        do @view.importFile
+    IMPORT_CLIPBOARD:
+      display: 'Import from the clipboard'
+      fn: () ->
+        do @view.importClipboard
+      available: if Clipboard? then Clipboard.available else false
+
     RECORD_MACRO:
       display: 'Begin/stop recording a macro'
     PLAY_MACRO:
@@ -745,6 +760,8 @@ if module?
       if name == 'MOTION'
         keys = ['MOTION']
       else if (name of keyMap)
+        if not _.result(v, 'available', true)
+          continue
         keys = keyMap[name]
       else
         # throw "Error:  keyMap missing key for #{name}"

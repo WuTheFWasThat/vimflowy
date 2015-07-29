@@ -1,10 +1,17 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
+<<<<<<< HEAD
 boldKey = 'ctrl+B'
 italicizeKey = 'ctrl+I'
 underlineKey = 'ctrl+U'
 strikethroughKey = 'ctrl+enter'
+=======
+boldKey = 'meta+b'
+italicizeKey = 'meta+i'
+underlineKey = 'meta+u'
+strikethroughKey = 'meta+-'
+>>>>>>> 2c783e2... Merge with master and import/export scaffold
 
 # test insert mode
 t = new TestCase ['']
@@ -327,6 +334,7 @@ t.expect [
     strikethrough: '    .    '
   }
 ]
+<<<<<<< HEAD
 
 # visual line mode
 t = new TestCase [
@@ -467,3 +475,5 @@ t.expect [
     bold: '   .'
   }
 ]
+=======
+>>>>>>> 2c783e2... Merge with master and import/export scaffold

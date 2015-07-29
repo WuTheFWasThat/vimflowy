@@ -27,6 +27,14 @@ renderLine = (lineData, options = {}) ->
     }, options.mark
 
 
+  results = []
+
+  if options.mark
+    results.push virtualDom.h 'span', {
+      className: 'mark'
+    }, options.mark
+
+
   # ideally this takes up space but is unselectable (uncopyable)
   cursorChar = ' '
 
@@ -304,16 +312,31 @@ renderLine = (lineData, options = {}) ->
         ), options.time
 
     ##########
-    # export
+    # EXPORT
     ##########
-
-    export: (filename, mimetype) ->
+    exportFile: (filename, mimetype) ->
       filename ||= @settings?.getSetting?('export_filename') || 'vimflowy.json'
       if not mimetype? # Infer mimetype from file extension
           mimetype = @mimetypeLookup filename
       content = @exportContent mimetype
       @saveFile filename, mimetype, content
-
+    exportClipboard: () ->
+      mimetype = ["application/json", "text/plain"]
+      clipboard = new Clipboard
+      for mimetype in mimetypes
+        content = @exportContent mimetype
+        clipboard.store content
+    importFileSelector: () ->
+      throw "Not implemented" # Selection screen to pick a file to import
+    importFile: (content, mimetype) -> # is this needed
+      throw "Not implemented"
+      importContent content, mimetype
+    importClipboard: () ->
+      clipboard = new Clipboard
+      content = do clipboard.load
+      importContent content
+    importContent: (content, mimetype) ->
+      throw "Not implemented"
     exportContent: (mimetype) ->
       jsonContent = do @data.serialize
       if mimetype == 'application/json'
@@ -327,7 +350,7 @@ renderLine = (lineData, options = {}) ->
               if typeof(node) == 'string'
                 return ["- #{node}"]
               lines = []
-              lines.push "- #{node.text}"
+              lines.push "- #{node.line}"
               for child in node.children ? []
                   for line in exportLines child
                       lines.push "#{indent}#{line}"
@@ -335,7 +358,6 @@ renderLine = (lineData, options = {}) ->
           return(exportLines jsonContent).join "\n"
       else
           throw "Invalid export format"
-
      mimetypeLookup: (filename) ->
        parts = filename.split '.'
        extension = parts[parts.length - 1] ? ''
