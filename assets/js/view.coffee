@@ -311,6 +311,7 @@ renderLine = (lineData, options = {}) ->
           @messageDiv.text('')
         ), options.time
 
+
     ##########
     # EXPORT
     ##########
@@ -321,16 +322,16 @@ renderLine = (lineData, options = {}) ->
       content = @exportContent mimetype
       @saveFile filename, mimetype, content
     exportClipboard: () ->
-      mimetype = ["application/json", "text/plain"]
+      mimetypes = ["application/json", "text/plain"]
       clipboard = new Clipboard
       for mimetype in mimetypes
         content = @exportContent mimetype
         clipboard.store content
-    importFileSelector: () ->
+    importFileSelector: (success, failure) ->
       throw "Not implemented" # Selection screen to pick a file to import
-    importFile: (content, mimetype) -> # is this needed
-      throw "Not implemented"
-      importContent content, mimetype
+    importFile: () ->
+      @importFileSelector (content, mimetype) ->
+          importContent content, mimetype
     importClipboard: () ->
       clipboard = new Clipboard
       content = do clipboard.load

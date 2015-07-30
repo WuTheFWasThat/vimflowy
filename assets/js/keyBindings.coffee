@@ -87,7 +87,10 @@ if module?
     ENTER_VISUAL      : ['v']
     ENTER_VISUAL_LINE : ['V']
 
-    EXPORT            : ['ctrl+s']
+    EXPORT_FILE       : ['ctrl+s']
+    EXPORT_CLIPBOARD  : ['ctrl+x']
+    IMPORT_FILE       : ['ctrl+shift+s']
+    IMPORT_CLIPBOARD  : ['ctrl+shift+x'] # Really bad shortcuts, change
 
   defaultVimKeyBindings[MODES.INSERT] =
     LEFT              : ['left']
@@ -133,7 +136,7 @@ if module?
     SCROLL_DOWN       : ['page down', 'ctrl+down']
     SCROLL_UP         : ['page up', 'ctrl+up']
 
-    EXPORT            : ['ctrl+s']
+    EXPORT_FILE       : ['ctrl+s']
     EXIT_MODE         : ['esc', 'ctrl+c']
 
     BOLD              : ['ctrl+B']
