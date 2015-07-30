@@ -931,6 +931,8 @@ class KeyBindings
     if not (key of bindings)
       if key == 'shift+enter'
         key = '\n'
+      if key.length > 1
+        return
       obj = {char: key}
       for property in constants.text_properties
         if @view.cursor.getProperty property then obj[property] = true
@@ -1096,6 +1098,8 @@ class KeyBindings
     if not (key of bindings)
       if key == 'shift+enter'
         key = '\n'
+      if key.length > 1
+        return
       view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
     else
       info = bindings[key]
@@ -1132,6 +1136,8 @@ class KeyBindings
 
     if not (key of bindings)
       # must be non-whitespace
+      if key.length > 1
+        return
       if /^\w*$/.test(key)
         view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
     else

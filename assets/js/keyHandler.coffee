@@ -76,6 +76,15 @@ class KeyHandler extends EventEmitter
     keyCodeMap[keyCode] = lower
     shiftMap[lower] = letter
 
+  # keys to let the browser do its thing
+  # TODO: make this configurable
+  ignoreKeys =
+    'meta+l'   : true
+    'meta+v'   : true
+    'meta+r'   : true
+    'ctrl+tab' : true
+    'ctrl+shift+tab' : true
+
   constructor: () ->
     super
 
@@ -104,6 +113,9 @@ class KeyHandler extends EventEmitter
       else
         # this is necessary for typing stuff..
         key = String.fromCharCode e.keyCode
+
+      if key of ignoreKeys
+        return true
 
       console.log('keycode', e.keyCode, 'key', key)
       self.emit 'keydown', key
