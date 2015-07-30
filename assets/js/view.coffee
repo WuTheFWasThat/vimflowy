@@ -41,9 +41,11 @@ renderLine = (lineData, options = {}) ->
   if lineData.length of options.cursors
     lineData.push {char: cursorChar}
 
-  # if still empty, put a newline
   if lineData.length == 0
-    lineData.push {char: '\n'}
+    # if absolutely nothing, we want a character that takes up height,
+    # but doesn't copy as anything
+    results.push virtualDom.h 'span', {innerHTML: '&zwnj;'}
+    return results
 
   for obj, i in lineData
     info = {
@@ -78,8 +80,7 @@ renderLine = (lineData, options = {}) ->
   isPunctuation = (char) ->
     return char == '.' or char == ',' or char == '!' or char == '?'
 
-  lineData.push {char: ' '} # to make end condition easier
-  for obj, i in lineData
+  for obj, i in lineData.concat [{char: ' '}] # to make end condition easier
     # TODO  or (isPunctuation obj.char)
     # problem is URLs have dots in them...
     if (isWhitespace obj.char)
@@ -936,6 +937,8 @@ class View
     }
     [].push.apply results, lineContents
 
+    if results.length == 0
+      results.push '&nbsp;'
     return results
 
 # exports

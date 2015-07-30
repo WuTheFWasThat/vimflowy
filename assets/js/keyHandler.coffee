@@ -80,8 +80,9 @@ class KeyHandler extends EventEmitter
   # TODO: make this configurable
   ignoreKeys =
     'meta+l'   : true
-    'meta+v'   : true
     'meta+r'   : true
+    'meta+c'   : true
+    'meta+v'   : true
     'ctrl+tab' : true
     'ctrl+shift+tab' : true
 
