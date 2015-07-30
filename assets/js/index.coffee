@@ -79,3 +79,11 @@ else
 
   create_view data
 
+window.onerror = (msg, url, line, col, err) ->
+    console.log("Caught error: '" + msg + "' from " + url + ":" + line)
+    if err != undefined
+        console.log 'Error: ', err, err.stack
+    message = 'An error was caught.  Please refresh the page to avoid weird state. \n\n'
+    message += 'Please help out vimflowy and report the bug.  If your data is not sensitive, '
+    message += 'please open the javascript console and save the log as debug information.'
+    alert message

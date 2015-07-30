@@ -864,6 +864,7 @@ class View
         bulletOpts.style = {cursor: 'pointer'}
         bulletOpts.onclick = ((id) =>
           @toggleBlock id
+          do @save
           do @render
         ).bind(@, id)
 

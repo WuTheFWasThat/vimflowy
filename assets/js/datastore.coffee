@@ -183,7 +183,7 @@ if module?
         console.log('got val', val)
         return val
       catch
-        console.log('parse failure??')
+        console.log('parse failure??', stored)
         return default_value
 
     lastSave: () ->
