@@ -35,7 +35,7 @@ $bottom-bar-height: 25px
         width: $settings-link-width
         float: right
 
-#settings
+.modal-dialog
     .modal-contents
         margin: 10% auto
         width: 400px
@@ -47,6 +47,31 @@ $bottom-bar-height: 25px
     .modal-close:hover
         background: #909090
 
+#settings
+    .modal-contents
+        margin: 10% auto
+        width: 400px
+        padding: 20px
+        border-radius: 10px
+
+#import-file
+    .modal-contents
+        margin: 10% auto
+        width: 400px
+        padding: 20px
+        border-radius: 10px
+    .title
+        font-size: 16pt
+        text-align: center
+        margin-bottom: 15px
+    .import
+        display: flex
+        flex-direction: row
+        input[type=file]
+            flex-grow: 1
+            flex-shrink: 1
+        input[type=submit]
+            margin-right: 20px
 
 #contents
     display: flex

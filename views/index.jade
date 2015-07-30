@@ -26,6 +26,13 @@ block content
                             select.export-fileformat-selection
                                 option(value="vimflowy.json" selected=selected) JSON
                                 option(value="vimflowy.txt") Text
+        .modal-dialog#import-file
+            .modal-contents
+                a.modal-close(href="#") X
+                div.title Import File
+                div.import
+                    input(type="file" name="import-file")
+                    input(type="submit" value="Import").submit
 
     #bottom-bar
         #mode.center

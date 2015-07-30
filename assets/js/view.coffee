@@ -315,6 +315,7 @@ renderLine = (lineData, options = {}) ->
     ##########
     # EXPORT
     ##########
+
     exportFile: (filename, mimetype) ->
       filename ||= @settings?.getSetting?('export_filename') || 'vimflowy.json'
       if not mimetype? # Infer mimetype from file extension
@@ -328,16 +329,107 @@ renderLine = (lineData, options = {}) ->
         content = @exportContent mimetype
         clipboard.store content
     importFileSelector: (success, failure) ->
-      throw "Not implemented" # Selection screen to pick a file to import
+      # Success callback takes (content, mimetype)
+      # Failure callback takes ()
+      # Both are optional.
+      window.location.hash = "import-file"
+      resolve = () ->
+          window.onhashchange = null
+          $("#import-file .submit").off 'click'
+          window.location.hash = ""
+      if "onhashchange" in window
+          window.onhashchange = () ->
+              if failure? then do failure
+              do resolve
+      $("#import-file .submit").on 'click', () =>
+          # if file is actually uploaded
+          file = $("#import-file :file")[0].files[0]
+          if file?
+              mimetype = @mimetypeLookup file.name
+              reader = new FileReader()
+              reader.readAsText file, "UTF-8"
+              reader.onload = (evt) ->
+                  content = evt.target.result
+                  if success? then success(content, mimetype)
+                  do resolve
+              reader.onerror = (evt) ->
+                  if failure? then do failure
+                  do resolve
     importFile: () ->
-      @importFileSelector (content, mimetype) ->
-          importContent content, mimetype
+      @importFileSelector (content, mimetype) =>
+          @importContent content, mimetype
     importClipboard: () ->
       clipboard = new Clipboard
       content = do clipboard.load
-      importContent content
+      @importContent content
+    parseJson: (content) ->
+      try
+        root = JSON.parse(content)
+      catch
+        throw "Tried to import malformed JSON"
+      verify = (node) ->
+        unless node.text || node.text == '' then return false
+        if node.children
+          for child in node.children
+            unless verify child then return false
+        return true
+      unless verify root
+        throw "Tried to import JSON, but the JSON in not in vimflowy's import format"
+      return root
+    parsePlaintext: (content) ->
+      # Step 1: parse into (int, string) pairs of indentation amounts.
+      lines = []
+      for line in content.split "\n"
+        if line.match /^\s*".*"$/ # Flag workflowy annotations as special cases
+          lines.push
+            indent: (line.match whitespace)[0].length
+            line: line.replace /^\s*"(.*)"$/, "\\1"
+            annotation: true
+          continue
+        whitespace = /^\s*/
+        lines.push
+            indent: (line.match whitespace)[0].length
+            line: (line.replace whitespace, "").replace /^(?:-\s*)?(?:\[COMPLETE\] )?/, ""
+      while lines[lines.length-1].line == '' # Strip trailing blank line(s)
+        delete lines[lines.length-1]
+      # Step 2: convert a list of (int, string, annotation?) into a forest format
+      parseAllChildren = (parentIndentation, lineNumber) ->
+        children = []
+        if lineNumber < lines.length and lines[lineNumber].annotation # Each node can have an annotation immediately follow it
+          children.push
+            text: lines[lineNumber].line
+          lineNumber = lineNumber + 1
+        while lineNumber < lines.length and lines[lineNumber].indent > parentIndentation # For [the first line of] each child
+          child =
+            text: lines[lineNumber].line
+          result = parseAllChildren lines[lineNumber].indent, lineNumber + 1
+          lineNumber = result.lineNumber
+          if result.children? then child.children = result.children
+          children.push child
+        return { children: children, lineNumber: lineNumber }
+      forest = (parseAllChildren -1, 0).children
+      root =
+        text: ""
+        children: forest
+      return root
+    parseHtml: (content) ->
+      throw "HTML import is not implemented"
+    parseContent: (content, mimetype) ->
+      if mimetype in ['application/json']
+        return @parseJson content
+      else if mimetype in ['text/plain', 'Text']
+        return @parsePlaintext content
+      else if mimetype in ['text/html']
+        return @parseHtml content
+      else
+        return "Trying to parse unsupported format"
     importContent: (content, mimetype) ->
-      throw "Not implemented"
+      root = @parseContent content, mimetype
+      row = @cursor.row
+      if root.text == '' && root.children # Complete export, not one node
+        @addBlocks root.children, row, 0
+      else
+        @addBlocks [root], row, 0
     exportContent: (mimetype) ->
       jsonContent = do @data.serialize
       if mimetype == 'application/json'
@@ -351,7 +443,7 @@ renderLine = (lineData, options = {}) ->
               if typeof(node) == 'string'
                 return ["- #{node}"]
               lines = []
-              lines.push "- #{node.line}"
+              lines.push "- #{node.text}"
               for child in node.children ? []
                   for line in exportLines child
                       lines.push "#{indent}#{line}"
@@ -361,7 +453,7 @@ renderLine = (lineData, options = {}) ->
           throw "Invalid export format"
      mimetypeLookup: (filename) ->
        parts = filename.split '.'
-       extension = parts[parts.length - 1] ? ''
+       extension = if parts.length > 1 then parts[parts.length - 1] else ''
        extensionLookup =
          'json': 'application/json'
          'txt': 'text/plain'
