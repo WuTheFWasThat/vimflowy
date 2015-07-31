@@ -5,34 +5,32 @@
 
 view = null
 create_view = (data) ->
-  keybindingsDiv = $('#keybindings')
 
   view = new View data, {
+    bindings: KeyBindings
     mainDiv: $('#view'),
     settingsDiv: $('#settings')
     messageDiv: $('#message')
-    keybindingsDiv: keybindingsDiv
+    keybindingsDiv: $('#keybindings')
+    modeDiv: $('#mode')
+    menuDiv: $('#menu')
   }
 
   $(window).on('paste', (e) ->
       e.preventDefault()
       text = (e.originalEvent || e).clipboardData.getData('text/plain')
+      # TODO: deal with this better when there are multiple lines
+      # maybe put in insert mode?
       chars = text.split ''
       view.addCharsAtCursor chars
-      # TODO: deal with this better when there are multiple lines
-      # TODO: put in insert mode?
       do view.render
       do view.save
   )
 
-  keyhandler = new KeyHandler
-  do keyhandler.listen
-  keybinder = new KeyBindings view, {
-    modeDiv: $('#mode')
-    keyBindingsDiv: keybindingsDiv
-    menuDiv: $('#menu')
-  }
-  keyhandler.on 'keydown', keybinder.handleKey.bind(keybinder)
+  key_emitter = new KeyEmitter
+  do key_emitter.listen
+  keyhandler = new KeyHandler view, KeyBindings.bindings
+  key_emitter.on 'keydown', keyhandler.handleKey.bind(keyhandler)
 
   $(document).ready ->
     do view.render

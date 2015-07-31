@@ -5,6 +5,7 @@ dataStore = require '../assets/js/datastore.coffee'
 Data = require '../assets/js/data.coffee'
 View = require '../assets/js/view.coffee'
 KeyBindings = require '../assets/js/keyBindings.coffee'
+KeyHandler = require '../assets/js/keyHandler.coffee'
 Register = require '../assets/js/register.coffee'
 
 class TestCase
@@ -17,7 +18,7 @@ class TestCase
 
     @view = new View @data
     @view.render = -> return
-    @keybinder = new KeyBindings @view
+    @keyhandler = new KeyHandler @view, KeyBindings.bindings
     @register = @view.register
 
   _expectDeepEqual: (actual, expected) ->
@@ -27,7 +28,7 @@ class TestCase
 
   sendKeys: (keys) ->
     for key in keys
-      @keybinder.handleKey key
+      @keyhandler.handleKey key
     return @
 
   sendKey: (key) ->

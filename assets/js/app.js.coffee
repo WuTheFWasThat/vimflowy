@@ -2,6 +2,7 @@
 #= require utils
 #
 #= require eventEmitter
+#= require keyEmitter
 #= require keyHandler
 #= require datastore
 #= require data

@@ -1,5 +1,15 @@
 ((exports) ->
 
+  exports.MODES =
+    NORMAL      : 1
+    INSERT      : 2
+    VISUAL      : 3
+    VISUAL_LINE : 4
+    MENU        : 5
+    MARK        : 6
+
+  exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
+
   exports.default_data = { text: '', children: [
     'Welcome to vimflowy!'
     '(I hope you know to use j and k to move up and down!)'
@@ -108,7 +118,5 @@
     'For more info, visit https://github.com/WuTheFWasThat/vimflowy'
     # Please report bugs!
   ] }
-
-  exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
 
 )(if typeof exports isnt 'undefined' then exports else window.constants = {})
