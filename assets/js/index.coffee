@@ -20,9 +20,16 @@ create_view = (data) ->
       e.preventDefault()
       text = (e.originalEvent || e).clipboardData.getData('text/plain')
       # TODO: deal with this better when there are multiple lines
-      # maybe put in insert mode?
-      chars = text.split ''
-      view.addCharsAtCursor chars
+      # maye put in insert mode?
+      lines = text.split '\n'
+      for line, i in lines
+        if i != 0
+          do view.newLineAtCursor
+        chars = line.split ''
+        options = {}
+        if view.mode == constants.MODES.INSERT
+          options.cursor = {pastEnd: true}
+        view.addCharsAtCursor chars, options
       do view.render
       do view.save
   )

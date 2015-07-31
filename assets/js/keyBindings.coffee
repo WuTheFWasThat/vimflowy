@@ -114,10 +114,10 @@ if module?
     DELKEY            : ['shift+backspace']
     SPLIT             : ['enter']
 
-    INDENT_RIGHT      : ['tab']
-    INDENT_LEFT       : ['shift+tab']
-    MOVE_BLOCK_RIGHT  : []
-    MOVE_BLOCK_LEFT   : []
+    INDENT_RIGHT      : []
+    INDENT_LEFT       : []
+    MOVE_BLOCK_RIGHT  : ['tab']
+    MOVE_BLOCK_LEFT   : ['shift+tab']
     MOVE_BLOCK_DOWN   : []
     MOVE_BLOCK_UP     : []
 
@@ -708,7 +708,7 @@ if module?
       fn: text_format_definition 'bold'
 
     ITALIC:
-      display: 'Bold text'
+      display: 'Italicize text'
       finishes_visual: true
       fn: text_format_definition 'italic'
 
@@ -718,6 +718,7 @@ if module?
       fn: text_format_definition 'underline'
 
     STRIKETHROUGH:
+      display: 'Strike through text'
       finishes_visual: true
       fn: text_format_definition 'strikethrough'
 
