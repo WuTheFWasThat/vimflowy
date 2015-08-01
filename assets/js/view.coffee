@@ -149,7 +149,7 @@ renderLine = (lineData, options = {}) ->
     if url != null
       divoptions.href = url
 
-    if markrow != null
+    if markrow != null and options.onclickmark?
       divoptions.onclick = options.onclickmark.bind @, markrow
     else if options.onclick?
       divoptions.onclick = options.onclick.bind @, x
@@ -888,16 +888,15 @@ renderLine = (lineData, options = {}) ->
         row = @data.getParent row
 
       makeCrumb = (row, text) =>
-        return virtualDom.h 'span', {
-          className: 'crumb'
-        }, [
-          virtualDom.h 'a', {
-            onclick: () =>
-              @reroot row
-              do @save
-              do @render
-          }, [ text ]
-        ]
+        options = {}
+        if @mode == MODES.NORMAL
+          options.onclick = () =>
+            @reroot row
+            do @save
+            do @render
+        return virtualDom.h 'span', { className: 'crumb' }, [
+                 virtualDom.h 'a', options, [ text ]
+               ]
 
       crumbNodes = []
       crumbNodes.push(makeCrumb @data.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
@@ -1015,19 +1014,23 @@ renderLine = (lineData, options = {}) ->
       else
           mark = @data.getMark row
 
-      lineContents = renderLine lineData, {
+      options = {
         cursors: cursors
         highlights: highlights
-        onclick: (x) =>
-          @cursor.set row, x.column
-          do @render
         marks: (do @data.getAllMarks)
         mark: mark
-        onclickmark: (row) =>
+      }
+
+      if @mode == MODES.NORMAL or @mode == MODES.INSERT
+        options.onclick = (x) =>
+          @cursor.set row, x.column
+          do @render
+      if @mode == MODES.NORMAL
+        options.onclickmark = (row) =>
           @rootInto row
           do @save
           do @render
-      }
+      lineContents = renderLine lineData, options
       [].push.apply results, lineContents
 
       if results.length == 0
