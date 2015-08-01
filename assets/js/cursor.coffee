@@ -154,7 +154,7 @@ class Cursor
 
   beginningWord: (options = {}) ->
     if do @atVisibleStart
-      return
+      return @
     do @prevChar
     while (not do @atVisibleStart) and @isInWhitespace @row, @col
       do @prevChar
@@ -162,12 +162,13 @@ class Cursor
     wordcheck = @getWordCheck options, (@data.getChar @row, @col)
     while (@col > 0) and wordcheck @row, (@col-1)
       do @_left
+    return @
 
   endWord: (options = {}) ->
     if do @atVisibleEnd
       if options.cursor.pastEnd
         do @_right
-      return
+      return @
 
     do @nextChar
     while (not do @atVisibleEnd) and @isInWhitespace @row, @col
@@ -184,12 +185,13 @@ class Cursor
     end = (@data.getLength @row) - 1
     if @col == end and options.cursor.pastEnd
       do @_right
+    return @
 
   nextWord: (options = {}) ->
     if do @atVisibleEnd
       if options.cursor.pastEnd
         do @_right
-      return
+      return @
 
     end = (@data.getLength @row) - 1
     wordcheck = @getWordCheck options, (@data.getChar @row, @col)
@@ -203,6 +205,7 @@ class Cursor
     end = (@data.getLength @row) - 1
     if @col == end and options.cursor.pastEnd
       do @_right
+    return @
 
   findNextChar: (char, options = {}) ->
     end = (@data.getLength @row) - 1

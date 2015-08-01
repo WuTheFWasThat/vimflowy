@@ -359,8 +359,13 @@ renderLine = (lineData, options = {}) ->
     # ACTIONS
 
     save: () ->
-      if @history[@historyIndex].index == @actions.length
+      if @historyIndex != @history.length - 1
+          # haven't acted, otherwise would've sliced
           return
+      if @history[@historyIndex].index == @actions.length
+          # haven't acted, otherwise there would be more actions
+          return
+
       state = @history[@historyIndex]
       state.after = {
         cursor: do @cursor.clone
@@ -374,6 +379,8 @@ renderLine = (lineData, options = {}) ->
 
     restoreViewState: (state) ->
       @cursor =  do state.cursor.clone
+      if @mode != MODES.INSERT
+        do @cursor.backIfNeeded
       @_changeView state.viewRoot
 
     undo: () ->
@@ -400,7 +407,7 @@ renderLine = (lineData, options = {}) ->
         @restoreViewState oldState.after
 
     act: (action) ->
-      if @historyIndex + 1 != @history.length
+      if @historyIndex != @history.length - 1
           @history = @history.slice 0, (@historyIndex + 1)
           @actions = @actions.slice 0, @history[@historyIndex].index
 

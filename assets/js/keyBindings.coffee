@@ -98,6 +98,7 @@ if module?
     END               : ['ctrl+e', 'end']
     DELETE_TO_HOME    : ['ctrl+u']
     DELETE_TO_END     : ['ctrl+k']
+    DELETE_LAST_WORD  : ['ctrl+w']
     PASTE_BEFORE      : ['ctrl+y']
     BEGINNING_WORD    : ['alt+b']
     END_WORD          : ['alt+f']
@@ -567,6 +568,14 @@ if module?
         options.cursor ?= {}
         options.includeEnd = true
         @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
+    DELETE_LAST_WORD:
+      display: 'Delete to the beginning of the previous word'
+      # macro: ['DELETE', 'BEGINNING_WWORD']
+      fn: (options = {}) ->
+        options.yank = true
+        options.cursor ?= {}
+        options.includeEnd = true
+        @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
     DELETE:
       display: 'Delete (operator)'
       bindings:
