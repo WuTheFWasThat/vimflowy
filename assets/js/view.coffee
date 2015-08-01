@@ -8,6 +8,7 @@ if module?
   Data = require('./data.coffee')
   dataStore = require('./datastore.coffee')
   Register = require('./register.coffee')
+  Logger = require('./logger.coffee')
 
 # a View consists of Data and a cursor
 # it also renders
@@ -104,7 +105,6 @@ renderLine = (lineData, options = {}) ->
   for url_word in url_words
     line[url_word.start].url_start = url_word.word
     line[url_word.end].url_end = url_word.word
-    # console.log 'url word', url_word
 
   # gather words that are marks
   for word in words
@@ -296,7 +296,6 @@ renderLine = (lineData, options = {}) ->
 
     showMessage: (message, options = {}) ->
       options.time ?= 5000
-      console.log('MESSAGE', message)
       if @messageDiv
         clearTimeout @messageDivTimeout
         @messageDiv.text(message)
@@ -389,10 +388,12 @@ renderLine = (lineData, options = {}) ->
         @historyIndex -= 1
         newState = @history[@historyIndex]
 
+        Logger.logger.debug "UNDOING ("
         for i in [(oldState.index-1)...(newState.index-1)]
             action = @actions[i]
+            Logger.logger.debug "  Undoing action #{action.constructor.name}(#{action.str()})"
             action.rewind @
-
+        Logger.logger.debug ") END UNDO"
         @restoreViewState newState.before
 
     redo: () ->
@@ -401,9 +402,12 @@ renderLine = (lineData, options = {}) ->
         @historyIndex += 1
         newState = @history[@historyIndex]
 
+        Logger.logger.debug "REDOING ("
         for i in [oldState.index...newState.index]
             action = @actions[i]
+            Logger.logger.debug "  Redoing action #{action.constructor.name}(#{action.str()})"
             action.reapply @
+        Logger.logger.debug ") END REDO"
         @restoreViewState oldState.after
 
     act: (action) ->
@@ -418,6 +422,7 @@ renderLine = (lineData, options = {}) ->
           viewRoot: @data.viewRoot
         }
 
+      Logger.logger.debug "Applying action #{action.constructor.name}(#{action.str()})"
       action.apply @
       @actions.push action
 
@@ -605,7 +610,7 @@ renderLine = (lineData, options = {}) ->
     #   - includeEnd says whether to also delete cursor2 location
     yankBetween: (cursor1, cursor2, options = {}) ->
       if cursor2.row != cursor1.row
-        console.log('not yet implemented')
+        Logger.logger.warn "Not yet implemented"
         return
 
       if cursor2.col < cursor1.col
@@ -618,7 +623,7 @@ renderLine = (lineData, options = {}) ->
     #   - includeEnd says whether to also delete cursor2 location
     deleteBetween: (cursor1, cursor2, options = {}) ->
       if cursor2.row != cursor1.row
-        console.log('not yet implemented')
+        Logger.logger.warn "Not yet implemented"
         return
 
       if cursor2.col < cursor1.col
@@ -644,7 +649,7 @@ renderLine = (lineData, options = {}) ->
 
     toggleRowPropertyBetween: (property, cursor1, cursor2, options) ->
       if cursor2.row != cursor1.row
-        console.log('not yet implemented')
+        Logger.logger.warn "Not yet implemented"
         return
 
       if cursor2.col < cursor1.col
@@ -1001,7 +1006,7 @@ renderLine = (lineData, options = {}) ->
             for i in [@cursor.col..@anchor.col]
               highlights[i] = true
           else
-            console.log('multiline not implemented')
+            Logger.logger.warn "Multiline not yet implemented"
 
       results = []
 

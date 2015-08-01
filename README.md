@@ -42,34 +42,10 @@ But for now, if you want to use vimflowy, you should first [learn vim](http://vi
   - multiple documents in online version (by visiting /documentname)
   - lazy loads data, for big documents
 
-## SETUP: ##
-
-#### INSTALL: ####
-
-Assuming you have node and npm
-
-    git clone https://github.com/WuTheFWasThat/vimflowy.git
-    cd vimflowy
-    npm install
-
-#### START: ####
-
-Just run
-
-    npm start
-
-And you can visit the app at `http://localhost:8080/`
-
-#### RUN TESTS: ####
-
-    npm test
-
 ## CONTRIBUTE ##
 
-Please send pull requests!  Remember to write tests when appropriate!
+Please do!  See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-You may contact me at [githubusername]@gmail.com as well
-
-#### LICENSE ####
+### LICENSE ###
 
 MIT: http://wuthefwasthat.mit-license.org/

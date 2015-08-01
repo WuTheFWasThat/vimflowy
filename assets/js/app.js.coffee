@@ -1,7 +1,8 @@
 #= require constants
 #= require utils
-#
+#= require logger
 #= require eventEmitter
+
 #= require keyEmitter
 #= require keyHandler
 #= require datastore

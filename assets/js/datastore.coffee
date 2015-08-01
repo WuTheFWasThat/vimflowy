@@ -1,5 +1,6 @@
 if module?
   _ = require('underscore')
+  Logger = require('./logger.coffee')
 
 ((exports) ->
   class DataStore
@@ -168,22 +169,22 @@ if module?
       return
 
     _setLocalStorage_: (key, value) ->
-      console.log('setting local storage', key, value)
+      Logger.logger.debug 'setting local storage', key, value
       localStorage.setItem key, JSON.stringify value
       localStorage.setItem @_lastSaveKey_, (do Date.now)
 
     _getLocalStorage_: (key, default_value = null) ->
-      console.log('getting from local storage', key, default_value)
+      Logger.logger.debug 'getting from local storage', key, default_value
       stored = localStorage.getItem key
       if stored == null
-        console.log('got nothing, defaulting')
+        Logger.logger.debug 'got nothing, defaulting to', default_value
         return default_value
       try
         val = JSON.parse stored
-        console.log('got val', val)
+        Logger.logger.debug 'got ', val
         return val
       catch
-        console.log('parse failure??', stored)
+        Logger.logger.debug 'parse failure:', stored
         return default_value
 
     lastSave: () ->
@@ -256,7 +257,7 @@ if module?
     getLastViewRoot: () ->
       id = @_getLocalStorage_ @_lastViewrootKey_ , 0
       if (localStorage.getItem @_lineKey_ id) == null
-        console.log 'GOT INVALID VIEW ROOT', id
+        Logger.logger.error 'Invalid view root', id
         id = 0
       return id
 

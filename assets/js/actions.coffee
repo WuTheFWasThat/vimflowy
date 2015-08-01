@@ -3,6 +3,8 @@
   # actions mutate the data of a view, and are undoable
 
   class Action
+    str: () ->
+      return ''
     apply: (view) ->
       return
     rewind: (view) ->
@@ -24,6 +26,9 @@
       @options.setCursor ?= 'end'
       @options.cursor ?= {}
 
+    str: () ->
+      return "row #{@row}, col #{@col}, nchars #{@chars.length}"
+
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
 
@@ -32,6 +37,7 @@
         view.cursor.set @row, (@col + shift), @options.cursor
       else if @options.setCursor == 'end'
         view.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
+
     rewind: (view) ->
       view.data.deleteChars @row, @col, @chars.length
 
@@ -44,12 +50,17 @@
       @options = options
       @options.setCursor ?= 'before'
       @options.cursor ?= {}
+
+    str: () ->
+      return "row #{@row}, col #{@col}, nchars #{@nchars}"
+
     apply: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
       if @options.setCursor == 'before'
         view.cursor.set @row, @col, @options.cursor
       else if @options.setCursor == 'after'
         view.cursor.set @row, (@col + 1), @options.cursor
+
     rewind: (view) ->
       view.data.writeChars @row, @col, @deletedChars
 
@@ -57,6 +68,9 @@
     constructor: (row, options) ->
       @row = row
       @options = options
+
+    str: () ->
+      return "row #{@row}"
 
     apply: (view) ->
       if @options.after
@@ -78,6 +92,9 @@
       @row = row
       @options = options
 
+    str: () ->
+      return "row #{@row}"
+
     apply: (view) ->
       @parent = view.data.getParent @row
       @index = view.data.indexOf @row
@@ -96,6 +113,9 @@
       @index = index
       @options = options
 
+    str: () ->
+      return "row #{@row}, parent #{@parent}"
+
     apply: (view) ->
       view.data.attachChild @parent, @row, @index
 
@@ -107,6 +127,9 @@
       @row = row
       @nrows = nrows
       @options = options
+
+    str: () ->
+      return "row #{@row}, nrows #{@nrows}"
 
     apply: (view) ->
       row = @row
@@ -166,6 +189,9 @@
       @nrows = serialized_rows.length
       @options = options
 
+    str: () ->
+      return "parent #{@parent}, index #{@index}"
+
     apply: (view) ->
       index = @index
 
@@ -195,6 +221,8 @@
   class ToggleBlock extends Action
     constructor: (row) ->
       @row = row
+    str: () ->
+      return "row #{@row}"
     apply: (view) ->
       view.data.toggleCollapsed @row
     rewind: (view) ->
@@ -204,6 +232,8 @@
     constructor: (row, mark) ->
       @row = row
       @mark = mark
+    str: () ->
+      return "row #{@row}, mark #{@mark}"
     apply: (view) ->
       @oldmark = view.data.getMark @row
       view.data.setMark @row, @mark

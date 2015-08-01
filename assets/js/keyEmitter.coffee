@@ -118,7 +118,7 @@ class KeyEmitter extends EventEmitter
       if key of ignoreKeys
         return true
 
-      console.log('keycode', e.keyCode, 'key', key)
+      Logger.logger.debug 'keycode', e.keyCode, 'key', key
       self.emit 'keydown', key
       return false
 

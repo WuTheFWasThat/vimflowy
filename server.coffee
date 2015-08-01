@@ -4,7 +4,7 @@ express = require 'express'
 
 process.on 'uncaughtException', (err) ->
   console.log 'Uncaught exception', err.message
-  console.log 'Uncaught exception', err.stack
+  console.log err.stack
   return
 
 env = process.env.NODE_ENV or 'development'

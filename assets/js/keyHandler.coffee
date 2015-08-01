@@ -7,6 +7,7 @@ if module?
   EventEmitter = require('./eventEmitter.coffee')
   Menu = require('./menu.coffee')
   constants = require('./constants.coffee')
+  Logger = require('./logger.coffee')
 
 (() ->
   MODES = constants.MODES
@@ -76,7 +77,7 @@ if module?
         do @view.save
 
     handleKey: (key) ->
-      console.log('handling', key)
+      Logger.logger.debug 'Handling key:', key
       @keyStream.enqueue key
       if @recording
         @recording.enqueue key

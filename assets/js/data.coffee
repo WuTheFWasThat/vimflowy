@@ -3,6 +3,7 @@ if module?
   _ = require('underscore')
   utils = require('./utils.coffee')
   constants = require('./constants.coffee')
+  Logger = require('./logger.coffee')
 
 class Data
   root: 0
@@ -300,7 +301,7 @@ class Data
 
   _insertSiblingHelper: (id, after) ->
     if id == @viewRoot
-      console.log 'Cannot insert sibling of view root'
+      Logger.logger.error 'Cannot insert sibling of view root'
       return null
 
     parent = @getParent id
