@@ -1,10 +1,10 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-boldKey = 'meta+b'
-italicizeKey = 'meta+i'
-underlineKey = 'meta+u'
-strikethroughKey = 'meta+-'
+boldKey = 'ctrl+B'
+italicizeKey = 'ctrl+I'
+underlineKey = 'ctrl+U'
+strikethroughKey = 'ctrl+enter'
 
 # test insert mode
 t = new TestCase ['']
@@ -325,5 +325,145 @@ t.expect [
     text:          'hell worl'
     bold:          ' ....    '
     strikethrough: '    .    '
+  }
+]
+
+# visual line mode
+t = new TestCase [
+  'blah'
+  'blah'
+  'blah'
+]
+t.sendKeys 'Vjj'
+t.sendKey boldKey
+t.expect [
+  {
+    text: 'blah'
+    bold: '....'
+  }
+  {
+    text: 'blah'
+    bold: '....'
+  }
+  {
+    text: 'blah'
+    bold: '....'
+  }
+]
+t.sendKeys 'ggVjj'
+t.sendKey boldKey
+t.expect [
+  'blah'
+  'blah'
+  'blah'
+]
+
+t = new TestCase [
+  {
+    text: 'blah'
+    bold: '... '
+    children: [{text: 'fee', bold: '. .'}, 'fi']
+  }
+  {
+    text: 'blah'
+    bold: '    '
+    children: ['fo', 'fum']
+  }
+  {
+    text: 'blah'
+    bold: '   .'
+  }
+]
+t.sendKeys 'Vjj'
+t.sendKey boldKey
+t.expect [
+  {
+    text: 'blah'
+    bold: '....'
+    children: [{text: 'fee', bold: '. .'}, 'fi']
+  }
+  {
+    text: 'blah'
+    bold: '....'
+    children: ['fo', 'fum']
+  }
+  {
+    text: 'blah'
+    bold: '....'
+  }
+]
+t.sendKeys 'GVk'
+t.sendKey boldKey
+t.expect [
+  {
+    text: 'blah'
+    bold: '....'
+    children: [{text: 'fee', bold: '. .'}, 'fi']
+  }
+  {
+    text: 'blah'
+    children: ['fo', 'fum']
+  }
+  'blah'
+]
+t.sendKeys 'Vk'
+t.sendKey boldKey
+t.expect [
+  {
+    text: 'blah'
+    bold: '....'
+    children: [{text: 'fee', bold: '. .'}, 'fi']
+  }
+  {
+    text: 'blah'
+    bold: '....'
+    children: ['fo', 'fum']
+  }
+  'blah'
+]
+t.sendKeys 'u'
+t.expect [
+  {
+    text: 'blah'
+    bold: '....'
+    children: [{text: 'fee', bold: '. .'}, 'fi']
+  }
+  {
+    text: 'blah'
+    children: ['fo', 'fum']
+  }
+  'blah'
+]
+t.sendKeys 'u'
+t.expect [
+  {
+    text: 'blah'
+    bold: '....'
+    children: [{text: 'fee', bold: '. .'}, 'fi']
+  }
+  {
+    text: 'blah'
+    bold: '....'
+    children: ['fo', 'fum']
+  }
+  {
+    text: 'blah'
+    bold: '....'
+  }
+]
+t.sendKeys 'u'
+t.expect [
+  {
+    text: 'blah'
+    bold: '... '
+    children: [{text: 'fee', bold: '. .'}, 'fi']
+  }
+  {
+    text: 'blah'
+    children: ['fo', 'fum']
+  }
+  {
+    text: 'blah'
+    bold: '   .'
   }
 ]

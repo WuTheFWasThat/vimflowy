@@ -79,10 +79,10 @@ if module?
     RECORD_MACRO      : ['q']
     PLAY_MACRO        : ['@']
 
-    BOLD              : ['meta+b']
-    ITALIC            : ['meta+i']
-    UNDERLINE         : ['meta+u']
-    STRIKETHROUGH     : ['meta+-']
+    BOLD              : ['ctrl+B']
+    ITALIC            : ['ctrl+I']
+    UNDERLINE         : ['ctrl+U']
+    STRIKETHROUGH     : ['ctrl+enter']
 
     ENTER_VISUAL      : ['v']
     ENTER_VISUAL_LINE : ['V']
@@ -136,10 +136,10 @@ if module?
     EXPORT            : ['ctrl+s']
     EXIT_MODE         : ['esc', 'ctrl+c']
 
-    BOLD              : ['meta+b']
-    ITALIC            : ['meta+i']
-    UNDERLINE         : ['meta+u']
-    STRIKETHROUGH     : ['meta+-']
+    BOLD              : ['ctrl+B']
+    ITALIC            : ['ctrl+I']
+    UNDERLINE         : ['ctrl+U']
+    STRIKETHROUGH     : ['ctrl+enter']
 
   defaultVimKeyBindings[MODES.VISUAL] =
     YANK              : ['y']
@@ -149,10 +149,10 @@ if module?
     EXIT_MODE         : ['esc', 'ctrl+c']
     # REPLACE           : ['r']
     # SWAP_CASE         : ['~']
-    BOLD              : ['meta+b']
-    ITALIC            : ['meta+i']
-    UNDERLINE         : ['meta+u']
-    STRIKETHROUGH     : ['meta+-']
+    BOLD              : ['ctrl+B']
+    ITALIC            : ['ctrl+I']
+    UNDERLINE         : ['ctrl+U']
+    STRIKETHROUGH     : ['ctrl+enter']
 
   defaultVimKeyBindings[MODES.VISUAL_LINE] =
     NEXT_SIBLING      : ['j', 'down']
@@ -166,10 +166,10 @@ if module?
     EXIT_MODE         : ['esc', 'ctrl+c']
     # REPLACE           : ['r']
     # SWAP_CASE         : ['~']
-    BOLD              : ['meta+b']
-    ITALIC            : ['meta+i']
-    UNDERLINE         : ['meta+u']
-    STRIKETHROUGH     : ['meta+-']
+    BOLD              : ['ctrl+B']
+    ITALIC            : ['ctrl+I']
+    UNDERLINE         : ['ctrl+U']
+    STRIKETHROUGH     : ['ctrl+enter']
 
   defaultVimKeyBindings[MODES.MENU] =
     MENU_SELECT       : ['enter']
@@ -217,7 +217,14 @@ if module?
       else if @view.mode == MODES.VISUAL
         @view.toggleRowPropertyBetween property, @view.cursor, @view.anchor, {includeEnd: true}
       else if @view.mode == MODES.VISUAL_LINE
-        console.log(property, @view.mode, 'not yet implemented')
+        index1 = @view.data.indexOf @view.cursor.row
+        index2 = @view.data.indexOf @view.anchor.row
+        parent = @view.data.getParent @view.cursor.row
+        if index2 < index1
+          [index1, index2] = [index2, index1]
+        rows = @view.data.getChildRange parent, index1, index2
+        @view.toggleRowsProperty property, rows
+        @view.setMode MODES.NORMAL
       else if @view.mode == MODES.INSERT
         @view.cursor.toggleProperty property
 

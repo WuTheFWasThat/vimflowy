@@ -229,13 +229,14 @@ if module?
         return
 
       if info.bindings
-        # this is a bit of a bad hack...
+        # TODO this is a terrible hack... for d,c,y
         info = info.bindings[key]
 
       if info.finishes_visual_line
         # set cursor to be earlier one and delete difference
         index1 = @view.data.indexOf @view.cursor.row
         index2 = @view.data.indexOf @view.anchor.row
+        # NOTE: this is bad (inconsistent with other behavior)  because it moves the cursor
         if index2 < index1
           @view.cursor = @view.anchor
         context.repeat = Math.abs(index2 - index1) + 1
@@ -247,19 +248,22 @@ if module?
       fn.apply context, args
 
       if to_mode != null
-        @view.anchor = null
         @view.setMode to_mode
+
+      if @view.mode != MODES.VISUAL_LINE
+        @view.anchor = null
         @view.lineSelect = false
-        if to_mode == MODES.NORMAL
+
+        if @view.mode == MODES.NORMAL
           do @view.cursor.backIfNeeded
           if info.drop # for yank
             return do keyStream.forget
           else
             return do keyStream.save
-        else if to_mode == MODES.INSERT
+        else if @view.mode == MODES.INSERT
           return
-
-      return do keyStream.forget
+      else
+        return do keyStream.forget
 
     processMenuMode: (keyStream) ->
       key = do keyStream.dequeue
