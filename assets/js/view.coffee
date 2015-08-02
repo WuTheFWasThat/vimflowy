@@ -17,7 +17,6 @@ renderLine = (lineData, options = {}) ->
   options.cursors ?= {}
   options.highlights ?= {}
   options.marks ?= {}
-  defaultStyle = options.defaultStyle || ''
 
   results = []
 
@@ -30,13 +29,6 @@ renderLine = (lineData, options = {}) ->
   # ideally this takes up space but is unselectable (uncopyable)
   cursorChar = ' '
 
-  # array of dicts:
-  # {
-  #   text: text
-  #   column: column
-  #   cursor: true/false
-  #   highlighted: true/false
-  # }
   line = []
 
   # add cursor if at end
@@ -53,23 +45,34 @@ renderLine = (lineData, options = {}) ->
     info = {
       column: i
     }
+    renderOptions = {
+      classes: []
+      type: 'span'
+    }
+
+    # make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
     for property in constants.text_properties
-      info[property] = obj[property]
+      if obj[property]
+        renderOptions.classes.push property
 
     x = obj.char
 
     if obj.char == '\n'
+      # tricky logic for rendering new lines within a bullet
+      # (copies correctly, works when cursor is on the newline itself)
       x = ''
       info.break = true
       if i of options.cursors
         x = cursorChar + x
 
     if i of options.cursors
-      info.cursor = true
+      renderOptions.classes.push 'cursor'
     if i of options.highlights
-      info.highlighted = true
+      renderOptions.classes.push 'highlight'
 
     info.char = x
+    info.renderOptions = renderOptions
+
     line.push info
 
   # collect set of words, { word: word, start: start, end: end }
@@ -103,66 +106,74 @@ renderLine = (lineData, options = {}) ->
     return urlRegex.test w.word
 
   for url_word in url_words
-    line[url_word.start].url_start = url_word.word
-    line[url_word.end].url_end = url_word.word
+    for i in [url_word.start..url_word.end]
+      line[i].renderOptions.type = 'a'
+      line[i].renderOptions.classes.push 'link'
+      line[i].renderOptions.href = url_word.word
 
-  # gather words that are marks
-  for word in words
-    if word.word[0] == '@'
-      mark = word.word[1..]
-      if mark of options.marks
-        line[word.start].mark_start = options.marks[mark]
-        line[word.end].mark_end = options.marks[mark]
+  if options.onclickmark?
+    # gather words that are marks
+    for word in words
+      if word.word[0] == '@'
+        mark = word.word[1..]
+        if mark of options.marks
+          row = options.marks[mark]
+          for i in [word.start..word.end]
+            line[i].renderOptions.type = 'a'
+            line[i].renderOptions.classes.push 'link'
+            line[i].renderOptions.onclick = options.onclickmark.bind @, row
 
-  url = null
-  markrow = null
 
-  for x in line
-    style = defaultStyle
-    if x.cursor
-      style = 'cursor'
-    else if x.highlighted
-      style = 'highlight'
+  renderSpec = []
+  # Normally, we collect things of the same type and render them in one div
+  # If there are column-specific handlers, however, we must break up the div to handle
+  # separate click events
+  if options.charclick
+    for x in line
+      x.renderOptions.text = x.char
+      if not x.renderOptions.onclick
+        x.renderOptions.onclick = options.charclick.bind @, x.column
+      renderSpec.push x.renderOptions
+      if x.break
+        renderSpec.push {type: 'div'}
+  else
+    acc = ''
+    renderOptions = {}
 
-    classes = [style]
+    flush = () ->
+      if acc.length
+        renderOptions.text = acc
+        renderOptions.onmouseover = options.linemouseover
+        renderSpec.push renderOptions
+      acc = ''
+      renderOptions = {}
 
-    if x.url_start
-      url = x.url_start
+    # collect line into groups to render
+    for x in line
+      if _.isEqual x.renderOptions, renderOptions
+        acc += x.char
+      else
+        do flush
+        acc = x.char
+        renderOptions = x.renderOptions
 
-    if x.mark_start
-      markrow = x.mark_start
+      if x.break
+        do flush
+        renderSpec.push {type: 'div'}
+    do flush
 
-    divtype = 'span'
-    if url != null
-      divtype = 'a'
-      classes.push 'link'
-    if markrow != null
-      divtype = 'a'
-      classes.push 'link'
+  for spec in renderSpec
+    divoptions = {}
+    if spec.classes
+      divoptions.className = (spec.classes.join ' ')
+    if spec.href
+      divoptions.href = spec.href
+    if spec.onclick
+      divoptions.onclick = spec.onclick
+    if spec.onmouseover
+      divoptions.onmouseover = spec.onmouseover
 
-    # make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
-    for property in constants.text_properties
-      if x[property]
-        classes.push property
-
-    divoptions = {className: (classes.join ' ')}
-    if url != null
-      divoptions.href = url
-
-    if markrow != null and options.onclickmark?
-      divoptions.onclick = options.onclickmark.bind @, markrow
-    else if options.onclick?
-      divoptions.onclick = options.onclick.bind @, x
-
-    results.push virtualDom.h divtype, divoptions, x.char
-
-    if x.break
-      results.push virtualDom.h 'div'
-
-    if x.url_end
-      url = null
-    if x.mark_end
-      markrow = null
+    results.push virtualDom.h spec.type, divoptions, spec.text
 
   return results
 
@@ -377,7 +388,7 @@ renderLine = (lineData, options = {}) ->
       }
 
     restoreViewState: (state) ->
-      @cursor =  do state.cursor.clone
+      @cursor.from state.cursor
       if @mode != MODES.INSERT
         do @cursor.backIfNeeded
       @_changeView state.viewRoot
@@ -896,7 +907,21 @@ renderLine = (lineData, options = {}) ->
 
     # RENDERING
 
-    virtualRender: () ->
+    render: (options = {}) ->
+      t = Date.now()
+      vtree = @virtualRender options
+      patches = virtualDom.diff @vtree, vtree
+      @vnode = virtualDom.patch @vnode, patches
+      @vtree = vtree
+      Logger.logger.debug 'Rendering: ', !!options.handle_clicks, (Date.now()-t)
+
+      cursorDiv = $('.cursor', @mainDiv)[0]
+      if cursorDiv
+        @scrollIntoView cursorDiv
+
+      return
+
+    virtualRender: (options = {}) ->
       crumbs = []
       row = @data.viewRoot
       while row != @data.root
@@ -904,14 +929,14 @@ renderLine = (lineData, options = {}) ->
         row = @data.getParent row
 
       makeCrumb = (row, text) =>
-        options = {}
+        m_options = {}
         if @mode == MODES.NORMAL
-          options.onclick = () =>
+          m_options.onclick = () =>
             @reroot row
             do @save
             do @render
         return virtualDom.h 'span', { className: 'crumb' }, [
-                 virtualDom.h 'a', options, [ text ]
+                 virtualDom.h 'a', m_options, [ text ]
                ]
 
       crumbNodes = []
@@ -924,7 +949,8 @@ renderLine = (lineData, options = {}) ->
         id: 'breadcrumbs'
       }, crumbNodes
 
-      contentsChildren = @virtualRenderTree @data.viewRoot, {ignoreCollapse: true}
+      options.ignoreCollapse = true # since we're the root, even if we're collapsed, we should render
+      contentsChildren = @virtualRenderTree @data.viewRoot, options
 
       contentsNode = virtualDom.h 'div', {
         id: 'treecontents'
@@ -932,17 +958,6 @@ renderLine = (lineData, options = {}) ->
 
       return virtualDom.h 'div', {
       }, [breadcrumbsNode, contentsNode]
-
-    render: () ->
-      vtree = do @virtualRender
-      patches = virtualDom.diff @vtree, vtree
-      @vnode = virtualDom.patch @vnode, patches
-      @vtree = vtree
-
-      cursorDiv = $('.cursor', @mainDiv)[0]
-      if cursorDiv
-        @scrollIntoView cursorDiv
-      return
 
     virtualRenderTree: (parentid, options = {}) ->
       if (not options.ignoreCollapse) and (@data.collapsed parentid)
@@ -982,12 +997,13 @@ renderLine = (lineData, options = {}) ->
         elLine = virtualDom.h 'div', {
           id: rowDivID id
           className: 'node-text'
-        }, @virtualRenderLine id
+        }, (@virtualRenderLine id, options)
 
+        options.ignoreCollapse = false
         children = virtualDom.h 'div', {
           id: childrenDivID id
           className: 'node-children'
-        }, (@virtualRenderTree id)
+        }, (@virtualRenderTree id, options)
 
         className = 'node'
         if i of highlighted
@@ -1001,7 +1017,7 @@ renderLine = (lineData, options = {}) ->
         childrenNodes.push childNode
       return childrenNodes
 
-    virtualRenderLine: (row) ->
+    virtualRenderLine: (row, options = {}) ->
 
       lineData = @data.getLine row
       cursors = {}
@@ -1030,27 +1046,30 @@ renderLine = (lineData, options = {}) ->
       else
           mark = @data.getMark row
 
-      options = {
+      lineoptions = {
         cursors: cursors
         highlights: highlights
         marks: (do @data.getAllMarks)
         mark: mark
       }
 
-      if @mode == MODES.NORMAL or @mode == MODES.INSERT
-        options.onclick = (x) =>
-          @cursor.set row, x.column
-          do @render
+      if options.handle_clicks
+        if @mode == MODES.NORMAL or @mode == MODES.INSERT
+          lineoptions.charclick = (column) =>
+            @cursor.set row, column
+            # assume they might click again
+            @render {handle_clicks: true}
+      else
+        lineoptions.linemouseover = () =>
+          @render {handle_clicks: true}
+
       if @mode == MODES.NORMAL
-        options.onclickmark = (row) =>
+        lineoptions.onclickmark = (row) =>
           @rootInto row
           do @save
           do @render
-      lineContents = renderLine lineData, options
+      lineContents = renderLine lineData, lineoptions
       [].push.apply results, lineContents
-
-      if results.length == 0
-        results.push '&nbsp;'
       return results
 
   # exports

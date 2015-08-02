@@ -86,6 +86,7 @@ if module?
     processKeys: (keyStream) ->
       while not keyStream.done() and not keyStream.waiting
         @processOnce keyStream
+      # TODO: stop re-rendering everything every time?
       do @view.render
 
     processOnce: (keyStream) ->
@@ -160,7 +161,7 @@ if module?
             motion tmp, {pastEnd: true}
 
           if tmp.row == @view.cursor.row # only allow same-row movement
-            @view.cursor = tmp
+            @view.cursor.from tmp
           else
             @view.showMessage "Visual mode currently only works on one line"
         return
@@ -238,7 +239,7 @@ if module?
         index2 = @view.data.indexOf @view.anchor.row
         # NOTE: this is bad (inconsistent with other behavior)  because it moves the cursor
         if index2 < index1
-          @view.cursor = @view.anchor
+          @view.cursor.from @view.anchor
         context.repeat = Math.abs(index2 - index1) + 1
         to_mode = if info.to_mode? then info.to_mode else MODES.NORMAL
       else

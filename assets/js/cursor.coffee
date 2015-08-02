@@ -16,6 +16,11 @@ class Cursor
   clone: () ->
     return new Cursor @data, @row, @col, @moveCol
 
+  from: (other) ->
+    @row = other.row
+    @col = other.col
+    @moveCol = other.moveCol
+
   # cursorOptions:
   #   - pastEnd:         means whether we're on the column or past it.
   #                      generally true when in insert mode but not in normal mode

@@ -684,7 +684,9 @@ if module?
     SWAP_CURSOR:
       display: 'Swap cursor to other end of selection, in visual and visual line mode'
       fn: () ->
-        [@view.anchor, @view.cursor] = [@view.cursor, @view.anchor]
+        tmp = do @view.anchor.clone
+        @view.anchor.from @view.cursor
+        @view.cursor.from tmp
 
     # for insert mode
 
