@@ -322,12 +322,6 @@ renderLine = (lineData, options = {}) ->
           mimetype = @mimetypeLookup filename
       content = @exportContent mimetype
       @saveFile filename, mimetype, content
-    exportClipboard: () ->
-      mimetypes = ["application/json", "text/plain"]
-      clipboard = new Clipboard
-      for mimetype in mimetypes
-        content = @exportContent mimetype
-        clipboard.store content
     importFileSelector: (success, failure) ->
       # Success callback takes (content, mimetype)
       # Failure callback takes ()
@@ -358,10 +352,6 @@ renderLine = (lineData, options = {}) ->
     importFile: () ->
       @importFileSelector (content, mimetype) =>
           @importContent content, mimetype
-    importClipboard: () ->
-      clipboard = new Clipboard
-      content = do clipboard.load
-      @importContent content
     parseJson: (content) ->
       try
         root = JSON.parse(content)
@@ -451,7 +441,7 @@ renderLine = (lineData, options = {}) ->
           return(exportLines jsonContent).join "\n"
       else
           throw "Invalid export format"
-     mimetypeLookup: (filename) ->
+    mimetypeLookup: (filename) ->
        parts = filename.split '.'
        extension = if parts.length > 1 then parts[parts.length - 1] else ''
        extensionLookup =

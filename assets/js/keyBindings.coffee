@@ -88,9 +88,7 @@ if module?
     ENTER_VISUAL_LINE : ['V']
 
     EXPORT_FILE       : ['ctrl+s'] # Really bad shortcuts, change
-    EXPORT_CLIPBOARD  : ['ctrl+x']
     IMPORT_FILE       : ['ctrl+S']
-    IMPORT_CLIPBOARD  : ['ctrl+X']
 
   defaultVimKeyBindings[MODES.INSERT] =
     LEFT              : ['left']
@@ -137,9 +135,7 @@ if module?
     SCROLL_UP         : ['page up', 'ctrl+up']
 
     EXPORT_FILE       : ['ctrl+s'] # Really bad shortcuts, change
-    EXPORT_CLIPBOARD  : ['ctrl+x']
-    # jeff wonders:  is there a reason import_file isn't here?
-    IMPORT_CLIPBOARD  : ['ctrl+shift+x']
+    IMPORT_FILE       : ['ctrl+S']
 
     EXIT_MODE         : ['esc', 'ctrl+c']
 
@@ -665,20 +661,10 @@ if module?
       display: 'Save a file'
       fn: () ->
         do @view.exportFile
-    EXPORT_CLIPBOARD:
-      display: 'Save to clipboard'
-      fn: () ->
-        do @view.exportClipboard
-      available: if Clipboard? then Clipboard.available else false
     IMPORT_FILE:
       display: 'Import from a file'
       fn: () ->
         do @view.importFile
-    IMPORT_CLIPBOARD:
-      display: 'Import from the clipboard'
-      fn: () ->
-        do @view.importClipboard
-      available: if Clipboard? then Clipboard.available else false
 
     RECORD_MACRO:
       display: 'Begin/stop recording a macro'

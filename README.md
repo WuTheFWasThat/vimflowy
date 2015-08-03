@@ -37,7 +37,7 @@ But for now, if you want to use vimflowy, you should first [learn vim](http://vi
 - Extras
   - search
   - marks (not quite like vim's)
-  - data export
+  - data import/export
   - different themes
   - multiple documents in online version (by visiting /documentname)
   - lazy loads data, for big documents
