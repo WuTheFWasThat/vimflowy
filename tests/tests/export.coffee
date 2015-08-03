@@ -39,14 +39,18 @@ t.expectExport 'application/json',
 
 # Test vimflowy text import
 t = new TestCase ['']
-t.import "- Line 1\n
-- Line 2\n
-  - Line 2.1\n
-  - Line 2.2\n
-    - Line 2.2.1\n
-  - Line 2.3\n
-    - Line 2.3.1\n
-- Line 3", 'text/plain'
+t.import """- Line 1
+            - Line 2
+              - Line 2.1
+              - Line 2.2
+                - Line 2.2.1
+              - Line 2.3
+                - Line 2.3.1
+            - Line 3""", 'text/plain'
+t.sendKey 'down'
+t.sendKeys '3<'
+t.sendKey 'up'
+t.sendKeys 'dd'
 t.expectExport 'application/json',
   (JSON.stringify {
     text: '', children: [
@@ -65,7 +69,7 @@ t.expectExport 'application/json',
 
 # Test vimflowy json import
 t = new TestCase ['']
-t.import '{
+t.import """{
   "text": "",
   "children": [
     {
@@ -99,7 +103,7 @@ t.import '{
       "text": "Line 3"
     }
   ]
-}', 'application/json'
+}""", 'application/json'
 t.sendKey 'down'
 t.sendKeys '3<'
 t.sendKey 'up'
@@ -122,11 +126,15 @@ t.expectExport 'application/json',
 
 # Test workflowy import
 t = new TestCase ['']
-t.import "- [COMPLETE] Line 1\n
-  - Subpart 1\n
-    \"Title line for subpart 1\"\n
-- [COMPLETE] Line 2\n
-- [COMPLETE] Line 3", "text/plain"
+t.import """- [COMPLETE] Line 1
+              - Subpart 1
+              "Title line for subpart 1"
+            - [COMPLETE] Line 2
+            - [COMPLETE] Line 3""", "text/plain"
+t.sendKey 'down'
+t.sendKeys '3<'
+t.sendKey 'up'
+t.sendKeys 'dd'
 t.expectExport 'application/json',
   (JSON.stringify {
     text: '', children: [

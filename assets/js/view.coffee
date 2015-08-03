@@ -373,7 +373,7 @@ renderLine = (lineData, options = {}) ->
         if line.match /^\s*".*"$/ # Flag workflowy annotations as special cases
           lines.push
             indent: (line.match whitespace)[0].length
-            line: line.replace /^\s*"(.*)"$/, "\\1"
+            line: line.replace /^\s*"(.*)"$/, "$1"
             annotation: true
           continue
         whitespace = /^\s*/
