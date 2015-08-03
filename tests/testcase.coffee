@@ -28,11 +28,7 @@ class TestCase
 
   sendKeys: (keys) ->
     for key in keys
-<<<<<<< HEAD
       @keyhandler.handleKey key
-=======
-      @keybinder.handleKey key
->>>>>>> 2c783e2... Merge with master and import/export scaffold
     return @
 
   sendKey: (key) ->
