@@ -85,6 +85,7 @@ class KeyEmitter extends EventEmitter
     'meta+v'   : true
     'ctrl+tab' : true
     'ctrl+shift+tab' : true
+    'ctrl+J' : true
 
   constructor: () ->
     super
