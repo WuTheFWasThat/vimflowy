@@ -1,6 +1,11 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
+indentBlockKey = 'tab'
+unindentBlockKey = 'shift+tab'
+indentRowKey = '>'
+unindentRowKey = '<'
+
 threeRows = [
   { text: 'top row', children: [
     { text: 'middle row', children : [
@@ -10,13 +15,15 @@ threeRows = [
 ]
 
 t = new TestCase threeRows
-t.sendKeys '>'
+t.sendKey indentBlockKey
 t.expect threeRows
-t.sendKeys 'j>'
+t.sendKeys 'j'
+t.sendKey indentBlockKey
 t.expect threeRows
-t.sendKeys 'j>'
+t.sendKeys 'j'
+t.sendKey indentBlockKey
 t.expect threeRows
-t.sendKeys '<'
+t.sendKey unindentBlockKey
 t.expect [
   { text: 'top row', children: [
       'middle row',
@@ -52,7 +59,8 @@ t.expect [
   ] },
   'nother row'
 ]
-t.sendKeys '>>'
+t.sendKey indentBlockKey
+t.sendKey indentBlockKey
 t.expect [
   { text: 'top row', children: [
     { text: 'middle row', children : [
@@ -81,7 +89,7 @@ t.expect [
   ] },
 ]
 t.sendKeys 'k'
-t.sendKey 'shift+tab'
+t.sendKey unindentRowKey
 t.expect [
   { text: 'top row', children: [
     'middle row',
@@ -90,7 +98,7 @@ t.expect [
     ] },
   ] },
 ]
-t.sendKey 'shift+tab'
+t.sendKey unindentRowKey
 t.expect [
   { text: 'top row', children: [
     'middle row',
@@ -100,7 +108,7 @@ t.expect [
   ] },
 ]
 t.sendKeys 'k'
-t.sendKey 'shift+tab'
+t.sendKey unindentRowKey
 t.expect [
   'top row',
   { text: 'middle row', children: [
@@ -169,7 +177,7 @@ t = new TestCase [
   ] },
 ]
 t.sendKeys 'j'
-t.sendKey '<'
+t.sendKey unindentBlockKey
 t.expect [
   { text: 'a', children : [
     { text: 'ad', children : [
@@ -180,7 +188,7 @@ t.expect [
     'abc',
   ] },
 ]
-t.sendKey '>'
+t.sendKey indentBlockKey
 t.expect [
   { text: 'a', children: [
     { text: 'ad', children : [
@@ -221,7 +229,8 @@ t = new TestCase [
   ] },
   '3'
 ]
-t.sendKeys 'G>'
+t.sendKeys 'G'
+t.sendKey indentBlockKey
 t.expect [
   { text: '1', children: [
     '2'
@@ -248,7 +257,7 @@ t.expect [
   ] },
 ]
 
-# test regular tab
+# test indenting row
 t = new TestCase [
   '0',
   { text: '1', children: [
@@ -256,7 +265,7 @@ t = new TestCase [
   ] },
 ]
 t.sendKeys 'j'
-t.sendKey 'tab'
+t.sendKey indentRowKey
 t.expect [
   { text: '0', children: [
     '1'
@@ -264,7 +273,7 @@ t.expect [
   ] },
 ]
 
-# test multi >
+# test multi indent block
 t = new TestCase [
   { text: 'mama', children: [
     { text: 'oldest kid', children : [
@@ -274,7 +283,8 @@ t = new TestCase [
     'young kid'
   ] },
 ]
-t.sendKeys 'jjj2>'
+t.sendKeys 'jjj2'
+t.sendKey indentBlockKey
 t.expect [
   { text: 'mama', children: [
     { text: 'oldest kid', children : [
@@ -297,7 +307,8 @@ t = new TestCase [
     'young kid'
   ] },
 ]
-t.sendKeys 'jj2>'
+t.sendKeys 'jj2'
+t.sendKey indentBlockKey
 t.expect [
   { text: 'mama', children: [
     { text: 'oldest kid', children : [
@@ -321,7 +332,8 @@ t.expect [
     'young kid'
   ] },
 ]
-t.sendKeys 'k2<'
+t.sendKeys 'k2'
+t.sendKey unindentBlockKey
 t.expect [
   { text: 'mama', children : [
     'young kid'

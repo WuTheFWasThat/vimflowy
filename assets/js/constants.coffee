@@ -22,8 +22,8 @@
         { text: 'Collapsed bullets.  z to toggle collapsedness', collapsed: true, children: [
           'You found me! :)'
         ] }
-        'Use < and > to indent and unindent blocks'
-        'Use tab and shift+tab to indent and unindent just a single line'
+        'Use tab and shift+tab to indent and unindent blocks'
+        'Use < and > to indent and unindent just a single line'
         { text: 'Text formatting', collapsed: true, children: [
           {
             text:      'Bold (meta+b), italicized (meta+i), and underlined (meta+u) text.  Bold italic underlined!'

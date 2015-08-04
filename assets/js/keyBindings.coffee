@@ -49,10 +49,10 @@ if module?
     PASTE_BEFORE      : ['P']
     JOIN_LINE         : ['J']
 
-    INDENT_RIGHT      : ['tab']
-    INDENT_LEFT       : ['shift+tab']
-    MOVE_BLOCK_RIGHT  : ['>', 'ctrl+l']
-    MOVE_BLOCK_LEFT   : ['<', 'ctrl+h']
+    INDENT_RIGHT      : ['>']
+    INDENT_LEFT       : ['<']
+    MOVE_BLOCK_RIGHT  : ['tab', 'ctrl+l']
+    MOVE_BLOCK_LEFT   : ['shift+tab', 'ctrl+h']
     MOVE_BLOCK_DOWN   : ['ctrl+j']
     MOVE_BLOCK_UP     : ['ctrl+k']
 
