@@ -27,14 +27,6 @@ renderLine = (lineData, options = {}) ->
     }, options.mark
 
 
-  results = []
-
-  if options.mark
-    results.push virtualDom.h 'span', {
-      className: 'mark'
-    }, options.mark
-
-
   # ideally this takes up space but is unselectable (uncopyable)
   cursorChar = ' '
 
@@ -322,6 +314,7 @@ renderLine = (lineData, options = {}) ->
           mimetype = @mimetypeLookup filename
       content = @exportContent mimetype
       @saveFile filename, mimetype, content
+
     importFileSelector: (success, failure) ->
       # Success callback takes (content, mimetype)
       # Failure callback takes ()
@@ -349,14 +342,17 @@ renderLine = (lineData, options = {}) ->
               reader.onerror = (evt) ->
                   if failure? then do failure
                   do resolve
+
     importFile: () ->
       @importFileSelector (content, mimetype) =>
           @importContent content, mimetype
+
     parseJson: (content) ->
       try
         root = JSON.parse(content)
       catch
-        throw "Tried to import malformed JSON"
+        @showMessage "The uploaded file is not valid JSON"
+        return false
       verify = (node) ->
         unless node.text || node.text == '' then return false
         if node.children
@@ -364,8 +360,10 @@ renderLine = (lineData, options = {}) ->
             unless verify child then return false
         return true
       unless verify root
-        throw "Tried to import JSON, but the JSON in not in vimflowy's import format"
+        @showMessage "The uploaded file is not in a valid vimflowy format"
+        return false
       return root
+
     parsePlaintext: (content) ->
       # Step 1: parse into (int, string) pairs of indentation amounts.
       lines = []
@@ -381,7 +379,7 @@ renderLine = (lineData, options = {}) ->
             indent: (line.match whitespace)[0].length
             line: (line.replace whitespace, "").replace /^(?:-\s*)?(?:\[COMPLETE\] )?/, ""
       while lines[lines.length-1].line == '' # Strip trailing blank line(s)
-        delete lines[lines.length-1]
+        lines = lines.splice(0, lines.length-1)
       # Step 2: convert a list of (int, string, annotation?) into a forest format
       parseAllChildren = (parentIndentation, lineNumber) ->
         children = []
@@ -402,8 +400,10 @@ renderLine = (lineData, options = {}) ->
         text: ""
         children: forest
       return root
+
     parseHtml: (content) ->
       throw "HTML import is not implemented"
+
     parseContent: (content, mimetype) ->
       if mimetype in ['application/json']
         return @parseJson content
@@ -413,13 +413,16 @@ renderLine = (lineData, options = {}) ->
         return @parseHtml content
       else
         return "Trying to parse unsupported format"
+
     importContent: (content, mimetype) ->
       root = @parseContent content, mimetype
+      if not root then return
       row = @cursor.row
       if root.text == '' && root.children # Complete export, not one node
         @addBlocks root.children, row, 0
       else
         @addBlocks [root], row, 0
+
     exportContent: (mimetype) ->
       jsonContent = do @data.serialize
       if mimetype == 'application/json'
@@ -441,6 +444,7 @@ renderLine = (lineData, options = {}) ->
           return(exportLines jsonContent).join "\n"
       else
           throw "Invalid export format"
+
     mimetypeLookup: (filename) ->
        parts = filename.split '.'
        extension = if parts.length > 1 then parts[parts.length - 1] else ''
