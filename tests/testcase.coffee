@@ -35,6 +35,9 @@ class TestCase
     @sendKeys [key]
     return @
 
+  import: (content, mimetype) ->
+    @view.importContent content, mimetype
+
   expect: (expected) ->
     serialized = @data.serialize @data.root, true
     @_expectDeepEqual serialized.children, expected
@@ -74,7 +77,7 @@ class TestCase
     assert.equal export_, expected,
       "Expected \n#{export_}\n To match \n#{expected}\n!"
     return @
-
+  
   expectMarks: (expected) ->
     marks = do @view.data.store.getAllMarks
     @_expectDeepEqual marks, expected

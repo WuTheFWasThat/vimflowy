@@ -87,7 +87,8 @@ if module?
     ENTER_VISUAL      : ['v']
     ENTER_VISUAL_LINE : ['V']
 
-    EXPORT            : ['ctrl+s']
+    EXPORT_FILE       : ['ctrl+s']
+    IMPORT_FILE       : ['ctrl+S']
 
   defaultVimKeyBindings[MODES.INSERT] =
     LEFT              : ['left']
@@ -133,7 +134,6 @@ if module?
     SCROLL_DOWN       : ['page down', 'ctrl+down']
     SCROLL_UP         : ['page up', 'ctrl+up']
 
-    EXPORT            : ['ctrl+s']
     EXIT_MODE         : ['esc', 'ctrl+c']
 
     BOLD              : ['ctrl+B']
@@ -654,10 +654,15 @@ if module?
       drop: true
       fn: () ->
         @view.scrollPages -0.5
-    EXPORT:
+    EXPORT_FILE:
       display: 'Save a file'
       fn: () ->
-        do @view.export
+        do @view.exportFile
+    IMPORT_FILE:
+      display: 'Import from a file'
+      fn: () ->
+        do @view.importFile
+
     RECORD_MACRO:
       display: 'Begin/stop recording a macro'
     PLAY_MACRO:
@@ -747,6 +752,8 @@ if module?
       if name == 'MOTION'
         keys = ['MOTION']
       else if (name of keyMap)
+        if not _.result(v, 'available', true)
+          continue
         keys = keyMap[name]
       else
         # throw "Error:  keyMap missing key for #{name}"

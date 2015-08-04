@@ -1,5 +1,5 @@
 #!/usr/bin/env coffee
-#
+
 express = require 'express'
 
 process.on 'uncaughtException', (err) ->
