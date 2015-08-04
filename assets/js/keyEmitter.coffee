@@ -76,23 +76,11 @@ class KeyEmitter extends EventEmitter
     keyCodeMap[keyCode] = lower
     shiftMap[lower] = letter
 
-  # keys to let the browser do its thing
-  # TODO: make this configurable
-  ignoreKeys =
-    'meta+l'   : true
-    'meta+r'   : true
-    'meta+c'   : true
-    'meta+v'   : true
-    'ctrl+tab' : true
-    'ctrl+shift+tab' : true
-    'ctrl+J' : true
-
   constructor: () ->
     super
 
   listen: () ->
-    self = @
-    $(document).keydown (e) ->
+    $(document).keydown (e) =>
       if e.keyCode of ignoreMap
         return true
       else if e.keyCode of keyCodeMap
@@ -116,10 +104,7 @@ class KeyEmitter extends EventEmitter
         # this is necessary for typing stuff..
         key = String.fromCharCode e.keyCode
 
-      if key of ignoreKeys
-        return true
-
       Logger.logger.debug 'keycode', e.keyCode, 'key', key
-      self.emit 'keydown', key
-      return false
-
+      if @emit 'keydown', key
+        return false
+      else return true
