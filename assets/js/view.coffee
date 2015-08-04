@@ -870,10 +870,14 @@ renderLine = (lineData, options = {}) ->
     scrollPages: (npages) ->
       # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
       line_height = do $('.node-text').height
+      if line_height == 0
+        line_height = 21 # ugly hack... 0 happens when first line is empty, currently
       page_height = do $(document).height
       height = npages * page_height
 
       numlines = Math.round(height / line_height)
+      numlines = Math.max(Math.min(numlines, 1000), -1000) # guard against craziness
+
       if numlines > 0
         for i in [1..numlines]
           do @cursor.down
