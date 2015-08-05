@@ -48,7 +48,7 @@ t.import """- Line 1
                 - Line 2.3.1
             - Line 3""", 'text/plain'
 t.sendKey 'down'
-t.sendKeys '3<'
+t.sendKeys ['3', 'shift+tab']
 t.sendKey 'up'
 t.sendKeys 'dd'
 t.expectExport 'application/json',
@@ -105,7 +105,7 @@ t.import """{
   ]
 }""", 'application/json'
 t.sendKey 'down'
-t.sendKeys '3<'
+t.sendKeys ['3', 'shift+tab']
 t.sendKey 'up'
 t.sendKeys 'dd'
 t.expectExport 'application/json',
@@ -132,7 +132,7 @@ t.import """- [COMPLETE] Line 1
             - [COMPLETE] Line 2
             - [COMPLETE] Line 3""", "text/plain"
 t.sendKey 'down'
-t.sendKeys '3<'
+t.sendKeys ['3', 'shift+tab']
 t.sendKey 'up'
 t.sendKeys 'dd'
 t.expectExport 'application/json',
