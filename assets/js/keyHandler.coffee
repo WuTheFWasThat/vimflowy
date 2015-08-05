@@ -81,27 +81,30 @@ if module?
       @keyStream.enqueue key
       if @recording
         @recording.enqueue key
-      @processKeys @keyStream
+      handled = @processKeys @keyStream
+      return handled
 
     processKeys: (keyStream) ->
+      handled = true
       while not keyStream.done() and not keyStream.waiting
-        @processOnce keyStream
+        handled = @processOnce keyStream
       # TODO: stop re-rendering everything every time?
       do @view.render
+      return not handled
 
     processOnce: (keyStream) ->
       if @view.mode == MODES.NORMAL
-        @processNormalMode keyStream
+        return @processNormalMode keyStream
       else if @view.mode == MODES.INSERT
-        @processInsertMode keyStream
+        return @processInsertMode keyStream
       else if @view.mode == MODES.VISUAL
-        @processVisualMode keyStream
+        return @processVisualMode keyStream
       else if @view.mode == MODES.VISUAL_LINE
-        @processVisualLineMode keyStream
+        return @processVisualLineMode keyStream
       else if @view.mode == MODES.MENU
-        @processMenuMode keyStream
+        return @processMenuMode keyStream
       else if @view.mode == MODES.MARK
-        @processMarkMode keyStream
+        return @processMarkMode keyStream
       else
         throw "Invalid mode #{@view.mode}"
 
@@ -116,12 +119,12 @@ if module?
         if key == 'shift+enter'
           key = '\n'
         if key.length > 1
-          return
+          return false
         obj = {char: key}
         for property in constants.text_properties
           if @view.cursor.getProperty property then obj[property] = true
         @view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
-        return
+        return true
 
       info = bindings[key]
 
@@ -140,7 +143,8 @@ if module?
       if info.to_mode == MODES.NORMAL
         do @view.cursor.left
         @view.setMode MODES.NORMAL
-        return do keyStream.save
+        do keyStream.save
+      return true
 
     processVisualMode: (keyStream) ->
       key = do keyStream.dequeue
@@ -164,7 +168,9 @@ if module?
             @view.cursor.from tmp
           else
             @view.showMessage "Visual mode currently only works on one line"
-        return
+          return true
+        else
+          return false
 
       info = bindings[key]
 
@@ -194,13 +200,16 @@ if module?
         if to_mode == MODES.NORMAL
           do @view.cursor.backIfNeeded
           if info.drop # for yank
-            return do keyStream.forget
+            do keyStream.forget
+            return true
           else
-            return do keyStream.save
+            do keyStream.save
+            return true
         else if to_mode == MODES.INSERT
-          return
+          return true
 
-      return do keyStream.forget
+      do keyStream.forget
+      return true
 
     processVisualLineMode: (keyStream) ->
       key = do keyStream.dequeue
@@ -210,7 +219,8 @@ if module?
       bindings = @bindings[MODES.VISUAL_LINE]
 
       if not (key of bindings)
-        return do keyStream.forget
+        do keyStream.forget
+        return false
 
       info = bindings[key]
 
@@ -227,7 +237,9 @@ if module?
           motion = info.fn
           for i in [1..repeat]
             motion @view.cursor, {pastEnd: true}
-        return
+          return true
+        else
+          return false
 
       if info.bindings
         # TODO this is a terrible hack... for d,c,y
@@ -258,13 +270,16 @@ if module?
         if @view.mode == MODES.NORMAL
           do @view.cursor.backIfNeeded
           if info.drop # for yank
-            return do keyStream.forget
+            do keyStream.forget
+            return true
           else
-            return do keyStream.save
+            do keyStream.save
+            return true
         else if @view.mode == MODES.INSERT
-          return
+          return true
       else
-        return do keyStream.forget
+        do keyStream.forget
+        return true
 
     processMenuMode: (keyStream) ->
       key = do keyStream.dequeue
@@ -278,7 +293,7 @@ if module?
         if key == 'shift+enter'
           key = '\n'
         if key.length > 1
-          return
+          return false
         view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
       else
         info = bindings[key]
@@ -301,7 +316,8 @@ if module?
 
       do @menu.update
       do @menu.render
-      return do keyStream.forget
+      do keyStream.forget
+      return true
 
     processMarkMode: (keyStream) ->
       key = do keyStream.dequeue
@@ -314,7 +330,7 @@ if module?
       if not (key of bindings)
         # must be non-whitespace
         if key.length > 1
-          return
+          return false
         if /^\w*$/.test(key)
           view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
       else
@@ -339,7 +355,8 @@ if module?
           @view.setMode MODES.NORMAL
 
       # no harm in saving.  important for setMark, and nothing else does anything
-      return do keyStream.save
+      do keyStream.save
+      return true
 
     # takes keyStream, key, returns repeat number and key
     getRepeat: (keyStream, key = null) ->
@@ -391,7 +408,9 @@ if module?
 
     processNormalMode: (keyStream, bindings = @bindings[MODES.NORMAL], repeat = 1) ->
       [newrepeat, key] = @getRepeat keyStream
-      if key == null then return do keyStream.wait
+      if key == null
+        do keyStream.wait
+        return true
       # TODO: something better for passing repeat through?
       repeat = repeat * newrepeat
 
@@ -404,7 +423,9 @@ if module?
 
           # note: this uses original bindings to determine what's a motion
           [motion, repeat] = @getMotion keyStream, key, @bindings[MODES.NORMAL], repeat
-          if motion == null then return do keyStream.forget
+          if motion == null
+            do keyStream.forget
+            return false
 
           cursor = do @view.cursor.clone
           for i in [1..repeat]
@@ -412,7 +433,8 @@ if module?
 
           args.push cursor
         else
-          return do keyStream.forget
+          do keyStream.forget
+          return false
       else
         info = bindings[key] || {}
 
@@ -422,18 +444,21 @@ if module?
       if info.motion
         # note: this uses *new* bindings to determine what's a motion
         [motion, repeat] = @getMotion keyStream, key, bindings, repeat
-        if motion == null then return
+        if motion == null
+          return true
 
         for j in [1..repeat]
           motion @view.cursor, ''
-        return do keyStream.forget
+        do keyStream.forget
+        return true
 
       if info.menu
         @view.setMode MODES.MENU
         @menu = new Menu @view.menuDiv, (info.menu.bind @, @view)
         do @menu.update
         do @menu.render
-        return do keyStream.forget
+        do keyStream.forget
+        return true
 
       if info.continue
         key = do keyStream.dequeue
@@ -454,9 +479,10 @@ if module?
       if info.to_mode
         @view.setMode info.to_mode
         if info.to_mode == MODES.MENU
-          return do keyStream.forget
+          do keyStream.forget
+          return true
         else
-          return
+          return true
 
       if info.name == 'RECORD_MACRO'
         if @recording == null
@@ -470,7 +496,8 @@ if module?
           @macros[@recording_key] = macro
           @recording = null
           @recording_key = null
-        return do keyStream.forget
+        do keyStream.forget
+        return true
       if info.name == 'PLAY_MACRO'
           nkey = do keyStream.dequeue
           if nkey == null then return do keyStream.wait
@@ -482,7 +509,8 @@ if module?
             recordKeyStream = new KeyStream recording
             @processKeys recordKeyStream
           # but we should save the macro-playing sequence itself
-          return do keyStream.save
+          do keyStream.save
+          return true
 
       if info.name == 'REPLAY'
         for i in [1..repeat]
@@ -490,12 +518,14 @@ if module?
           newStream.on 'save', () =>
             do @view.save
           @processKeys newStream
-        return do keyStream.forget
+        do keyStream.forget
+        return true
 
       if info.drop
-        return do keyStream.forget
+        do keyStream.forget
       else
-        return do keyStream.save
+        do keyStream.save
+      return true
 
   module?.exports = KeyHandler
   window?.KeyHandler = KeyHandler
