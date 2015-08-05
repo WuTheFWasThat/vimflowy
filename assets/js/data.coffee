@@ -339,25 +339,42 @@ class Data
           break
     return results
 
-  find: (query, nresults = 10) ->
+  find: (query, options = {}) ->
+    nresults = options.nresults or 10
+    case_sensitive = options.case_sensitive
+
     results = [] # list of (row_id, index) pairs
+
+    canonicalize = (x) ->
+      return if options.case_sensitive then x else x.toLowerCase()
+
+    get_words = (char_array) ->
+      words =
+        (char_array.join '').split(' ')
+        .filter((x) -> x.length)
+        .map canonicalize
+      return words
+
+    query_words = get_words query
     if query.length == 0
       return results
 
     for id in do @orderedLines
-      line = @getText id
-      for i in [0..line.length-query.length]
-        match = true
-        for j in [0...query.length]
-          if line[i+j] != query[j]
-            match = false
-            break
-        if match
-          results.push {
-            row: id
-            index: i
-          }
-          break
+      line = canonicalize (@getText id).join ''
+      matches = []
+      if _.all(query_words.map ((word) ->
+                i = line.indexOf word
+                if i >= 0
+                  for j in [i...i+word.length]
+                    matches.push j
+                  return true
+                else
+                  return false
+              ))
+        results.push {
+          row: id
+          matches: matches
+        }
       if nresults > 0 and results.length == nresults
         break
     return results

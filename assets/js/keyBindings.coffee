@@ -321,10 +321,9 @@ if module?
 
         for found in view.find chars
           row = found.row
-          index = found.index
 
           highlights = {}
-          for i in [index ... index + chars.length]
+          for i in found.matches
             highlights[i] = true
 
           results.push {

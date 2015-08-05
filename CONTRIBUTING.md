@@ -1,10 +1,10 @@
 # Guidelines to contributing
 
-Send a pull request!  Remember to write tests when appropriate!
+Just send a pull request.  Remember to write tests when appropriate!
 
 For any questions, you may contact me at [githubusername]@gmail.com.
 
-## SETUP: ##
+## DEV SETUP: ##
 
 For development, you'll probably want to run a web version of vimflowy locally.
 

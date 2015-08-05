@@ -315,9 +315,9 @@ renderLine = (lineData, options = {}) ->
         ), options.time
 
 
-    ##########
-    # EXPORT
-    ##########
+    #################
+    # import/export #
+    #################
 
     exportFile: (filename, mimetype) ->
       filename ||= @settings?.getSetting?('export_filename') || 'vimflowy.json'
@@ -433,6 +433,8 @@ renderLine = (lineData, options = {}) ->
         @addBlocks root.children, row, 0
       else
         @addBlocks [root], row, 0
+      do @save
+      do @render
 
     exportContent: (mimetype) ->
       jsonContent = do @data.serialize
@@ -963,8 +965,8 @@ renderLine = (lineData, options = {}) ->
     pasteAfter: (options = {}) ->
       @register.paste options
 
-    find: (chars, nresults = 10) ->
-      results = @data.find chars, nresults
+    find: (chars, options = {}) ->
+      results = @data.find chars, options
       return results
 
     setMark: (row, mark) ->

@@ -155,3 +155,32 @@ t.expect [
   ] }
 ]
 
+# case insensitive!
+t = new TestCase [
+  'case',
+  'crease',
+  'CASE',
+]
+t.sendKeys '/case'
+t.sendKey 'ctrl+j'
+t.sendKey 'enter'
+t.sendKeys 'dd'
+t.expect [
+  'case',
+  'crease',
+]
+
+# multi word!
+t = new TestCase [
+  'broomball',
+  'basketball',
+  'basket of bread',
+]
+t.sendKeys '/bread basket'
+t.sendKey 'enter'
+t.sendKeys 'dd'
+t.expect [
+  'broomball',
+  'basketball',
+]
+
