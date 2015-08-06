@@ -105,6 +105,6 @@ class KeyEmitter extends EventEmitter
         key = String.fromCharCode e.keyCode
 
       Logger.logger.debug 'keycode', e.keyCode, 'key', key
-      if false == @emit 'keydown', key # if the key is handled
-        return false
-      else return true
+      results = @emit 'keydown', key
+      # return false to stop propagation, if any handler handled the key
+      return not _.any results

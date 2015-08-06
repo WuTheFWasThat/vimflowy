@@ -4,15 +4,9 @@ class EventEmitter
   constructor: ->
     @events = {}
 
+  # emit an event and return all responses from the listeners
   emit: (event, args...) ->
-    # Can return a jquery-style 'false' intended to override bubbling behavior.
-    # A false from any listener makes this return false, but does not halt proprogation to other listeners
-    return false unless @events[event]
-    retVal = true
-    for listener in @events[event]
-      if false == listener args...
-        retVal = false
-    return retVal
+    return ((listener args...) for listener in (@events[event] or []))
 
   addListener: (event, listener) ->
     @emit 'newListener', event, listener

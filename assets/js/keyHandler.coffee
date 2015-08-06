@@ -85,12 +85,12 @@ if module?
       return handled
 
     processKeys: (keyStream) ->
-      handled = true
+      handled = false
       while not keyStream.done() and not keyStream.waiting
-        handled = @processOnce keyStream
+        handled = handled or (@processOnce keyStream)
       # TODO: stop re-rendering everything every time?
       do @view.render
-      return not handled
+      return handled
 
     processOnce: (keyStream) ->
       if @view.mode == MODES.NORMAL
@@ -237,9 +237,7 @@ if module?
           motion = info.fn
           for i in [1..repeat]
             motion @view.cursor, {pastEnd: true}
-          return true
-        else
-          return false
+        return true
 
       if info.bindings
         # TODO this is a terrible hack... for d,c,y
@@ -480,9 +478,7 @@ if module?
         @view.setMode info.to_mode
         if info.to_mode == MODES.MENU
           do keyStream.forget
-          return true
-        else
-          return true
+        return true
 
       if info.name == 'RECORD_MACRO'
         if @recording == null
