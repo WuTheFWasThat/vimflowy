@@ -40,10 +40,13 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     setLine: (row, line) ->
       @set (@_lineKey_ row), line
 
-    getParent: (row) ->
-      @get (@_parentKey_ row)
-    setParent: (row, parent) ->
-      @set (@_parentKey_ row), parent
+    getParents: (row) ->
+      parents = @get (@_parentKey_ row), []
+      if typeof parents == 'number'
+        parents = [ parents ]
+      parents
+    setParents: (row, parents) ->
+      @set (@_parentKey_ row), parents
 
     getChildren: (row) ->
       [].slice.apply @get (@_childrenKey_ row), []
@@ -79,7 +82,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     setLastViewRoot: (row) ->
       @set @_lastViewrootKey_, row
     getLastViewRoot: () ->
-      @get @_lastViewrootKey_, 0
+      @get @_lastViewrootKey_
 
     # get next row ID
     getId: () -> # Suggest to override this for efficiency

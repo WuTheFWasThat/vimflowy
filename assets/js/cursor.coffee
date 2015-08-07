@@ -275,9 +275,9 @@ class Cursor
 
   parent: (cursorOptions = {}) ->
     row = @data.getParent @row
-    if row == @data.root
+    if row.id == @data.root.id
       return
-    if row == @data.viewRoot
+    if row.id == @data.viewRoot.id
       @data.changeViewRoot @data.getParent row
     @setRow row, cursorOptions
 

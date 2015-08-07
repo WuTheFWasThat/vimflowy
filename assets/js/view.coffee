@@ -531,7 +531,7 @@ window?.renderLine = renderLine
 
     # try going to jump, return true if succeeds
     tryJump: (jump) ->
-      if jump.viewRoot == @data.viewRoot
+      if jump.viewRoot.id == @data.viewRoot.id
         return false # not moving, don't jump
 
       if not @data.isAttached jump.viewRoot
@@ -585,7 +585,7 @@ window?.renderLine = renderLine
     # fails if there is no child
     # records in jump history
     _changeView: (row) ->
-      if row == @data.viewRoot
+      if row.id == @data.viewRoot.id
         return true # not moving, do nothing
       if @data.hasChildren row
         @addToJumpHistory () =>
@@ -614,7 +614,7 @@ window?.renderLine = renderLine
       throw new errors.GenericError "Failed to root into #{row}"
 
     rootUp: () ->
-      if @data.viewRoot != @data.root
+      if @data.viewRoot.id != @data.root.id
         parent = @data.getParent @data.viewRoot
         @reroot parent
 
@@ -632,7 +632,8 @@ window?.renderLine = renderLine
       mark = word[1..]
       allMarks = do @data.getAllMarks
       if mark of allMarks
-        row = allMarks[mark]
+        rowId = allMarks[mark]
+        row = @data.canonicalInstance rowId
         @rootInto row
         return true
       else
@@ -844,7 +845,7 @@ window?.renderLine = renderLine
 
     indentBlocks: (id, numblocks = 1) ->
       newparent = @data.getSiblingBefore id
-      if newparent == null
+      unless newparent?
         return null # cannot indent
 
       if @data.collapsed newparent
@@ -857,7 +858,7 @@ window?.renderLine = renderLine
 
     unindentBlocks: (id, numblocks = 1, options = {}) ->
       parent = @data.getParent id
-      if parent == @data.viewRoot
+      if parent.id == @data.viewRoot.id
         return null
 
       siblings = @data.getSiblingRange id, 0, (numblocks-1)
@@ -1043,7 +1044,7 @@ window?.renderLine = renderLine
     virtualRender: (options = {}) ->
       crumbs = []
       row = @data.viewRoot
-      while row != @data.root
+      while row.id != @data.root.id
         crumbs.push row
         row = @data.getParent row
 

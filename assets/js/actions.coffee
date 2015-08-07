@@ -96,15 +96,11 @@ if module?
       return "row #{@row}"
 
     apply: (view) ->
-      @parent = view.data.getParent @row
-      @index = view.data.indexOf @row
-
-      errors.assert_not_equals @row, view.data.root, "Cannot detach root"
-
-      view.data.detach @row
+      errors.assert_not_equals @row.id, view.data.root.id, "Cannot detach root"
+      @detached = view.data.detach @row
 
     rewind: (view) ->
-      view.data.attachChild @parent, @row, @index
+      view.data.attachChild @detached.parent, @row, @detached.index
 
   class AttachBlock extends Action
     constructor: (@row, @parent, @index = -1, @options = {}) ->
@@ -142,7 +138,7 @@ if module?
         next = children[@index]
       else
         next = if @index == 0 then @parent else children[@index - 1]
-        if next == view.data.viewRoot
+        if next.id == view.data.viewRoot.id
           next = view.data.addChild @parent
           @created = next
 
