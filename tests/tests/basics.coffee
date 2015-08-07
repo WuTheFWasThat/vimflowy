@@ -228,3 +228,8 @@ t.expect ['umpty', '']
 t.sendKeys 'jxk.'
 t.expect ['mpty', '']
 
+# test join where second row is empty
+t = new TestCase ['empty', '']
+t.sendKeys 'J'
+t.expect ['empty']
+

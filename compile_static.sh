@@ -48,9 +48,8 @@ fi
 
 # unnecessary manifest.json from connect-assets.  chrome app upload complains about it
 rm -rf $TMP_FOLDER/assets/manifest.json
-
-cp manifest.json $TMP_FOLDER/
-cp background.js $TMP_FOLDER/
+# stuff for chrome packaged app
+cp package/* $TMP_FOLDER/
 
 (
     cd $TMP_FOLDER

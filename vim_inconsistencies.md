@@ -1,6 +1,10 @@
 # Known inconsistencies with vim #
 
-Feel free to report more. Most of these are intentional
+There are some obvious huge differences like search and marks behavior.
+This catalogs some more subtle differences.  Most have been entirely intentional.
+
+If you feel any of them make vimflowy feel significantly less familiar, contact me and I'll take it into consideration.
+And feel free to report more!
 
 - undoing operations always puts your cursor where it was.  (This is not true in vim: try going to the middle of a line and typing d0u)
 - in vim, cw works like ciw, which is inconsistent/counterintuitive

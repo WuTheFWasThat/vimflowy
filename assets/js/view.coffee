@@ -813,7 +813,7 @@ renderLine = (lineData, options = {}) ->
         @moveBlock child, first, 0
 
       line = @data.getLine second
-      if options.delimiter
+      if line.length and options.delimiter
         if line[0].char != options.delimiter
           line = [{char: options.delimiter}].concat line
       @detachBlock second
