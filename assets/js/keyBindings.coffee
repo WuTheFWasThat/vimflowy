@@ -8,6 +8,7 @@ if module?
 
   defaultVimKeyBindings = {}
 
+  # keybindings for normal-like modes (normal, visual, visual-line)
   defaultVimKeyBindings[MODES.NORMAL] =
     HELP              : ['?']
     INSERT            : ['i']
@@ -39,6 +40,8 @@ if module?
     GO_END            : ['G']
     DELETE            : ['d']
     DELETE_TO_END     : ['D']
+    DELETE_TO_HOME    : []
+    DELETE_LAST_WORD  : []
     CHANGE            : ['c']
     DELETE_CHAR       : ['x']
     DELETE_LAST_CHAR  : ['X']
@@ -48,6 +51,7 @@ if module?
     PASTE_AFTER       : ['p']
     PASTE_BEFORE      : ['P']
     JOIN_LINE         : ['J']
+    SPLIT_LINE        : ['K']
 
     INDENT_RIGHT      : ['>']
     INDENT_LEFT       : ['<']
@@ -90,6 +94,11 @@ if module?
     EXPORT_FILE       : ['ctrl+s']
     IMPORT_FILE       : ['ctrl+S']
 
+    SWAP_CURSOR       : ['o', 'O']
+    EXIT_MODE         : ['esc', 'ctrl+c']
+    # TODO: SWAP_CASE         : ['~']
+
+  # keybindings for insert-like modes (insert, mark, menu)
   defaultVimKeyBindings[MODES.INSERT] =
     LEFT              : ['left']
     RIGHT             : ['right']
@@ -101,6 +110,7 @@ if module?
     DELETE_TO_END     : ['ctrl+k']
     DELETE_LAST_WORD  : ['ctrl+w']
     PASTE_BEFORE      : ['ctrl+y']
+    PASTE_AFTER       : []
     BEGINNING_WORD    : ['alt+b']
     END_WORD          : ['alt+f']
     NEXT_WORD         : []
@@ -114,7 +124,7 @@ if module?
 
     BACKSPACE         : ['backspace']
     DELKEY            : ['shift+backspace']
-    SPLIT             : ['enter']
+    SPLIT_LINE        : ['enter']
 
     INDENT_RIGHT      : []
     INDENT_LEFT       : []
@@ -134,81 +144,178 @@ if module?
     SCROLL_DOWN       : ['page down', 'ctrl+down']
     SCROLL_UP         : ['page up', 'ctrl+up']
 
-    EXIT_MODE         : ['esc', 'ctrl+c']
-
     BOLD              : ['ctrl+B']
     ITALIC            : ['ctrl+I']
     UNDERLINE         : ['ctrl+U']
     STRIKETHROUGH     : ['ctrl+enter']
 
-  defaultVimKeyBindings[MODES.VISUAL] =
-    YANK              : ['y']
-    DELETE            : ['d', 'x']
-    CHANGE            : ['c']
-    SWAP_CURSOR       : ['o', 'O']
-    EXIT_MODE         : ['esc', 'ctrl+c']
-    # REPLACE           : ['r']
-    # SWAP_CASE         : ['~']
-    BOLD              : ['ctrl+B']
-    ITALIC            : ['ctrl+I']
-    UNDERLINE         : ['ctrl+U']
-    STRIKETHROUGH     : ['ctrl+enter']
-
-  defaultVimKeyBindings[MODES.VISUAL_LINE] =
-    NEXT_SIBLING      : ['j', 'down']
-    PREV_SIBLING      : ['k', 'up']
-    YANK              : ['y']
-    DELETE            : ['d', 'x']
-    CHANGE            : ['c']
-    SWAP_CURSOR       : ['o', 'O']
-    MOVE_BLOCK_RIGHT  : ['>']
-    MOVE_BLOCK_LEFT   : ['<']
-    EXIT_MODE         : ['esc', 'ctrl+c']
-    # REPLACE           : ['r']
-    # SWAP_CASE         : ['~']
-    BOLD              : ['ctrl+B']
-    ITALIC            : ['ctrl+I']
-    UNDERLINE         : ['ctrl+U']
-    STRIKETHROUGH     : ['ctrl+enter']
-
-  defaultVimKeyBindings[MODES.MENU] =
     MENU_SELECT       : ['enter']
     MENU_UP           : ['ctrl+k', 'up', 'tab']
     MENU_DOWN         : ['ctrl+j', 'down', 'shift+tab']
 
-    LEFT              : ['left']
-    RIGHT             : ['right']
-    HOME              : ['ctrl+a', 'home']
-    END               : ['ctrl+e', 'end']
-    BEGINNING_WORD    : ['alt+b']
-    END_WORD          : ['alt+f']
-    NEXT_WORD         : []
-    BEGINNING_WWORD   : []
-    END_WWORD         : []
-    NEXT_WWORD        : []
-    FIND_NEXT_CHAR    : []
-    FIND_PREV_CHAR    : []
-    TO_NEXT_CHAR      : []
-    TO_PREV_CHAR      : []
-
-    BACKSPACE         : ['backspace']
-    DELKEY            : ['shift+backspace']
-
     EXIT_MODE         : ['esc', 'ctrl+c']
 
-  defaultVimKeyBindings[MODES.MARK] =
     FINISH_MARK       : ['enter']
 
-    LEFT              : ['left']
-    RIGHT             : ['right']
-    HOME              : ['ctrl+a', 'home']
-    END               : ['ctrl+e', 'end']
+  # set of possible actions for each mode
+  actions = {}
+  actions[MODES.NORMAL] = [
+    'HELP',
+    'INSERT', 'INSERT_HOME', 'INSERT_AFTER', 'INSERT_END', 'INSERT_LINE_BELOW', 'INSERT_LINE_ABOVE',
 
-    BACKSPACE         : ['backspace']
-    DELKEY            : ['shift+backspace']
+    'LEFT', 'RIGHT', 'UP', 'DOWN',
+    'HOME', 'END',
+    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
+    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
+    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
 
-    EXIT_MODE         : ['esc', 'ctrl+c']
+    'GO', 'GO_END', 'PARENT',
+    'DELETE', 'DELETE_CHAR',
+    'CHANGE', 'CHANGE_CHAR',
+    'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_CHAR', 'DELETE_LAST_WORD'
+    'REPLACE',
+    'YANK', 'PASTE_AFTER', 'PASTE_BEFORE',
+    'JOIN_LINE', 'SPLIT_LINE',
 
+    'INDENT_RIGHT', 'INDENT_LEFT',
+    'MOVE_BLOCK_LEFT', 'MOVE_BLOCK_RIGHT', 'MOVE_BLOCK_UP', 'MOVE_BLOCK_DOWN',
+
+    'NEXT_SIBLING', 'PREV_SIBLING',
+
+    'TOGGLE_FOLD',
+    'ZOOM_IN', 'ZOOM_OUT', 'ZOOM_IN_ALL', 'ZOOM_OUT_ALL',
+    'SCROLL_DOWN', 'SCROLL_UP',
+
+    'SEARCH',
+    'MARK', 'MARK_SEARCH',
+    'JUMP_PREVIOUS', 'JUMP_NEXT',
+
+    'UNDO', 'REDO',
+    'REPLAY',
+    'RECORD_MACRO', 'PLAY_MACRO',
+
+    'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
+
+    'ENTER_VISUAL', 'ENTER_VISUAL_LINE',
+
+    'EXPORT_FILE', 'IMPORT_FILE',
+  ]
+
+  actions[MODES.VISUAL] = [
+    'YANK',
+    'DELETE',
+    'CHANGE',
+    'SWAP_CURSOR',
+    # TODO: 'REPLACE',
+    'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
+    'EXIT_MODE',
+  ]
+
+  actions[MODES.VISUAL_LINE] = [
+    'NEXT_SIBLING', 'PREV_SIBLING',
+    'YANK',
+    'DELETE',
+    'CHANGE',
+    'SWAP_CURSOR',
+    'MOVE_BLOCK_RIGHT',
+    'MOVE_BLOCK_LEFT',
+    'EXIT_MODE',
+    # TODO: 'REPLACE',
+    'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
+  ]
+
+  actions[MODES.INSERT] = [
+    'LEFT', 'RIGHT', 'UP', 'DOWN',
+    'HOME', 'END',
+    'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_WORD',
+    'PASTE_BEFORE', 'PASTE_AFTER',
+    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
+    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
+    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
+
+    'BACKSPACE', 'DELKEY',
+    'SPLIT_LINE',
+
+    'INDENT_RIGHT', 'INDENT_LEFT',
+    'MOVE_BLOCK_RIGHT', 'MOVE_BLOCK_LEFT', 'MOVE_BLOCK_DOWN', 'MOVE_BLOCK_UP',
+
+    'NEXT_SIBLING', 'PREV_SIBLING',
+
+    'TOGGLE_FOLD',
+    'ZOOM_OUT', 'ZOOM_IN', 'ZOOM_OUT_ALL', 'ZOOM_IN_ALL',
+    'SCROLL_DOWN', 'SCROLL_UP',
+
+    'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
+
+    'EXIT_MODE',
+  ]
+
+  actions[MODES.MENU] = [
+    'MENU_UP', 'MENU_DOWN',
+    'MENU_SELECT',
+    'LEFT', 'RIGHT',
+    'HOME', 'END',
+    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
+    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
+    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
+    'BACKSPACE', 'DELKEY',
+    'EXIT_MODE',
+  ]
+
+  actions[MODES.MARK] = [
+    'FINISH_MARK',
+    'LEFT', 'RIGHT',
+    'HOME', 'END',
+    'BACKSPACE', 'DELKEY',
+    'EXIT_MODE',
+  ]
+
+  assert_arr_equal = (arr_a, arr_b) ->
+    a_minus_b = _.difference(arr_a, arr_b)
+    if a_minus_b.length
+      throw "Arrays not same, first contains: #{a_minus_b}"
+    b_minus_a = _.difference(arr_b, arr_a)
+    if b_minus_a.length
+      throw "Arrays not same, second contains: #{b_minus_a}"
+
+  assert_arr_equal(
+    _.keys(defaultVimKeyBindings[MODES.NORMAL]),
+    _.union(
+      actions[MODES.NORMAL], actions[MODES.VISUAL], actions[MODES.VISUAL_LINE]
+    )
+  )
+
+  assert_arr_equal(
+    _.keys(defaultVimKeyBindings[MODES.INSERT]),
+    _.union(
+      actions[MODES.INSERT], actions[MODES.MENU], actions[MODES.MARK]
+    )
+  )
+
+  get_mode_keybindings = (mode, general_bindings) ->
+      bindings = {}
+      for action in actions[mode]
+          bindings[action] = general_bindings[action].slice()
+      return bindings
+
+  modeBindings = {}
+  modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultVimKeyBindings[MODES.NORMAL]
+  modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultVimKeyBindings[MODES.NORMAL]
+  modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultVimKeyBindings[MODES.NORMAL]
+
+  # special case, delete_char -> delete in visual and visual_line
+  [].push.apply modeBindings[MODES.VISUAL].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
+  [].push.apply modeBindings[MODES.VISUAL_LINE].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
+  # special case, down -> next_sibling, up -> prev_sibling in visual_line
+  [].push.apply modeBindings[MODES.VISUAL_LINE].NEXT_SIBLING, modeBindings[MODES.NORMAL].DOWN
+  [].push.apply modeBindings[MODES.VISUAL_LINE].PREV_SIBLING, modeBindings[MODES.NORMAL].UP
+  # special case, indent -> move in visual_line
+  [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, modeBindings[MODES.NORMAL].INDENT_RIGHT
+  [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, modeBindings[MODES.NORMAL].INDENT_LEFT
+
+  modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultVimKeyBindings[MODES.INSERT]
+  modeBindings[MODES.MENU] = get_mode_keybindings MODES.MENU, defaultVimKeyBindings[MODES.INSERT]
+  modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultVimKeyBindings[MODES.INSERT]
 
   text_format_definition = (property) ->
     return () ->
@@ -642,6 +749,10 @@ if module?
       display: 'Join current line with line below'
       fn: () ->
         do @view.joinAtCursor
+    SPLIT_LINE:
+      display: 'Split line at cursor (i.e. enter key)'
+      fn: () ->
+        do @view.newLineAtCursor
 
     SCROLL_DOWN:
       display: 'Scroll half window down'
@@ -702,10 +813,6 @@ if module?
       display: 'Delete a character after the cursor (i.e. del key)'
       fn: () ->
         @view.delCharsAfterCursor 1
-    SPLIT:
-      display: 'Split line at cursor (i.e. enter key)'
-      fn: () ->
-        do @view.newLineAtCursor
 
     # for menu mode
     MENU_SELECT:
@@ -769,7 +876,7 @@ if module?
         bindings[key] = v
     return bindings
 
-  keyMaps = JSON.parse JSON.stringify defaultVimKeyBindings
+  keyMaps = JSON.parse JSON.stringify modeBindings
 
   bindings = {}
   for mode_name, mode of MODES

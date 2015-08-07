@@ -87,7 +87,7 @@ if module?
     processKeys: (keyStream) ->
       handled = false
       while not keyStream.done() and not keyStream.waiting
-        handled = handled or (@processOnce keyStream)
+        handled = (@processOnce keyStream) or handled
       # TODO: stop re-rendering everything every time?
       do @view.render
       return handled
