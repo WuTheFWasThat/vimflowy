@@ -285,7 +285,7 @@ if module?
 
       bindings = @bindings[MODES.MENU]
 
-      view = @menu.view
+      view = @view.menu.view
 
       if not (key of bindings)
         if key == 'shift+enter'
@@ -304,16 +304,17 @@ if module?
           args = []
           context = {
             view: view,
-            menu: @menu
+            menu: @view.menu,
             repeat: 1,
           }
           fn.apply context, args
 
         if info.to_mode == MODES.NORMAL
           @view.setMode MODES.NORMAL
+          @view.menu = null
+          return true
 
-      do @menu.update
-      do @menu.render
+      do @view.menu.update
       do keyStream.forget
       return true
 
@@ -452,9 +453,8 @@ if module?
 
       if info.menu
         @view.setMode MODES.MENU
-        @menu = new Menu @view.menuDiv, (info.menu.bind @, @view)
-        do @menu.update
-        do @menu.render
+        @view.menu = new Menu @view.menuDiv, (info.menu.bind @, @view)
+        do @view.menu.update
         do keyStream.forget
         return true
 

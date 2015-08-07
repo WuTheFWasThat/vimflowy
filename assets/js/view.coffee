@@ -257,8 +257,6 @@ renderLine = (lineData, options = {}) ->
 
       if @menuDiv
         @menuDiv.toggleClass 'hidden', (mode != MODES.MENU)
-      if @keybindingsDiv
-        @keybindingsDiv.toggleClass 'hidden', (mode == MODES.MENU)
       if @mainDiv
         @mainDiv.toggleClass 'hidden', (mode == MODES.MENU)
       do @buildBindingsDiv
@@ -1023,6 +1021,10 @@ renderLine = (lineData, options = {}) ->
     # RENDERING
 
     render: (options = {}) ->
+      if @menu
+        do @menu.render
+        return
+
       t = Date.now()
       vtree = @virtualRender options
       patches = virtualDom.diff @vtree, vtree

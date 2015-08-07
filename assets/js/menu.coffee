@@ -60,12 +60,6 @@ class Menu
       message = ''
       if do @view.curLineLength == 0
         message = 'Type something to search!'
-        message += '<br/>'
-        message += 'Ctrl+j and Ctrl+k to move up and down'
-        message += '<br/>'
-        message += 'Enter to select result'
-        message += '<br/>'
-        message += 'Esc to cancel'
       else
         message = 'No results!  Try typing something else'
       @div.append(
