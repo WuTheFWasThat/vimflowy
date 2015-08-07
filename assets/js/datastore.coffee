@@ -12,9 +12,9 @@ if module?
       throw 'Not implemented'
     setLine: (row, line) ->
       throw 'Not implemented'
-    getParent: (row) ->
+    getParents: (row) ->
       throw 'Not implemented'
-    setParent: (row, parent) ->
+    setParents: (row, parent) ->
       throw 'Not implemented'
     getChildren: (row) ->
       throw 'Not implemented'
@@ -77,11 +77,14 @@ if module?
     setLine: (row, line) ->
       @lines[row] = line
 
-    getParent: (row) ->
-      return @parents[row]
+    getParents: (row) ->
+      parents = @parents[row]
+      if typeof parents == 'number' then parents = [parents]
+      unless parents? then parents = []
+      return parents
 
-    setParent: (row, parent) ->
-      @parents[row] = parent
+    setParents: (row, parents) ->
+      @parents[row] = parents
 
     getChildren: (row) ->
       return [].slice.apply @children[row]
@@ -111,7 +114,7 @@ if module?
       return # no point in remembering
 
     getLastViewRoot: () ->
-      return 0
+      return
 
     getAllMarks: () ->
       return _.clone @allMarks
@@ -199,14 +202,17 @@ if module?
       @lines[row] = line
       @_setLocalStorage_ (@_lineKey_ row), line
 
-    getParent: (row) ->
+    getParents: (row) ->
       if not (row of @parents)
         @parents[row] = @_getLocalStorage_ @_parentKey_ row
-      return @parents[row]
+      parents = @parents[row]
+      if typeof parents == 'number' then parents = [parents]
+      unless parents? then parents = []
+      return parents
 
-    setParent: (row, parent) ->
-      @parents[row] = parent
-      @_setLocalStorage_ (@_parentKey_ row), parent
+    setParents: (row, parents) ->
+      @parents[row] = parents
+      @_setLocalStorage_ (@_parentKey_ row), parents
 
     getChildren: (row) ->
       if not (row of @children)
@@ -255,10 +261,10 @@ if module?
       return @_setLocalStorage_ @_allMarksKey_, marks
 
     getLastViewRoot: () ->
-      id = @_getLocalStorage_ @_lastViewrootKey_ , 0
+      id = @_getLocalStorage_ @_lastViewrootKey_
       if (localStorage.getItem @_lineKey_ id) == null
         Logger.logger.error 'Invalid view root', id
-        id = 0
+        return
       return id
 
     getId: () ->

@@ -96,15 +96,11 @@
       return "row #{@row}"
 
     apply: (view) ->
-      @parent = view.data.getParent @row
-      @index = view.data.indexOf @row
-
-      if @row == view.root then throw 'Cannot delete root'
-
-      view.data.detach @row
+      if @row.id == view.data.root.id then throw 'Cannot delete root'
+      @detached = view.data.detach @row
 
     rewind: (view) ->
-      view.data.attachChild @parent, @row, @index
+      view.data.attachChild @detached.parent, @row, @detached.index
 
   class AttachBlock extends Action
     constructor: (row, parent, index = -1, options = {}) ->
