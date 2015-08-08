@@ -6,10 +6,10 @@ if module?
 ((exports) ->
   MODES = constants.MODES
 
-  defaultVimKeyBindings = {}
+  defaultHotkeys = {}
 
   # keybindings for normal-like modes (normal, visual, visual-line)
-  defaultVimKeyBindings[MODES.NORMAL] =
+  defaultHotkeys[MODES.NORMAL] =
     HELP              : ['?']
     INSERT            : ['i']
     INSERT_HOME       : ['I']
@@ -99,7 +99,7 @@ if module?
     # TODO: SWAP_CASE         : ['~']
 
   # keybindings for insert-like modes (insert, mark, menu)
-  defaultVimKeyBindings[MODES.INSERT] =
+  defaultHotkeys[MODES.INSERT] =
     LEFT              : ['left']
     RIGHT             : ['right']
     UP                : ['up']
@@ -250,7 +250,7 @@ if module?
     'EXIT_MODE',
   ]
 
-  actions[MODES.MENU] = [
+  actions[MODES.SEARCH] = [
     'MENU_UP', 'MENU_DOWN',
     'MENU_SELECT',
     'LEFT', 'RIGHT',
@@ -279,16 +279,16 @@ if module?
       throw "Arrays not same, second contains: #{b_minus_a}"
 
   assert_arr_equal(
-    _.keys(defaultVimKeyBindings[MODES.NORMAL]),
+    _.keys(defaultHotkeys[MODES.NORMAL]),
     _.union(
       actions[MODES.NORMAL], actions[MODES.VISUAL], actions[MODES.VISUAL_LINE]
     )
   )
 
   assert_arr_equal(
-    _.keys(defaultVimKeyBindings[MODES.INSERT]),
+    _.keys(defaultHotkeys[MODES.INSERT]),
     _.union(
-      actions[MODES.INSERT], actions[MODES.MENU], actions[MODES.MARK]
+      actions[MODES.INSERT], actions[MODES.SEARCH], actions[MODES.MARK]
     )
   )
 
@@ -299,9 +299,9 @@ if module?
       return bindings
 
   modeBindings = {}
-  modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultVimKeyBindings[MODES.NORMAL]
-  modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultVimKeyBindings[MODES.NORMAL]
-  modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultVimKeyBindings[MODES.NORMAL]
+  modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultHotkeys[MODES.NORMAL]
+  modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultHotkeys[MODES.NORMAL]
+  modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultHotkeys[MODES.NORMAL]
 
   # special case, delete_char -> delete in visual and visual_line
   [].push.apply modeBindings[MODES.VISUAL].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
@@ -313,9 +313,9 @@ if module?
   [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, modeBindings[MODES.NORMAL].INDENT_RIGHT
   [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, modeBindings[MODES.NORMAL].INDENT_LEFT
 
-  modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultVimKeyBindings[MODES.INSERT]
-  modeBindings[MODES.MENU] = get_mode_keybindings MODES.MENU, defaultVimKeyBindings[MODES.INSERT]
-  modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultVimKeyBindings[MODES.INSERT]
+  modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultHotkeys[MODES.INSERT]
+  modeBindings[MODES.SEARCH] = get_mode_keybindings MODES.SEARCH, defaultHotkeys[MODES.INSERT]
+  modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultHotkeys[MODES.INSERT]
 
   text_format_definition = (property) ->
     return () ->

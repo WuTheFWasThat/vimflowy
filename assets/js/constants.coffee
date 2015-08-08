@@ -5,7 +5,7 @@
     INSERT      : 2
     VISUAL      : 3
     VISUAL_LINE : 4
-    MENU        : 5
+    SEARCH      : 5
     MARK        : 6
 
   exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
@@ -26,13 +26,13 @@
         'Use < and > to indent and unindent just a single line'
         { text: 'Text formatting', collapsed: true, children: [
           {
-            text:      'Bold (meta+b), italicized (meta+i), and underlined (meta+u) text.  Bold italic underlined!'
-            bold:      '....                                                               ...................... '
-            italic:    '               ..........                                          ...................... '
-            underline: '                                        ..........                 ...................... '
+            text:      'Bold (ctrl+shift+b), italicized (ctrl+shift+i), and underlined (ctrl+shift+u) text.  Bold italic underlined!'
+            bold:      '....                                                                                 ...................... '
+            italic:    '                     ..........                                                      ...................... '
+            underline: '                                                    ..........                       ...................... '
           }
           {
-            text:          'Strike through (meta+-)!'
+            text:          'Strike through (ctrl+enter)!'
             children: [ {
               text:          'Try using it for todo lists'
               strikethrough: '...........................'

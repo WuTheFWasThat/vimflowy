@@ -256,9 +256,9 @@ renderLine = (lineData, options = {}) ->
         @markrow = @cursor.row
 
       if @menuDiv
-        @menuDiv.toggleClass 'hidden', (mode != MODES.MENU)
+        @menuDiv.toggleClass 'hidden', (mode != MODES.SEARCH)
       if @mainDiv
-        @mainDiv.toggleClass 'hidden', (mode == MODES.MENU)
+        @mainDiv.toggleClass 'hidden', (mode == MODES.SEARCH)
       do @buildBindingsDiv
 
     buildBindingsDiv: () ->
