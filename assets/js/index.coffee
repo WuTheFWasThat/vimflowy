@@ -42,6 +42,43 @@ create_view = (data) ->
   $(document).ready ->
     do view.render
 
+    $("#import_submit").click () =>
+        file = $("#import-file :file")[0].files[0]
+        if not file?
+            view.showMessage 'Please select a file to import!'
+            return
+        view.showMessage 'Importing...'
+        mimetype = utils.mimetypeLookup file.name
+        reader = new FileReader()
+        reader.readAsText file, "UTF-8"
+        reader.onload = (evt) ->
+            content = evt.target.result
+            if view.importContent content, mimetype
+                view.showMessage 'Imported!'
+                window.location.hash = '' # close the modal
+            else
+                view.showMessage 'Import failed due to parsing issue'
+        reader.onerror = (evt) ->
+            view.showMessage 'Import failed due to file-reading issue'
+            console.log 'Import Error', evt
+
+    $("#export_submit").click () =>
+        view.showMessage 'Exporting...'
+
+        filename = (view.settings.getSetting 'export_filename') || 'vimflowy.json'
+        # Infer mimetype from file extension
+        mimetype = utils.mimetypeLookup filename
+        content = view.exportContent mimetype
+
+        $("#export").attr("download", filename)
+        $("#export").attr("href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}")
+        $("#export")[0].click()
+        $("#export").attr("download", null)
+        $("#export").attr("href", null)
+
+        view.showMessage 'Exported!'
+        window.location.hash = '' # close the modal
+
 if chrome?.storage?.sync
   Logger.logger.info 'using chrome storage'
 

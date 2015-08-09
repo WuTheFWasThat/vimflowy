@@ -91,9 +91,6 @@ if module?
     ENTER_VISUAL      : ['v']
     ENTER_VISUAL_LINE : ['V']
 
-    EXPORT_FILE       : ['ctrl+s']
-    IMPORT_FILE       : ['ctrl+S']
-
     SWAP_CURSOR       : ['o', 'O']
     EXIT_MODE         : ['esc', 'ctrl+c']
     # TODO: SWAP_CASE         : ['~']
@@ -197,8 +194,6 @@ if module?
     'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
 
     'ENTER_VISUAL', 'ENTER_VISUAL_LINE',
-
-    'EXPORT_FILE', 'IMPORT_FILE',
   ]
 
   actions[MODES.VISUAL] = [
@@ -764,14 +759,6 @@ if module?
       drop: true
       fn: () ->
         @view.scrollPages -0.5
-    EXPORT_FILE:
-      display: 'Save a file'
-      fn: () ->
-        do @view.exportFile
-    IMPORT_FILE:
-      display: 'Import from a file'
-      fn: () ->
-        do @view.importFile
 
     RECORD_MACRO:
       display: 'Begin/stop recording a macro'

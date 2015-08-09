@@ -317,45 +317,6 @@ renderLine = (lineData, options = {}) ->
     # import/export #
     #################
 
-    exportFile: (filename, mimetype) ->
-      filename ||= @settings?.getSetting?('export_filename') || 'vimflowy.json'
-      if not mimetype? # Infer mimetype from file extension
-          mimetype = @mimetypeLookup filename
-      content = @exportContent mimetype
-      @saveFile filename, mimetype, content
-
-    importFileSelector: (success, failure) ->
-      # Success callback takes (content, mimetype)
-      # Failure callback takes ()
-      # Both are optional.
-      window.location.hash = "import-file"
-      resolve = () ->
-          window.onhashchange = null
-          $("#import-file .submit").off 'click'
-          window.location.hash = ""
-      if "onhashchange" in window
-          window.onhashchange = () ->
-              if failure? then do failure
-              do resolve
-      $("#import-file .submit").on 'click', () =>
-          # if file is actually uploaded
-          file = $("#import-file :file")[0].files[0]
-          if file?
-              mimetype = @mimetypeLookup file.name
-              reader = new FileReader()
-              reader.readAsText file, "UTF-8"
-              reader.onload = (evt) ->
-                  content = evt.target.result
-                  if success? then success(content, mimetype)
-                  do resolve
-              reader.onerror = (evt) ->
-                  if failure? then do failure
-                  do resolve
-
-    importFile: () ->
-      @importFileSelector (content, mimetype) =>
-          @importContent content, mimetype
-
     parseJson: (content) ->
       try
         root = JSON.parse(content)
@@ -410,22 +371,17 @@ renderLine = (lineData, options = {}) ->
         children: forest
       return root
 
-    parseHtml: (content) ->
-      throw "HTML import is not implemented"
-
     parseContent: (content, mimetype) ->
       if mimetype in ['application/json']
         return @parseJson content
       else if mimetype in ['text/plain', 'Text']
         return @parsePlaintext content
-      else if mimetype in ['text/html']
-        return @parseHtml content
       else
-        return "Trying to parse unsupported format"
+        return null
 
     importContent: (content, mimetype) ->
       root = @parseContent content, mimetype
-      if not root then return
+      if not root then return false
       row = @cursor.row
       if root.text == '' && root.children # Complete export, not one node
         @addBlocks root.children, row, 0
@@ -433,6 +389,7 @@ renderLine = (lineData, options = {}) ->
         @addBlocks [root], row, 0
       do @save
       do @render
+      return true
 
     exportContent: (mimetype) ->
       jsonContent = do @data.serialize
@@ -452,28 +409,9 @@ renderLine = (lineData, options = {}) ->
                   for line in exportLines child
                       lines.push "#{indent}#{line}"
               return lines
-          return(exportLines jsonContent).join "\n"
+          return (exportLines jsonContent).join "\n"
       else
           throw "Invalid export format"
-
-    mimetypeLookup: (filename) ->
-       parts = filename.split '.'
-       extension = if parts.length > 1 then parts[parts.length - 1] else ''
-       extensionLookup =
-         'json': 'application/json'
-         'txt': 'text/plain'
-         '': 'text/plain'
-       return extensionLookup[extension.toLowerCase()]
-
-    saveFile: (filename, mimetype, content) ->
-      if not $?
-        throw "Tried to save a file from the console, impossible"
-      $("#export").attr("download", filename)
-      $("#export").attr("href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}")
-      $("#export")[0].click()
-      $("#export").attr("download", null)
-      $("#export").attr("href", null)
-      return content
 
     # ACTIONS
 

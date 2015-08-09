@@ -13,7 +13,7 @@ block content
                 a.modal-close(href="#") X
                 table
                     tr
-                        td Visual Theme:
+                        th Visual Theme
                         td
                             select.theme-selection
                                 option(value="default-theme" selected=selected) Default
@@ -21,23 +21,23 @@ block content
                                 option(value="solarized_dark-theme") Solarized Dark
                                 option(value="solarized_light-theme") Solarized Light
                     tr
-                        td Export Format:
+                        th Export
                         td
                             select.export-fileformat-selection
-                                option(value="vimflowy.json" selected=selected) JSON
-                                option(value="vimflowy.txt") Text
-        .modal-dialog#import-file
-            .modal-contents
-                a.modal-close(href="#") X
-                div.title Import File
-                div.import
-                    input(type="file" name="import-file")
-                    input(type="submit" value="Import").submit
+                                option(value="vimflowy.json" selected=selected) Export as JSON
+                                option(value="vimflowy.txt") Export as text
+
+                            button#export_submit(style='float:right') Export!
+                    tr
+                        th Import
+                        td#import-file
+                            input(type="file" name="import-file")
+                            button#import_submit(style='float:right') Import!
 
     #bottom-bar
         a#settings-link.center(href='#settings')
           span.fa.fa-cog(style='margin-right:10px')
-          span Settings
+          span Menu
 
         #message
         #mode.center

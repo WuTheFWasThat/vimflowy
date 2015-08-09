@@ -101,12 +101,12 @@
         ] }
       ] }
       { text: 'Customizable', collapsed: true, children: [
-        'Different color themes (see Settings)'
+        'Different color themes (see Menu)'
         # 'Customizable hotkeys'
       ] }
-      # { text: 'Import and export data', collapsed: true, children: [
-      #   ''
-      # ] }
+      { text: 'Import and export data', collapsed: true, children: [
+        'Supports both JSON and Workflowy-compatible plaintext formats'
+      ] }
     ] }
     { text: 'Tips', collapsed: true, children: [
       'Collapse things often to avoid clutter.  Zoom into collapsed bullets'
