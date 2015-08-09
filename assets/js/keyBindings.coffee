@@ -698,6 +698,10 @@ if module?
           fn: (cursor, options = {}) ->
             options.yank = true
             @view.deleteBetween @view.cursor, cursor, options
+        MARK:
+          display: 'Delete mark at cursor'
+          fn: () ->
+            @view.setMark @view.cursor.row, ''
     CHANGE:
       display: 'Change (operator)'
       bindings:

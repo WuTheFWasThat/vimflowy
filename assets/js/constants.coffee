@@ -99,6 +99,7 @@
           'Click the tag to jump to the marked location.'
           'Alternatively, when your cursor is over the tag, type gm to jump to the mark'
         ] }
+        'Delete marks by using dm, or just mark with empty string'
       ] }
       { text: 'Customizable', collapsed: true, children: [
         'Different color themes (see Menu)'

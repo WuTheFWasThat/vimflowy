@@ -330,7 +330,7 @@ if module?
         # must be non-whitespace
         if key.length > 1
           return false
-        if /^\w*$/.test(key)
+        if /^\S*$/.test(key)
           view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
       else
         info = bindings[key]
