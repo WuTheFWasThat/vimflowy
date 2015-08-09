@@ -86,8 +86,10 @@ class Data
   # marks #
   #########
 
+  # get mark for a row, '' if it doesn't exist
   getMark: (id) ->
-    return (@store.getMark id) || ''
+    marks = @store.getMarks id
+    return marks[id] or ''
 
   _updateAllMarks: (id, mark = '') ->
     allMarks = do @store.getAllMarks
@@ -95,7 +97,7 @@ class Data
     if mark of allMarks
       return false
 
-    oldmark = @store.getMark id
+    oldmark = @getMark id
     if oldmark
       delete allMarks[oldmark]
 
@@ -104,11 +106,46 @@ class Data
     @store.setAllMarks allMarks
     return true
 
+  # recursively update allMarks for id,mark pair
+  _updateMarksRecursive: (id, mark = '', from, to) ->
+    cur = from
+    while true
+      marks = @store.getMarks cur
+      if mark
+        marks[id] = mark
+      else
+        delete marks[id]
+      @store.setMarks cur, marks
+      if cur == to
+        break
+      cur = @getParent cur
+
   setMark: (id, mark = '') ->
-    # update allMarks mapping
     if @_updateAllMarks id, mark
-      # update row's mark
-      @store.setMark id, mark
+      @_updateMarksRecursive id, mark, id, @root
+      return true
+    return false
+
+  # detach the marks of an id that is being detached
+  # assumes that the old parent of the id is set
+  detachMarks: (id) ->
+    marks = @store.getMarks id
+    for row, mark of marks
+      row = parseInt row
+      @_updateAllMarks row, ''
+      # roll back the mark for this row, but only above me
+      @_updateMarksRecursive row, '', (@getParent id), @root
+
+  # try to restore the marks of an id that was detached
+  # assumes that the new to-be-parent of the id is already set
+  # and that the marks dictionary contains the old values
+  attachMarks: (id) ->
+    marks = @store.getMarks id
+    for row, mark of marks
+      row = parseInt row
+      if not (@setMark row, mark)
+        # roll back the mark for this row, but only underneath me
+        @_updateMarksRecursive row, '', row, id
 
   getAllMarks: () ->
     return do @store.getAllMarks
@@ -155,12 +192,7 @@ class Data
     children.splice i, 1
 
     @store.setChildren parent, children
-
-    mark = @getMark id
-    if mark
-      # set the mark in allMarks, but not for the row
-      # that way, when re-attaching, we can try to re-apply the mark
-      @_updateAllMarks id, ''
+    @detachMarks id
 
     return {
       parent: parent
@@ -180,13 +212,7 @@ class Data
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
       @store.setParent child, id
-
-      # try to restore the mark of child
-      mark = @getMark child
-      if mark
-        if not (@_updateAllMarks child, mark)
-          # don't call @setMark, since that will mess up allMarks
-          @store.setMark child, ''
+      @attachMarks child
 
     @store.setChildren id, children
 
@@ -406,7 +432,7 @@ class Data
     if @collapsed id
       struct.collapsed = true
 
-    mark = @store.getMark id
+    mark = @getMark id
     if mark
       struct.mark = mark
 

@@ -20,10 +20,7 @@ if module?
       throw 'Not implemented'
     setChildren: (row, children) ->
       throw 'Not implemented'
-    getMark: (row) ->
-      throw 'Not implemented'
-    setMark: (row, marks) ->
-      throw 'Not implemented'
+
     getCollapsed: (row) ->
       throw 'Not implemented'
     setCollapsed: (row, collapsed) ->
@@ -35,7 +32,14 @@ if module?
     setSetting: (setting, value) ->
       throw 'Not implemented'
 
-    # maintain global marks datastructure
+    # get mapping of row -> mark, for subtree beneath row
+    getMarks: (row) ->
+      throw 'Not implemented'
+    # set mapping of row -> mark, for subtree beneath row
+    setMarks: (row, marks) ->
+      throw 'Not implemented'
+
+    # maintain global marks datastructure.  maps mark -> row
     getAllMarks: () ->
       throw 'Not implemented'
     setAllMarks: (marks) ->
@@ -95,11 +99,11 @@ if module?
     setCollapsed: (row, collapsed) ->
       @collapsed[row] = collapsed
 
-    getMark: (row) ->
-      return @marks[row]
+    getMarks: (row) ->
+      return @marks[row] or {}
 
-    setMark: (row, mark) ->
-      @marks[row] = mark
+    setMarks: (row, marks) ->
+      @marks[row] = marks
 
     getSetting: (setting) ->
       return @settings[setting]
@@ -147,8 +151,8 @@ if module?
       @_collapsedKey_ = (row) ->
         return "#{@prefix}:#{row}:collapsed"
 
-      @_markKey_ = (row) ->
-        return "#{@prefix}:#{row}:mark"
+      @_marksKey_ = (row) ->
+        return "#{@prefix}:#{row}:marks"
 
       # no prefix, meaning it's global
       @_settingKey_ = (setting) ->
@@ -156,7 +160,7 @@ if module?
 
       @_lastSaveKey_ = "#{@prefix}:lastSave"
       @_lastViewrootKey_ = "#{@prefix}:lastviewroot"
-      @_allMarksKey_ = "#{@prefix}:marks"
+      @_allMarksKey_ = "#{@prefix}:allMarks"
       @_IDKey_ = "#{@prefix}:lastID"
 
       @lines = {}
@@ -226,14 +230,14 @@ if module?
       @collapsed[row] = collapsed
       @_setLocalStorage_ (@_collapsedKey_ row), collapsed
 
-    getMark: (row) ->
+    getMarks: (row) ->
       if not (row of @marks)
-        @marks[row] = @_getLocalStorage_ @_markKey_ row, ''
+        @marks[row] = @_getLocalStorage_ (@_marksKey_ row), {}
       return @marks[row]
 
-    setMark: (row, mark) ->
-      @marks[row] = mark
-      @_setLocalStorage_ (@_markKey_ row), mark
+    setMarks: (row, marks) ->
+      @marks[row] = marks
+      @_setLocalStorage_ (@_marksKey_ row), marks
 
     getSetting: (setting) ->
       if not (setting of @settings)

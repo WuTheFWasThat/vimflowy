@@ -275,3 +275,104 @@ t.expect [
   ] }
   { text: 'esome', mark: 'whoo' }
 ]
+
+# thoroughly test deletion of rows
+
+# marks can fail to reapply
+t = new TestCase [
+  { text: 'row', mark: 'row', children: [
+    { text: 'child', children: [
+      { text: 'grandchild', children: [
+        { text: 'grandgrandchild', mark: 'too' }
+        { text: 'grandgrandchild', mark: 'deep' }
+      ] }
+    ] }
+  ] }
+  'random'
+  'random'
+]
+t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
+
+t.sendKeys 'dd'
+t.expect [ 'random', 'random' ]
+t.expectMarks {}
+
+t.sendKeys 'mrow'
+t.sendKey 'enter'
+t.expectMarks {'row': 6}
+
+t.sendKeys 'jmtoo'
+t.sendKey 'enter'
+t.expectMarks {'row': 6, 'too': 7}
+
+# and marks can fail to apply
+t.sendKeys 'p'
+t.expect [
+  { text: 'random', mark: 'row' },
+  { text: 'random', mark: 'too' },
+  { text: 'row', children: [
+    { text: 'child', children: [
+      { text: 'grandchild', children: [
+        'grandgrandchild'
+        { text: 'grandgrandchild', mark: 'deep' }
+      ] }
+    ] }
+  ] }
+]
+t.expectMarks {'row': 6, 'too': 7, 'deep': 5}
+
+# deletion and reattachment works for nested stuff
+t = new TestCase [
+  { text: 'row', mark: 'row', children: [
+    { text: 'child', children: [
+      { text: 'grandchild', children: [
+        { text: 'grandgrandchild', mark: 'too' }
+        { text: 'grandgrandchild', mark: 'deep' }
+      ] }
+    ] }
+  ] }
+  'random'
+]
+t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
+
+t.sendKeys 'dd'
+t.expect [ 'random' ]
+t.expectMarks {}
+
+t.sendKeys 'p'
+t.expect [
+  'random'
+  { text: 'row', mark: 'row', children: [
+    { text: 'child', children: [
+      { text: 'grandchild', children: [
+        { text: 'grandgrandchild', mark: 'too' }
+        { text: 'grandgrandchild', mark: 'deep' }
+      ] }
+    ] }
+  ] }
+]
+t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
+
+t.sendKeys 'u'
+t.expect [ 'random' ]
+t.expectMarks {}
+
+t.sendKeys 'mtoo'
+t.sendKey 'enter'
+t.expectMarks {'too': 6}
+
+# and marks can fail to apply
+t.sendKeys 'p'
+t.expect [
+  { text: 'random', mark: 'too' },
+  { text: 'row', mark: 'row', children: [
+    { text: 'child', children: [
+      { text: 'grandchild', children: [
+        'grandgrandchild'
+        { text: 'grandgrandchild', mark: 'deep' }
+      ] }
+    ] }
+  ] }
+]
+# new IDs happen since it's the second paste
+t.expectMarks {'row': 7, 'too': 6, 'deep': 11}
