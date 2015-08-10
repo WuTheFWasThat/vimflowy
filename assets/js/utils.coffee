@@ -12,5 +12,17 @@
       '': 'text/plain'
     return extensionLookup[extension.toLowerCase()]
 
+  exports.isScrolledIntoView = (elem) ->
+    $elem = $(elem)
+    $window = $(window)
+
+    docViewTop = $window.scrollTop()
+    docViewBottom = docViewTop + $window.height()
+
+    elemTop = $elem.offset().top
+    elemBottom = elemTop + $elem.height()
+
+    return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop))
+
 
 )(if typeof exports isnt 'undefined' then exports else window.utils = {})

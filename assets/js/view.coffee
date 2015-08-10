@@ -956,6 +956,11 @@ renderLine = (lineData, options = {}) ->
          # scroll down
          @scrollMain (elemBottom - window.innerHeight + bottom_margin)
 
+    getVisibleRows: () ->
+      ids = $.makeArray($('.bullet')).filter(utils.isScrolledIntoView)
+                                   .map((x) -> return parseInt $(x).data('id'))
+      return ids
+
     # RENDERING
 
     render: (options = {}) ->
@@ -1032,22 +1037,27 @@ renderLine = (lineData, options = {}) ->
 
       for i, id of @data.getChildren parentid
 
-        icon = 'fa-circle'
-        if @data.hasChildren id
-          icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
+        if @easy_motion_mappings and id of @easy_motion_mappings.id_to_key
+          char = @easy_motion_mappings.id_to_key[id]
+          bullet = virtualDom.h 'span', {className: 'bullet easy-motion'}, [char]
+        else
+          icon = 'fa-circle'
+          if @data.hasChildren id
+            icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
 
-        bulletOpts = {
-          className: 'fa ' + icon + ' bullet'
-        }
-        if @data.hasChildren id
-          bulletOpts.style = {cursor: 'pointer'}
-          bulletOpts.onclick = ((id) =>
-            @toggleBlock id
-            do @save
-            do @render
-          ).bind(@, id)
+          bulletOpts = {
+            className: 'fa ' + icon + ' bullet'
+            attributes: {'data-id': id}
+          }
+          if @data.hasChildren id
+            bulletOpts.style = {cursor: 'pointer'}
+            bulletOpts.onclick = ((id) =>
+              @toggleBlock id
+              do @save
+              do @render
+            ).bind(@, id)
 
-        bullet = virtualDom.h 'i', bulletOpts
+          bullet = virtualDom.h 'i', bulletOpts
 
         elLine = virtualDom.h 'div', {
           id: rowDivID id

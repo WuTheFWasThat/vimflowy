@@ -108,6 +108,9 @@
       { text: 'Import and export data', collapsed: true, children: [
         'Supports both JSON and Workflowy-compatible plaintext formats'
       ] }
+      { text: 'Easy motion', collapsed: true, children: [
+        'Hit space to jump to a row quickly'
+      ] }
     ] }
     { text: 'Tips', collapsed: true, children: [
       'Collapse things often to avoid clutter.  Zoom into collapsed bullets'

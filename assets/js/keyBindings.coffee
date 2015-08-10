@@ -38,6 +38,8 @@ if module?
     GO                : ['g']
     PARENT            : ['p']
     GO_END            : ['G']
+    EASY_MOTION       : ['space']
+
     DELETE            : ['d']
     DELETE_TO_END     : ['D']
     DELETE_TO_HOME    : []
@@ -167,6 +169,7 @@ if module?
     'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
 
     'GO', 'GO_END', 'PARENT',
+    'EASY_MOTION',
     'DELETE', 'DELETE_CHAR',
     'CHANGE', 'CHANGE_CHAR',
     'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_CHAR', 'DELETE_LAST_WORD'
@@ -621,6 +624,41 @@ if module?
       motion: true
       fn: (cursor, options) ->
         cursor.prevSibling options
+
+    EASY_MOTION:
+      display: 'Jump to a visible row (based on EasyMotion)'
+      motion: true
+      fn: () ->
+        ids = do @view.getVisibleRows
+        keys = [
+          'z', 'x', 'c', 'v',
+          'q', 'w', 'e', 'r', 't',
+          'a', 's', 'd', 'f',
+          'g', 'h', 'j', 'k', 'l',
+          'y', 'u', 'i', 'o', 'p',
+          'b', 'n', 'm',
+        ]
+
+        if keys.length > ids.length
+          start = (keys.length - ids.length) / 2
+          keys = keys.slice(start, start + ids.length)
+        else
+          start = (ids.length - keys.length) / 2
+          ids = ids.slice(start, start + ids.length)
+
+        mappings = {
+          key_to_id: {}
+          id_to_key: {}
+        }
+        for [id, key] in _.zip(ids, keys)
+          mappings.key_to_id[key] = id
+          mappings.id_to_key[id] = key
+        @view.easy_motion_mappings = mappings
+      continue: (char, cursor, options) ->
+        if char of @view.easy_motion_mappings.key_to_id
+          id = @view.easy_motion_mappings.key_to_id[char]
+          cursor.set id, 0
+        @view.easy_motion_mappings = null
 
     GO:
       display: 'Various commands for navigation (operator)'

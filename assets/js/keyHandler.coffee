@@ -393,6 +393,8 @@ if module?
       if info.continue
         key = do keyStream.dequeue
         if key == null
+          if info.fn # bit of a hack, for
+            info.fn.apply {view: @view}
           do keyStream.wait
           return [null, repeat]
         fn = info.continue.bind @, key
