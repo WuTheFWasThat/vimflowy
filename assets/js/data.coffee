@@ -176,11 +176,11 @@ class Data
     children.splice ci, 1
     parents = @getParents row
     pi = _.findIndex parents, (par) ->
-        par.id == parent.id
+        par == parent.id
     parents.splice pi, 1
 
-    @store.setChildren parent, children
-    @store.setParents row, parents
+    @store.setChildren parent.id, children
+    @store.setParents row.id, parents
 
     mark = @getMark row
     if mark

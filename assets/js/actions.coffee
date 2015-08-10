@@ -151,7 +151,7 @@
         next = siblings[index]
       else
         next = if index == 0 then parent else siblings[index - 1]
-        if next == view.data.viewRoot
+        if next.id == view.data.viewRoot.id
           next = view.data.addChild parent
           @created = next
 

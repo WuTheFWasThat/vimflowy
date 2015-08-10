@@ -44,11 +44,11 @@ class TestCase
     return @
 
   expectViewRoot: (expected) ->
-    assert.equal @data.viewRoot, expected
+    assert.equal @data.viewRoot.id, expected
     return @
 
   expectCursor: (row, col) ->
-    assert.equal @view.cursor.row, row
+    assert.equal @view.cursor.row.id, row
     assert.equal @view.cursor.col, col
     return @
 
