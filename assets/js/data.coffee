@@ -164,7 +164,7 @@ class Data
         @_updateMarksRecursive row2, '', row2, row
 
   getAllMarks: () ->
-    _.map @store.getAllMarks, @canonicalInstance, @
+    _.mapObject (do @store.getAllMarks), @canonicalInstance, @
 
   #############
   # structure #
@@ -497,13 +497,7 @@ class Data
     if @collapsed row
       struct.collapsed = true
 
-<<<<<<< e0a6d9009463debe22bdb66b24adf9be02ddd018
     mark = @getMark row
-||||||| merged common ancestors
-    mark = @store.getMark row
-=======
-    mark = @store.getMark row.id
->>>>>>> Go to a mark works
     if mark
       struct.mark = mark
 
