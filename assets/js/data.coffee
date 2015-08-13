@@ -163,8 +163,13 @@ class Data
         # roll back the mark for this row, but only underneath me
         @_updateMarksRecursive row2, '', row2, row
 
+  reverseBijection: (reverseMap, callback) ->
+    callback = callback or _.identity
+    _.transform reverseMap, (memo, keys, value) ->
+      _.forEach keys, (key) ->
+        memo[callback key] = value
   getAllMarks: () ->
-    _.mapObject (do @store.getAllMarks), @canonicalInstance, @
+    _.mapValues (do @store.getAllMarks), @canonicalInstance, @
 
   #############
   # structure #
@@ -198,7 +203,6 @@ class Data
     # TODO: Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
     # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
     errors.assert id?, "Empty id passed to canonicalInstance"
-    unless id? then return
     if id == @root.id
       return @root
     parentId = (@store.getParents id)[0]
@@ -423,10 +427,10 @@ class Data
   # find marks that start with the prefix
   findMarks: (prefix, nresults = 10) ->
     results = [] # list of rows
-    for mark, id of (do @getAllMarks)
+    for mark, row of (do @getAllMarks)
       if (mark.indexOf prefix) == 0
         results.push {
-          row: (@canonicalInstance id)
+          row: row
           mark: mark
         }
         if nresults > 0 and results.length == nresults

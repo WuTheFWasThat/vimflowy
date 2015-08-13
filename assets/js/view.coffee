@@ -632,8 +632,7 @@ window?.renderLine = renderLine
       mark = word[1..]
       allMarks = do @data.getAllMarks
       if mark of allMarks
-        rowId = allMarks[mark]
-        row = @data.canonicalInstance rowId
+        row = allMarks[mark]
         @rootInto row
         return true
       else
@@ -843,25 +842,25 @@ window?.renderLine = renderLine
       @detachBlock row, options
       @attachBlock row, parent, index, options
 
-    indentBlocks: (id, numblocks = 1) ->
-      newparent = @data.getSiblingBefore id
+    indentBlocks: (row, numblocks = 1) ->
+      newparent = @data.getSiblingBefore row
       unless newparent?
         return null # cannot indent
 
       if @data.collapsed newparent
         @toggleBlock newparent
 
-      siblings = @data.getSiblingRange id, 0, (numblocks-1)
+      siblings = @data.getSiblingRange row, 0, (numblocks-1)
       for sib in siblings
         @moveBlock sib, newparent, -1
       return newparent
 
-    unindentBlocks: (id, numblocks = 1, options = {}) ->
-      parent = @data.getParent id
+    unindentBlocks: (row, numblocks = 1, options = {}) ->
+      parent = @data.getParent row
       if parent.id == @data.viewRoot.id
         return null
 
-      siblings = @data.getSiblingRange id, 0, (numblocks-1)
+      siblings = @data.getSiblingRange row, 0, (numblocks-1)
 
       newparent = @data.getParent parent
       pp_i = @data.indexOf parent
