@@ -872,25 +872,25 @@ renderLine = (lineData, options = {}) ->
       @detachBlock row, options
       @attachBlock row, parent, index, options
 
-    indentBlocks: (id, numblocks = 1) ->
-      newparent = @data.getSiblingBefore id
+    indentBlocks: (row, numblocks = 1) ->
+      newparent = @data.getSiblingBefore row
       if newparent == null
         return null # cannot indent
 
       if @data.collapsed newparent
         @toggleBlock newparent
 
-      siblings = @data.getSiblingRange id, 0, (numblocks-1)
+      siblings = @data.getSiblingRange row, 0, (numblocks-1)
       for sib in siblings
         @moveBlock sib, newparent, -1
       return newparent
 
-    unindentBlocks: (id, numblocks = 1, options = {}) ->
-      parent = @data.getParent id
-      if parent == @data.viewRoot
+    unindentBlocks: (row, numblocks = 1, options = {}) ->
+      parent = @data.getParent row
+      if parent.id == @data.viewRoot.id
         return null
 
-      siblings = @data.getSiblingRange id, 0, (numblocks-1)
+      siblings = @data.getSiblingRange row, 0, (numblocks-1)
 
       newparent = @data.getParent parent
       pp_i = @data.indexOf parent
