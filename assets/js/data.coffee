@@ -232,7 +232,8 @@ class Data
   # attaches a detached child to a parent
   # the child should not have a parent already
   attachChild: (row, child, index = -1) ->
-    @attachChildren row, [child], index
+    children = @attachChildren row, [child], index
+    return children[0]
 
   attachChildren: (row, new_children, index = -1) ->
     children = @getChildren row
@@ -248,6 +249,7 @@ class Data
       @attachMarks child
 
     @store.setChildren row.id, children
+    return new_children
 
   nextVisible: (row = @viewRoot) ->
     if @viewable row
@@ -347,6 +349,9 @@ class Data
     child = { id: do @store.getNew }
     @attachChild row, child, index
     return child
+
+  cloneRow: (row, parent, index = -1) ->
+    @attachChildren parent, row, index
 
   # this is never used, since data structure is basically persistent
   # deleteRow: (row) ->

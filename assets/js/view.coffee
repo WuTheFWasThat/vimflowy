@@ -787,11 +787,18 @@ renderLine = (lineData, options = {}) ->
       action = new actions.AddBlocks serialized_rows, parent, index, options
       @act action
 
+    addClones: (cloned_rows, parent, index = -1, options = {}) ->
+      action = new actions.CloneBlocks cloned_rows, parent, index, options
+      @act action
+
     yankBlocks: (nrows) ->
       siblings = @data.getSiblingRange @cursor.row, 0, (nrows-1)
-      siblings = siblings.filter ((x) -> return x != null)
       serialized = siblings.map ((x) => return @data.serialize x)
       @register.saveSerializedRows serialized
+
+    yankBlocksClone: (nrows) ->
+      siblings = @data.getSiblingRange @cursor.row, 0, (nrows-1)
+      @register.saveClonedRows (siblings.map (sibling) -> sibling.id)
 
     detachBlock: (row, options = {}) ->
       action = new actions.DetachBlock row, options

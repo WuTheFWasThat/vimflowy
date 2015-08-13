@@ -17,17 +17,12 @@
     #   setCursor: if you wish to set the cursor, set to 'beginning' or 'end'
     #              indicating where the cursor should go to
 
-    constructor: (row, col, chars, options = {}) ->
-      @row = row
-      @col = col
-      @chars = chars
-
-      @options = options
+    constructor: (@row, @col, @chars, @options = {}) ->
       @options.setCursor ?= 'end'
       @options.cursor ?= {}
 
     str: () ->
-      return "row #{@row}, col #{@col}, nchars #{@chars.length}"
+      return "row #{@row.id}, col #{@col}, nchars #{@chars.length}"
 
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
@@ -42,17 +37,12 @@
       view.data.deleteChars @row, @col, @chars.length
 
   class DelChars extends Action
-    constructor: (row, col, nchars, options = {}) ->
-      @row = row
-      @col = col
-      @nchars = nchars
-
-      @options = options
+    constructor: (@row, @col, @nchars, @options = {}) ->
       @options.setCursor ?= 'before'
       @options.cursor ?= {}
 
     str: () ->
-      return "row #{@row}, col #{@col}, nchars #{@nchars}"
+      return "row #{@row.id}, col #{@col}, nchars #{@nchars}"
 
     apply: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
@@ -65,12 +55,10 @@
       view.data.writeChars @row, @col, @deletedChars
 
   class InsertRowSibling extends Action
-    constructor: (row, options) ->
-      @row = row
-      @options = options
+    constructor: (@row, @options) ->
 
     str: () ->
-      return "row #{@row}"
+      return "row #{@row.id}"
 
     apply: (view) ->
       if @options.after
@@ -88,12 +76,10 @@
       view.data.attachChild @rewinded.parent, @newrow, @rewinded.index
 
   class DetachBlock extends Action
-    constructor: (row, options = {}) ->
-      @row = row
-      @options = options
+    constructor: (@row, @options = {}) ->
 
     str: () ->
-      return "row #{@row}"
+      return "row #{@row.id}"
 
     apply: (view) ->
       if @row.id == view.data.root.id then throw 'Cannot delete root'
@@ -103,14 +89,10 @@
       view.data.attachChild @detached.parent, @row, @detached.index
 
   class AttachBlock extends Action
-    constructor: (row, parent, index = -1, options = {}) ->
-      @row = row
-      @parent = parent
-      @index = index
-      @options = options
+    constructor: (@row, @parent, @index = -1, @options = {}) ->
 
     str: () ->
-      return "row #{@row}, parent #{@parent}"
+      return "row #{@row.id}, parent #{@parent}"
 
     apply: (view) ->
       view.data.attachChild @parent, @row, @index
@@ -119,13 +101,10 @@
       view.data.detach @row
 
   class DeleteBlocks extends Action
-    constructor: (row, nrows = 1, options = {}) ->
-      @row = row
-      @nrows = nrows
-      @options = options
+    constructor: (@row, @nrows = 1, @options = {}) ->
 
     str: () ->
-      return "row #{@row}, nrows #{@nrows}"
+      return "row #{@row.id}, nrows #{@nrows}"
 
     apply: (view) ->
       row = @row
@@ -178,15 +157,11 @@
     #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
     #              indicating which block the cursor should go to
 
-    constructor: (serialized_rows, parent, index = -1, options = {}) ->
-      @serialized_rows = serialized_rows
-      @parent = parent
-      @index = index
-      @nrows = serialized_rows.length
-      @options = options
+    constructor: (@serialized_rows, @parent, @index = -1, @options = {}) ->
+      @nrows = @serialized_rows.length
 
     str: () ->
-      return "parent #{@parent}, index #{@index}"
+      return "parent #{@parent.id}, index #{@index}"
 
     apply: (view) ->
       index = @index
@@ -214,22 +189,53 @@
         view.data.attachChild @parent, sib, index
         index += 1
 
-  class ToggleBlock extends Action
-    constructor: (row) ->
-      @row = row
+  class CloneBlocks extends Action
+    # options:
+    #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
+    #              indicating which block the cursor should go to
+
+    constructor: (@cloned_rows, @parent, @index = -1, @options = {}) ->
+      @nrows = @cloned_rows.length
+
     str: () ->
-      return "row #{@row}"
+      return "parent #{@parent.id}, index #{@index}"
+
+    apply: (view) ->
+      index = @index
+
+      first = true
+      for clone_id in @cloned_rows
+        original = view.data.canonicalInstance clone_id
+        unless original?
+          continue
+        clone = view.data.cloneRow original, @parent, index
+        index += 1
+
+        if @options.setCursor == 'first' and first
+          view.cursor.set clone, 0
+          first = false
+
+      if @options.setCursor == 'last' and row?
+        view.cursor.set clone, 0
+
+    rewind: (view) ->
+      delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+      for sib in delete_siblings
+        view.data.detach sib
+
+  class ToggleBlock extends Action
+    constructor: (@row) ->
+    str: () ->
+      return "row #{@row.id}"
     apply: (view) ->
       view.data.toggleCollapsed @row
     rewind: (view) ->
       view.data.toggleCollapsed @row
 
   class SetMark extends Action
-    constructor: (row, mark) ->
-      @row = row
-      @mark = mark
+    constructor: (@row, @mark) ->
     str: () ->
-      return "row #{@row}, mark #{@mark}"
+      return "row #{@row.id}, mark #{@mark}"
     apply: (view) ->
       @oldmark = view.data.getMark @row
       view.data.setMark @row, @mark
@@ -243,6 +249,7 @@
   exports.AttachBlock = AttachBlock
   exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
+  exports.CloneBlocks = CloneBlocks
   exports.ToggleBlock = ToggleBlock
   exports.SetMark = SetMark
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

@@ -60,8 +60,7 @@ class Register
     else if @type == Register.TYPES.SERIALIZED_ROWS
       @pasteSerializedRows options
     else if @type == Register.TYPES.CLONED_ROWS
-      #TODO: Implement
-      console.log "CLONED_ROWS paste from register is not implemented"
+      @pasteClonedRows options
 
   pasteChars: (options = {}) ->
     if options.before
@@ -102,6 +101,20 @@ class Register
         @view.addBlocks @serialized_rows, row, 0, {setCursor: 'first'}
       else
         @view.addBlocks @serialized_rows, parent, (index + 1), {setCursor: 'first'}
+
+  pasteClonedRows: (options = {}) ->
+    row = @view.cursor.row
+    parent = @view.data.getParent row
+    index = @view.data.indexOf row
+
+    if options.before
+      @view.addClones @cloned_rows, parent, index, {setCursor: 'first'}
+    else
+      children = @view.data.getChildren row
+      if (not @view.data.collapsed row) and (children.length > 0)
+        @view.addClones @cloned_rows, row, 0, {setCursor: 'first'}
+      else
+        @view.addClones @cloned_rows, parent, (index + 1), {setCursor: 'first'}
 
 # exports
 module?.exports = Register
