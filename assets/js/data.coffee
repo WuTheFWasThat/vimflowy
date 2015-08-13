@@ -146,10 +146,13 @@ class Data
   canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
     # TODO: try to optimize for one in the viewroot
     # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
+    unless id? then return
     if id == @root.id
       return @root
     parentId = (@store.getParents id)[0]
     canonicalParent = @canonicalInstance parentId
+    if not canonicalParent
+      return
     children = @getChildren canonicalParent
     return _.find children, (sib) ->
       sib.id == id
@@ -320,15 +323,15 @@ class Data
     return child
 
   # this is never used, since data structure is basically persistent
-  # deleteRow: (id) ->
-  #   if id == @viewRoot.id
+  # deleteRow: (row) ->
+  #   if row.id == @viewRoot.id
   #     throw 'Cannot delete view root'
 
-  #   for child in (@getChildren id).slice()
+  #   for child in (@getChildren row).slice()
   #     @deleteRow child
 
-  #   @detach id
-  #   @store.delete id
+  #   @detach row
+  #   @store.delete row.id
 
   _insertSiblingHelper: (row, after) ->
     if row.id == @viewRoot.id

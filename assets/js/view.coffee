@@ -571,7 +571,7 @@ renderLine = (lineData, options = {}) ->
 
     # try going to jump, return true if succeeds
     tryJump: (jump) ->
-      if jump.viewRoot == @data.viewRoot
+      if jump.viewRoot.id == @data.viewRoot.id
         return false # not moving, don't jump
 
       if not @data.isAttached jump.viewRoot
