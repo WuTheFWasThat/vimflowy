@@ -41,7 +41,7 @@ if module?
       @options.cursor ?= {}
 
     str: () ->
-      return "row #{@row}, col #{@col}, nchars #{@chars.length}"
+      return "row #{@row.id}, col #{@col}, nchars #{@chars.length}"
 
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
@@ -61,7 +61,7 @@ if module?
       @options.cursor ?= {}
 
     str: () ->
-      return "row #{@row}, col #{@col}, nchars #{@nchars}"
+      return "row #{@row.id}, col #{@col}, nchars #{@nchars}"
 
     apply: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
@@ -77,7 +77,7 @@ if module?
     constructor: (@parent, @index) ->
 
     str: () ->
-      return "parent #{@parent} index #{@index}"
+      return "parent #{@parent.id} index #{@index}"
 
     apply: (view) ->
       @newrow = view.data.addChild @parent, @index
@@ -93,7 +93,7 @@ if module?
     constructor: (@row, @options = {}) ->
 
     str: () ->
-      return "row #{@row}"
+      return "row #{@row.id}"
 
     apply: (view) ->
       errors.assert_not_equals @row.id, view.data.root.id, "Cannot detach root"
@@ -106,7 +106,7 @@ if module?
     constructor: (@row, @parent, @index = -1, @options = {}) ->
 
     str: () ->
-      return "row #{@row}, parent #{@parent}"
+      return "row #{@row.id}, parent #{@parent}"
 
     apply: (view) ->
       view.data.attachChild @parent, @row, @index
@@ -118,7 +118,7 @@ if module?
     constructor: (@parent, @index, @nrows = 1, @options = {}) ->
 
     str: () ->
-      return "parent #{@parent}, index #{@index}, nrows #{@nrows}"
+      return "parent #{@parent.id}, index #{@index}, nrows #{@nrows}"
 
     apply: (view) ->
       @deleted_rows = []
@@ -167,7 +167,7 @@ if module?
       @nrows = @serialized_rows.length
 
     str: () ->
-      return "parent #{@parent}, index #{@index}"
+      return "parent #{@parent.id}, index #{@index}"
 
     apply: (view) ->
       index = @index
@@ -195,10 +195,44 @@ if module?
         view.data.attachChild @parent, sib, index
         index += 1
 
+  class CloneBlocks extends Action
+    # options:
+    #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
+    #              indicating which block the cursor should go to
+
+    constructor: (@cloned_rows, @parent, @index = -1, @options = {}) ->
+      @nrows = @cloned_rows.length
+
+    str: () ->
+      return "parent #{@parent.id}, index #{@index}"
+
+    apply: (view) ->
+      index = @index
+
+      first = true
+      for clone_id in @cloned_rows
+        original = view.data.canonicalInstance clone_id
+        unless original?
+          continue
+        clone = view.data.cloneRow original, @parent, index
+        index += 1
+
+        if @options.setCursor == 'first' and first
+          view.cursor.set clone, 0
+          first = false
+
+      if @options.setCursor == 'last' and row?
+        view.cursor.set clone, 0
+
+    rewind: (view) ->
+      delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+      for sib in delete_siblings
+        view.data.detach sib
+
   class ToggleBlock extends Action
     constructor: (@row) ->
     str: () ->
-      return "row #{@row}"
+      return "row #{@row.id}"
     apply: (view) ->
       view.data.toggleCollapsed @row
     rewind: (view) ->
@@ -207,7 +241,7 @@ if module?
   class SetMark extends Action
     constructor: (@row, @mark) ->
     str: () ->
-      return "row #{@row}, mark #{@mark}"
+      return "row #{@row.id}, mark #{@mark}"
     apply: (view) ->
       @oldmark = view.data.getMark @row
       view.data.setMark @row, @mark
@@ -221,6 +255,7 @@ if module?
   exports.AttachBlock = AttachBlock
   exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
+  exports.CloneBlocks = CloneBlocks
   exports.ToggleBlock = ToggleBlock
   exports.SetMark = SetMark
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

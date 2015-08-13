@@ -253,7 +253,8 @@ class Data
   # attaches a detached child to a parent
   # the child should not have a parent already
   attachChild: (row, child, index = -1) ->
-    @attachChildren row, [child], index
+    children = @attachChildren row, [child], index
+    return children[0]
 
   attachChildren: (row, new_children, index = -1) ->
     children = @getChildren row
@@ -270,6 +271,7 @@ class Data
 
     for child in new_children
       @attachMarks child
+    return new_children
 
   # returns an array representing the ancestry of a row,
   # up until the ancestor specified by the `stop` parameter
@@ -396,6 +398,9 @@ class Data
     child = { id: do @store.getNew }
     @attachChild row, child, index
     return child
+
+  cloneRow: (row, parent, index = -1) ->
+    @attachChildren parent, row, index
 
   _insertSiblingHelper: (row, after) ->
     if row.id == @viewRoot.id
