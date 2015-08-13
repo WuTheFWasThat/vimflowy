@@ -1041,7 +1041,7 @@ renderLine = (lineData, options = {}) ->
     virtualRender: (options = {}) ->
       crumbs = []
       row = @data.viewRoot
-      while row != @data.root
+      while row.id != @data.root.id
         crumbs.push row
         row = @data.getParent row
 
