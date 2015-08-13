@@ -118,6 +118,8 @@ if module?
       if not (key of bindings)
         if key == 'shift+enter'
           key = '\n'
+        else if key == 'space'
+          key = ' '
         if key.length > 1
           return false
         obj = {char: key}
@@ -290,6 +292,8 @@ if module?
       if not (key of bindings)
         if key == 'shift+enter'
           key = '\n'
+        else if key == 'space'
+          key = ' '
         if key.length > 1
           return false
         view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}

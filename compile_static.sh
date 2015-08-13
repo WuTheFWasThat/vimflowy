@@ -55,10 +55,11 @@ cp package/* $TMP_FOLDER/
     cd $TMP_FOLDER
     zip -q -r vimflowy.zip .
 )
+rm -rf $OUTPUT_FOLDER/vimflowy $OUTPUT_FOLDER/vimflowy.zip
 mv $TMP_FOLDER/vimflowy.zip $OUTPUT_FOLDER/vimflowy.zip
-rm -rf $TMP_FOLDER
+mv $TMP_FOLDER $OUTPUT_FOLDER/vimflowy
 
 kill $NODE_PID
 rm $SERVER_OUT
 
-echo "Success!  Result at $OUTPUT_FOLDER/vimflowy.zip"
+echo "Success!  Results at $OUTPUT_FOLDER/vimflowy.zip $OUTPUT_FOLDER/vimflowy"
