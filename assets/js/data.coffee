@@ -198,11 +198,14 @@ class Data
     # TODO: Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
     # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
     errors.assert id?, "Empty id passed to canonicalInstance"
+    unless id? then return
     if id == @root.id
       return @root
     parentId = (@store.getParents id)[0]
     errors.assert parentId?, "No parent found for id: #{id}"
     canonicalParent = @canonicalInstance parentId
+    if not canonicalParent
+      return
     children = @getChildren canonicalParent
     return _.find children, (sib) ->
       sib.id == id
