@@ -509,7 +509,7 @@ renderLine = (lineData, options = {}) ->
 
     # try going to jump, return true if succeeds
     tryJump: (jump) ->
-      if jump.viewRoot == @data.viewRoot
+      if jump.viewRoot.id == @data.viewRoot.id
         return false # not moving, don't jump
 
       if not @data.isAttached jump.viewRoot
@@ -787,11 +787,18 @@ renderLine = (lineData, options = {}) ->
       action = new actions.AddBlocks serialized_rows, parent, index, options
       @act action
 
+    addClones: (cloned_rows, parent, index = -1, options = {}) ->
+      action = new actions.CloneBlocks cloned_rows, parent, index, options
+      @act action
+
     yankBlocks: (nrows) ->
       siblings = @data.getSiblingRange @cursor.row, 0, (nrows-1)
-      siblings = siblings.filter ((x) -> return x != null)
       serialized = siblings.map ((x) => return @data.serialize x)
       @register.saveSerializedRows serialized
+
+    yankBlocksClone: (nrows) ->
+      siblings = @data.getSiblingRange @cursor.row, 0, (nrows-1)
+      @register.saveClonedRows (siblings.map (sibling) -> sibling.id)
 
     detachBlock: (row, options = {}) ->
       action = new actions.DetachBlock row, options
@@ -810,25 +817,25 @@ renderLine = (lineData, options = {}) ->
       @detachBlock row, options
       @attachBlock row, parent, index, options
 
-    indentBlocks: (id, numblocks = 1) ->
-      newparent = @data.getSiblingBefore id
+    indentBlocks: (row, numblocks = 1) ->
+      newparent = @data.getSiblingBefore row
       if newparent == null
         return null # cannot indent
 
       if @data.collapsed newparent
         @toggleBlock newparent
 
-      siblings = @data.getSiblingRange id, 0, (numblocks-1)
+      siblings = @data.getSiblingRange row, 0, (numblocks-1)
       for sib in siblings
         @moveBlock sib, newparent, -1
       return newparent
 
-    unindentBlocks: (id, numblocks = 1, options = {}) ->
-      parent = @data.getParent id
-      if parent == @data.viewRoot
+    unindentBlocks: (row, numblocks = 1, options = {}) ->
+      parent = @data.getParent row
+      if parent.id == @data.viewRoot.id
         return null
 
-      siblings = @data.getSiblingRange id, 0, (numblocks-1)
+      siblings = @data.getSiblingRange row, 0, (numblocks-1)
 
       newparent = @data.getParent parent
       pp_i = @data.indexOf parent
@@ -984,7 +991,7 @@ renderLine = (lineData, options = {}) ->
     virtualRender: (options = {}) ->
       crumbs = []
       row = @data.viewRoot
-      while row != @data.root
+      while row.id != @data.root.id
         crumbs.push row
         row = @data.getParent row
 
@@ -1088,7 +1095,7 @@ renderLine = (lineData, options = {}) ->
       cursors = {}
       highlights = {}
 
-      marking = @markrow == row
+      marking = @markrow?.id == row.id
 
       if row == @cursor.row and not marking
         cursors[@cursor.col] = true

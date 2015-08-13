@@ -5,13 +5,13 @@ if module?
 class Cursor
   constructor: (data, row = null, col = null, moveCol = null) ->
     @data = data
-    @row = if row == null then (@data.getChildren @data.viewRoot)[0] else row
-    @col = if col == null then 0 else col
+    @row = row ? (@data.getChildren @data.viewRoot)[0]
+    @col = col ? 0
     @properties = {}
     do @_getPropertiesFromContext
 
     # -1 means last col
-    @moveCol = if moveCol == null then col else moveCol
+    @moveCol = moveCol ? col
 
   clone: () ->
     return new Cursor @data, @row, @col, @moveCol
@@ -271,9 +271,9 @@ class Cursor
 
   parent: (cursorOptions = {}) ->
     row = @data.getParent @row
-    if row == @data.root
+    if row.id == @data.root.id
       return
-    if row == @data.viewRoot
+    if row.id == @data.viewRoot.id
       @data.changeViewRoot @data.getParent row
     @setRow row, cursorOptions
 

@@ -50,6 +50,7 @@ if module?
     CHANGE_CHAR       : ['s']
     REPLACE           : ['r']
     YANK              : ['y']
+    CLONE             : ['c']
     PASTE_AFTER       : ['p']
     PASTE_BEFORE      : ['P']
     JOIN_LINE         : ['J']
@@ -174,7 +175,8 @@ if module?
     'CHANGE', 'CHANGE_CHAR',
     'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_CHAR', 'DELETE_LAST_WORD'
     'REPLACE',
-    'YANK', 'PASTE_AFTER', 'PASTE_BEFORE',
+    'YANK', 'CLONE',
+    'PASTE_AFTER', 'PASTE_BEFORE',
     'JOIN_LINE', 'SPLIT_LINE',
 
     'INDENT_RIGHT', 'INDENT_LEFT',
@@ -342,6 +344,7 @@ if module?
   #   if this is a motion, takes an extra cursor argument first
   # continue:
   #   a function which takes next key
+  # TODO: document 'drop'
   # bindings:
   #   a dictionary from keyDefinitions to functions
   #   *SPECIAL KEYS*
@@ -773,6 +776,12 @@ if module?
           finishes_visual: true
           fn: (cursor, options = {}) ->
             @view.yankBetween @view.cursor, cursor, options
+        CLONE:
+          display: 'Yank blocks as a clone'
+          drop: true # TODO: Is this correct? Re-check after Jeff documents
+          finishes_visual_line: true
+          fn: () ->
+            @view.yankBlocksClone @repeat
     PASTE_AFTER:
       display: 'Paste after cursor'
       fn: () ->
