@@ -5,7 +5,7 @@
     INSERT      : 2
     VISUAL      : 3
     VISUAL_LINE : 4
-    MENU        : 5
+    SEARCH      : 5
     MARK        : 6
 
   exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
@@ -26,13 +26,13 @@
         'Use < and > to indent and unindent just a single line'
         { text: 'Text formatting', collapsed: true, children: [
           {
-            text:      'Bold (meta+b), italicized (meta+i), and underlined (meta+u) text.  Bold italic underlined!'
-            bold:      '....                                                               ...................... '
-            italic:    '               ..........                                          ...................... '
-            underline: '                                        ..........                 ...................... '
+            text:      'Bold (ctrl+shift+b), italicized (ctrl+shift+i), and underlined (ctrl+shift+u) text.  Bold italic underlined!'
+            bold:      '....                                                                                 ...................... '
+            italic:    '                     ..........                                                      ...................... '
+            underline: '                                                    ..........                       ...................... '
           }
           {
-            text:          'Strike through (meta+-)!'
+            text:          'Strike through (ctrl+enter)!'
             children: [ {
               text:          'Try using it for todo lists'
               strikethrough: '...........................'
@@ -99,14 +99,18 @@
           'Click the tag to jump to the marked location.'
           'Alternatively, when your cursor is over the tag, type gm to jump to the mark'
         ] }
+        'Delete marks by using dm, or just mark with empty string'
       ] }
       { text: 'Customizable', collapsed: true, children: [
-        'Different color themes (see Settings)'
+        'Different color themes (see Menu)'
         # 'Customizable hotkeys'
       ] }
-      # { text: 'Import and export data', collapsed: true, children: [
-      #   ''
-      # ] }
+      { text: 'Import and export data', collapsed: true, children: [
+        'Supports both JSON and Workflowy-compatible plaintext formats'
+      ] }
+      { text: 'Easy motion', collapsed: true, children: [
+        'Hit space to jump to a row quickly'
+      ] }
     ] }
     { text: 'Tips', collapsed: true, children: [
       'Collapse things often to avoid clutter.  Zoom into collapsed bullets'

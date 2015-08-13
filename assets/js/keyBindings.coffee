@@ -6,10 +6,10 @@ if module?
 ((exports) ->
   MODES = constants.MODES
 
-  defaultVimKeyBindings = {}
+  defaultHotkeys = {}
 
   # keybindings for normal-like modes (normal, visual, visual-line)
-  defaultVimKeyBindings[MODES.NORMAL] =
+  defaultHotkeys[MODES.NORMAL] =
     HELP              : ['?']
     INSERT            : ['i']
     INSERT_HOME       : ['I']
@@ -38,6 +38,8 @@ if module?
     GO                : ['g']
     PARENT            : ['p']
     GO_END            : ['G']
+    EASY_MOTION       : ['space']
+
     DELETE            : ['d']
     DELETE_TO_END     : ['D']
     DELETE_TO_HOME    : []
@@ -91,15 +93,12 @@ if module?
     ENTER_VISUAL      : ['v']
     ENTER_VISUAL_LINE : ['V']
 
-    EXPORT_FILE       : ['ctrl+s']
-    IMPORT_FILE       : ['ctrl+S']
-
     SWAP_CURSOR       : ['o', 'O']
     EXIT_MODE         : ['esc', 'ctrl+c']
     # TODO: SWAP_CASE         : ['~']
 
   # keybindings for insert-like modes (insert, mark, menu)
-  defaultVimKeyBindings[MODES.INSERT] =
+  defaultHotkeys[MODES.INSERT] =
     LEFT              : ['left']
     RIGHT             : ['right']
     UP                : ['up']
@@ -170,6 +169,7 @@ if module?
     'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
 
     'GO', 'GO_END', 'PARENT',
+    'EASY_MOTION',
     'DELETE', 'DELETE_CHAR',
     'CHANGE', 'CHANGE_CHAR',
     'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_CHAR', 'DELETE_LAST_WORD'
@@ -197,8 +197,6 @@ if module?
     'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
 
     'ENTER_VISUAL', 'ENTER_VISUAL_LINE',
-
-    'EXPORT_FILE', 'IMPORT_FILE',
   ]
 
   actions[MODES.VISUAL] = [
@@ -250,7 +248,7 @@ if module?
     'EXIT_MODE',
   ]
 
-  actions[MODES.MENU] = [
+  actions[MODES.SEARCH] = [
     'MENU_UP', 'MENU_DOWN',
     'MENU_SELECT',
     'LEFT', 'RIGHT',
@@ -279,16 +277,16 @@ if module?
       throw "Arrays not same, second contains: #{b_minus_a}"
 
   assert_arr_equal(
-    _.keys(defaultVimKeyBindings[MODES.NORMAL]),
+    _.keys(defaultHotkeys[MODES.NORMAL]),
     _.union(
       actions[MODES.NORMAL], actions[MODES.VISUAL], actions[MODES.VISUAL_LINE]
     )
   )
 
   assert_arr_equal(
-    _.keys(defaultVimKeyBindings[MODES.INSERT]),
+    _.keys(defaultHotkeys[MODES.INSERT]),
     _.union(
-      actions[MODES.INSERT], actions[MODES.MENU], actions[MODES.MARK]
+      actions[MODES.INSERT], actions[MODES.SEARCH], actions[MODES.MARK]
     )
   )
 
@@ -299,9 +297,9 @@ if module?
       return bindings
 
   modeBindings = {}
-  modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultVimKeyBindings[MODES.NORMAL]
-  modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultVimKeyBindings[MODES.NORMAL]
-  modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultVimKeyBindings[MODES.NORMAL]
+  modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultHotkeys[MODES.NORMAL]
+  modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultHotkeys[MODES.NORMAL]
+  modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultHotkeys[MODES.NORMAL]
 
   # special case, delete_char -> delete in visual and visual_line
   [].push.apply modeBindings[MODES.VISUAL].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
@@ -313,9 +311,9 @@ if module?
   [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, modeBindings[MODES.NORMAL].INDENT_RIGHT
   [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, modeBindings[MODES.NORMAL].INDENT_LEFT
 
-  modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultVimKeyBindings[MODES.INSERT]
-  modeBindings[MODES.MENU] = get_mode_keybindings MODES.MENU, defaultVimKeyBindings[MODES.INSERT]
-  modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultVimKeyBindings[MODES.INSERT]
+  modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultHotkeys[MODES.INSERT]
+  modeBindings[MODES.SEARCH] = get_mode_keybindings MODES.SEARCH, defaultHotkeys[MODES.INSERT]
+  modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultHotkeys[MODES.INSERT]
 
   text_format_definition = (property) ->
     return () ->
@@ -627,6 +625,41 @@ if module?
       fn: (cursor, options) ->
         cursor.prevSibling options
 
+    EASY_MOTION:
+      display: 'Jump to a visible row (based on EasyMotion)'
+      motion: true
+      fn: () ->
+        ids = do @view.getVisibleRows
+        keys = [
+          'z', 'x', 'c', 'v',
+          'q', 'w', 'e', 'r', 't',
+          'a', 's', 'd', 'f',
+          'g', 'h', 'j', 'k', 'l',
+          'y', 'u', 'i', 'o', 'p',
+          'b', 'n', 'm',
+        ]
+
+        if keys.length > ids.length
+          start = (keys.length - ids.length) / 2
+          keys = keys.slice(start, start + ids.length)
+        else
+          start = (ids.length - keys.length) / 2
+          ids = ids.slice(start, start + ids.length)
+
+        mappings = {
+          key_to_id: {}
+          id_to_key: {}
+        }
+        for [id, key] in _.zip(ids, keys)
+          mappings.key_to_id[key] = id
+          mappings.id_to_key[id] = key
+        @view.easy_motion_mappings = mappings
+      continue: (char, cursor, options) ->
+        if char of @view.easy_motion_mappings.key_to_id
+          id = @view.easy_motion_mappings.key_to_id[char]
+          cursor.set id, 0
+        @view.easy_motion_mappings = null
+
     GO:
       display: 'Various commands for navigation (operator)'
       motion: true
@@ -703,6 +736,10 @@ if module?
           fn: (cursor, options = {}) ->
             options.yank = true
             @view.deleteBetween @view.cursor, cursor, options
+        MARK:
+          display: 'Delete mark at cursor'
+          fn: () ->
+            @view.setMark @view.cursor.row, ''
     CHANGE:
       display: 'Change (operator)'
       bindings:
@@ -764,14 +801,6 @@ if module?
       drop: true
       fn: () ->
         @view.scrollPages -0.5
-    EXPORT_FILE:
-      display: 'Save a file'
-      fn: () ->
-        do @view.exportFile
-    IMPORT_FILE:
-      display: 'Import from a file'
-      fn: () ->
-        do @view.importFile
 
     RECORD_MACRO:
       display: 'Begin/stop recording a macro'

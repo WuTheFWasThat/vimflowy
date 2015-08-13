@@ -101,8 +101,8 @@ if module?
         return @processVisualMode keyStream
       else if @view.mode == MODES.VISUAL_LINE
         return @processVisualLineMode keyStream
-      else if @view.mode == MODES.MENU
-        return @processMenuMode keyStream
+      else if @view.mode == MODES.SEARCH
+        return @processSearchMode keyStream
       else if @view.mode == MODES.MARK
         return @processMarkMode keyStream
       else
@@ -279,11 +279,11 @@ if module?
         do keyStream.forget
         return true
 
-    processMenuMode: (keyStream) ->
+    processSearchMode: (keyStream) ->
       key = do keyStream.dequeue
-      if key == null then throw 'Got no key in menu mode'
+      if key == null then throw 'Got no key in search mode'
 
-      bindings = @bindings[MODES.MENU]
+      bindings = @bindings[MODES.SEARCH]
 
       view = @view.menu.view
 
@@ -320,7 +320,7 @@ if module?
 
     processMarkMode: (keyStream) ->
       key = do keyStream.dequeue
-      if key == null then throw 'Got no key in menu mode'
+      if key == null then throw 'Got no key in search mode'
 
       bindings = @bindings[MODES.MARK]
 
@@ -330,7 +330,7 @@ if module?
         # must be non-whitespace
         if key.length > 1
           return false
-        if /^\w*$/.test(key)
+        if /^\S*$/.test(key)
           view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
       else
         info = bindings[key]
@@ -393,6 +393,8 @@ if module?
       if info.continue
         key = do keyStream.dequeue
         if key == null
+          if info.fn # bit of a hack, for
+            info.fn.apply {view: @view}
           do keyStream.wait
           return [null, repeat]
         fn = info.continue.bind @, key
@@ -452,7 +454,7 @@ if module?
         return true
 
       if info.menu
-        @view.setMode MODES.MENU
+        @view.setMode MODES.SEARCH
         @view.menu = new Menu @view.menuDiv, (info.menu.bind @, @view)
         do @view.menu.update
         do keyStream.forget
@@ -476,7 +478,7 @@ if module?
 
       if info.to_mode
         @view.setMode info.to_mode
-        if info.to_mode == MODES.MENU
+        if info.to_mode == MODES.SEARCH
           do keyStream.forget
         return true
 

@@ -1,7 +1,3 @@
-@import '../utils'
-@import '../constants'
-@import '../solarized_constants'
-
 $bg-color: $solarized-color-base3
 $secondary-bg-color: $solarized-color-base2
 $text-color: $solarized-color-base00
@@ -55,6 +51,9 @@ body.solarized_light-theme
         background-color: $secondary-bg-color
         border: 1px solid $trim-color
 
+    #settings th
+        background: $bg-color
+
     #settings-link
         background: $secondary-bg-color
         color: $text-color
@@ -67,3 +66,6 @@ body.solarized_light-theme
         background-color: $secondary-bg-color
         &.active
             border: 2px solid $solarized-color-yellow
+
+    .easy-motion
+        color: $solarized-color-magenta

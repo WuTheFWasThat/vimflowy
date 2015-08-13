@@ -37,6 +37,7 @@ class KeyEmitter extends EventEmitter
     9: 'tab'
     13: 'enter'
     27: 'esc'
+    32: 'space'
 
     33: 'page up'
     34: 'page down'

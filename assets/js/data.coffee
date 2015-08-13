@@ -88,8 +88,10 @@ class Data
   # marks #
   #########
 
+  # get mark for a row, '' if it doesn't exist
   getMark: (row) ->
-    return (@store.getMark row.id) || ''
+    marks = @store.getMarks row.id
+    return marks[row.id] or ''
 
   _updateAllMarks: (row, mark = '') ->
     allMarks = do @store.getAllMarks
@@ -97,7 +99,7 @@ class Data
     if mark of allMarks
       return false
 
-    oldmark = @store.getMark row.id
+    oldmark = @getMark row
     if oldmark
       delete allMarks[oldmark]
 
@@ -106,11 +108,46 @@ class Data
     @store.setAllMarks allMarks
     return true
 
+  # recursively update allMarks for id,mark pair
+  _updateMarksRecursive: (row, mark = '', from, to) ->
+    cur = from
+    while true
+      marks = @store.getMarks cur.id
+      if mark
+        marks[row.id] = mark
+      else
+        delete marks[row.id]
+      @store.setMarks cur.id, marks
+      if cur.id == to.id
+        break
+      cur = @getParent cur
+
   setMark: (row, mark = '') ->
-    # update allMarks mapping
     if @_updateAllMarks row, mark
-      # update row's mark
-      @store.setMark row.id, mark
+      @_updateMarksRecursive row, mark, row, @root
+      return true
+    return false
+
+  # detach the marks of an id that is being detached
+  # assumes that the old parent of the id is set
+  detachMarks: (row) ->
+    marks = @store.getMarks row.id
+    for childId, mark of marks
+      childRow = { id: childId, crumbs: { parent: row.id, crumbs: row.crumbs } }
+      @_updateAllMarks childRow, ''
+      # roll back the mark for this row, but only above me
+      @_updateMarksRecursive childRow, '', (@getParent row), @root
+
+  # try to restore the marks of an id that was detached
+  # assumes that the new to-be-parent of the id is already set
+  # and that the marks dictionary contains the old values
+  attachMarks: (row) ->
+    marks = @store.getMarks row.id
+    for childId, mark of marks
+      childRow = { id: childId, crumbs: { parent: row.id, crumbs: row.crumbs } }
+      if not (@setMark childRow, mark)
+        # roll back the mark for this row, but only underneath me
+        @_updateMarksRecursive childRow, '', childRow, row
 
   getAllMarks: () ->
     _.mapObject (do @store.getAllMarks), @canonicalInstance, @
@@ -143,7 +180,7 @@ class Data
   collapsed: (row) ->
     return @store.getCollapsed row.id
 
-  canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
+  canonicalInstance: (id, mark) -> # Given an id (for example with search or mark), return a row with that id
     # TODO: try to optimize for one in the viewroot
     # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
     unless id? then return
@@ -185,12 +222,7 @@ class Data
 
     @store.setChildren parent.id, children
     @store.setParents row.id, parents
-
-    mark = @getMark row
-    if mark
-      # set the mark in allMarks, but not for the row
-      # that way, when re-attaching, we can try to re-apply the mark
-      @_updateAllMarks row, ''
+    @detachMarks row
 
     return {
       parent: parent
@@ -213,13 +245,7 @@ class Data
       parents = @store.getParents child.id
       parents.push row.id
       @store.setParents child.id, row.id
-
-      # try to restore the mark of child
-      mark = @getMark child
-      if mark
-        if not (@_updateAllMarks child, mark)
-          # don't call @setMark, since that will mess up allMarks
-          @store.setMark child.id, ''
+      @attachMarks child
 
     @store.setChildren row.id, children
 
@@ -364,6 +390,8 @@ class Data
   findMarks: (prefix, nresults = 10) ->
     results = [] # list of rows
     for mark, row of (do @getAllMarks)
+      unless row?
+        continue
       if (mark.indexOf prefix) == 0
         results.push {
           row: row
@@ -440,7 +468,7 @@ class Data
     if @collapsed row
       struct.collapsed = true
 
-    mark = @store.getMark row.id
+    mark = @getMark row
     if mark
       struct.mark = mark
 
