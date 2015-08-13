@@ -113,7 +113,7 @@ class Data
       @store.setMark row.id, mark
 
   getAllMarks: () ->
-    _.map @store.getAllMarks, @canonicalInstance, @
+    _.mapObject (do @store.getAllMarks), @canonicalInstance, @
 
   #############
   # structure #
@@ -148,8 +148,8 @@ class Data
     # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
     if id == @root.id
       return @root
-    parent = (@store.getParents id)[0]
-    canonicalParent = @canonicalInstance parent.id
+    parentId = (@store.getParents id)[0]
+    canonicalParent = @canonicalInstance parentId
     children = @getChildren canonicalParent
     return _.find children, (sib) ->
       sib.id == id

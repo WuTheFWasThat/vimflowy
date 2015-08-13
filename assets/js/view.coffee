@@ -1140,7 +1140,7 @@ renderLine = (lineData, options = {}) ->
       cursors = {}
       highlights = {}
 
-      marking = @markrow == row
+      marking = @markrow?.id == row.id
 
       if row == @cursor.row and not marking
         cursors[@cursor.col] = true
