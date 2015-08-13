@@ -94,6 +94,7 @@ It also internally maintains
     CHANGE_CHAR       : ['s']
     REPLACE           : ['r']
     YANK              : ['y']
+    #CLONE             : ['c']
     PASTE_AFTER       : ['p']
     PASTE_BEFORE      : ['P']
     JOIN_LINE         : ['J']

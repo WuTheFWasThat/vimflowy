@@ -5,16 +5,24 @@ Implements pasting for each of the types
 ###
 
 class Register
+
+  #############
+  # Union Type 
+  #############
+
   @TYPES = {
     NONE: 0
     CHARS: 1
+    # TODO: Document difference between ROWS and SERIALIZED ROWS
     ROWS: 2
     SERIALIZED_ROWS: 3
+    CLONED_ROWS: 4
   }
 
   # Register is a union type. @data holds one of several kinds of values
   # They can be referenced as @chars, @rows etc.
   for type of Register.TYPES
+    console.log type
     Object.defineProperty @prototype, type.toLowerCase(),
         get: -> @data
         set: (data) -> @data = data
@@ -35,9 +43,11 @@ class Register
   saveRows: (data) ->
     @type = Register.TYPES.ROWS
     @data = data
-
   saveSerializedRows: (data) ->
     @type = Register.TYPES.SERIALIZED_ROWS
+    @data = data
+  saveClonedRows: (data) ->
+    @type = Register.TYPES.CLONED_ROWS
     @data = data
 
   serialize: () ->
@@ -58,6 +68,9 @@ class Register
       @pasteRows options
     else if @type == Register.TYPES.SERIALIZED_ROWS
       @pasteSerializedRows options
+    else if @type == Register.TYPES.CLONED_ROWS
+      #TODO: Implement
+      console.log "CLONED_ROWS paste from register is not implemented"
 
   pasteChars: (options = {}) ->
     if options.before
