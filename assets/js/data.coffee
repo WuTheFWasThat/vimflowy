@@ -106,14 +106,14 @@ class Data
     @store.setAllMarks allMarks
     return true
 
-  setMark: (id, mark = '') ->
+  setMark: (row, mark = '') ->
     # update allMarks mapping
-    if @_updateAllMarks id, mark
+    if @_updateAllMarks row, mark
       # update row's mark
-      @store.setMark id, mark
+      @store.setMark row.id, mark
 
   getAllMarks: () ->
-    return do @store.getAllMarks
+    _.map @store.getAllMarks, @canonicalInstance, @
 
   #############
   # structure #
@@ -145,6 +145,7 @@ class Data
 
   canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
     # TODO: try to optimize for one in the viewroot
+    # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
     if id == @root.id
       return @root
     parent = (@store.getParents id)[0]
@@ -436,7 +437,7 @@ class Data
     if @collapsed row
       struct.collapsed = true
 
-    mark = @store.getMark row
+    mark = @store.getMark row.id
     if mark
       struct.mark = mark
 
