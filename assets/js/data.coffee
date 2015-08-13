@@ -164,7 +164,7 @@ class Data
         @_updateMarksRecursive row2, '', row2, row
 
   getAllMarks: () ->
-    return do @store.getAllMarks
+    _.map @store.getAllMarks, @canonicalInstance, @
 
   #############
   # structure #
@@ -195,7 +195,8 @@ class Data
     return @store.getCollapsed row.id
 
   canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
-    # TODO: try to optimize for one in the viewroot
+    # TODO: Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
+    # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
     errors.assert id?, "Empty id passed to canonicalInstance"
     if id == @root.id
       return @root
@@ -496,7 +497,13 @@ class Data
     if @collapsed row
       struct.collapsed = true
 
+<<<<<<< e0a6d9009463debe22bdb66b24adf9be02ddd018
     mark = @getMark row
+||||||| merged common ancestors
+    mark = @store.getMark row
+=======
+    mark = @store.getMark row.id
+>>>>>>> Go to a mark works
     if mark
       struct.mark = mark
 
