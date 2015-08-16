@@ -354,7 +354,7 @@ if module?
   #   SEE: menu.coffee
   keyDefinitions =
     HELP:
-      display: 'Show/hide key bindings'
+      display: 'Show/hide key bindings (edit in <a href="#settings">settings</a>)'
       drop: true
       fn: () ->
         @view.keybindingsDiv.toggleClass 'active'

@@ -58,30 +58,3 @@
   text-decoration: line-through
   opacity: 0.5
 
-.modal-dialog
-  position: fixed
-  top: 0
-  right: 0
-  bottom: 0
-  left: 0
-  z-index: 99999
-  opacity: 0
-  @include transition(opacity 100ms ease-in)
-  pointer-events: none
-  &:target
-    opacity: 1
-    pointer-events: auto
-  .modal-contents
-    position: relative
-  .modal-close
-    position: absolute
-    width: 24px
-    right: -12px
-    top: -10px
-    font-family: Arial, Helvetica, sans-serif
-    font-weight: bold
-    line-height: 25px
-    text-align: center
-    text-decoration: none
-    @include border-radius(12px)
-

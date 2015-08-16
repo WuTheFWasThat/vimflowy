@@ -8,36 +8,40 @@ block content
         #menu.hidden
         #view
         #keybindings
-        .modal-dialog#settings
-            .modal-contents
-                a.modal-close(href="#") X
-                table
-                    tr
-                        th Visual Theme
-                        td
-                            select.theme-selection
-                                option(value="default-theme" selected=selected) Default
-                                option(value="dark-theme") Dark
-                                option(value="solarized_dark-theme") Solarized Dark
-                                option(value="solarized_light-theme") Solarized Light
-                    tr
-                        th Export
-                        td
-                            select.export-fileformat-selection
-                                option(value="vimflowy.json" selected=selected) Export as JSON
-                                option(value="vimflowy.txt") Export as text
 
-                            button#export_submit(style='float:right') Export!
-                    tr
-                        th Import
-                        td#import-file
-                            input(type="file" name="import-file")
-                            button#import_submit(style='float:right') Import!
+    #settings.hidden
+        #settings-left
+            .settings-header Visual Theme
+            .settings-content
+                select.theme-selection
+                    option(value="default-theme" selected=selected) Default
+                    option(value="dark-theme") Dark
+                    option(value="solarized_dark-theme") Solarized Dark
+                    option(value="solarized_light-theme") Solarized Light
+
+            .settings-header Export
+            .settings-content
+                select.export-fileformat-selection
+                    option(value="vimflowy.json" selected=selected) Export as JSON
+                    option(value="vimflowy.txt") Export as text
+
+                button.btn#export_submit(style='float:right') Export!
+
+            .settings-header Import
+            .settings-content
+                #import-file
+                    input(type="file" name="import-file")
+                    button.btn#import_submit(style='float:right') Import!
+
+        #settings-right
+            .settings-header Hotkeys
+            .settings-content
+                | Configurable hotkeys coming soon!
 
     #bottom-bar
-        a#settings-link.center(href='#settings')
-          span.fa.fa-cog(style='margin-right:10px')
-          span Menu
+        a#settings-link.center
+          span#settings-icon.fa(style='margin-right:10px')
+          span#settings-text
 
         #message
         #mode.center

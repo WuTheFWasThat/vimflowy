@@ -29,7 +29,7 @@ But for now, if you want to use vimflowy, you should first [learn vim](http://vi
   - modal editing
     - insert and normal mode
     - visual mode (only within a line)
-    - visual line (only within siblings)
+    - visual line (acts on groups of siblings)
   - keybindings for everything
   - undo!  Full history kept within a session
   - ctrl+o and ctrl+i to move through jump history

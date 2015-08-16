@@ -4,7 +4,7 @@ body, html
 
 $bottom-bar-height: 25px
 #bottom-bar
-    z-index: 1
+    z-index: 3
     position: absolute
     bottom: 0px
     height: $bottom-bar-height
@@ -35,29 +35,46 @@ $bottom-bar-height: 25px
     #settings-link
         width: $settings-link-width
         text-decoration: none
+        cursor: pointer
 
-.modal-dialog
-    .modal-contents
-        margin: 10% auto
-        width: 500px
-        padding: 20px
-        border-radius: 10px
-    .modal-close
-        background: #606060
-        color: #FFFFFF
-    .modal-close:hover
-        background: #909090
+.btn
+    padding: 5px
+    border-radius: 5px
+    background-color: white
+    border: 1px solid black
+    cursor: pointer
+    margin: 0px 5px
+    &:focus
+      outline:0
 
 #settings
-    table
-        width: 100%
-        td
-            padding-left: 20px
-        th
-            border: 1px solid black
-            border-radius: 5px
-            -moz-border-radius: 5px
-            padding: 5px
+    position: absolute
+    width: 100%
+    @include calc(height, '100% - #{$bottom-bar-height}')
+    z-index: 2
+
+    #settings-left
+        position: absolute
+        padding: 20px
+        left: 0%
+        right: 75%
+
+    #settings-right
+        position: absolute
+        padding: 20px
+        left: 25%
+        right: 0%
+
+    .settings-header
+        $header-padding: 5px
+        @include calc(width, '100% - #{2 * $header-padding}')
+        border: 1px solid black
+        border-radius: 5px
+        -moz-border-radius: 5px
+        padding: $header-padding
+
+    .settings-content
+        padding: 20px 0px
 
 #contents
     display: flex

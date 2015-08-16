@@ -81,6 +81,9 @@ if module?
         do @view.save
 
     handleKey: (key) ->
+      if do @view.showingSettings
+          @view.handleSettings key
+          return true
       Logger.logger.debug 'Handling key:', key
       @keyStream.enqueue key
       if @recording

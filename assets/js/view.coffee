@@ -232,6 +232,33 @@ renderLine = (lineData, options = {}) ->
 
       return @
 
+    ###################
+    # settings related
+    ###################
+
+    showingSettings: () ->
+      return @settingsDiv and (not @settingsDiv.hasClass('hidden'))
+
+    settingsOff: () ->
+      $('#settings-icon').addClass('fa-cog').removeClass('fa-arrow-left')
+      $('#settings-text').text('Settings')
+      @modeDiv.removeClass('hidden')
+      @settingsDiv.addClass('hidden')
+
+    settingsOn: () ->
+      $('#settings-icon').addClass('fa-arrow-left').removeClass('fa-cog')
+      $('#settings-text').text('Back')
+      @modeDiv.addClass('hidden')
+      @settingsDiv.removeClass('hidden')
+
+    settingsToggle: () ->
+      if do @showingSettings
+        do @settingsOff
+      else
+        do @settingsOn
+
+    handleSettings: (key) ->
+      do @settingsOff
 
     #################
     # modes related
@@ -300,7 +327,7 @@ renderLine = (lineData, options = {}) ->
           # row.append $('<td>').text keys[0]
           row.append $('<td>').text keys.join(' OR ')
 
-          display_cell = $('<td>').css('width', '100%').text v.display
+          display_cell = $('<td>').css('width', '100%').html v.display
           if v.bindings
             buildTableContents v.bindings, display_cell
           row.append display_cell

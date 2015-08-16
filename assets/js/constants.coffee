@@ -75,8 +75,7 @@
           ] }
           { text: 'Visual line mode', collapsed: true, children: [
             'Press V to enter visual line mode'
-            'It only works on sibling lines, for now'
-            'It lets you yank (y), delete (d or x), change (c), and indent (< or >)'
+            'It lets you yank (y), delete (d or x), change (c), and indent (< or >) groups of siblings'
           ] }
         ] }
         { text: 'Full history within a session', collapsed: true, children: [

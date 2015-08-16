@@ -40,7 +40,11 @@ create_view = (data) ->
   key_emitter.on 'keydown', keyhandler.handleKey.bind(keyhandler)
 
   $(document).ready ->
+    do view.settingsOff
     do view.render
+
+    $("#settings-link").click () =>
+      do view.settingsToggle
 
     $("#import_submit").click () =>
         file = $("#import-file :file")[0].files[0]
@@ -55,7 +59,7 @@ create_view = (data) ->
             content = evt.target.result
             if view.importContent content, mimetype
                 view.showMessage 'Imported!'
-                window.location.hash = '' # close the modal
+                do view.settingsOff
             else
                 view.showMessage 'Import failed due to parsing issue'
         reader.onerror = (evt) ->
@@ -77,7 +81,7 @@ create_view = (data) ->
         $("#export").attr("href", null)
 
         view.showMessage 'Exported!'
-        window.location.hash = '' # close the modal
+        do view.settingsOff
 
 if chrome?.storage?.sync
   Logger.logger.info 'using chrome storage'

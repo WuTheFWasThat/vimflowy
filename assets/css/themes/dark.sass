@@ -1,12 +1,13 @@
-$background-color: $color-black
-$secondary-background-color: #222222
+$bg-color: $color-black
+$secondary-bg-color: #222222
+$light-bg-color: #444444
 $text-color: #EEEEEE
 $trim-color: #EEEEEE
-$subtle-background: #333
+$subtle-bg-color: #333
 
 body.dark-theme
     color: $text-color
-    background-color: $background-color
+    background-color: $bg-color
 
     #breadcrumbs
         .crumb:not(:last-child)
@@ -22,33 +23,34 @@ body.dark-theme
         background-color: #666  // #770
 
     .menuSelected
-        background-color: $subtle-background
+        background-color: $subtle-bg-color
 
     .link
         text-decoration: none
         color: $color-link-blue
 
     #mode
-        background: $secondary-background-color
+        background: $secondary-bg-color
 
     #bottom-bar
-        background-color: #444444
+        background-color: $light-bg-color
         border-top: 1px solid #999
 
     #keybindings
-        background: $secondary-background-color !important
+        background: $secondary-bg-color !important
         table, tbody
-            background-color: $secondary-background-color
+            background-color: $secondary-bg-color
 
-    .modal-contents
-        background-color: $secondary-background-color
+    #settings
+        background-color: $light-bg-color
+
+    #settings .settings-header, .btn
         border: 1px solid $trim-color
-
-    #settings th
-        background: $background-color
+        background: $secondary-bg-color
+        color: $text-color
 
     #settings-link
-        background: $secondary-background-color
+        background: $secondary-bg-color
         color: $text-color
 
     .searchBox
@@ -56,6 +58,6 @@ body.dark-theme
 
     .mark
         border: 1px solid $trim-color
-        background-color: $subtle-background
+        background-color: $subtle-bg-color
         &.active
             background-color: #884400
