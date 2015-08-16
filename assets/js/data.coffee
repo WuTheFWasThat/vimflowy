@@ -216,6 +216,34 @@ class Data
 
     @store.setChildren id, children
 
+  # returns an array representing the ancestry of a row,
+  # up until the ancestor specified by the `stop` parameter
+  # i.e. [stop, stop's child, ... , row's parent , row]
+  getAncestry: (row, stop = @root) ->
+    ancestors = []
+    while row != stop
+      if row == @root
+        throw "Failed to get ancestry for #{row} going up until #{stop}"
+      ancestors.push row
+      row = @getParent row
+    ancestors.push stop
+    do ancestors.reverse
+    return ancestors
+
+  # given two rows, returns
+  # 1. the common ancestor of the rows
+  # 2. the array of ancestors between common ancestor and row1
+  # 3. the array of ancestors between common ancestor and row2
+  getCommonAncestor: (row1, row2) ->
+    ancestors1 = @getAncestry row1
+    ancestors2 = @getAncestry row2
+    common = @root
+    i = 1
+    while ancestors1.length > i and ancestors2.length > i and ancestors1[i] == ancestors2[i]
+      common = ancestors1[i]
+      i += 1
+    return [common, ancestors1[i..], ancestors2[i..]]
+
   nextVisible: (id = @viewRoot) ->
     if @viewable id
       children = @getChildren id

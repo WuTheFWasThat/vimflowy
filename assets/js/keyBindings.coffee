@@ -210,7 +210,6 @@ if module?
   ]
 
   actions[MODES.VISUAL_LINE] = [
-    'NEXT_SIBLING', 'PREV_SIBLING',
     'YANK',
     'DELETE',
     'CHANGE',
@@ -304,9 +303,6 @@ if module?
   # special case, delete_char -> delete in visual and visual_line
   [].push.apply modeBindings[MODES.VISUAL].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
   [].push.apply modeBindings[MODES.VISUAL_LINE].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
-  # special case, down -> next_sibling, up -> prev_sibling in visual_line
-  [].push.apply modeBindings[MODES.VISUAL_LINE].NEXT_SIBLING, modeBindings[MODES.NORMAL].DOWN
-  [].push.apply modeBindings[MODES.VISUAL_LINE].PREV_SIBLING, modeBindings[MODES.NORMAL].UP
   # special case, indent -> move in visual_line
   [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, modeBindings[MODES.NORMAL].INDENT_RIGHT
   [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, modeBindings[MODES.NORMAL].INDENT_LEFT
@@ -630,6 +626,7 @@ if module?
       motion: true
       fn: () ->
         ids = do @view.getVisibleRows
+        ids = ids.filter (row) => return (row != @view.cursor.row)
         keys = [
           'z', 'x', 'c', 'v',
           'q', 'w', 'e', 'r', 't',

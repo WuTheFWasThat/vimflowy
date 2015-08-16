@@ -67,7 +67,7 @@ renderLine = (lineData, options = {}) ->
 
     if i of options.cursors
       renderOptions.classes.push 'cursor'
-    if i of options.highlights
+    else if i of options.highlights
       renderOptions.classes.push 'highlight'
 
     info.char = x
@@ -238,6 +238,16 @@ renderLine = (lineData, options = {}) ->
     #################
 
     setMode: (mode) ->
+      if mode == @mode
+        return
+
+      oldmode = @mode
+      if oldmode == MODES.VISUAL_LINE
+        @anchor = null
+        @lineSelect = false
+      else if oldmode == MODES.SEARCH
+        @menu = null
+
       @mode = mode
       if @modeDiv
         for k, v of MODES
@@ -254,6 +264,8 @@ renderLine = (lineData, options = {}) ->
         }
         @markview = new View data
         @markrow = @cursor.row
+      else if mode == MODES.NORMAL
+        do @cursor.backIfNeeded
 
       if @menuDiv
         @menuDiv.toggleClass 'hidden', (mode != MODES.SEARCH)
@@ -961,6 +973,27 @@ renderLine = (lineData, options = {}) ->
                                    .map((x) -> return parseInt $(x).data('id'))
       return ids
 
+    # given an anchor and cursor, figures out the right blocks to be deleting
+    # returns a parent, minindex, and maxindex
+    getVisualLineSelections: () ->
+      [common, ancestors1, ancestors2] = @data.getCommonAncestor @cursor.row, @anchor.row
+      if ancestors1.length == 0
+        # anchor is underneath cursor
+        parent = @data.getParent common
+        index = @data.indexOf @cursor.row
+        return [parent, index, index]
+      else if ancestors2.length == 0
+        # cursor is underneath anchor
+        parent = @data.getParent common
+        index = @data.indexOf @anchor.row
+        return [parent, index, index]
+      else
+        index1 = @data.indexOf (ancestors1[0] ? @cursor.row)
+        index2 = @data.indexOf (ancestors2[0] ? @anchor.row)
+        if index2 < index1
+          [index1, index2] = [index2, index1]
+        return [common, index1, index2]
+
     # RENDERING
 
     render: (options = {}) ->
@@ -1010,6 +1043,14 @@ renderLine = (lineData, options = {}) ->
       }, crumbNodes
 
       options.ignoreCollapse = true # since we're the root, even if we're collapsed, we should render
+
+      options.highlight_blocks = {}
+      if @lineSelect
+        # mirrors logic of finishes_visual_line in keyHandler.coffee
+        [parent, index1, index2] = do @getVisualLineSelections
+        for child in @data.getChildRange parent, index1, index2
+          options.highlight_blocks[child] = true
+
       contentsChildren = @virtualRenderTree @data.viewRoot, options
 
       contentsNode = virtualDom.h 'div', {
@@ -1025,17 +1066,7 @@ renderLine = (lineData, options = {}) ->
 
       childrenNodes = []
 
-      highlighted = {}
-      if @lineSelect
-        if parentid == @data.getParent @cursor.row
-          index1 = @data.indexOf @cursor.row
-          index2 = @data.indexOf @anchor.row
-          if index2 < index1
-            [index1, index2] = [index2, index1]
-          for i in [index1..index2]
-            highlighted[i] = true
-
-      for i, id of @data.getChildren parentid
+      for id in @data.getChildren parentid
 
         if @easy_motion_mappings and id of @easy_motion_mappings.id_to_key
           char = @easy_motion_mappings.id_to_key[id]
@@ -1071,7 +1102,7 @@ renderLine = (lineData, options = {}) ->
         }, (@virtualRenderTree id, options)
 
         className = 'node'
-        if i of highlighted
+        if id of options.highlight_blocks
           className += ' highlight'
 
         childNode = virtualDom.h 'div', {

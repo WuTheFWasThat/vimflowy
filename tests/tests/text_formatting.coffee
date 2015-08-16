@@ -5,6 +5,8 @@ boldKey = 'ctrl+B'
 italicizeKey = 'ctrl+I'
 underlineKey = 'ctrl+U'
 strikethroughKey = 'ctrl+enter'
+siblingDownKey = 'alt+j'
+siblingUpKey = 'alt+k'
 
 # test insert mode
 t = new TestCase ['']
@@ -374,8 +376,7 @@ t = new TestCase [
     bold: '   .'
   }
 ]
-t.sendKeys 'Vjj'
-t.sendKey boldKey
+t.sendKeys ['V', siblingDownKey, siblingDownKey, boldKey]
 t.expect [
   {
     text: 'blah'
@@ -392,8 +393,7 @@ t.expect [
     bold: '....'
   }
 ]
-t.sendKeys 'GVk'
-t.sendKey boldKey
+t.sendKeys ['G', 'V', siblingUpKey, boldKey]
 t.expect [
   {
     text: 'blah'
@@ -406,8 +406,7 @@ t.expect [
   }
   'blah'
 ]
-t.sendKeys 'Vk'
-t.sendKey boldKey
+t.sendKeys ['V', siblingUpKey, boldKey]
 t.expect [
   {
     text: 'blah'

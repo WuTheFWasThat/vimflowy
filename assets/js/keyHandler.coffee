@@ -24,6 +24,7 @@ if module?
       @queue = [] # queue so that we can read group of keys, like 123 or fy
       @lastSequence = [] # last key sequence
       @index = 0
+      @checkpoint_index = 0
       @waiting = false
 
       for key in keys
@@ -36,7 +37,7 @@ if module?
       return @index == @queue.length
 
     rewind: () ->
-      @index = 0
+      @index = @checkpoint_index
 
     enqueue: (key) ->
       @queue.push key
@@ -45,6 +46,9 @@ if module?
     dequeue: () ->
       if @index == @queue.length then return null
       return @queue[@index++]
+
+    checkpoint: () ->
+      @checkpoint_index = @index
 
     # means we are waiting for another key before we can do things
     wait: () ->
@@ -87,6 +91,7 @@ if module?
     processKeys: (keyStream) ->
       handled = false
       while not keyStream.done() and not keyStream.waiting
+        do keyStream.checkpoint
         handled = (@processOnce keyStream) or handled
       # TODO: stop re-rendering everything every time?
       do @view.render
@@ -159,20 +164,24 @@ if module?
         # getMotion using normal mode motions
         # TODO: make this relationship more explicit via a separate motions dictionary
         [motion, repeat] = @getMotion keyStream, key
-        if motion != null
-
-          tmp = do @view.cursor.clone # this is necessary until we figure out multiline
-
-          for i in [1..repeat]
-            motion tmp, {pastEnd: true}
-
-          if tmp.row == @view.cursor.row # only allow same-row movement
-            @view.cursor.from tmp
+        if motion == null
+          if keyStream.waiting # motion continuing
+            return true
           else
-            @view.showMessage "Visual mode currently only works on one line"
+            do keyStream.forget
+            return false
+
+        # this is necessary until we figure out multiline
+        tmp = do @view.cursor.clone
+
+        for i in [1..repeat]
+          motion tmp, {pastEnd: true}
+
+        if tmp.row != @view.cursor.row # only allow same-row movement
+          @view.showMessage "Visual mode currently only works on one line"
           return true
-        else
-          return false
+        @view.cursor.from tmp
+        return true
 
       info = bindings[key]
 
@@ -184,7 +193,7 @@ if module?
 
       to_mode = null
       if info.bindings
-        # this is a bit of a bad hack...
+        # TODO this is a terrible hack... for d,c,y
         info = info.bindings['MOTION']
 
       if info.finishes_visual
@@ -200,7 +209,6 @@ if module?
         @view.anchor = null
         @view.setMode to_mode
         if to_mode == MODES.NORMAL
-          do @view.cursor.backIfNeeded
           if info.drop # for yank
             do keyStream.forget
             return true
@@ -221,8 +229,19 @@ if module?
       bindings = @bindings[MODES.VISUAL_LINE]
 
       if not (key of bindings)
-        do keyStream.forget
-        return false
+        # getMotion using normal mode motions
+        # TODO: make this relationship more explicit via a separate motions dictionary
+        [motion, repeat] = @getMotion keyStream, key
+        if motion == null
+          if keyStream.waiting # motion continuing
+            return true
+          else
+            do keyStream.forget
+            return false
+
+        for i in [1..repeat]
+          motion @view.cursor, {pastEnd: true}
+        return true
 
       info = bindings[key]
 
@@ -233,26 +252,18 @@ if module?
       }
 
       to_mode = null
-      if info.motion
-        [motion, repeat] = @getMotion keyStream, key
-        if motion != null
-          motion = info.fn
-          for i in [1..repeat]
-            motion @view.cursor, {pastEnd: true}
-        return true
 
       if info.bindings
         # TODO this is a terrible hack... for d,c,y
         info = info.bindings[key]
 
       if info.finishes_visual_line
-        # set cursor to be earlier one and delete difference
-        index1 = @view.data.indexOf @view.cursor.row
-        index2 = @view.data.indexOf @view.anchor.row
-        # NOTE: this is bad (inconsistent with other behavior)  because it moves the cursor
-        if index2 < index1
-          @view.cursor.from @view.anchor
-        context.repeat = Math.abs(index2 - index1) + 1
+        [parentid, index1, index2] = do @view.getVisualLineSelections
+        # NOTE: this is bad (inconsistent with other behavior) for yank/indent because it moves the cursor
+        # maybe just move it back afterwards?
+        @view.cursor.setRow (@view.data.getChildren parentid)[index1]
+        context.repeat = index2 - index1 + 1
+
         to_mode = if info.to_mode? then info.to_mode else MODES.NORMAL
       else
         to_mode = if info.to_mode? then info.to_mode else null
@@ -264,11 +275,7 @@ if module?
         @view.setMode to_mode
 
       if @view.mode != MODES.VISUAL_LINE
-        @view.anchor = null
-        @view.lineSelect = false
-
         if @view.mode == MODES.NORMAL
-          do @view.cursor.backIfNeeded
           if info.drop # for yank
             do keyStream.forget
             return true
@@ -315,7 +322,6 @@ if module?
 
         if info.to_mode == MODES.NORMAL
           @view.setMode MODES.NORMAL
-          @view.menu = null
           return true
 
       do @view.menu.update
@@ -397,12 +403,11 @@ if module?
       if info.continue
         key = do keyStream.dequeue
         if key == null
-          if info.fn # bit of a hack, for
-            info.fn.apply {view: @view}
           do keyStream.wait
+          if info.fn # bit of a hack, for easy-motion
+            info.fn.apply {view: @view}
           return [null, repeat]
         fn = info.continue.bind @, key
-
       else if info.bindings
         answer = (@getMotion keyStream, null, info.bindings, repeat)
         return answer
