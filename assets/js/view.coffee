@@ -1,6 +1,6 @@
 # imports
 if module?
-  _ = require('underscore')
+  _ = require('lodash')
 
   actions = require('./actions.coffee')
   constants = require('./constants.coffee')
@@ -1097,7 +1097,7 @@ renderLine = (lineData, options = {}) ->
 
       marking = @markrow?.id == row.id
 
-      if row == @cursor.row and not marking
+      if (data.sameInstance row, @cursor.row) and not marking
         cursors[@cursor.col] = true
 
         if @anchor and not @lineSelect

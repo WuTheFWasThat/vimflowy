@@ -1,6 +1,6 @@
 # imports
 if module?
-  _ = require('underscore')
+  _ = require('lodash')
   utils = require('./utils.coffee')
   constants = require('./constants.coffee')
   Logger = require('./logger.coffee')
@@ -150,14 +150,14 @@ class Data
         @_updateMarksRecursive childRow, '', childRow, row
 
   getAllMarks: () ->
-    _.mapObject (do @store.getAllMarks), @canonicalInstance, @
+    _.mapValues (do @store.getAllMarks), @canonicalInstance, @
 
   #############
   # structure #
   #############
 
   getParent: (row) ->
-    return { id: row.crumbs.parent, crumbs: row.crumbs.crumbs }
+    return { id: row.crumbs.parent, crumbs: _.cloneDeep(row.crumbs.crumbs) }
 
   getParents: (row) ->
     return @store.getParents row.id
@@ -165,7 +165,7 @@ class Data
   getChildren: (row) ->
     children = @store.getChildren row.id
     _.each children, (child) ->
-      child.crumbs = { parent: row.id, crumbs: row.crumbs }
+      child.crumbs = { parent: row.id, crumbs: _.cloneDeep(row.crumbs) }
     return children
 
   hasChildren: (row) ->
@@ -193,6 +193,14 @@ class Data
     children = @getChildren canonicalParent
     return _.find children, (sib) ->
       sib.id == id
+
+  sameInstance: (row1, row2) ->
+    while row1.id == row2.id and row1.id != @root.id and row2.id != @root.id
+      row1 = @getParent row1
+      row2 = @getParent row2
+    if row1.id != row2.id
+      return false
+    return true
 
   toggleCollapsed: (row) ->
     @store.setCollapsed row.id, (not @collapsed row)
@@ -242,7 +250,7 @@ class Data
     else
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
-      child.crumbs = { parent: row.id, crumbs: row.crumbs }
+      child.crumbs = { parent: row.id, crumbs: _.cloneDeep(row.crumbs) }
       parents = @store.getParents child.id
       parents.push row.id
       @store.setParents child.id, row.id
@@ -351,7 +359,7 @@ class Data
     return child
 
   cloneRow: (row, parent, index = -1) ->
-    @attachChildren parent, row, index
+    @attachChildren parent, _.cloneDeep(row), index
 
   # this is never used, since data structure is basically persistent
   # deleteRow: (row) ->
