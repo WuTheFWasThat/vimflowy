@@ -5,11 +5,15 @@ if module?
 
 ((exports) ->
   MODES = constants.MODES
+  MODE_TYPES = {
+    NORMAL: 0
+    INSERT: 1
+  }
 
   defaultHotkeys = {}
 
   # keybindings for normal-like modes (normal, visual, visual-line)
-  defaultHotkeys[MODES.NORMAL] =
+  defaultHotkeys[MODE_TYPES.NORMAL] =
     HELP              : ['?']
     INSERT            : ['i']
     INSERT_HOME       : ['I']
@@ -98,7 +102,7 @@ if module?
     # TODO: SWAP_CASE         : ['~']
 
   # keybindings for insert-like modes (insert, mark, menu)
-  defaultHotkeys[MODES.INSERT] =
+  defaultHotkeys[MODE_TYPES.INSERT] =
     LEFT              : ['left']
     RIGHT             : ['right']
     UP                : ['up']
@@ -276,14 +280,14 @@ if module?
       throw "Arrays not same, second contains: #{b_minus_a}"
 
   assert_arr_equal(
-    _.keys(defaultHotkeys[MODES.NORMAL]),
+    _.keys(defaultHotkeys[MODE_TYPES.NORMAL]),
     _.union(
       actions[MODES.NORMAL], actions[MODES.VISUAL], actions[MODES.VISUAL_LINE]
     )
   )
 
   assert_arr_equal(
-    _.keys(defaultHotkeys[MODES.INSERT]),
+    _.keys(defaultHotkeys[MODE_TYPES.INSERT]),
     _.union(
       actions[MODES.INSERT], actions[MODES.SEARCH], actions[MODES.MARK]
     )
@@ -296,9 +300,9 @@ if module?
       return bindings
 
   modeBindings = {}
-  modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultHotkeys[MODES.NORMAL]
-  modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultHotkeys[MODES.NORMAL]
-  modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultHotkeys[MODES.NORMAL]
+  modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultHotkeys[MODE_TYPES.NORMAL]
+  modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultHotkeys[MODE_TYPES.NORMAL]
+  modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultHotkeys[MODE_TYPES.NORMAL]
 
   # special case, delete_char -> delete in visual and visual_line
   [].push.apply modeBindings[MODES.VISUAL].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
@@ -307,9 +311,9 @@ if module?
   [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, modeBindings[MODES.NORMAL].INDENT_RIGHT
   [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, modeBindings[MODES.NORMAL].INDENT_LEFT
 
-  modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultHotkeys[MODES.INSERT]
-  modeBindings[MODES.SEARCH] = get_mode_keybindings MODES.SEARCH, defaultHotkeys[MODES.INSERT]
-  modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultHotkeys[MODES.INSERT]
+  modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultHotkeys[MODE_TYPES.INSERT]
+  modeBindings[MODES.SEARCH] = get_mode_keybindings MODES.SEARCH, defaultHotkeys[MODE_TYPES.INSERT]
+  modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultHotkeys[MODE_TYPES.INSERT]
 
   text_format_definition = (property) ->
     return () ->
@@ -354,12 +358,10 @@ if module?
   #   SEE: menu.coffee
   keyDefinitions =
     HELP:
-      display: 'Show/hide key bindings (edit in <a href="#settings">settings</a>)'
+      display: 'Show/hide key bindings (edit in settings)'
       drop: true
       fn: () ->
-        @view.keybindingsDiv.toggleClass 'active'
-        @view.data.store.setSetting 'showKeyBindings', @view.keybindingsDiv.hasClass 'active'
-        do @view.buildBindingsDiv
+        do @view.toggleBindingsDiv
     ZOOM_IN:
       display: 'Zoom in by one level'
       fn: () ->
@@ -908,9 +910,40 @@ if module?
   for mode_name, mode of MODES
     bindings[mode] = getBindings keyDefinitions, keyMaps[mode]
 
+  buildTable = (mode) ->
+    modeKeymap = keyMaps[mode] || {}
+
+    table = $('<table>')
+
+    buildTableContents = (bindings, onto) ->
+      for k,v of bindings
+        if k == 'MOTION'
+          keys = ['<MOTION>']
+        else
+          keys = modeKeymap[k]
+          if not keys
+            continue
+
+        if keys.length == 0
+          continue
+
+        row = $('<tr>')
+
+        # row.append $('<td>').text keys[0]
+        row.append $('<td>').text keys.join(' OR ')
+
+        display_cell = $('<td>').css('width', '100%').html v.display
+        if v.bindings
+          buildTableContents v.bindings, display_cell
+        row.append display_cell
+
+        onto.append row
+    buildTableContents keyDefinitions, table
+    return table
+
   # exports
   exports.bindings = bindings
-  exports.maps = keyMaps
+  exports.buildTable = buildTable
   exports.definitions = keyDefinitions
 
 )(if typeof exports isnt 'undefined' then exports else window.KeyBindings = {})

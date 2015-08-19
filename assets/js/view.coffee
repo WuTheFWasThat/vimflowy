@@ -306,37 +306,13 @@ renderLine = (lineData, options = {}) ->
       if not (@settings.getSetting 'showKeyBindings')
         return
 
-      modeKeymap = @bindings.maps[@mode] || {}
-
-      table = $('<table>')
-
-      buildTableContents = (definitions, onto) =>
-        for k,v of definitions
-          if k == 'MOTION'
-            keys = ['<MOTION>']
-          else
-            keys = modeKeymap[k]
-            if not keys
-              continue
-
-          if keys.length == 0
-            continue
-
-          row = $('<tr>')
-
-          # row.append $('<td>').text keys[0]
-          row.append $('<td>').text keys.join(' OR ')
-
-          display_cell = $('<td>').css('width', '100%').html v.display
-          if v.bindings
-            buildTableContents v.bindings, display_cell
-          row.append display_cell
-
-          onto.append row
-
-      buildTableContents @bindings.definitions, table
+      table = @bindings.buildTable @mode
       @keybindingsDiv.empty().append(table)
 
+    toggleBindingsDiv: () ->
+      @keybindingsDiv.toggleClass 'active'
+      @data.store.setSetting 'showKeyBindings', @keybindingsDiv.hasClass 'active'
+      do @buildBindingsDiv
 
     #################
     # show message
