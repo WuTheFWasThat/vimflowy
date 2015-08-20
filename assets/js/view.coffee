@@ -360,11 +360,13 @@ renderLine = (lineData, options = {}) ->
             annotation: true
           continue
         whitespace = /^\s*/
+        # TODO: record whether COMPLETE and strikethrough line if so?
         lines.push
             indent: (line.match whitespace)[0].length
             line: (line.replace whitespace, "").replace /^(?:-\s*)?(?:\[COMPLETE\] )?/, ""
       while lines[lines.length-1].line == '' # Strip trailing blank line(s)
         lines = lines.splice(0, lines.length-1)
+
       # Step 2: convert a list of (int, string, annotation?) into a forest format
       parseAllChildren = (parentIndentation, lineNumber) ->
         children = []
@@ -377,13 +379,16 @@ renderLine = (lineData, options = {}) ->
             text: lines[lineNumber].line
           result = parseAllChildren lines[lineNumber].indent, lineNumber + 1
           lineNumber = result.lineNumber
-          if result.children? then child.children = result.children
+          if result.children?
+            child.children = result.children
+            child.collapsed = result.children.length > 0
           children.push child
-        return { children: children, lineNumber: lineNumber }
+        return { children: children, lineNumber: lineNumber}
       forest = (parseAllChildren -1, 0).children
       root =
         text: ""
         children: forest
+        collapsed: (forest.length > 0)
       return root
 
     parseContent: (content, mimetype) ->
@@ -854,6 +859,9 @@ renderLine = (lineData, options = {}) ->
       return newparent
 
     indent: (id = @cursor.row) ->
+      if @data.collapsed id
+        return @indentBlocks id
+
       sib = @data.getSiblingBefore id
 
       newparent = @indentBlocks id
@@ -863,6 +871,9 @@ renderLine = (lineData, options = {}) ->
         @moveBlock child, sib, -1
 
     unindent: (id = @cursor.row) ->
+      if @data.collapsed id
+        return @unindentBlocks id
+
       if @data.hasChildren id
         return
 

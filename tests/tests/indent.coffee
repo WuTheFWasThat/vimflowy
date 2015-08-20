@@ -345,3 +345,28 @@ t.expect [
     'grandkid 2'
   ] },
 ]
+
+# make sure indent row behaves like indent block when collapsed
+t = new TestCase [
+  { text: 'grandmama', children: [
+    { text: 'mama', collapsed: true, children : [
+      'me'
+    ] },
+  ] },
+]
+t.sendKeys ['j', unindentRowKey]
+t.expect [
+  'grandmama',
+  { text: 'mama', collapsed: true, children : [
+    'me'
+  ] }
+]
+
+t.sendKey indentRowKey
+t.expect [
+  { text: 'grandmama', children: [
+    { text: 'mama', collapsed: true, children : [
+      'me'
+    ] },
+  ] },
+]

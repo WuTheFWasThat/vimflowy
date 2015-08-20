@@ -59,11 +59,11 @@ t.expectExport 'application/json',
             { text: "Line 2.1" },
             { text: "Line 2.2", children: [
                 { text: "Line 2.2.1" }
-            ] },
+            ], collapsed: true },
             { text: "Line 2.3", children: [
                 { text: "Line 2.3.1" }
-            ] }
-        ] },
+            ], collapsed: true }
+        ], collapsed: true },
         { text: 'Line 3' }
     ] }, null, 2)
 
@@ -79,7 +79,7 @@ t.import """{
       "text": "Line 2",
       "children": [
         {
-          "text": "Line 2.1" 
+          "text": "Line 2.1"
         },
         {
           "text": "Line 2.2",
@@ -141,8 +141,8 @@ t.expectExport 'application/json',
         { text: 'Line 1', children: [
             { text: "Subpart 1", children: [
                 { text: "Title line for subpart 1" }
-            ] }
-        ] },
+            ], collapsed: true }
+        ], collapsed: true },
         { text: 'Line 2' },
         { text: 'Line 3' }
     ] }, null, 2)
