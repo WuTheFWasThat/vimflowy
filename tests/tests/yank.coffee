@@ -2,6 +2,8 @@ require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 Register = require '../../assets/js/register.coffee'
 
+secondPasteDisabled = true
+
 # test pasting!
 t = new TestCase ['px']
 t.sendKeys 'xp'
@@ -69,14 +71,18 @@ t.sendKeys 'dd'
 t.expectRegisterType Register.TYPES.ROWS
 t.expect [ 'dumpty' ]
 t.sendKeys 'p'
-t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
+if secondPasteDisabled
+  t.expectRegisterType Register.TYPES.NONE
+else
+  t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
 t.expect [ 'dumpty', 'humpty' ]
 t.sendKeys 'u'
 t.expect ['dumpty']
 t.sendKeys 'u'
 t.expect ['humpty', 'dumpty']
-t.sendKeys 'p'
-t.expect ['humpty', 'humpty', 'dumpty']
+if not secondPasteDisabled
+  t.sendKeys 'p'
+  t.expect ['humpty', 'humpty', 'dumpty']
 
 t = new TestCase ['humpty', 'dumpty']
 t.sendKeys 'jddP'
@@ -101,6 +107,8 @@ t.expect [
   ] },
 ]
 
+if secondPasteDisabled
+  t.sendKeys 'yy'
 t.sendKeys 'u'
 t.expect [
   { text: 'herpy', children: [
@@ -282,46 +290,47 @@ t.expect [
   ] }
 ]
 
-# test second paste
-t = new TestCase [
-  { text: 'hey', collapsed: true, children: [
-    'yo'
-  ] }
-  'me'
-  'cool'
-]
-t.sendKeys 'Vjd'
-t.expect [
-  'cool'
-]
-t.expectRegisterType Register.TYPES.ROWS
-t.sendKeys 'p'
-t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
-t.expect [
-  'cool'
-  { text: 'hey', collapsed: true, children: [
-    'yo'
-  ] }
-  'me'
-]
-t.sendKeys 'zryjrh'
-t.expect [
-  'cool'
-  { text: 'yey', children: [
-    'ho'
-  ] }
-  'me'
-]
-# second paste should be original thing
-t.sendKeys 'P'
-t.expect [
-  'cool'
-  { text: 'yey', children: [
+if not secondPasteDisabled
+  # test second paste
+  t = new TestCase [
     { text: 'hey', collapsed: true, children: [
       'yo'
     ] }
     'me'
-    'ho'
-  ] }
-  'me'
-]
+    'cool'
+  ]
+  t.sendKeys 'Vjd'
+  t.expect [
+    'cool'
+  ]
+  t.expectRegisterType Register.TYPES.ROWS
+  t.sendKeys 'p'
+  t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
+  t.expect [
+    'cool'
+    { text: 'hey', collapsed: true, children: [
+      'yo'
+    ] }
+    'me'
+  ]
+  t.sendKeys 'zryjrh'
+  t.expect [
+    'cool'
+    { text: 'yey', children: [
+      'ho'
+    ] }
+    'me'
+  ]
+  # second paste should be original thing
+  t.sendKeys 'P'
+  t.expect [
+    'cool'
+    { text: 'yey', children: [
+      { text: 'hey', collapsed: true, children: [
+        'yo'
+      ] }
+      'me'
+      'ho'
+    ] }
+    'me'
+  ]

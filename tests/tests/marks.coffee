@@ -157,14 +157,49 @@ t.expect [
 ]
 t.expectMarks {'mark3': 1}
 
+# try to mark again something that's already there
+t = new TestCase [
+  { text: 'line 1', mark: 'mark1' }
+]
+
+# once line is deleted, we can mark though
+t.sendKeys 'yy'
+t.sendKeys ['m', 'enter']
+t.expect [
+  'line 1'
+]
+t.expectMarks {}
+
+t.sendKeys 'u'
+t.expect [
+  { text: 'line 1', mark: 'mark1' }
+]
+t.expectMarks {'mark1': 1}
+
+# paste can't reapply the mark
+t.sendKeys 'p'
+t.expect [
+  { text: 'line 1', mark: 'mark1' }
+  'line 1'
+]
+t.expectMarks {'mark1': 1}
+
+t.sendKeys 'kmmark2'
+t.sendKey 'enter'
+t.expect [
+  { text: 'line 1', mark: 'mark2' }
+  'line 1'
+]
+t.expectMarks {'mark2': 1}
+
 # paste can now reapply the mark
 t.sendKeys 'p'
 t.expect [
-  { text: 'line 1', mark: 'mark3' }
-  { text: 'line 2', mark: 'mark2' }
-  'line 2'
+  { text: 'line 1', mark: 'mark2' }
+  { text: 'line 1', mark: 'mark1' }
+  'line 1'
 ]
-t.expectMarks {'mark3': 1, 'mark2': 3}
+t.expectMarks {'mark2': 1, 'mark1': 3}
 
 # test going to mark under cursor
 t = new TestCase [
@@ -353,7 +388,7 @@ t.expect [
 ]
 t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
 
-t.sendKeys 'u'
+t.sendKeys 'yyu'
 t.expect [ 'random' ]
 t.expectMarks {}
 

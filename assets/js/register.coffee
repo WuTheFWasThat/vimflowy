@@ -50,7 +50,9 @@ class Register
         @view.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
     else if @type == Register.TYPES.ROWS
       # now that rows are in action, must switch to serialized version
-      @saveSerializedRows (@view.data.serialize row for row in @rows)
+      # @saveSerializedRows (@view.data.serialize row for row in @rows)
+      # For efficiency, just wipe registers for now
+      @type = Register.TYPES.NONE
 
       row = @view.cursor.row
       parent = @view.data.getParent row
