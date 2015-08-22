@@ -4,6 +4,9 @@ block morehead
   - var bodyClass = 'index'
 
 block content
+    // hack for firefox paste
+    .offscreen(contenteditable="true")
+
     #contents
         #menu.hidden
         #view

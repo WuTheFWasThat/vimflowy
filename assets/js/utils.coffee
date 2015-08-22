@@ -12,12 +12,12 @@
       '': 'text/plain'
     return extensionLookup[extension.toLowerCase()]
 
-  exports.isScrolledIntoView = (elem) ->
+  exports.isScrolledIntoView = (elem, container) ->
     $elem = $(elem)
-    $window = $(window)
+    $container = $(container)
 
-    docViewTop = $window.scrollTop()
-    docViewBottom = docViewTop + $window.height()
+    docViewTop = $container.offset().top
+    docViewBottom = docViewTop + $container.outerHeight()
 
     elemTop = $elem.offset().top
     elemBottom = elemTop + $elem.height()

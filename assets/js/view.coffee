@@ -983,7 +983,7 @@ renderLine = (lineData, options = {}) ->
          @scrollMain (elemBottom - window.innerHeight + bottom_margin)
 
     getVisibleRows: () ->
-      ids = $.makeArray($('.bullet')).filter(utils.isScrolledIntoView)
+      ids = $.makeArray($('.bullet')).filter((bullet) => return utils.isScrolledIntoView $(bullet), @mainDiv)
                                    .map((x) -> return parseInt $(x).data('id'))
       return ids
 

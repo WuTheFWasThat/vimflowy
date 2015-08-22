@@ -126,7 +126,7 @@ if module?
       if not (key of bindings)
         if key == 'shift+enter'
           key = '\n'
-        else if key == 'space'
+        else if key == 'space' or key == 'shift+space'
           key = ' '
         if key.length > 1
           return false

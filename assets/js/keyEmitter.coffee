@@ -1,5 +1,14 @@
 class KeyEmitter extends EventEmitter
 
+  # SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
+  isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0 # Opera 8.0+
+  isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0 # Safari 3+
+  isChrome = !!window.chrome && !isOpera # Chrome 1+
+  isFirefox = typeof InstallTrigger != 'undefined' # Firefox 1.0+
+
+  if not isChrome and not isFirefox
+    alert('Unsupported browser!  Please use Chrome 1+ or Firefox 1.0+')
+
   shiftMap =
     '`': '~'
     '1': '!'
@@ -77,6 +86,9 @@ class KeyEmitter extends EventEmitter
     keyCodeMap[keyCode] = lower
     shiftMap[lower] = letter
 
+  if isFirefox
+    keyCodeMap[173] = '-'
+
   constructor: () ->
     super
 
@@ -84,26 +96,26 @@ class KeyEmitter extends EventEmitter
     $(document).keydown (e) =>
       if e.keyCode of ignoreMap
         return true
-      else if e.keyCode of keyCodeMap
+      if e.keyCode of keyCodeMap
         key = keyCodeMap[e.keyCode]
-
-        if e.shiftKey
-          if key of shiftMap
-            key = shiftMap[key]
-          else
-            key = 'shift+' + key
-
-        if e.altKey
-          key = 'alt+' + key
-
-        if e.ctrlKey
-          key = 'ctrl+' + key
-
-        if e.metaKey
-          key = 'meta+' + key
       else
         # this is necessary for typing stuff..
         key = String.fromCharCode e.keyCode
+
+      if e.shiftKey
+        if key of shiftMap
+          key = shiftMap[key]
+        else
+          key = 'shift+' + key
+
+      if e.altKey
+        key = 'alt+' + key
+
+      if e.ctrlKey
+        key = 'ctrl+' + key
+
+      if e.metaKey
+        key = 'meta+' + key
 
       Logger.logger.debug 'keycode', e.keyCode, 'key', key
       results = @emit 'keydown', key

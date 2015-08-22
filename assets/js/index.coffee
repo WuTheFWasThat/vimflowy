@@ -16,7 +16,7 @@ create_view = (data) ->
     menuDiv: $('#menu')
   }
 
-  $(window).on('paste', (e) ->
+  $(document).on('paste', (e) ->
       e.preventDefault()
       text = (e.originalEvent || e).clipboardData.getData('text/plain')
       # TODO: deal with this better when there are multiple lines
