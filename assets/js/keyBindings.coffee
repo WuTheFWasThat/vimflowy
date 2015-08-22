@@ -271,50 +271,6 @@ if module?
     'EXIT_MODE',
   ]
 
-  assert_arr_equal = (arr_a, arr_b) ->
-    a_minus_b = _.difference(arr_a, arr_b)
-    if a_minus_b.length
-      throw "Arrays not same, first contains: #{a_minus_b}"
-    b_minus_a = _.difference(arr_b, arr_a)
-    if b_minus_a.length
-      throw "Arrays not same, second contains: #{b_minus_a}"
-
-  assert_arr_equal(
-    _.keys(defaultHotkeys[MODE_TYPES.NORMAL]),
-    _.union(
-      actions[MODES.NORMAL], actions[MODES.VISUAL], actions[MODES.VISUAL_LINE]
-    )
-  )
-
-  assert_arr_equal(
-    _.keys(defaultHotkeys[MODE_TYPES.INSERT]),
-    _.union(
-      actions[MODES.INSERT], actions[MODES.SEARCH], actions[MODES.MARK]
-    )
-  )
-
-  get_mode_keybindings = (mode, general_bindings) ->
-      bindings = {}
-      for action in actions[mode]
-          bindings[action] = general_bindings[action].slice()
-      return bindings
-
-  modeBindings = {}
-  modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultHotkeys[MODE_TYPES.NORMAL]
-  modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultHotkeys[MODE_TYPES.NORMAL]
-  modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultHotkeys[MODE_TYPES.NORMAL]
-
-  # special case, delete_char -> delete in visual and visual_line
-  [].push.apply modeBindings[MODES.VISUAL].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
-  [].push.apply modeBindings[MODES.VISUAL_LINE].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
-  # special case, indent -> move in visual_line
-  [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, modeBindings[MODES.NORMAL].INDENT_RIGHT
-  [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, modeBindings[MODES.NORMAL].INDENT_LEFT
-
-  modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultHotkeys[MODE_TYPES.INSERT]
-  modeBindings[MODES.SEARCH] = get_mode_keybindings MODES.SEARCH, defaultHotkeys[MODE_TYPES.INSERT]
-  modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultHotkeys[MODE_TYPES.INSERT]
-
   text_format_definition = (property) ->
     return () ->
       if @view.mode == MODES.NORMAL
@@ -879,71 +835,118 @@ if module?
       finishes_visual: true
       fn: text_format_definition 'strikethrough'
 
-  # takes keyDefinitions and keyMaps, and combines them
-  getBindings = (definitions, keyMap) ->
-    bindings = {}
-    for name, v of definitions
-      if name == 'MOTION'
-        keys = ['MOTION']
-      else if (name of keyMap)
-        if not _.result(v, 'available', true)
-          continue
-        keys = keyMap[name]
-      else
-        # throw "Error:  keyMap missing key for #{name}"
-        continue
 
-      v = _.clone v
-      v.name = name
-      if v.bindings
-        v.bindings = getBindings v.bindings, keyMap
+  assert_arr_equal = (arr_a, arr_b) ->
+    a_minus_b = _.difference(arr_a, arr_b)
+    if a_minus_b.length
+      throw "Arrays not same, first contains: #{a_minus_b}"
+    b_minus_a = _.difference(arr_b, arr_a)
+    if b_minus_a.length
+      throw "Arrays not same, second contains: #{b_minus_a}"
 
-      for key in keys
-        if key of bindings
-          throw "Error:  Duplicate binding on key #{key}"
-        bindings[key] = v
-    return bindings
+  assert_arr_equal(
+    _.keys(defaultHotkeys[MODE_TYPES.NORMAL]),
+    _.union(
+      actions[MODES.NORMAL], actions[MODES.VISUAL], actions[MODES.VISUAL_LINE]
+    )
+  )
 
-  keyMaps = JSON.parse JSON.stringify modeBindings
+  assert_arr_equal(
+    _.keys(defaultHotkeys[MODE_TYPES.INSERT]),
+    _.union(
+      actions[MODES.INSERT], actions[MODES.SEARCH], actions[MODES.MARK]
+    )
+  )
 
-  bindings = {}
-  for mode_name, mode of MODES
-    bindings[mode] = getBindings keyDefinitions, keyMaps[mode]
+  class KeyBindings
+    # TODO: takes in datastore?
+    constructor: () ->
+      get_mode_keybindings = (mode, general_bindings) ->
+          bindings = {}
+          for action in actions[mode]
+              bindings[action] = general_bindings[action].slice()
+          return bindings
 
-  buildTable = (mode) ->
-    modeKeymap = keyMaps[mode] || {}
+      modeBindings = {}
+      modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultHotkeys[MODE_TYPES.NORMAL]
+      modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultHotkeys[MODE_TYPES.NORMAL]
+      modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultHotkeys[MODE_TYPES.NORMAL]
 
-    table = $('<table>')
+      # special case, delete_char -> delete in visual and visual_line
+      [].push.apply modeBindings[MODES.VISUAL].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
+      [].push.apply modeBindings[MODES.VISUAL_LINE].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
+      # special case, indent -> move in visual_line
+      [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, modeBindings[MODES.NORMAL].INDENT_RIGHT
+      [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, modeBindings[MODES.NORMAL].INDENT_LEFT
 
-    buildTableContents = (bindings, onto) ->
-      for k,v of bindings
-        if k == 'MOTION'
-          keys = ['<MOTION>']
-        else
-          keys = modeKeymap[k]
-          if not keys
+      modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultHotkeys[MODE_TYPES.INSERT]
+      modeBindings[MODES.SEARCH] = get_mode_keybindings MODES.SEARCH, defaultHotkeys[MODE_TYPES.INSERT]
+      modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultHotkeys[MODE_TYPES.INSERT]
+
+      # takes keyDefinitions and keyMaps, and combines them
+      getBindings = (definitions, keyMap) ->
+        bindings = {}
+        for name, v of definitions
+          if name == 'MOTION'
+            keys = ['MOTION']
+          else if (name of keyMap)
+            if not _.result(v, 'available', true)
+              continue
+            keys = keyMap[name]
+          else
+            # throw "Error:  keyMap missing key for #{name}"
             continue
 
-        if keys.length == 0
-          continue
+          v = _.clone v
+          v.name = name
+          if v.bindings
+            v.bindings = getBindings v.bindings, keyMap
 
-        row = $('<tr>')
+          for key in keys
+            if key of bindings
+              throw "Error:  Duplicate binding on key #{key}"
+            bindings[key] = v
+        return bindings
 
-        # row.append $('<td>').text keys[0]
-        row.append $('<td>').text keys.join(' OR ')
+      @keyMaps = JSON.parse JSON.stringify modeBindings
 
-        display_cell = $('<td>').css('width', '100%').html v.display
-        if v.bindings
-          buildTableContents v.bindings, display_cell
-        row.append display_cell
+      @bindings = {}
+      for mode_name, mode of MODES
+        @bindings[mode] = getBindings keyDefinitions, @keyMaps[mode]
 
-        onto.append row
-    buildTableContents keyDefinitions, table
-    return table
+    buildTable: (mode) ->
+      modeKeymap = @keyMaps[mode] || {}
 
-  # exports
-  exports.bindings = bindings
-  exports.buildTable = buildTable
-  exports.definitions = keyDefinitions
+      table = $('<table>')
 
-)(if typeof exports isnt 'undefined' then exports else window.KeyBindings = {})
+      buildTableContents = (bindings, onto) ->
+        for k,v of bindings
+          if k == 'MOTION'
+            keys = ['<MOTION>']
+          else
+            keys = modeKeymap[k]
+            if not keys
+              continue
+
+          if keys.length == 0
+            continue
+
+          row = $('<tr>')
+
+          # row.append $('<td>').text keys[0]
+          row.append $('<td>').text keys.join(' OR ')
+
+          display_cell = $('<td>').css('width', '100%').html v.display
+          if v.bindings
+            buildTableContents v.bindings, display_cell
+          row.append display_cell
+
+          onto.append row
+      buildTableContents keyDefinitions, table
+      return table
+
+    # TODO getBindings: (mode) -> return @bindings[mode]
+
+  module?.exports = KeyBindings
+  window?.KeyBindings = KeyBindings
+)()

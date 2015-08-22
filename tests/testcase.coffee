@@ -18,7 +18,7 @@ class TestCase
 
     @view = new View @data
     @view.render = -> return
-    @keyhandler = new KeyHandler @view, KeyBindings.bindings
+    @keyhandler = new KeyHandler @view, new KeyBindings
     @register = @view.register
 
   _expectDeepEqual: (actual, expected) ->
@@ -77,7 +77,7 @@ class TestCase
     assert.equal export_, expected,
       "Expected \n#{export_}\n To match \n#{expected}\n!"
     return @
-  
+
   expectMarks: (expected) ->
     marks = do @view.data.store.getAllMarks
     @_expectDeepEqual marks, expected

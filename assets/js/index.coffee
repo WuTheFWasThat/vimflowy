@@ -6,8 +6,10 @@
 view = null
 create_view = (data) ->
 
+  keyBindings = new KeyBindings
+
   view = new View data, {
-    bindings: KeyBindings
+    bindings: keyBindings
     mainDiv: $('#view'),
     settingsDiv: $('#settings')
     messageDiv: $('#message')
@@ -36,7 +38,7 @@ create_view = (data) ->
 
   key_emitter = new KeyEmitter
   do key_emitter.listen
-  keyhandler = new KeyHandler view, KeyBindings.bindings
+  keyhandler = new KeyHandler view, keyBindings
   key_emitter.on 'keydown', keyhandler.handleKey.bind(keyhandler)
 
   $(document).ready ->

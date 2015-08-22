@@ -67,10 +67,10 @@ if module?
 
   class KeyHandler
 
-    constructor: (view, bindings) ->
+    constructor: (view, keyBindings) ->
       @view = view
 
-      @bindings = bindings
+      @keyBindings = keyBindings
 
       @macros = {}
       @recording = null
@@ -121,7 +121,7 @@ if module?
       if key == null then throw 'Got no key in insert mode'
       # if key == null then return do keyStream.wait
 
-      bindings = @bindings[MODES.INSERT]
+      bindings = @keyBindings.bindings[MODES.INSERT]
 
       if not (key of bindings)
         if key == 'shift+enter'
@@ -161,7 +161,7 @@ if module?
       if key == null then throw 'Got no key in visual mode'
       # if key == null then return do keyStream.wait
 
-      bindings = @bindings[MODES.VISUAL]
+      bindings = @keyBindings.bindings[MODES.VISUAL]
 
       if not (key of bindings)
         # getMotion using normal mode motions
@@ -229,7 +229,7 @@ if module?
       if key == null then throw 'Got no key in visual line mode'
       # if key == null then return do keyStream.wait
 
-      bindings = @bindings[MODES.VISUAL_LINE]
+      bindings = @keyBindings.bindings[MODES.VISUAL_LINE]
 
       if not (key of bindings)
         # getMotion using normal mode motions
@@ -295,7 +295,7 @@ if module?
       key = do keyStream.dequeue
       if key == null then throw 'Got no key in search mode'
 
-      bindings = @bindings[MODES.SEARCH]
+      bindings = @keyBindings.bindings[MODES.SEARCH]
 
       view = @view.menu.view
 
@@ -335,7 +335,7 @@ if module?
       key = do keyStream.dequeue
       if key == null then throw 'Got no key in search mode'
 
-      bindings = @bindings[MODES.MARK]
+      bindings = @keyBindings.bindings[MODES.MARK]
 
       view = @view.markview
 
@@ -388,7 +388,7 @@ if module?
       return [parseInt(numStr), key]
 
     # useful when you expect a motion
-    getMotion: (keyStream, motionKey, bindings = @bindings[MODES.NORMAL], repeat = 1) =>
+    getMotion: (keyStream, motionKey, bindings = @keyBindings.bindings[MODES.NORMAL], repeat = 1) =>
       [motionRepeat, motionKey] = @getRepeat keyStream, motionKey
       repeat = repeat * motionRepeat
 
@@ -419,7 +419,7 @@ if module?
 
       return [fn, repeat]
 
-    processNormalMode: (keyStream, bindings = @bindings[MODES.NORMAL], repeat = 1) ->
+    processNormalMode: (keyStream, bindings = @keyBindings.bindings[MODES.NORMAL], repeat = 1) ->
       [newrepeat, key] = @getRepeat keyStream
       if key == null
         do keyStream.wait
@@ -435,7 +435,7 @@ if module?
           info = bindings['MOTION']
 
           # note: this uses original bindings to determine what's a motion
-          [motion, repeat] = @getMotion keyStream, key, @bindings[MODES.NORMAL], repeat
+          [motion, repeat] = @getMotion keyStream, key, @keyBindings.bindings[MODES.NORMAL], repeat
           if motion == null
             do keyStream.forget
             return false
