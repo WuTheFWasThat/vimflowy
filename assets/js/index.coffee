@@ -6,10 +6,14 @@
 view = null
 create_view = (data) ->
 
-  keyBindings = new KeyBindings
+  settings = new Settings data.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
+  do settings.loadRenderSettings
+
+  keyBindings = new KeyBindings settings
 
   view = new View data, {
     bindings: keyBindings
+    settings: settings
     mainDiv: $('#view'),
     settingsDiv: $('#settings')
     messageDiv: $('#message')
@@ -42,7 +46,7 @@ create_view = (data) ->
   key_emitter.on 'keydown', keyhandler.handleKey.bind(keyhandler)
 
   $(document).ready ->
-    do view.settingsOff
+    do view.hideSettings
     do view.render
 
     $("#settings-link").click () =>
@@ -61,7 +65,7 @@ create_view = (data) ->
             content = evt.target.result
             if view.importContent content, mimetype
                 view.showMessage 'Imported!'
-                do view.settingsOff
+                do view.hideSettings
             else
                 view.showMessage 'Import failed due to parsing issue'
         reader.onerror = (evt) ->
@@ -83,7 +87,7 @@ create_view = (data) ->
         $("#export").attr("href", null)
 
         view.showMessage 'Exported!'
-        do view.settingsOff
+        do view.hideSettings
 
 if chrome?.storage?.sync
   Logger.logger.info 'using chrome storage'

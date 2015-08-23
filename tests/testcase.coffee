@@ -7,6 +7,7 @@ View = require '../assets/js/view.coffee'
 KeyBindings = require '../assets/js/keyBindings.coffee'
 KeyHandler = require '../assets/js/keyHandler.coffee'
 Register = require '../assets/js/register.coffee'
+Settings = require '../assets/js/settings.coffee'
 
 class TestCase
   constructor: (serialized = ['']) ->
@@ -16,9 +17,13 @@ class TestCase
       text: ''
       children: serialized
 
+    @settings =  new Settings @store
     @view = new View @data
     @view.render = -> return
-    @keyhandler = new KeyHandler @view, new KeyBindings
+
+    # will have default bindings
+    keyBindings = new KeyBindings @settings
+    @keyhandler = new KeyHandler @view, keyBindings
     @register = @view.register
 
   _expectDeepEqual: (actual, expected) ->

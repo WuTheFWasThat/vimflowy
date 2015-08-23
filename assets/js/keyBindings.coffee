@@ -2,18 +2,28 @@
 if module?
   _ = require('underscore')
   constants = require('./constants.coffee')
+  utils = require('./utils.coffee')
+  Logger = require('./logger.coffee')
 
 ((exports) ->
   MODES = constants.MODES
-  MODE_TYPES = {
-    NORMAL: 0
-    INSERT: 1
+
+  NORMAL_MODE_TYPE = 'Normal'
+  INSERT_MODE_TYPE = 'Insert'
+  MODE_TYPES = {}
+  MODE_TYPES[NORMAL_MODE_TYPE] = {
+    description: 'Modes in which text is not being inserted, and all keys are configurable actions.  NORMAL, VISUAL, and VISUAL_LINE modes fall under this category.'
+    modes: [MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE]
+  }
+  MODE_TYPES[INSERT_MODE_TYPE] = {
+    description: 'Modes in which most text is inserted, and available hotkeys are restricted to those with modifiers.  INSERT, SEARCH, and MARK modes fall under this category.'
+    modes: [MODES.INSERT, MODES.SEARCH, MODES.MARK]
   }
 
   defaultHotkeys = {}
 
-  # keybindings for normal-like modes (normal, visual, visual-line)
-  defaultHotkeys[MODE_TYPES.NORMAL] =
+  # key mappings for normal-like modes (normal, visual, visual-line)
+  defaultHotkeys[NORMAL_MODE_TYPE] =
     HELP              : ['?']
     INSERT            : ['i']
     INSERT_HOME       : ['I']
@@ -101,8 +111,8 @@ if module?
     EXIT_MODE         : ['esc', 'ctrl+c']
     # TODO: SWAP_CASE         : ['~']
 
-  # keybindings for insert-like modes (insert, mark, menu)
-  defaultHotkeys[MODE_TYPES.INSERT] =
+  # key mappings for insert-like modes (insert, mark, menu)
+  defaultHotkeys[INSERT_MODE_TYPE] =
     LEFT              : ['left']
     RIGHT             : ['right']
     UP                : ['up']
@@ -162,6 +172,7 @@ if module?
 
   # set of possible actions for each mode
   actions = {}
+
   actions[MODES.NORMAL] = [
     'HELP',
     'INSERT', 'INSERT_HOME', 'INSERT_AFTER', 'INSERT_END', 'INSERT_LINE_BELOW', 'INSERT_LINE_ABOVE',
@@ -270,6 +281,13 @@ if module?
     'BACKSPACE', 'DELKEY',
     'EXIT_MODE',
   ]
+
+  # make sure that the default hotkeys accurately represents the set of possible actions under that mode_type
+  for mode_type, mode_type_obj of MODE_TYPES
+    utils.assert_arrays_equal(
+      _.keys(defaultHotkeys[mode_type]),
+      _.union.apply(_, mode_type_obj.modes.map((mode) -> actions[mode]))
+    )
 
   text_format_definition = (property) ->
     return () ->
@@ -835,53 +853,35 @@ if module?
       finishes_visual: true
       fn: text_format_definition 'strikethrough'
 
-
-  assert_arr_equal = (arr_a, arr_b) ->
-    a_minus_b = _.difference(arr_a, arr_b)
-    if a_minus_b.length
-      throw "Arrays not same, first contains: #{a_minus_b}"
-    b_minus_a = _.difference(arr_b, arr_a)
-    if b_minus_a.length
-      throw "Arrays not same, second contains: #{b_minus_a}"
-
-  assert_arr_equal(
-    _.keys(defaultHotkeys[MODE_TYPES.NORMAL]),
-    _.union(
-      actions[MODES.NORMAL], actions[MODES.VISUAL], actions[MODES.VISUAL_LINE]
-    )
-  )
-
-  assert_arr_equal(
-    _.keys(defaultHotkeys[MODE_TYPES.INSERT]),
-    _.union(
-      actions[MODES.INSERT], actions[MODES.SEARCH], actions[MODES.MARK]
-    )
-  )
-
   class KeyBindings
-    # TODO: takes in datastore?
-    constructor: () ->
-      get_mode_keybindings = (mode, general_bindings) ->
-          bindings = {}
+    constructor: (@settings) ->
+      @hotkey_settings = @settings.getSetting 'hotkeys'
+      if not @apply_hotkey_settings @hotkey_settings
+        Logger.logger.error "Failed to apply saved hotkeys #{hotkey_settings}"
+        @hotkey_settings = {}
+        if not @apply_hotkey_settings @hotkey_settings
+          Logger.logger.error "Failed to apply empty hotkeys settings!?"
+
+    apply_hotkey_settings: (hotkey_settings) ->
+      # merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
+      hotkeys = {}
+      for mode_type of MODE_TYPES
+        hotkeys[mode_type] = _.extend({}, defaultHotkeys[mode_type], hotkey_settings[mode_type] or {})
+
+      # for each mode, get key mapping for that particular mode - a mapping from action to set of keys
+      keyMaps = {}
+      for mode_type, mode_type_obj of MODE_TYPES
+        for mode in mode_type_obj.modes
+          modeKeyMap = {}
           for action in actions[mode]
-              bindings[action] = general_bindings[action].slice()
-          return bindings
-
-      modeBindings = {}
-      modeBindings[MODES.NORMAL] = get_mode_keybindings MODES.NORMAL, defaultHotkeys[MODE_TYPES.NORMAL]
-      modeBindings[MODES.VISUAL] = get_mode_keybindings MODES.VISUAL, defaultHotkeys[MODE_TYPES.NORMAL]
-      modeBindings[MODES.VISUAL_LINE] = get_mode_keybindings MODES.VISUAL_LINE, defaultHotkeys[MODE_TYPES.NORMAL]
-
+            modeKeyMap[action] = hotkeys[mode_type][action].slice()
+          keyMaps[mode] = modeKeyMap
       # special case, delete_char -> delete in visual and visual_line
-      [].push.apply modeBindings[MODES.VISUAL].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
-      [].push.apply modeBindings[MODES.VISUAL_LINE].DELETE, modeBindings[MODES.NORMAL].DELETE_CHAR
+      [].push.apply keyMaps[MODES.VISUAL].DELETE, keyMaps[MODES.NORMAL].DELETE_CHAR
+      [].push.apply keyMaps[MODES.VISUAL_LINE].DELETE, keyMaps[MODES.NORMAL].DELETE_CHAR
       # special case, indent -> move in visual_line
-      [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, modeBindings[MODES.NORMAL].INDENT_RIGHT
-      [].push.apply modeBindings[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, modeBindings[MODES.NORMAL].INDENT_LEFT
-
-      modeBindings[MODES.INSERT] = get_mode_keybindings MODES.INSERT, defaultHotkeys[MODE_TYPES.INSERT]
-      modeBindings[MODES.SEARCH] = get_mode_keybindings MODES.SEARCH, defaultHotkeys[MODE_TYPES.INSERT]
-      modeBindings[MODES.MARK] = get_mode_keybindings MODES.MARK, defaultHotkeys[MODE_TYPES.INSERT]
+      [].push.apply keyMaps[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, keyMaps[MODES.NORMAL].INDENT_RIGHT
+      [].push.apply keyMaps[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, keyMaps[MODES.NORMAL].INDENT_LEFT
 
       # takes keyDefinitions and keyMaps, and combines them
       getBindings = (definitions, keyMap) ->
@@ -908,11 +908,14 @@ if module?
             bindings[key] = v
         return bindings
 
-      @keyMaps = JSON.parse JSON.stringify modeBindings
-
-      @bindings = {}
+      bindings = {}
       for mode_name, mode of MODES
-        @bindings[mode] = getBindings keyDefinitions, @keyMaps[mode]
+        bindings[mode] = getBindings keyDefinitions, keyMaps[mode]
+
+      @bindings = bindings
+      @keyMaps = keyMaps
+
+      return true
 
     buildTable: (mode) ->
       modeKeymap = @keyMaps[mode] || {}

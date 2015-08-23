@@ -196,11 +196,12 @@ renderLine = (lineData, options = {}) ->
       @bindings = options.bindings
 
       @mainDiv = options.mainDiv
-      @settingsDiv = options.settingsDiv
+      @settings = options.settings
       @keybindingsDiv = options.keybindingsDiv
       @messageDiv = options.messageDiv
       @menuDiv = options.menuDiv
       @modeDiv = options.modeDiv
+
 
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @data, row, 0
@@ -223,10 +224,6 @@ renderLine = (lineData, options = {}) ->
         @vnode = virtualDom.create @vtree
         @mainDiv.append @vnode
 
-      if @settingsDiv?
-        @settings = new Settings @data.store, {mainDiv: @settingsDiv, keybindingsDiv: @keybindingsDiv}
-        do @settings.loadRenderSettings
-
       @mode = null
       @setMode MODES.NORMAL
 
@@ -237,28 +234,28 @@ renderLine = (lineData, options = {}) ->
     ###################
 
     showingSettings: () ->
-      return @settingsDiv and (not @settingsDiv.hasClass('hidden'))
+      return @settings and (not @settings.mainDiv.hasClass('hidden'))
 
-    settingsOff: () ->
+    hideSettings: () ->
       $('#settings-icon').addClass('fa-cog').removeClass('fa-arrow-left')
       $('#settings-text').text('Settings')
       @modeDiv.removeClass('hidden')
-      @settingsDiv.addClass('hidden')
+      @settings.mainDiv.addClass('hidden')
 
-    settingsOn: () ->
+    showSettings: () ->
       $('#settings-icon').addClass('fa-arrow-left').removeClass('fa-cog')
       $('#settings-text').text('Back')
       @modeDiv.addClass('hidden')
-      @settingsDiv.removeClass('hidden')
+      @settings.mainDiv.removeClass('hidden')
 
     settingsToggle: () ->
       if do @showingSettings
-        do @settingsOff
+        do @hideSettings
       else
-        do @settingsOn
+        do @showSettings
 
     handleSettings: (key) ->
-      do @settingsOff
+      do @hideSettings
 
     #################
     # modes related

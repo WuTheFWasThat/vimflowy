@@ -26,7 +26,7 @@ if module?
     setCollapsed: (row, collapsed) ->
       throw 'Not implemented'
 
-    # get global settings
+    # get global settings (data not specific to a document)
     getSetting: (setting) ->
       throw 'Not implemented'
     setSetting: (setting, value) ->
