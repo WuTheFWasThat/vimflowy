@@ -8,8 +8,8 @@ if module?
 ((exports) ->
   MODES = constants.MODES
 
-  NORMAL_MODE_TYPE = 'Normal'
-  INSERT_MODE_TYPE = 'Insert'
+  NORMAL_MODE_TYPE = 'Normal-like modes'
+  INSERT_MODE_TYPE = 'Insert-like modes'
   MODE_TYPES = {}
   MODE_TYPES[NORMAL_MODE_TYPE] = {
     description: 'Modes in which text is not being inserted, and all keys are configurable actions.  NORMAL, VISUAL, and VISUAL_LINE modes fall under this category.'
@@ -854,14 +854,65 @@ if module?
       fn: text_format_definition 'strikethrough'
 
   class KeyBindings
-    constructor: (@settings) ->
-      @hotkey_settings = @settings.getSetting 'hotkeys'
-      if not @apply_hotkey_settings @hotkey_settings
-        Logger.logger.error "Failed to apply saved hotkeys #{hotkey_settings}"
-        @hotkey_settings = {}
-        if not @apply_hotkey_settings @hotkey_settings
-          Logger.logger.error "Failed to apply empty hotkeys settings!?"
+    # takes keyDefinitions and keyMappings, and combines them to key bindings
+    getBindings = (definitions, keyMap) ->
+      bindings = {}
+      for name, v of definitions
+        if name == 'MOTION'
+          keys = ['MOTION']
+        else if (name of keyMap)
+          if not _.result(v, 'available', true)
+            continue
+          keys = keyMap[name]
+        else
+          # throw "Error:  keyMap missing key for #{name}"
+          continue
 
+        v = _.clone v
+        v.name = name
+        if v.bindings
+          [err, sub_bindings] = getBindings v.bindings, keyMap
+          if err
+            return [err, null]
+          else
+            v.bindings = sub_bindings
+
+        for key in keys
+          if key of bindings
+            return ["Duplicate binding on key #{key}", bindings]
+          bindings[key] = v
+      return [null, bindings]
+
+    constructor: (@settings, options = {}) ->
+      # a mapping from actions to keys
+      @keyMaps = null
+      # a recursive mapping from keys to actions
+      @bindings = null
+
+      hotkey_settings = @settings.getSetting 'hotkeys'
+      err = @apply_hotkey_settings hotkey_settings
+      if err
+        Logger.logger.error "Failed to apply saved hotkeys #{hotkey_settings}"
+        Logger.logger.error err
+        do @apply_default_hotkey_settings
+
+      @modebindingsDiv = options.modebindingsDiv
+
+    render_hotkeys: () ->
+      if $? # TODO: pass this in as an argument
+        $('#hotkey-edit-normal').empty().append(
+          $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
+        ).append(
+          @buildTable @hotkeys[NORMAL_MODE_TYPE]
+        )
+
+        $('#hotkey-edit-insert').empty().append(
+          $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
+        ).append(
+          @buildTable @hotkeys[INSERT_MODE_TYPE]
+        )
+
+    # tries to apply new hotkey settings, returning an error if there was one
     apply_hotkey_settings: (hotkey_settings) ->
       # merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
       hotkeys = {}
@@ -883,51 +934,38 @@ if module?
       [].push.apply keyMaps[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, keyMaps[MODES.NORMAL].INDENT_RIGHT
       [].push.apply keyMaps[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, keyMaps[MODES.NORMAL].INDENT_LEFT
 
-      # takes keyDefinitions and keyMaps, and combines them
-      getBindings = (definitions, keyMap) ->
-        bindings = {}
-        for name, v of definitions
-          if name == 'MOTION'
-            keys = ['MOTION']
-          else if (name of keyMap)
-            if not _.result(v, 'available', true)
-              continue
-            keys = keyMap[name]
-          else
-            # throw "Error:  keyMap missing key for #{name}"
-            continue
-
-          v = _.clone v
-          v.name = name
-          if v.bindings
-            v.bindings = getBindings v.bindings, keyMap
-
-          for key in keys
-            if key of bindings
-              throw "Error:  Duplicate binding on key #{key}"
-            bindings[key] = v
-        return bindings
-
       bindings = {}
       for mode_name, mode of MODES
-        bindings[mode] = getBindings keyDefinitions, keyMaps[mode]
+        [err, mode_bindings] = getBindings keyDefinitions, keyMaps[mode]
+        if err then return "Error getting bindings for #{mode_name}: #{err}"
+        bindings[mode] = mode_bindings
 
+      @hotkeys = hotkeys
       @bindings = bindings
       @keyMaps = keyMaps
 
-      return true
+      do @render_hotkeys
+      @settings.setSetting 'hotkeys', hotkey_settings
+      # TODO: update keybindings table
+      return null
 
-    buildTable: (mode) ->
-      modeKeymap = @keyMaps[mode] || {}
+    # apply default hotkeys
+    apply_default_hotkey_settings: () ->
+        err = @apply_hotkey_settings {}
+        if err # there shouldn't be an error
+          Logger.logger.error "Failed to apply empty hotkeys settings!"
+          throw "Failed to apply empty hotkeys settings!"
 
-      table = $('<table>')
+    # build table to visualize hotkeys
+    buildTable: (keyMap) ->
+      table = $('<table>').addClass('keybindings-table')
 
       buildTableContents = (bindings, onto) ->
         for k,v of bindings
           if k == 'MOTION'
             keys = ['<MOTION>']
           else
-            keys = modeKeymap[k]
+            keys = keyMap[k]
             if not keys
               continue
 
@@ -947,6 +985,15 @@ if module?
           onto.append row
       buildTableContents keyDefinitions, table
       return table
+
+    renderModeTable: (mode) ->
+      if not @modebindingsDiv
+        return
+      if not (@settings.getSetting 'showKeyBindings')
+        return
+
+      table = @buildTable @keyMaps[mode]
+      @modebindingsDiv.empty().append(table)
 
     # TODO getBindings: (mode) -> return @bindings[mode]
 

@@ -47,6 +47,13 @@ $bottom-bar-height: 25px
     &:focus
       outline:0
 
+.keybindings-table
+    width: 100%
+    td
+        font-size: 10px
+        border: 1px solid
+        padding: 5px
+
 #settings
     position: absolute
     width: 100%
@@ -77,6 +84,17 @@ $bottom-bar-height: 25px
     .settings-content
         padding: 20px 0px
 
+    #hotkey-actions
+        margin-bottom: 10px
+
+    #hotkey-edit
+        min-height: 100px
+
+        #hotkey-edit-normal, #hotkey-edit-insert
+            display: inline-block
+            width: 50%
+            height: 100%
+
 #contents
     display: flex
     flex-direction: row
@@ -97,13 +115,6 @@ $bottom-bar-height: 25px
 
         &.active
             min-width: 500px
-
-        table
-            width: 100%
-            td
-                font-size: 10px
-                border: 1px solid
-                padding: 5px
 
     #view, #menu
         $content-padding: 50px

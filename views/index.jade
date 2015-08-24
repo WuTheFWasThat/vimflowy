@@ -28,23 +28,25 @@ block content
                     option(value="vimflowy.json" selected=selected) Export as JSON
                     option(value="vimflowy.txt") Export as text
 
-                button.btn#export_submit(style='float:right') Export!
+                button.btn#data_export(style='float:right') Export!
 
             .settings-header Import
             .settings-content
                 #import-file
                     input(type="file" name="import-file")
-                    button.btn#import_submit(style='float:right') Import!
+                    button.btn#data_import(style='float:right') Import!
 
         #settings-right
             .settings-header Hotkeys
             .settings-content
-                | Configurable hotkeys coming soon!
-                // button.btn#hotkeys_edit(style='float:left') Edit
-                // button.btn#hotkeys_default(style='float:left') Load defaults
-                // button.btn#hotkeys_export(style='float:left') Export as file
-                // button.btn#hotkeys_import(style='float:left') Import from file
-                // input(type="file" name="hotkeys-file" style='float:left')
+              #hotkey-actions.clearfix
+                button.btn#hotkeys_export(style='float:left') Export as file
+                button.btn#hotkeys_default(style='float:left') Load defaults
+                button.btn#hotkeys_import(style='float:left') Import from file
+                input#hotkeys_file_input(type="file" name="hotkeys-file" style='float:left')
+              #hotkey-edit
+                #hotkey-edit-normal
+                #hotkey-edit-insert
 
     #bottom-bar
         a#settings-link.center

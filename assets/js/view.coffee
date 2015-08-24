@@ -295,21 +295,14 @@ renderLine = (lineData, options = {}) ->
         @menuDiv.toggleClass 'hidden', (mode != MODES.SEARCH)
       if @mainDiv
         @mainDiv.toggleClass 'hidden', (mode == MODES.SEARCH)
-      do @buildBindingsDiv
-
-    buildBindingsDiv: () ->
-      if not @keybindingsDiv
-        return
-      if not (@settings.getSetting 'showKeyBindings')
-        return
-
-      table = @bindings.buildTable @mode
-      @keybindingsDiv.empty().append(table)
+      if @bindings
+        @bindings.renderModeTable mode
 
     toggleBindingsDiv: () ->
       @keybindingsDiv.toggleClass 'active'
       @data.store.setSetting 'showKeyBindings', @keybindingsDiv.hasClass 'active'
-      do @buildBindingsDiv
+      if @bindings
+        @bindings.renderModeTable @mode
 
     #################
     # show message
@@ -319,9 +312,14 @@ renderLine = (lineData, options = {}) ->
       options.time ?= 5000
       if @messageDiv
         clearTimeout @messageDivTimeout
+
         @messageDiv.text(message)
+        if options.text_class
+          @messageDiv.addClass("text-#{options.text_class}")
+
         @messageDivTimeout = setTimeout (() =>
           @messageDiv.text('')
+          @messageDiv.removeClass()
         ), options.time
 
 
@@ -333,7 +331,7 @@ renderLine = (lineData, options = {}) ->
       try
         root = JSON.parse(content)
       catch
-        @showMessage "The uploaded file is not valid JSON"
+        @showMessage "The uploaded file is not valid JSON", {text_class: 'error'}
         return false
       verify = (node) ->
         unless node.text || node.text == '' then return false
@@ -342,7 +340,7 @@ renderLine = (lineData, options = {}) ->
             unless verify child then return false
         return true
       unless verify root
-        @showMessage "The uploaded file is not in a valid vimflowy format"
+        @showMessage "The uploaded file is not in a valid vimflowy format", {text_class: 'error'}
         return false
       return root
 
@@ -934,7 +932,7 @@ renderLine = (lineData, options = {}) ->
         @act new actions.SetMark row, mark
         return true
       else
-        @showMessage "Mark '#{mark}' is already taken"
+        @showMessage "Mark '#{mark}' is already taken", {text_class: 'error'}
         return false
 
     scrollPages: (npages) ->

@@ -181,7 +181,7 @@ if module?
           motion tmp, {pastEnd: true}
 
         if tmp.row != @view.cursor.row # only allow same-row movement
-          @view.showMessage "Visual mode currently only works on one line"
+          @view.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
           return true
         @view.cursor.from tmp
         return true

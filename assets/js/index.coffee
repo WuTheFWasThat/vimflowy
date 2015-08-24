@@ -9,7 +9,7 @@ create_view = (data) ->
   settings = new Settings data.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
   do settings.loadRenderSettings
 
-  keyBindings = new KeyBindings settings
+  keyBindings = new KeyBindings settings, {modebindingsDiv: $('#keybindings')}
 
   view = new View data, {
     bindings: keyBindings
@@ -52,42 +52,70 @@ create_view = (data) ->
     $("#settings-link").click () =>
       do view.settingsToggle
 
-    $("#import_submit").click () =>
-        file = $("#import-file :file")[0].files[0]
+    load_file = (filesDiv, cb) ->
+        file = filesDiv.files[0]
         if not file?
-            view.showMessage 'Please select a file to import!'
-            return
-        view.showMessage 'Importing...'
-        mimetype = utils.mimetypeLookup file.name
+            return cb 'No file selected for import!'
+        view.showMessage 'Reading in file...'
         reader = new FileReader()
         reader.readAsText file, "UTF-8"
         reader.onload = (evt) ->
             content = evt.target.result
-            if view.importContent content, mimetype
-                view.showMessage 'Imported!'
-                do view.hideSettings
-            else
-                view.showMessage 'Import failed due to parsing issue'
+            cb null, content, file.name
         reader.onerror = (evt) ->
-            view.showMessage 'Import failed due to file-reading issue'
+            cb 'Import failed due to file-reading issue'
             console.log 'Import Error', evt
 
-    $("#export_submit").click () =>
+    download_file = (filename, mimetype, content) ->
+        exportDiv = $("#export")
+        exportDiv.attr "download", filename
+        exportDiv.attr "href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}"
+        do exportDiv[0].click
+        exportDiv.attr "download", null
+        exportDiv.attr "href", null
+
+    $("#hotkeys_import").click () =>
+        load_file $('#hotkeys_file_input')[0], (err, content) ->
+            if err then return view.showMessage err, {text_class: 'error'}
+            try
+                hotkey_settings = JSON.parse content
+            catch e
+                return view.showMessage "Failed to parse JSON: #{e}", {text_class: 'error'}
+            err = keyBindings.apply_hotkey_settings hotkey_settings
+            if err then return view.showMessage err, {text_class: 'error'}
+            keyBindings.renderModeTable view.mode # TODO: do this elsewhere?
+            view.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
+
+    $("#hotkeys_export").click () =>
+        filename = 'vimflowy_hotkeys.json'
+        content = JSON.stringify(keyBindings.hotkeys, null, 2)
+        download_file filename, 'application/json', content
+        view.showMessage "Downloaded hotkeys to #{filename}!", {text_class: 'success'}
+
+    $("#hotkeys_default").click () =>
+        do keyBindings.apply_default_hotkey_settings
+        keyBindings.renderModeTable view.mode # TODO: do this elsewhere?
+        view.showMessage "Loaded defaults!", {text_class: 'success'}
+
+    $("#data_import").click () =>
+        load_file $('#import-file :file')[0], (err, content, filename) ->
+            if err then return view.showMessage err, {text_class: 'error'}
+            mimetype = utils.mimetypeLookup filename
+            if view.importContent content, mimetype
+                view.showMessage 'Imported!', {text_class: 'success'}
+                do view.hideSettings
+            else
+                view.showMessage 'Import failed due to parsing issue', {text_class: 'error'}
+
+    $("#data_export").click () =>
         view.showMessage 'Exporting...'
 
         filename = (view.settings.getSetting 'export_filename') || 'vimflowy.json'
         # Infer mimetype from file extension
         mimetype = utils.mimetypeLookup filename
         content = view.exportContent mimetype
-
-        $("#export").attr("download", filename)
-        $("#export").attr("href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}")
-        $("#export")[0].click()
-        $("#export").attr("download", null)
-        $("#export").attr("href", null)
-
-        view.showMessage 'Exported!'
-        do view.hideSettings
+        download_file filename, mimetype, content
+        view.showMessage "Exported to #{filename}!", {text_class: 'success'}
 
 if chrome?.storage?.sync
   Logger.logger.info 'using chrome storage'

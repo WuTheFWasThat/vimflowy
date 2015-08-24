@@ -61,3 +61,52 @@
 .offscreen
   position: absolute
   left: -999em
+
+// http://stackoverflow.com/questions/218760/how-do-you-keep-parents-of-floated-elements-from-collapsing
+.clearfix:after
+  content: " "
+  display: block
+  height: 0
+  clear: both
+
+.tooltip
+    display: inline
+    position: relative
+    cursor: default
+
+    &:hover
+        color: #c00
+        text-decoration: none
+
+    &:hover:after
+        background: #111
+        background: rgba(0,0,0,.8)
+        border-radius: .5em
+        bottom: 1.85em
+        color: #fff
+        content: attr(title)
+        display: block
+        left: 1em
+        padding: .3em 1em
+        position: absolute
+        width: 250px
+        z-index: 98
+        font-size: 12px
+
+    &:hover:before
+        border: solid
+        border-color: #111 transparent
+        border-color: rgba(0,0,0,.8) transparent
+        border-width: .4em .4em 0 .4em
+        bottom: 1em
+        content: ""
+        display: block
+        left: 2em
+        position: absolute
+        z-index: 99
+
+.text-success
+    color: green
+
+.text-error
+    color: red
