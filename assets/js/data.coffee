@@ -214,6 +214,14 @@ class Data
     return _.find children, (sib) ->
       sib.id == id
 
+  sameInstance: (row1, row2) ->
+    while row1.id == row2.id and row1.id != @root.id and row2.id != @root.id
+      row1 = @getParent row1
+      row2 = @getParent row2
+    if row1.id != row2.id
+      return false
+    return true
+
   toggleCollapsed: (row) ->
     @store.setCollapsed row.id, (not @collapsed row)
 
@@ -267,6 +275,8 @@ class Data
       parents = @store.getParents child.id
       parents.push row.id
       @store.setParents child.id, parents
+      if (!@collapsed child) and (!@sameInstance child, @viewRoot) and (@hasVisibleAncestor child, child)
+        child.collapsed = true
     @store.setChildren row.id, children
 
     for child in new_children
@@ -356,6 +366,16 @@ class Data
         return null
       if @collapsed cur
         answer = cur
+   
+  # Checks whether the ancestor is visible. Does not include the given node but does
+  # include viewRoot
+  hasVisibleAncestor: (row, checkAncestor) ->
+    cur = row
+    until cur.id == @viewRoot.id or cur.id == @root.id
+      cur = @getParent cur
+      if cur.id == checkAncestor.id
+        return true
+    return false
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
@@ -400,7 +420,7 @@ class Data
     return child
 
   cloneRow: (row, parent, index = -1) ->
-    @attachChildren parent, row, index
+    @attachChild parent, _.cloneDeep(row), index
 
   _insertSiblingHelper: (row, after) ->
     if row.id == @viewRoot.id
