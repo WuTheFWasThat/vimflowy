@@ -54,26 +54,21 @@
     rewind: (view) ->
       view.data.writeChars @row, @col, @deletedChars
 
-  class InsertRowSibling extends Action
-    constructor: (@row, @options) ->
+  class InsertRow extends Action
+    constructor: (@parent, @index) ->
 
     str: () ->
-      return "row #{@row}"
+      return "parent #{@parent} index #{@index}"
 
     apply: (view) ->
-      if @options.after
-        @newrow = view.data.insertSiblingAfter @row
-      else if @options.before
-        @newrow = view.data.insertSiblingBefore @row
-      else
-        throw ('InsertRowSibling needs valid options: ' + JSON.stringify @options)
+      @newrow = view.data.addChild @parent, @index
       view.cursor.set @newrow, 0
 
     rewind: (view) ->
       @rewinded = view.data.detach @newrow
 
     reapply: (view) ->
-      view.data.attachChild @rewinded.parent, @newrow, @rewinded.index
+      view.data.attachChild @parent, @newrow, @index
 
   class DetachBlock extends Action
     constructor: (@row, @options = {}) ->
@@ -105,42 +100,34 @@
       view.data.detach @row
 
   class DeleteBlocks extends Action
-    constructor: (@row, @nrows = 1, @options = {}) ->
+    constructor: (@parent, @index, @nrows = 1, @options = {}) ->
 
     str: () ->
-      return "row #{@row}, nrows #{@nrows}"
+      return "parent #{@parent}, index #{@index}, nrows #{@nrows}"
 
     apply: (view) ->
-      row = @row
-      parent = view.data.getParent row
-      index = view.data.indexOf row
-
-      if row == view.root then throw 'Cannot delete root'
-
       @deleted_rows = []
-      delete_siblings = view.data.getSiblingRange row, 0, (@nrows-1)
-      for sib in delete_siblings
+      delete_rows = view.data.getChildRange @parent, @index, (@index+@nrows-1)
+      for sib in delete_rows
         if sib == null then break
         @deleted_rows.push sib
         view.data.detach sib
 
       @created = null
       if @options.addNew
-        @created = view.data.addChild parent, index
+        @created = view.data.addChild @parent, @index
 
-      siblings = view.data.getChildren parent
+      children = view.data.getChildren @parent
 
-      if index < siblings.length
-        next = siblings[index]
+      if @index < children.length
+        next = children[@index]
       else
-        next = if index == 0 then parent else siblings[index - 1]
+        next = if @index == 0 then @parent else children[@index - 1]
         if next == view.data.viewRoot
-          next = view.data.addChild parent
+          next = view.data.addChild @parent
           @created = next
 
       view.cursor.set next, 0
-      @parent = parent
-      @index = index
 
     rewind: (view) ->
       if @created != null
@@ -214,7 +201,7 @@
 
   exports.AddChars = AddChars
   exports.DelChars = DelChars
-  exports.InsertRowSibling = InsertRowSibling
+  exports.InsertRow = InsertRow
   exports.DetachBlock = DetachBlock
   exports.AttachBlock = AttachBlock
   exports.DeleteBlocks = DeleteBlocks

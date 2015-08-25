@@ -745,19 +745,27 @@ renderLine = (lineData, options = {}) ->
     newLineBelow: () ->
       children = @data.getChildren @cursor.row
       if (not @data.collapsed @cursor.row) and children.length > 0
-        @act new actions.InsertRowSibling children[0], {before: true}
+        @act new actions.InsertRow @cursor.row, 0
       else
-        @act new actions.InsertRowSibling @cursor.row, {after: true}
+        parent = @data.getParent @cursor.row
+        index = @data.indexOf @cursor.row
+        @act new actions.InsertRow parent, (index+1)
 
     newLineAbove: () ->
-      @act new actions.InsertRowSibling @cursor.row, {before: true}
+      parent = @data.getParent @cursor.row
+      index = @data.indexOf @cursor.row
+      @act new actions.InsertRow parent, index
 
+    # behavior of "enter", splitting a line
     newLineAtCursor: () ->
       delAction = new actions.DelChars @cursor.row, 0, @cursor.col
       @act delAction
       row = @cursor.row
-      sibling = @act new actions.InsertRowSibling @cursor.row, {before: true}
+
+      do @newLineAbove
+      # cursor now is at inserted row, add the characters
       @addCharsAfterCursor delAction.deletedChars
+      # restore cursor
       @cursor.set row, 0, {keepProperties: true}
 
     joinRows: (first, second, options = {}) ->
@@ -793,8 +801,10 @@ renderLine = (lineData, options = {}) ->
       else
         @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
-    delBlocks: (nrows, options = {}) ->
-      action = new actions.DeleteBlocks @cursor.row, nrows, options
+    delBlocksAtCursor: (nrows, options = {}) ->
+      parent = @data.getParent @cursor.row
+      index = @data.indexOf @cursor.row
+      action = new actions.DeleteBlocks parent, index, nrows, options
       @act action
       @register.saveRows action.deleted_rows
 

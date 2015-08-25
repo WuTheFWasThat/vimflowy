@@ -702,7 +702,7 @@ if module?
           display: 'Delete blocks'
           finishes_visual_line: true
           fn: () ->
-            @view.delBlocks @repeat, {addNew: false}
+            @view.delBlocksAtCursor @repeat, {addNew: false}
         MOTION:
           display: 'Delete from cursor with motion'
           finishes_visual: true
@@ -721,7 +721,7 @@ if module?
           finishes_visual_line: true
           to_mode: MODES.INSERT
           fn: () ->
-            @view.delBlocks @repeat, {addNew: true}
+            @view.delBlocksAtCursor @repeat, {addNew: true}
         MOTION:
           display: 'Delete from cursor with motion, and enter insert mode'
           finishes_visual: true
