@@ -1,6 +1,6 @@
 # imports
 if module?
-  _ = require('underscore')
+  _ = require('lodash')
   constants = require('./constants.coffee')
   utils = require('./utils.coffee')
   Logger = require('./logger.coffee')

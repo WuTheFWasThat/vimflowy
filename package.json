@@ -17,8 +17,8 @@
     "connect-flash": "latest",
     "express": "latest",
     "jade": "latest",
+    "lodash": "latest",
     "nodemon": "latest",
-    "node-sass": "latest",
-    "underscore": "latest"
+    "node-sass": "latest"
   }
 }

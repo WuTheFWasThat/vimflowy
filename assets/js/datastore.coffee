@@ -1,5 +1,5 @@
 if module?
-  _ = require('underscore')
+  _ = require('lodash')
   Logger = require('./logger.coffee')
 
 ((exports) ->
