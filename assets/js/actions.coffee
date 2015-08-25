@@ -17,12 +17,7 @@
     #   setCursor: if you wish to set the cursor, set to 'beginning' or 'end'
     #              indicating where the cursor should go to
 
-    constructor: (row, col, chars, options = {}) ->
-      @row = row
-      @col = col
-      @chars = chars
-
-      @options = options
+    constructor: (@row, @col, @chars, @options = {}) ->
       @options.setCursor ?= 'end'
       @options.cursor ?= {}
 
@@ -42,12 +37,7 @@
       view.data.deleteChars @row, @col, @chars.length
 
   class DelChars extends Action
-    constructor: (row, col, nchars, options = {}) ->
-      @row = row
-      @col = col
-      @nchars = nchars
-
-      @options = options
+    constructor: (@row, @col, @nchars, @options = {}) ->
       @options.setCursor ?= 'before'
       @options.cursor ?= {}
 
@@ -65,9 +55,7 @@
       view.data.writeChars @row, @col, @deletedChars
 
   class InsertRowSibling extends Action
-    constructor: (row, options) ->
-      @row = row
-      @options = options
+    constructor: (@row, @options) ->
 
     str: () ->
       return "row #{@row}"
@@ -88,9 +76,7 @@
       view.data.attachChild @rewinded.parent, @newrow, @rewinded.index
 
   class DetachBlock extends Action
-    constructor: (row, options = {}) ->
-      @row = row
-      @options = options
+    constructor: (@row, @options = {}) ->
 
     str: () ->
       return "row #{@row}"
@@ -107,11 +93,7 @@
       view.data.attachChild @parent, @row, @index
 
   class AttachBlock extends Action
-    constructor: (row, parent, index = -1, options = {}) ->
-      @row = row
-      @parent = parent
-      @index = index
-      @options = options
+    constructor: (@row, @parent, @index = -1, @options = {}) ->
 
     str: () ->
       return "row #{@row}, parent #{@parent}"
@@ -123,10 +105,7 @@
       view.data.detach @row
 
   class DeleteBlocks extends Action
-    constructor: (row, nrows = 1, options = {}) ->
-      @row = row
-      @nrows = nrows
-      @options = options
+    constructor: (@row, @nrows = 1, @options = {}) ->
 
     str: () ->
       return "row #{@row}, nrows #{@nrows}"
@@ -182,12 +161,8 @@
     #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
     #              indicating which block the cursor should go to
 
-    constructor: (serialized_rows, parent, index = -1, options = {}) ->
-      @serialized_rows = serialized_rows
-      @parent = parent
-      @index = index
-      @nrows = serialized_rows.length
-      @options = options
+    constructor: (@serialized_rows, @parent, @index = -1, @options = {}) ->
+      @nrows = @serialized_rows.length
 
     str: () ->
       return "parent #{@parent}, index #{@index}"
@@ -219,8 +194,7 @@
         index += 1
 
   class ToggleBlock extends Action
-    constructor: (row) ->
-      @row = row
+    constructor: (@row) ->
     str: () ->
       return "row #{@row}"
     apply: (view) ->
@@ -229,9 +203,7 @@
       view.data.toggleCollapsed @row
 
   class SetMark extends Action
-    constructor: (row, mark) ->
-      @row = row
-      @mark = mark
+    constructor: (@row, @mark) ->
     str: () ->
       return "row #{@row}, mark #{@mark}"
     apply: (view) ->

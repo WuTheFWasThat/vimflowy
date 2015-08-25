@@ -6,81 +6,93 @@ class Register
     SERIALIZED_ROWS: 3
   }
 
+  # Register is a union type. @data holds one of several kinds of values
+  # They can be referenced as @chars, @rows etc.
+  for type of Register.TYPES
+    Object.defineProperty @prototype, type.toLowerCase(),
+        get: -> @data
+        set: (data) -> @data = data
+
   constructor: (view) ->
     @view = view
-    @type = Register.TYPES.NONE
+    do @saveNone
     return @
 
-  saveChars: (chars) ->
+  saveNone: () ->
+    @type = Register.TYPES.NONE
+    @data = null
+
+  saveChars: (data) ->
     @type = Register.TYPES.CHARS
-    @chars = chars
+    @data = data
 
-  saveSerializedRows: (serialized_rows) ->
-    @type = Register.TYPES.SERIALIZED_ROWS
-    @serialized_rows = serialized_rows
-
-  saveRows: (rows) ->
+  saveRows: (data) ->
     @type = Register.TYPES.ROWS
-    @rows = rows
+    @data = data
+
+  saveSerializedRows: (data) ->
+    @type = Register.TYPES.SERIALIZED_ROWS
+    @data = data
 
   serialize: () ->
-    data = ''
-    if @type == Register.TYPES.CHARS
-      data = @chars
-    else if @type == Register.TYPES.ROWS
-      data = [@view.data.serialize row for row in @rows]
-    else if @type == Register.TYPES.SERIALIZED_ROWS
-      data = @serialized_rows
-    return {type: @type, data: data}
+    return {type: @type, data: @data}
 
   deserialize: (serialized) ->
     @type = serialized.type
-    if @type == Register.TYPES.CHARS
-      @chars = serialized.data
-    else if @type == Register.TYPES.ROWS
-      @serialized_rows = serialized.data
-    else if @type == Register.TYPES.SERIALIZED_ROWS
-      @serialized_rows = serialized.data
+    @data = serialized.data
+
+  ###########
+  # Pasting
+  ###########
 
   paste: (options = {}) ->
     if @type == Register.TYPES.CHARS
-      if options.before
-        @view.addCharsAtCursor @chars, {cursor: options.cursor}
-      else
-        @view.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
+      @pasteChars options
     else if @type == Register.TYPES.ROWS
-      # now that rows are in action, must switch to serialized version
-      # @saveSerializedRows (@view.data.serialize row for row in @rows)
-      # For efficiency, just wipe registers for now
-      @type = Register.TYPES.NONE
-
-      row = @view.cursor.row
-      parent = @view.data.getParent row
-      index = @view.data.indexOf row
-
-      if options.before
-        @view.attachBlocks @rows, parent, index
-      else
-        children = @view.data.getChildren row
-        if (not @view.data.collapsed row) and (children.length > 0)
-          @view.attachBlocks @rows, row, 0
-        else
-          @view.attachBlocks @rows ,parent, (index + 1)
-
-      @view.cursor.set @rows[0], 0
+      @pasteRows options
     else if @type == Register.TYPES.SERIALIZED_ROWS
-      row = @view.cursor.row
-      parent = @view.data.getParent row
-      index = @view.data.indexOf row
+      @pasteSerializedRows options
 
-      if options.before
-        @view.addBlocks @serialized_rows, parent, index, {setCursor: 'first'}
+  pasteChars: (options = {}) ->
+    if options.before
+      @view.addCharsAtCursor @chars, {cursor: options.cursor}
+    else
+      @view.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
+
+  pasteRows: (options = {}) ->
+    row = @view.cursor.row
+    parent = @view.data.getParent row
+    index = @view.data.indexOf row
+
+    if options.before
+      @view.attachBlocks @rows, parent, index
+    else
+      children = @view.data.getChildren row
+      if (not @view.data.collapsed row) and (children.length > 0)
+        @view.attachBlocks @rows, row, 0
       else
-        children = @view.data.getChildren row
-        if (not @view.data.collapsed row) and (children.length > 0)
-          @view.addBlocks @serialized_rows, row, 0, {setCursor: 'first'}
-        else
-          @view.addBlocks @serialized_rows ,parent, (index + 1), {setCursor: 'first'}
+        @view.attachBlocks @rows, parent, (index + 1)
+
+    @view.cursor.set @rows[0], 0
+
+    # now that rows are in action, must switch to serialized version
+    # @saveSerializedRows (@view.data.serialize row for row in @rows)
+    # For efficiency, just wipe registers for now
+    do @saveNone
+
+  pasteSerializedRows: (options = {}) ->
+    row = @view.cursor.row
+    parent = @view.data.getParent row
+    index = @view.data.indexOf row
+
+    if options.before
+      @view.addBlocks @serialized_rows, parent, index, {setCursor: 'first'}
+    else
+      children = @view.data.getChildren row
+      if (not @view.data.collapsed row) and (children.length > 0)
+        @view.addBlocks @serialized_rows, row, 0, {setCursor: 'first'}
+      else
+        @view.addBlocks @serialized_rows, parent, (index + 1), {setCursor: 'first'}
 
 # exports
 module?.exports = Register
