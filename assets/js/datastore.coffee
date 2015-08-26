@@ -4,180 +4,123 @@ if module?
 
 ((exports) ->
   class DataStore
-    constructor: () ->
-      return
-
-    # get and set values for a given row
-    getLine: (row) ->
-      throw 'Not implemented'
-    setLine: (row, line) ->
-      throw 'Not implemented'
-    getParent: (row) ->
-      throw 'Not implemented'
-    setParent: (row, parent) ->
-      throw 'Not implemented'
-    getChildren: (row) ->
-      throw 'Not implemented'
-    setChildren: (row, children) ->
-      throw 'Not implemented'
-
-    getCollapsed: (row) ->
-      throw 'Not implemented'
-    setCollapsed: (row, collapsed) ->
-      throw 'Not implemented'
-
-    # get global settings (data not specific to a document)
-    getSetting: (setting) ->
-      throw 'Not implemented'
-    setSetting: (setting, value) ->
-      throw 'Not implemented'
-
-    # get mapping of row -> mark, for subtree beneath row
-    getMarks: (row) ->
-      throw 'Not implemented'
-    # set mapping of row -> mark, for subtree beneath row
-    setMarks: (row, marks) ->
-      throw 'Not implemented'
-
-    # maintain global marks datastructure.  maps mark -> row
-    getAllMarks: () ->
-      throw 'Not implemented'
-    setAllMarks: (marks) ->
-      throw 'Not implemented'
-
-    # get next row ID
-    getId: () ->
-      throw 'Not implemented'
-    getNew: () ->
-      id = do @getId
-      @setLine id, []
-      @setChildren id, []
-      return id
-
-    # get last view (for page reload)
-    setLastViewRoot: (row) ->
-      throw 'Not implemented'
-    getLastViewRoot: () ->
-      throw 'Not implemented'
-
-    # delete: (id) ->
-    #  throw 'Not implemented'
-
-  class InMemory extends DataStore
-    constructor: () ->
-      @lines = {}
-      @parents = {}
-      @children = {}
-      @collapsed = {}
-      @marks = {}
-
-      @settings = {}
-      @allMarks = {}
-      return
-
-    getLine: (row) ->
-      return [].slice.apply @lines[row]
-
-    setLine: (row, line) ->
-      @lines[row] = line
-
-    getParent: (row) ->
-      return @parents[row]
-
-    setParent: (row, parent) ->
-      @parents[row] = parent
-
-    getChildren: (row) ->
-      return [].slice.apply @children[row]
-
-    setChildren: (row, children) ->
-      @children[row] = children
-
-    getCollapsed: (row) ->
-      return @collapsed[row]
-
-    setCollapsed: (row, collapsed) ->
-      @collapsed[row] = collapsed
-
-    getMarks: (row) ->
-      return @marks[row] or {}
-
-    setMarks: (row, marks) ->
-      @marks[row] = marks
-
-    getSetting: (setting) ->
-      return @settings[setting]
-
-    setSetting: (setting, value) ->
-      @settings[setting] = value
-
-    setLastViewRoot: (row) ->
-      return # no point in remembering
-
-    getLastViewRoot: () ->
-      return 0
-
-    getAllMarks: () ->
-      return _.clone @allMarks
-
-    setAllMarks: (marks) ->
-      @allMarks = marks
-
-    getId: () ->
-      id = 0
-      while @lines[id]
-        id++
-      return id
-
-    # delete: (id) ->
-    #   delete @children[id]
-    #   delete @parents[id]
-    #   delete @lines[id]
-    #   delete @collapsed[id]
-
-  class LocalStorageLazy extends DataStore
     constructor: (prefix='') ->
       @prefix = "#{prefix}save"
 
-      @_lineKey_ = (row) ->
-        return "#{@prefix}:#{row}:line"
-
-      @_parentKey_ = (row) ->
-        return "#{@prefix}:#{row}:parent"
-
-      @_childrenKey_ = (row) ->
-        return "#{@prefix}:#{row}:children"
-
-      @_collapsedKey_ = (row) ->
-        return "#{@prefix}:#{row}:collapsed"
-
-      @_marksKey_ = (row) ->
-        return "#{@prefix}:#{row}:marks"
+      @_lineKey_ = (row) -> "#{@prefix}:#{row}:line"
+      @_parentKey_ = (row) -> "#{@prefix}:#{row}:parent"
+      @_childrenKey_ = (row) -> "#{@prefix}:#{row}:children"
+      @_collapsedKey_ = (row) -> "#{@prefix}:#{row}:collapsed"
+      @_marksKey_ = (row) -> "#{@prefix}:#{row}:marks"
 
       # no prefix, meaning it's global
-      @_settingKey_ = (setting) ->
-        return "settings:#{setting}"
+      @_settingKey_ = (setting) -> "settings:#{setting}"
 
       @_lastSaveKey_ = "#{@prefix}:lastSave"
       @_lastViewrootKey_ = "#{@prefix}:lastviewroot"
       @_allMarksKey_ = "#{@prefix}:allMarks"
       @_IDKey_ = "#{@prefix}:lastID"
 
-      @lines = {}
-      @parents = {}
-      @children = {}
-      @collapsed = {}
-      @marks = {}
-      @settings = {}
-      @allMarks = @_getLocalStorage_ @_allMarksKey_, {}
-      return
+    get: (key, default_value=null) ->
+        throw 'Not implemented'
+
+    set: (key, value) ->
+        throw 'Not implemented'
+
+    # get and set values for a given row
+    getLine: (row) ->
+      [].slice.apply @get (@_lineKey_ row)
+    setLine: (row, line) ->
+      @set (@_lineKey_ row), line
+
+    getParent: (row) ->
+      @get (@_parentKey_ row)
+    setParent: (row, parent) ->
+      @set (@_parentKey_ row), parent
+
+    getChildren: (row) ->
+      [].slice.apply @get (@_childrenKey_ row)
+    setChildren: (row, children) ->
+      @set (@_childrenKey_ row), children
+
+    getCollapsed: (row) ->
+      @get (@_collapsedKey_ row)
+    setCollapsed: (row, collapsed) ->
+      @set (@_collapsedKey_ row), collapsed
+
+    # get mapping of row -> mark, for subtree beneath row
+    getMarks: (row) ->
+      @get (@_marksKey_ row), {}
+
+    # set mapping of row -> mark, for subtree beneath row
+    setMarks: (row, marks) ->
+      @set (@_marksKey_ row), marks
+
+    # get global settings (data not specific to a document)
+    getSetting: (setting) ->
+      @get (@_settingKey_ setting)
+    setSetting: (setting, value) ->
+      @set (@_settingKey_ setting), value
+
+    # maintain global marks datastructure.  maps mark -> row
+    getAllMarks: () ->
+      @get @_allMarksKey_, {}
+    setAllMarks: (marks) ->
+      @set @_allMarksKey_, marks
+
+    # get last view (for page reload)
+    setLastViewRoot: (row) ->
+      @set @_lastViewrootKey_, row
+    getLastViewRoot: () ->
+      @get @lastViewrootKey_, 0
+
+    # get next row ID
+    getId: () -> # Suggest to override this for efficiency
+      id = 0
+      while (@get (@_lineKey_ id), null) != null
+        id++
+      id
+
+    getNew: () ->
+      id = do @getId
+      @setLine id, []
+      @setChildren id, []
+      return id
+
+  class InMemory extends DataStore
+    constructor: () ->
+      super ''
+      @cache = {}
+
+    get: (key, default_value = null) ->
+      if key of @cache
+        @cache[key]
+      else
+        default_value
+
+    set: (key, value) ->
+      @cache[key] = value
+
+  class LocalStorageLazy extends DataStore
+    constructor: (prefix='') ->
+      super prefix
+      @cache = {}
+
+    get: (key, default_value=null) ->
+      if not (key of @cache)
+        @cache[key] = @_getLocalStorage_ key, default_value
+      return @cache[key]
+
+    set: (key, value) ->
+      @cache[key] = value
+      @_setLocalStorage_ key, value
 
     _setLocalStorage_: (key, value) ->
       Logger.logger.debug 'setting local storage', key, value
       localStorage.setItem key, JSON.stringify value
       localStorage.setItem @_lastSaveKey_, (do Date.now)
 
-    _getLocalStorage_: (key, default_value = null) ->
+    _getLocalStorage_: (key, default_value) ->
       Logger.logger.debug 'getting from local storage', key, default_value
       stored = localStorage.getItem key
       if stored == null
@@ -192,89 +135,14 @@ if module?
         return default_value
 
     lastSave: () ->
-      return @_getLocalStorage_ @_lastSaveKey_, 0
-
-    getLine: (row) ->
-      if not (row of @lines)
-        @lines[row] = @_getLocalStorage_ @_lineKey_ row
-      return [].slice.apply @lines[row]
-
-    setLine: (row, line) ->
-      @lines[row] = line
-      @_setLocalStorage_ (@_lineKey_ row), line
-
-    getParent: (row) ->
-      if not (row of @parents)
-        @parents[row] = @_getLocalStorage_ @_parentKey_ row
-      return @parents[row]
-
-    setParent: (row, parent) ->
-      @parents[row] = parent
-      @_setLocalStorage_ (@_parentKey_ row), parent
-
-    getChildren: (row) ->
-      if not (row of @children)
-        @children[row] = @_getLocalStorage_ @_childrenKey_ row
-      return [].slice.apply @children[row]
-
-    setChildren: (row, children) ->
-      @children[row] = children
-      @_setLocalStorage_ (@_childrenKey_ row), children
-
-    getCollapsed: (row) ->
-      if not (row of @collapsed)
-        @collapsed[row] = @_getLocalStorage_ @_collapsedKey_ row
-      return @collapsed[row]
-
-    setCollapsed: (row, collapsed) ->
-      @collapsed[row] = collapsed
-      @_setLocalStorage_ (@_collapsedKey_ row), collapsed
-
-    getMarks: (row) ->
-      if not (row of @marks)
-        @marks[row] = @_getLocalStorage_ (@_marksKey_ row), {}
-      return @marks[row]
-
-    setMarks: (row, marks) ->
-      @marks[row] = marks
-      @_setLocalStorage_ (@_marksKey_ row), marks
-
-    getSetting: (setting) ->
-      if not (setting of @settings)
-        @settings[setting] = @_getLocalStorage_ @_settingKey_ setting
-      return @settings[setting]
-
-    setSetting: (setting, value) ->
-      @settings[setting] = value
-      @_setLocalStorage_ (@_settingKey_ setting), value
-
-    setLastViewRoot: (row) ->
-      @_setLocalStorage_ @_lastViewrootKey_ , row
-
-    getAllMarks: () ->
-      return _.clone @allMarks
-
-    setAllMarks: (marks) ->
-      @allMarks = _.clone marks
-      return @_setLocalStorage_ @_allMarksKey_, marks
-
-    getLastViewRoot: () ->
-      id = @_getLocalStorage_ @_lastViewrootKey_ , 0
-      if (localStorage.getItem @_lineKey_ id) == null
-        Logger.logger.error 'Invalid view root', id
-        id = 0
-      return id
+      @_getLocalStorage_ @_lastSaveKey_, 0
 
     getId: () ->
       id = @_getLocalStorage_ @_IDKey_, 0
-      while (localStorage.getItem @_lineKey_ id) != null
+      while (@_getLocalStorage_ (@_lineKey_ id), null) != null
         id++
       @_setLocalStorage_ @_IDKey_, (id + 1)
       return id
-
-    # delete: (id) ->
-    #   delete @structure[id]
-    #   delete @lines[id]
 
   exports.InMemory = InMemory
   exports.LocalStorageLazy = LocalStorageLazy
