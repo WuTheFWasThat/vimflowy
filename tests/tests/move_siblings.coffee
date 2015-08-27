@@ -1,7 +1,6 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test alt+j and alt+k
 new TestCase [
   { text: 'one', children: [
     'uno',
@@ -12,7 +11,7 @@ new TestCase [
   { text: 'tacos', children: [
     'tacos',
   ] }
-], (t) ->
+], { name: "test alt+j and alt+k" }, (t) ->
   t.sendKeys 'x'
   t.sendKey 'alt+j'
   t.sendKeys 'x'
@@ -81,4 +80,3 @@ new TestCase [
       'tacos',
     ] }
   ]
-

@@ -1,7 +1,6 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test swapping
 new TestCase [
   { text: 'move', children: [
     'me'
@@ -15,7 +14,7 @@ new TestCase [
     ] },
   ] },
   '...'
-], (t) ->
+], { name: "test swapping" }, (t) ->
   t.sendKey 'ctrl+j'
   t.expect [
     'one',
@@ -260,7 +259,6 @@ new TestCase [
     '...'
   ]
 
-# test ctrl+h
 new TestCase [
   { text: '1', children: [
     '2'
@@ -269,7 +267,7 @@ new TestCase [
     ] },
     '5'
   ] },
-], (t) ->
+], { name: "test ctrl+h" }, (t) ->
   t.sendKeys 'jj'
   t.sendKey 'ctrl+h'
   t.expect [
@@ -282,13 +280,12 @@ new TestCase [
     ] },
   ]
 
-# swap past collapsed makes sibling
 new TestCase [
   'line'
   { text: '1', collapsed: true, children: [
     '2'
   ] },
-], (t) ->
+], { name: "swap past collapsed makes sibling" }, (t) ->
   t.sendKey 'ctrl+j'
   t.expect [
     { text: '1', collapsed: true, children: [
@@ -297,13 +294,12 @@ new TestCase [
     'line'
   ]
 
-# indent uncollapses
 new TestCase [
   { text: '1', collapsed: true, children: [
     '2'
   ] },
   '3'
-], (t) ->
+], { name: "indent uncollapses" }, (t) ->
   t.sendKeys 'G>'
   t.expect [
     { text: '1', children: [
@@ -319,7 +315,7 @@ new TestCase [
   { text: '3', children: [
     '4'
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'j'
   t.sendKey 'ctrl+l'
   t.expect [

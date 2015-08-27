@@ -10,7 +10,7 @@ Register = require '../assets/js/register.coffee'
 Settings = require '../assets/js/settings.coffee'
 
 class TestCase
-  constructor: (serialized = [''], callback) ->
+  constructor: (serialized = [''], options, callback) ->
     @store = new dataStore.InMemory
     @data = new Data @store
     @data.load
@@ -25,14 +25,22 @@ class TestCase
     keyBindings = new KeyBindings @settings
     @keyhandler = new KeyHandler @view, keyBindings
     @register = @view.register
+    @name = options.name || "an anonymous test"
     unless callback then throw "No callback in test"
-    it "an anonymous test", () =>
+    if it?
+      it @name, () =>
+        callback @
+    else
       callback @
 
   _expectDeepEqual: (actual, expected) ->
     assert.deepEqual actual, expected,
       "Expected \n #{JSON.stringify(expected, null, 2)}" +
       "But got \n #{JSON.stringify(actual, null, 2)}"
+  _expectStringEqual: (actual, expected) ->
+    assert.equal actual, expected,
+      "Expected \n #{expected}" +
+      "But got \n #{actual}"
 
   sendKeys: (keys) ->
     for key in keys
@@ -82,8 +90,7 @@ class TestCase
 
   expectExport: (fileExtension, expected) ->
     export_ = @view.exportContent fileExtension
-    assert.equal export_, expected,
-      "Expected \n#{export_}\n To match \n#{expected}\n!"
+    @_expectStringEqual export_, expected
     return @
 
   expectMarks: (expected) ->

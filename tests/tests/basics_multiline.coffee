@@ -1,8 +1,7 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test multiline
-new TestCase [''], (t) ->
+new TestCase [''], { name: "test multiline" }, (t) ->
   t.sendKeys 'ione'
   t.sendKey 'esc'
   t.sendKeys 'otwo'
@@ -15,12 +14,11 @@ new TestCase [''], (t) ->
   t.sendKeys 'kkkxjjjx'
   t.expect ['o', 'o']
 
-# test that last line stays
-new TestCase ['unos', 'dos', 'tres', 'quatro'], (t) ->
+new TestCase ['unos', 'dos', 'tres', 'quatro'], { name: "test that last line stays" }, (t) ->
   t.sendKeys '$jjjx'
   t.expect ['unos', 'dos', 'tres', 'quatr']
 
-new TestCase ['unos', 'dos', 'tres', 'quatro'], (t) ->
+new TestCase ['unos', 'dos', 'tres', 'quatro'], { name: "test that last line stays" }, (t) ->
   t.sendKeys '$A'
   t.sendKey 'down'
   t.sendKey 'down'
@@ -29,28 +27,28 @@ new TestCase ['unos', 'dos', 'tres', 'quatro'], (t) ->
   t.expect ['unos', 'dos', 'tres', 'quatr']
 
 # test o and O, edge cases
-new TestCase ['a', 's', 'd', 'f'], (t) ->
+new TestCase ['a', 's', 'd', 'f'], { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys 'Oo'
   t.expect ['o', 'a', 's', 'd', 'f']
   t.sendKey 'esc'
   t.sendKeys 'u'
   t.expect ['a', 's', 'd', 'f']
 
-new TestCase ['a', 's', 'd', 'f'], (t) ->
+new TestCase ['a', 's', 'd', 'f'], { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys '5joO'
   t.expect ['a', 's', 'd', 'f', 'O']
   t.sendKey 'esc'
   t.sendKeys 'u'
   t.expect ['a', 's', 'd', 'f']
 
-new TestCase ['a', 's', 'd', 'f'], (t) ->
+new TestCase ['a', 's', 'd', 'f'], { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys 'oO'
   t.expect ['a', 'O', 's', 'd', 'f']
   t.sendKey 'esc'
   t.sendKeys 'u'
   t.expect ['a', 's', 'd', 'f']
 
-new TestCase ['a', 's', 'd', 'f'], (t) ->
+new TestCase ['a', 's', 'd', 'f'], { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys '5jOo'
   t.expect ['a', 's', 'd', 'o', 'f']
   t.sendKey 'esc'
@@ -65,7 +63,7 @@ threeRows = [
   ] },
 ]
 
-new TestCase threeRows, (t) ->
+new TestCase threeRows, { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys 'Oo'
   t.expect [
     'o',
@@ -79,7 +77,7 @@ new TestCase threeRows, (t) ->
   t.sendKeys 'u'
   t.expect threeRows
 
-new TestCase threeRows, (t) ->
+new TestCase threeRows, { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys 'oO'
   t.expect [
     { text: 'top row', children: [
@@ -93,7 +91,7 @@ new TestCase threeRows, (t) ->
   t.sendKeys 'u'
   t.expect threeRows
 
-new TestCase threeRows, (t) ->
+new TestCase threeRows, { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys 'jOo'
   t.expect [
     { text: 'top row', children: [
@@ -107,7 +105,7 @@ new TestCase threeRows, (t) ->
   t.sendKeys 'u'
   t.expect threeRows
 
-new TestCase threeRows, (t) ->
+new TestCase threeRows, { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys 'joO'
   t.expect [
     { text: 'top row', children: [
@@ -121,7 +119,7 @@ new TestCase threeRows, (t) ->
   t.sendKeys 'u'
   t.expect threeRows
 
-new TestCase threeRows, (t) ->
+new TestCase threeRows, { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys '2jOo'
   t.expect [
     { text: 'top row', children: [
@@ -135,7 +133,7 @@ new TestCase threeRows, (t) ->
   t.sendKeys 'u'
   t.expect threeRows
 
-new TestCase threeRows, (t) ->
+new TestCase threeRows, { name: "test o and O, edge cases" }, (t) ->
   t.sendKeys '2joO'
   t.expect [
     { text: 'top row', children: [
@@ -154,7 +152,7 @@ new TestCase [
     's', 'd'
   ] },
   'f'
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'oo'
   t.expect [
     { text: 'a', collapsed: true, children: [
@@ -164,12 +162,11 @@ new TestCase [
     'f'
   ]
 
-# test $ behavior
 new TestCase [
   'a row'
   'another row'
   'a third row'
-], (t) ->
+], { name: "test $ behavior" }, (t) ->
   t.sendKeys '$jx'
   t.expect [
     'a row'
@@ -191,12 +188,11 @@ new TestCase [
     'a third row'
   ]
 
-# test delete behavior
 new TestCase [
   'a row'
   'another row'
   'a third row'
-], (t) ->
+], { name: "test delete behavior" }, (t) ->
   t.sendKeys 'ddjdd'
   t.expect [
     'another row'
@@ -215,7 +211,7 @@ new TestCase [
     ] },
   ] },
   'another row'
-], (t) ->
+], {}, (t) ->
   t.sendKeys '3jdd'
   t.expect [
     { text: 'top row', children: [
@@ -253,7 +249,7 @@ new TestCase [
     ] },
   ] },
   'another row'
-], (t) ->
+], {}, (t) ->
   t.sendKeys '2jdd'
   t.expect [
     { text: 'top row', children: [
@@ -291,7 +287,7 @@ new TestCase [
     ] },
   ] },
   'another row'
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'dd'
   t.expect [ 'another row' ]
 
@@ -313,7 +309,6 @@ new TestCase [
     'another row'
   ]
 
-# test cc
 new TestCase [
   { text: 'top row', children: [
     { text: 'middle row', children : [
@@ -322,24 +317,14 @@ new TestCase [
     ] },
   ] },
   'another row'
-], (t) ->
+], { name: "test cc" }, (t) ->
   t.sendKeys 'cc'
   t.sendKeys 'a row'
   t.sendKey 'esc'
   t.expect [ 'a row', 'another row' ]
   t.sendKeys 'u'
-new TestCase [
-  { text: 'top row', children: [
-    { text: 'middle row', children : [
-      'bottom row'
-      'bottomest row'
-    ] },
-  ] },
-  'another row'
-], (t) ->
 
-# see that it handles deletion of everything correctly
-new TestCase [ 'row', 'row', 'row your boat' ], (t) ->
+new TestCase [ 'row', 'row', 'row your boat' ], { name: "see that it handles deletion of everything correctly" }, (t) ->
   t.sendKeys '4dd'
   t.expect ['']
 
@@ -350,7 +335,7 @@ new TestCase [
       'bottomest row'
     ] },
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'cc'
   t.sendKeys 'a row'
   t.sendKey 'esc'
@@ -370,7 +355,7 @@ new TestCase [
     'middle row'
     'bottom row'
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'jcc'
   t.sendKeys 'a row'
   t.sendKey 'esc'
@@ -391,12 +376,11 @@ new TestCase [
     ] },
   ]
 
-# cursor goes back where it was
 new TestCase [
   'top row',
   'middle row'
   'bottom row'
-], (t) ->
+], { name: "cursor goes back where it was" }, (t) ->
   t.sendKeys 'dd'
   t.sendKeys 'jj'
   t.sendKeys 'ux'
@@ -407,12 +391,11 @@ new TestCase [
     'bottom row',
   ]
 
-# cursor goes back where it was after redo and undo again
 new TestCase [
   'top row',
   'middle row'
   'bottom row'
-], (t) ->
+], { name: "cursor goes back where it was after redo and undo again" }, (t) ->
   t.sendKeys 'dd'
   t.sendKeys 'jj'
   t.sendKeys 'u'
@@ -425,8 +408,7 @@ new TestCase [
     'bottom row',
   ]
 
-# test redo in tricky case
-new TestCase [ 'a row' ], (t) ->
+new TestCase [ 'a row' ], { name: "test redo in tricky case" }, (t) ->
   t.sendKeys 'cc'
   t.sendKeys 'new row'
   t.sendKey 'esc'
@@ -442,8 +424,7 @@ new TestCase [ 'a row' ], (t) ->
   t.sendKey 'ctrl+r'
   t.expect [ 'new ro' ]
 
-# test redo in trickier case
-new TestCase [ 'a row' ], (t) ->
+new TestCase [ 'a row' ], { name: "test redo in trickier case" }, (t) ->
   t.sendKeys 'cc'
   t.sendKeys 'new row'
   t.sendKey 'esc'
@@ -465,8 +446,7 @@ new TestCase [ 'a row' ], (t) ->
   t.sendKey 'ctrl+r'
   t.expect [ 'new ro' ]
 
-# test redo in another tricky case
-new TestCase [ 'a row' ], (t) ->
+new TestCase [ 'a row' ], { name: "test redo in another tricky case" }, (t) ->
   t.sendKeys 'yyp'
   t.expect [
     'a row'
@@ -492,8 +472,7 @@ new TestCase [ 'a row' ], (t) ->
     ' row'
   ]
 
-# test redo in another trickier case
-new TestCase [ 'a row' ], (t) ->
+new TestCase [ 'a row' ], { name: "test redo in another trickier case" }, (t) ->
   t.sendKeys 'yyp'
   t.expect [
     'a row'
@@ -531,7 +510,7 @@ new TestCase [
       'bottom row'
     ] }
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'jjcc'
   t.sendKeys 'a row'
   t.sendKey 'esc'
@@ -549,7 +528,7 @@ new TestCase [
       'bottom row'
     ] },
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'jj2cc'
   t.sendKeys 'a row'
   t.sendKey 'esc'
@@ -566,7 +545,7 @@ new TestCase [
     'child row 1'
     'child row 2'
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'j3dd'
   t.expect [ 'parent row' ]
   t.sendKeys 'u'
@@ -586,7 +565,7 @@ new TestCase [
       'baby 3'
     ] },
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys '2j2cc' # despite the 2cc, deletes only one, but deletes all the children
   t.sendKeys 'deleted'
   t.sendKey 'esc'

@@ -4,13 +4,13 @@ siblingDownKey = 'alt+j'
 siblingUpKey = 'alt+k'
 easyMotionKey = 'space'
 
-new TestCase [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ], (t) ->
+new TestCase [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ], {}, (t) ->
   t.sendKeys 'Vjx'
   t.expect [ 'i', 'am', 'a', 'test', 'case' ]
   t.sendKeys 'u'
   t.expect [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]
 
-new TestCase [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ], (t) ->
+new TestCase [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ], {}, (t) ->
   t.sendKeys 'GVkc'
   t.expect [ 'hello', 'world', 'i', 'am', 'a', '']
   t.sendKeys 'confused soul'
@@ -19,8 +19,7 @@ new TestCase [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ], (t) ->
   t.sendKeys 'u'
   t.expect [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]
 
-# test o
-new TestCase [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ], (t) ->
+new TestCase [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ], { name: "test o" }, (t) ->
   t.sendKeys 'jjjx'
   t.expect [ 'hello', 'world', 'i', 'm', 'a', 'test', 'case' ]
   t.sendKeys 'Vjjokkd'
@@ -30,21 +29,18 @@ new TestCase [ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ], (t) ->
   t.sendKey 'ctrl+r'
   t.expect [ 'hello', 'case' ]
 
-# test repeat
-new TestCase [ '1', '2', '3', '4', '5', '6', '7' ], (t) ->
+new TestCase [ '1', '2', '3', '4', '5', '6', '7' ], { name: "test repeat" }, (t) ->
   t.sendKeys 'Vjjx'
   t.expect [ '4', '5', '6', '7' ]
   t.sendKeys '.'
   t.expect [ '7' ]
 
-# yank doesn't save
-new TestCase [ '1', '2' ], (t) ->
+new TestCase [ '1', '2' ], { name: "yank doesn't save" }, (t) ->
   t.sendKeys 'xjVy'
   t.expect [ '', '2' ]
   t.sendKeys '.' # this is the x, not the y
   t.expect [ '', '' ]
 
-# test children
 new TestCase [
   { text: 'nest', children: [
     'egg'
@@ -55,7 +51,7 @@ new TestCase [
   { text: 'nest 3', children: [
     'egg 3'
   ] }
-], (t) ->
+], { name: "test children" }, (t) ->
   t.sendKeys ['V', siblingDownKey, 'x']
   t.expect [
     { text: 'nest 3', children: [
@@ -142,7 +138,6 @@ new TestCase [
     ] }
   ]
 
-# test indent
 new TestCase [
   { text: 'nest', children: [
     'egg'
@@ -154,7 +149,7 @@ new TestCase [
   { text: 'nest 3', children: [
     'egg 3'
   ] }
-], (t) ->
+], { name: "test indent" }, (t) ->
   # does nothing when can't indent
   t.sendKeys ['j', 'V', '>']
   t.expect [
@@ -239,7 +234,6 @@ new TestCase [
     ] }
   ]
 
-# test cursor as ancestor of anchor, and vice versa
 new TestCase [
   { text: 'nest', children: [
     'egg'
@@ -251,7 +245,7 @@ new TestCase [
   { text: 'nest 3', children: [
     'egg 3'
   ] }
-], (t) ->
+], { name: "test cursor as ancestor of anchor, and vice versa" }, (t) ->
   t.sendKeys 'Vjd'
   t.expect [
     { text: 'nest 2', children: [
@@ -269,7 +263,6 @@ new TestCase [
     ] }
   ]
 
-# test new LCA behavior
 new TestCase [
   { text: 'nest', children: [
     'egg'
@@ -281,7 +274,7 @@ new TestCase [
   { text: 'nest 3', children: [
     'egg 3'
   ] }
-], (t) ->
+], { name: "test new LCA behavior" }, (t) ->
   t.sendKeys 'jVjd'
   t.expect [
     { text: 'nest 3', children: [
@@ -300,7 +293,7 @@ new TestCase [
   { text: 'nest 3', children: [
     'egg 3'
   ] }
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'jVjjd'
   t.expect [
     { text: 'nest 3', children: [
@@ -316,7 +309,7 @@ new TestCase [
     ] }
     'whoops!'
   ] }
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'jjjVkkd'
   t.expect [
     { text: 'this case', children: [
@@ -324,7 +317,6 @@ new TestCase [
     ] }
   ]
 
-# test G to go to end of document
 new TestCase [
   'yay'
   { text: 'hip', children: [
@@ -333,7 +325,7 @@ new TestCase [
     ] }
   ] }
   'hooray!'
-], (t) ->
+], { name: "test G to go to end of document" }, (t) ->
   t.sendKeys 'VGd'
   t.expect [ '' ]
   t.sendKeys 'u'

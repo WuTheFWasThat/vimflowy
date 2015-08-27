@@ -7,7 +7,7 @@ new TestCase [
       'bottom row'
     ] },
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'Gx'
   t.expect [
     { text: 'top row', children: [
@@ -48,7 +48,7 @@ new TestCase [
       'bottom row'
     ] },
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys ']]x'
   t.expect [
     { text: 'top row', children: [

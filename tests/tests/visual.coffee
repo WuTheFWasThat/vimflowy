@@ -1,38 +1,35 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], {}, (t) ->
   t.sendKeys 'vwx'
   t.expect ['orld']
 
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], {}, (t) ->
   t.sendKeys 'vex'
   t.expect [' world']
 
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], {}, (t) ->
   t.sendKeys 'v$x'
   t.expect ['']
 
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], {}, (t) ->
   t.sendKeys 'wv3lx'
   t.expect ['hello d']
 
-# movement in visual persists
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], { name: "movement in visual persists" }, (t) ->
   t.sendKeys 'vw'
   t.sendKey 'esc'
   t.sendKeys 'x'
   t.expect ['hello orld']
 
-# test o
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], { name: "test o" }, (t) ->
   t.sendKeys 'wv3lo3hx'
   t.expect ['held']
   t.sendKeys 'u'
   t.expect ['hello world']
 
-# test that cursor goes back if needed
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], { name: "test that cursor goes back if needed" }, (t) ->
   t.sendKeys 'v$'
   t.sendKey 'esc'
   t.sendKeys 'x'
@@ -40,15 +37,14 @@ new TestCase ['hello world'], (t) ->
   t.sendKeys 'u'
   t.expect ['hello world']
 
-new TestCase [ 'hello world' ], (t) ->
+new TestCase [ 'hello world' ], {}, (t) ->
   t.sendKeys 'wv$y'
   t.sendKeys 'P'
   t.expect [ 'hello worlworldd' ]
   t.sendKeys 'u'
   t.expect ['hello world']
 
-# test that change works
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], { name: "test that change works" }, (t) ->
   t.sendKeys 'vec'
   t.sendKeys 'hi'
   t.sendKey 'esc'
@@ -56,15 +52,13 @@ new TestCase ['hello world'], (t) ->
   t.sendKeys 'u'
   t.expect ['hello world']
 
-# test repeat
-new TestCase [ '1234567' ], (t) ->
+new TestCase [ '1234567' ], { name: "test repeat" }, (t) ->
   t.sendKeys 'vllx'
   t.expect [ '4567' ]
   t.sendKeys '.'
   t.expect [ '7' ]
 
-# test repeat
-new TestCase [ '1234' ], (t) ->
+new TestCase [ '1234' ], { name: "test repeat" }, (t) ->
   t.sendKeys 'xvly'
   t.expect [ '234' ]
   t.sendKeys '.'

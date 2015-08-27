@@ -1,8 +1,7 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test macros
-new TestCase [ 'banananana' ], (t) ->
+new TestCase [ 'banananana' ], { name: "test macros" }, (t) ->
   # does nothing since nothing has been recorded
   t.sendKeys '@q'
   t.expect [ 'banananana' ]
@@ -30,7 +29,7 @@ new TestCase [
   '00000000'
   '00000000'
   '00000000'
-], (t) ->
+], {}, (t) ->
   # does nothing since nothing has been recorded
   t.sendKeys 'qmr1lr2jq'
   t.sendKeys '7@m'
@@ -80,7 +79,6 @@ new TestCase [
     '00'
   ]
 
-# test nested macros.  to create a checkerboard
 new TestCase [
   '00000000'
   '00000000'
@@ -90,7 +88,7 @@ new TestCase [
   '00000000'
   '00000000'
   '00000000'
-], (t) ->
+], { name: "test nested macros.  to create a checkerboard" }, (t) ->
   # does nothing since nothing has been recorded
   t.sendKeys 'qqr1llq'
   t.expect [

@@ -1,13 +1,12 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test ctrl+o and ctrl+i!
 new TestCase [
   { text: 'first', children: [
     'second'
   ] },
   'third'
-], (t) ->
+], { name: "test ctrl+o and ctrl+i!" }, (t) ->
   t.expectViewRoot 0
   t.expectCursor 1, 0
   t.sendKeys ']'
@@ -55,13 +54,12 @@ new TestCase [
     ] },
   ]
 
-# test more stuff
 new TestCase [
   { text: 'okay', mark: 'goto', children: [
     'stuff'
   ] },
   'third'
-], (t) ->
+], {}, (t) ->
   t.sendKeys '\'goto'
   t.sendKey 'enter'
   t.expectViewRoot 1
@@ -75,7 +73,6 @@ new TestCase [
   t.expectCursor 2, 0
   t.expectJumpIndex 1, 2
 
-# erases history properly
 new TestCase [
   { text: 'first', children: [
     'second'
@@ -83,7 +80,7 @@ new TestCase [
   { text: 'third', children: [
     'fourth'
   ] },
-], (t) ->
+], { name: "erases history properly" }, (t) ->
   t.expectViewRoot 0
   t.expectJumpIndex 0, 1
   t.sendKeys ']'
@@ -129,14 +126,13 @@ new TestCase [
   t.expectViewRoot 0
   t.expectJumpIndex 2, 5
 
-# test cursor position
 new TestCase [
   { text: 'first', children: [
     'second'
     'cursor'
   ] },
   'third'
-], (t) ->
+], { name: "test cursor position" }, (t) ->
   t.expectViewRoot 0
   t.expectCursor 1, 0
 

@@ -1,7 +1,7 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-new TestCase ['some random text'], (t) ->
+new TestCase ['some random text'], {}, (t) ->
   t.sendKeys 'wD'
   t.expect ['some ']
   t.sendKeys 'D'
@@ -11,15 +11,14 @@ new TestCase ['some random text'], (t) ->
   t.sendKeys 'u'
   t.expect ['some random text']
 
-new TestCase ['some random text'], (t) ->
+new TestCase ['some random text'], {}, (t) ->
   t.sendKeys '$D'
   t.expect ['some random tex']
   # paste should work
   t.sendKeys 'P'
   t.expect ['some random tetx']
 
-# in insert mode
-new TestCase ['some random text'], (t) ->
+new TestCase ['some random text'], { name: "in insert mode" }, (t) ->
   t.sendKeys 'wi'
   t.sendKey 'ctrl+k'
   t.expect ['some ']
@@ -31,8 +30,7 @@ new TestCase ['some random text'], (t) ->
   t.sendKeys 'u'
   t.expect ['some random text']
 
-# in insert mode
-new TestCase ['some random text'], (t) ->
+new TestCase ['some random text'], { name: "in insert mode" }, (t) ->
   t.sendKeys 'wi'
   t.sendKey 'ctrl+u'
   t.expect ['random text']
@@ -44,8 +42,7 @@ new TestCase ['some random text'], (t) ->
   t.sendKeys 'u'
   t.expect ['some random text']
 
-# in insert mode, ctrl+y brings you past end?
-new TestCase ['some random text'], (t) ->
+new TestCase ['some random text'], { name: "in insert mode, ctrl+y brings you past end?" }, (t) ->
   t.sendKeys 'wi'
   t.sendKey 'ctrl+k'
   t.expect ['some ']
@@ -54,8 +51,7 @@ new TestCase ['some random text'], (t) ->
   t.sendKey 's'
   t.expect ['some random texts']
 
-# not undoable when nothing
-new TestCase ['some random text'], (t) ->
+new TestCase ['some random text'], { name: "not undoable when nothing" }, (t) ->
   t.sendKeys 'x'
   t.expect ['ome random text']
   t.sendKeys '$a'

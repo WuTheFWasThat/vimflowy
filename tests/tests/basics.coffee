@@ -1,7 +1,7 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-new TestCase [''], (t) ->
+new TestCase [''], {}, (t) ->
   t.sendKey 'i'
   t.sendKeys 'hello world'
   t.sendKey 'esc'
@@ -45,7 +45,7 @@ new TestCase [''], (t) ->
   t.expect ['yellowy purple']
 
 # test that redo doesn't go past latest
-new TestCase ['thing'], (t) ->
+new TestCase ['thing'], { name: "test that redo doesn't go past latest" }, (t) ->
   t.sendKey 'x'
   t.expect ['hing']
   t.sendKeys 'u'
@@ -57,7 +57,7 @@ new TestCase ['thing'], (t) ->
   t.sendKeys 'u'
   t.expect ['thing']
 
-new TestCase ['hello'], (t) ->
+new TestCase ['hello'], { name: "i+esc moves the cursor back a character, a + esc doesn't" }, (t) ->
   t.sendKey '$'
   # i + esc moves the cursor back a character
   for i in [1..3]
@@ -73,7 +73,7 @@ new TestCase ['hello'], (t) ->
   t.sendKeys 'ru'
   t.expect ['hullo']
 
-new TestCase ['hello world'], (t) ->
+new TestCase ['hello world'], {}, (t) ->
 
   # make sure delete and then undo doesn't move the cursor
   t.sendKeys '$hhxux'
@@ -112,7 +112,7 @@ new TestCase ['hello world'], (t) ->
   t.expect ['abu']
 
 # make sure cursor doesn't go before line
-new TestCase ['blahblah'], (t) ->
+new TestCase ['blahblah'], {}, (t) ->
   t.sendKeys '0d$iab'
   t.expect ['ab']
 
@@ -120,7 +120,7 @@ new TestCase ['blahblah'], (t) ->
 # REPEAT
 #########
 
-new TestCase [''], (t) ->
+new TestCase [''], {}, (t) ->
   t.sendKeys '....'
   t.expect ['']
   t.sendKeys 'irainbow'
@@ -130,7 +130,7 @@ new TestCase [''], (t) ->
   t.sendKeys 'x...'
   t.expect ['rainborain']
 
-new TestCase ['the quick brown fox   jumped   over the lazy dog'], (t) ->
+new TestCase ['the quick brown fox   jumped   over the lazy dog'], {}, (t) ->
   t.sendKeys 'dw'
   t.expect ['quick brown fox   jumped   over the lazy dog']
   t.sendKeys '..'
@@ -151,15 +151,13 @@ new TestCase ['the quick brown fox   jumped   over the lazy dog'], (t) ->
   t.sendKeys '.'
   t.expect ['xvxr xhx xerooxerox']
 
-# repeat works on c
-new TestCase ['vim is great'], (t) ->
+new TestCase ['vim is great'], { name: "repeat works on c" }, (t) ->
   t.sendKeys 'ceblah'
   t.sendKey 'esc'
   t.sendKeys 'w.w.'
   t.expect ['blah blah blah']
 
-# repeat works on replace
-new TestCase ['obladi oblada'], (t) ->
+new TestCase ['obladi oblada'], { name: "repeat works on replace" }, (t) ->
   t.sendKeys 'eroehl.'
   t.expect ['oblado oblado']
 
@@ -167,8 +165,7 @@ new TestCase ['obladi oblada'], (t) ->
 # NUMBERS
 #########
 
-# numbers works on movement
-new TestCase ['obladi oblada o lee lee o lah lah'], (t) ->
+new TestCase ['obladi oblada o lee lee o lah lah'], { name: "numbers works on movement" }, (t) ->
   t.sendKeys '5lx'
   t.expect ['oblad oblada o lee lee o lah lah']
   t.sendKeys '6wx'
@@ -198,8 +195,7 @@ new TestCase ['obladi oblada o lee lee o lah lah'], (t) ->
   t.sendKey 'esc'
   t.expect ['blah blah blah blaha']
 
-# numbers repeat works on replace
-new TestCase ['1234123412341234 is my credit card'], (t) ->
+new TestCase ['1234123412341234 is my credit card'], { name: "numbers repeat works on replace" }, (t) ->
   t.sendKeys '12r*'
   t.expect ['************1234 is my credit card']
   t.sendKeys 'l12X'
@@ -219,14 +215,12 @@ new TestCase ['1234123412341234 is my credit card'], (t) ->
   t.sendKeys '6u'
   t.expect ['1234123412341234 is my credit card']
 
-# test x on empty row
-new TestCase ['empty', ''], (t) ->
+new TestCase ['empty', ''], { name: "test x on empty row" }, (t) ->
   t.sendKeys 'ru'
   t.expect ['umpty', '']
   t.sendKeys 'jxk.'
   t.expect ['mpty', '']
 
-# test join where second row is empty
-new TestCase ['empty', ''], (t) ->
+new TestCase ['empty', ''], { name: "test join where second row is empty" }, (t) ->
   t.sendKeys 'J'
   t.expect ['empty']

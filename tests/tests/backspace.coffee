@@ -1,14 +1,13 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test backspace
-new TestCase ['abc'], (t) ->
+new TestCase ['abc'], { name: "test backspace" }, (t) ->
   t.sendKey 'A'
   t.sendKey 'backspace'
   t.sendKey 'backspace'
   t.expect ['a']
 
-new TestCase ['abc', 'def'], (t) ->
+new TestCase ['abc', 'def'], { name: "test backspace" }, (t) ->
   t.sendKeys 'jli'
   t.sendKey 'backspace'
   t.expect ['abc', 'ef']
@@ -26,7 +25,7 @@ new TestCase ['abc', 'def'], (t) ->
   t.sendKey 'u'
   t.expect ['abc', 'def']
 
-new TestCase ['ab', 'cd'], (t) ->
+new TestCase ['ab', 'cd'], { name: "test backspace" }, (t) ->
   t.sendKeys 'jA'
   t.sendKey 'backspace'
   t.sendKey 'backspace'
@@ -43,7 +42,7 @@ new TestCase [
   { text: 'cd', children: [
     'de'
   ] },
-], (t) ->
+], { name: "test backspace" }, (t) ->
   t.sendKeys 'jji'
   t.sendKey 'backspace'
   # cannot backspace when there are children
@@ -75,7 +74,7 @@ new TestCase [
   { text: 'ab', children: [
     'cd'
   ] },
-], (t) ->
+], { name: "test backspace" }, (t) ->
   t.sendKeys 'ji'
   t.sendKey 'backspace'
   t.expect [
@@ -97,8 +96,7 @@ new TestCase [
     'acd'
   ]
 
-# test shift+backspace
-new TestCase ['ab', 'cd'], (t) ->
+new TestCase ['ab', 'cd'], { name: "test shift+backspace" }, (t) ->
   t.sendKeys 'i'
   t.sendKey 'shift+backspace'
   t.expect ['b', 'cd']
@@ -107,14 +105,13 @@ new TestCase ['ab', 'cd'], (t) ->
   t.sendKey 'shift+backspace'
   t.expect ['', 'cd']
 
-# test J join
-new TestCase ['ab', 'cd'], (t) ->
+new TestCase ['ab', 'cd'], { name: "test J join" }, (t) ->
   t.sendKeys 'J'
   t.expect ['ab cd']
   t.sendKeys 'x'
   t.expect ['abcd']
 
-new TestCase ['ab', ' cd'], (t) ->
+new TestCase ['ab', ' cd'], { name: "test J join" }, (t) ->
   t.sendKeys 'J'
   t.expect ['ab cd']
   t.sendKeys 'x'
@@ -124,7 +121,7 @@ new TestCase [
   { text: 'ab', children: [
     'cd'
   ] },
-], (t) ->
+], { name: "test J join" }, (t) ->
   t.sendKeys 'J'
   t.expect ['ab cd']
   t.sendKeys 'x'
@@ -136,7 +133,7 @@ new TestCase [
     'ef'
     'gh'
   ] },
-], (t) ->
+], { name: "test J join" }, (t) ->
   t.sendKeys 'J'
   t.expect [
     { text: 'ab cd', children: [

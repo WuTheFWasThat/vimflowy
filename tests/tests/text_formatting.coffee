@@ -8,8 +8,7 @@ strikethroughKey = 'ctrl+enter'
 siblingDownKey = 'alt+j'
 siblingUpKey = 'alt+k'
 
-# test insert mode
-new TestCase [''], (t) ->
+new TestCase [''], { name: "test insert mode" }, (t) ->
   t.sendKeys 'i'
   t.sendKey underlineKey
   t.sendKeys 'underline'
@@ -38,7 +37,7 @@ new TestCase [''], (t) ->
     }
   ]
 
-new TestCase [''], (t) ->
+new TestCase [''], {}, (t) ->
   t.sendKeys 'i'
   t.sendKeys 'normal, '
   t.sendKey italicizeKey
@@ -114,8 +113,7 @@ new TestCase [''], (t) ->
     }
   ]
 
-# test going onto next line 'enter' in insert mode
-new TestCase [''], (t) ->
+new TestCase [''], { name: "test going onto next line 'enter' in insert mode" }, (t) ->
   t.sendKeys 'i'
   t.sendKey boldKey
   t.sendKeys 'this'
@@ -159,14 +157,13 @@ new TestCase [''], (t) ->
   ]
   t.sendKey 'esc'
 
-# test xp
 new TestCase [
   {
     text:   'bim'
     bold:   '. .'
     italic: ' ..'
   }
-], (t) ->
+], { name: "test xp" }, (t) ->
   t.sendKeys 'xp'
   t.expect [
     {
@@ -176,10 +173,9 @@ new TestCase [
     }
   ]
 
-# test normal mode
 new TestCase [
   'test'
-], (t) ->
+], { name: "test normal mode" }, (t) ->
   t.sendKey strikethroughKey
   t.expect [
     {
@@ -197,7 +193,7 @@ new TestCase [
     text:   'test'
     bold:   '... '
   }
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'll'
   t.sendKey boldKey
   t.expect [
@@ -233,10 +229,9 @@ new TestCase [
     }
   ]
 
-# visual mode
 new TestCase [
   'hello world'
-], (t) ->
+], { name: "visual mode" }, (t) ->
   t.sendKeys 've'
   t.sendKey boldKey
   t.expect [
@@ -330,12 +325,11 @@ new TestCase [
     }
   ]
 
-# visual line mode
 new TestCase [
   'blah'
   'blah'
   'blah'
-], (t) ->
+], { name: "visual line mode" }, (t) ->
   t.sendKeys 'Vjj'
   t.sendKey boldKey
   t.expect [
@@ -375,7 +369,7 @@ new TestCase [
     text: 'blah'
     bold: '   .'
   }
-], (t) ->
+], {}, (t) ->
   t.sendKeys ['V', siblingDownKey, siblingDownKey, boldKey]
   t.expect [
     {

@@ -1,8 +1,7 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test the shit out of b
-new TestCase ['the quick brown fox   jumped   over the lazy dog'], (t) ->
+new TestCase ['the quick brown fox   jumped   over the lazy dog'], { name: "test the shit out of b" }, (t) ->
   t.sendKeys '$bx'
   t.expect ['the quick brown fox   jumped   over the lazy og']
   t.sendKeys 'bx'
@@ -25,11 +24,11 @@ new TestCase ['the quick brown fox   jumped   over the lazy dog'], (t) ->
   t.expect ['he ck fox   umped   ver he azy og']
   t.sendKeys '5bx'
   t.expect ['e ck fox   umped   ver he azy og']
-new TestCase ['the'], (t) ->
+new TestCase ['the'], { name: "test the shit out of b" }, (t) ->
   t.sendKeys '0db'
   t.expect ['the']
 
-new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], (t) ->
+new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], {}, (t) ->
   t.sendKeys 'G$'
   t.sendKeys 'x'
   t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
@@ -53,8 +52,7 @@ new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], (t) ->
 # t.sendKeys 'j0db'
 # t.expect ['the']
 
-# test the shit out of e
-new TestCase ['the quick brown fox   jumped   over the lazy dog'], (t) ->
+new TestCase ['the quick brown fox   jumped   over the lazy dog'], { name: "test the shit out of e" }, (t) ->
   t.sendKeys 'ex'
   t.expect ['th quick brown fox   jumped   over the lazy dog']
   t.sendKeys 'ex'
@@ -77,11 +75,11 @@ new TestCase ['the quick brown fox   jumped   over the lazy dog'], (t) ->
   t.expect ['th quic brow fo   jumpe   ove la do']
   t.sendKeys '5ex'
   t.expect ['th quic brow fo   jumpe   ove la d']
-new TestCase ['the'], (t) ->
+new TestCase ['the'], { name: "test the shit out of e" }, (t) ->
   t.sendKeys '$de'
   t.expect ['th']
 
-new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], (t) ->
+new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], { name: "test the shit out of e" }, (t) ->
   t.sendKeys 'x'
   t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
   t.sendKeys 'ex'
@@ -99,8 +97,7 @@ new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], (t) ->
   t.sendKeys 'ie'
   t.expect ['', ' wor', '', '  ', '', 'th', '', 'word', 'ye', 'e']
 
-# test the shit out of w
-new TestCase ['the quick brown fox   jumped   over the lazy dog'], (t) ->
+new TestCase ['the quick brown fox   jumped   over the lazy dog'], { name: "test the shit out of w" }, (t) ->
   t.sendKeys 'wx'
   t.expect ['the uick brown fox   jumped   over the lazy dog']
   t.sendKeys 'lwx'
@@ -124,15 +121,15 @@ new TestCase ['the quick brown fox   jumped   over the lazy dog'], (t) ->
   t.sendKeys '5wx'
   t.expect ['the uick rown ox   umped   thlazy ']
 
-new TestCase ['the'], (t) ->
+new TestCase ['the'], { name: "test the shit out of w" }, (t) ->
   t.sendKeys 'dw'
   t.expect ['']
 
-new TestCase ['the'], (t) ->
+new TestCase ['the'], { name: "test the shit out of w" }, (t) ->
   t.sendKeys '$dw'
   t.expect ['th']
 
-new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], (t) ->
+new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], { name: "test the shit out of w" }, (t) ->
   t.sendKeys 'x'
   t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
   t.sendKeys 'wx'
@@ -150,8 +147,7 @@ new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', ''], (t) ->
   t.sendKeys 'iw'
   t.expect ['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', 'w']
 
-# test blocks vs. words!
-new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
+new TestCase ['ah... yes ... it (ahem) was me!'], { name: "test blocks vs. words!" }, (t) ->
   t.sendKeys 'ex'
   t.expect ['a... yes ... it (ahem) was me!']
   t.sendKeys 'ex'
@@ -175,7 +171,7 @@ new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
   t.sendKeys 'ex'
   t.expect ['a.. ye .. i ahe) wa ']
 
-new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
+new TestCase ['ah... yes ... it (ahem) was me!'], { name: "test blocks vs. words!" }, (t) ->
   t.sendKeys 'Ex'
   t.expect ['ah.. yes ... it (ahem) was me!']
   t.sendKeys 'Ex'
@@ -193,7 +189,7 @@ new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
   t.sendKeys 'Ex'
   t.expect ['ah.. ye .. i (ahem wa m']
 
-new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
+new TestCase ['ah... yes ... it (ahem) was me!'], { name: "test blocks vs. words!" }, (t) ->
   t.sendKeys 'wx'
   t.expect ['ah.. yes ... it (ahem) was me!']
   t.sendKeys 'wx'
@@ -215,7 +211,7 @@ new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
   t.sendKeys 'wx'
   t.expect ['ah.. es .. t ahem as ']
 
-new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
+new TestCase ['ah... yes ... it (ahem) was me!'], { name: "test blocks vs. words!" }, (t) ->
   t.sendKeys 'Wx'
   t.expect ['ah... es ... it (ahem) was me!']
   t.sendKeys 'Wx'
@@ -233,7 +229,7 @@ new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
   t.sendKeys 'Wx'
   t.expect ['ah... es .. t ahem) as ']
 
-new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
+new TestCase ['ah... yes ... it (ahem) was me!'], { name: "test blocks vs. words!" }, (t) ->
   t.sendKeys '$'
   t.sendKeys 'bx'
   t.expect ['ah... yes ... it (ahem) was e!']
@@ -258,7 +254,7 @@ new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
   t.sendKeys 'bx'
   t.expect ['.. es .. t hem as e!']
 
-new TestCase ['ah... yes ... it (ahem) was me!'], (t) ->
+new TestCase ['ah... yes ... it (ahem) was me!'], { name: "test blocks vs. words!" }, (t) ->
   t.sendKeys '$'
   t.sendKeys 'Bx'
   t.expect ['ah... yes ... it (ahem) was e!']

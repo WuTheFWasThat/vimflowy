@@ -1,8 +1,7 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# tricky case - makes sure redoing actions puts cursor in good spot
-new TestCase ['bug reproduce'], (t) ->
+new TestCase ['bug reproduce'], { name: "tricky case - makes sure redoing actions puts cursor in good spot" }, (t) ->
   t.sendKeys 'i'
   t.sendKey 'ctrl+e' # put cursor at end, this will be remembered by view
   t.sendKey 'ctrl+w'

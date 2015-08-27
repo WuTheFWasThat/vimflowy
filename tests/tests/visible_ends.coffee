@@ -1,12 +1,11 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test go to end and go to beginning
-new TestCase ['always to front'], (t) ->
+new TestCase ['always to front'], { name: "test go to end and go to beginning" }, (t) ->
   t.sendKeys '$Gx'
   t.expect ['lways to front']
 
-new TestCase ['a', 'ab', 'abc'], (t) ->
+new TestCase ['a', 'ab', 'abc'], { name: "test go to end and go to beginning" }, (t) ->
   t.sendKeys '$Gx'
   t.expect ['a', 'ab', 'bc']
 
@@ -15,7 +14,7 @@ new TestCase [
   { text: 'bc', children: [
     'cd'
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'Gx'
   t.expect [
     'ab'
@@ -36,7 +35,7 @@ new TestCase [
   { text: 'bc', collapsed: true, children: [
     'cd'
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'Gx'
   t.expect [
     'ab'
@@ -45,17 +44,16 @@ new TestCase [
     ] },
   ]
 
-new TestCase ['always to front'], (t) ->
+new TestCase ['always to front'], {}, (t) ->
   t.sendKeys '$ggx'
   t.expect ['lways to front']
 
-new TestCase ['a', 'ab', 'abc'], (t) ->
+new TestCase ['a', 'ab', 'abc'], {}, (t) ->
   t.sendKeys 'jj$x'
   t.expect ['a', 'ab', 'ab']
   t.sendKeys 'ggx'
   t.expect ['', 'ab', 'ab']
 
-# with zoom
 new TestCase [
   'ab'
   { text: 'bc', children: [
@@ -63,7 +61,7 @@ new TestCase [
     'cd'
   ] },
   'de'
-], (t) ->
+], { name: "with zoom" }, (t) ->
   t.sendKeys 'j]Gx'
   t.expect [
     'ab'
@@ -83,7 +81,6 @@ new TestCase [
     'de'
   ]
 
-# with zoom onto collapsed
 new TestCase [
   'ab'
   { text: 'bc', collapsed: true, children: [
@@ -91,7 +88,7 @@ new TestCase [
     'cd'
   ] },
   'de'
-], (t) ->
+], { name: "with zoom onto collapsed" }, (t) ->
   t.sendKeys 'j]Gx'
   t.expect [
     'ab'

@@ -1,13 +1,12 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test changing view root
 new TestCase [
   { text: 'first', children: [
     'second'
   ] },
   'third'
-], (t) ->
+], { name: "test changing view root" }, (t) ->
   t.sendKey ']'
   t.expect [
     { text: 'first', children: [
@@ -39,14 +38,13 @@ new TestCase [
     'hird'
   ]
 
-# zoom in on collapsed works but doesn't uncollapse
 new TestCase [
   { text: 'first', children: [
     { text: 'second', children: [
       'third'
     ] },
   ] },
-], (t) ->
+], { name: "zoom in on collapsed works but doesn't uncollapse" }, (t) ->
   t.sendKeys 'zjx'
   t.expect [
     { text: 'irst', collapsed: true, children: [
@@ -73,7 +71,6 @@ new TestCase [
     ] },
   ]
 
-# test full zoom
 new TestCase [
   { text: 'first', children: [
     { text: 'second', children: [
@@ -82,7 +79,7 @@ new TestCase [
       ] },
     ] },
   ] },
-], (t) ->
+], { name: "test full zoom" }, (t) ->
   t.sendKeys 'jjj}x'
   t.expect [
     { text: 'first', children: [
@@ -102,7 +99,7 @@ new TestCase [
       ] },
     ] },
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys '$x$' # second dollar needed, since x ruins it
   t.expect [
     { text: 'firs', children: [
@@ -144,14 +141,13 @@ new TestCase [
     ] },
   ]
 
-# can't unindent too far out when zoomed in
 new TestCase [
   { text: 'first', children: [
     { text: 'second', children: [
       'third'
     ] },
   ] },
-], (t) ->
+], { name: "can't unindent too far out when zoomed in" }, (t) ->
   t.sendKeys 'jj'
   t.sendKey 'shift+tab'
   t.expect [

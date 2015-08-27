@@ -1,12 +1,11 @@
 TestCase = require '../testcase.coffee'
 
-# Test export formats
 new TestCase [
   { text: 'first', children: [
     'second'
   ] },
   'third'
-], (t) ->
+], { name: "Test export formats" }, (t) ->
   t.expectExport 'text/plain', "- \n  - first\n    - second\n  - third"
   t.expectExport 'application/json',
     (JSON.stringify {
@@ -17,13 +16,12 @@ new TestCase [
         { text: 'third' }
     ]}, null, 2)
 
-# Make sure zoom does not affect export
 new TestCase [
   { text: 'first', children: [
     'second'
   ] },
   'third'
-], (t) ->
+], { name: "Make sure zoom does not affect export" }, (t) ->
   t.sendKey 'down'
   t.sendKey 'alt+l'
   t.expectExport 'text/plain', "- \n  - first\n    - second\n  - third"
@@ -36,8 +34,7 @@ new TestCase [
         { text: 'third' }
     ]}, null, 2)
 
-# Test vimflowy text import
-new TestCase [''], (t) ->
+new TestCase [''], { name: "Test vimflowy text import" }, (t) ->
   t.import """- Line 1
               - Line 2
                 - Line 2.1
@@ -66,8 +63,7 @@ new TestCase [''], (t) ->
           { text: 'Line 3' }
       ] }, null, 2)
 
-# Test vimflowy json import
-new TestCase [''], (t) ->
+new TestCase [''], { name: "Test vimflowy json import" }, (t) ->
   t.import """{
     "text": "",
     "children": [
@@ -123,8 +119,7 @@ new TestCase [''], (t) ->
           { text: 'Line 3' }
     ] }, null, 2)
 
-# Test workflowy import
-new TestCase [''], (t) ->
+new TestCase [''], { name: "Test workflowy import" }, (t) ->
   t.import """- [COMPLETE] Line 1
                 - Subpart 1
                 "Title line for subpart 1"

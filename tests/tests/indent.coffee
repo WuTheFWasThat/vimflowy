@@ -14,7 +14,7 @@ threeRows = [
   ] },
 ]
 
-new TestCase threeRows, (t) ->
+new TestCase threeRows, {}, (t) ->
   t.sendKey indentBlockKey
   t.expect threeRows
   t.sendKeys 'j'
@@ -40,7 +40,7 @@ new TestCase [
     ] },
   ] },
   'another row'
-], (t) ->
+], {}, (t) ->
   t.sendKeys '2jx'
   t.expect [
     { text: 'top row', children: [
@@ -165,7 +165,6 @@ new TestCase [
     ] },
   ]
 
-# test block indent
 new TestCase [
   { text: 'a', children: [
     { text: 'ab', children : [
@@ -175,7 +174,7 @@ new TestCase [
       'ade'
     ] },
   ] },
-], (t) ->
+], { name: "test block indent" }, (t) ->
   t.sendKeys 'j'
   t.sendKey unindentBlockKey
   t.expect [
@@ -222,13 +221,12 @@ new TestCase [
     ] },
   ]
 
-# indent uncollapses
 new TestCase [
   { text: '1', collapsed: true, children: [
     '2'
   ] },
   '3'
-], (t) ->
+], { name: "indent collapses" }, (t) ->
   t.sendKeys 'G'
   t.sendKey indentBlockKey
   t.expect [
@@ -245,7 +243,7 @@ new TestCase [
   { text: '3', children: [
     '4'
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'j'
   t.sendKey 'ctrl+l'
   t.expect [
@@ -257,13 +255,12 @@ new TestCase [
     ] },
   ]
 
-# test indenting row
 new TestCase [
   '0',
   { text: '1', children: [
     '2'
   ] },
-], (t) ->
+], { name: "test indenting row" }, (t) ->
   t.sendKeys 'j'
   t.sendKey indentRowKey
   t.expect [
@@ -273,7 +270,6 @@ new TestCase [
     ] },
   ]
 
-# test multi indent block
 new TestCase [
   { text: 'mama', children: [
     { text: 'oldest kid', children : [
@@ -282,7 +278,7 @@ new TestCase [
     'middle kid'
     'young kid'
   ] },
-], (t) ->
+], { name: "test multi indent block" }, (t) ->
   t.sendKeys 'jjj2'
   t.sendKey indentBlockKey
   t.expect [
@@ -295,7 +291,6 @@ new TestCase [
     ] },
   ]
 
-# a bit trickier
 new TestCase [
   { text: 'mama', children: [
     { text: 'oldest kid', collapsed: true, children : [
@@ -306,7 +301,7 @@ new TestCase [
     ] },
     'young kid'
   ] },
-], (t) ->
+], { name: "a bit trickier" }, (t) ->
   t.sendKeys 'jj2'
   t.sendKey indentBlockKey
   t.expect [
@@ -346,14 +341,13 @@ new TestCase [
     ] },
   ]
 
-# make sure indent row behaves like indent block when collapsed
 new TestCase [
   { text: 'grandmama', children: [
     { text: 'mama', collapsed: true, children : [
       'me'
     ] },
   ] },
-], (t) ->
+], { name: "make sure indent row behaves like indent block when collapsed" }, (t) ->
   t.sendKeys ['j', unindentRowKey]
   t.expect [
     'grandmama',

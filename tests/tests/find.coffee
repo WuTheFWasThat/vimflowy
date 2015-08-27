@@ -1,8 +1,7 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test f, F, t T
-new TestCase ['Peter Piper picked a peck of pickled peppers'], (t) ->
+new TestCase ['Peter Piper picked a peck of pickled peppers'], { name: "test f, F, t T" }, (t) ->
   t.sendKeys 'fprd'
   t.expect ['Peter Pider picked a peck of pickled peppers']
   t.sendKeys 'fprl'
@@ -16,7 +15,7 @@ new TestCase ['Peter Piper picked a peck of pickled peppers'], (t) ->
   t.sendKeys '0tPx'
   t.expect ['PeterPider licked a peck of pickled pepers']
 
-new TestCase ['Peter Piper picked a peck of pickled peppers'], (t) ->
+new TestCase ['Peter Piper picked a peck of pickled peppers'], { name: "test f, F, t T" }, (t) ->
   t.sendKeys '$Fpx'
   t.expect ['Peter Piper picked a peck of pickled pepers']
   t.sendKeys '3FpTpra'
@@ -28,7 +27,7 @@ new TestCase ['Peter Piper picked a peck of pickled peppers'], (t) ->
   t.sendKey 'esc'
   t.expect ['Peeter Piper plucked a pack of pickled pepers']
 
-new TestCase ['edge case'], (t) ->
+new TestCase ['edge case'], {}, (t) ->
   t.sendKeys 'fsx'
   t.expect ['edge cae']
   t.sendKeys 'fex'
@@ -36,13 +35,13 @@ new TestCase ['edge case'], (t) ->
   t.sendKeys 'fex'
   t.expect ['edge c']
 
-new TestCase ['edge case'], (t) ->
+new TestCase ['edge case'], {}, (t) ->
   t.sendKeys '2tex'
   t.expect ['edge cae']
   t.sendKeys 'htex'
   t.expect ['edge ce']
 
-new TestCase ['edge case'], (t) ->
+new TestCase ['edge case'], {}, (t) ->
   t.sendKeys '$Fdx'
   t.expect ['ege case']
   t.sendKeys 'Fex'
@@ -50,7 +49,7 @@ new TestCase ['edge case'], (t) ->
   t.sendKeys 'Fex'
   t.expect ['e case']
 
-new TestCase ['edge case'], (t) ->
+new TestCase ['edge case'], {}, (t) ->
   t.sendKeys '$2Tex'
   t.expect ['ege case']
   t.sendKeys 'Tex'
@@ -58,19 +57,18 @@ new TestCase ['edge case'], (t) ->
   t.sendKeys 'hTfx'
   t.expect ['e case']
 
-# test delete with f/t
-new TestCase ['awdf awdf awdf'], (t) ->
+new TestCase ['awdf awdf awdf'], { name: "test delete with f/t" }, (t) ->
   t.sendKeys 'd2fa'
   t.expect ['wdf']
 
-new TestCase ['awdf awdf awdf'], (t) ->
+new TestCase ['awdf awdf awdf'], { name: "test delete with f/t" }, (t) ->
   t.sendKeys 'd2ta'
   t.expect ['awdf']
 
-new TestCase ['awdf awdf awdf'], (t) ->
+new TestCase ['awdf awdf awdf'], { name: "test delete with f/t" }, (t) ->
   t.sendKeys '$d2Fa'
   t.expect ['awdf f']
 
-new TestCase ['awdf awdf awdf'], (t) ->
+new TestCase ['awdf awdf awdf'], { name: "test delete with f/t" }, (t) ->
   t.sendKeys '$d2Ta'
   t.expect ['awdf af']

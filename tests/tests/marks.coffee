@@ -1,11 +1,10 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test marks
 new TestCase [
   'a line'
   'another line'
-], (t) ->
+], { name: "test marks" }, (t) ->
   t.expectMarks {}
   t.sendKeys 'mmarktest'
   t.sendKey 'enter'
@@ -95,11 +94,10 @@ new TestCase [
     { text: 'another line', mark: 'halo' }
   ]
 
-# paste reapplies marks
 new TestCase [
   { text: 'line 1', mark: 'mark1' }
   { text: 'line 2', mark: 'mark2' }
-], (t) ->
+], { name: "paste reapplies marks" }, (t) ->
   t.expectMarks {'mark1': 1, 'mark2': 2}
   t.sendKeys 'dd'
   t.expect [
@@ -113,11 +111,10 @@ new TestCase [
   ]
   t.expectMarks {'mark2': 2, 'mark1': 1}
 
-# try to mark again something that's already there
 new TestCase [
   { text: 'line 1', mark: 'mark1' }
   { text: 'line 2', mark: 'mark2' }
-], (t) ->
+], { name: "try to mark again something that's already there" }, (t) ->
   t.sendKeys 'mmark2'
   t.sendKey 'enter'
   # does nothing due to mark2 being taken
@@ -157,10 +154,9 @@ new TestCase [
   ]
   t.expectMarks {'mark3': 1}
 
-# try to mark again something that's already there
 new TestCase [
   { text: 'line 1', mark: 'mark1' }
-], (t) ->
+], { name: "try to mark again something that's already there" }, (t) ->
 
   # once line is deleted, we can mark though
   t.sendKeys 'yy'
@@ -201,7 +197,6 @@ new TestCase [
   ]
   t.expectMarks {'mark2': 1, 'mark1': 3}
 
-# test going to mark under cursor
 new TestCase [
   { text: '@mark2 @mark3', children: [
     'line'
@@ -210,7 +205,7 @@ new TestCase [
   { text: 'stuff', mark: 'mark2', children: [
     'more stuff'
   ] }
-], (t) ->
+], { name: "test going to mark under cursor" }, (t) ->
   t.sendKeys 'gmx'
   t.expectViewRoot 4
   t.expect [
@@ -249,7 +244,6 @@ new TestCase [
     ] }
   ]
 
-# search for marks
 new TestCase [
   { text: 'whoo', mark: 'hip' }
   { text: 'yay', mark: 'hooray', children: [
@@ -258,7 +252,7 @@ new TestCase [
     { text: 'hooray', mark: 'yay' }
   ] }
   { text: 'awesome', mark: 'whoo' }
-], (t) ->
+], { name: "search for marks" }, (t) ->
   t.sendKeys '`w'
   t.sendKey 'enter'
   t.sendKeys 'x'
@@ -313,7 +307,6 @@ new TestCase [
 
 # thoroughly test deletion of rows
 
-# marks can fail to reapply
 new TestCase [
   { text: 'row', mark: 'row', children: [
     { text: 'child', children: [
@@ -325,7 +318,7 @@ new TestCase [
   ] }
   'random'
   'random'
-], (t) ->
+], { name: "marks can fail to reapply" }, (t) ->
   t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
 
   t.sendKeys 'dd'
@@ -356,7 +349,6 @@ new TestCase [
   ]
   t.expectMarks {'row': 6, 'too': 7, 'deep': 5}
 
-# deletion and reattachment works for nested stuff
 new TestCase [
   { text: 'row', mark: 'row', children: [
     { text: 'child', children: [
@@ -367,7 +359,7 @@ new TestCase [
     ] }
   ] }
   'random'
-], (t) ->
+], { name: "deletion and reattachment works for nested stuff" }, (t) ->
   t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
 
   t.sendKeys 'dd'

@@ -1,7 +1,6 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test search
 new TestCase [
   'blah',
   'searchblah',
@@ -14,7 +13,7 @@ new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-], (t) ->
+], { name: "test search" }, (t) ->
   t.sendKeys '/search'
   t.sendKey 'enter'
   t.sendKeys 'dd'
@@ -31,7 +30,6 @@ new TestCase [
     ] }
   ]
 
-# test search
 new TestCase [
   'blah',
   'searchblah',
@@ -44,7 +42,7 @@ new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-], (t) ->
+], { name: "test search" }, (t) ->
   t.sendKeys '/search'
   t.sendKey 'ctrl+j'
   t.sendKey 'enter'
@@ -74,7 +72,7 @@ new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-], (t) ->
+], {}, (t) ->
   t.sendKeys '/search'
   t.sendKey 'ctrl+j'
   t.sendKey 'ctrl+j'
@@ -93,7 +91,6 @@ new TestCase [
     ] }
   ]
 
-# test search canceling
 new TestCase [
   'blah',
   'searchblah',
@@ -106,7 +103,7 @@ new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-], (t) ->
+], { name: "test search canceling" }, (t) ->
   t.sendKeys '/search'
   t.sendKey 'esc'
   t.sendKeys 'dd'
@@ -135,7 +132,7 @@ new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-], (t) ->
+], {}, (t) ->
   t.sendKeys '/search'
   t.sendKey 'ctrl+k'
   t.sendKey 'enter'
@@ -155,12 +152,11 @@ new TestCase [
     ] }
   ]
 
-# case insensitive!
 new TestCase [
   'case',
   'crease',
   'CASE',
-], (t) ->
+], { name: "case insensitive!" }, (t) ->
   t.sendKeys '/case'
   t.sendKey 'ctrl+j'
   t.sendKey 'enter'
@@ -170,12 +166,11 @@ new TestCase [
     'crease',
   ]
 
-# multi word!
 new TestCase [
   'broomball',
   'basketball',
   'basket of bread',
-], (t) ->
+], { name: "multi word!" }, (t) ->
   t.sendKeys '/bread basket'
   t.sendKey 'enter'
   t.sendKeys 'dd'

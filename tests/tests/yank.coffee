@@ -4,29 +4,28 @@ Register = require '../../assets/js/register.coffee'
 
 secondPasteDisabled = true
 
-# test pasting!
-t = new TestCase ['px'], (t) ->
+new TestCase ['px'], { name: "test pasting!" }, (t) ->
   t.sendKeys 'xp'
   t.expect ['xp']
   t.expectRegisterType Register.TYPES.CHARS
   t.sendKeys 'xp'
   t.expect ['xp']
 
-t = new TestCase ['one fish, two fish, red fish, blue fish'], (t) ->
+new TestCase ['one fish, two fish, red fish, blue fish'], {}, (t) ->
   t.sendKeys 'dWWhp'
   t.expect ['fish, one two fish, red fish, blue fish']
   # undo doesn't move cursor, and paste still has stuff in register
   t.sendKeys 'up'
   t.expect ['fish, one two fish, red fish, blue fish']
 
-t = new TestCase ['one fish, two fish, red fish, blue fish'], (t) ->
+new TestCase ['one fish, two fish, red fish, blue fish'], {}, (t) ->
   t.sendKeys '2dW2Whp'
   t.expect ['two fish, one fish, red fish, blue fish']
   # undo doesn't move cursor, and paste still has stuff in register
   t.sendKeys 'up'
   t.expect ['two fish, one fish, red fish, blue fish']
 
-t = new TestCase ['one fish, two fish, red fish, blue fish'], (t) ->
+new TestCase ['one fish, two fish, red fish, blue fish'], {}, (t) ->
   t.sendKeys 'd2W2Whp'
   t.expect ['two fish, one fish, red fish, blue fish']
   # undo doesn't move cursor, and paste still has stuff in register
@@ -36,8 +35,7 @@ t = new TestCase ['one fish, two fish, red fish, blue fish'], (t) ->
   t.sendKeys 'p'
   t.expect ['two fish, one fish, red fish, blue fish']
 
-# test an edge case
-t = new TestCase ['word'], (t) ->
+new TestCase ['word'], { name: "test an edge case" }, (t) ->
   t.sendKeys 'de'
   t.expect ['']
   t.sendKeys 'p'
@@ -48,16 +46,14 @@ t = new TestCase ['word'], (t) ->
   t.sendKeys '.'
   t.expect ['word']
 
-# test paste behind
-t = new TestCase ['one fish, two fish, red fish, blue fish'], (t) ->
+new TestCase ['one fish, two fish, red fish, blue fish'], { name: "test paste behind" }, (t) ->
   t.sendKeys '$F,d$3bP'
   t.expect ['one fish, two fish, blue fish, red fish']
   # undo doesn't move cursor, and paste still has stuff in register
   t.sendKeys 'uP'
   t.expect ['one fish, two fish, blue fish, red fish']
 
-# test an edge case
-t = new TestCase ['word'], (t) ->
+new TestCase ['word'], { name: "test an edge case" }, (t) ->
   t.sendKeys 'de'
   t.expect ['']
   t.sendKeys 'P'
@@ -65,8 +61,7 @@ t = new TestCase ['word'], (t) ->
   t.sendKeys 'u'
   t.expect ['']
 
-# test pasting rows!
-t = new TestCase ['humpty', 'dumpty'], (t) ->
+new TestCase ['humpty', 'dumpty'], { name: "test pasting rows!" }, (t) ->
   t.sendKeys 'dd'
   t.expectRegisterType Register.TYPES.ROWS
   t.expect [ 'dumpty' ]
@@ -84,7 +79,7 @@ t = new TestCase ['humpty', 'dumpty'], (t) ->
     t.sendKeys 'p'
     t.expect ['humpty', 'humpty', 'dumpty']
 
-t = new TestCase ['humpty', 'dumpty'], (t) ->
+new TestCase ['humpty', 'dumpty'], {}, (t) ->
   t.sendKeys 'jddP'
   t.expect [ 'dumpty', 'humpty' ]
   t.sendKeys 'u'
@@ -92,13 +87,13 @@ t = new TestCase ['humpty', 'dumpty'], (t) ->
   t.sendKeys 'u'
   t.expect ['humpty', 'dumpty']
 
-t = new TestCase [
+new TestCase [
   { text: 'herpy', children: [
     { text: 'derpy', children: [
       'burpy'
     ] },
   ] },
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'jjddp'
   t.expect [
     { text: 'herpy', children: [
@@ -150,16 +145,15 @@ t = new TestCase [
     ] },
   ]
 
-# test yank
-t = new TestCase ['lol'], (t) ->
+new TestCase ['lol'], { name: "test yank" }, (t) ->
   t.sendKeys 'yllp'
   t.expect ['loll']
 
-t = new TestCase ['lol'], (t) ->
+new TestCase ['lol'], {}, (t) ->
   t.sendKeys 'y$P'
   t.expect ['lollol']
 
-t = new TestCase ['lol'], (t) ->
+new TestCase ['lol'], {}, (t) ->
   t.sendKeys '$ybp'
   t.expect ['lollo']
   t.sendKeys 'u'
@@ -167,19 +161,18 @@ t = new TestCase ['lol'], (t) ->
   t.sendKeys 'P'
   t.expect ['lolol']
 
-t = new TestCase ['haha ... ha ... funny'], (t) ->
+new TestCase ['haha ... ha ... funny'], {}, (t) ->
   t.sendKeys 'y3wP'
   t.expect ['haha ... ha haha ... ha ... funny']
 
-t = new TestCase ['haha ... ha ... funny'], (t) ->
+new TestCase ['haha ... ha ... funny'], {}, (t) ->
   t.sendKeys 'yep'
   t.expect ['hhahaaha ... ha ... funny']
   # cursor ends at last character
   t.sendKeys 'yffp'
   t.expect ['hhahaaaha ... ha ... faha ... ha ... funny']
 
-# test line yank and paste
-t = new TestCase ['hey', 'yo', 'yo', 'yo', 'yo', 'yo'], (t) ->
+new TestCase ['hey', 'yo', 'yo', 'yo', 'yo', 'yo'], { name: "test line yank and paste" }, (t) ->
   t.sendKeys 'yyjp'
   t.expect ['hey', 'yo', 'hey', 'yo', 'yo', 'yo', 'yo']
   t.sendKeys 'jjP'
@@ -195,7 +188,7 @@ t = new TestCase ['hey', 'yo', 'yo', 'yo', 'yo', 'yo'], (t) ->
   t.sendKeys 'jjjjjp'
   t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yho']
 
-t = new TestCase ['hey', 'yo', 'yo', 'yo', 'yo', 'yo'], (t) ->
+new TestCase ['hey', 'yo', 'yo', 'yo', 'yo', 'yo'], { name: "test line yank and paste" }, (t) ->
   t.sendKeys 'yyjp'
   t.expect ['hey', 'yo', 'hey', 'yo', 'yo', 'yo', 'yo']
   t.sendKeys 'jjP'
@@ -210,11 +203,11 @@ t = new TestCase ['hey', 'yo', 'yo', 'yo', 'yo', 'yo'], (t) ->
   t.sendKeys 'jjjjjp'
   t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yo', 'hey']
 
-t = new TestCase [
+new TestCase [
   { text: 'hey', children: [
     'yo'
   ] }
-], (t) ->
+], {}, (t) ->
   t.sendKeys 'yyp'
   t.expect [
     { text: 'hey', children: [
@@ -258,12 +251,11 @@ t = new TestCase [
     ] }
   ]
 
-# test paste on collapsed
-t = new TestCase [
+new TestCase [
   { text: 'hey', collapsed: true, children: [
     'yo'
   ] }
-], (t) ->
+], { name: "test paste on collapsed" }, (t) ->
   t.sendKeys 'yyp'
   t.expect [
     { text: 'hey', collapsed: true, children: [
@@ -274,12 +266,11 @@ t = new TestCase [
     ] },
   ]
 
-# test paste preserves collapsedness
-t = new TestCase [
+new TestCase [
   { text: 'hey', collapsed: true, children: [
     'yo'
   ] }
-], (t) ->
+], { name: "test paste preserves collapsedness" }, (t) ->
   t.sendKeys 'yyzp'
   t.expect [
     { text: 'hey', children: [
@@ -292,7 +283,7 @@ t = new TestCase [
 
   if not secondPasteDisabled
     # test second paste
-    t = new TestCase [
+    new TestCase [
       { text: 'hey', collapsed: true, children: [
         'yo'
       ] }

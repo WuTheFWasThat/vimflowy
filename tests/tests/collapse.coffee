@@ -1,13 +1,12 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test collapsing
 new TestCase [
   { text: 'first', children: [
     'second'
   ] },
   'third'
-], (t) ->
+], { name: "test collapsing" }, (t) ->
   t.sendKeys 'z'
   t.expect [
     { text: 'first', collapsed: true, children: [
