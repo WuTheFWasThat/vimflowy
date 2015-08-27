@@ -10,7 +10,7 @@ Register = require '../assets/js/register.coffee'
 Settings = require '../assets/js/settings.coffee'
 
 class TestCase
-  constructor: (serialized = ['']) ->
+  constructor: (serialized = [''], callback) ->
     @store = new dataStore.InMemory
     @data = new Data @store
     @data.load
@@ -25,6 +25,7 @@ class TestCase
     keyBindings = new KeyBindings @settings
     @keyhandler = new KeyHandler @view, keyBindings
     @register = @view.register
+    if callback then callback @ else throw "No callback in test"
 
   _expectDeepEqual: (actual, expected) ->
     assert.deepEqual actual, expected,
