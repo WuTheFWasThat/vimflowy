@@ -1,8 +1,7 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
-# test search
-t = new TestCase [
+new TestCase [
   'blah',
   'searchblah',
   'blahsearchblah',
@@ -14,25 +13,24 @@ t = new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-]
-t.sendKeys '/search'
-t.sendKey 'enter'
-t.sendKeys 'dd'
-t.expect [
-  'blah',
-  'blahsearchblah',
-  'search',
-  'surch',
-  { text: 'blahsearch', children: [
+], { name: "test search" }, (t) ->
+  t.sendKeys '/search'
+  t.sendKey 'enter'
+  t.sendKeys 'dd'
+  t.expect [
     'blah',
-  ] }
-  { text: 'blah', children: [
+    'blahsearchblah',
     'search',
-  ] }
-]
+    'surch',
+    { text: 'blahsearch', children: [
+      'blah',
+    ] }
+    { text: 'blah', children: [
+      'search',
+    ] }
+  ]
 
-# test search
-t = new TestCase [
+new TestCase [
   'blah',
   'searchblah',
   'blahsearchblah',
@@ -44,25 +42,25 @@ t = new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-]
-t.sendKeys '/search'
-t.sendKey 'ctrl+j'
-t.sendKey 'enter'
-t.sendKeys 'dd'
-t.expect [
-  'blah',
-  'searchblah',
-  'search',
-  'surch',
-  { text: 'blahsearch', children: [
+], { name: "test search" }, (t) ->
+  t.sendKeys '/search'
+  t.sendKey 'ctrl+j'
+  t.sendKey 'enter'
+  t.sendKeys 'dd'
+  t.expect [
     'blah',
-  ] }
-  { text: 'blah', children: [
+    'searchblah',
     'search',
-  ] }
-]
+    'surch',
+    { text: 'blahsearch', children: [
+      'blah',
+    ] }
+    { text: 'blah', children: [
+      'search',
+    ] }
+  ]
 
-t = new TestCase [
+new TestCase [
   'blah',
   'searchblah',
   'blahsearchblah',
@@ -74,27 +72,26 @@ t = new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-]
-t.sendKeys '/search'
-t.sendKey 'ctrl+j'
-t.sendKey 'ctrl+j'
-t.sendKey 'enter'
-t.sendKeys 'dd'
-t.expect [
-  'blah',
-  'searchblah',
-  'blahsearchblah',
-  'surch',
-  { text: 'blahsearch', children: [
+], {}, (t) ->
+  t.sendKeys '/search'
+  t.sendKey 'ctrl+j'
+  t.sendKey 'ctrl+j'
+  t.sendKey 'enter'
+  t.sendKeys 'dd'
+  t.expect [
     'blah',
-  ] }
-  { text: 'blah', children: [
-    'search',
-  ] }
-]
+    'searchblah',
+    'blahsearchblah',
+    'surch',
+    { text: 'blahsearch', children: [
+      'blah',
+    ] }
+    { text: 'blah', children: [
+      'search',
+    ] }
+  ]
 
-# test search canceling
-t = new TestCase [
+new TestCase [
   'blah',
   'searchblah',
   'blahsearchblah',
@@ -106,24 +103,24 @@ t = new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-]
-t.sendKeys '/search'
-t.sendKey 'esc'
-t.sendKeys 'dd'
-t.expect [
-  'searchblah',
-  'blahsearchblah',
-  'search',
-  'surch',
-  { text: 'blahsearch', children: [
-    'blah',
-  ] }
-  { text: 'blah', children: [
+], { name: "test search canceling" }, (t) ->
+  t.sendKeys '/search'
+  t.sendKey 'esc'
+  t.sendKeys 'dd'
+  t.expect [
+    'searchblah',
+    'blahsearchblah',
     'search',
-  ] }
-]
+    'surch',
+    { text: 'blahsearch', children: [
+      'blah',
+    ] }
+    { text: 'blah', children: [
+      'search',
+    ] }
+  ]
 
-t = new TestCase [
+new TestCase [
   'blah',
   'searchblah',
   'blahsearchblah',
@@ -135,52 +132,49 @@ t = new TestCase [
   { text: 'blah', children: [
     'search',
   ] }
-]
-t.sendKeys '/search'
-t.sendKey 'ctrl+k'
-t.sendKey 'enter'
-t.sendKeys 'dd'
-t.expect [
-  'blah',
-  'searchblah',
-  'blahsearchblah',
-  'search',
-  'surch',
-  { text: 'blahsearch', children: [
+], {}, (t) ->
+  t.sendKeys '/search'
+  t.sendKey 'ctrl+k'
+  t.sendKey 'enter'
+  t.sendKeys 'dd'
+  t.expect [
     'blah',
-  ] }
-  { text: 'blah', children: [
-    # NOTE: a new line is created since it got changed to be the view root
-    '',
-  ] }
-]
+    'searchblah',
+    'blahsearchblah',
+    'search',
+    'surch',
+    { text: 'blahsearch', children: [
+      'blah',
+    ] }
+    { text: 'blah', children: [
+      # NOTE: a new line is created since it got changed to be the view root
+      '',
+    ] }
+  ]
 
-# case insensitive!
-t = new TestCase [
+new TestCase [
   'case',
   'crease',
   'CASE',
-]
-t.sendKeys '/case'
-t.sendKey 'ctrl+j'
-t.sendKey 'enter'
-t.sendKeys 'dd'
-t.expect [
-  'case',
-  'crease',
-]
+], { name: "case insensitive!" }, (t) ->
+  t.sendKeys '/case'
+  t.sendKey 'ctrl+j'
+  t.sendKey 'enter'
+  t.sendKeys 'dd'
+  t.expect [
+    'case',
+    'crease',
+  ]
 
-# multi word!
-t = new TestCase [
+new TestCase [
   'broomball',
   'basketball',
   'basket of bread',
-]
-t.sendKeys '/bread basket'
-t.sendKey 'enter'
-t.sendKeys 'dd'
-t.expect [
-  'broomball',
-  'basketball',
-]
-
+], { name: "multi word!" }, (t) ->
+  t.sendKeys '/bread basket'
+  t.sendKey 'enter'
+  t.sendKeys 'dd'
+  t.expect [
+    'broomball',
+    'basketball',
+  ]
