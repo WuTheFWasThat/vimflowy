@@ -25,7 +25,9 @@ class TestCase
     keyBindings = new KeyBindings @settings
     @keyhandler = new KeyHandler @view, keyBindings
     @register = @view.register
-    if callback then callback @ else throw "No callback in test"
+    unless callback then throw "No callback in test"
+    it "an anonymous test", () =>
+      callback @
 
   _expectDeepEqual: (actual, expected) ->
     assert.deepEqual actual, expected,
