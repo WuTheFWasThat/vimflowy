@@ -8,14 +8,18 @@
   },
   "scripts": {
     "start": "gulp",
-    "test": "./tests/run.coffee"
+    "test": "mocha --compilers coffee:coffee-script/register tests/tests/*"
+  },
+  "devDependencies": {
+    "blanket": "latest",
+    "mocha": "latest",
+    "nodemon": "latest"
   },
   "dependencies": {
     "async": "latest",
     "coffee-script": "latest",
     "express": "latest",
-    "lodash": "latest",
-    "nodemon": "latest"
+    "lodash": "latest"
   },
   "devDependencies": {
     "del": "latest",
