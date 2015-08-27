@@ -6,8 +6,8 @@ class KeyEmitter extends EventEmitter
   isChrome = !!window.chrome && !isOpera # Chrome 1+
   isFirefox = typeof InstallTrigger != 'undefined' # Firefox 1.0+
 
-  if not isChrome and not isFirefox
-    alert('Unsupported browser!  Please use Chrome 1+ or Firefox 1.0+')
+  if not isChrome and not isFirefox and not isSafari
+    alert('Unsupported browser!  Please use a recent Chrome, Firefox, or Safari')
 
   shiftMap =
     '`': '~'

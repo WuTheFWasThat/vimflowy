@@ -22,6 +22,12 @@ create_view = (data) ->
     menuDiv: $('#menu')
   }
 
+  # needed for safari
+  $('#paste-hack').focus()
+  $(document).on('click', () ->
+    $('#paste-hack').focus()
+  )
+
   $(document).on('paste', (e) ->
       e.preventDefault()
       text = (e.originalEvent || e).clipboardData.getData('text/plain')
