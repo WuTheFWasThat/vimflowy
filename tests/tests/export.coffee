@@ -1,3 +1,4 @@
+require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
 new TestCase [
