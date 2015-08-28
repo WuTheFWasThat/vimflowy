@@ -8,11 +8,18 @@
   },
   "scripts": {
     "start": "NODE_ENV=development nodemon -e coffee,jade,sass server.coffee",
-    "test": "mocha --compilers coffee:coffee-script/register tests/tests/*"
+    "test": "multi='spec=- html-cov=public/coverage.html' node_modules/mocha/bin/mocha --require blanket --reporter mocha-multi --compilers coffee:coffee-script/register tests/tests/*"
+  },
+  "config": {
+    "blanket": {
+      "pattern": "/\/assets\/js\/.*\\.coffee$/",
+      "loader": "./node-loaders/coffee-script"
+    }
   },
   "devDependencies": {
     "blanket": "latest",
     "mocha": "latest",
+    "mocha-multi": "latest",
     "nodemon": "latest"
   },
   "dependencies": {

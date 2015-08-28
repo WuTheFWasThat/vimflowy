@@ -1,5 +1,6 @@
 node_modules/
 public/assets/
+public/coverage.html
 npm-debug.log
 *.swp
 *.swn
