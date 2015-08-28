@@ -10,6 +10,10 @@
     "start": "NODE_ENV=development nodemon -e coffee,jade,sass server.coffee",
     "test": "mocha --compilers coffee:coffee-script tests/tests/*"
   },
+  "devDependencies": {
+    "mocha": "latest",
+    "nodemon": "latest"
+  },
   "dependencies": {
     "async": "latest",
     "coffee-script": "latest",
@@ -18,7 +22,6 @@
     "express": "latest",
     "jade": "latest",
     "lodash": "latest",
-    "nodemon": "latest",
     "node-sass": "latest"
   }
 }
