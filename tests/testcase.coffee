@@ -1,3 +1,4 @@
+require 'blanket'
 require 'coffee-script/register'
 assert = require 'assert'
 
