@@ -1,5 +1,5 @@
 node_modules/
-public/assets/
+public/
 npm-debug.log
 *.swp
 *.swn

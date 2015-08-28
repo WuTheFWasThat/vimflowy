@@ -1,0 +1,27 @@
+@mixin calc($property, $expression)
+  #{$property}: -moz-calc(#{$expression})
+  #{$property}: -webkit-calc(#{$expression})
+  #{$property}: calc(#{$expression})
+
+@mixin linear-gradient($from, $to)
+  background: $from
+  background: -moz-linear-gradient(#{$from}, #{$to})
+  background: -webkit-linear-gradient(#{$from}, #{$to})
+  background: -o-linear-gradient(#{$from}, #{$to})
+
+@mixin transition($transition)
+  -moz-transition:    $transition
+  -o-transition:      $transition
+  -webkit-transition: $transition
+  transition:         $transition
+
+@mixin box-shadow($shadow)
+  -moz-box-shadow:    $shadow
+  -webkit-box-shadow: $shadow
+  box-shadow:         $shadow
+
+@mixin border-radius($radius)
+  -webkit-border-radius: $radius
+  -moz-border-radius:    $radius
+  border-radius:         $radius
+

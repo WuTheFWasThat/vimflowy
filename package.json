@@ -7,18 +7,24 @@
     "npm": "1.2.x"
   },
   "scripts": {
-    "start": "NODE_ENV=development nodemon -e coffee,jade,sass server.coffee",
+    "start": "gulp",
     "test": "./tests/run.coffee"
   },
   "dependencies": {
     "async": "latest",
     "coffee-script": "latest",
-    "connect-assets": "latest",
-    "connect-flash": "latest",
     "express": "latest",
-    "jade": "latest",
     "lodash": "latest",
-    "nodemon": "latest",
-    "node-sass": "latest"
+    "nodemon": "latest"
+  },
+  "devDependencies": {
+    "del": "latest",
+    "gulp": "latest",
+    "gulp-coffee": "latest",
+    "gulp-jade": "latest",
+    "gulp-rename": "latest",
+    "gulp-sass": "latest",
+    "gulp-sourcemaps": "latest",
+    "gulp-util": "latest"
   }
 }

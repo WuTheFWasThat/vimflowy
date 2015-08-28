@@ -25,7 +25,9 @@ create_view = (data) ->
   # needed for safari
   $('#paste-hack').focus()
   $(document).on('click', () ->
-    $('#paste-hack').focus()
+    # if settings menu is up, we don't want to blur (the dropdowns need focus)
+    if $('#settings').hasClass 'hidden'
+      $('#paste-hack').focus()
   )
 
   $(document).on('paste', (e) ->

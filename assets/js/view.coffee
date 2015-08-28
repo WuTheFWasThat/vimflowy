@@ -1,14 +1,14 @@
 # imports
 if module?
-  _ = require('lodash')
+  global._ = require('lodash')
 
-  actions = require('./actions.coffee')
-  constants = require('./constants.coffee')
-  Cursor = require('./cursor.coffee')
-  Data = require('./data.coffee')
-  dataStore = require('./datastore.coffee')
-  Register = require('./register.coffee')
-  Logger = require('./logger.coffee')
+  global.actions = require('./actions.coffee')
+  global.constants = require('./constants.coffee')
+  global.Cursor = require('./cursor.coffee')
+  global.Data = require('./data.coffee')
+  global.dataStore = require('./datastore.coffee')
+  global.Register = require('./register.coffee')
+  global.Logger = require('./logger.coffee')
 
 # a View consists of Data and a cursor
 # it also renders
@@ -176,6 +176,7 @@ renderLine = (lineData, options = {}) ->
     results.push virtualDom.h spec.type, divoptions, spec.text
 
   return results
+window?.renderLine = renderLine
 
 (() ->
   MODES = constants.MODES

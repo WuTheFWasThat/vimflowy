@@ -1,3 +1,8 @@
+if module?
+  global.View = require('./view.coffee')
+  global.Data = require('./data.coffee')
+  global.dataStore = require('./datastore.coffee')
+
 class Menu
   constructor: (div, fn) ->
     @div = div
@@ -94,10 +99,6 @@ class Menu
     result = @results[@selection]
     do result.fn
 
-if module?
-  View = require('./view.coffee')
-  Data = require('./data.coffee')
-  dataStore = require('./datastore.coffee')
-
 # exports
 module?.exports = Menu
+window?.Menu = Menu

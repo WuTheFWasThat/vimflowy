@@ -1,5 +1,5 @@
 if module? # imports
-  _ = require('underscore')
+  global._ = require('lodash')
 
 ((exports) ->
 

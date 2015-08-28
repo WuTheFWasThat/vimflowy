@@ -1,6 +1,6 @@
 if module?
-  _ = require('lodash')
-  Logger = require('./logger.coffee')
+  global._ = require('lodash')
+  global.Logger = require('./logger.coffee')
 
 ((exports) ->
   class DataStore

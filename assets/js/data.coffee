@@ -1,9 +1,9 @@
 # imports
 if module?
-  _ = require('lodash')
-  utils = require('./utils.coffee')
-  constants = require('./constants.coffee')
-  Logger = require('./logger.coffee')
+  global._ = require('lodash')
+  global.utils = require('./utils.coffee')
+  global.constants = require('./constants.coffee')
+  global.Logger = require('./logger.coffee')
 
 class Data
   root: 0
@@ -510,3 +510,4 @@ class Data
 
 # exports
 module?.exports = Data
+window?.Data = Data

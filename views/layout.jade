@@ -2,7 +2,19 @@ html
   head
     title Vimflowy
 
-    != css('app')
+    link(rel="stylesheet" href="/css/constants.css")
+    link(rel="stylesheet" href="/css/utils.css")
+    link(rel="stylesheet" href="/css/index.css")
+
+    // template for themes
+    link(rel="stylesheet" href="/css/view.css")
+
+    // themes
+    link(rel="stylesheet" href="/css/themes/default.css")
+    link(rel="stylesheet" href="/css/themes/dark.css")
+    link(rel="stylesheet" href="/css/themes/solarized_dark.css")
+    link(rel="stylesheet" href="/css/themes/solarized_light.css")
+
     link(rel="stylesheet" href="/font-awesome.min.css")
     link(rel="icon" type="image/png" href="images/vimflowy-32.png")
 
@@ -15,5 +27,22 @@ html
     script(src='/jquery.cookie.min.js')
     script(src='/lodash.js')
     script(src='/virtual-dom.js')
-    != js('app.js')
+
+    script(src='/js/constants.js')
+    script(src='/js/utils.js')
+    script(src='/js/logger.js')
+    script(src='/js/eventEmitter.js')
+    script(src='/js/keyEmitter.js')
+    script(src='/js/keyHandler.js')
+    script(src='/js/datastore.js')
+    script(src='/js/data.js')
+    script(src='/js/actions.js')
+    script(src='/js/cursor.js')
+    script(src='/js/register.js')
+    script(src='/js/settings.js')
+    script(src='/js/view.js')
+    script(src='/js/menu.js')
+    script(src='/js/keyBindings.js')
+    script(src='/js/index.js')
+
     block morefoot

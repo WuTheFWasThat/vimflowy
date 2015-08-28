@@ -4,10 +4,10 @@ Takes in keys, and, based on the keybindings, manipulates view/data
 
 # imports
 if module?
-  EventEmitter = require('./eventEmitter.coffee')
-  Menu = require('./menu.coffee')
-  constants = require('./constants.coffee')
-  Logger = require('./logger.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
+  global.Menu = require('./menu.coffee')
+  global.constants = require('./constants.coffee')
+  global.Logger = require('./logger.coffee')
 
 (() ->
   MODES = constants.MODES

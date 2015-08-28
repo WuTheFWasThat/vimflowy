@@ -121,3 +121,5 @@ class KeyEmitter extends EventEmitter
       results = @emit 'keydown', key
       # return false to stop propagation, if any handler handled the key
       return not _.any results
+
+window.KeyEmitter = KeyEmitter

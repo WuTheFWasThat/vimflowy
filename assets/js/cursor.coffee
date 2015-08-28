@@ -1,6 +1,6 @@
 if module?
-  utils = require('./utils.coffee')
-  constants = require('./constants.coffee')
+  global.utils = require('./utils.coffee')
+  global.constants = require('./constants.coffee')
 
 class Cursor
   constructor: (data, row = null, col = null, moveCol = null) ->
@@ -313,3 +313,4 @@ class Cursor
 
 # exports
 module?.exports = Cursor
+window?.Cursor = Cursor

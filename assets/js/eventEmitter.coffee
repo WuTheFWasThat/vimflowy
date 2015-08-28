@@ -33,3 +33,4 @@ class EventEmitter
 
 # exports
 module?.exports = EventEmitter
+window?.EventEmitter = EventEmitter

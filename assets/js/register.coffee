@@ -96,3 +96,4 @@ class Register
 
 # exports
 module?.exports = Register
+window?.Register = Register

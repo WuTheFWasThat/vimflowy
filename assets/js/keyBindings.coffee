@@ -1,9 +1,9 @@
 # imports
 if module?
-  _ = require('lodash')
-  constants = require('./constants.coffee')
-  utils = require('./utils.coffee')
-  Logger = require('./logger.coffee')
+  global._ = require('lodash')
+  global.constants = require('./constants.coffee')
+  global.utils = require('./utils.coffee')
+  global.Logger = require('./logger.coffee')
 
 ((exports) ->
   MODES = constants.MODES
