@@ -81,7 +81,8 @@ gulp.task 'watch', ->
 gulp.task 'serve', ->
   app = express()
   app.use express.static(__dirname + '/public')
-  port = process.argv[2] or 8080
+  port = 8080 # TODO: make a way to specify?
+  app.get '/:docname', ((req, res) -> res.sendFile "#{__dirname}/public/index.html")
   app.listen port
   console.log 'Started server on port ' + port
 

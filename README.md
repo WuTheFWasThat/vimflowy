@@ -8,12 +8,11 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 
 ## NOTES ##
 
-- Vimflowy is currently aimed at vim users, who should feel at home.
-The plan is to eventually have very customizable bindings, and defaults for normal people (as well as emacs users).
-But for now, if you want to use vimflowy, you should first [learn vim](http://vim-adventures.com/)
-- The app is entirely local. The online version uses localStorage, so it should be used in only one browser
-- Currently, weird things happen when you use it in multiple tabs
-- There are many [known inconsistencies with vim](vim_inconsistencies.md), mostly intentional.
+- The app is entirely local. The online version uses localStorage, so it should be used in only one browser.
+  If you're going to have a large document, use a browser with large localStorage limits
+- Currently, weird things happen when you use multiple tabs simultaneously
+- Tested mostly in Chrome and Firefox
+- There are [known inconsistencies with vim](vim_inconsistencies.md)
 
 ## FEATURES ##
 
@@ -31,6 +30,7 @@ But for now, if you want to use vimflowy, you should first [learn vim](http://vi
     - visual mode (only within a line)
     - visual line (acts on groups of siblings)
   - keybindings for everything
+    - configurable (via downloading/uploading a json file)
   - undo!  Full history kept within a session
   - ctrl+o and ctrl+i to move through jump history
   - macros

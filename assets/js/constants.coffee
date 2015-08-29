@@ -102,7 +102,7 @@
       ] }
       { text: 'Customizable', collapsed: true, children: [
         'Different color themes (see Menu)'
-        # 'Customizable hotkeys'
+        'Customizable hotkeys (via downloading/uploading a json file)'
       ] }
       { text: 'Import and export data', collapsed: true, children: [
         'Supports both JSON and Workflowy-compatible plaintext formats'
