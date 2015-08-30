@@ -7,8 +7,8 @@
     "npm": "1.2.x"
   },
   "scripts": {
-    "start": "gulp",
-    "test": "multi='spec=- html-cov=public/coverage.html' node_modules/mocha/bin/mocha --require blanket --reporter mocha-multi --compilers coffee:coffee-script/register tests/tests/*"
+    "start": "node_modules/.bin/gulp",
+    "test": "multi='spec=- html-cov=public/coverage.html' node_modules/.bin/mocha test/tests/*"
   },
   "config": {
     "blanket": {

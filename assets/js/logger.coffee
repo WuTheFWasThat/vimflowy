@@ -7,9 +7,16 @@
     FATAL: 4
   }
 
+  STREAM = {
+    STDOUT: 0
+    STDERR: 1
+    QUEUE: 2
+  }
+
   class Logger
-    constructor: (level=LEVEL.INFO) ->
-      @level = level
+    constructor: (level=LEVEL.INFO, stream=STREAM.STDOUT) ->
+      @setLevel level
+      @setStream stream
 
       register_loglevel = (name, value) =>
         @[name.toLowerCase()] = () ->
@@ -21,7 +28,12 @@
       return
 
     log: () ->
-      console.log.apply console, arguments
+      if @stream == STREAM.STDOUT
+        console.log.apply console, arguments
+      else if @stream == STREAM.STDERR
+        console.error.apply console, arguments
+      else if @stream == STREAM.QUEUE
+        @queue.push arguments
 
     setLevel: (level) ->
       @level = level
@@ -29,8 +41,25 @@
     off: () ->
       @level = Infinity
 
+    setStream: (stream) ->
+      @stream = stream
+      if @stream == STREAM.QUEUE
+        @queue = []
+
+    # for queue
+
+    flush: () ->
+      if @stream == STREAM.QUEUE
+        for args in @queue
+          console.log.apply console, args
+        do @empty
+
+    empty: () ->
+      @queue = []
+
   exports.Logger = Logger
   exports.LEVEL = LEVEL
+  exports.STREAM = STREAM
 
   exports.logger = new Logger(LEVEL.DEBUG)
 )(if typeof exports isnt 'undefined' then exports else window.Logger = {})

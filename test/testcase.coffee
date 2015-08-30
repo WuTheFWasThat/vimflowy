@@ -1,6 +1,7 @@
 require 'blanket'
 require 'coffee-script/register'
 assert = require 'assert'
+_ = require 'lodash'
 
 dataStore = require '../assets/js/datastore.coffee'
 Data = require '../assets/js/data.coffee'
@@ -9,9 +10,14 @@ KeyBindings = require '../assets/js/keyBindings.coffee'
 KeyHandler = require '../assets/js/keyHandler.coffee'
 Register = require '../assets/js/register.coffee'
 Settings = require '../assets/js/settings.coffee'
+Logger = require '../assets/js/logger.coffee'
+
+Logger.logger.setStream Logger.STREAM.QUEUE
+afterEach 'empty the queue', () ->
+  do Logger.logger.empty
 
 class TestCase
-  constructor: (serialized = [''], options, callback) ->
+  constructor: (serialized = ['']) ->
     @store = new dataStore.InMemory
     @data = new Data @store
     @data.load
@@ -26,22 +32,22 @@ class TestCase
     keyBindings = new KeyBindings @settings
     @keyhandler = new KeyHandler @view, keyBindings
     @register = @view.register
-    @name = options.name || "an anonymous test"
-    unless callback then throw "No callback in test"
-    if it?
-      it @name, () =>
-        callback @
-    else
-      callback @
 
-  _expectDeepEqual: (actual, expected) ->
-    assert.deepEqual actual, expected,
-      "Expected \n #{JSON.stringify(expected, null, 2)}" +
-      "But got \n #{JSON.stringify(actual, null, 2)}"
-  _expectStringEqual: (actual, expected) ->
-    assert.equal actual, expected,
-      "Expected \n #{expected}" +
-      "But got \n #{actual}"
+  _expectDeepEqual: (actual, expected, message) ->
+    if not _.isEqual actual, expected
+      do Logger.logger.flush
+      console.error \
+        "\nExpected:\n#{JSON.stringify(expected, null, 2)}" +
+        "\nBut got:\n#{JSON.stringify(actual, null, 2)}"
+      throw Error message
+
+  _expectEqual: (actual, expected, message) ->
+    if actual != expected
+      do Logger.logger.flush
+      console.error \
+        "\nExpected:\n#{expected}" +
+        "\nBut got:\n#{actual}"
+      throw Error message
 
   sendKeys: (keys) ->
     for key in keys
@@ -57,22 +63,26 @@ class TestCase
 
   expect: (expected) ->
     serialized = @data.serialize @data.root, true
-    @_expectDeepEqual serialized.children, expected
+    @_expectDeepEqual serialized.children, expected, "Unexpected serialized content"
     return @
 
   expectViewRoot: (expected) ->
-    assert.equal @data.viewRoot, expected
+    @_expectEqual @data.viewRoot, expected, "Unexpected view root"
     return @
 
   expectCursor: (row, col) ->
-    assert.equal @view.cursor.row, row
-    assert.equal @view.cursor.col, col
+    @_expectEqual @view.cursor.row, row, "Unexpected cursor row"
+    @_expectEqual @view.cursor.col, col, "Unexpected cursor col"
     return @
 
   expectJumpIndex: (index, historyLength = null) ->
-    assert.equal @view.jumpIndex, index
+    @_expectEqual @view.jumpIndex, index, "Unexpected jump index"
     if historyLength != null
-      assert.equal @view.jumpHistory.length, historyLength
+      @_expectEqual @view.jumpHistory.length, historyLength, "Unexpected jump history length"
+    return @
+
+  expectNumMenuResults: (num_results) ->
+    @_expectEqual @view.menu.results.length, num_results, "Unexpected number of results"
     return @
 
   setRegister: (value) ->
@@ -81,22 +91,22 @@ class TestCase
 
   expectRegister: (expected) ->
     current = do @register.serialize
-    @_expectDeepEqual current, expected
+    @_expectDeepEqual current, expected, "Unexpected register content"
     return @
 
   expectRegisterType: (expected) ->
     current = do @register.serialize
-    @_expectDeepEqual current.type, expected
+    @_expectDeepEqual current.type, expected, "Unexpected register type"
     return @
 
   expectExport: (fileExtension, expected) ->
     export_ = @view.exportContent fileExtension
-    @_expectStringEqual export_, expected
+    @_expectEqual export_, expected, "Unexpected export content"
     return @
 
   expectMarks: (expected) ->
     marks = do @view.data.store.getAllMarks
-    @_expectDeepEqual marks, expected
+    @_expectDeepEqual marks, expected, "Unexpected marks"
     return @
 
 module.exports = TestCase
