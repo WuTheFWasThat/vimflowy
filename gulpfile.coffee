@@ -9,6 +9,7 @@ sass = require 'gulp-sass'
 sourcemaps = require 'gulp-sourcemaps'
 util = require 'gulp-util'
 watch = require 'gulp-watch'
+mocha = require 'gulp-mocha'
 
 out_folder = 'public'
 
@@ -18,11 +19,14 @@ handle = (stream) ->
     util.log.apply @, arguments
     do stream.end
 
+test_files = 'test/tests/*.coffee'
+coffee_files = 'assets/js/**/*'
+
 gulp.task 'clean', (cb) ->
   del ["#{out_folder}"], cb
 
 gulp.task 'coffee', ->
-  gulp.src 'assets/js/*.coffee'
+  gulp.src coffee_files
     .pipe sourcemaps.init()
     .pipe handle coffee()
     .pipe sourcemaps.write()
@@ -70,12 +74,17 @@ gulp.task 'assets', [
   'images',
 ]
 
+gulp.task 'test', () ->
+  gulp.src test_files, {read: false}
+    .pipe mocha {reporter: 'dot', bail: true, compilers: 'coffee:coffee-script/register'}
+
 # Rerun tasks when files changes
 # TODO: use gulp-watch?
 gulp.task 'watch', ->
   gulp.watch 'assets/css/**/*', ['sass']
   gulp.watch 'views/**/*', ['jade']
-  gulp.watch 'assets/js/**/*', ['coffee']
+  gulp.watch coffee_files, ['coffee', 'test']
+  gulp.watch test_files, ['test']
 
 # serves an express app
 gulp.task 'serve', ->
@@ -87,4 +96,4 @@ gulp.task 'serve', ->
   console.log 'Started server on port ' + port
 
 gulp.task 'default', ['clean'], () ->
-  gulp.start 'assets', 'watch', 'serve'
+  gulp.start 'assets', 'watch', 'serve', 'test'

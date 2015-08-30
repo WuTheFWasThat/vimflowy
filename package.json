@@ -31,6 +31,7 @@
     "gulp": "latest",
     "gulp-coffee": "latest",
     "gulp-jade": "latest",
+    "gulp-mocha": "latest",
     "gulp-rename": "latest",
     "gulp-sass": "latest",
     "gulp-sourcemaps": "latest",
