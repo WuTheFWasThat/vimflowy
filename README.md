@@ -1,4 +1,4 @@
-# ![Vimflowy](/public/images/vimflowy-32.png?raw=true) Vimflowy
+# ![Vimflowy](/assets/images/vimflowy-32.png?raw=true) Vimflowy
 
 This is a productivity tool which draws great inspiration from workflowy and vim.
 
