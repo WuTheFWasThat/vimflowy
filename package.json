@@ -35,6 +35,7 @@
     "gulp-rename": "latest",
     "gulp-sass": "latest",
     "gulp-sourcemaps": "latest",
-    "gulp-util": "latest"
+    "gulp-util": "latest",
+    "gulp-watch": "latest"
   }
 }
