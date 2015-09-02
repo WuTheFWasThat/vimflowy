@@ -1,75 +1,34 @@
 @import '../solarized_constants'
 
-$bg-color: $solarized-color-base3
-$secondary-bg-color: $solarized-color-base2
-$text-color: $solarized-color-base00
-$trim-color: $solarized-color-base01
-$cursor-bg-color: $solarized-color-cyan
-$cursor-color: $bg-color
-$breadcrumbs-color: $solarized-color-violet
-$highlight-color: $text-color
-$highlight-bg-color: $secondary-bg-color
-$menu-selected-bg-color: $solarized-color-base1
+body#solarized_light-theme
+    color: $solarized-color-base00
 
-body.solarized_light-theme
+    .theme-cursor
+        color: $solarized-color-base3
+        background-color: $solarized-color-cyan
 
-    color: $text-color
-    background-color: $bg-color
-
-    #breadcrumbs
-        .crumb:not(:last-child)
-            color: $breadcrumbs-color
-        .crumb:not(:last-child)::after
-            color: $text-color
-
-    .cursor
-        background-color: $cursor-bg-color
-        color: $cursor-color
-
-    .highlight
-        background-color: $highlight-bg-color
-        color: $highlight-color
-
-    .menuSelected
-        background-color: $menu-selected-bg-color
-
-    #mode
-        background: $secondary-bg-color
-
-    #bottom-bar
-        background-color: $bg-color
-        border-top: 1px solid $trim-color
-
-    .link
-        text-decoration: none
+    .theme-text-link
         color: $solarized-color-blue
+        cursor: pointer
 
-    #keybindings
-        background: $secondary-bg-color !important
-
-    .keybindings-table, .keybindings-table tbody
-        background-color: $secondary-bg-color
-
-    #settings
-        background-color: $secondary-bg-color
-
-    #settings .settings-header, .btn
-        background: $bg-color
-        border: 1px solid $trim-color
-        color: $text-color
-
-    #settings-link
-        background: $secondary-bg-color
-        color: $text-color
-
-    .searchBox
-        border: 1px solid $trim-color
-
-    .mark
-        border: 1px solid $trim-color
-        background-color: $secondary-bg-color
-        &.active
-            border: 2px solid $solarized-color-yellow
-
-    .easy-motion
+    .theme-text-accent
         color: $solarized-color-magenta
+
+    &.theme-bg-primary, .theme-bg-primary
+        background-color: $solarized-color-base3
+
+    .theme-bg-secondary
+        background-color: $solarized-color-base2
+
+    .theme-bg-highlight
+        background-color: $solarized-color-base2
+
+    .theme-bg-selection
+        background-color: #b3c1c1
+
+    .theme-trim
+        border: 1px solid $solarized-color-base01
+
+    .theme-trim-accent
+        border: 2px solid $solarized-color-magenta
+

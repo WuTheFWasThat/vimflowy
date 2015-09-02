@@ -53,7 +53,7 @@ class Menu
 
     do @div.empty
 
-    searchBox = $('<div>').addClass('searchBox').appendTo @div
+    searchBox = $('<div>').addClass('searchBox theme-trim').appendTo @div
     searchBox.append $('<i>').addClass('fa fa-search').css(
       'margin-right': '10px'
     )
@@ -82,7 +82,7 @@ class Menu
 
         icon = 'fa-circle'
         if i == @selection
-          resultDiv.addClass 'menuSelected'
+          resultDiv.addClass 'theme-bg-selection'
           icon = 'fa-arrow-circle-right'
         resultDiv.append $('<i>').addClass('fa ' + icon + ' bullet').css(
           'margin-right': '20px'

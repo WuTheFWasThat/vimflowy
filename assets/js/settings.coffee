@@ -52,7 +52,7 @@
     ####################
 
     changeStyle: (theme) ->
-      $('body').removeClass().addClass(theme)
+      $('body').attr('id', theme)
 
   module?.exports = Settings
   window?.Settings = Settings

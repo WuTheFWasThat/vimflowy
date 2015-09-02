@@ -10,7 +10,9 @@ $bottom-bar-height: 25px
     position: absolute
     bottom: 0px
     height: $bottom-bar-height
-    border-top: 1px solid black
+    border-left   : 0px !important;
+    border-right  : 0px !important;
+    border-bottom : 0px !important;
     width: 100%
     font-size: 12px
 
@@ -42,8 +44,7 @@ $bottom-bar-height: 25px
 .btn
     padding: 5px
     border-radius: 5px
-    background-color: white
-    border: 1px solid black
+    font-size: 11px
     cursor: pointer
     margin: 0px 5px
     &:focus
@@ -78,7 +79,6 @@ $bottom-bar-height: 25px
     .settings-header
         $header-padding: 5px
         @include calc(width, '100% - #{2 * $header-padding}')
-        border: 1px solid black
         border-radius: 5px
         -moz-border-radius: 5px
         padding: $header-padding
@@ -108,7 +108,6 @@ $bottom-bar-height: 25px
     #keybindings
         position: relative
         flex: 0 1 auto
-        background: #CCCCCC
         width: 0%
         height: 100%
         overflow-y: auto
@@ -132,8 +131,6 @@ $bottom-bar-height: 25px
         #breadcrumbs
             font-size: 20px
             margin-bottom: 20px
-            .crumb:not(:last-child)
-                cursor: pointer
             .crumb:not(:last-child)::after
                 font-family: FontAwesome
                 // angle-right

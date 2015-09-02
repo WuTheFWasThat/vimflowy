@@ -1,66 +1,33 @@
 @import '../constants'
 
-$bg-color: $color-black
-$secondary-bg-color: #222222
-$light-bg-color: #444444
-$text-color: #EEEEEE
-$trim-color: #EEEEEE
-$subtle-bg-color: #333
+body#dark-theme
+    color: #EEEEEE
 
-body.dark-theme
-    color: $text-color
-    background-color: $bg-color
-
-    #breadcrumbs
-        .crumb:not(:last-child)
-            color: $color-link-blue
-        .crumb:not(:last-child)::after
-            color: $text-color
-
-    .cursor
-        background-color: #CCC
+    .theme-cursor
         color: $color-black
+        background-color: #CCC
 
-    .highlight
-        background-color: #666  // #770
-
-    .menuSelected
-        background-color: $subtle-bg-color
-
-    .link
-        text-decoration: none
+    .theme-text-link
         color: $color-link-blue
+        cursor: pointer
 
-    #mode
-        background: $secondary-bg-color
+    .theme-text-accent
+        color: #CCCC00
 
-    #bottom-bar
-        background-color: $light-bg-color
-        border-top: 1px solid #999
+    &.theme-bg-primary, .theme-bg-primary
+        background-color: $color-black
 
-    #keybindings
-        background: $secondary-bg-color !important
+    .theme-bg-secondary
+        background-color: #333333
 
-    .keybindings-table, .keybindings-table tbody
-        background-color: $secondary-bg-color
+    .theme-bg-highlight
+        background-color: #666  // #770 for yellowish
 
-    #settings
-        background-color: $light-bg-color
+    .theme-bg-selection
+        background-color: #333333
 
-    #settings .settings-header, .btn
-        border: 1px solid $trim-color
-        background: $secondary-bg-color
-        color: $text-color
+    .theme-trim
+        border: 1px solid #EEEEEE
 
-    #settings-link
-        background: $secondary-bg-color
-        color: $text-color
-
-    .searchBox
-        border: 1px solid $trim-color
-
-    .mark
-        border: 1px solid $trim-color
-        background-color: $subtle-bg-color
-        &.active
-            background-color: #884400
+    .theme-trim-accent
+        border: 2px solid #CCCC00

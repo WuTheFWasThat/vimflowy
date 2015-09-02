@@ -958,7 +958,7 @@ if module?
 
     # build table to visualize hotkeys
     buildTable: (keyMap) ->
-      table = $('<table>').addClass('keybindings-table')
+      table = $('<table>').addClass('keybindings-table theme-bg-secondary')
 
       buildTableContents = (bindings, onto) ->
         for k,v of bindings

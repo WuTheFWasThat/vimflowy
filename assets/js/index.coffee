@@ -27,7 +27,9 @@ create_view = (data) ->
   $(document).on('click', () ->
     # if settings menu is up, we don't want to blur (the dropdowns need focus)
     if $('#settings').hasClass 'hidden'
-      $('#paste-hack').focus()
+      # if user is tryign to copy, we don't want to blur
+      if not window.getSelection().toString()
+        $('#paste-hack').focus()
   )
 
   $(document).on('paste', (e) ->

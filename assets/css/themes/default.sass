@@ -1,59 +1,33 @@
 @import '../constants'
 
-$bg-color: $color-white
-$secondary-bg-color: #AAAAAA
-$text-color: $color-black
-$trim-color: $color-black
-$subtle-bg-color: #EEEEEE
+body#default-theme
+    color: $color-black
 
-body.default-theme
-    color: $text-color
-    background: $bg-color
-
-    #breadcrumbs
-        .crumb:not(:last-child)
-            color: $color-link-blue
-        .crumb:not(:last-child)::after
-            color: $color-black
-
-    .cursor
-        // background-color: $secondary-bg-color
+    .theme-cursor
+        color: $color-white
         background-color: #666
-        color: $bg-color
 
-    .highlight
-        background-color: #CCC // #FFA
-
-    .menuSelected
-        background-color: $subtle-bg-color
-
-    .link
-        text-decoration: none
+    .theme-text-link
         color: $color-link-blue
+        cursor: pointer
 
-    #mode
-        background: $secondary-bg-color
+    .theme-text-accent
+        color: #dd3388
 
-    #bottom-bar
-        background-color: $bg-color
+    &.theme-bg-primary, .theme-bg-primary
+        background-color: $color-white
 
-    #settings
-        background-color: $bg-color
+    .theme-bg-secondary
+        background-color: #AAAAAA
 
-    #settings .settings-header, .btn
-        border: 1px solid $trim-color
-        background: $secondary-bg-color
+    .theme-bg-highlight
+        background-color: #CCC // #FFA for yellowish
 
-    #settings-link
-        background: $secondary-bg-color
-        color: $text-color
+    .theme-bg-selection
+        background-color: #EEEEEE
 
-    .searchBox
-        border: 1px solid $trim-color
+    .theme-trim
+        border: 1px solid $color-black
 
-    .mark
-        border: 1px solid $trim-color
-        background-color: $subtle-bg-color
-        &.active
-            background-color: #FFFF88
-
+    .theme-trim-accent
+        border: 2px solid #dd3388

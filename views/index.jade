@@ -10,11 +10,11 @@ block content
     #contents
         #menu.hidden
         #view
-        #keybindings
+        #keybindings.theme-bg-secondary
 
-    #settings.hidden
+    #settings.hidden.theme-bg-primary
         #settings-left
-            .settings-header Visual Theme
+            .settings-header.theme-bg-secondary.theme-trim Visual Theme
             .settings-content
                 select.theme-selection
                     option(value="default-theme" selected=selected) Default
@@ -22,38 +22,38 @@ block content
                     option(value="solarized_dark-theme") Solarized Dark
                     option(value="solarized_light-theme") Solarized Light
 
-            .settings-header Export
+            .settings-header.theme-bg-secondary.theme-trim Export
             .settings-content
                 select.export-fileformat-selection
                     option(value="vimflowy.json" selected=selected) Export as JSON
                     option(value="vimflowy.txt") Export as text
 
-                button.btn#data_export(style='float:right') Export!
+                .btn.theme-bg-secondary.theme-trim#data_export(style='float:right') Export!
 
-            .settings-header Import
+            .settings-header.theme-bg-secondary.theme-trim Import
             .settings-content
                 #import-file
                     input(type="file" name="import-file")
-                    button.btn#data_import(style='float:right') Import!
+                    .btn.theme-bg-secondary.theme-trim#data_import(style='float:right') Import!
 
         #settings-right
-            .settings-header Hotkeys
+            .settings-header.theme-bg-secondary.theme-trim Hotkeys
             .settings-content
               #hotkey-actions.clearfix
-                button.btn#hotkeys_export(style='float:left') Export as file
-                button.btn#hotkeys_default(style='float:left') Load defaults
-                button.btn#hotkeys_import(style='float:left') Import from file
+                .btn.theme-bg-secondary.theme-trim#hotkeys_export(style='float:left') Export as file
+                .btn.theme-bg-secondary.theme-trim#hotkeys_default(style='float:left') Load defaults
+                .btn.theme-bg-secondary.theme-trim#hotkeys_import(style='float:left') Import from file
                 input#hotkeys_file_input(type="file" name="hotkeys-file" style='float:left')
               #hotkey-edit
                 #hotkey-edit-normal
                 #hotkey-edit-insert
 
-    #bottom-bar
-        a#settings-link.center
+    #bottom-bar.theme-bg-primary.theme-trim
+        a#settings-link.center.theme-bg-secondary
           span#settings-icon.fa(style='margin-right:10px')
           span#settings-text
 
         #message
-        #mode.center
+        #mode.center.theme-bg-secondary
 
     a#export.hidden

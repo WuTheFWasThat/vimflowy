@@ -22,7 +22,7 @@ renderLine = (lineData, options = {}) ->
 
   if options.mark
     results.push virtualDom.h 'span', {
-      className: 'mark'
+      className: 'mark theme-bg-secondary theme-trim'
     }, options.mark
 
 
@@ -66,9 +66,9 @@ renderLine = (lineData, options = {}) ->
         x = cursorChar + x
 
     if i of options.cursors
-      renderOptions.classes.push 'cursor'
+      renderOptions.classes.push 'theme-cursor'
     else if i of options.highlights
-      renderOptions.classes.push 'highlight'
+      renderOptions.classes.push 'theme-bg-highlight'
 
     info.char = x
     info.renderOptions = renderOptions
@@ -108,7 +108,7 @@ renderLine = (lineData, options = {}) ->
   for url_word in url_words
     for i in [url_word.start..url_word.end]
       line[i].renderOptions.type = 'a'
-      line[i].renderOptions.classes.push 'link'
+      line[i].renderOptions.classes.push 'theme-text-link'
       line[i].renderOptions.href = url_word.word
 
   if options.onclickmark?
@@ -120,7 +120,7 @@ renderLine = (lineData, options = {}) ->
           row = options.marks[mark]
           for i in [word.start..word.end]
             line[i].renderOptions.type = 'a'
-            line[i].renderOptions.classes.push 'link'
+            line[i].renderOptions.classes.push 'theme-text-link'
             line[i].renderOptions.onclick = options.onclickmark.bind @, row
 
 
@@ -239,15 +239,15 @@ window?.renderLine = renderLine
 
     hideSettings: () ->
       $('#settings-icon').addClass('fa-cog').removeClass('fa-arrow-left')
-      $('#settings-text').text('Settings')
-      @modeDiv.removeClass('hidden')
-      @settings.mainDiv.addClass('hidden')
+      $('#settings-text').text 'Settings'
+      @modeDiv.removeClass 'hidden'
+      @settings.mainDiv.addClass 'hidden'
 
     showSettings: () ->
       $('#settings-icon').addClass('fa-arrow-left').removeClass('fa-cog')
-      $('#settings-text').text('Back')
-      @modeDiv.addClass('hidden')
-      @settings.mainDiv.removeClass('hidden')
+      $('#settings-text').text 'Back'
+      @modeDiv.addClass 'hidden'
+      @settings.mainDiv.removeClass 'hidden'
 
     settingsToggle: () ->
       if do @showingSettings
@@ -1028,7 +1028,7 @@ window?.renderLine = renderLine
       @vtree = vtree
       Logger.logger.debug 'Rendering: ', !!options.handle_clicks, (Date.now()-t)
 
-      cursorDiv = $('.cursor', @mainDiv)[0]
+      cursorDiv = $('.theme-cursor', @mainDiv)[0]
       if cursorDiv
         @scrollIntoView cursorDiv
 
@@ -1041,22 +1041,24 @@ window?.renderLine = renderLine
         crumbs.push row
         row = @data.getParent row
 
-      makeCrumb = (row, text) =>
+      makeCrumb = (row, text, isLast) =>
         m_options = {}
-        if @mode == MODES.NORMAL
+        if @mode == MODES.NORMAL and not isLast
+          m_options.className = 'theme-text-link'
           m_options.onclick = () =>
             @reroot row
             do @save
             do @render
         return virtualDom.h 'span', { className: 'crumb' }, [
-                 virtualDom.h 'a', m_options, [ text ]
+                 virtualDom.h 'span', m_options, [ text ]
                ]
 
       crumbNodes = []
       crumbNodes.push(makeCrumb @data.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
-      for row in crumbs by -1
+      for i in [crumbs.length-1..0]
+        row = crumbs[i]
         text = (@data.getText row).join('')
-        crumbNodes.push(makeCrumb row, text)
+        crumbNodes.push(makeCrumb row, text, i==0)
 
       breadcrumbsNode = virtualDom.h 'div', {
         id: 'breadcrumbs'
@@ -1090,7 +1092,7 @@ window?.renderLine = renderLine
 
         if @easy_motion_mappings and id of @easy_motion_mappings.id_to_key
           char = @easy_motion_mappings.id_to_key[id]
-          bullet = virtualDom.h 'span', {className: 'bullet easy-motion'}, [char]
+          bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent'}, [char]
         else
           icon = 'fa-circle'
           if @data.hasChildren id
@@ -1123,7 +1125,7 @@ window?.renderLine = renderLine
 
         className = 'node'
         if id of options.highlight_blocks
-          className += ' highlight'
+          className += ' theme-bg-highlight'
 
         childNode = virtualDom.h 'div', {
           id: containerDivID id
@@ -1157,7 +1159,7 @@ window?.renderLine = renderLine
       if marking
           markresults = @markview.virtualRenderLine @markview.cursor.row
           results.push virtualDom.h 'span', {
-            className: 'mark active'
+            className: 'mark theme-bg-secondary theme-trim-accent'
           }, markresults
       else
           mark = @data.getMark row
