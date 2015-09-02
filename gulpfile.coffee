@@ -33,7 +33,7 @@ gulp.task 'coffee', ->
     .pipe gulp.dest "#{out_folder}/js"
 
 gulp.task 'jade', ->
-  gulp.src 'views/index.jade'
+  gulp.src 'assets/html/index.jade'
     .pipe handle jade({})
     .pipe gulp.dest "#{out_folder}/"
 
@@ -82,7 +82,7 @@ gulp.task 'test', () ->
 # TODO: use gulp-watch?
 gulp.task 'watch', ->
   gulp.watch 'assets/css/**/*', ['sass']
-  gulp.watch 'views/**/*', ['jade']
+  gulp.watch 'assets/html/**/*', ['jade']
   gulp.watch coffee_files, ['coffee', 'test']
   gulp.watch test_files, ['test']
 
