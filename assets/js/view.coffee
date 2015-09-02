@@ -1055,7 +1055,7 @@ window?.renderLine = renderLine
 
       crumbNodes = []
       crumbNodes.push(makeCrumb @data.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
-      for i in [crumbs.length-1..0]
+      for i in [crumbs.length-1..0] by -1
         row = crumbs[i]
         text = (@data.getText row).join('')
         crumbNodes.push(makeCrumb row, text, i==0)
@@ -1157,7 +1157,7 @@ window?.renderLine = renderLine
 
       mark = null
       if marking
-          markresults = @markview.virtualRenderLine @markview.cursor.row
+          markresults = @markview.virtualRenderLine @markview.cursor.row, {no_clicks: true}
           results.push virtualDom.h 'span', {
             className: 'mark theme-bg-secondary theme-trim-accent'
           }, markresults
@@ -1177,7 +1177,7 @@ window?.renderLine = renderLine
             @cursor.set row, column
             # assume they might click again
             @render {handle_clicks: true}
-      else
+      else if not options.no_clicks
         lineoptions.linemouseover = () =>
           @render {handle_clicks: true}
 
