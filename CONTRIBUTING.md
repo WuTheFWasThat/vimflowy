@@ -24,7 +24,16 @@ Just run
 
 And you can visit the app at `http://localhost:8080/`
 
+Assets will be automatically recompiled when the source changes, and tests are automatically re-ran.
+
 #### RUN TESTS: ####
+
+Tests are run automatically.  To get a more detailed report, run
 
     npm test
 
+And for a test coverage report, run
+
+    npm run coverage
+
+and visit `localhost:8080/coverage.html`

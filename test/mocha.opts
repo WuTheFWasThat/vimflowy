@@ -1,3 +1,2 @@
---require blanket
---reporter mocha-multi
+--reporter spec
 --compilers coffee:coffee-script/register
