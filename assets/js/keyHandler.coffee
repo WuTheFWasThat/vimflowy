@@ -5,6 +5,7 @@ Takes in keys, and, based on the keybindings, manipulates view/data
 # imports
 if module?
   global.EventEmitter = require('./eventEmitter.coffee')
+  global.errors = require('./errors.coffee')
   global.Menu = require('./menu.coffee')
   global.constants = require('./constants.coffee')
   global.Logger = require('./logger.coffee')
@@ -114,11 +115,11 @@ if module?
       else if @view.mode == MODES.MARK
         return @processMarkMode keyStream
       else
-        throw "Invalid mode #{@view.mode}"
+        throw new errors.UnexpectedValue "mode", @view.mode
 
     processInsertMode: (keyStream) ->
       key = do keyStream.dequeue
-      if key == null then throw 'Got no key in insert mode'
+      if key == null then throw errors.GenericError 'Got no key in insert mode'
       # if key == null then return do keyStream.wait
 
       bindings = @keyBindings.bindings[MODES.INSERT]
@@ -158,7 +159,7 @@ if module?
 
     processVisualMode: (keyStream) ->
       key = do keyStream.dequeue
-      if key == null then throw 'Got no key in visual mode'
+      if key == null then throw errors.GenericError 'Got no key in visual mode'
       # if key == null then return do keyStream.wait
 
       bindings = @keyBindings.bindings[MODES.VISUAL]
@@ -226,7 +227,7 @@ if module?
 
     processVisualLineMode: (keyStream) ->
       key = do keyStream.dequeue
-      if key == null then throw 'Got no key in visual line mode'
+      if key == null then throw errors.GenericError 'Got no key in visual line mode'
       # if key == null then return do keyStream.wait
 
       bindings = @keyBindings.bindings[MODES.VISUAL_LINE]
@@ -293,7 +294,7 @@ if module?
 
     processSearchMode: (keyStream) ->
       key = do keyStream.dequeue
-      if key == null then throw 'Got no key in search mode'
+      if key == null then throw errors.GenericError 'Got no key in search mode'
 
       bindings = @keyBindings.bindings[MODES.SEARCH]
 
@@ -333,7 +334,7 @@ if module?
 
     processMarkMode: (keyStream) ->
       key = do keyStream.dequeue
-      if key == null then throw 'Got no key in search mode'
+      if key == null then throw errors.GenericError 'Got no key in mark mode'
 
       bindings = @keyBindings.bindings[MODES.MARK]
 

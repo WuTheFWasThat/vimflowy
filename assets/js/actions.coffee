@@ -1,3 +1,6 @@
+if module?
+  global.errors = require('./errors.coffee')
+
 ((exports) ->
 
   # actions mutate the data of a view, and are undoable
@@ -80,7 +83,7 @@
       @parent = view.data.getParent @row
       @index = view.data.indexOf @row
 
-      if @row == view.root then throw 'Cannot delete root'
+      errors.assert_not_equals @row, view.data.root, "Cannot detach root"
 
       view.data.detach @row
 

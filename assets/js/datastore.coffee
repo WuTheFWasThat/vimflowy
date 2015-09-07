@@ -1,6 +1,6 @@
 if module?
   global._ = require('lodash')
-  global.constants = require('constants')
+  global.errors = require('./errors.coffee')
   global.Logger = require('./logger.coffee')
 
 ((exports) ->
@@ -23,10 +23,10 @@ if module?
       @_IDKey_ = "#{@prefix}:lastID"
 
     get: (key, default_value=null) ->
-        throw 'Not implemented'
+        throw new errors.NotImplemented
 
     set: (key, value) ->
-        throw 'Not implemented'
+        throw new errors.NotImplemented
 
     # get and set values for a given row
     getLine: (row) ->
@@ -123,7 +123,7 @@ if module?
           This document has been modified (in another tab) since opening it in this tab.
           Please refresh to continue!
         '
-        throw new constants.ValidError 'Last save disagrees with cache'
+        throw new errors.DataPoisoned 'Last save disagrees with cache'
 
       @lastSave = Date.now()
       localStorage.setItem @_lastSaveKey_, @lastSave

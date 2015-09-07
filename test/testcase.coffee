@@ -36,17 +36,23 @@ class TestCase
   _expectDeepEqual: (actual, expected, message) ->
     if not _.isEqual actual, expected
       do Logger.logger.flush
-      console.error \
-        "\nExpected:\n#{JSON.stringify(expected, null, 2)}" +
-        "\nBut got:\n#{JSON.stringify(actual, null, 2)}"
+      console.error "
+        \nExpected:
+        \n#{JSON.stringify(expected, null, 2)}
+        \nBut got:
+        \n#{JSON.stringify(actual, null, 2)}
+      "
       throw Error message
 
   _expectEqual: (actual, expected, message) ->
     if actual != expected
       do Logger.logger.flush
-      console.error \
-        "\nExpected:\n#{expected}" +
-        "\nBut got:\n#{actual}"
+      console.error "
+        \nExpected:
+        \n#{expected}
+        \nBut got:
+        \n#{actual}
+      "
       throw Error message
 
   sendKeys: (keys) ->

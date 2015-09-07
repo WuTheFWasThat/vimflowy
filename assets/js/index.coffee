@@ -171,15 +171,22 @@ else
   create_view data
 
 window.onerror = (msg, url, line, col, err) ->
-    if err instanceof constants.ValidError
-        Logger.logger.info "Caught valid error: '#{msg}' from #{url}:#{line}"
-        Logger.logger.info "Error: ", err, err.stack
-        return
-
     Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"
     if err != undefined
         Logger.logger.error "Error: ", err, err.stack
-    message = 'An error was caught.  Please refresh the page to avoid weird state. \n\n'
-    message += 'Please help out vimflowy and report the bug.  If your data is not sensitive, '
-    message += 'please open the javascript console and save the log as debug information.'
-    alert message
+
+    if err instanceof errors.DataPoisoned
+        # no need to alert, already alerted
+        return
+
+    alert "
+      An error was caught.  Please refresh the page to avoid weird state. \n\n
+      Please help out vimflowy and report the bug!
+      Simply open the javascript console, save the log as debug information,
+      and send it to wuthefwasthat@gmail.com with a brief description of what happened.
+      \n\n
+      ERROR:\n\n
+      #{msg}\n\n
+      #{err}\n\n
+      #{err.stack}
+    "

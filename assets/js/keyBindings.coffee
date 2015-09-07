@@ -2,7 +2,7 @@
 if module?
   global._ = require('lodash')
   global.constants = require('./constants.coffee')
-  global.utils = require('./utils.coffee')
+  global.errors = require('./errors.coffee')
   global.keyDefinitions = require('./keyDefinitions.coffee')
   global.Logger = require('./logger.coffee')
 
@@ -285,7 +285,7 @@ if module?
 
   # make sure that the default hotkeys accurately represents the set of possible actions under that mode_type
   for mode_type, mode_type_obj of MODE_TYPES
-    utils.assert_arrays_equal(
+    errors.assert_arrays_equal(
       _.keys(defaultHotkeys[mode_type]),
       _.union.apply(_, mode_type_obj.modes.map((mode) -> actions[mode]))
     )
@@ -298,11 +298,9 @@ if module?
         if name == 'MOTION'
           keys = ['MOTION']
         else if (name of keyMap)
-          if not _.result(v, 'available', true)
-            continue
           keys = keyMap[name]
         else
-          # throw "Error:  keyMap missing key for #{name}"
+          # this definition does not pertain to this context
           continue
 
         v = _.clone v
@@ -390,9 +388,7 @@ if module?
     # apply default hotkeys
     apply_default_hotkey_settings: () ->
         err = @apply_hotkey_settings {}
-        if err # there shouldn't be an error
-          Logger.logger.error "Failed to apply empty hotkeys settings!"
-          throw "Failed to apply empty hotkeys settings!"
+        errors.assert_equals err, null, "Failed to apply default hotkeys"
         @save_settings {}
 
     # build table to visualize hotkeys

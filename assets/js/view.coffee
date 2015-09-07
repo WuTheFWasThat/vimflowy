@@ -4,6 +4,7 @@ if module?
 
   global.actions = require('./actions.coffee')
   global.constants = require('./constants.coffee')
+  global.errors = require('./errors.coffee')
   global.Cursor = require('./cursor.coffee')
   global.Data = require('./data.coffee')
   global.dataStore = require('./datastore.coffee')
@@ -427,7 +428,7 @@ window?.renderLine = renderLine
               return lines
           return (exportLines jsonContent).join "\n"
       else
-          throw "Invalid export format"
+          throw new errors.UnexpectedValue "mimetype", mimetype
 
     # ACTIONS
 
@@ -605,7 +606,7 @@ window?.renderLine = renderLine
       if @reroot parent
         @cursor.setRow row
         return true
-      throw 'Failed to root into'
+      throw new errors.GenericError "Failed to root into #{row}"
 
     rootUp: () ->
       if @data.viewRoot != @data.root

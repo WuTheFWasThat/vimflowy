@@ -2,6 +2,7 @@
 if module?
   global._ = require('lodash')
   global.utils = require('./utils.coffee')
+  global.errors = require('./errors.coffee')
   global.constants = require('./constants.coffee')
   global.Logger = require('./logger.coffee')
 
@@ -222,8 +223,7 @@ class Data
   getAncestry: (row, stop = @root) ->
     ancestors = []
     while row != stop
-      if row == @root
-        throw "Failed to get ancestry for #{row} going up until #{stop}"
+      errors.assert_not_equals row, @root, "Failed to get ancestry for #{row} going up until #{stop}"
       ancestors.push row
       row = @getParent row
     ancestors.push stop
@@ -341,17 +341,6 @@ class Data
     child = do @store.getNew
     @attachChild id, child, index
     return child
-
-  # this is never used, since data structure is basically persistent
-  # deleteRow: (id) ->
-  #   if id == @viewRoot
-  #     throw 'Cannot delete view root'
-
-  #   for child in (@getChildren id).slice()
-  #     @deleteRow child
-
-  #   @detach id
-  #   @store.delete id
 
   _insertSiblingHelper: (id, after) ->
     if id == @viewRoot

@@ -8,11 +8,6 @@
     SEARCH      : 5
     MARK        : 6
 
-
-  ValidError = (@message) -> return
-  ValidError.prototype = new Error()
-  exports.ValidError = ValidError
-
   exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
 
   exports.default_data = { text: '', children: [
