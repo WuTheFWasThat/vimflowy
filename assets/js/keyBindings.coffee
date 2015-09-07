@@ -6,6 +6,35 @@ if module?
   global.keyDefinitions = require('./keyDefinitions.coffee')
   global.Logger = require('./logger.coffee')
 
+###
+Terminology:
+      key       - a key corresponds to a keypress, including modifiers/special keys
+      command   - a command is a semantic event.  each command has a string name, and a definition (see keyDefinitions)
+      mode      - same as vim's notion of modes.  each mode determines the set of possible commands, and a new set of bindings
+      mode type - there are two mode types: insert-like and normal-like.  Each mode falls into precisely one of these two categories.
+                  'insert-like' describes modes in which typing characters inserts the characters.
+                  Thus the only keys configurable as commands are those with modifiers.
+                  'normal-like' describes modes in which the user is not typing, and all keys are potential commands.
+
+The Keybindings class is primarily responsible for dealing with hotkeys
+Given a hotkey mapping, it combines it with key definitions to create a bindings dictionary,
+also performing some validation on the hotkeys.
+Concretely, it exposes 2 main objects:
+      hotkeys:
+          a 2-layered mapping.  For each mode type and command name, contains a list of keys
+          this is the object the user can configure
+      bindings:
+          another 2-layer mapping.  For each mode and relevant key, maps to the corresponding command's function
+          this is the object used internally for handling keys (i.e. translating them to commands)
+It also internally maintains
+      _keyMaps:
+          a 2-layer mapping similar to hotkeys.  For each mode and command name, a list of keys.
+          Used for rendering the hotkeys table
+          besides translating the mode types into each mode, keyMaps differs from hotkeys by handles some quirky behavior,
+          such as making the DELETE_CHAR command always act like DELETE in visual/visual_line modes
+
+###
+
 ((exports) ->
   MODES = constants.MODES
 
@@ -13,7 +42,7 @@ if module?
   INSERT_MODE_TYPE = 'Insert-like modes'
   MODE_TYPES = {}
   MODE_TYPES[NORMAL_MODE_TYPE] = {
-    description: 'Modes in which text is not being inserted, and all keys are configurable actions.  NORMAL, VISUAL, and VISUAL_LINE modes fall under this category.'
+    description: 'Modes in which text is not being inserted, and all keys are configurable as commands.  NORMAL, VISUAL, and VISUAL_LINE modes fall under this category.'
     modes: [MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE]
   }
   MODE_TYPES[INSERT_MODE_TYPE] = {
@@ -171,10 +200,10 @@ if module?
 
     FINISH_MARK       : ['enter']
 
-  # set of possible actions for each mode
-  actions = {}
+  # set of possible commands for each mode
+  commands = {}
 
-  actions[MODES.NORMAL] = [
+  commands[MODES.NORMAL] = [
     'HELP',
     'INSERT', 'INSERT_HOME', 'INSERT_AFTER', 'INSERT_END', 'INSERT_LINE_BELOW', 'INSERT_LINE_ABOVE',
 
@@ -215,7 +244,7 @@ if module?
     'ENTER_VISUAL', 'ENTER_VISUAL_LINE',
   ]
 
-  actions[MODES.VISUAL] = [
+  commands[MODES.VISUAL] = [
     'YANK',
     'DELETE',
     'CHANGE',
@@ -225,7 +254,7 @@ if module?
     'EXIT_MODE',
   ]
 
-  actions[MODES.VISUAL_LINE] = [
+  commands[MODES.VISUAL_LINE] = [
     'YANK',
     'DELETE',
     'CHANGE',
@@ -237,7 +266,7 @@ if module?
     'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
   ]
 
-  actions[MODES.INSERT] = [
+  commands[MODES.INSERT] = [
     'LEFT', 'RIGHT', 'UP', 'DOWN',
     'HOME', 'END',
     'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_WORD',
@@ -263,7 +292,7 @@ if module?
     'EXIT_MODE',
   ]
 
-  actions[MODES.SEARCH] = [
+  commands[MODES.SEARCH] = [
     'MENU_UP', 'MENU_DOWN',
     'MENU_SELECT',
     'LEFT', 'RIGHT',
@@ -275,7 +304,7 @@ if module?
     'EXIT_MODE',
   ]
 
-  actions[MODES.MARK] = [
+  commands[MODES.MARK] = [
     'FINISH_MARK',
     'LEFT', 'RIGHT',
     'HOME', 'END',
@@ -283,11 +312,11 @@ if module?
     'EXIT_MODE',
   ]
 
-  # make sure that the default hotkeys accurately represents the set of possible actions under that mode_type
+  # make sure that the default hotkeys accurately represents the set of possible commands under that mode_type
   for mode_type, mode_type_obj of MODE_TYPES
     errors.assert_arrays_equal(
       _.keys(defaultHotkeys[mode_type]),
-      _.union.apply(_, mode_type_obj.modes.map((mode) -> actions[mode]))
+      _.union.apply(_, mode_type_obj.modes.map((mode) -> commands[mode]))
     )
 
   class KeyBindings
@@ -319,9 +348,9 @@ if module?
       return [null, bindings]
 
     constructor: (@settings, options = {}) ->
-      # a mapping from actions to keys
-      @keyMaps = null
-      # a recursive mapping from keys to actions
+      # a mapping from commands to keys
+      @_keyMaps = null
+      # a recursive mapping from keys to commands
       @bindings = null
 
       hotkey_settings = @settings.getSetting 'hotkeys'
@@ -354,13 +383,13 @@ if module?
       for mode_type of MODE_TYPES
         hotkeys[mode_type] = _.extend({}, defaultHotkeys[mode_type], hotkey_settings[mode_type] or {})
 
-      # for each mode, get key mapping for that particular mode - a mapping from action to set of keys
+      # for each mode, get key mapping for that particular mode - a mapping from command to set of keys
       keyMaps = {}
       for mode_type, mode_type_obj of MODE_TYPES
         for mode in mode_type_obj.modes
           modeKeyMap = {}
-          for action in actions[mode]
-            modeKeyMap[action] = hotkeys[mode_type][action].slice()
+          for command in commands[mode]
+            modeKeyMap[command] = hotkeys[mode_type][command].slice()
           keyMaps[mode] = modeKeyMap
       # special case, delete_char -> delete in visual and visual_line
       [].push.apply keyMaps[MODES.VISUAL].DELETE, keyMaps[MODES.NORMAL].DELETE_CHAR
@@ -377,7 +406,7 @@ if module?
 
       @hotkeys = hotkeys
       @bindings = bindings
-      @keyMaps = keyMaps
+      @_keyMaps = keyMaps
 
       do @render_hotkeys
       return null
@@ -427,7 +456,7 @@ if module?
       if not (@settings.getSetting 'showKeyBindings')
         return
 
-      table = @buildTable @keyMaps[mode]
+      table = @buildTable @_keyMaps[mode]
       @modebindingsDiv.empty().append(table)
 
     # TODO getBindings: (mode) -> return @bindings[mode]

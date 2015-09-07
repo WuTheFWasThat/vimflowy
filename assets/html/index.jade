@@ -30,8 +30,15 @@ block content
             .settings-header.theme-bg-secondary.theme-trim Import
             .settings-content
                 #import-file
-                    input(type="file" name="import-file")
+                    input(type="file" name="import-file" style="max-width:75%")
                     .btn.theme-bg-secondary.theme-trim#data_import(style='float:right') Import!
+
+            .settings-header.theme-bg-secondary.theme-trim Info
+            .settings-content
+                | For more info, or to contact the maintainers, please visit
+                = ' '
+                a.theme-text-link(href="https://github.com/WuTheFWasThat/vimflowy") the github website
+                | .
 
         #settings-right
             .settings-header.theme-bg-secondary.theme-trim Hotkeys

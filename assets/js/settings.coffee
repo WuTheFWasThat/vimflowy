@@ -1,3 +1,9 @@
+###
+Represents user settings
+Uses a data store key which is agnostic to which document is being viewed
+(i.e. /blah and /blah2 have the same settings)
+###
+
 (() ->
   class Settings
     default_settings:

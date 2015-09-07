@@ -1,7 +1,11 @@
-#= require settings
-# data structure:
-
-# mapping from id to line
+###
+initialize the main page
+- handle button clicks (import/export/hotkey stuff)
+- handle clipboard paste
+- handle errors
+- load data from localStorage or chrome storage, or just use in-memory datastructures
+- initialize objects (view, settings, etc.) with relevant divs
+###
 
 view = null
 create_view = (data) ->

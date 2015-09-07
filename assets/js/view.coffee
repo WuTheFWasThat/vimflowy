@@ -11,8 +11,14 @@ if module?
   global.Register = require('./register.coffee')
   global.Logger = require('./logger.coffee')
 
-# a View consists of Data and a cursor
-# it also renders
+###
+a View represents the actual viewport onto the vimflowy document
+It holds a Cursor, a Data object, and a Settings object
+It exposes methods for manipulation of the document, and movement of the cursor
+It also handles rendering of everything, including settings.
+
+Currently, the separation between the View and Data classes is not very good.  (see data.coffee)
+###
 
 renderLine = (lineData, options = {}) ->
   options.cursors ?= {}
@@ -203,7 +209,6 @@ window?.renderLine = renderLine
       @messageDiv = options.messageDiv
       @menuDiv = options.menuDiv
       @modeDiv = options.modeDiv
-
 
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @data, row, 0

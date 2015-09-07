@@ -1,10 +1,26 @@
+###
+actions mutate the data of a view, and are undoable
+each action should implement a constructor, as well as the following methods:
+
+    str: () -> string
+        prints itself
+    apply: (view) -> void
+        takes a view and acts on it (mutates the view)
+    rewind: (view) -> void
+        takes a view, assumed be in the state right after the action was applied, and undoes the action
+
+the action may also optionally implement
+
+    reapply: (view) -> void
+        takes a view, and acts on it.  assumes that apply has been called once already
+        by default, reapply is the same as apply.
+        it should be implemented only if it is more efficient than the apply implementation
+###
+
 if module?
   global.errors = require('./errors.coffee')
 
 ((exports) ->
-
-  # actions mutate the data of a view, and are undoable
-
   class Action
     str: () ->
       return ''

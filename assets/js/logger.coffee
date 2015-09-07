@@ -1,3 +1,8 @@
+###
+A straightforward class for configurable logging
+Log-levels and streams (currently only one stream at a time)
+###
+
 ((exports) ->
   LEVEL = {
     DEBUG: 0

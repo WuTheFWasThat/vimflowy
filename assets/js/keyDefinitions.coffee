@@ -1,6 +1,40 @@
 if module?
   global.constants = require('./constants.coffee')
 
+###
+keyDefinitions defines the set of possible commands.
+Each command has a name, which the keyDefinitions dictionary maps to a definition,
+which describes what the command should do in various modes.
+
+Each definition has the following required fields:
+    display:
+        a string used for display in keybindings help screen
+    motion:
+        a boolean indicating whether the function is a motion (default false)
+The definition should also have 1 of the following 3 fields
+    fn:
+        takes a view and mutates it
+        if this is a motion, takes an extra cursor argument first
+    continue:
+        a function which takes additionally an extra key as its first argument
+    bindings:
+        another (recursive) set of key definitions, i.e. a dictionary from command names to definitions
+It may also have:
+    to_mode:
+        a mode to switch to
+And for menu mode functions,
+    menu:
+      function taking a view and chars, and
+      returning a list of {contents, renderOptions, fn}
+      SEE: menu.coffee
+
+NOTE: there is a special command called 'MOTION', which is used in the bindings dictionaries
+    much like if the motion boolean is true, this command always takes an extra cursor argument.
+    TODO: this is a hack, and should be done more properly
+
+For more info/context, see keyBindings.coffee
+###
+
 ((exports) ->
   MODES = constants.MODES
 
@@ -22,29 +56,6 @@ if module?
       else if @view.mode == MODES.INSERT
         @view.cursor.toggleProperty property
 
-  # display:
-  #   is displayed in keybindings help screen
-  #
-  # each should have 1 of the following four
-  # fn:
-  #   takes a view and mutates it
-  #   if this is a motion, takes an extra cursor argument first
-  # continue:
-  #   a function which takes next key
-  # bindings:
-  #   a dictionary from keyDefinitions to functions
-  #   *SPECIAL KEYS*
-  #   if the key is 'MOTION', the function takes a cursor # TODO: make that less janky
-  # motion:
-  #   if the binding is a motion
-  # to_mode:
-  #   mode to switch to
-  #
-  # for menu mode functions,
-  # menu:
-  #   function taking a view and chars, and
-  #   returning a list of {contents, renderOptions, fn}
-  #   SEE: menu.coffee
   keyDefinitions =
     HELP:
       display: 'Show/hide key bindings (edit in settings)'

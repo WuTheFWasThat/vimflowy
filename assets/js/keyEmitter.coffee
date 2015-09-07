@@ -1,3 +1,13 @@
+###
+KeyEmitter is an EventEmitter that emits keys
+A key corresponds to a keypress in the browser, including modifiers/special keys
+
+The core function is to take browser keypress events, and normalize the key to have a string representation.
+
+For more info, see its consumer, keyHandler.coffee, as well as keyBindings.coffee
+Note that one-character keys are treated specially, in that they are insertable in insert mode.
+###
+
 class KeyEmitter extends EventEmitter
 
   # SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser

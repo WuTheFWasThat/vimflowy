@@ -119,7 +119,6 @@
     ] }
     'Press i to enter insert mode and start adding your own content!'
     'For more info, visit https://github.com/WuTheFWasThat/vimflowy'
-    # Please report bugs!
   ] }
 
 )(if typeof exports isnt 'undefined' then exports else window.constants = {})

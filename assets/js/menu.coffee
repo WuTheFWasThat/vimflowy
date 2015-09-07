@@ -3,6 +3,12 @@ if module?
   global.Data = require('./data.coffee')
   global.dataStore = require('./datastore.coffee')
 
+###
+Represents the menu shown in menu mode.
+Functions for paging through and selecting results, and for rendering.
+Internally uses an entire view object (this is sorta weird..)
+###
+
 class Menu
   constructor: (div, fn) ->
     @div = div

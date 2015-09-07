@@ -2,6 +2,10 @@ if module?
   global.utils = require('./utils.coffee')
   global.constants = require('./constants.coffee')
 
+###
+Cursor represents a cursor with a view
+it handles movement logic, insert mode line properties (e.g. bold/italic)
+###
 class Cursor
   constructor: (data, row = null, col = null, moveCol = null) ->
     @data = data

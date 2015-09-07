@@ -3,6 +3,12 @@ if module?
   global.errors = require('./errors.coffee')
   global.Logger = require('./logger.coffee')
 
+###
+DataStore abstracts the data layer, so that it can be swapped out.
+There are many methods the each type of DataStore should implement to satisfy the API.
+However, in the case of a key-value store, one can simply implement `get` and `set` methods.
+Currently, DataStore has a synchronous API.  This may need to change eventually...  :(
+###
 ((exports) ->
   class DataStore
     constructor: (prefix='') ->

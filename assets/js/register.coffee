@@ -1,3 +1,9 @@
+###
+Represents a yank register.  Holds data of one of several types -
+either nothing, a set of characters, a set of row ids, or a set of serialized rows
+Implements pasting for each of the types
+###
+
 class Register
   @TYPES = {
     NONE: 0

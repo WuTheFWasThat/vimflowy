@@ -1,5 +1,16 @@
 ###
-Takes in keys, and, based on the keybindings, manipulates view/data
+Takes in keys, and, based on the keybindings (see keyBindings.coffee), manipulates the view (see view.coffee)
+
+The KeyHandler class manages the state of what keys have been input, dealing with the logic for
+- handling multi-key sequences, i.e. a key that semantically needs another key (e.g. the GO command, `g` in vim)
+- handling motions and commands that take motions
+- combining together and saving sequences of commands (important for the REPEAT command, `.` in vim, for macros, and for number prefixes, e.g. 3j)
+- dropping sequences of commands that are invalid
+- telling the view when to save (i.e. the proper checkpoints for undo and redo)
+It maintains custom logic for this, for each mode.
+(NOTE: hopefully this logic can be more unified!  It is currently quite fragile)
+
+the KeyStream class is a helper class which deals with queuing and checkpointing a stream of key events
 ###
 
 # imports

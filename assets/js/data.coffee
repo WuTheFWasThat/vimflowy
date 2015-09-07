@@ -6,6 +6,17 @@ if module?
   global.constants = require('./constants.coffee')
   global.Logger = require('./logger.coffee')
 
+###
+Data is a wrapper class around the actual datastore, providing methods to manipulate the data
+the data itself includes:
+  - the location that is currently being viewed
+  - the text in each line, including text properties like bold/italic
+  - the parent/child relationships and collapsed-ness of lines
+  - marks datastructures
+also deals with loading the initial data from the datastore, and serializing the data to a string
+
+Currently, the separation between the View and Data classes is not very good.  (see view.coffee)
+###
 class Data
   root: 0
 
