@@ -8,7 +8,6 @@ rename = require 'gulp-rename'
 sass = require 'gulp-sass'
 sourcemaps = require 'gulp-sourcemaps'
 util = require 'gulp-util'
-watch = require 'gulp-watch'
 mocha = require 'gulp-mocha'
 
 out_folder = 'public'
@@ -50,27 +49,22 @@ gulp.task 'sass', ->
     .pipe sourcemaps.write()
     .pipe gulp.dest "#{out_folder}/css/themes"
 
+gulp.task 'images', ->
+  gulp.src 'assets/images/*'
+    .pipe gulp.dest "#{out_folder}/images"
+
 gulp.task 'vendor', ->
-  gulp.src 'vendor/*'
+  gulp.src 'vendor/**/*'
     .pipe gulp.dest "#{out_folder}/"
   gulp.src 'node_modules/lodash/index.js'
     .pipe rename "lodash.js"
     .pipe gulp.dest "#{out_folder}/"
-
-gulp.task 'fonts', ->
-  gulp.src 'assets/fonts/*'
-    .pipe gulp.dest "#{out_folder}/fonts"
-
-gulp.task 'images', ->
-  gulp.src 'assets/images/*'
-    .pipe gulp.dest "#{out_folder}/images"
 
 gulp.task 'assets', [
   'coffee',
   'sass',
   'jade',
   'vendor',
-  'fonts',
   'images',
 ]
 
@@ -79,7 +73,6 @@ gulp.task 'test', () ->
     .pipe mocha {reporter: 'dot', bail: true, compilers: 'coffee:coffee-script/register'}
 
 # Rerun tasks when files changes
-# TODO: use gulp-watch?
 gulp.task 'watch', ->
   gulp.watch 'assets/css/**/*', ['sass']
   gulp.watch 'assets/html/**/*', ['jade']
@@ -89,9 +82,9 @@ gulp.task 'watch', ->
 # serves an express app
 gulp.task 'serve', ->
   app = express()
-  app.use express.static(__dirname + '/public')
+  app.use express.static "#{__dirname}/#{out_folder}"
   port = 8080 # TODO: make a way to specify?
-  app.get '/:docname', ((req, res) -> res.sendFile "#{__dirname}/public/index.html")
+  app.get '/:docname', ((req, res) -> res.sendFile "#{__dirname}/#{out_folder}/index.html")
   app.listen port
   console.log 'Started server on port ' + port
 
