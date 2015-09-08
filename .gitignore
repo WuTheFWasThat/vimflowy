@@ -6,5 +6,4 @@ npm-debug.log
 *.swo
 dist/
 .sass-cache
-*.tmux.conf
 .bitballoon
