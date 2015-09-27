@@ -120,53 +120,6 @@ describe "random set of basic tests", () ->
     t.sendKeys '0d$iab'
     t.expect ['ab']
 
-describe "repeat", () ->
-
-  it "works with insertion of text", () ->
-    t = new TestCase ['']
-    t.sendKeys '....'
-    t.expect ['']
-    t.sendKeys 'irainbow'
-    t.sendKey 'esc'
-    t.sendKey '.'
-    t.expect ['rainborainboww']
-    t.sendKeys 'x...'
-    t.expect ['rainborain']
-
-  it "works with deletion + motion", () ->
-    t = new TestCase ['the quick brown fox   jumped   over the lazy dog']
-    t.sendKeys 'dw'
-    t.expect ['quick brown fox   jumped   over the lazy dog']
-    t.sendKeys '..'
-    t.expect ['fox   jumped   over the lazy dog']
-    t.sendKeys 'u.'
-    t.expect ['fox   jumped   over the lazy dog']
-    t.sendKeys 'dy' # nonsense
-    t.expect ['fox   jumped   over the lazy dog']
-    t.sendKeys '..'
-    t.expect ['over the lazy dog']
-    t.sendKeys 'rxll.w.e.$.'
-    t.expect ['xvxr xhx lazy dox']
-    t.sendKeys 'cbxero'
-    t.sendKey 'esc'
-    t.expect ['xvxr xhx lazy xerox']
-    t.sendKeys 'b.'
-    t.expect ['xvxr xhx xeroxerox']
-    t.sendKeys '.'
-    t.expect ['xvxr xhx xerooxerox']
-
-  it "works with change (c)", () ->
-    t = new TestCase ['vim is great']
-    t.sendKeys 'ceblah'
-    t.sendKey 'esc'
-    t.sendKeys 'w.w.'
-    t.expect ['blah blah blah']
-
-  it "works with replace", () ->
-    t = new TestCase ['obladi oblada']
-    t.sendKeys 'eroehl.'
-    t.expect ['oblado oblado']
-
 describe "numbers (repeat next action)", () ->
 
   it "works on movement", () ->
@@ -220,12 +173,4 @@ describe "numbers (repeat next action)", () ->
     t.expect ['********1234 is my credit card']
     t.sendKeys '6u'
     t.expect ['1234123412341234 is my credit card']
-
-describe "random tricky cases", () ->
-  it "test x on empty row", () ->
-    t = new TestCase ['empty', '']
-    t.sendKeys 'ru'
-    t.expect ['umpty', '']
-    t.sendKeys 'jxk.'
-    t.expect ['mpty', '']
 
