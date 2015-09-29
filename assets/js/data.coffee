@@ -163,11 +163,6 @@ class Data
         # roll back the mark for this row, but only underneath me
         @_updateMarksRecursive row2, '', row2, row
 
-  reverseBijection: (reverseMap, callback) ->
-    callback = callback or _.identity
-    _.transform reverseMap, (memo, keys, value) ->
-      _.forEach keys, (key) ->
-        memo[callback key] = value
   getAllMarks: () ->
     _.mapValues (do @store.getAllMarks), @canonicalInstance, @
 
