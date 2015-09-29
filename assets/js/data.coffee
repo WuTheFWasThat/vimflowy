@@ -203,19 +203,17 @@ class Data
     parentId = (@store.getParents id)[0]
     errors.assert parentId?, "No parent found for id: #{id}"
     canonicalParent = @canonicalInstance parentId
-    if not canonicalParent
-      return
     children = @getChildren canonicalParent
-    return _.find children, (sib) ->
+    instance = _.find children, (sib) ->
       sib.id == id
+    errors.assert instance?, "No canonical instance found for id: #{id}"
+    return instance
 
   sameInstance: (row1, row2) ->
     while row1.id == row2.id and row1.id != @root.id and row2.id != @root.id
       row1 = @getParent row1
       row2 = @getParent row2
-    if row1.id != row2.id
-      return false
-    return true
+    return row1.id == row2.id
 
   toggleCollapsed: (row) ->
     @store.setCollapsed row.id, (not @collapsed row)
@@ -298,12 +296,11 @@ class Data
   getCommonAncestor: (row1, row2) ->
     ancestors1 = @getAncestry row1
     ancestors2 = @getAncestry row2
-    common = @root
-    i = 1
-    while ancestors1.length > i and ancestors2.length > i and ancestors1[i].id == ancestors2[i].id
-      common = ancestors1[i]
-      i += 1
-    return [common, ancestors1[i..], ancestors2[i..]]
+    commonAncestry = _.takeWhile _.zip(ancestors1, ancestors2), (pair) ->
+      pair[0]?.id == pair[1]?.id
+    common = (_.last commonAncestry)[0]
+    firstDifference = commonAncestry.length
+    return [common, ancestors1[firstDifference..], ancestors2[firstDifference..]]
 
   nextVisible: (row = @viewRoot) ->
     if @viewable row
