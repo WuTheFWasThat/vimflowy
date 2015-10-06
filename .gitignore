@@ -3,6 +3,7 @@ public/
 npm-debug.log
 *.swp
 *.swn
+*.swm
 *.swo
 dist/
 .sass-cache

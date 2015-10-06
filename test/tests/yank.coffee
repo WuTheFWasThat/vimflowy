@@ -39,20 +39,6 @@ describe "yank", () ->
       t.sendKeys 'p'
       t.expect ['two fish, one fish, red fish, blue fish']
 
-    it "works in an edge case with empty line, and repeat", () ->
-      t = new TestCase ['word']
-      t.sendKeys 'de'
-      t.expect ['']
-      t.sendKeys 'p'
-      t.expect ['word']
-      t.sendKeys 'u'
-      t.expect ['']
-      # repeat still knows what to do
-      t.sendKeys '.'
-      t.expect ['word']
-      t.sendKeys '.'
-      t.expect ['wordword']
-
     it "works behind", () ->
       t = new TestCase ['one fish, two fish, red fish, blue fish']
       t.sendKeys '$F,d$3bP'
