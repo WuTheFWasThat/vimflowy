@@ -265,12 +265,12 @@ class Cursor
 
   up: (cursorOptions = {}) ->
     row = @data.prevVisible @row
-    if row != null
+    if row?
       @setRow row, cursorOptions
 
   down: (cursorOptions = {}) ->
     row = @data.nextVisible @row
-    if row != null
+    if row?
       @setRow row, cursorOptions
 
   parent: (cursorOptions = {}) ->
@@ -283,12 +283,12 @@ class Cursor
 
   prevSibling: (cursorOptions = {}) ->
     prevsib = @data.getSiblingBefore @row
-    if prevsib != null
+    if prevsib?
       @setRow prevsib, cursorOptions
 
   nextSibling: (cursorOptions = {}) ->
     nextsib = @data.getSiblingAfter @row
-    if nextsib != null
+    if nextsib?
       @setRow nextsib, cursorOptions
 
   # cursor properties

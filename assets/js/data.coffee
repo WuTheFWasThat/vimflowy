@@ -326,7 +326,7 @@ class Data
 
   prevVisible: (row) ->
     prevsib = @getSiblingBefore row
-    if prevsib != null
+    if prevsib?
       return @lastVisible prevsib
     parent = @getParent row
     if parent.id == @viewRoot.id

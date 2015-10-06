@@ -1156,11 +1156,11 @@ window?.renderLine = renderLine
 
       marking = @markrow?.id == row.id
 
-      if row == @cursor.row and not marking
+      if row.id == @cursor.row.id and not marking
         cursors[@cursor.col] = true
 
         if @anchor and not @lineSelect
-          if row == @anchor.row
+          if row.id == @anchor.row?.id
             for i in [@cursor.col..@anchor.col]
               highlights[i] = true
           else
