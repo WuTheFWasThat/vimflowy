@@ -206,7 +206,17 @@ if module?
     str: () ->
       return "parent #{@parent.id}, index #{@index}"
 
+    check: (view) ->
+      children = view.data.getChildren @parent
+      for clone_id in @cloned_rows
+        if _.find children, { id: clone_id }
+          return false
+      return true
+
     apply: (view) ->
+      unless (@check view)
+        return view.showMessage "Duplicate nodes cannot be siblings", {text_class: 'error'}
+
       index = @index
 
       first = true
