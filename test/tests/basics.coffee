@@ -1,4 +1,3 @@
-require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
 describe "random set of basic tests", () ->
