@@ -1101,47 +1101,47 @@ window?.renderLine = renderLine
 
       childrenNodes = []
 
-      for id in @data.getChildren parentid
+      for row in @data.getChildren parentid
 
-        if @easy_motion_mappings and id of @easy_motion_mappings.id_to_key
-          char = @easy_motion_mappings.id_to_key[id]
+        if @easy_motion_mappings and row.id of @easy_motion_mappings.id_to_key
+          char = @easy_motion_mappings.id_to_key[row.id]
           bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent'}, [char]
         else
           icon = 'fa-circle'
-          if @data.hasChildren id
-            icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
+          if @data.hasChildren row
+            icon = if @data.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
 
           bulletOpts = {
             className: 'fa ' + icon + ' bullet'
-            attributes: {'data-id': id}
+            attributes: {'data-id': row.id}
           }
-          if @data.hasChildren id
+          if @data.hasChildren row
             bulletOpts.style = {cursor: 'pointer'}
-            bulletOpts.onclick = ((id) =>
-              @toggleBlock id
+            bulletOpts.onclick = ((row) =>
+              @toggleBlock row
               do @save
               do @render
-            ).bind(@, id)
+            ).bind(@, row)
 
           bullet = virtualDom.h 'i', bulletOpts
 
         elLine = virtualDom.h 'div', {
-          id: rowDivID id
+          id: rowDivID row.id
           className: 'node-text'
-        }, (@virtualRenderLine id, options)
+        }, (@virtualRenderLine row, options)
 
         options.ignoreCollapse = false
         children = virtualDom.h 'div', {
-          id: childrenDivID id
+          id: childrenDivID row.id
           className: 'node-children'
-        }, (@virtualRenderTree id, options)
+        }, (@virtualRenderTree row, options)
 
         className = 'node'
-        if id of options.highlight_blocks
+        if row.id of options.highlight_blocks
           className += ' theme-bg-highlight'
 
         childNode = virtualDom.h 'div', {
-          id: containerDivID id
+          id: containerDivID row.id
           className: className
         }, [bullet, elLine, children]
 

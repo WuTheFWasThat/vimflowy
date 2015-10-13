@@ -206,16 +206,27 @@ if module?
     str: () ->
       return "parent #{@parent.id}, index #{@index}"
 
-    check: (view) ->
+    checkSibling: (view) ->
       children = view.data.getChildren @parent
       for clone_id in @cloned_rows
         if _.find children, { id: clone_id }
           return false
       return true
+    checkCircular: (view) ->
+      @_checkCircularTree view, _.map(@cloned_rows, (clone_id) -> { id: clone_id })
+    _checkCircularTree: (view, rows) ->
+      for row in rows
+        if view.data.wouldBeCircularInsert row, @parent
+          return false
+        unless @_checkCircularTree view, (view.data.getChildren row)
+          return false
+      return true
 
     apply: (view) ->
-      unless (@check view)
-        return view.showMessage "Duplicate nodes cannot be siblings", {text_class: 'error'}
+      unless (@checkSibling view)
+        return view.showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
+      unless (@checkCircular view)
+        return view.showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
 
       index = @index
 
@@ -224,8 +235,11 @@ if module?
         original = view.data.canonicalInstance clone_id
         unless original?
           continue
-        clone = view.data.cloneRow original, @parent, index
-        index += 1
+        try
+          clone = view.data.cloneRow original, @parent, index
+          index += 1
+        catch error
+          return view.showMessage "Rows cannot be nested under themselves", {text_class: 'error'}
 
         if @options.setCursor == 'first' and first
           view.cursor.set clone, 0

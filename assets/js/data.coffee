@@ -264,12 +264,12 @@ class Data
     else
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
+      if @wouldBeCircularInsert child, row
+        throw new errors.CircularReference "Trying to attach a child as a descendent of itself"
       child.crumbs = { parent: row.id, crumbs: row.crumbs }
       parents = @store.getParents child.id
       parents.push row.id
       @store.setParents child.id, parents
-      if (!@collapsed child) and (!@sameInstance child, @viewRoot) and (@hasVisibleAncestor child, child)
-        child.collapsed = true
     @store.setChildren row.id, children
 
     for child in new_children
@@ -368,6 +368,8 @@ class Data
       if cur.id == checkAncestor.id
         return true
     return false
+  wouldBeCircularInsert: (row, parent) ->
+    return parent.id == row.id or (@hasVisibleAncestor parent, row)
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
