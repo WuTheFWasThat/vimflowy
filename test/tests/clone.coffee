@@ -104,3 +104,33 @@ describe "cloning tests", () ->
       ] }
     ]
     t.expectMarks {'mark1': 1, 'mark2': 2}
+
+  it "deletes marks only on last clone delete", () ->
+    t = new TestCase [
+      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1'
+      ] }
+    ]
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+    t.sendKeys 'yc'
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+    t.sendKeys 'jj'
+    t.sendKeys 'p'
+    t.sendKeys 'dd'
+    t.expect [
+      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1',
+      ] }
+    ]
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+    t.sendKeys 'kk'
+    t.sendKeys 'dd'
+    t.expect [
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1',
+      ] }
+    ]
+    t.expectMarks {'mark2': 2}
+

@@ -196,6 +196,18 @@ class Data
   collapsed: (row) ->
     return @store.getCollapsed row.id
 
+  countInstances: (id) ->
+    # Precondition: No circular references in ancestry
+    errors.assert id?, "Empty id passed to countInstances"
+    if id == @root.id
+      return 1
+    parentCount = 0
+    for parent_id in (@store.getParents id)
+      parentCount += @countInstances parent_id # Always exactly once under every parent
+    return parentCount
+  exactlyOneInstance: (id) ->
+    1 == @countInstances id
+
   canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
     # TODO: Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
     # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
@@ -234,7 +246,8 @@ class Data
     # though it is detached, it remembers its old parent
     # and remembers its old mark
 
-    @detachMarks row # Requires parent to be set correctly # TODO: not quite correct if we're not detaching the only instance
+    if @exactlyOneInstance row.id # If detaching the LAST instance
+      @detachMarks row # Requires parent to be set correctly, so it's at the beginning
 
     parent = @getParent row
     children = @getSiblings row
