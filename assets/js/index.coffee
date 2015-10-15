@@ -12,6 +12,7 @@ create_view = (data) ->
 
   settings = new Settings data.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
   do settings.loadRenderSettings
+  window?.setSetting = settings.setSetting.bind settings # For enabling debugging
 
   keyBindings = new KeyBindings settings, {modebindingsDiv: $('#keybindings')}
 

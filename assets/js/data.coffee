@@ -229,6 +229,11 @@ class Data
       row2 = @getParent row2
     return row1.id == row2.id
 
+  debugInstance: (row) ->
+    ancestors = @getAncestry row
+    ids = _.map ancestors, (row) -> row.id
+    ids.join ", "
+
   toggleCollapsed: (row) ->
     @store.setCollapsed row.id, (not @collapsed row)
 
