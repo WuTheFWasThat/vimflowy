@@ -133,3 +133,32 @@ describe "cloning tests", () ->
     ]
     t.expectMarks {'mark2': 2}
 
+  it "cloning to a sibling is impossible", () ->
+    t = new TestCase [
+      'one',
+      'two',
+      'three'
+    ]
+    t.sendKeys 'yc'
+    t.sendKeys 'j'
+    t.sendKeys 'p'
+    t.expect [
+      'one',
+      'two',
+      'three'
+    ]
+
+  it "cloning into a cycle is impossible", () ->
+    t = new TestCase [
+      { text: 'one', children: [
+        'uno',
+      ] }
+    ]
+    t.sendKeys 'yc'
+    t.sendKeys 'j'
+    t.sendKeys 'p'
+    t.expect [
+      { text: 'one', children: [
+        'uno',
+      ] }
+    ]

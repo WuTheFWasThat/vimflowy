@@ -213,7 +213,7 @@ if module?
           return false
       return true
     checkCircular: (view) ->
-      @_checkCircularTree view, _.map(@cloned_rows, (clone_id) -> { id: clone_id })
+      @_checkCircularTree view, _.map(@cloned_rows, (clone_id) -> view.data.canonicalInstance clone_id)
     _checkCircularTree: (view, rows) ->
       for row in rows
         if view.data.wouldBeCircularInsert row, @parent
