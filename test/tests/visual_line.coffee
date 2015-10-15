@@ -1,4 +1,3 @@
-require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 siblingDownKey = 'alt+j'
 siblingUpKey = 'alt+k'

@@ -1,4 +1,3 @@
-require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
 redoKey = 'ctrl+r'
