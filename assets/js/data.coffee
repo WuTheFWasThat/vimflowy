@@ -109,6 +109,8 @@ class Data
     allMarks = do @store.getAllMarks
 
     if mark of allMarks
+      if allMarks[mark] == row.id
+        return true
       return false
 
     oldmark = @getMark row
