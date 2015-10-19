@@ -12,6 +12,7 @@ if module? # imports
   exports.UnexpectedValue = errorFactory (name, value) -> @message = "Unexpected value for `#{name}`: #{value}"
   exports.GenericError = errorFactory (@message) -> return
   exports.CircularReference = errorFactory (@message) -> return
+  exports.SchemaVersion = errorFactory (@message) -> return
 
   # is special because ignored by error handling in index.coffee
   exports.DataPoisoned = errorFactory (@message) -> return

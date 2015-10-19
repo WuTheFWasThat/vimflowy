@@ -12,6 +12,8 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 ((exports) ->
   class DataStore
     constructor: (prefix='') ->
+      @_schemaVersion_ = 1
+
       @prefix = "#{prefix}save"
 
       @_lineKey_ = (row) -> "#{@prefix}:#{row}:line"
@@ -27,6 +29,8 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_lastViewrootKey_ = "#{@prefix}:lastviewroot"
       @_allMarksKey_ = "#{@prefix}:allMarks"
       @_IDKey_ = "#{@prefix}:lastID"
+      @_schemaVersionKey_ = "#{@prefix}:schemaVersion"
+      do @validateSchemaVersion
 
     get: (key, default_value=null) ->
         throw new errors.NotImplemented
@@ -84,6 +88,11 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     getLastViewRoot: () ->
       @get @_lastViewrootKey_
 
+    setSchemaVersion: (version) ->
+      @set @_schemaVersionKey_, version
+    getSchemaVersion: () ->
+      @get @_schemaVersionKey_
+
     # get next row ID
     getId: () -> # Suggest to override this for efficiency
       id = 0
@@ -96,11 +105,26 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @setLine id, []
       @setChildren id, []
       return id
+    
+    validateSchemaVersion: () ->
+      storedVersion = do @getSchemaVersion
+      if not storedVersion? and (@getChildren 0).length == 0
+        @setSchemaVersion @_schemaVersion_
+        console.log("Set schema")
+        return
+      else if not storedVersion? # Heuristic test for pre-versioning versions of vimflowy
+        throw new errors.SchemaVersion "The stored data is corrupt or made with a very old version of vimflowy. Please export your data in the old version and clear localstorage before upgrading. Then, import your old data."
+      else if storedVersion > @_schemaVersion_
+        throw new errors.SchemaVersion "The stored data was made with a newer version of vimflowy. Please upgrade vimflowy to use this format."
+      else if storedVersion < @_schemaVersion_
+        throw new errors.SchemaVersion "The stored data was made with an older version of vimflowy, and no migration paths exist. Please report this as a bug."
+      else if storedVersion == @_schemaVersion_
+        return
 
   class InMemory extends DataStore
     constructor: () ->
-      super ''
       @cache = {}
+      super ''
 
     get: (key, default_value = null) ->
       if key of @cache
@@ -113,9 +137,9 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
   class LocalStorageLazy extends DataStore
     constructor: (prefix='') ->
-      super prefix
-      @lastSave = Date.now()
       @cache = {}
+      super prefix
+      @lastSave = do @getLastSave
 
     get: (key, default_value=null) ->
       if not (key of @cache)
@@ -126,7 +150,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @cache[key] = value
       @_setLocalStorage_ key, value
 
-    _setLocalStorage_: (key, value) ->
+    _setLocalStorage_: (key, value, options={}) ->
       if (do @getLastSave) > @lastSave
         alert '
           This document has been modified (in another tab) since opening it in this tab.
@@ -134,8 +158,9 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
         '
         throw new errors.DataPoisoned 'Last save disagrees with cache'
 
-      @lastSave = Date.now()
-      localStorage.setItem @_lastSaveKey_, @lastSave
+      unless options.doesNotAffectLastSave
+        @lastSave = Date.now()
+        localStorage.setItem @_lastSaveKey_, @lastSave
 
       Logger.logger.debug 'setting local storage', key, value
       localStorage.setItem key, JSON.stringify value
@@ -158,6 +183,9 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     # doesn't cache!
     getLastSave: () ->
       @_getLocalStorage_ @_lastSaveKey_, 0
+
+    setSchemaVersion: (version) ->
+      @_setLocalStorage_ @_schemaVersionKey_, version, { doesNotAffectLastSave: true }
 
     getId: () ->
       id = @_getLocalStorage_ @_IDKey_, 0
