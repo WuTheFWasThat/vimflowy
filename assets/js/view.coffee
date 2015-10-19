@@ -1084,7 +1084,7 @@ window?.renderLine = renderLine
         # mirrors logic of finishes_visual_line in keyHandler.coffee
         [parent, index1, index2] = do @getVisualLineSelections
         for child in @data.getChildRange parent, index1, index2
-          options.highlight_blocks[child] = true
+          options.highlight_blocks[child.id] = true
 
       contentsChildren = @virtualRenderTree @data.viewRoot, options
 
@@ -1156,7 +1156,7 @@ window?.renderLine = renderLine
       cursors = {}
       highlights = {}
 
-      marking = @markrow?.id == row.id
+      marking = @markrow? and (@data.sameInstance @markrow, row)
 
       if (@data.sameInstance row, @cursor.row) and not marking
         cursors[@cursor.col] = true
