@@ -1140,6 +1140,9 @@ window?.renderLine = renderLine
         if row.id of options.highlight_blocks
           className += ' theme-bg-highlight'
 
+        unless @data.exactlyOneInstance row.id
+          className += ' theme-bg-clone'
+
         childNode = virtualDom.h 'div', {
           id: containerDivID row.id
           className: className
