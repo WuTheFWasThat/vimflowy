@@ -1151,7 +1151,7 @@ window?.renderLine = renderLine
     virtualRenderLine: (row, options = {}) ->
 
       lineData = @data.getLine row
-      if @settings.getSetting "debugCloning"
+      if @settings?.getSetting?("debugCloning")
         lineData = lineData.concat (_.map (" " + (@data.debugInstance row)), (c) -> {char : c, bold: true})
       cursors = {}
       highlights = {}
