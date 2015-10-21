@@ -7,8 +7,8 @@ vimflowy:
 	mkdir -p ${APP_DIR}
 	rm -rf ${APP_DIR}
 	# builds everything into public/
-	gulp clean
-	gulp assets
+	npm run gulp clean
+	npm run gulp assets
 	# copy entire public folder
 	cp -r public ${APP_DIR}
 	# stuff for chrome packaged app
