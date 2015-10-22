@@ -83,6 +83,40 @@ describe "cloning tests", () ->
       ] }
     ]
 
+  it "test cursor movement in complex clones", () ->
+    t = new TestCase [
+      { text: 'Clone', children: [
+          'Clone child'
+        ]
+      }
+      { text: 'Not a clone', children: [
+          'Also not a clone and going to be deleted'
+        ]
+      }
+    ]
+    t.sendKeys 'yc'
+    t.sendKeys 'jjjj'
+    t.sendKeys 'p'
+    t.sendKeys 'kddk'
+    t.expect [
+      { text: 'Clone', children: [
+        'Clone child',
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Clone', children: [
+          'Clone child',
+        ] }
+      ] }
+    ]
+    t.expectCursor 3, 0
+    # test movement
+    t.sendKeys 'k'
+    t.expectCursor 2, 0
+    t.sendKeys 'k'
+    t.expectCursor 1, 0
+    t.sendKeys 'k'
+    t.expectCursor 1, 0
+
   it "works with pasting marks", () ->
     t = new TestCase [
       { text: 'line 1', mark: 'mark1' }
