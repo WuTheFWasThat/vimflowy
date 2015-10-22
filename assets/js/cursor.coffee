@@ -41,6 +41,9 @@ class Cursor
     @row = row
     @_fromMoveCol cursorOptions
 
+  _setRow: (row) ->
+    @row = row
+
   setCol: (moveCol, cursorOptions = {pastEnd: true}) ->
     @moveCol = moveCol
     @_fromMoveCol cursorOptions

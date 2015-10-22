@@ -322,6 +322,16 @@ class Data
     firstDifference = commonAncestry.length
     return [common, ancestors1[firstDifference..], ancestors2[firstDifference..]]
 
+  combineAncestry: (row, descendents) ->
+    for descendent in descendents
+      children = @getChildren row
+      sameChild = _.find children, (x) -> x.id == descendent.id
+      if sameChild?
+        row = sameChild
+      else
+        return null
+    return row
+
   nextVisible: (row = @viewRoot) ->
     if @viewable row
       children = @getChildren row

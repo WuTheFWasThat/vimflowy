@@ -503,8 +503,9 @@ window?.renderLine = renderLine
         }
 
       Logger.logger.debug "Applying action #{action.constructor.name}(#{action.str()})"
-      action.apply @
+      retVal = action.apply @
       @actions.push action
+      return retVal
 
     curLine: () ->
       return @data.getLine @cursor.row
@@ -843,11 +844,20 @@ window?.renderLine = renderLine
         index += 1
 
     attachBlock: (row, parent, index = -1, options = {}) ->
-      @act new actions.AttachBlock row, parent, index, options
+      return @act new actions.AttachBlock row, parent, index, options
 
     moveBlock: (row, parent, index = -1, options = {}) ->
-      @detachBlock row, options
-      @attachBlock row, parent, index, options
+      [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
+      if @data.sameInstance commonAncestor, row # Move the cursor also, if it is in the moved block
+        @detachBlock row, options
+        newRow = @attachBlock row, parent, index, options
+        newCursorRow = @data.combineAncestry newRow, cursorAncestors
+        errors.assert newCursorRow?.id, "cursor row could not be reconstructed in moveBlock"
+        @cursor._setRow newCursorRow # TODO: Jeff how can I do this better?
+        return newRow
+      else
+        @detachBlock row, options
+        return @attachBlock row, parent, index, options
 
     indentBlocks: (row, numblocks = 1) ->
       newparent = @data.getSiblingBefore row
@@ -877,35 +887,35 @@ window?.renderLine = renderLine
         @moveBlock sib, newparent, pp_i
       return newparent
 
-    indent: (id = @cursor.row) ->
-      if @data.collapsed id
-        return @indentBlocks id
+    indent: (row = @cursor.row) ->
+      if @data.collapsed row
+        return @indentBlocks row
 
-      sib = @data.getSiblingBefore id
+      sib = @data.getSiblingBefore row
 
-      newparent = @indentBlocks id
-      if newparent == null
+      newparent = @indentBlocks row
+      unless newparent?
         return
-      for child in (@data.getChildren id).slice()
+      for child in (@data.getChildren row).slice()
         @moveBlock child, sib, -1
 
-    unindent: (id = @cursor.row) ->
-      if @data.collapsed id
-        return @unindentBlocks id
+    unindent: (row = @cursor.row) ->
+      if @data.collapsed row
+        return @unindentBlocks row
 
-      if @data.hasChildren id
+      if @data.hasChildren row
         return
 
-      parent = @data.getParent id
-      p_i = @data.indexOf id
+      parent = @data.getParent row
+      p_i = @data.indexOf row
 
-      newparent = @unindentBlocks id
-      if newparent == null
+      newparent = @unindentBlocks row
+      unless newparent?
         return
 
       p_children = @data.getChildren parent
       for child in p_children.slice(p_i)
-        @moveBlock child, id, -1
+        @moveBlock child, row, -1
 
     swapDown: (row = @cursor.row) ->
       next = @data.nextVisible (@data.lastVisible row)

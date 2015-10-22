@@ -40,7 +40,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
     # get and set values for a given row
     getLine: (row) ->
-      [].slice.apply @get (@_lineKey_ row), []
+      _.cloneDeep (@get (@_lineKey_ row), [])
     setLine: (row, line) ->
       @set (@_lineKey_ row), line
 
@@ -53,7 +53,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @set (@_parentKey_ row), parents
 
     getChildren: (row) ->
-      [].slice.apply @get (@_childrenKey_ row), []
+      _.cloneDeep (@get (@_childrenKey_ row), [])
     setChildren: (row, children) ->
       @set (@_childrenKey_ row), children
 
@@ -110,7 +110,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       storedVersion = do @getSchemaVersion
       if not storedVersion? and (@getChildren 0).length == 0
         @setSchemaVersion @_schemaVersion_
-        console.log("Set schema")
         return
       else if not storedVersion? # Heuristic test for pre-versioning versions of vimflowy
         throw new errors.SchemaVersion "The stored data is corrupt or made with a very old version of vimflowy. Please export your data in the old version and clear localstorage before upgrading. Then, import your old data."

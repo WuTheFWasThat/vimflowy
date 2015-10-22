@@ -109,7 +109,7 @@ if module?
       return "row #{@row.id}, parent #{@parent}"
 
     apply: (view) ->
-      view.data.attachChild @parent, @row, @index
+      return view.data.attachChild @parent, @row, @index
 
     rewind: (view) ->
       view.data.detach @row
