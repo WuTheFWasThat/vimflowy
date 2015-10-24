@@ -239,6 +239,8 @@ if module?
           clone = view.data.cloneRow original, @parent, index
           index += 1
         catch error
+          unless error instanceof errors.CircularReference
+            throw error
           return view.showMessage "Rows cannot be nested under themselves", {text_class: 'error'}
 
         if @options.setCursor == 'first' and first

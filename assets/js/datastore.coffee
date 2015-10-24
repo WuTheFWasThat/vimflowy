@@ -55,6 +55,8 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     getChildren: (row) ->
       _.cloneDeep (@get (@_childrenKey_ row), [])
     setChildren: (row, children) ->
+      # TODO: Move this upstream and make it less janky ('pick' for whitelist)
+      children = _.map children, (child) -> _.omit child, 'datastore_object', 'parent' # Save memory
       @set (@_childrenKey_ row), children
 
     getCollapsed: (row) ->

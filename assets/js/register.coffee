@@ -78,7 +78,7 @@ class Register
 
   pasteRows: (options = {}) ->
     row = @view.cursor.row
-    parent = @view.data.getParent row
+    parent = do row.getParent
     index = @view.data.indexOf row
 
     if options.before
@@ -99,7 +99,7 @@ class Register
 
   pasteSerializedRows: (options = {}) ->
     row = @view.cursor.row
-    parent = @view.data.getParent row
+    parent = do row.getParent
     index = @view.data.indexOf row
 
     if options.before
@@ -113,7 +113,7 @@ class Register
 
   pasteClonedRows: (options = {}) ->
     row = @view.cursor.row
-    parent = @view.data.getParent row
+    parent = do row.getParent
     index = @view.data.indexOf row
 
     if options.before

@@ -47,7 +47,7 @@ For more info/context, see keyBindings.coffee
       else if @view.mode == MODES.VISUAL_LINE
         index1 = @view.data.indexOf @view.cursor.row
         index2 = @view.data.indexOf @view.anchor.row
-        parent = @view.data.getParent @view.cursor.row
+        parent = do @view.cursor.row.getParent
         if index2 < index1
           [index1, index2] = [index2, index1]
         rows = @view.data.getChildRange parent, index1, index2

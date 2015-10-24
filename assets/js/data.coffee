@@ -6,6 +6,42 @@ if module?
   global.constants = require('./constants.coffee')
   global.Logger = require('./logger.coffee')
 
+class Instance
+  constructor: (@parent, @id, @datastore_object=null) ->
+
+  getParent: () ->
+    @parent
+
+  setParent: (parent) ->
+    @parent = parent
+
+  getId: () ->
+    @id
+
+  debug: () ->
+    ancestors = do @getAncestry
+    ids = _.map ancestors, (row) -> row.id
+    ids.join ", "
+
+  isRoot: () ->
+    @id == constants.root_id
+
+  clone: () ->
+    new Instance (@parent?.clone?()), @id, (_.cloneDeep @datastore_object)
+
+  # Represents the exact same view instance
+  is: (other) ->
+    [row1, row2] = [@, other]
+    while row1.id == row2.id and not (do row1.isRoot) and not (do row2.isRoot)
+      row1 = do row1.getParent
+      row2 = do row2.getParent
+    return row1.id == row2.id
+
+Instance.getRoot = () ->
+  root = new Instance {}, constants.root_id, {}
+  root.setParent null
+  root
+
 ###
 Data is a wrapper class around the actual datastore, providing methods to manipulate the data
 the data itself includes:
@@ -18,9 +54,8 @@ also deals with loading the initial data from the datastore, and serializing the
 Currently, the separation between the View and Data classes is not very good.  (see view.coffee)
 ###
 class Data
-  root:
-    id: 0
-    crumbs: { parent: 0, crumbs: { parent: 0 } } # make it enough layers to guard against any bugs, but not circular because serialization
+  rootId: constants.root_id
+  root: do Instance.getRoot
 
   constructor: (store) ->
     @store = store
@@ -134,7 +169,7 @@ class Data
       @store.setMarks cur.id, marks
       if cur.id == to.id
         break
-      cur = @getParent cur
+      cur = do cur.getParent
 
   setMark: (row, mark = '') ->
     if @_updateAllMarks row, mark
@@ -151,7 +186,7 @@ class Data
       row2 = @canonicalInstance id
       @_updateAllMarks row2, ''
       # roll back the mark for this row, but only above me
-      @_updateMarksRecursive row2, '', (@getParent row), @root
+      @_updateMarksRecursive row2, '', (do row.getParent), @root
 
   # try to restore the marks of an id that was detached
   # assumes that the new to-be-parent of the id is already set
@@ -172,29 +207,33 @@ class Data
   # structure #
   #############
 
-  getParent: (row) ->
-    return { id: row.crumbs.parent, crumbs: row.crumbs.crumbs }
+  getChildren: (row) ->
+    children = @store.getChildren row.id
+    _.map children, (child) ->
+      new Instance row, child.id, child
+
+  getChild: (row, id) ->
+    _.find (@getChildren row), (x) -> x.id == id
 
   getParents: (row) ->
     return @store.getParents row.id
-
-  getChildren: (row) ->
-    children = @store.getChildren row.id
-    _.each children, (child) ->
-      child.crumbs = { parent: row.id, crumbs: row.crumbs }
-    return children
 
   hasChildren: (row) ->
     return ((@getChildren row).length > 0)
 
   getSiblings: (row) ->
-    children = @store.getChildren row.crumbs.parent
-    _.each children, (child) ->
-      child.crumbs = row.crumbs
-    return children
+    return @getChildren (do row.getParent)
+
+  indexOf: (child) ->
+    children = @getSiblings child
+    return _.findIndex children, (sib) ->
+        sib.id == child.id
 
   collapsed: (row) ->
     return @store.getCollapsed row.id
+
+  toggleCollapsed: (row) ->
+    @store.setCollapsed row.id, (not @collapsed row)
 
   countInstances: (id) ->
     # Precondition: No circular references in ancestry
@@ -214,37 +253,16 @@ class Data
     errors.assert id?, "Empty id passed to canonicalInstance"
     if id == @root.id
       return @root
-    parentId = (@store.getParents id)[0]
+    parentId = (@store.getParents id)[0] # This is the only actual choice made
     errors.assert parentId?, "No parent found for id: #{id}"
     canonicalParent = @canonicalInstance parentId
-    children = @getChildren canonicalParent
-    instance = _.find children, (sib) ->
-      sib.id == id
+    instance = @getChild canonicalParent, id
     errors.assert instance?, "No canonical instance found for id: #{id}"
     return instance
 
-  sameInstance: (row1, row2) ->
-    while row1.id == row2.id and row1.id != @root.id and row2.id != @root.id
-      row1 = @getParent row1
-      row2 = @getParent row2
-    return row1.id == row2.id
-
-  debugInstance: (row) ->
-    ancestors = @getAncestry row
-    ids = _.map ancestors, (row) -> row.id
-    ids.join ", "
-
-  toggleCollapsed: (row) ->
-    @store.setCollapsed row.id, (not @collapsed row)
-
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (row) ->
-    return (not @collapsed row) or (row.id == @viewRoot.id)
-
-  indexOf: (child) ->
-    children = @getSiblings child
-    return _.findIndex children, (sib) ->
-        sib.id == child.id
+    return (not @collapsed row) or (row.is @viewRoot)
 
   detach: (row) ->
     # detach a block from the graph
@@ -254,7 +272,7 @@ class Data
     if @exactlyOneInstance row.id # If detaching the LAST instance
       @detachMarks row # Requires parent to be set correctly, so it's at the beginning
 
-    parent = @getParent row
+    parent = do row.getParent
     children = @getSiblings row
     ci = @indexOf row
     children.splice ci, 1
@@ -286,7 +304,7 @@ class Data
     for child in new_children
       if @wouldBeCircularInsert child, row
         throw new errors.CircularReference "Trying to attach a child as a descendent of itself"
-      child.crumbs = { parent: row.id, crumbs: row.crumbs }
+      child.setParent row
       parents = @store.getParents child.id
       parents.push row.id
       @store.setParents child.id, parents
@@ -301,10 +319,10 @@ class Data
   # i.e. [stop, stop's child, ... , row's parent , row]
   getAncestry: (row, stop = @root) ->
     ancestors = []
-    while row.id != stop.id
+    until row.is stop
       errors.assert_not_equals row.id, @root.id, "Failed to get ancestry for #{row} going up until #{stop}"
       ancestors.push row
-      row = @getParent row
+      row = do row.getParent
     ancestors.push stop
     do ancestors.reverse
     return ancestors
@@ -316,19 +334,16 @@ class Data
   getCommonAncestor: (row1, row2) ->
     ancestors1 = @getAncestry row1
     ancestors2 = @getAncestry row2
-    commonAncestry = _.takeWhile _.zip(ancestors1, ancestors2), (pair) ->
-      pair[0]?.id == pair[1]?.id
+    commonAncestry = _.takeWhile (_.zip ancestors1, ancestors2), (pair) ->
+      pair[0]? and pair[1]? and pair[0].is pair[1]
     common = (_.last commonAncestry)[0]
     firstDifference = commonAncestry.length
     return [common, ancestors1[firstDifference..], ancestors2[firstDifference..]]
 
   combineAncestry: (row, descendents) ->
     for descendent in descendents
-      children = @getChildren row
-      sameChild = _.find children, (x) -> x.id == descendent.id
-      if sameChild?
-        row = sameChild
-      else
+      row = @getChild row, descendent.id
+      unless row?
         return null
     return row
 
@@ -339,10 +354,10 @@ class Data
         return children[0]
     while true
       nextsib = @getSiblingAfter row
-      if nextsib != null
+      if nextsib?
         return nextsib
-      row = @getParent row
-      if row.id == @viewRoot.id
+      row = do row.getParent
+      if row.is @viewRoot
         return null
 
   # last thing visible nested within id
@@ -358,8 +373,8 @@ class Data
     prevsib = @getSiblingBefore row
     if prevsib?
       return @lastVisible prevsib
-    parent = @getParent row
-    if parent.id == @viewRoot.id
+    parent = do row.getParent
+    if parent.is @viewRoot
       return null
     return parent
 
@@ -368,8 +383,8 @@ class Data
   oldestVisibleAncestor: (row) ->
     last = row
     while true
-      cur = @getParent last
-      if cur.id == @viewRoot.id
+      cur = do last.getParent
+      if cur.is @viewRoot
         return last
       if cur.id == @root.id
         return null
@@ -381,8 +396,8 @@ class Data
     answer = row
     cur = row
     while true
-      cur = @getParent cur
-      if cur.id == @viewRoot.id
+      cur = do cur.getParent
+      if cur.is @viewRoot
         return answer
       if cur.id == @root.id
         return null
@@ -391,15 +406,17 @@ class Data
    
   # Checks whether the ancestor is visible. Does not include the given node but does
   # include viewRoot
-  hasVisibleAncestor: (row, checkAncestor) ->
+  hasVisibleAncestor: (row, checkAncestorId) ->
+    errors.assert row?
+    errors.assert checkAncestorId?
     cur = row
-    until cur.id == @viewRoot.id or cur.id == @root.id
-      cur = @getParent cur
-      if cur.id == checkAncestor.id
+    until (cur.is @viewRoot) or (do cur.isRoot)
+      cur = do cur.getParent
+      if cur.id == checkAncestorId
         return true
     return false
   wouldBeCircularInsert: (row, parent) ->
-    return parent.id == row.id or (@hasVisibleAncestor parent, row)
+    return parent.id == row.id or (@hasVisibleAncestor parent, row.id)
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
@@ -410,7 +427,7 @@ class Data
         return true
       if (@indexOf row) == -1
         return false
-      row = @getParent row
+      row = do row.getParent
 
   getSiblingBefore: (row) ->
     return @getSiblingOffset row, -1
@@ -424,7 +441,7 @@ class Data
   getSiblingRange: (row, min_offset, max_offset) ->
     children = @getSiblings row
     index = @indexOf row
-    return @getChildRange (@getParent row), (min_offset + index), (max_offset + index)
+    return @getChildRange (do row.getParent), (min_offset + index), (max_offset + index)
 
   getChildRange: (row, min, max) ->
     children = @getChildren row
@@ -439,20 +456,20 @@ class Data
         return children[index]
 
   addChild: (row, index = -1) ->
-    child = { id: do @store.getNew }
+    id = do @store.getNew
+    child = new Instance row, id
     @attachChild row, child, index
     return child
 
   cloneRow: (row, parent, index = -1) ->
-    @attachChild parent, _.cloneDeep(row), index
+    @attachChild parent, (do row.clone), index
 
   _insertSiblingHelper: (row, after) ->
     if row.id == @viewRoot.id
       Logger.logger.error 'Cannot insert sibling of view root'
       return null
 
-    parent = @getParent row
-    children = @getChildren parent
+    parent = do row.getParent
     index = @indexOf row
 
     return (@addChild parent, (index + after))
@@ -563,14 +580,13 @@ class Data
     return struct
 
   loadTo: (serialized, parent = @root, index = -1) ->
-    row = { id: do @store.getNew }
+    row = new Instance parent, (do @store.getNew), {}
 
     if row.id != @root.id
       @attachChild parent, row, index
     else
-      # parent should be 0 == @root.id
+      row.setParent null
       @store.setParents row.id, [@root.id]
-      row.crumbs = @root.crumbs
 
     if typeof serialized == 'string'
       @setLine row, (serialized.split '')
@@ -596,7 +612,7 @@ class Data
 
   load: (serialized) ->
     if serialized.viewRoot
-      @viewRoot = serialized.viewRoot
+      @viewRoot = serialized.viewRoot # TODO: Serialize and unserialize viewRoot in terms of id-list only
     else
       @viewRoot = @root
 

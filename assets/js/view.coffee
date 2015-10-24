@@ -608,7 +608,7 @@ window?.renderLine = renderLine
     rootInto: (row = @cursor.row) ->
       if @reroot row
         return true
-      parent = @data.getParent row
+      parent = do row.getParent
       if @reroot parent
         @cursor.setRow row
         return true
@@ -616,7 +616,7 @@ window?.renderLine = renderLine
 
     rootUp: () ->
       if @data.viewRoot.id != @data.root.id
-        parent = @data.getParent @data.viewRoot
+        parent = do @data.viewRoot.getParent
         @reroot parent
 
     rootDown: () ->
@@ -755,12 +755,12 @@ window?.renderLine = renderLine
       if (not @data.collapsed @cursor.row) and children.length > 0
         @act new actions.InsertRow @cursor.row, 0
       else
-        parent = @data.getParent @cursor.row
+        parent = do @cursor.row.getParent
         index = @data.indexOf @cursor.row
         @act new actions.InsertRow parent, (index+1)
 
     newLineAbove: () ->
-      parent = @data.getParent @cursor.row
+      parent = do @cursor.row.getParent
       index = @data.indexOf @cursor.row
       @act new actions.InsertRow parent, index
 
@@ -810,7 +810,7 @@ window?.renderLine = renderLine
         @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
     delBlocksAtCursor: (nrows, options = {}) ->
-      parent = @data.getParent @cursor.row
+      parent = do @cursor.row.getParent
       index = @data.indexOf @cursor.row
       action = new actions.DeleteBlocks parent, index, nrows, options
       @act action
@@ -848,7 +848,7 @@ window?.renderLine = renderLine
 
     moveBlock: (row, parent, index = -1, options = {}) ->
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
-      if @data.sameInstance commonAncestor, row # Move the cursor also, if it is in the moved block
+      if commonAncestor.is row # Move the cursor also, if it is in the moved block
         @detachBlock row, options
         newRow = @attachBlock row, parent, index, options
         newCursorRow = @data.combineAncestry newRow, cursorAncestors
@@ -873,13 +873,13 @@ window?.renderLine = renderLine
       return newparent
 
     unindentBlocks: (row, numblocks = 1, options = {}) ->
-      parent = @data.getParent row
+      parent = do row.getParent
       if parent.id == @data.viewRoot.id
         return null
 
       siblings = @data.getSiblingRange row, 0, (numblocks-1)
 
-      newparent = @data.getParent parent
+      newparent = do parent.getParent
       pp_i = @data.indexOf parent
 
       for sib in siblings
@@ -906,7 +906,7 @@ window?.renderLine = renderLine
       if @data.hasChildren row
         return
 
-      parent = @data.getParent row
+      parent = do row.getParent
       p_i = @data.indexOf row
 
       newparent = @unindentBlocks row
@@ -928,7 +928,7 @@ window?.renderLine = renderLine
         @attachBlock row, next, 0
       else
         # make it the next sibling
-        parent = @data.getParent next
+        parent = do next.getParent
         p_i = @data.indexOf next
         @attachBlock row, parent, (p_i+1)
 
@@ -939,7 +939,7 @@ window?.renderLine = renderLine
 
       @detachBlock row
       # make it the previous sibling
-      parent = @data.getParent prev
+      parent = do prev.getParent
       p_i = @data.indexOf prev
       @attachBlock row, parent, p_i
 
@@ -1022,12 +1022,12 @@ window?.renderLine = renderLine
       [common, ancestors1, ancestors2] = @data.getCommonAncestor @cursor.row, @anchor.row
       if ancestors1.length == 0
         # anchor is underneath cursor
-        parent = @data.getParent common
+        parent = do common.getParent
         index = @data.indexOf @cursor.row
         return [parent, index, index]
       else if ancestors2.length == 0
         # cursor is underneath anchor
-        parent = @data.getParent common
+        parent = do common.getParent
         index = @data.indexOf @anchor.row
         return [parent, index, index]
       else
@@ -1060,9 +1060,9 @@ window?.renderLine = renderLine
     virtualRender: (options = {}) ->
       crumbs = []
       row = @data.viewRoot
-      while row.id != @data.root.id
+      until row.is @data.root
         crumbs.push row
-        row = @data.getParent row
+        row = do row.getParent
 
       makeCrumb = (row, text, isLast) =>
         m_options = {}
@@ -1169,13 +1169,13 @@ window?.renderLine = renderLine
       cursors = {}
       highlights = {}
 
-      marking = @markrow? and (@data.sameInstance @markrow, row)
+      marking = @markrow? and @markrow.is row
 
-      if (@data.sameInstance row, @cursor.row) and not marking
+      if (row.is @cursor.row) and not marking
         cursors[@cursor.col] = true
 
         if @anchor and not @lineSelect
-          if @anchor.row? and (@data.sameInstance row, @anchor.row)
+          if @anchor.row? and row.is @anchor.row
             for i in [@cursor.col..@anchor.col]
               highlights[i] = true
           else

@@ -277,11 +277,11 @@ class Cursor
       @setRow row, cursorOptions
 
   parent: (cursorOptions = {}) ->
-    row = @data.getParent @row
+    row = do @row.getParent
     if row.id == @data.root.id
       return
-    if row.id == @data.viewRoot.id
-      @data.changeViewRoot @data.getParent row
+    if row.is @data.viewRoot
+      @data.changeViewRoot (do row.getParent)
     @setRow row, cursorOptions
 
   prevSibling: (cursorOptions = {}) ->
