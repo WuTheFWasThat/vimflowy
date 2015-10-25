@@ -530,11 +530,11 @@ For more info/context, see keyBindings.coffee
     CLONE:
       display: 'Yank blocks as a clone'
       definition: () ->
-        @view.yankBlocksClone @view.cursor.row, @repeat
+        @view.yankBlocksCloneAtCursor @repeat
         do @keyStream.forget
   }
 
-  #   jeff: c conflicts with change, so this doesn't work
+  # jeff: c conflicts with change, so this doesn't work
   # registerAction 'CLONE', 'Yank blocks as a clone', [MODES.VISUAL_LINE], () ->
   #     @view.yankBlocksClone @row_start, @num_rows
   #     @view.setMode MODES.NORMAL
