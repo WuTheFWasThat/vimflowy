@@ -44,10 +44,13 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     setLine: (row, line) ->
       @set (@_lineKey_ row), line
 
-    getParent: (row) ->
-      @get (@_parentKey_ row)
-    setParent: (row, parent) ->
-      @set (@_parentKey_ row), parent
+    getParents: (row) ->
+      parents = @get (@_parentKey_ row), []
+      if typeof parents == 'number'
+        parents = [ parents ]
+      parents
+    setParents: (row, parents) ->
+      @set (@_parentKey_ row), parents
 
     getChildren: (row) ->
       _.cloneDeep (@get (@_childrenKey_ row), [])
