@@ -276,6 +276,8 @@ window?.renderLine = renderLine
       if oldmode == MODES.VISUAL_LINE
         @anchor = null
         @lineSelect = false
+      else if oldmode == MODES.VISUAL
+        @anchor = null
       else if oldmode == MODES.SEARCH
         @menu = null
 

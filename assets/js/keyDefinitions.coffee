@@ -42,8 +42,6 @@ For more info/context, see keyBindings.coffee
     return () ->
       if @view.mode == MODES.NORMAL
         @view.toggleRowProperty property
-      else if @view.mode == MODES.VISUAL
-        @view.toggleRowPropertyBetween property, @view.cursor, @view.anchor, {includeEnd: true}
       else if @view.mode == MODES.INSERT
         @view.cursor.toggleProperty property
 
@@ -51,6 +49,24 @@ For more info/context, see keyBindings.coffee
     return () ->
       rows = @view.data.getChildRange @parent, @row_start_i, @row_end_i
       @view.toggleRowsProperty property, rows
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
+
+  text_format_visual = (property) ->
+    return () ->
+      @view.toggleRowPropertyBetween property, @view.cursor, @view.anchor, {includeEnd: true}
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
+
+  get_swap_cursor_fn = () ->
+    return () ->
+      tmp = do @view.anchor.clone
+      @view.anchor.from @view.cursor
+      @view.cursor.from tmp
+      do @keyStream.save
+
+  exit_normal_fn = () ->
+    return () ->
       @view.setMode MODES.NORMAL
       do @keyStream.save
 
@@ -432,6 +448,11 @@ For more info/context, see keyBindings.coffee
         @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
         @view.setMode MODES.NORMAL
         do @keyStream.save
+      visual: () ->
+        options = {includeEnd: true, yank: true}
+        @view.deleteBetween @view.cursor, @view.anchor, options
+        @view.setMode MODES.NORMAL
+        do @keyStream.save
       bindings:
         DELETE:
           display: 'Delete blocks'
@@ -439,7 +460,6 @@ For more info/context, see keyBindings.coffee
             @view.delBlocksAtCursor @repeat, {addNew: false}
         MOTION:
           display: 'Delete from cursor with motion'
-          finishes_visual: true
           fn: (cursor, options = {}) ->
             options.yank = true
             @view.deleteBetween @view.cursor, cursor, options
@@ -452,6 +472,10 @@ For more info/context, see keyBindings.coffee
       visual_line: () ->
         @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: true}
         @view.setMode MODES.INSERT
+      visual: () ->
+        options = {includeEnd: true, yank: true, cursor: {pastEnd: true}}
+        @view.deleteBetween @view.cursor, @view.anchor, options
+        @view.setMode MODES.INSERT
       bindings:
         CHANGE:
           display: 'Delete blocks, and enter insert mode'
@@ -460,7 +484,6 @@ For more info/context, see keyBindings.coffee
             @view.delBlocksAtCursor @repeat, {addNew: true}
         MOTION:
           display: 'Delete from cursor with motion, and enter insert mode'
-          finishes_visual: true
           to_mode: MODES.INSERT
           fn: (cursor, options = {}) ->
             options.yank = true
@@ -473,6 +496,11 @@ For more info/context, see keyBindings.coffee
         @view.yankBlocks @row_start, @num_rows
         @view.setMode MODES.NORMAL
         do @keyStream.forget
+      visual: () ->
+        options = {includeEnd: true}
+        @view.yankBetween @view.cursor, @view.anchor, options
+        @view.setMode MODES.NORMAL
+        do @keyStream.forget
       bindings:
         YANK:
           display: 'Yank blocks'
@@ -482,7 +510,6 @@ For more info/context, see keyBindings.coffee
         MOTION:
           display: 'Yank from cursor with motion'
           drop: true
-          finishes_visual: true
           fn: (cursor, options = {}) ->
             @view.yankBetween @view.cursor, cursor, options
     PASTE_AFTER:
@@ -523,9 +550,8 @@ For more info/context, see keyBindings.coffee
     EXIT_MODE:
       display: 'Exit back to normal mode'
       to_mode: MODES.NORMAL
-      visual_line: () ->
-        @view.setMode MODES.NORMAL
-        do @keyStream.save
+      visual_line: do exit_normal_fn
+      visual: do exit_normal_fn
       fn: () -> return
 
     # for visual mode
@@ -542,15 +568,8 @@ For more info/context, see keyBindings.coffee
         @view.anchor = do @view.cursor.clone
     SWAP_CURSOR:
       display: 'Swap cursor to other end of selection, in visual and visual line mode'
-      fn: () ->
-        tmp = do @view.anchor.clone
-        @view.anchor.from @view.cursor
-        @view.cursor.from tmp
-      visual_line: () ->
-        tmp = do @view.anchor.clone
-        @view.anchor.from @view.cursor
-        @view.cursor.from tmp
-        do @keyStream.save
+      visual: do get_swap_cursor_fn
+      visual_line: do get_swap_cursor_fn
 
     # for insert mode
 
@@ -582,26 +601,26 @@ For more info/context, see keyBindings.coffee
     # FORMATTING
     BOLD:
       display: 'Bold text'
-      finishes_visual: true
       fn: text_format_definition 'bold'
       visual_line: text_format_visual_line 'bold'
+      visual: text_format_visual 'bold'
     ITALIC:
       display: 'Italicize text'
-      finishes_visual: true
       fn: text_format_definition 'italic'
       visual_line: text_format_visual_line 'italic'
+      visual: text_format_visual 'italic'
 
     UNDERLINE:
       display: 'Underline text'
-      finishes_visual: true
       fn: text_format_definition 'underline'
       visual_line: text_format_visual_line 'underline'
+      visual: text_format_visual 'underline'
 
     STRIKETHROUGH:
       display: 'Strike through text'
-      finishes_visual: true
       fn: text_format_definition 'strikethrough'
       visual_line: text_format_visual_line 'strikethrough'
+      visual: text_format_visual 'strikethrough'
 
   module?.exports = keyDefinitions
   window?.keyDefinitions = keyDefinitions

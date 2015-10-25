@@ -201,40 +201,13 @@ if module?
 
       info = bindings[key]
 
-      args = []
+      fn = info.visual
+
       context = {
         view: @view,
-        repeat: 1,
+        keyStream: @keyStream,
       }
-
-      to_mode = null
-      if info.bindings
-        # TODO this is a terrible hack... for d,c,y
-        info = info.bindings['MOTION']
-
-      if info.finishes_visual
-        args.push @view.anchor, {includeEnd: true}
-        to_mode = if info.to_mode? then info.to_mode else MODES.NORMAL
-      else
-        to_mode = if info.to_mode? then info.to_mode else null
-
-      fn = info.fn
-      fn.apply context, args
-
-      if to_mode != null
-        @view.anchor = null
-        @view.setMode to_mode
-        if to_mode == MODES.NORMAL
-          if info.drop # for yank
-            do keyStream.forget
-            return true
-          else
-            do keyStream.save
-            return true
-        else if to_mode == MODES.INSERT
-          return true
-
-      do keyStream.forget
+      fn.apply context, []
       return true
 
     processVisualLineMode: (keyStream) ->
