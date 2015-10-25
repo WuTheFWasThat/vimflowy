@@ -12,12 +12,11 @@ create_view = (data) ->
 
   settings = new Settings data.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
   do settings.loadRenderSettings
-  window?.setSetting = settings.setSetting.bind settings # For enabling debugging
 
-  keyBindings = new KeyBindings settings, {modebindingsDiv: $('#keybindings')}
+  key_bindings = new KeyBindings settings, {modebindingsDiv: $('#keybindings')}
 
   view = new View data, {
-    bindings: keyBindings
+    bindings: key_bindings
     settings: settings
     mainDiv: $('#view'),
     settingsDiv: $('#settings')
@@ -57,8 +56,14 @@ create_view = (data) ->
 
   key_emitter = new KeyEmitter
   do key_emitter.listen
-  keyhandler = new KeyHandler view, keyBindings
-  key_emitter.on 'keydown', keyhandler.handleKey.bind(keyhandler)
+  key_handler = new KeyHandler view, key_bindings
+  key_emitter.on 'keydown', key_handler.handleKey.bind(key_handler)
+
+  # expose globals, for debugging
+  window.view = view
+  window.key_handler = key_handler
+  window.key_emitter = key_emitter
+  window.key_bindings = key_bindings
 
   $(document).ready ->
     do view.hideSettings
@@ -96,21 +101,21 @@ create_view = (data) ->
                 hotkey_settings = JSON.parse content
             catch e
                 return view.showMessage "Failed to parse JSON: #{e}", {text_class: 'error'}
-            err = keyBindings.apply_hotkey_settings hotkey_settings
+            err = key_bindings.apply_hotkey_settings hotkey_settings
             if err then return view.showMessage err, {text_class: 'error'}
-            keyBindings.save_settings hotkey_settings
-            keyBindings.renderModeTable view.mode # TODO: do this elsewhere?
+            key_bindings.save_settings hotkey_settings
+            key_bindings.renderModeTable view.mode # TODO: do this elsewhere?
             view.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
 
     $("#hotkeys_export").click () =>
         filename = 'vimflowy_hotkeys.json'
-        content = JSON.stringify(keyBindings.hotkeys, null, 2)
+        content = JSON.stringify(key_bindings.hotkeys, null, 2)
         download_file filename, 'application/json', content
         view.showMessage "Downloaded hotkeys to #{filename}!", {text_class: 'success'}
 
     $("#hotkeys_default").click () =>
-        do keyBindings.apply_default_hotkey_settings
-        keyBindings.renderModeTable view.mode # TODO: do this elsewhere?
+        do key_bindings.apply_default_hotkey_settings
+        key_bindings.renderModeTable view.mode # TODO: do this elsewhere?
         view.showMessage "Loaded defaults!", {text_class: 'success'}
 
     $("#data_import").click () =>
@@ -132,7 +137,7 @@ create_view = (data) ->
         content = view.exportContent mimetype
         download_file filename, mimetype, content
         view.showMessage "Exported to #{filename}!", {text_class: 'success'}
-  return view
+
 
 if chrome?.storage?.sync
   Logger.logger.info 'using chrome storage'
@@ -157,7 +162,7 @@ if chrome?.storage?.sync
         Logger.logger.info 'Saved'
     ), 5000
 
-    window.vimflowy = create_view data
+    create_view data
 else if localStorage?
   docname = window.location.pathname.split('/')[1]
   datastore = new dataStore.LocalStorageLazy docname
@@ -166,7 +171,7 @@ else if localStorage?
   if (do datastore.getLastSave) == 0
     data.load constants.default_data
 
-  window.vimflowy = create_view data
+  create_view data
 else
   alert('You need local storage support for data to be persisted!')
   datastore = new dataStore.InMemory
@@ -174,7 +179,7 @@ else
   data = new Data datastore
   data.load constants.default_data
 
-  window.vimflowy = create_view data
+  create_view data
 
 window.onerror = (msg, url, line, col, err) ->
     Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"

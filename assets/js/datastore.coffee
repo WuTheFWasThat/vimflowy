@@ -107,7 +107,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @setLine id, []
       @setChildren id, []
       return id
-    
+
     validateSchemaVersion: () ->
       storedVersion = do @getSchemaVersion
       if not storedVersion? and (@getChildren 0).length == 0
@@ -140,7 +140,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     constructor: (prefix='') ->
       @cache = {}
       super prefix
-      @lastSave = do @getLastSave
+      @lastSave = do Date.now
 
     get: (key, default_value=null) ->
       if not (key of @cache)

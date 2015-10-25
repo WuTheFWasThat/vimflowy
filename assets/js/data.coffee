@@ -293,14 +293,16 @@ class Data
     return children[0]
 
   attachChildren: (row, new_children, index = -1) ->
+    for child in new_children
+      if @wouldBeCircularInsert child, row
+        throw new errors.CircularReference "Trying to attach a child as a descendent of itself"
+
     children = @getChildren row
     if index == -1
       children.push.apply children, new_children
     else
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
-      if @wouldBeCircularInsert child, row
-        throw new errors.CircularReference "Trying to attach a child as a descendent of itself"
       child.setParent row
       parents = @store.getParents child.id
       parents.push row.id
@@ -404,14 +406,13 @@ class Data
   # Checks whether the ancestor is visible. Does not include the given node but does
   # include viewRoot
   hasVisibleAncestor: (row, checkAncestorId) ->
-    errors.assert row?
-    errors.assert checkAncestorId?
     cur = row
     until (cur.is @viewRoot) or (do cur.isRoot)
       cur = do cur.getParent
       if cur.id == checkAncestorId
         return true
     return false
+
   wouldBeCircularInsert: (row, parent) ->
     return parent.id == row.id or (@hasVisibleAncestor parent, row.id)
 

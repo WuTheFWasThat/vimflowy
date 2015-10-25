@@ -206,14 +206,16 @@ if module?
     str: () ->
       return "parent #{@parent.id}, index #{@index}"
 
-    checkSibling: (view) ->
+    _checkSibling: (view) ->
       children = view.data.getChildren @parent
       for clone_id in @cloned_rows
         if _.find children, { id: clone_id }
           return false
       return true
+
     checkCircular: (view) ->
       @_checkCircularTree view, _.map(@cloned_rows, (clone_id) -> view.data.canonicalInstance clone_id)
+
     _checkCircularTree: (view, rows) ->
       for row in rows
         if view.data.wouldBeCircularInsert row, @parent
@@ -223,7 +225,7 @@ if module?
       return true
 
     apply: (view) ->
-      unless (@checkSibling view)
+      unless (@_checkSibling view)
         return view.showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
       unless (@checkCircular view)
         return view.showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
