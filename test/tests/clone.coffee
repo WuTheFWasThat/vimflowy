@@ -1,5 +1,8 @@
 TestCase = require '../testcase.coffee'
 
+swapDownKey = 'ctrl+j'
+swapUpKey = 'ctrl+k'
+
 describe "cloning tests", () ->
   it "test yc and p", () ->
     t = new TestCase [
@@ -196,3 +199,101 @@ describe "cloning tests", () ->
         'uno',
       ] }
     ]
+
+  it "enforces constraints upon movement", () ->
+    t = new TestCase [
+      { text: 'Clone', children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        'Not a clone'
+      ] }
+    ]
+
+    t.sendKeys 'ycjjp'
+    t.expect [
+      { text: 'Clone', children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Clone', children: [
+          'Clone child'
+        ] }
+        'Not a clone'
+      ] }
+    ]
+
+    t.sendKeys 'gg'
+    t.sendKey swapDownKey
+    t.expect [
+      { text: 'Clone', children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Clone', children: [
+          'Clone child'
+        ] }
+        'Not a clone'
+      ] }
+    ]
+
+  it "works with marks in tricky case", () ->
+    t = new TestCase [
+      { text: 'Marked clone', mark: 'mark', children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        'Not a clone'
+      ] }
+    ]
+    t.expectMarks { 'mark': 1 }
+
+    console.log '\nDEBUG STEP 1'
+    console.log 'marks under 1', (t.store.getMarks 1)
+    console.log 'marks under 3', (t.store.getMarks 3)
+    console.log 'all marks', (do t.store.getAllMarks)
+
+
+    t.sendKeys 'ycjjp'
+    t.expect [
+      { text: 'Marked clone', mark: 'mark', children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Marked clone', mark: 'mark', children: [
+          'Clone child'
+        ] }
+        'Not a clone'
+      ] }
+    ]
+
+    console.log '\nDEBUG STEP 2'
+    console.log 'marks under 1', (t.store.getMarks 1)
+    console.log 'marks under 3', (t.store.getMarks 3)
+    console.log 'all marks', (do t.store.getAllMarks)
+
+
+    t.sendKeys 'ggdd'
+    t.expect [
+      { text: 'Not a clone', children: [
+        { text: 'Marked clone', mark: 'mark', children: [
+          'Clone child'
+        ] }
+        'Not a clone'
+      ] }
+    ]
+    t.expectMarks { 'mark': 1 }
+
+    console.log '\nDEBUG STEP 3'
+    console.log 'marks under 1', (t.store.getMarks 1)
+    console.log 'marks under 3', (t.store.getMarks 3)
+    console.log 'all marks', (do t.store.getAllMarks)
+
+    t.sendKeys 'dd'
+    t.expect [ "" ]
+    console.log '\nDEBUG STEP 4'
+    console.log 'marks under 1', (t.store.getMarks 1)
+    console.log 'marks under 3', (t.store.getMarks 3)
+    console.log 'all marks', (do t.store.getAllMarks)
+    t.expectMarks { }
+
