@@ -847,17 +847,15 @@ window?.renderLine = renderLine
       return @act new actions.AttachBlock row, parent, index, options
 
     moveBlock: (row, parent, index = -1, options = {}) ->
+      @detachBlock row, options
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
-      if commonAncestor.is row # Move the cursor also, if it is in the moved block
-        @detachBlock row, options
-        newRow = @attachBlock row, parent, index, options
+      newRow = @attachBlock row, parent, index, options
+      # Move the cursor also, if it is in the moved block
+      if commonAncestor.is row
         newCursorRow = @data.combineAncestry newRow, cursorAncestors
         errors.assert newCursorRow?.id, "cursor row could not be reconstructed in moveBlock"
         @cursor._setRow newCursorRow # TODO: Jeff how can I do this better?
-        return newRow
-      else
-        @detachBlock row, options
-        return @attachBlock row, parent, index, options
+      return newRow
 
     indentBlocks: (row, numblocks = 1) ->
       newparent = @data.getSiblingBefore row

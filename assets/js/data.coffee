@@ -38,9 +38,7 @@ class Instance
     return row1.id == row2.id
 
 Instance.getRoot = () ->
-  root = new Instance {}, constants.root_id, {}
-  root.setParent null
-  root
+  new Instance null, constants.root_id, {}
 
 ###
 Data is a wrapper class around the actual datastore, providing methods to manipulate the data
