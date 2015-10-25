@@ -244,27 +244,19 @@ It also internally maintains
     'ENTER_VISUAL', 'ENTER_VISUAL_LINE',
   ]
 
-  commands[MODES.VISUAL] = [
-    'YANK',
-    'DELETE',
-    'CHANGE',
-    'SWAP_CURSOR',
-    # TODO: 'REPLACE',
-    'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
-    'EXIT_MODE',
-  ]
+  # WTF: this iteration messes things up
+  # for k,v of keyDefinitions
+  #   console.log k, v
 
-  commands[MODES.VISUAL_LINE] = [
-    'YANK',
-    'DELETE',
-    'CHANGE',
-    'SWAP_CURSOR',
-    'MOVE_BLOCK_RIGHT',
-    'MOVE_BLOCK_LEFT',
-    'EXIT_MODE',
-    # TODO: 'REPLACE',
-    'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
-  ]
+  commands[MODES.VISUAL] = []
+  for k of keyDefinitions
+    if keyDefinitions[k].visual
+      commands[MODES.VISUAL].push k
+
+  commands[MODES.VISUAL_LINE] = []
+  for k of keyDefinitions
+    if keyDefinitions[k].visual_line
+      commands[MODES.VISUAL_LINE].push k
 
   commands[MODES.INSERT] = [
     'LEFT', 'RIGHT', 'UP', 'DOWN',

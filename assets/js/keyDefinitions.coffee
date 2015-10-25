@@ -231,6 +231,7 @@ For more info/context, see keyBindings.coffee
       fn: () ->
         do @view.newLineAbove
     REPLACE:
+      # TODO: visual and visual_line mode
       display: 'Replace character'
       continue: (char) ->
         @view.replaceCharsAfterCursor char, @repeat, {setCursor: 'end'}

@@ -201,13 +201,11 @@ if module?
 
       info = bindings[key]
 
-      fn = info.visual
-
       context = {
         view: @view,
         keyStream: @keyStream,
       }
-      fn.apply context, []
+      info.visual.apply context, []
       return true
 
     processVisualLineMode: (keyStream) ->
@@ -234,8 +232,6 @@ if module?
 
       info = bindings[key]
 
-      fn = info.visual_line
-
       [parent, index1, index2] = do @view.getVisualLineSelections
       # TODO: get a row, instead of id, for parent
       context = {
@@ -248,7 +244,7 @@ if module?
         parent: parent
         num_rows: index2 - index1 + 1
       }
-      fn.apply context, []
+      info.visual_line.apply context, []
       return true
 
     processSearchMode: (keyStream) ->
