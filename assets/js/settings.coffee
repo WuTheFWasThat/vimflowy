@@ -10,7 +10,6 @@ Uses a data store key which is agnostic to which document is being viewed
       theme: 'default-theme'
       export_filename: 'vimflowy.json'
       showKeyBindings: true
-      debugCloning: false
       hotkeys: {}
 
     constructor: (datastore, options = {}) ->

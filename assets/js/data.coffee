@@ -31,11 +31,10 @@ class Row
 
   # Represents the exact same row
   is: (other) ->
-    [row1, row2] = [@, other]
-    while row1.id == row2.id and not (do row1.isRoot) and not (do row2.isRoot)
-      row1 = do row1.getParent
-      row2 = do row2.getParent
-    return row1.id == row2.id
+    if @id != other.id then return false
+    if do @isRoot then return do other.isRoot
+    if do other.isRoot then return false
+    return (do @getParent).is (do other.getParent)
 
 Row.getRoot = () ->
   new Row null, constants.root_id, {}
@@ -52,7 +51,6 @@ also deals with loading the initial data from the datastore, and serializing the
 Currently, the separation between the View and Data classes is not very good.  (see view.coffee)
 ###
 class Data
-  rootId: constants.root_id
   root: do Row.getRoot
 
   constructor: (store) ->
