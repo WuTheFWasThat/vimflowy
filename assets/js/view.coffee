@@ -1120,6 +1120,9 @@ window?.renderLine = renderLine
           icon = 'fa-circle'
           if @data.hasChildren row
             icon = if @data.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
+          if (@data.getParents row).length > 1
+            icon = 'fa-clone'
+
 
           bulletOpts = {
             className: 'fa ' + icon + ' bullet'
@@ -1149,9 +1152,6 @@ window?.renderLine = renderLine
         className = 'node'
         if row.id of options.highlight_blocks
           className += ' theme-bg-highlight'
-
-        unless @data.exactlyOneInstance row.id
-          className += ' theme-bg-clone'
 
         childNode = virtualDom.h 'div', {
           id: containerDivID row.id

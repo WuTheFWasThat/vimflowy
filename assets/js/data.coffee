@@ -244,6 +244,7 @@ class Data
     for parent_id in (@store.getParents id)
       parentCount += @countInstances parent_id # Always exactly once under every parent
     return parentCount
+
   exactlyOneInstance: (id) ->
     1 == @countInstances id
 
@@ -403,7 +404,7 @@ class Data
         return null
       if @collapsed cur
         answer = cur
-   
+
   # Checks whether the ancestor is visible. Does not include the given node but does
   # include viewRoot
   hasVisibleAncestor: (row, checkAncestorId) ->
