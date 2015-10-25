@@ -808,22 +808,28 @@ window?.renderLine = renderLine
       else
         @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
-    delBlocksAtCursor: (nrows, options = {}) ->
-      parent = do @cursor.row.getParent
-      index = @data.indexOf @cursor.row
+    delBlocks: (parent, index, nrows, options = {}) ->
       action = new actions.DeleteBlocks parent, index, nrows, options
       @act action
       @register.saveRows action.deleted_rows
+
+    delBlocksAtCursor: (nrows, options = {}) ->
+      parent = do @cursor.row.getParent
+      index = @data.indexOf @cursor.row
+      @delBlocks parent, index, nrows, options
 
     addBlocks: (serialized_rows, parent, index = -1, options = {}) ->
       action = new actions.AddBlocks serialized_rows, parent, index, options
       @act action
 
-    yankBlocks: (nrows) ->
-      siblings = @data.getSiblingRange @cursor.row, 0, (nrows-1)
+    yankBlocks: (row, nrows) ->
+      siblings = @data.getSiblingRange row, 0, (nrows-1)
       siblings = siblings.filter ((x) -> return x != null)
       serialized = siblings.map ((x) => return @data.serialize x)
       @register.saveSerializedRows serialized
+
+    yankBlocksAtCursor: (nrows) ->
+      @yankBlocks @cursor.row, nrows
 
     detachBlock: (row, options = {}) ->
       action = new actions.DetachBlock row, options
@@ -1095,13 +1101,13 @@ window?.renderLine = renderLine
       return virtualDom.h 'div', {
       }, [breadcrumbsNode, contentsNode]
 
-    virtualRenderTree: (parentid, options = {}) ->
-      if (not options.ignoreCollapse) and (@data.collapsed parentid)
+    virtualRenderTree: (parent, options = {}) ->
+      if (not options.ignoreCollapse) and (@data.collapsed parent)
         return
 
       childrenNodes = []
 
-      for row in @data.getChildren parentid
+      for row in @data.getChildren parent
 
         if @easy_motion_mappings and row.id of @easy_motion_mappings.id_to_key
           char = @easy_motion_mappings.id_to_key[row.id]

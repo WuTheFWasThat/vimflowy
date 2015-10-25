@@ -186,6 +186,7 @@ describe "visual line mode", () ->
       ] }
     ]
     # does nothing again
+    t.sendKeys [siblingUpKey]
     t.sendKeys 'jV>'
     t.expect [
       { text: 'nest', children: [

@@ -103,6 +103,7 @@ if module?
       handled = @processKeys @keyStream
       return handled
 
+    # NOTE: handled tells the eventEmitter whether to preventDefault or not
     processKeys: (keyStream) ->
       handled = false
       while not keyStream.done() and not keyStream.waiting
@@ -260,6 +261,24 @@ if module?
 
       info = bindings[key]
 
+      if info.visual_line
+        fn = info.visual_line
+
+        [parent, index1, index2] = do @view.getVisualLineSelections
+        # TODO: get a row, instead of id, for parent
+        context = {
+          view: @view,
+          keyStream: @keyStream,
+          row_start_i: index1
+          row_end_i: index2
+          row_start: (@view.data.getChildren parent)[index1]
+          row_end: (@view.data.getChildren parent)[index2]
+          parent: parent
+          num_rows: index2 - index1 + 1
+        }
+        fn.apply context, []
+        return true
+
       args = []
       context = {
         view: @view,
@@ -267,21 +286,6 @@ if module?
       }
 
       to_mode = null
-
-      if info.bindings
-        # TODO this is a terrible hack... for d,c,y
-        info = info.bindings[key]
-
-      if info.finishes_visual_line
-        [parentid, index1, index2] = do @view.getVisualLineSelections
-        # NOTE: this is bad (inconsistent with other behavior) for yank/indent because it moves the cursor
-        # maybe just move it back afterwards?
-        @view.cursor.setRow (@view.data.getChildren parentid)[index1]
-        context.repeat = index2 - index1 + 1
-
-        to_mode = if info.to_mode? then info.to_mode else MODES.NORMAL
-      else
-        to_mode = if info.to_mode? then info.to_mode else null
 
       fn = info.fn
       fn.apply context, args

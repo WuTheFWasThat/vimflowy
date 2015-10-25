@@ -89,14 +89,20 @@ For more info/context, see keyBindings.coffee
         do @view.unindent
     MOVE_BLOCK_RIGHT:
       display: 'Move block right'
-      finishes_visual_line: true
       fn: () ->
         @view.indentBlocks @view.cursor.row, @repeat
+      visual_line: () ->
+        @view.indentBlocks @row_start, @num_rows
+        @view.setMode MODES.NORMAL
+        do @keyStream.save
     MOVE_BLOCK_LEFT:
       display: 'Move block left'
-      finishes_visual_line: true
       fn: () ->
         @view.unindentBlocks @view.cursor.row, @repeat
+      visual_line: () ->
+        @view.unindentBlocks @row_start, @num_rows
+        @view.setMode MODES.NORMAL
+        do @keyStream.save
     MOVE_BLOCK_DOWN:
       display: 'Move block down'
       fn: () ->
@@ -424,10 +430,13 @@ For more info/context, see keyBindings.coffee
         @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
     DELETE:
       display: 'Delete (operator)'
+      visual_line: () ->
+        @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
+        @view.setMode MODES.NORMAL
+        do @keyStream.save
       bindings:
         DELETE:
           display: 'Delete blocks'
-          finishes_visual_line: true
           fn: () ->
             @view.delBlocksAtCursor @repeat, {addNew: false}
         MOTION:
@@ -442,10 +451,12 @@ For more info/context, see keyBindings.coffee
             @view.setMark @view.cursor.row, ''
     CHANGE:
       display: 'Change (operator)'
+      visual_line: () ->
+        @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: true}
+        @view.setMode MODES.INSERT
       bindings:
         CHANGE:
           display: 'Delete blocks, and enter insert mode'
-          finishes_visual_line: true
           to_mode: MODES.INSERT
           fn: () ->
             @view.delBlocksAtCursor @repeat, {addNew: true}
@@ -460,13 +471,16 @@ For more info/context, see keyBindings.coffee
 
     YANK:
       display: 'Yank (operator)'
+      visual_line: () ->
+        @view.yankBlocks @row_start, @num_rows
+        @view.setMode MODES.NORMAL
+        do @keyStream.forget
       bindings:
         YANK:
           display: 'Yank blocks'
           drop: true
-          finishes_visual_line: true
           fn: () ->
-            @view.yankBlocks @repeat
+            @view.yankBlocksAtCursor @repeat
         MOTION:
           display: 'Yank from cursor with motion'
           drop: true
