@@ -44,17 +44,15 @@ For more info/context, see keyBindings.coffee
         @view.toggleRowProperty property
       else if @view.mode == MODES.VISUAL
         @view.toggleRowPropertyBetween property, @view.cursor, @view.anchor, {includeEnd: true}
-      else if @view.mode == MODES.VISUAL_LINE
-        index1 = @view.data.indexOf @view.cursor.row
-        index2 = @view.data.indexOf @view.anchor.row
-        parent = do @view.cursor.row.getParent
-        if index2 < index1
-          [index1, index2] = [index2, index1]
-        rows = @view.data.getChildRange parent, index1, index2
-        @view.toggleRowsProperty property, rows
-        @view.setMode MODES.NORMAL
       else if @view.mode == MODES.INSERT
         @view.cursor.toggleProperty property
+
+  text_format_visual_line = (property) ->
+    return () ->
+      rows = @view.data.getChildRange @parent, @row_start_i, @row_end_i
+      @view.toggleRowsProperty property, rows
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
 
   keyDefinitions =
     HELP:
@@ -525,6 +523,9 @@ For more info/context, see keyBindings.coffee
     EXIT_MODE:
       display: 'Exit back to normal mode'
       to_mode: MODES.NORMAL
+      visual_line: () ->
+        @view.setMode MODES.NORMAL
+        do @keyStream.save
       fn: () -> return
 
     # for visual mode
@@ -545,6 +546,11 @@ For more info/context, see keyBindings.coffee
         tmp = do @view.anchor.clone
         @view.anchor.from @view.cursor
         @view.cursor.from tmp
+      visual_line: () ->
+        tmp = do @view.anchor.clone
+        @view.anchor.from @view.cursor
+        @view.cursor.from tmp
+        do @keyStream.save
 
     # for insert mode
 
@@ -578,21 +584,24 @@ For more info/context, see keyBindings.coffee
       display: 'Bold text'
       finishes_visual: true
       fn: text_format_definition 'bold'
-
+      visual_line: text_format_visual_line 'bold'
     ITALIC:
       display: 'Italicize text'
       finishes_visual: true
       fn: text_format_definition 'italic'
+      visual_line: text_format_visual_line 'italic'
 
     UNDERLINE:
       display: 'Underline text'
       finishes_visual: true
       fn: text_format_definition 'underline'
+      visual_line: text_format_visual_line 'underline'
 
     STRIKETHROUGH:
       display: 'Strike through text'
       finishes_visual: true
       fn: text_format_definition 'strikethrough'
+      visual_line: text_format_visual_line 'strikethrough'
 
   module?.exports = keyDefinitions
   window?.keyDefinitions = keyDefinitions

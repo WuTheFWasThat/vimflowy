@@ -261,51 +261,22 @@ if module?
 
       info = bindings[key]
 
-      if info.visual_line
-        fn = info.visual_line
+      fn = info.visual_line
 
-        [parent, index1, index2] = do @view.getVisualLineSelections
-        # TODO: get a row, instead of id, for parent
-        context = {
-          view: @view,
-          keyStream: @keyStream,
-          row_start_i: index1
-          row_end_i: index2
-          row_start: (@view.data.getChildren parent)[index1]
-          row_end: (@view.data.getChildren parent)[index2]
-          parent: parent
-          num_rows: index2 - index1 + 1
-        }
-        fn.apply context, []
-        return true
-
-      args = []
+      [parent, index1, index2] = do @view.getVisualLineSelections
+      # TODO: get a row, instead of id, for parent
       context = {
         view: @view,
-        repeat: 1,
+        keyStream: @keyStream,
+        row_start_i: index1
+        row_end_i: index2
+        row_start: (@view.data.getChildren parent)[index1]
+        row_end: (@view.data.getChildren parent)[index2]
+        parent: parent
+        num_rows: index2 - index1 + 1
       }
-
-      to_mode = null
-
-      fn = info.fn
-      fn.apply context, args
-
-      if to_mode != null
-        @view.setMode to_mode
-
-      if @view.mode != MODES.VISUAL_LINE
-        if @view.mode == MODES.NORMAL
-          if info.drop # for yank
-            do keyStream.forget
-            return true
-          else
-            do keyStream.save
-            return true
-        else if @view.mode == MODES.INSERT
-          return true
-      else
-        do keyStream.forget
-        return true
+      fn.apply context, []
+      return true
 
     processSearchMode: (keyStream) ->
       key = do keyStream.dequeue
