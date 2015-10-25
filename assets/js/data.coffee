@@ -7,10 +7,19 @@ if module?
   global.Logger = require('./logger.coffee')
 
 class Row
-  constructor: (@parent, @id, @datastore_object=null) ->
+  constructor: (@parent, @id) ->
 
   getParent: () ->
     @parent
+
+  # NOTE: in the future, this may contain other info
+  serialize: () ->
+    return @id
+
+  load: (obj) ->
+    if typeof obj == 'number'
+      obj = {id: obj}
+    @id = obj.id
 
   setParent: (parent) ->
     @parent = parent
@@ -27,7 +36,7 @@ class Row
     @id == constants.root_id
 
   clone: () ->
-    new Row (@parent?.clone?()), @id, (_.cloneDeep @datastore_object)
+    new Row (@parent?.clone?()), @id
 
   # Represents the exact same row
   is: (other) ->
@@ -37,7 +46,7 @@ class Row
     return (do @getParent).is (do other.getParent)
 
 Row.getRoot = () ->
-  new Row null, constants.root_id, {}
+  new Row null, constants.root_id
 
 ###
 Data is a wrapper class around the actual datastore, providing methods to manipulate the data
@@ -203,10 +212,16 @@ class Data
   # structure #
   #############
 
-  getChildren: (row) ->
-    children = @store.getChildren row.id
-    _.map children, (child) ->
-      new Row row, child.id, child
+  getChildren: (parent) ->
+    children = []
+    for serialized_child in @store.getChildren parent.id
+      row = new Row parent
+      row.load serialized_child
+      children.push row
+    children
+
+  setChildren: (id, children) ->
+    @store.setChildren id, (do child.serialize for child in children)
 
   getChild: (row, id) ->
     _.find (@getChildren row), (x) -> x.id == id
@@ -278,7 +293,7 @@ class Data
         par == parent.id
     parents.splice pi, 1
 
-    @store.setChildren parent.id, children
+    @setChildren parent.id, children
     @store.setParents row.id, parents
 
     return {
@@ -307,7 +322,8 @@ class Data
       parents = @store.getParents child.id
       parents.push row.id
       @store.setParents child.id, parents
-    @store.setChildren row.id, children
+
+    @setChildren row.id, children
 
     for child in new_children
       @attachMarks child
@@ -578,7 +594,7 @@ class Data
     return struct
 
   loadTo: (serialized, parent = @root, index = -1) ->
-    row = new Row parent, (do @store.getNew), {}
+    row = new Row parent, (do @store.getNew)
 
     if row.id != @root.id
       @attachChild parent, row, index
