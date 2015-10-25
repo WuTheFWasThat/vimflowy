@@ -850,6 +850,7 @@ window?.renderLine = renderLine
       @detachBlock row, options
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
       newRow = @attachBlock row, parent, index, options
+
       # Move the cursor also, if it is in the moved block
       if commonAncestor.is row
         newCursorRow = @data.combineAncestry newRow, cursorAncestors
@@ -1162,8 +1163,6 @@ window?.renderLine = renderLine
     virtualRenderLine: (row, options = {}) ->
 
       lineData = @data.getLine row
-      if @settings?.getSetting?("debugCloning")
-        lineData = lineData.concat (_.map (" " + (@data.debugInstance row)), (c) -> {char : c, bold: true})
       cursors = {}
       highlights = {}
 

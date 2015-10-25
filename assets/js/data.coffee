@@ -6,7 +6,7 @@ if module?
   global.constants = require('./constants.coffee')
   global.Logger = require('./logger.coffee')
 
-class Instance
+class Row
   constructor: (@parent, @id, @datastore_object=null) ->
 
   getParent: () ->
@@ -27,9 +27,9 @@ class Instance
     @id == constants.root_id
 
   clone: () ->
-    new Instance (@parent?.clone?()), @id, (_.cloneDeep @datastore_object)
+    new Row (@parent?.clone?()), @id, (_.cloneDeep @datastore_object)
 
-  # Represents the exact same view instance
+  # Represents the exact same row
   is: (other) ->
     [row1, row2] = [@, other]
     while row1.id == row2.id and not (do row1.isRoot) and not (do row2.isRoot)
@@ -37,8 +37,8 @@ class Instance
       row2 = do row2.getParent
     return row1.id == row2.id
 
-Instance.getRoot = () ->
-  new Instance null, constants.root_id, {}
+Row.getRoot = () ->
+  new Row null, constants.root_id, {}
 
 ###
 Data is a wrapper class around the actual datastore, providing methods to manipulate the data
@@ -53,7 +53,7 @@ Currently, the separation between the View and Data classes is not very good.  (
 ###
 class Data
   rootId: constants.root_id
-  root: do Instance.getRoot
+  root: do Row.getRoot
 
   constructor: (store) ->
     @store = store
@@ -208,7 +208,7 @@ class Data
   getChildren: (row) ->
     children = @store.getChildren row.id
     _.map children, (child) ->
-      new Instance row, child.id, child
+      new Row row, child.id, child
 
   getChild: (row, id) ->
     _.find (@getChildren row), (x) -> x.id == id
@@ -456,7 +456,7 @@ class Data
 
   addChild: (row, index = -1) ->
     id = do @store.getNew
-    child = new Instance row, id
+    child = new Row row, id
     @attachChild row, child, index
     return child
 
@@ -579,7 +579,7 @@ class Data
     return struct
 
   loadTo: (serialized, parent = @root, index = -1) ->
-    row = new Instance parent, (do @store.getNew), {}
+    row = new Row parent, (do @store.getNew), {}
 
     if row.id != @root.id
       @attachChild parent, row, index
