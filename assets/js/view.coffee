@@ -837,9 +837,13 @@ window?.renderLine = renderLine
     yankBlocksAtCursor: (nrows) ->
       @yankBlocks @cursor.row, nrows
 
-    yankBlocksClone: (nrows) ->
-      siblings = @data.getSiblingRange @cursor.row, 0, (nrows-1)
+    yankBlocksClone: (row, nrows) ->
+      siblings = @data.getSiblingRange row, 0, (nrows-1)
+      siblings = siblings.filter ((x) -> return x != null)
       @register.saveClonedRows (siblings.map (sibling) -> sibling.id)
+
+    yankBlocksCloneAtCursor: (nrows) ->
+      @yankBlocksClone @cursor.row, nrows
 
     detachBlock: (row, options = {}) ->
       action = new actions.DetachBlock row, options
