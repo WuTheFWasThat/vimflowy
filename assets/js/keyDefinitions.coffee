@@ -516,9 +516,15 @@ For more info/context, see keyBindings.coffee
         CLONE:
           display: 'Yank blocks as a clone'
           drop: true
-          finishes_visual_line: true
           fn: () ->
-            @view.yankBlocksClone @repeat
+            @view.yankBlocksCloneAtCursor @repeat
+    # TODO: after keybindings stuff is better
+    # CLONE:
+    #   display: 'Yank blocks as a clone'
+    #   visual_line: () ->
+    #     @view.yankBlocksClone @row_start, @num_rows
+    #     @view.setMode MODES.NORMAL
+    #     do @keyStream.forget
     PASTE_AFTER:
       display: 'Paste after cursor'
       fn: () ->
