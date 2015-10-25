@@ -795,7 +795,7 @@ For more info/context, see keyBindings.coffee
     CLONE:
       display: 'Yank blocks as a clone'
       definition: () ->
-        @view.yankBlocksClone @view.cursor.row, @repeat
+        @view.yankBlocksCloneAtCursor @repeat
         do @keyStream.forget
   }
 
