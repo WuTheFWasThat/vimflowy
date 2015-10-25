@@ -47,7 +47,7 @@ For more info/context, see keyBindings.coffee
       else if @view.mode == MODES.VISUAL_LINE
         index1 = @view.data.indexOf @view.cursor.row
         index2 = @view.data.indexOf @view.anchor.row
-        parent = @view.data.getParent @view.cursor.row
+        parent = do @view.cursor.row.getParent
         if index2 < index1
           [index1, index2] = [index2, index1]
         rows = @view.data.getChildRange parent, index1, index2
@@ -328,7 +328,7 @@ For more info/context, see keyBindings.coffee
       motion: true
       fn: () ->
         ids = do @view.getVisibleRows
-        ids = ids.filter (row) => return (row != @view.cursor.row)
+        ids = ids.filter (row) => return (row.id != @view.cursor.row.id)
         keys = [
           'z', 'x', 'c', 'v',
           'q', 'w', 'e', 'r', 't',
@@ -356,7 +356,8 @@ For more info/context, see keyBindings.coffee
       continue: (char, cursor, options) ->
         if char of @view.easy_motion_mappings.key_to_id
           id = @view.easy_motion_mappings.key_to_id[char]
-          cursor.set id, 0
+          row = @view.data.canonicalInstance id
+          cursor.set row, 0
         @view.easy_motion_mappings = null
 
     GO:

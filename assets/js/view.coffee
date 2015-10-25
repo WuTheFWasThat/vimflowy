@@ -531,7 +531,7 @@ window?.renderLine = renderLine
 
     # try going to jump, return true if succeeds
     tryJump: (jump) ->
-      if jump.viewRoot == @data.viewRoot
+      if jump.viewRoot.id == @data.viewRoot.id
         return false # not moving, don't jump
 
       if not @data.isAttached jump.viewRoot
@@ -585,7 +585,7 @@ window?.renderLine = renderLine
     # fails if there is no child
     # records in jump history
     _changeView: (row) ->
-      if row == @data.viewRoot
+      if row.id == @data.viewRoot.id
         return true # not moving, do nothing
       if @data.hasChildren row
         @addToJumpHistory () =>
@@ -607,15 +607,15 @@ window?.renderLine = renderLine
     rootInto: (row = @cursor.row) ->
       if @reroot row
         return true
-      parent = @data.getParent row
+      parent = do row.getParent
       if @reroot parent
         @cursor.setRow row
         return true
       throw new errors.GenericError "Failed to root into #{row}"
 
     rootUp: () ->
-      if @data.viewRoot != @data.root
-        parent = @data.getParent @data.viewRoot
+      if @data.viewRoot.id != @data.root.id
+        parent = do @data.viewRoot.getParent
         @reroot parent
 
     rootDown: () ->
@@ -754,12 +754,12 @@ window?.renderLine = renderLine
       if (not @data.collapsed @cursor.row) and children.length > 0
         @act new actions.InsertRow @cursor.row, 0
       else
-        parent = @data.getParent @cursor.row
+        parent = do @cursor.row.getParent
         index = @data.indexOf @cursor.row
         @act new actions.InsertRow parent, (index+1)
 
     newLineAbove: () ->
-      parent = @data.getParent @cursor.row
+      parent = do @cursor.row.getParent
       index = @data.indexOf @cursor.row
       @act new actions.InsertRow parent, index
 
@@ -809,7 +809,7 @@ window?.renderLine = renderLine
         @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
     delBlocksAtCursor: (nrows, options = {}) ->
-      parent = @data.getParent @cursor.row
+      parent = do @cursor.row.getParent
       index = @data.indexOf @cursor.row
       action = new actions.DeleteBlocks parent, index, nrows, options
       @act action
@@ -840,29 +840,36 @@ window?.renderLine = renderLine
 
     moveBlock: (row, parent, index = -1, options = {}) ->
       @detachBlock row, options
+      [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
       @attachBlock row, parent, index, options
 
-    indentBlocks: (id, numblocks = 1) ->
-      newparent = @data.getSiblingBefore id
-      if newparent == null
+      # Move the cursor also, if it is in the moved block
+      if commonAncestor.is row
+        newCursorRow = @data.combineAncestry row, cursorAncestors
+        @cursor._setRow newCursorRow
+      return row
+
+    indentBlocks: (row, numblocks = 1) ->
+      newparent = @data.getSiblingBefore row
+      unless newparent?
         return null # cannot indent
 
       if @data.collapsed newparent
         @toggleBlock newparent
 
-      siblings = @data.getSiblingRange id, 0, (numblocks-1)
+      siblings = @data.getSiblingRange row, 0, (numblocks-1)
       for sib in siblings
         @moveBlock sib, newparent, -1
       return newparent
 
-    unindentBlocks: (id, numblocks = 1, options = {}) ->
-      parent = @data.getParent id
-      if parent == @data.viewRoot
+    unindentBlocks: (row, numblocks = 1, options = {}) ->
+      parent = do row.getParent
+      if parent.id == @data.viewRoot.id
         return null
 
-      siblings = @data.getSiblingRange id, 0, (numblocks-1)
+      siblings = @data.getSiblingRange row, 0, (numblocks-1)
 
-      newparent = @data.getParent parent
+      newparent = do parent.getParent
       pp_i = @data.indexOf parent
 
       for sib in siblings
@@ -870,35 +877,35 @@ window?.renderLine = renderLine
         @moveBlock sib, newparent, pp_i
       return newparent
 
-    indent: (id = @cursor.row) ->
-      if @data.collapsed id
-        return @indentBlocks id
+    indent: (row = @cursor.row) ->
+      if @data.collapsed row
+        return @indentBlocks row
 
-      sib = @data.getSiblingBefore id
+      sib = @data.getSiblingBefore row
 
-      newparent = @indentBlocks id
-      if newparent == null
+      newparent = @indentBlocks row
+      unless newparent?
         return
-      for child in (@data.getChildren id).slice()
+      for child in (@data.getChildren row).slice()
         @moveBlock child, sib, -1
 
-    unindent: (id = @cursor.row) ->
-      if @data.collapsed id
-        return @unindentBlocks id
+    unindent: (row = @cursor.row) ->
+      if @data.collapsed row
+        return @unindentBlocks row
 
-      if @data.hasChildren id
+      if @data.hasChildren row
         return
 
-      parent = @data.getParent id
-      p_i = @data.indexOf id
+      parent = do row.getParent
+      p_i = @data.indexOf row
 
-      newparent = @unindentBlocks id
-      if newparent == null
+      newparent = @unindentBlocks row
+      unless newparent?
         return
 
       p_children = @data.getChildren parent
       for child in p_children.slice(p_i)
-        @moveBlock child, id, -1
+        @moveBlock child, row, -1
 
     swapDown: (row = @cursor.row) ->
       next = @data.nextVisible (@data.lastVisible row)
@@ -911,7 +918,7 @@ window?.renderLine = renderLine
         @attachBlock row, next, 0
       else
         # make it the next sibling
-        parent = @data.getParent next
+        parent = do next.getParent
         p_i = @data.indexOf next
         @attachBlock row, parent, (p_i+1)
 
@@ -922,7 +929,7 @@ window?.renderLine = renderLine
 
       @detachBlock row
       # make it the previous sibling
-      parent = @data.getParent prev
+      parent = do prev.getParent
       p_i = @data.indexOf prev
       @attachBlock row, parent, p_i
 
@@ -1005,12 +1012,12 @@ window?.renderLine = renderLine
       [common, ancestors1, ancestors2] = @data.getCommonAncestor @cursor.row, @anchor.row
       if ancestors1.length == 0
         # anchor is underneath cursor
-        parent = @data.getParent common
+        parent = do common.getParent
         index = @data.indexOf @cursor.row
         return [parent, index, index]
       else if ancestors2.length == 0
         # cursor is underneath anchor
-        parent = @data.getParent common
+        parent = do common.getParent
         index = @data.indexOf @anchor.row
         return [parent, index, index]
       else
@@ -1043,9 +1050,9 @@ window?.renderLine = renderLine
     virtualRender: (options = {}) ->
       crumbs = []
       row = @data.viewRoot
-      while row != @data.root
+      until row.is @data.root
         crumbs.push row
-        row = @data.getParent row
+        row = do row.getParent
 
       makeCrumb = (row, text, isLast) =>
         m_options = {}
@@ -1077,7 +1084,7 @@ window?.renderLine = renderLine
         # mirrors logic of finishes_visual_line in keyHandler.coffee
         [parent, index1, index2] = do @getVisualLineSelections
         for child in @data.getChildRange parent, index1, index2
-          options.highlight_blocks[child] = true
+          options.highlight_blocks[child.id] = true
 
       contentsChildren = @virtualRenderTree @data.viewRoot, options
 
@@ -1094,47 +1101,47 @@ window?.renderLine = renderLine
 
       childrenNodes = []
 
-      for id in @data.getChildren parentid
+      for row in @data.getChildren parentid
 
-        if @easy_motion_mappings and id of @easy_motion_mappings.id_to_key
-          char = @easy_motion_mappings.id_to_key[id]
+        if @easy_motion_mappings and row.id of @easy_motion_mappings.id_to_key
+          char = @easy_motion_mappings.id_to_key[row.id]
           bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent'}, [char]
         else
           icon = 'fa-circle'
-          if @data.hasChildren id
-            icon = if @data.collapsed id then 'fa-plus-circle' else 'fa-minus-circle'
+          if @data.hasChildren row
+            icon = if @data.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
 
           bulletOpts = {
             className: 'fa ' + icon + ' bullet'
-            attributes: {'data-id': id}
+            attributes: {'data-id': row.id}
           }
-          if @data.hasChildren id
+          if @data.hasChildren row
             bulletOpts.style = {cursor: 'pointer'}
-            bulletOpts.onclick = ((id) =>
-              @toggleBlock id
+            bulletOpts.onclick = ((row) =>
+              @toggleBlock row
               do @save
               do @render
-            ).bind(@, id)
+            ).bind(@, row)
 
           bullet = virtualDom.h 'i', bulletOpts
 
         elLine = virtualDom.h 'div', {
-          id: rowDivID id
+          id: rowDivID row.id
           className: 'node-text'
-        }, (@virtualRenderLine id, options)
+        }, (@virtualRenderLine row, options)
 
         options.ignoreCollapse = false
         children = virtualDom.h 'div', {
-          id: childrenDivID id
+          id: childrenDivID row.id
           className: 'node-children'
-        }, (@virtualRenderTree id, options)
+        }, (@virtualRenderTree row, options)
 
         className = 'node'
-        if id of options.highlight_blocks
+        if row.id of options.highlight_blocks
           className += ' theme-bg-highlight'
 
         childNode = virtualDom.h 'div', {
-          id: containerDivID id
+          id: containerDivID row.id
           className: className
         }, [bullet, elLine, children]
 
@@ -1147,13 +1154,13 @@ window?.renderLine = renderLine
       cursors = {}
       highlights = {}
 
-      marking = @markrow == row
+      marking = @markrow? and @markrow.is row
 
-      if row == @cursor.row and not marking
+      if (row.is @cursor.row) and not marking
         cursors[@cursor.col] = true
 
         if @anchor and not @lineSelect
-          if row == @anchor.row
+          if @anchor.row? and row.is @anchor.row
             for i in [@cursor.col..@anchor.col]
               highlights[i] = true
           else

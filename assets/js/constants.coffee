@@ -10,6 +10,8 @@
 
   exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
 
+  exports.root_id = 0
+
   exports.default_data = { text: '', children: [
     'Welcome to vimflowy!'
     '(I hope you know to use j and k to move up and down!)'

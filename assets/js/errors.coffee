@@ -22,6 +22,9 @@ if module? # imports
   AssertionError = errorFactory (message) -> @message = "Assertion error: #{message}"
   exports.AssertionError = AssertionError
 
+  exports.assert = (a, message="assert error") ->
+    unless a then throw new AssertionError "#{message}\nExpected #{a} to be true"
+
   exports.assert_equals = (a, b, message="assert_equals error") ->
     if a != b then throw new AssertionError "#{message}\nExpected #{a} == #{b}"
 

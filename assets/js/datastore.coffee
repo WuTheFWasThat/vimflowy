@@ -24,7 +24,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_settingKey_ = (setting) -> "settings:#{setting}"
 
       @_lastSaveKey_ = "#{@prefix}:lastSave"
-      @_lastViewrootKey_ = "#{@prefix}:lastviewroot"
+      @_lastViewrootKey_ = "#{@prefix}:lastviewroot2"
       @_allMarksKey_ = "#{@prefix}:allMarks"
       @_IDKey_ = "#{@prefix}:lastID"
 
@@ -36,7 +36,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
     # get and set values for a given row
     getLine: (row) ->
-      [].slice.apply @get (@_lineKey_ row), []
+      _.cloneDeep (@get (@_lineKey_ row), [])
     setLine: (row, line) ->
       @set (@_lineKey_ row), line
 
@@ -46,7 +46,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @set (@_parentKey_ row), parent
 
     getChildren: (row) ->
-      [].slice.apply @get (@_childrenKey_ row), []
+      _.cloneDeep (@get (@_childrenKey_ row), [])
     setChildren: (row, children) ->
       @set (@_childrenKey_ row), children
 
@@ -76,10 +76,10 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @set @_allMarksKey_, marks
 
     # get last view (for page reload)
-    setLastViewRoot: (row) ->
-      @set @_lastViewrootKey_, row
+    setLastViewRoot: (ancestry) ->
+      @set @_lastViewrootKey_, ancestry
     getLastViewRoot: () ->
-      @get @_lastViewrootKey_, 0
+      @get @_lastViewrootKey_, []
 
     # get next row ID
     getId: () -> # Suggest to override this for efficiency
@@ -96,8 +96,8 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
   class InMemory extends DataStore
     constructor: () ->
-      super ''
       @cache = {}
+      super ''
 
     get: (key, default_value = null) ->
       if key of @cache
@@ -110,9 +110,9 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
   class LocalStorageLazy extends DataStore
     constructor: (prefix='') ->
-      super prefix
-      @lastSave = Date.now()
       @cache = {}
+      super prefix
+      @lastSave = do Date.now
 
     get: (key, default_value=null) ->
       if not (key of @cache)

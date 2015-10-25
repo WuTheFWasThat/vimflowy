@@ -41,7 +41,7 @@ if module?
       @options.cursor ?= {}
 
     str: () ->
-      return "row #{@row}, col #{@col}, nchars #{@chars.length}"
+      return "row #{@row.id}, col #{@col}, nchars #{@chars.length}"
 
     apply: (view) ->
       view.data.writeChars @row, @col, @chars
@@ -61,7 +61,7 @@ if module?
       @options.cursor ?= {}
 
     str: () ->
-      return "row #{@row}, col #{@col}, nchars #{@nchars}"
+      return "row #{@row.id}, col #{@col}, nchars #{@nchars}"
 
     apply: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
@@ -77,7 +77,7 @@ if module?
     constructor: (@parent, @index) ->
 
     str: () ->
-      return "parent #{@parent} index #{@index}"
+      return "parent #{@parent.id} index #{@index}"
 
     apply: (view) ->
       @newrow = view.data.addChild @parent, @index
@@ -93,24 +93,20 @@ if module?
     constructor: (@row, @options = {}) ->
 
     str: () ->
-      return "row #{@row}"
+      return "row #{@row.id}"
 
     apply: (view) ->
-      @parent = view.data.getParent @row
-      @index = view.data.indexOf @row
-
-      errors.assert_not_equals @row, view.data.root, "Cannot detach root"
-
-      view.data.detach @row
+      errors.assert_not_equals @row.id, view.data.root.id, "Cannot detach root"
+      @detached = view.data.detach @row
 
     rewind: (view) ->
-      view.data.attachChild @parent, @row, @index
+      view.data.attachChild @detached.parent, @row, @detached.index
 
   class AttachBlock extends Action
     constructor: (@row, @parent, @index = -1, @options = {}) ->
 
     str: () ->
-      return "row #{@row}, parent #{@parent}"
+      return "row #{@row.id}, parent #{@parent}"
 
     apply: (view) ->
       view.data.attachChild @parent, @row, @index
@@ -122,7 +118,7 @@ if module?
     constructor: (@parent, @index, @nrows = 1, @options = {}) ->
 
     str: () ->
-      return "parent #{@parent}, index #{@index}, nrows #{@nrows}"
+      return "parent #{@parent.id}, index #{@index}, nrows #{@nrows}"
 
     apply: (view) ->
       @deleted_rows = []
@@ -142,7 +138,7 @@ if module?
         next = children[@index]
       else
         next = if @index == 0 then @parent else children[@index - 1]
-        if next == view.data.viewRoot
+        if next.id == view.data.viewRoot.id
           next = view.data.addChild @parent
           @created = next
 
@@ -171,7 +167,7 @@ if module?
       @nrows = @serialized_rows.length
 
     str: () ->
-      return "parent #{@parent}, index #{@index}"
+      return "parent #{@parent.id}, index #{@index}"
 
     apply: (view) ->
       index = @index
@@ -202,7 +198,7 @@ if module?
   class ToggleBlock extends Action
     constructor: (@row) ->
     str: () ->
-      return "row #{@row}"
+      return "row #{@row.id}"
     apply: (view) ->
       view.data.toggleCollapsed @row
     rewind: (view) ->
@@ -211,7 +207,7 @@ if module?
   class SetMark extends Action
     constructor: (@row, @mark) ->
     str: () ->
-      return "row #{@row}, mark #{@mark}"
+      return "row #{@row.id}, mark #{@mark}"
     apply: (view) ->
       @oldmark = view.data.getMark @row
       view.data.setMark @row, @mark

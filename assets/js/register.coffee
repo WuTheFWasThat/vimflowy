@@ -5,6 +5,7 @@ Implements pasting for each of the types
 ###
 
 class Register
+
   @TYPES = {
     NONE: 0
     CHARS: 1
@@ -35,7 +36,6 @@ class Register
   saveRows: (data) ->
     @type = Register.TYPES.ROWS
     @data = data
-
   saveSerializedRows: (data) ->
     @type = Register.TYPES.SERIALIZED_ROWS
     @data = data
@@ -67,7 +67,7 @@ class Register
 
   pasteRows: (options = {}) ->
     row = @view.cursor.row
-    parent = @view.data.getParent row
+    parent = do row.getParent
     index = @view.data.indexOf row
 
     if options.before
@@ -88,7 +88,7 @@ class Register
 
   pasteSerializedRows: (options = {}) ->
     row = @view.cursor.row
-    parent = @view.data.getParent row
+    parent = do row.getParent
     index = @view.data.indexOf row
 
     if options.before

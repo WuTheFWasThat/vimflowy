@@ -73,11 +73,11 @@ class TestCase
     return @
 
   expectViewRoot: (expected) ->
-    @_expectEqual @data.viewRoot, expected, "Unexpected view root"
+    @_expectEqual @data.viewRoot.id, expected, "Unexpected view root"
     return @
 
   expectCursor: (row, col) ->
-    @_expectEqual @view.cursor.row, row, "Unexpected cursor row"
+    @_expectEqual @view.cursor.row.id, row, "Unexpected cursor row"
     @_expectEqual @view.cursor.col, col, "Unexpected cursor col"
     return @
 

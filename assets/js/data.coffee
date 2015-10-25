@@ -6,6 +6,64 @@ if module?
   global.constants = require('./constants.coffee')
   global.Logger = require('./logger.coffee')
 
+class Row
+  constructor: (@parent, @id) ->
+
+  getParent: () ->
+    @parent
+
+  # NOTE: in the future, this may contain other info
+  serialize: () ->
+    return @id
+
+  load: (obj) ->
+    if typeof obj == 'number'
+      obj = {id: obj}
+    @id = obj.id
+
+  setParent: (parent) ->
+    @parent = parent
+
+  getId: () ->
+    @id
+
+  debug: () ->
+    ancestors = do @getAncestry
+    ids = _.map ancestors, (row) -> row.id
+    ids.join ", "
+
+  isRoot: () ->
+    @id == constants.root_id
+
+  # gets a list of IDs
+  getAncestry: () ->
+    if do @isRoot then return []
+    ancestors = do @parent.getAncestry
+    ancestors.push @id
+    ancestors
+
+  # Represents the exact same row
+  is: (other) ->
+    if @id != other.id then return false
+    if do @isRoot then return do other.isRoot
+    if do other.isRoot then return false
+    return (do @getParent).is (do other.getParent)
+
+Row.getRoot = () ->
+  new Row null, constants.root_id
+
+Row.loadFrom = (parent, serialized) ->
+  row = new Row parent
+  row.load serialized
+  row
+
+Row.loadFromAncestry = (ancestry) ->
+  if ancestry.length == 0
+    return do Row.getRoot
+  id = do ancestry.pop
+  parent = Row.loadFromAncestry ancestry
+  new Row parent, id
+
 ###
 Data is a wrapper class around the actual datastore, providing methods to manipulate the data
 the data itself includes:
@@ -18,16 +76,16 @@ also deals with loading the initial data from the datastore, and serializing the
 Currently, the separation between the View and Data classes is not very good.  (see view.coffee)
 ###
 class Data
-  root: 0
+  root: do Row.getRoot
 
   constructor: (store) ->
     @store = store
-    @viewRoot = do @store.getLastViewRoot
+    @viewRoot = Row.loadFromAncestry (do @store.getLastViewRoot || [])
     return @
 
   changeViewRoot: (row) ->
     @viewRoot = row
-    @store.setLastViewRoot row
+    @store.setLastViewRoot do row.getAncestry
 
   #########
   # lines #
@@ -41,7 +99,7 @@ class Data
   # }
   # in the case where all properties are false, it may be simply the character (to save space)
   getLine: (row) ->
-    return (@store.getLine row).map (obj) ->
+    return (@store.getLine row.id).map (obj) ->
       if typeof obj == 'string'
         obj = {
           char: obj
@@ -55,7 +113,7 @@ class Data
     return @getLine(row)[col]?.char
 
   setLine: (row, line) ->
-    return (@store.setLine row, (line.map (obj) ->
+    return (@store.setLine row.id, (line.map (obj) ->
       # if no properties are true, serialize just the character to save space
       if _.all constants.text_properties.map ((property) => (not obj[property]))
         return obj.char
@@ -99,112 +157,124 @@ class Data
   #########
 
   # get mark for a row, '' if it doesn't exist
-  getMark: (id) ->
-    marks = @store.getMarks id
-    return marks[id] or ''
+  getMark: (row) ->
+    marks = @store.getMarks row.id
+    return marks[row.id] or ''
 
-  _updateAllMarks: (id, mark = '') ->
+  _updateAllMarks: (row, mark = '') ->
     allMarks = do @store.getAllMarks
 
     if mark of allMarks
       return false
 
-    oldmark = @getMark id
+    oldmark = @getMark row
     if oldmark
       delete allMarks[oldmark]
 
     if mark
-      allMarks[mark] = id
+      allMarks[mark] = row.id
     @store.setAllMarks allMarks
     return true
 
   # recursively update allMarks for id,mark pair
-  _updateMarksRecursive: (id, mark = '', from, to) ->
+  _updateMarksRecursive: (row, mark = '', from, to) ->
     cur = from
     while true
-      marks = @store.getMarks cur
+      marks = @store.getMarks cur.id
       if mark
-        marks[id] = mark
+        marks[row.id] = mark
       else
-        delete marks[id]
-      @store.setMarks cur, marks
-      if cur == to
+        delete marks[row.id]
+      @store.setMarks cur.id, marks
+      if cur.id == to.id
         break
-      cur = @getParent cur
+      cur = do cur.getParent
 
-  setMark: (id, mark = '') ->
-    if @_updateAllMarks id, mark
-      @_updateMarksRecursive id, mark, id, @root
+  setMark: (row, mark = '') ->
+    if @_updateAllMarks row, mark
+      @_updateMarksRecursive row, mark, row, @root
       return true
     return false
 
   # detach the marks of an id that is being detached
   # assumes that the old parent of the id is set
-  detachMarks: (id) ->
-    marks = @store.getMarks id
-    for row, mark of marks
-      row = parseInt row
-      @_updateAllMarks row, ''
+  detachMarks: (row) ->
+    marks = @store.getMarks row.id
+    for id, mark of marks
+      id = parseInt id
+      row2 = @canonicalInstance id
+      @_updateAllMarks row2, ''
       # roll back the mark for this row, but only above me
-      @_updateMarksRecursive row, '', (@getParent id), @root
+      @_updateMarksRecursive row2, '', (do row.getParent), @root
 
   # try to restore the marks of an id that was detached
   # assumes that the new to-be-parent of the id is already set
   # and that the marks dictionary contains the old values
-  attachMarks: (id) ->
-    marks = @store.getMarks id
-    for row, mark of marks
-      row = parseInt row
-      if not (@setMark row, mark)
+  attachMarks: (row) ->
+    marks = @store.getMarks row.id
+    for id, mark of marks
+      id = parseInt id
+      row2 = @canonicalInstance id
+      if not (@setMark row2, mark)
         # roll back the mark for this row, but only underneath me
-        @_updateMarksRecursive row, '', row, id
+        @_updateMarksRecursive row2, '', row2, row
 
   getAllMarks: () ->
-    return do @store.getAllMarks
+    _.mapValues (do @store.getAllMarks), @canonicalInstance, @
 
   #############
   # structure #
   #############
 
-  getParent: (row) ->
-    return @store.getParent row
+  getChildren: (parent) ->
+    (Row.loadFrom parent, serialized) for serialized in @store.getChildren parent.id
 
-  getChildren: (row) ->
-    return @store.getChildren row
+  setChildren: (id, children) ->
+    @store.setChildren id, (do child.serialize for child in children)
+
+  getChild: (row, id) ->
+    _.find (@getChildren row), (x) -> x.id == id
 
   hasChildren: (row) ->
     return ((@getChildren row).length > 0)
 
   getSiblings: (row) ->
-    parent = @getParent row
-    return @getChildren parent
-
-  collapsed: (row) ->
-    return @store.getCollapsed row
-
-  toggleCollapsed: (id) ->
-    @store.setCollapsed id, (not @collapsed id)
-
-  # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
-  viewable: (row) ->
-    return (not @collapsed row) or (row == @viewRoot)
+    return @getChildren (do row.getParent)
 
   indexOf: (child) ->
     children = @getSiblings child
-    return children.indexOf child
+    return _.findIndex children, (sib) ->
+        sib.id == child.id
 
-  detach: (id) ->
+  collapsed: (row) ->
+    return @store.getCollapsed row.id
+
+  toggleCollapsed: (row) ->
+    @store.setCollapsed row.id, (not @collapsed row)
+
+  canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
+    if id == @root.id
+      return @root
+    canonicalParent = @canonicalInstance (@store.getParent id)
+    return @getChild canonicalParent, id
+
+  # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
+  viewable: (row) ->
+    return (not @collapsed row) or (row.is @viewRoot)
+
+  detach: (row) ->
     # detach a block from the graph
     # though it is detached, it remembers its old parent
     # and remembers its old mark
 
-    parent = @getParent id
-    children = @getChildren parent
-    i = children.indexOf id
+    @detachMarks row # Requires parent to be set correctly, so it's at the beginning
+
+    parent = do row.getParent
+    children = @getSiblings row
+    i = @indexOf row
     children.splice i, 1
 
-    @store.setChildren parent, children
-    @detachMarks id
+    @setChildren parent.id, children
 
     return {
       parent: parent
@@ -213,30 +283,33 @@ class Data
 
   # attaches a detached child to a parent
   # the child should not have a parent already
-  attachChild: (id, child, index = -1) ->
-    @attachChildren id, [child], index
+  attachChild: (row, child, index = -1) ->
+    children = @attachChildren row, [child], index
 
-  attachChildren: (id, new_children, index = -1) ->
-    children = @getChildren id
+  attachChildren: (row, new_children, index = -1) ->
+    children = @getChildren row
     if index == -1
       children.push.apply children, new_children
     else
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
-      @store.setParent child, id
-      @attachMarks child
+      child.setParent row
+      @store.setParent child.id, row.id
 
-    @store.setChildren id, children
+    @setChildren row.id, children
+
+    for child in new_children
+      @attachMarks child
 
   # returns an array representing the ancestry of a row,
   # up until the ancestor specified by the `stop` parameter
   # i.e. [stop, stop's child, ... , row's parent , row]
   getAncestry: (row, stop = @root) ->
     ancestors = []
-    while row != stop
-      errors.assert_not_equals row, @root, "Failed to get ancestry for #{row} going up until #{stop}"
+    until row.is stop
+      errors.assert_not_equals row.id, @root.id, "Failed to get ancestry for #{row} going up until #{stop}"
       ancestors.push row
-      row = @getParent row
+      row = do row.getParent
     ancestors.push stop
     do ancestors.reverse
     return ancestors
@@ -248,96 +321,103 @@ class Data
   getCommonAncestor: (row1, row2) ->
     ancestors1 = @getAncestry row1
     ancestors2 = @getAncestry row2
-    common = @root
-    i = 1
-    while ancestors1.length > i and ancestors2.length > i and ancestors1[i] == ancestors2[i]
-      common = ancestors1[i]
-      i += 1
-    return [common, ancestors1[i..], ancestors2[i..]]
+    commonAncestry = _.takeWhile (_.zip ancestors1, ancestors2), (pair) ->
+      pair[0]? and pair[1]? and pair[0].is pair[1]
+    common = (_.last commonAncestry)[0]
+    firstDifference = commonAncestry.length
+    return [common, ancestors1[firstDifference..], ancestors2[firstDifference..]]
 
-  nextVisible: (id = @viewRoot) ->
-    if @viewable id
-      children = @getChildren id
+  # extends a row's path using descendents (used when moving blocks around)
+  combineAncestry: (row, descendents) ->
+    for descendent in descendents
+      row = @getChild row, descendent.id
+      unless row?
+        return null
+    return row
+
+  nextVisible: (row = @viewRoot) ->
+    if @viewable row
+      children = @getChildren row
       if children.length > 0
         return children[0]
     while true
-      nextsib = @getSiblingAfter id
-      if nextsib != null
+      nextsib = @getSiblingAfter row
+      if nextsib?
         return nextsib
-      id = @getParent id
-      if id == @viewRoot
+      row = do row.getParent
+      if row.is @viewRoot
         return null
 
   # last thing visible nested within id
-  lastVisible: (id = @viewRoot) ->
-    if not @viewable id
-      return id
-    children = @getChildren id
+  lastVisible: (row = @viewRoot) ->
+    if not @viewable row
+      return row
+    children = @getChildren row
     if children.length > 0
       return @lastVisible children[children.length - 1]
-    return id
+    return row
 
-  prevVisible: (id) ->
-    prevsib = @getSiblingBefore id
-    if prevsib != null
+  prevVisible: (row) ->
+    prevsib = @getSiblingBefore row
+    if prevsib?
       return @lastVisible prevsib
-    parent = @getParent id
-    if parent == @viewRoot
+    parent = do row.getParent
+    if parent.is @viewRoot
       return null
     return parent
 
   # finds oldest ancestor that is visible (viewRoot itself not considered visible)
   # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
-  oldestVisibleAncestor: (id) ->
-    last = id
+  oldestVisibleAncestor: (row) ->
+    last = row
     while true
-      cur = @getParent last
-      if cur == @viewRoot
+      cur = do last.getParent
+      if cur.is @viewRoot
         return last
-      if cur == @root
+      if cur.id == @root.id
         return null
       last = cur
 
   # finds closest ancestor that is visible (viewRoot itself not considered visible)
   # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
-  youngestVisibleAncestor: (id) ->
-    answer = id
-    cur = id
+  youngestVisibleAncestor: (row) ->
+    answer = row
+    cur = row
     while true
-      cur = @getParent cur
-      if cur == @viewRoot
+      cur = do cur.getParent
+      if cur.is @viewRoot
         return answer
-      if cur == @root
+      if cur.id == @root.id
         return null
       if @collapsed cur
         answer = cur
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
-  isAttached: (id) ->
+  isAttached: (row) ->
     while true
-      if id == @root
+      if row.id == @root.id
         return true
-      if (@indexOf id) == -1
+      if (@indexOf row) == -1
         return false
-      id = @getParent id
+      row = do row.getParent
 
-  getSiblingBefore: (id) ->
-    return @getSiblingOffset id, -1
+  getSiblingBefore: (row) ->
+    return @getSiblingOffset row, -1
 
-  getSiblingAfter: (id) ->
-    return @getSiblingOffset id, 1
+  getSiblingAfter: (row) ->
+    return @getSiblingOffset row, 1
 
-  getSiblingOffset: (id, offset) ->
-    return (@getSiblingRange id, offset, offset)[0]
+  getSiblingOffset: (row, offset) ->
+    return (@getSiblingRange row, offset, offset)[0]
 
-  getSiblingRange: (id, min_offset, max_offset) ->
-    children = @getSiblings id
-    index = @indexOf id
-    return @getChildRange (@getParent id), (min_offset + index), (max_offset + index)
+  getSiblingRange: (row, min_offset, max_offset) ->
+    children = @getSiblings row
+    index = @indexOf row
+    return @getChildRange (do row.getParent), (min_offset + index), (max_offset + index)
 
-  getChildRange: (id, min, max) ->
-    children = @getChildren id
+  getChildRange: (row, min, max) ->
+    children = @getChildren row
     indices = [min..max]
 
     return indices.map (index) ->
@@ -348,37 +428,37 @@ class Data
       else
         return children[index]
 
-  addChild: (id, index = -1) ->
-    child = do @store.getNew
-    @attachChild id, child, index
+  addChild: (row, index = -1) ->
+    id = do @store.getNew
+    child = new Row row, id
+    @attachChild row, child, index
     return child
 
-  _insertSiblingHelper: (id, after) ->
-    if id == @viewRoot
+  _insertSiblingHelper: (row, after) ->
+    if row.id == @viewRoot.id
       Logger.logger.error 'Cannot insert sibling of view root'
       return null
 
-    parent = @getParent id
-    children = @getChildren parent
-    index = children.indexOf id
+    parent = do row.getParent
+    index = @indexOf row
 
     return (@addChild parent, (index + after))
 
-  insertSiblingAfter: (id) ->
-    return @_insertSiblingHelper id, 1
+  insertSiblingAfter: (row) ->
+    return @_insertSiblingHelper row, 1
 
-  insertSiblingBefore: (id) ->
-    return @_insertSiblingHelper id, 0
+  insertSiblingBefore: (row) ->
+    return @_insertSiblingHelper row, 0
 
   orderedLines: () ->
-    ids = []
+    rows = []
 
-    helper = (id) =>
-      ids.push id
-      for child in @getChildren id
+    helper = (row) =>
+      rows.push row
+      for child in @getChildren row
         helper child
     helper @root
-    return ids
+    return rows
 
   # find marks that start with the prefix
   findMarks: (prefix, nresults = 10) ->
@@ -413,8 +493,8 @@ class Data
     if query.length == 0
       return results
 
-    for id in do @orderedLines
-      line = canonicalize (@getText id).join ''
+    for row in do @orderedLines
+      line = canonicalize (@getText row).join ''
       matches = []
       if _.all(query_words.map ((word) ->
                 i = line.indexOf word
@@ -426,7 +506,7 @@ class Data
                   return false
               ))
         results.push {
-          row: id
+          row: row
           matches: matches
         }
       if nresults > 0 and results.length == nresults
@@ -438,14 +518,14 @@ class Data
   #################
 
   # important: serialized automatically garbage collects
-  serialize: (id = @root, pretty=false) ->
-    line = @getLine id
-    text = (@getText id).join('')
+  serialize: (row = @root, pretty=false) ->
+    line = @getLine row
+    text = (@getText row).join('')
 
     struct = {
       text: text
     }
-    children = (@serialize childid, pretty for childid in @getChildren id)
+    children = (@serialize childrow, pretty for childrow in @getChildren row)
     if children.length
       struct.children = children
 
@@ -454,13 +534,13 @@ class Data
         struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
         pretty = false
 
-    if id == @root and @viewRoot != @root
+    if row.id == @root.id and @viewRoot.id != @root.id
       struct.viewRoot = @viewRoot
 
-    if @collapsed id
+    if @collapsed row
       struct.collapsed = true
 
-    mark = @getMark id
+    mark = @getMark row
     if mark
       struct.mark = mark
 
@@ -470,16 +550,16 @@ class Data
     return struct
 
   loadTo: (serialized, parent = @root, index = -1) ->
-    id = do @store.getNew
+    row = new Row parent, (do @store.getNew)
 
-    if id != @root
-      @attachChild parent, id, index
+    if row.id != @root.id
+      @attachChild parent, row, index
     else
-      # parent should be 0
-      @store.setParent id, @root
+      row.setParent null
+      @store.setParent row.id, @root.id
 
     if typeof serialized == 'string'
-      @setLine id, (serialized.split '')
+      @setLine row, (serialized.split '')
     else
       line = (serialized.text.split '').map((char) -> {char: char})
       for property in constants.text_properties
@@ -488,21 +568,21 @@ class Data
             if val == '.'
               line[i][property] = true
 
-      @setLine id, line
-      @store.setCollapsed id, serialized.collapsed
+      @setLine row, line
+      @store.setCollapsed row.id, serialized.collapsed
 
       if serialized.mark
-        @setMark id, serialized.mark
+        @setMark row, serialized.mark
 
       if serialized.children
         for serialized_child in serialized.children
-          @loadTo serialized_child, id
+          @loadTo serialized_child, row
 
-    return id
+    return row
 
   load: (serialized) ->
     if serialized.viewRoot
-      @viewRoot = serialized.viewRoot
+      @viewRoot = serialized.viewRoot # TODO: Serialize and unserialize viewRoot in terms of id-list only
     else
       @viewRoot = @root
 

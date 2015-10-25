@@ -41,6 +41,9 @@ class Cursor
     @row = row
     @_fromMoveCol cursorOptions
 
+  _setRow: (row) ->
+    @row = row
+
   setCol: (moveCol, cursorOptions = {pastEnd: true}) ->
     @moveCol = moveCol
     @_fromMoveCol cursorOptions
@@ -265,30 +268,30 @@ class Cursor
 
   up: (cursorOptions = {}) ->
     row = @data.prevVisible @row
-    if row != null
+    if row?
       @setRow row, cursorOptions
 
   down: (cursorOptions = {}) ->
     row = @data.nextVisible @row
-    if row != null
+    if row?
       @setRow row, cursorOptions
 
   parent: (cursorOptions = {}) ->
-    row = @data.getParent @row
-    if row == @data.root
+    row = do @row.getParent
+    if row.id == @data.root.id
       return
-    if row == @data.viewRoot
-      @data.changeViewRoot @data.getParent row
+    if row.is @data.viewRoot
+      @data.changeViewRoot (do row.getParent)
     @setRow row, cursorOptions
 
   prevSibling: (cursorOptions = {}) ->
     prevsib = @data.getSiblingBefore @row
-    if prevsib != null
+    if prevsib?
       @setRow prevsib, cursorOptions
 
   nextSibling: (cursorOptions = {}) ->
     nextsib = @data.getSiblingAfter @row
-    if nextsib != null
+    if nextsib?
       @setRow nextsib, cursorOptions
 
   # cursor properties
