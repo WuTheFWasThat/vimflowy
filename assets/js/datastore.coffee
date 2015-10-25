@@ -26,7 +26,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_settingKey_ = (setting) -> "settings:#{setting}"
 
       @_lastSaveKey_ = "#{@prefix}:lastSave"
-      @_lastViewrootKey_ = "#{@prefix}:lastviewroot"
+      @_lastViewrootKey_ = "#{@prefix}:lastviewroot2"
       @_allMarksKey_ = "#{@prefix}:allMarks"
       @_IDKey_ = "#{@prefix}:lastID"
       @_schemaVersionKey_ = "#{@prefix}:schemaVersion"
@@ -83,15 +83,15 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @set @_allMarksKey_, marks
 
     # get last view (for page reload)
-    setLastViewRoot: (row) ->
-      @set @_lastViewrootKey_, row
+    setLastViewRoot: (ancestry) ->
+      @set @_lastViewrootKey_, ancestry
     getLastViewRoot: () ->
-      @get @_lastViewrootKey_
+      @get @_lastViewrootKey_, []
 
     setSchemaVersion: (version) ->
       @set @_schemaVersionKey_, version
     getSchemaVersion: () ->
-      @get @_schemaVersionKey_
+      @get @_schemaVersionKey_, 1
 
     # get next row ID
     getId: () -> # Suggest to override this for efficiency

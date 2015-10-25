@@ -38,6 +38,13 @@ class Row
   clone: () ->
     new Row (@parent?.clone?()), @id
 
+  # gets a list of IDs
+  getAncestry: () ->
+    if do @isRoot then return []
+    ancestors = do @parent.getAncestry
+    ancestors.push @id
+    ancestors
+
   # Represents the exact same row
   is: (other) ->
     if @id != other.id then return false
@@ -47,6 +54,18 @@ class Row
 
 Row.getRoot = () ->
   new Row null, constants.root_id
+
+Row.loadFrom = (parent, serialized) ->
+  row = new Row parent
+  row.load serialized
+  row
+
+Row.loadFromAncestry = (ancestry) ->
+  if ancestry.length == 0
+    return do Row.getRoot
+  id = do ancestry.pop
+  parent = Row.loadFromAncestry ancestry
+  new Row parent, id
 
 ###
 Data is a wrapper class around the actual datastore, providing methods to manipulate the data
@@ -64,12 +83,12 @@ class Data
 
   constructor: (store) ->
     @store = store
-    @viewRoot = do @store.getLastViewRoot || @root
+    @viewRoot = Row.loadFromAncestry (do @store.getLastViewRoot || [])
     return @
 
   changeViewRoot: (row) ->
     @viewRoot = row
-    @store.setLastViewRoot row
+    @store.setLastViewRoot do row.getAncestry
 
   #########
   # lines #
@@ -213,12 +232,7 @@ class Data
   #############
 
   getChildren: (parent) ->
-    children = []
-    for serialized_child in @store.getChildren parent.id
-      row = new Row parent
-      row.load serialized_child
-      children.push row
-    children
+    (Row.loadFrom parent, serialized) for serialized in @store.getChildren parent.id
 
   setChildren: (id, children) ->
     @store.setChildren id, (do child.serialize for child in children)
