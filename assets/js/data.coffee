@@ -535,7 +535,7 @@ class Data
         pretty = false
 
     if row.id == @root.id and @viewRoot.id != @root.id
-      struct.viewRoot = @viewRoot
+      struct.viewRoot = do @viewRoot.getAncestry
 
     if @collapsed row
       struct.collapsed = true
@@ -582,7 +582,7 @@ class Data
 
   load: (serialized) ->
     if serialized.viewRoot
-      @viewRoot = serialized.viewRoot # TODO: Serialize and unserialize viewRoot in terms of id-list only
+      @viewRoot = Row.loadFromAncestry serialized.viewRoot
     else
       @viewRoot = @root
 
