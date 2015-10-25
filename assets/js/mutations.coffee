@@ -195,6 +195,68 @@ if module?
         view.data.attachChild @parent, sib, index
         index += 1
 
+  class CloneBlocks extends Mutation
+    # options:
+    #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
+    #              indicating which block the cursor should go to
+
+    constructor: (@cloned_rows, @parent, @index = -1, @options = {}) ->
+      @nrows = @cloned_rows.length
+
+    str: () ->
+      return "parent #{@parent.id}, index #{@index}"
+
+    _checkSibling: (view) ->
+      children = view.data.getChildren @parent
+      for clone_id in @cloned_rows
+        if _.find children, { id: clone_id }
+          return false
+      return true
+
+    checkCircular: (view) ->
+      @_checkCircularTree view, _.map(@cloned_rows, (clone_id) -> view.data.canonicalInstance clone_id)
+
+    _checkCircularTree: (view, rows) ->
+      for row in rows
+        if view.data.wouldBeCircularInsert row, @parent
+          return false
+        unless @_checkCircularTree view, (view.data.getChildren row)
+          return false
+      return true
+
+    mutate: (view) ->
+      unless (@_checkSibling view)
+        return view.showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
+      unless (@checkCircular view)
+        return view.showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
+
+      index = @index
+
+      first = true
+      for clone_id in @cloned_rows
+        original = view.data.canonicalInstance clone_id
+        unless original?
+          continue
+        try
+          clone = view.data.cloneRow original, @parent, index
+          index += 1
+        catch error
+          unless error instanceof errors.CircularReference
+            throw error
+          return view.showMessage "Rows cannot be nested under themselves", {text_class: 'error'}
+
+        if @options.setCursor == 'first' and first
+          view.cursor.set clone, 0
+          first = false
+
+      if @options.setCursor == 'last' and row?
+        view.cursor.set clone, 0
+
+    rewind: (view) ->
+      delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+      for sib in delete_siblings
+        view.data.detach sib
+
   class ToggleBlock extends Mutation
     constructor: (@row) ->
     str: () ->
@@ -221,6 +283,7 @@ if module?
   exports.AttachBlock = AttachBlock
   exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
+  exports.CloneBlocks = CloneBlocks
   exports.ToggleBlock = ToggleBlock
   exports.SetMark = SetMark
 )(if typeof exports isnt 'undefined' then exports else window.mutations = {})
