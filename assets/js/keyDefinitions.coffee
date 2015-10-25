@@ -792,7 +792,21 @@ For more info/context, see keyBindings.coffee
 
         @view.yankBetween @view.cursor, cursor, {}
         do @keyStream.forget
+    CLONE:
+      display: 'Yank blocks as a clone'
+      definition: () ->
+        @view.yankBlocksClone @view.cursor.row, @repeat
+        do @keyStream.forget
   }
+
+  #   jeff: c conflicts with change, so this doesn't work
+  # registerAction [MODES.VISUAL_LINE], {
+  #   name: 'CLONE',
+  #   description: 'Yank blocks as a clone',
+  # }, () ->
+  #   @view.yankBlocksClone @row_start, @num_rows
+  #   @view.setMode MODES.NORMAL
+  #   do @keyStream.forget
 
   registerAction [MODES.NORMAL], {
     name: 'DELETE_CHAR',

@@ -95,6 +95,7 @@ It also internally maintains
     CHANGE_CHAR       : ['s']
     REPLACE           : ['r']
     YANK              : ['y']
+    CLONE             : ['c']
     PASTE_AFTER       : ['p']
     PASTE_BEFORE      : ['P']
     JOIN_LINE         : ['J']
@@ -240,6 +241,7 @@ It also internally maintains
     return mode_commands
 
   commands[MODES.NORMAL] = get_commands_for_mode MODES.NORMAL
+  commands[MODES.NORMAL].push('CLONE') # is in a sub-dict
   commands[MODES.VISUAL] = get_commands_for_mode MODES.VISUAL
   commands[MODES.VISUAL_LINE] = get_commands_for_mode MODES.VISUAL_LINE
   commands[MODES.INSERT] = get_commands_for_mode MODES.INSERT
@@ -263,7 +265,6 @@ It also internally maintains
         else if (name of keyMap)
           keys = keyMap[name]
         else
-          # this definition does not pertain to this context
           continue
 
         v = _.clone v

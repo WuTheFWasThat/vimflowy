@@ -832,6 +832,10 @@ window?.renderLine = renderLine
       mutation = new mutations.AddBlocks serialized_rows, parent, index, options
       @do mutation
 
+    addClones: (cloned_rows, parent, index = -1, options = {}) ->
+      mutation= new mutations.CloneBlocks cloned_rows, parent, index, options
+      @do mutation
+
     yankBlocks: (row, nrows) ->
       siblings = @data.getSiblingRange row, 0, (nrows-1)
       siblings = siblings.filter ((x) -> return x != null)
@@ -840,6 +844,10 @@ window?.renderLine = renderLine
 
     yankBlocksAtCursor: (nrows) ->
       @yankBlocks @cursor.row, nrows
+
+    yankBlocksClone: (row, nrows) ->
+      siblings = @data.getSiblingRange row, 0, (nrows-1)
+      @register.saveClonedRows (siblings.map (sibling) -> sibling.id)
 
     detachBlock: (row, options = {}) ->
       mutation = new mutations.DetachBlock row, options
@@ -1129,6 +1137,9 @@ window?.renderLine = renderLine
           icon = 'fa-circle'
           if @data.hasChildren row
             icon = if @data.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
+          if (@data.getParents row).length > 1
+            icon = 'fa-clone'
+
 
           bulletOpts = {
             className: 'fa ' + icon + ' bullet'
