@@ -200,6 +200,14 @@ It also internally maintains
 
     FINISH_MARK       : ['enter']
 
+  WITHIN_ROW_MOTIONS = [
+    'LEFT', 'RIGHT',
+    'HOME', 'END',
+    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
+    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
+    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
+  ]
+
   # set of possible commands for each mode
   commands = {}
 
@@ -284,25 +292,19 @@ It also internally maintains
     'EXIT_MODE',
   ]
 
-  commands[MODES.SEARCH] = [
-    'MENU_UP', 'MENU_DOWN',
-    'MENU_SELECT',
-    'LEFT', 'RIGHT',
-    'HOME', 'END',
-    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
-    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
-    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
-    'BACKSPACE', 'DELKEY',
-    'EXIT_MODE',
-  ]
+  commands[MODES.SEARCH] = []
+  for k of keyDefinitions
+    if keyDefinitions[k].search
+      commands[MODES.SEARCH].push k
+  for motion in WITHIN_ROW_MOTIONS
+    commands[MODES.SEARCH].push motion
 
-  commands[MODES.MARK] = [
-    'FINISH_MARK',
-    'LEFT', 'RIGHT',
-    'HOME', 'END',
-    'BACKSPACE', 'DELKEY',
-    'EXIT_MODE',
-  ]
+  commands[MODES.MARK] = []
+  for k of keyDefinitions
+    if keyDefinitions[k].mark
+      commands[MODES.MARK].push k
+  for motion in WITHIN_ROW_MOTIONS
+    commands[MODES.MARK].push motion
 
   # make sure that the default hotkeys accurately represents the set of possible commands under that mode_type
   for mode_type, mode_type_obj of MODE_TYPES

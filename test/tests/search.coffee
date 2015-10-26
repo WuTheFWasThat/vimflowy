@@ -102,6 +102,36 @@ describe "search", () ->
     t.sendKeys '/search'
     t.expectNumMenuResults 4
 
+  it "delete works", () ->
+    t = new TestCase [
+      'blah',
+      'blur',
+    ]
+    t.sendKeys '/blurb'
+    t.expectNumMenuResults 0
+    t.sendKey 'backspace'
+    t.expectNumMenuResults 1
+    t.sendKey 'enter'
+    t.sendKeys 'dd'
+    t.expect [
+      'blah',
+    ]
+
+    t = new TestCase [
+      'blah',
+      'blur',
+    ]
+    t.sendKeys '/blurb'
+    t.expectNumMenuResults 0
+    t.sendKey 'left'
+    t.sendKey 'shift+backspace'
+    t.expectNumMenuResults 1
+    t.sendKey 'enter'
+    t.sendKeys 'dd'
+    t.expect [
+      'blah',
+    ]
+
   it "can page up through menu results", () ->
     t = new TestCase [
       'blah',

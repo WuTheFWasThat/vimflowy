@@ -66,9 +66,7 @@ For more info/context, see keyBindings.coffee
       do @keyStream.save
 
   exit_normal_fn = () ->
-    return () ->
-      @view.setMode MODES.NORMAL
-      do @keyStream.save
+    return () -> @view.setMode MODES.NORMAL
 
   keyDefinitions =
     HELP:
@@ -165,9 +163,11 @@ For more info/context, see keyBindings.coffee
     FINISH_MARK:
       display: 'Finish typing mark'
       to_mode: MODES.NORMAL
-      fn: () ->
-        mark = (do @view.curText).join ''
-        @original_view.setMark @original_view.markrow, mark
+      mark: () ->
+        mark = (do @view.markview.curText).join ''
+        @view.setMark @view.markrow, mark
+        @view.setMode MODES.NORMAL
+        do @keyStream.save
     MARK_SEARCH:
       display: 'Go to (search for) a mark'
       drop: true
@@ -553,7 +553,8 @@ For more info/context, see keyBindings.coffee
       to_mode: MODES.NORMAL
       visual_line: do exit_normal_fn
       visual: do exit_normal_fn
-      fn: () -> return
+      search: do exit_normal_fn
+      mark: do exit_normal_fn
 
     # for visual mode
     ENTER_VISUAL:
@@ -576,28 +577,35 @@ For more info/context, see keyBindings.coffee
 
     BACKSPACE:
       display: 'Delete a character before the cursor (i.e. backspace key)'
+      mark: () ->
+        do @view.markview.deleteAtCursor
+      search: () ->
+        do @view.menu.view.deleteAtCursor
       fn: () ->
         do @view.deleteAtCursor
     DELKEY:
       display: 'Delete a character after the cursor (i.e. del key)'
+      mark: () ->
+        @view.markview.delCharsAfterCursor 1
+      search: () ->
+        @view.menu.view.delCharsAfterCursor 1
       fn: () ->
         @view.delCharsAfterCursor 1
 
     # for menu mode
     MENU_SELECT:
       display: 'Select current menu selection'
-      to_mode: MODES.NORMAL
-      fn: () ->
-        do @menu.select
-        do @view.save # b/c could've zoomed
+      search: () ->
+        do @view.menu.select
+        @view.setMode MODES.NORMAL
     MENU_UP:
       display: 'Select previous menu selection'
-      fn: () ->
-        do @menu.up
+      search: () ->
+        do @view.menu.up
     MENU_DOWN:
       display: 'Select next menu selection'
-      fn: () ->
-        do @menu.down
+      search: () ->
+        do @view.menu.down
 
     # FORMATTING
     BOLD:

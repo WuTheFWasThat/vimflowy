@@ -253,7 +253,7 @@ if module?
 
       bindings = @keyBindings.bindings[MODES.SEARCH]
 
-      view = @view.menu.view
+      menu_view = @view.menu.view
 
       if not (key of bindings)
         if key == 'shift+enter'
@@ -262,28 +262,25 @@ if module?
           key = ' '
         if key.length > 1
           return false
-        view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+        menu_view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
       else
         info = bindings[key]
 
         if info.motion
           motion = info.fn
-          motion view.cursor, {pastEnd: true}
-        else if info.fn
-          fn = info.fn
+          motion menu_view.cursor, {pastEnd: true}
+        else
+          fn = info.search || info.fn
           args = []
           context = {
-            view: view,
-            menu: @view.menu,
-            repeat: 1,
+            view: @view,
+            keyStream: @keyStream
           }
           fn.apply context, args
 
-        if info.to_mode == MODES.NORMAL
-          @view.setMode MODES.NORMAL
-          return true
+      if @view.mode != MODES.NORMAL
+        do @view.menu.update
 
-      do @view.menu.update
       do keyStream.forget
       return true
 
@@ -293,37 +290,28 @@ if module?
 
       bindings = @keyBindings.bindings[MODES.MARK]
 
-      view = @view.markview
+      mark_view = @view.markview
 
       if not (key of bindings)
         # must be non-whitespace
         if key.length > 1
           return false
         if /^\S*$/.test(key)
-          view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+          mark_view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
       else
         info = bindings[key]
 
         if info.motion
           motion = info.fn
-          motion view.cursor, {pastEnd: true}
-        else if info.fn
-          fn = info.fn
+          motion mark_view.cursor, {pastEnd: true}
+        else
+          fn = info.mark
           args = []
           context = {
-            view: view
-            original_view: @view # hack for now
-            repeat: 1
+            view: @view
+            keyStream: @keyStream
           }
           fn.apply context, args
-
-        if info.to_mode == MODES.NORMAL
-          @view.markview = null
-          @view.markrow = null
-          @view.setMode MODES.NORMAL
-
-      # no harm in saving.  important for setMark, and nothing else does anything
-      do keyStream.save
       return true
 
     # takes keyStream, key, returns repeat number and key
