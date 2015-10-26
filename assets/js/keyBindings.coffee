@@ -153,7 +153,6 @@ It also internally maintains
     DELETE_TO_END     : ['ctrl+k']
     DELETE_LAST_WORD  : ['ctrl+w']
     PASTE_BEFORE      : ['ctrl+y']
-    PASTE_AFTER       : []
     BEGINNING_WORD    : ['alt+b']
     END_WORD          : ['alt+f']
     NEXT_WORD         : []
@@ -208,6 +207,13 @@ It also internally maintains
     'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
   ]
 
+  ALL_MOTIONS = [
+    WITHIN_ROW_MOTIONS...,
+
+    'UP', 'DOWN',
+    'NEXT_SIBLING', 'PREV_SIBLING',
+  ]
+
   # set of possible commands for each mode
   commands = {}
 
@@ -215,14 +221,10 @@ It also internally maintains
     'HELP',
     'INSERT', 'INSERT_HOME', 'INSERT_AFTER', 'INSERT_END', 'INSERT_LINE_BELOW', 'INSERT_LINE_ABOVE',
 
-    'LEFT', 'RIGHT', 'UP', 'DOWN',
-    'HOME', 'END',
-    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
-    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
-    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
-
+    # TODO: make these part of motions
     'GO', 'GO_END', 'PARENT',
     'EASY_MOTION',
+
     'DELETE', 'DELETE_CHAR',
     'CHANGE', 'CHANGE_CHAR',
     'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_CHAR', 'DELETE_LAST_WORD'
@@ -251,6 +253,8 @@ It also internally maintains
 
     'ENTER_VISUAL', 'ENTER_VISUAL_LINE',
   ]
+  for motion in ALL_MOTIONS
+    commands[MODES.NORMAL].push motion
 
   # WTF: this iteration messes things up
   # for k,v of keyDefinitions
@@ -266,31 +270,12 @@ It also internally maintains
     if keyDefinitions[k].visual_line
       commands[MODES.VISUAL_LINE].push k
 
-  commands[MODES.INSERT] = [
-    'LEFT', 'RIGHT', 'UP', 'DOWN',
-    'HOME', 'END',
-    'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_WORD',
-    'PASTE_BEFORE', 'PASTE_AFTER',
-    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
-    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
-    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
-
-    'BACKSPACE', 'DELKEY',
-    'SPLIT_LINE',
-
-    'INDENT_RIGHT', 'INDENT_LEFT',
-    'MOVE_BLOCK_RIGHT', 'MOVE_BLOCK_LEFT', 'MOVE_BLOCK_DOWN', 'MOVE_BLOCK_UP',
-
-    'NEXT_SIBLING', 'PREV_SIBLING',
-
-    'TOGGLE_FOLD',
-    'ZOOM_OUT', 'ZOOM_IN', 'ZOOM_OUT_ALL', 'ZOOM_IN_ALL',
-    'SCROLL_DOWN', 'SCROLL_UP',
-
-    'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
-
-    'EXIT_MODE',
-  ]
+  commands[MODES.INSERT] = []
+  for k of keyDefinitions
+    if keyDefinitions[k].insert
+      commands[MODES.INSERT].push k
+  for motion in ALL_MOTIONS
+    commands[MODES.INSERT].push motion
 
   commands[MODES.SEARCH] = []
   for k of keyDefinitions
@@ -385,12 +370,6 @@ It also internally maintains
           for command in commands[mode]
             modeKeyMap[command] = hotkeys[mode_type][command].slice()
           keyMaps[mode] = modeKeyMap
-      # special case, delete_char -> delete in visual and visual_line
-      [].push.apply keyMaps[MODES.VISUAL].DELETE, keyMaps[MODES.NORMAL].DELETE_CHAR
-      [].push.apply keyMaps[MODES.VISUAL_LINE].DELETE, keyMaps[MODES.NORMAL].DELETE_CHAR
-      # special case, indent -> move in visual_line
-      [].push.apply keyMaps[MODES.VISUAL_LINE].MOVE_BLOCK_RIGHT, keyMaps[MODES.NORMAL].INDENT_RIGHT
-      [].push.apply keyMaps[MODES.VISUAL_LINE].MOVE_BLOCK_LEFT, keyMaps[MODES.NORMAL].INDENT_LEFT
 
       bindings = {}
       for mode_name, mode of MODES

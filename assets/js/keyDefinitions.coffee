@@ -40,10 +40,11 @@ For more info/context, see keyBindings.coffee
 
   text_format_definition = (property) ->
     return () ->
-      if @view.mode == MODES.NORMAL
-        @view.toggleRowProperty property
-      else if @view.mode == MODES.INSERT
-        @view.cursor.toggleProperty property
+      @view.toggleRowProperty property
+
+  text_format_insert = (property) ->
+    return () ->
+      @view.cursor.toggleProperty property
 
   text_format_visual_line = (property) ->
     return () ->
@@ -68,6 +69,31 @@ For more info/context, see keyBindings.coffee
   exit_normal_fn = () ->
     return () -> @view.setMode MODES.NORMAL
 
+  visual_line_mode_delete_fn = () ->
+    return () ->
+      @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
+
+  visual_mode_delete_fn = () ->
+    return () ->
+      options = {includeEnd: true, yank: true}
+      @view.deleteBetween @view.cursor, @view.anchor, options
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
+
+  visual_line_indent = () ->
+    return () ->
+      @view.indentBlocks @row_start, @num_rows
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
+
+  visual_line_unindent = () ->
+    return () ->
+      @view.unindentBlocks @row_start, @num_rows
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
+
   keyDefinitions =
     HELP:
       display: 'Show/hide key bindings (edit in settings)'
@@ -78,55 +104,75 @@ For more info/context, see keyBindings.coffee
       display: 'Zoom in by one level'
       fn: () ->
         do @view.rootDown
+      insert: () ->
+        do @view.rootDown
     ZOOM_OUT:
       display: 'Zoom out by one level'
       fn: () ->
+        do @view.rootUp
+      insert: () ->
         do @view.rootUp
     ZOOM_IN_ALL:
       display: 'Zoom in onto cursor'
       fn: () ->
         do @view.rootInto
+      insert: () ->
+        do @view.rootInto
     ZOOM_OUT_ALL:
       display: 'Zoom out to home'
       fn: () ->
+        do @view.reroot
+      insert: () ->
         do @view.reroot
 
     INDENT_RIGHT:
       display: 'Indent row right'
       fn: () ->
         do @view.indent
+      insert: () ->
+        do @view.indent
+      # NOTE: this matches block indent behavior, in visual line
+      visual_line: do visual_line_indent
     INDENT_LEFT:
       display: 'Indent row left'
       fn: () ->
         do @view.unindent
+      insert: () ->
+        do @view.unindent
+      # NOTE: this matches block indent behavior, in visual line
+      visual_line: do visual_line_unindent
     MOVE_BLOCK_RIGHT:
       display: 'Move block right'
       fn: () ->
         @view.indentBlocks @view.cursor.row, @repeat
-      visual_line: () ->
-        @view.indentBlocks @row_start, @num_rows
-        @view.setMode MODES.NORMAL
-        do @keyStream.save
+      insert: () ->
+        @view.indentBlocks @view.cursor.row, 1
+      visual_line: do visual_line_indent
     MOVE_BLOCK_LEFT:
       display: 'Move block left'
       fn: () ->
         @view.unindentBlocks @view.cursor.row, @repeat
-      visual_line: () ->
-        @view.unindentBlocks @row_start, @num_rows
-        @view.setMode MODES.NORMAL
-        do @keyStream.save
+      insert: () ->
+        @view.unindentBlocks @view.cursor.row, 1
+      visual_line: do visual_line_unindent
     MOVE_BLOCK_DOWN:
       display: 'Move block down'
       fn: () ->
+        do @view.swapDown
+      insert: () ->
         do @view.swapDown
     MOVE_BLOCK_UP:
       display: 'Move block up'
       fn: () ->
         do @view.swapUp
+      insert: () ->
+        do @view.swapUp
 
     TOGGLE_FOLD:
       display: 'Toggle whether a block is folded'
       fn: () ->
+        do @view.toggleCurBlock
+      insert: () ->
         do @view.toggleCurBlock
 
     # content-based navigation
@@ -406,6 +452,9 @@ For more info/context, see keyBindings.coffee
         cursor.visibleEnd options
     DELETE_CHAR:
       display: 'Delete character'
+      # behaves like row delete, in visual line
+      visual_line: do visual_line_mode_delete_fn
+      visual: do visual_mode_delete_fn
       fn: () ->
         @view.delCharsAfterCursor @repeat, {yank: true}
     DELETE_LAST_CHAR:
@@ -423,37 +472,56 @@ For more info/context, see keyBindings.coffee
       display: 'Delete to the beginning of the line'
       # TODO: something like this would be nice...
       # macro: ['DELETE', 'HOME']
-      fn: (options = {}) ->
-        options.yank = true
-        options.cursor ?= {}
+      fn: () ->
+        options = {
+          cursor: {}
+          yank: true
+        }
+        @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
+      insert: () ->
+        options = {
+          cursor: {pastEnd: true}
+          yank: true
+        }
         @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
     DELETE_TO_END:
       display: 'Delete to the end of the line'
       # macro: ['DELETE', 'END']
-      fn: (options = {}) ->
-        options.yank = true
-        options.cursor ?= {}
-        options.includeEnd = true
+      fn: () ->
+        options = {
+          yank: true
+          cursor: {}
+          includeEnd: true
+        }
+        @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
+      insert: () ->
+        options = {
+          yank: true
+          cursor: {pastEnd: true}
+          includeEnd: true
+        }
         @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
     DELETE_LAST_WORD:
       display: 'Delete to the beginning of the previous word'
       # macro: ['DELETE', 'BEGINNING_WWORD']
-      fn: (options = {}) ->
-        options.yank = true
-        options.cursor ?= {}
-        options.includeEnd = true
+      fn: () ->
+        options = {
+          yank: true
+          cursor: {}
+          includeEnd: true
+        }
+        @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
+      insert: () ->
+        options = {
+          yank: true
+          cursor: {pastEnd: true}
+          includeEnd: true
+        }
         @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
     DELETE:
       display: 'Delete (operator)'
-      visual_line: () ->
-        @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
-        @view.setMode MODES.NORMAL
-        do @keyStream.save
-      visual: () ->
-        options = {includeEnd: true, yank: true}
-        @view.deleteBetween @view.cursor, @view.anchor, options
-        @view.setMode MODES.NORMAL
-        do @keyStream.save
+      visual_line: do visual_line_mode_delete_fn
+      visual: do visual_mode_delete_fn
       bindings:
         DELETE:
           display: 'Delete blocks'
@@ -517,10 +585,13 @@ For more info/context, see keyBindings.coffee
       display: 'Paste after cursor'
       fn: () ->
         do @view.pasteAfter
+      # NOTE: paste after doesn't make sense for insert mode
     PASTE_BEFORE:
       display: 'Paste before cursor'
-      fn: (options) ->
-        @view.pasteBefore options
+      fn: () ->
+        @view.pasteBefore {}
+      insert: () ->
+        @view.pasteBefore {cursor: {pastEnd: true}}
 
     JOIN_LINE:
       display: 'Join current line with line below'
@@ -530,16 +601,22 @@ For more info/context, see keyBindings.coffee
       display: 'Split line at cursor (i.e. enter key)'
       fn: () ->
         do @view.newLineAtCursor
+      insert: () ->
+        do @view.newLineAtCursor
 
     SCROLL_DOWN:
       display: 'Scroll half window down'
       drop: true
       fn: () ->
         @view.scrollPages 0.5
+      insert: () ->
+        @view.scrollPages 0.5
     SCROLL_UP:
       display: 'Scroll half window up'
       drop: true
       fn: () ->
+        @view.scrollPages -0.5
+      insert: () ->
         @view.scrollPages -0.5
 
     RECORD_MACRO:
@@ -550,11 +627,14 @@ For more info/context, see keyBindings.coffee
     # for everything but normal mode
     EXIT_MODE:
       display: 'Exit back to normal mode'
-      to_mode: MODES.NORMAL
       visual_line: do exit_normal_fn
       visual: do exit_normal_fn
       search: do exit_normal_fn
       mark: do exit_normal_fn
+      insert: () ->
+        do @view.cursor.left
+        @view.setMode MODES.NORMAL
+        do @keyStream.save
 
     # for visual mode
     ENTER_VISUAL:
@@ -577,6 +657,8 @@ For more info/context, see keyBindings.coffee
 
     BACKSPACE:
       display: 'Delete a character before the cursor (i.e. backspace key)'
+      insert: () ->
+        do @view.deleteAtCursor
       mark: () ->
         do @view.markview.deleteAtCursor
       search: () ->
@@ -585,6 +667,8 @@ For more info/context, see keyBindings.coffee
         do @view.deleteAtCursor
     DELKEY:
       display: 'Delete a character after the cursor (i.e. del key)'
+      insert: () ->
+        @view.delCharsAfterCursor 1
       mark: () ->
         @view.markview.delCharsAfterCursor 1
       search: () ->
@@ -611,23 +695,27 @@ For more info/context, see keyBindings.coffee
     BOLD:
       display: 'Bold text'
       fn: text_format_definition 'bold'
+      insert: text_format_insert 'bold'
       visual_line: text_format_visual_line 'bold'
       visual: text_format_visual 'bold'
     ITALIC:
       display: 'Italicize text'
       fn: text_format_definition 'italic'
+      insert: text_format_insert 'italic'
       visual_line: text_format_visual_line 'italic'
       visual: text_format_visual 'italic'
 
     UNDERLINE:
       display: 'Underline text'
       fn: text_format_definition 'underline'
+      insert: text_format_insert 'underline'
       visual_line: text_format_visual_line 'underline'
       visual: text_format_visual 'underline'
 
     STRIKETHROUGH:
       display: 'Strike through text'
       fn: text_format_definition 'strikethrough'
+      insert: text_format_insert 'strikethrough'
       visual_line: text_format_visual_line 'strikethrough'
       visual: text_format_visual 'strikethrough'
 

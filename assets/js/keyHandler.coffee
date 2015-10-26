@@ -154,19 +154,14 @@ if module?
       if info.motion
         motion = info.fn
         motion @view.cursor, {pastEnd: true}
-      else if info.fn
-        fn = info.fn
-        args = [{cursor: {pastEnd: true}}]
+      else
+        fn = info.insert
         context = {
           view: @view,
-          repeat: 1,
+          keyStream: keyStream,
         }
-        fn.apply context, args
+        fn.apply context, []
 
-      if info.to_mode == MODES.NORMAL
-        do @view.cursor.left
-        @view.setMode MODES.NORMAL
-        do keyStream.save
       return true
 
     processVisualMode: (keyStream) ->
@@ -270,7 +265,7 @@ if module?
           motion = info.fn
           motion menu_view.cursor, {pastEnd: true}
         else
-          fn = info.search || info.fn
+          fn = info.search
           args = []
           context = {
             view: @view,
