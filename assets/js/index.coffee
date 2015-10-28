@@ -137,6 +137,7 @@ create_view = (data) ->
         content = view.exportContent mimetype
         download_file filename, mimetype, content
         view.showMessage "Exported to #{filename}!", {text_class: 'success'}
+  return view
 
 
 if chrome?.storage?.sync
@@ -162,7 +163,7 @@ if chrome?.storage?.sync
         Logger.logger.info 'Saved'
     ), 5000
 
-    create_view data
+    window.vimflowy = create_view data
 else if localStorage?
   docname = window.location.pathname.split('/')[1]
   datastore = new dataStore.LocalStorageLazy docname
@@ -171,7 +172,7 @@ else if localStorage?
   if (do datastore.getLastSave) == 0
     data.load constants.default_data
 
-  create_view data
+  window.vimflowy = create_view data
 else
   alert('You need local storage support for data to be persisted!')
   datastore = new dataStore.InMemory
@@ -179,7 +180,7 @@ else
   data = new Data datastore
   data.load constants.default_data
 
-  create_view data
+  window.vimflowy = create_view data
 
 window.onerror = (msg, url, line, col, err) ->
     Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"
