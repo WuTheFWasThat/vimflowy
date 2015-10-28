@@ -319,10 +319,6 @@ class Data
     return child
 
   attachChildren: (row, new_children, index = -1) ->
-    for child in new_children
-      if @wouldBeCircularInsert child, row
-        throw new errors.CircularReference "Trying to attach a child as a descendent of itself"
-
     children = @getChildren row
     if index == -1
       children.push.apply children, new_children
@@ -439,8 +435,18 @@ class Data
         return true
     return false
 
-  wouldBeCircularInsert: (row, parent) ->
+  wouldBeCircularInsertLine: (row, parent) ->
     return parent.id == row.id or (@hasVisibleAncestor parent, row.id)
+  wouldBeCircularInsertTree: (row, parent) ->
+    # Precondition: tree is not already circular
+    if @wouldBeCircularInsertLine row, parent
+      return true
+    for child in @getChildren row
+      if @wouldBeCircularInsertTree child, parent # Because the tree is not circular, just have to check from the parent up
+        return true
+    return false
+  wouldBeDoubledSiblingInsert: (row, parent) ->
+    (@getChild parent, row.id)?
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
