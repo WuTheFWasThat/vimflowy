@@ -248,12 +248,6 @@ describe "cloning tests", () ->
     ]
     t.expectMarks { 'mark': 1 }
 
-    console.log '\nDEBUG STEP 1'
-    console.log 'marks under 1', (t.store.getMarks 1)
-    console.log 'marks under 3', (t.store.getMarks 3)
-    console.log 'all marks', (do t.store.getAllMarks)
-
-
     t.sendKeys 'ycjjp'
     t.expect [
       { text: 'Marked clone', mark: 'mark', children: [
@@ -267,12 +261,6 @@ describe "cloning tests", () ->
       ] }
     ]
 
-    console.log '\nDEBUG STEP 2'
-    console.log 'marks under 1', (t.store.getMarks 1)
-    console.log 'marks under 3', (t.store.getMarks 3)
-    console.log 'all marks', (do t.store.getAllMarks)
-
-
     t.sendKeys 'ggdd'
     t.expect [
       { text: 'Not a clone', children: [
@@ -284,16 +272,7 @@ describe "cloning tests", () ->
     ]
     t.expectMarks { 'mark': 1 }
 
-    console.log '\nDEBUG STEP 3'
-    console.log 'marks under 1', (t.store.getMarks 1)
-    console.log 'marks under 3', (t.store.getMarks 3)
-    console.log 'all marks', (do t.store.getAllMarks)
-
     t.sendKeys 'dd'
     t.expect [ "" ]
-    console.log '\nDEBUG STEP 4'
-    console.log 'marks under 1', (t.store.getMarks 1)
-    console.log 'marks under 3', (t.store.getMarks 3)
-    console.log 'all marks', (do t.store.getAllMarks)
     t.expectMarks { }
 
