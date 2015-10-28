@@ -869,7 +869,21 @@ window?.renderLine = renderLine
     attachBlock: (row, parent, index = -1, options = {}) ->
       @do new mutations.AttachBlock row, parent, index, options
 
+    validateRowInsertionValid: (row, parent, sameParent=false) ->
+      if (not sameParent) and @data.wouldBeDoubledSiblingInsert row, parent, sameParent
+        @showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
+        return false
+      if @data.wouldBeCircularInsertTree row, parent
+        @showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
+        return false
+      return true
+
     moveBlock: (row, parent, index = -1, options = {}) ->
+      sameParent = parent.id == (do row.getParent).id
+      if sameParent and index > @data.indexOf row
+        index = index - 1
+      if not (@validateRowInsertionValid row, parent, sameParent)
+        return row
       @detachBlock row, options
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
       @attachBlock row, parent, index, options
@@ -943,29 +957,27 @@ window?.renderLine = renderLine
 
     swapDown: (row = @cursor.row) ->
       next = @data.nextVisible (@data.lastVisible row)
-      if next == null
+      unless next?
         return
-
-      @detachBlock row
+    
       if (@data.hasChildren next) and (not @data.collapsed next)
         # make it the first child
-        @attachBlock row, next, 0
+        @moveBlock row, next, 0
       else
         # make it the next sibling
         parent = do next.getParent
         p_i = @data.indexOf next
-        @attachBlock row, parent, (p_i+1)
+        @moveBlock row, parent, (p_i+1)
 
     swapUp: (row = @cursor.row) ->
       prev = @data.prevVisible row
-      if prev == null
+      unless prev?
         return
 
-      @detachBlock row
       # make it the previous sibling
       parent = do prev.getParent
       p_i = @data.indexOf prev
-      @attachBlock row, parent, p_i
+      @moveBlock row, parent, p_i
 
     toggleCurBlock: () ->
       @toggleBlock @cursor.row
