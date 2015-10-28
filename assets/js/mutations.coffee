@@ -125,8 +125,8 @@ if module?
       delete_rows = view.data.getChildRange @parent, @index, (@index+@nrows-1)
       for sib in delete_rows
         if sib == null then break
-        @deleted_rows.push sib
         view.data.detach sib
+        @deleted_rows.push sib
 
       @created = null
       if @options.addNew

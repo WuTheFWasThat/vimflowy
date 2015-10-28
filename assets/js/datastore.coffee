@@ -20,7 +20,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_parentKey_ = (row) -> "#{@prefix}:#{row}:parent"
       @_childrenKey_ = (row) -> "#{@prefix}:#{row}:children"
       @_collapsedKey_ = (row) -> "#{@prefix}:#{row}:collapsed"
-      @_marksKey_ = (row) -> "#{@prefix}:#{row}:marks"
 
       @_pluginDataKey_ = (plugin, key) -> "#{@prefix}:plugin:#{plugin}:data:#{key}"
       @_pluginDataVersionKey_ = (plugin) -> "#{@prefix}:plugin:#{plugin}:version"
@@ -64,14 +63,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @get (@_collapsedKey_ row)
     setCollapsed: (row, collapsed) ->
       @set (@_collapsedKey_ row), collapsed
-
-    # get mapping of row -> mark, for subtree beneath row
-    getMarks: (row) ->
-      @get (@_marksKey_ row), {}
-
-    # set mapping of row -> mark, for subtree beneath row
-    setMarks: (row, marks) ->
-      @set (@_marksKey_ row), marks
 
     # get global settings (data not specific to a document)
     getSetting: (setting) ->

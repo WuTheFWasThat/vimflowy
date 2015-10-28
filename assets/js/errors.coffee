@@ -11,7 +11,6 @@ if module? # imports
   exports.NotImplemented = errorFactory (message) -> @message = "Not implemented!"
   exports.UnexpectedValue = errorFactory (name, value) -> @message = "Unexpected value for `#{name}`: #{value}"
   exports.GenericError = errorFactory (@message) -> return
-  exports.CircularReference = errorFactory (@message) -> return
   exports.SchemaVersion = errorFactory (@message) -> return
 
   # is special because ignored by error handling in index.coffee

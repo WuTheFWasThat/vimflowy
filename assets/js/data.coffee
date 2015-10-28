@@ -1,5 +1,6 @@
 # imports
 if module?
+  global.BiMap = require('bimap')
   global._ = require('lodash')
   global.utils = require('./utils.coffee')
   global.errors = require('./errors.coffee')
@@ -81,6 +82,7 @@ class Data
   constructor: (store) ->
     @store = store
     @viewRoot = Row.loadFromAncestry (do @store.getLastViewRoot || [])
+    @detached_marks = {}
     return @
 
   changeViewRoot: (row) ->
@@ -158,13 +160,13 @@ class Data
 
   # get mark for a row, '' if it doesn't exist
   getMark: (row) ->
-    marks = @store.getMarks row.id
-    return marks[row.id] or ''
+    allMarks = new BiMap (do @store.getAllMarks)
+    return (allMarks.val row.id)
 
-  _updateAllMarks: (row, mark = '') ->
+  setMark: (row, mark = '') ->
     allMarks = do @store.getAllMarks
 
-    if mark of allMarks
+    if mark and (mark of allMarks)
       if allMarks[mark] == row.id
         return true
       return false
@@ -178,48 +180,33 @@ class Data
     @store.setAllMarks allMarks
     return true
 
-  # recursively update allMarks for id,mark pair
-  _updateMarksRecursive: (row, mark = '', from, to) ->
-    cur = from
-    while true
-      marks = @store.getMarks cur.id
-      if mark
-        marks[row.id] = mark
-      else
-        delete marks[row.id]
-      @store.setMarks cur.id, marks
-      if cur.id == to.id
-        break
-      cur = do cur.getParent
-
-  setMark: (row, mark = '') ->
-    if @_updateAllMarks row, mark
-      @_updateMarksRecursive row, mark, row, @root
-      return true
-    return false
-
   # detach the marks of an id that is being detached
   # assumes that the old parent of the id is set
   detachMarks: (row) ->
-    marks = @store.getMarks row.id
-    for id, mark of marks
-      id = parseInt id
-      row2 = @canonicalInstance id
-      @_updateAllMarks row2, ''
-      # roll back the mark for this row, but only above me
-      @_updateMarksRecursive row2, '', (do row.getParent), @root
+    success = true
+    for child in @getChildren row
+      if not @detachMarks child
+        success = false
+    mark = @getMark row
+    @detached_marks[row.id] = mark # For re-attaching
+    if @exactlyOneInstance row.id
+      if not @setMark row, ''
+        success = false
+    return success
 
   # try to restore the marks of an id that was detached
   # assumes that the new to-be-parent of the id is already set
   # and that the marks dictionary contains the old values
   attachMarks: (row) ->
-    marks = @store.getMarks row.id
-    for id, mark of marks
-      id = parseInt id
-      row2 = @canonicalInstance id
-      if not (@setMark row2, mark)
-        # roll back the mark for this row, but only underneath me
-        @_updateMarksRecursive row2, '', row2, row
+    success = true
+    mark = @detached_marks[row.id]
+    if mark
+      if not @setMark row, mark
+        success = false
+    for child in @getChildren row
+      if not @attachMarks child
+        success = false
+    return success
 
   getAllMarks: () ->
     _.mapValues (do @store.getAllMarks), @canonicalInstance, @
@@ -292,8 +279,7 @@ class Data
     # though it is detached, it remembers its old parent
     # and remembers its old mark
 
-    if @exactlyOneInstance row.id # If detaching the LAST instance
-      @detachMarks row # Requires parent to be set correctly, so it's at the beginning
+    @detachMarks row # Requires parent to be set correctly, so it's at the beginning
 
     parent = do row.getParent
     children = @getSiblings row
