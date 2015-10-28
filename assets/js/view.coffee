@@ -278,6 +278,9 @@ window?.renderLine = renderLine
         @lineSelect = false
       else if oldmode == MODES.VISUAL
         @anchor = null
+      else if oldmode == MODES.MARK
+        @markview = null
+        @markrow = null
       else if oldmode == MODES.SEARCH
         @menu = null
 

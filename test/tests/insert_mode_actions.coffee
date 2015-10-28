@@ -3,6 +3,18 @@ TestCase = require '../testcase.coffee'
 # TODO: this file needs more tests!
 # tests ctrl+e, ctrl+w, ctrl+u, ctrl+k, ctrl+y
 
+describe "delete to end", () ->
+  it "keeps the cursor past the end", () ->
+    t = new TestCase ['happy ending']
+    t.sendKeys 'i'
+    t.sendKey 'alt+f'
+    t.sendKey 'right'
+    t.sendKey 'right'
+    t.sendKey 'ctrl+k'
+    t.sendKeys 'feet'
+    t.sendKey 'esc'
+    t.expect ['happy feet']
+
 describe "insert mode actions", () ->
   it "works in tricky case redoing actions in normal mode", () ->
     t = new TestCase ['bug reproduce']
@@ -23,3 +35,4 @@ describe "insert mode actions", () ->
     # since we're now in normal mode
     t.sendKey 'x'
     t.expect ['bug reproduc']
+

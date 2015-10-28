@@ -16,11 +16,6 @@ class Row
   serialize: () ->
     return @id
 
-  load: (obj) ->
-    if typeof obj == 'number'
-      obj = {id: obj}
-    @id = obj.id
-
   setParent: (parent) ->
     @parent = parent
 
@@ -56,9 +51,11 @@ Row.getRoot = () ->
   new Row null, constants.root_id
 
 Row.loadFrom = (parent, serialized) ->
-  row = new Row parent
-  row.load serialized
-  row
+  id = if typeof serialized == 'number'
+    serialized
+  else
+    serialized.id
+  new Row parent, id
 
 Row.loadFromAncestry = (ancestry) ->
   if ancestry.length == 0
