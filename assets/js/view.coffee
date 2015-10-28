@@ -1122,7 +1122,11 @@ window?.renderLine = renderLine
       childrenNodes = []
 
       for row in @data.getChildren parent
+        rowElements = []
 
+        if (@data.getParents row).length > 1
+          cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon' }
+          rowElements.push cloneIcon
         if @easy_motion_mappings and row.id of @easy_motion_mappings.id_to_key
           char = @easy_motion_mappings.id_to_key[row.id]
           bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent'}, [char]
@@ -1130,9 +1134,6 @@ window?.renderLine = renderLine
           icon = 'fa-circle'
           if @data.hasChildren row
             icon = if @data.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
-          if (@data.getParents row).length > 1
-            icon = 'fa-clone'
-
 
           bulletOpts = {
             className: 'fa ' + icon + ' bullet'
@@ -1147,17 +1148,20 @@ window?.renderLine = renderLine
             ).bind(@, row)
 
           bullet = virtualDom.h 'i', bulletOpts
+        rowElements.push bullet
 
         elLine = virtualDom.h 'div', {
           id: rowDivID row.id
           className: 'node-text'
         }, (@virtualRenderLine row, options)
+        rowElements.push elLine
 
         options.ignoreCollapse = false
         children = virtualDom.h 'div', {
           id: childrenDivID row.id
           className: 'node-children'
         }, (@virtualRenderTree row, options)
+        rowElements.push children
 
         className = 'node'
         if row.id of options.highlight_blocks
@@ -1166,7 +1170,7 @@ window?.renderLine = renderLine
         childNode = virtualDom.h 'div', {
           id: containerDivID row.id
           className: className
-        }, [bullet, elLine, children]
+        }, rowElements
 
         childrenNodes.push childNode
       return childrenNodes
