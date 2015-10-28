@@ -517,7 +517,7 @@ For more info/context, see keyBindings.coffee
           display: 'Yank blocks as a clone'
           drop: true
           fn: () ->
-            @view.yankBlocksClone @repeat
+            @view.yankBlocksCloneAtCursor @repeat
     # TODO: after keybindings stuff is better
     # CLONE:
     #   display: 'Yank blocks as a clone'
