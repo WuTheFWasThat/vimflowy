@@ -218,9 +218,7 @@ if module?
 
     _checkCircularTree: (view, rows) ->
       for row in rows
-        if view.data.wouldBeCircularInsert row, @parent
-          return false
-        unless @_checkCircularTree view, (view.data.getChildren row)
+        if view.data.wouldBeCircularInsertTree row, @parent
           return false
       return true
 
