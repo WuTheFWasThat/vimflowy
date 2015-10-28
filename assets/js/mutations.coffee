@@ -96,7 +96,7 @@ if module?
       return "row #{@row.id}"
 
     mutate: (view) ->
-      errors.assert_not_equals @row.id, view.data.root.id, "Cannot detach root"
+      errors.assert (not do @row.isRoot), "Cannot detach root"
       @detached = view.data.detach @row
 
     rewind: (view) ->
@@ -125,8 +125,8 @@ if module?
       delete_rows = view.data.getChildRange @parent, @index, (@index+@nrows-1)
       for sib in delete_rows
         if sib == null then break
-        @deleted_rows.push sib
         view.data.detach sib
+        @deleted_rows.push sib
 
       @created = null
       if @options.addNew
@@ -215,7 +215,7 @@ if module?
         originals.push original
 
       for original in originals
-        if not view.validateRowInsertionValid original, @parent
+        if not view.validateRowInsertion original, @parent
           return
 
       index = @index
