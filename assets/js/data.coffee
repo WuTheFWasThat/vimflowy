@@ -445,6 +445,8 @@ class Data
       if @wouldBeCircularInsertTree child, parent # Because the tree is not circular, just have to check from the parent up
         return true
     return false
+  wouldBeDoubledSiblingInsert: (row, parent) ->
+    (@getChild parent, row.id)?
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
