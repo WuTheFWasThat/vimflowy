@@ -125,8 +125,8 @@ if module?
       delete_rows = view.data.getChildRange @parent, @index, (@index+@nrows-1)
       for sib in delete_rows
         if sib == null then break
-        @deleted_rows.push sib
         view.data.detach sib
+        @deleted_rows.push sib
 
       @created = null
       if @options.addNew
@@ -195,6 +195,47 @@ if module?
         view.data.attachChild @parent, sib, index
         index += 1
 
+  class CloneBlocks extends Action
+    # options:
+    #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
+    #              indicating which block the cursor should go to
+
+    constructor: (@cloned_rows, @parent, @index = -1, @options = {}) ->
+      @nrows = @cloned_rows.length
+
+    str: () ->
+      return "parent #{@parent.id}, index #{@index}"
+
+    apply: (view) ->
+      originals = []
+      for clone_id in @cloned_rows
+        original = view.data.canonicalInstance clone_id
+        unless original?
+          continue
+        originals.push original
+
+      for original in originals
+        if not view.validateRowInsertionValid original, @parent
+          return
+
+      index = @index
+      first = true
+      for original in originals
+        clone = view.data.cloneRow original, @parent, index
+        index += 1
+
+        if @options.setCursor == 'first' and first
+          view.cursor.set clone, 0
+          first = false
+
+      if @options.setCursor == 'last' and row?
+        view.cursor.set clone, 0
+
+    rewind: (view) ->
+      delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+      for sib in delete_siblings
+        view.data.detach sib
+
   class ToggleBlock extends Action
     constructor: (@row) ->
     str: () ->
@@ -221,6 +262,7 @@ if module?
   exports.AttachBlock = AttachBlock
   exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
+  exports.CloneBlocks = CloneBlocks
   exports.ToggleBlock = ToggleBlock
   exports.SetMark = SetMark
 )(if typeof exports isnt 'undefined' then exports else window.actions = {})

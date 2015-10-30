@@ -20,7 +20,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_parentKey_ = (row) -> "#{@prefix}:#{row}:parent"
       @_childrenKey_ = (row) -> "#{@prefix}:#{row}:children"
       @_collapsedKey_ = (row) -> "#{@prefix}:#{row}:collapsed"
-      @_marksKey_ = (row) -> "#{@prefix}:#{row}:marks"
 
       # no prefix, meaning it's global
       @_settingKey_ = (setting) -> "settings:#{setting}"
@@ -44,10 +43,13 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     setLine: (row, line) ->
       @set (@_lineKey_ row), line
 
-    getParent: (row) ->
-      @get (@_parentKey_ row)
-    setParent: (row, parent) ->
-      @set (@_parentKey_ row), parent
+    getParents: (row) ->
+      parents = @get (@_parentKey_ row), []
+      if typeof parents == 'number'
+        parents = [ parents ]
+      parents
+    setParents: (row, parents) ->
+      @set (@_parentKey_ row), parents
 
     getChildren: (row) ->
       _.cloneDeep (@get (@_childrenKey_ row), [])
@@ -58,14 +60,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @get (@_collapsedKey_ row)
     setCollapsed: (row, collapsed) ->
       @set (@_collapsedKey_ row), collapsed
-
-    # get mapping of row -> mark, for subtree beneath row
-    getMarks: (row) ->
-      @get (@_marksKey_ row), {}
-
-    # set mapping of row -> mark, for subtree beneath row
-    setMarks: (row, marks) ->
-      @set (@_marksKey_ row), marks
 
     # get global settings (data not specific to a document)
     getSetting: (setting) ->

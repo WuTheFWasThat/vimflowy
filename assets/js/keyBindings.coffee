@@ -94,6 +94,7 @@ It also internally maintains
     CHANGE_CHAR       : ['s']
     REPLACE           : ['r']
     YANK              : ['y']
+    CLONE             : ['c']
     PASTE_AFTER       : ['p']
     PASTE_BEFORE      : ['P']
     JOIN_LINE         : ['J']
@@ -229,7 +230,8 @@ It also internally maintains
     'CHANGE', 'CHANGE_CHAR',
     'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_CHAR', 'DELETE_LAST_WORD'
     'REPLACE',
-    'YANK', 'PASTE_AFTER', 'PASTE_BEFORE',
+    'YANK', 'CLONE',
+    'PASTE_AFTER', 'PASTE_BEFORE',
     'JOIN_LINE', 'SPLIT_LINE',
 
     'INDENT_RIGHT', 'INDENT_LEFT',
@@ -308,7 +310,6 @@ It also internally maintains
         else if (name of keyMap)
           keys = keyMap[name]
         else
-          # this definition does not pertain to this context
           continue
 
         v = _.clone v

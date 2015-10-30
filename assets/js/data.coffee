@@ -1,5 +1,6 @@
 # imports
 if module?
+  global.BiMap = require('bimap')
   global._ = require('lodash')
   global.utils = require('./utils.coffee')
   global.errors = require('./errors.coffee')
@@ -29,6 +30,9 @@ class Row
 
   isRoot: () ->
     @id == constants.root_id
+
+  clone: () ->
+    new Row (@parent?.clone?()), @id
 
   # gets a list of IDs
   getAncestry: () ->
@@ -78,6 +82,7 @@ class Data
   constructor: (store) ->
     @store = store
     @viewRoot = Row.loadFromAncestry (do @store.getLastViewRoot || [])
+    @detached_marks = {}
     return @
 
   changeViewRoot: (row) ->
@@ -155,13 +160,15 @@ class Data
 
   # get mark for a row, '' if it doesn't exist
   getMark: (row) ->
-    marks = @store.getMarks row.id
-    return marks[row.id] or ''
+    allMarks = new BiMap (do @store.getAllMarks)
+    return (allMarks.val row.id)
 
-  _updateAllMarks: (row, mark = '') ->
+  setMark: (row, mark = '') ->
     allMarks = do @store.getAllMarks
 
-    if mark of allMarks
+    if mark and (mark of allMarks)
+      if allMarks[mark] == row.id
+        return true
       return false
 
     oldmark = @getMark row
@@ -173,48 +180,33 @@ class Data
     @store.setAllMarks allMarks
     return true
 
-  # recursively update allMarks for id,mark pair
-  _updateMarksRecursive: (row, mark = '', from, to) ->
-    cur = from
-    while true
-      marks = @store.getMarks cur.id
-      if mark
-        marks[row.id] = mark
-      else
-        delete marks[row.id]
-      @store.setMarks cur.id, marks
-      if cur.id == to.id
-        break
-      cur = do cur.getParent
-
-  setMark: (row, mark = '') ->
-    if @_updateAllMarks row, mark
-      @_updateMarksRecursive row, mark, row, @root
-      return true
-    return false
-
   # detach the marks of an id that is being detached
   # assumes that the old parent of the id is set
   detachMarks: (row) ->
-    marks = @store.getMarks row.id
-    for id, mark of marks
-      id = parseInt id
-      row2 = @canonicalInstance id
-      @_updateAllMarks row2, ''
-      # roll back the mark for this row, but only above me
-      @_updateMarksRecursive row2, '', (do row.getParent), @root
+    success = true
+    for child in @getChildren row
+      if not @detachMarks child
+        success = false
+    mark = @getMark row
+    @detached_marks[row.id] = mark # For re-attaching
+    if @exactlyOneInstance row.id
+      if not @setMark row, ''
+        success = false
+    return success
 
   # try to restore the marks of an id that was detached
   # assumes that the new to-be-parent of the id is already set
   # and that the marks dictionary contains the old values
   attachMarks: (row) ->
-    marks = @store.getMarks row.id
-    for id, mark of marks
-      id = parseInt id
-      row2 = @canonicalInstance id
-      if not (@setMark row2, mark)
-        # roll back the mark for this row, but only underneath me
-        @_updateMarksRecursive row2, '', row2, row
+    success = true
+    mark = @detached_marks[row.id]
+    if mark
+      if not @setMark row, mark
+        success = false
+    for child in @getChildren row
+      if not @attachMarks child
+        success = false
+    return success
 
   getAllMarks: () ->
     _.mapValues (do @store.getAllMarks), @canonicalInstance, @
@@ -231,6 +223,9 @@ class Data
 
   getChild: (row, id) ->
     _.find (@getChildren row), (x) -> x.id == id
+
+  getParents: (row) ->
+    return @store.getParents row.id
 
   hasChildren: (row) ->
     return ((@getChildren row).length > 0)
@@ -249,11 +244,31 @@ class Data
   toggleCollapsed: (row) ->
     @store.setCollapsed row.id, (not @collapsed row)
 
+  countInstances: (id) ->
+    # Precondition: No circular references in ancestry
+    errors.assert id?, "Empty id passed to countInstances"
+    if id == @root.id
+      return 1
+    parentCount = 0
+    for parent_id in (@store.getParents id)
+      parentCount += @countInstances parent_id # Always exactly once under every parent
+    return parentCount
+
+  exactlyOneInstance: (id) ->
+    1 == @countInstances id
+
   canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
+    # TODO: Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
+    # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
+    errors.assert id?, "Empty id passed to canonicalInstance"
     if id == @root.id
       return @root
-    canonicalParent = @canonicalInstance (@store.getParent id)
-    return @getChild canonicalParent, id
+    parentId = (@store.getParents id)[0] # This is the only actual choice made
+    errors.assert parentId?, "No parent found for id: #{id}"
+    canonicalParent = @canonicalInstance parentId
+    instance = @getChild canonicalParent, id
+    errors.assert instance?, "No canonical instance found for id: #{id}"
+    return instance
 
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (row) ->
@@ -268,20 +283,26 @@ class Data
 
     parent = do row.getParent
     children = @getSiblings row
-    i = @indexOf row
-    children.splice i, 1
+    ci = @indexOf row
+    children.splice ci, 1
+    parents = @getParents row
+    pi = _.findIndex parents, (par) ->
+        par == parent.id
+    parents.splice pi, 1
 
     @setChildren parent.id, children
+    @store.setParents row.id, parents
 
     return {
       parent: parent
-      index: i
+      index: ci
     }
 
   # attaches a detached child to a parent
   # the child should not have a parent already
   attachChild: (row, child, index = -1) ->
-    children = @attachChildren row, [child], index
+    @attachChildren row, [child], index
+    return child
 
   attachChildren: (row, new_children, index = -1) ->
     children = @getChildren row
@@ -291,7 +312,9 @@ class Data
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
       child.setParent row
-      @store.setParent child.id, row.id
+      parents = @store.getParents child.id
+      parents.push row.id
+      @store.setParents child.id, parents
 
     @setChildren row.id, children
 
@@ -324,7 +347,6 @@ class Data
     firstDifference = commonAncestry.length
     return [common, ancestors1[firstDifference..], ancestors2[firstDifference..]]
 
-  # extends a row's path using descendents (used when moving blocks around)
   combineAncestry: (row, descendents) ->
     for descendent in descendents
       row = @getChild row, descendent.id
@@ -389,9 +411,33 @@ class Data
       if @collapsed cur
         answer = cur
 
+  # Checks whether the ancestor is visible. Does not include the given node but does
+  # include viewRoot
+  hasVisibleAncestor: (row, checkAncestorId) ->
+    cur = row
+    until (cur.is @viewRoot) or (do cur.isRoot)
+      cur = do cur.getParent
+      if cur.id == checkAncestorId
+        return true
+    return false
+
+  wouldBeCircularInsertLine: (row, parent) ->
+    return parent.id == row.id or (@hasVisibleAncestor parent, row.id)
+  wouldBeCircularInsertTree: (row, parent) ->
+    # Precondition: tree is not already circular
+    if @wouldBeCircularInsertLine row, parent
+      return true
+    for child in @getChildren row
+      if @wouldBeCircularInsertTree child, parent # Because the tree is not circular, just have to check from the parent up
+        return true
+    return false
+  wouldBeDoubledSiblingInsert: (row, parent) ->
+    (@getChild parent, row.id)?
+
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
   isAttached: (row) ->
+    # TODO: Refactor where this is used in light of cloning
     while true
       if row.id == @root.id
         return true
@@ -430,6 +476,9 @@ class Data
     child = new Row row, id
     @attachChild row, child, index
     return child
+
+  cloneRow: (row, parent, index = -1) ->
+    @attachChild parent, (do row.clone), index
 
   _insertSiblingHelper: (row, after) ->
     if row.id == @viewRoot.id
@@ -532,7 +581,7 @@ class Data
         pretty = false
 
     if row.id == @root.id and @viewRoot.id != @root.id
-      struct.viewRoot = do @viewRoot.getAncestry
+      struct.viewRoot = @viewRoot
 
     if @collapsed row
       struct.collapsed = true
@@ -553,7 +602,7 @@ class Data
       @attachChild parent, row, index
     else
       row.setParent null
-      @store.setParent row.id, @root.id
+      @store.setParents row.id, [@root.id]
 
     if typeof serialized == 'string'
       @setLine row, (serialized.split '')
