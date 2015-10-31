@@ -160,32 +160,42 @@ if module?
       # if key == null then return do keyStream.wait
 
       bindings = @keyBindings.bindings[MODES.INSERT]
+      args = []
 
       if not (key of bindings)
         if key == 'shift+enter'
           key = '\n'
         else if key == 'space' or key == 'shift+space'
           key = ' '
-        if key.length > 1
+
+        if key.length == 1
+          # simply insert the key
+          obj = {char: key}
+          for property in constants.text_properties
+            if @view.cursor.getProperty property then obj[property] = true
+          @view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
+          return true
+
+        if not ('MOTION' of bindings)
           return false
-        obj = {char: key}
-        for property in constants.text_properties
-          if @view.cursor.getProperty property then obj[property] = true
-        @view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
-        return true
 
-      info = bindings[key]
+        info = bindings['MOTION']
 
-      if info.motion
-        motion = info.fn
-        motion @view.cursor, {pastEnd: true}
+        # note: this uses original bindings to determine what's a motion
+        [motion, repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[MODES.INSERT]
+        if motion == null
+          return false
+
+        args.push motion
       else
-        fn = info.insert
-        context = {
-          view: @view,
-          keyStream: keyStream,
-        }
-        fn.apply context, []
+        info = bindings[key]
+
+      fn = info.insert
+      context = {
+        view: @view,
+        keyStream: keyStream,
+      }
+      fn.apply context, args
 
       return true
 
@@ -196,10 +206,14 @@ if module?
 
       bindings = @keyBindings.bindings[MODES.VISUAL]
 
+      args = []
       if not (key of bindings)
-        # getMotion using normal mode motions
-        # TODO: make this relationship more explicit via a separate motions dictionary
-        [motion, repeat] = @getMotion keyStream, key
+        if not ('MOTION' of bindings)
+          do keyStream.forget
+          return false
+
+        [motion, repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[MODES.VISUAL]
+
         if motion == null
           if keyStream.waiting # motion continuing
             return true
@@ -207,25 +221,18 @@ if module?
             do keyStream.forget
             return false
 
-        # this is necessary until we figure out multiline
-        tmp = do @view.cursor.clone
-
-        for i in [1..repeat]
-          motion tmp, {pastEnd: true}
-
-        if tmp.row != @view.cursor.row # only allow same-row movement
-          @view.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
-          return true
-        @view.cursor.from tmp
-        return true
-
-      info = bindings[key]
+        info = bindings['MOTION']
+        args.push motion
+      else
+        info = bindings[key]
+        repeat = 1
 
       context = {
-        view: @view,
-        keyStream: @keyStream,
+        view: @view
+        keyStream: @keyStream
+        repeat: repeat
       }
-      info.visual.apply context, []
+      info.visual.apply context, args
       return true
 
     processVisualLineMode: (keyStream) ->
@@ -235,10 +242,14 @@ if module?
 
       bindings = @keyBindings.bindings[MODES.VISUAL_LINE]
 
+      args = []
       if not (key of bindings)
-        # getMotion using normal mode motions
-        # TODO: make this relationship more explicit via a separate motions dictionary
-        [motion, repeat] = @getMotion keyStream, key
+        if not ('MOTION' of bindings)
+          do keyStream.forget
+          return false
+
+        [motion, repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[MODES.VISUAL_LINE]
+
         if motion == null
           if keyStream.waiting # motion continuing
             return true
@@ -246,16 +257,17 @@ if module?
             do keyStream.forget
             return false
 
-        for i in [1..repeat]
-          motion @view.cursor, {pastEnd: true}
-        return true
-
-      info = bindings[key]
+        info = bindings['MOTION']
+        args.push motion
+      else
+        info = bindings[key]
+        repeat = 1
 
       [parent, index1, index2] = do @view.getVisualLineSelections
       # TODO: get a row, instead of id, for parent
       context = {
         view: @view,
+        repeat: repeat,
         keyStream: @keyStream,
         row_start_i: index1
         row_end_i: index2
@@ -264,7 +276,7 @@ if module?
         parent: parent
         num_rows: index2 - index1 + 1
       }
-      info.visual_line.apply context, []
+      info.visual_line.apply context, args
       return true
 
     processSearchMode: (keyStream) ->
@@ -274,29 +286,37 @@ if module?
       bindings = @keyBindings.bindings[MODES.SEARCH]
 
       menu_view = @view.menu.view
+      args = []
 
       if not (key of bindings)
         if key == 'shift+enter'
           key = '\n'
         else if key == 'space'
           key = ' '
-        if key.length > 1
+        if key.length == 1
+          menu_view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+          do @view.menu.update
+          do keyStream.forget
+          return true
+
+        if not ('MOTION' of bindings)
           return false
-        menu_view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+
+        [motion, repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[MODES.SEARCH]
+
+        if motion == null
+          return false
+        info = bindings['MOTION']
+        args.push motion
       else
         info = bindings[key]
 
-        if info.motion
-          motion = info.fn
-          motion menu_view.cursor, {pastEnd: true}
-        else
-          fn = info.search
-          args = []
-          context = {
-            view: @view,
-            keyStream: @keyStream
-          }
-          fn.apply context, args
+      fn = info.search
+      context = {
+        view: @view,
+        keyStream: @keyStream
+      }
+      fn.apply context, args
 
       if @view.mode != MODES.NORMAL
         do @view.menu.update
@@ -312,26 +332,33 @@ if module?
 
       mark_view = @view.markview
 
+      args = []
       if not (key of bindings)
         # must be non-whitespace
-        if key.length > 1
+        if key.length == 1
+          if /^\S*$/.test(key)
+            mark_view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+            return true
           return false
-        if /^\S*$/.test(key)
-          mark_view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+
+        if not ('MOTION' of bindings)
+          return false
+
+        [motion, repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[MODES.MARK]
+
+        if motion == null
+          return false
+        info = bindings['MOTION']
+        args.push motion
       else
         info = bindings[key]
 
-        if info.motion
-          motion = info.fn
-          motion mark_view.cursor, {pastEnd: true}
-        else
-          fn = info.mark
-          args = []
-          context = {
-            view: @view
-            keyStream: @keyStream
-          }
-          fn.apply context, args
+      fn = info.mark
+      context = {
+        view: @view
+        keyStream: @keyStream
+      }
+      fn.apply context, args
       return true
 
     # takes keyStream, key, returns repeat number and key
@@ -352,7 +379,10 @@ if module?
       return [parseInt(numStr), key]
 
     # useful when you expect a motion
-    getMotion: (keyStream, motionKey, bindings = @keyBindings.bindings[MODES.NORMAL], repeat = 1) =>
+    getMotion: (keyStream,
+                motionKey = null,
+                bindings = @keyBindings.motion_bindings[MODES.NORMAL],
+                repeat = 1) =>
       [motionRepeat, motionKey] = @getRepeat keyStream, motionKey
       repeat = repeat * motionRepeat
 
@@ -360,10 +390,11 @@ if module?
         do keyStream.wait
         return [null, repeat]
 
-      info = bindings[motionKey] || {}
-      if not info.motion
+      if not (motionKey of bindings)
         do keyStream.forget
         return [null, repeat]
+
+      info = bindings[motionKey]
 
       fn = null
 
@@ -395,39 +426,26 @@ if module?
       args = []
 
       if not (key of bindings)
-        if 'MOTION' of bindings
-          info = bindings['MOTION']
+        if not ('MOTION' of bindings)
+          do keyStream.forget
+          return false
 
-          # note: this uses original bindings to determine what's a motion
-          [motion, repeat] = @getMotion keyStream, key, @keyBindings.bindings[MODES.NORMAL], repeat
-          if motion == null
+        # note: this uses original bindings to determine what's a motion
+        [motion, repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[MODES.NORMAL], repeat
+        if motion == null
+          if keyStream.waiting # motion continuing
+            return true
+          else
             do keyStream.forget
             return false
 
-          cursor = do @view.cursor.clone
-          for i in [1..repeat]
-            motion cursor, {pastEnd: true, pastEndWord: true}
-
-          args.push cursor
-        else
-          do keyStream.forget
-          return false
+        args.push motion
+        info = bindings['MOTION']
       else
         info = bindings[key] || {}
 
       if info.bindings
         return @processNormalMode keyStream, info.bindings, repeat
-
-      if info.motion
-        # note: this uses *new* bindings to determine what's a motion
-        [motion, repeat] = @getMotion keyStream, key, bindings, repeat
-        if motion == null
-          return true
-
-        for j in [1..repeat]
-          motion @view.cursor, ''
-        do keyStream.forget
-        return true
 
       context = {
         view: @view

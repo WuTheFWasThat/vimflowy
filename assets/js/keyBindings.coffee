@@ -3,7 +3,8 @@ if module?
   global._ = require('lodash')
   global.constants = require('./constants.coffee')
   global.errors = require('./errors.coffee')
-  global.keyDefinitions = require('./keyDefinitions.coffee')
+  global.keyDefinitions = require('./keyDefinitions.coffee').keyDefinitions
+  global.motionDefinitions = require('./keyDefinitions.coffee').motionDefinitions
   global.Logger = require('./logger.coffee')
 
 ###
@@ -178,6 +179,11 @@ It also internally maintains
     NEXT_SIBLING      : []
     PREV_SIBLING      : []
 
+    GO                : []
+    PARENT            : []
+    GO_END            : []
+    EASY_MOTION       : []
+
     TOGGLE_FOLD       : ['ctrl+z']
     ZOOM_OUT          : ['ctrl+left']
     ZOOM_IN           : ['ctrl+right']
@@ -212,23 +218,23 @@ It also internally maintains
 
     'UP', 'DOWN',
     'NEXT_SIBLING', 'PREV_SIBLING',
+
+    'GO', 'GO_END', 'PARENT',
+    'EASY_MOTION',
   ]
 
   # set of possible commands for each mode
   commands = {}
 
   commands[MODES.NORMAL] = [
-    # TODO: these are motions...
-    'GO', 'GO_END', 'PARENT',
-    'EASY_MOTION',
-
     'DELETE', 'CHANGE', 'YANK',
   ]
   for motion in ALL_MOTIONS
     commands[MODES.NORMAL].push motion
   for k of keyDefinitions
-    if keyDefinitions[k].normal
-      commands[MODES.NORMAL].push k
+    if k != 'MOTION'
+      if keyDefinitions[k].normal
+        commands[MODES.NORMAL].push k
 
   # WTF: this iteration messes things up
   # for k,v of keyDefinitions
@@ -236,32 +242,41 @@ It also internally maintains
 
   commands[MODES.VISUAL] = []
   for k of keyDefinitions
-    if keyDefinitions[k].visual
-      commands[MODES.VISUAL].push k
+    if k != 'MOTION'
+      if keyDefinitions[k].visual
+        commands[MODES.VISUAL].push k
+  for motion in ALL_MOTIONS
+    commands[MODES.VISUAL].push motion
 
   commands[MODES.VISUAL_LINE] = []
   for k of keyDefinitions
-    if keyDefinitions[k].visual_line
-      commands[MODES.VISUAL_LINE].push k
+    if k != 'MOTION'
+      if keyDefinitions[k].visual_line
+        commands[MODES.VISUAL_LINE].push k
+  for motion in ALL_MOTIONS
+    commands[MODES.VISUAL_LINE].push motion
 
   commands[MODES.INSERT] = []
   for k of keyDefinitions
-    if keyDefinitions[k].insert
-      commands[MODES.INSERT].push k
+    if k != 'MOTION'
+      if keyDefinitions[k].insert
+        commands[MODES.INSERT].push k
   for motion in ALL_MOTIONS
     commands[MODES.INSERT].push motion
 
   commands[MODES.SEARCH] = []
   for k of keyDefinitions
-    if keyDefinitions[k].search
-      commands[MODES.SEARCH].push k
+    if k != 'MOTION'
+      if keyDefinitions[k].search
+        commands[MODES.SEARCH].push k
   for motion in WITHIN_ROW_MOTIONS
     commands[MODES.SEARCH].push motion
 
   commands[MODES.MARK] = []
   for k of keyDefinitions
-    if keyDefinitions[k].mark
-      commands[MODES.MARK].push k
+    if k != 'MOTION'
+      if keyDefinitions[k].mark
+        commands[MODES.MARK].push k
   for motion in WITHIN_ROW_MOTIONS
     commands[MODES.MARK].push motion
 
@@ -351,8 +366,15 @@ It also internally maintains
         if err then return "Error getting bindings for #{mode_name}: #{err}"
         bindings[mode] = mode_bindings
 
+      motion_bindings = {}
+      for mode_name, mode of MODES
+        [err, mode_bindings] = getBindings motionDefinitions, keyMaps[mode]
+        if err then return "Error getting motion bindings for #{mode_name}: #{err}"
+        motion_bindings[mode] = mode_bindings
+
       @hotkeys = hotkeys
       @bindings = bindings
+      @motion_bindings = motion_bindings
       @_keyMaps = keyMaps
 
       do @render_hotkeys

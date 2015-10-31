@@ -7,8 +7,9 @@ Cursor represents a cursor with a view
 it handles movement logic, insert mode line properties (e.g. bold/italic)
 ###
 class Cursor
-  constructor: (data, row = null, col = null, moveCol = null) ->
-    @data = data
+  constructor: (view, row = null, col = null, moveCol = null) ->
+    @view = view
+    @data = view.data
     @row = row ? (@data.getChildren @data.viewRoot)[0]
     @col = col ? 0
     @properties = {}
@@ -18,7 +19,7 @@ class Cursor
     @moveCol = moveCol ? col
 
   clone: () ->
-    return new Cursor @data, @row, @col, @moveCol
+    return new Cursor @view, @row, @col, @moveCol
 
   from: (other) ->
     @row = other.row
@@ -317,6 +318,9 @@ class Cursor
       obj = line[@col-1]
     for property in constants.text_properties
       @setProperty property, obj[property]
+
+  goMark: () ->
+    @view.goMark @
 
 # exports
 module?.exports = Cursor

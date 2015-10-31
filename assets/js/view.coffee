@@ -211,7 +211,7 @@ window?.renderLine = renderLine
       @modeDiv = options.modeDiv
 
       row = (@data.getChildren @data.viewRoot)[0]
-      @cursor = new Cursor @data, row, 0
+      @cursor = new Cursor @, row, 0
       @register = new Register @
 
       @actions = [] # full action history
@@ -635,8 +635,8 @@ window?.renderLine = renderLine
       return false
 
     # go to the mark under the cursor, if it exists
-    goMark: () ->
-      word = @data.getWord @cursor.row, @cursor.col
+    goMark: (cursor) ->
+      word = @data.getWord cursor.row, cursor.col
       if word.length < 1 or word[0] != '@'
         return false
       mark = word[1..]

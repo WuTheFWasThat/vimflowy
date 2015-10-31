@@ -9,8 +9,6 @@ which describes what the command should do in various modes.
 Each definition has the following required fields:
     display:
         a string used for display in keybindings help screen
-    motion:
-        a boolean indicating whether the function is a motion (default false)
 The definition should have functions for each mode that it supports
 The functions will be passed contexts depending on each mode
   TODO: document these
@@ -89,7 +87,171 @@ For more info/context, see keyBindings.coffee
       @view.setMode MODES.NORMAL
       do @keyStream.save
 
+  # MOTIONS
+  # take a cursor, and and options dictionary.  should move the cursor, somehow
+  # options include:
+  #     pastEnd: whether to allow going past the end of the line
+  #     pastEndWord: whether we consider the end of a word to be after the last letter
+  motionDefinitions =
+    LEFT:
+      display: 'Move cursor left'
+      fn: (cursor, options) ->
+        cursor.left options
+    RIGHT:
+      display: 'Move cursor right'
+      fn: (cursor, options) ->
+        cursor.right options
+    UP:
+      display: 'Move cursor up'
+      fn: (cursor, options) ->
+        cursor.up options
+    DOWN:
+      display: 'Move cursor down'
+      fn: (cursor, options) ->
+        cursor.down options
+    HOME:
+      display: 'Move cursor to beginning of line'
+      fn: (cursor, options) ->
+        cursor.home options
+    END:
+      display: 'Move cursor to end of line'
+      fn: (cursor, options) ->
+        cursor.end options
+    BEGINNING_WORD:
+      display: 'Move cursor to the first word-beginning before it'
+      fn: (cursor, options) ->
+        cursor.beginningWord {cursor: options}
+    END_WORD:
+      display: 'Move cursor to the first word-ending after it'
+      fn: (cursor, options) ->
+        cursor.endWord {cursor: options}
+    NEXT_WORD:
+      display: 'Move cursor to the beginning of the next word'
+      fn: (cursor, options) ->
+        cursor.nextWord {cursor: options}
+    BEGINNING_WWORD:
+      display: 'Move cursor to the first Word-beginning before it'
+      fn: (cursor, options) ->
+        cursor.beginningWord {cursor: options, whitespaceWord: true}
+    END_WWORD:
+      display: 'Move cursor to the first Word-ending after it'
+      fn: (cursor, options) ->
+        cursor.endWord {cursor: options, whitespaceWord: true}
+    NEXT_WWORD:
+      display: 'Move cursor to the beginning of the next Word'
+      fn: (cursor, options) ->
+        cursor.nextWord {cursor: options, whitespaceWord: true}
+    FIND_NEXT_CHAR:
+      display: 'Move cursor to next occurrence of character in line'
+      continue: (char, cursor, options) ->
+        cursor.findNextChar char, {cursor: options}
+    FIND_PREV_CHAR:
+      display: 'Move cursor to previous occurrence of character in line'
+      continue: (char, cursor, options) ->
+        cursor.findPrevChar char, {cursor: options}
+    TO_NEXT_CHAR:
+      display: 'Move cursor to just before next occurrence of character in line'
+      continue: (char, cursor, options) ->
+        cursor.findNextChar char, {cursor: options, beforeFound: true}
+    TO_PREV_CHAR:
+      display: 'Move cursor to just after previous occurrence of character in line'
+      continue: (char, cursor, options) ->
+        cursor.findPrevChar char, {cursor: options, beforeFound: true}
+
+    NEXT_SIBLING:
+      display: 'Move cursor to the next sibling of the current line'
+      fn: (cursor, options) ->
+        cursor.nextSibling options
+
+    PREV_SIBLING:
+      display: 'Move cursor to the previous sibling of the current line'
+      fn: (cursor, options) ->
+        cursor.prevSibling options
+
+    EASY_MOTION:
+      display: 'Jump to a visible row (based on EasyMotion)'
+      fn: () ->
+        ids = do @view.getVisibleRows
+        ids = ids.filter (row) => return (row.id != @view.cursor.row.id)
+        keys = [
+          'z', 'x', 'c', 'v',
+          'q', 'w', 'e', 'r', 't',
+          'a', 's', 'd', 'f',
+          'g', 'h', 'j', 'k', 'l',
+          'y', 'u', 'i', 'o', 'p',
+          'b', 'n', 'm',
+        ]
+
+        if keys.length > ids.length
+          start = (keys.length - ids.length) / 2
+          keys = keys.slice(start, start + ids.length)
+        else
+          start = (ids.length - keys.length) / 2
+          ids = ids.slice(start, start + ids.length)
+
+        mappings = {
+          key_to_id: {}
+          id_to_key: {}
+        }
+        for [id, key] in _.zip(ids, keys)
+          mappings.key_to_id[key] = id
+          mappings.id_to_key[id] = key
+        @view.easy_motion_mappings = mappings
+      continue: (char, cursor, options) ->
+        if char of @view.easy_motion_mappings.key_to_id
+          id = @view.easy_motion_mappings.key_to_id[char]
+          row = @view.data.canonicalInstance id
+          cursor.set row, 0
+        @view.easy_motion_mappings = null
+
+    GO:
+      display: 'Various commands for navigation (operator)'
+      bindings:
+        GO:
+          display: 'Go to the beginning of visible document'
+          fn: (cursor, options) ->
+            cursor.visibleHome options
+        PARENT:
+          display: 'Go to the parent of current line'
+          fn: (cursor, options) ->
+            cursor.parent options
+        MARK:
+          display: 'Go to the mark indicated by the cursor, if it exists'
+          fn: (cursor, options) ->
+            do cursor.goMark
+    GO_END:
+      display: 'Go to end of visible document'
+      fn: (cursor, options) ->
+        cursor.visibleEnd options
+
   keyDefinitions =
+    MOTION:
+      display: 'Move the cursor'
+      normal: (motion) ->
+        for i in [1..@repeat]
+          motion @view.cursor, {}
+        do @keyStream.forget
+      insert: (motion) ->
+        motion @view.cursor, {pastEnd: true}
+      visual: (motion) ->
+        # this is necessary until we figure out multiline
+        tmp = do @view.cursor.clone
+
+        for i in [1..@repeat]
+          motion tmp, {pastEnd: true}
+
+        if tmp.row != @view.cursor.row # only allow same-row movement
+          @view.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
+        else
+          @view.cursor.from tmp
+      visual_line: (motion) ->
+        for i in [1..@repeat]
+          motion @view.cursor, {pastEnd: true}
+      mark: (motion) ->
+        motion @view.markview.cursor, {pastEnd: true}
+      search: (motion) ->
+        motion @view.menu.view.cursor, {pastEnd: true}
+
     HELP:
       display: 'Show/hide key bindings (edit in settings)'
       normal: () ->
@@ -342,160 +504,6 @@ For more info/context, see keyBindings.coffee
         # save the macro-playing sequence itself
         do @keyStream.save
 
-    LEFT:
-      display: 'Move cursor left'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.left options
-    RIGHT:
-      display: 'Move cursor right'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.right options
-    UP:
-      display: 'Move cursor up'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.up options
-    DOWN:
-      display: 'Move cursor down'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.down options
-    HOME:
-      display: 'Move cursor to beginning of line'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.home options
-    END:
-      display: 'Move cursor to end of line'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.end options
-    BEGINNING_WORD:
-      display: 'Move cursor to the first word-beginning before it'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.beginningWord {cursor: options}
-    END_WORD:
-      display: 'Move cursor to the first word-ending after it'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.endWord {cursor: options}
-    NEXT_WORD:
-      display: 'Move cursor to the beginning of the next word'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.nextWord {cursor: options}
-    BEGINNING_WWORD:
-      display: 'Move cursor to the first Word-beginning before it'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.beginningWord {cursor: options, whitespaceWord: true}
-    END_WWORD:
-      display: 'Move cursor to the first Word-ending after it'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.endWord {cursor: options, whitespaceWord: true}
-    NEXT_WWORD:
-      display: 'Move cursor to the beginning of the next Word'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.nextWord {cursor: options, whitespaceWord: true}
-    FIND_NEXT_CHAR:
-      display: 'Move cursor to next occurrence of character in line'
-      motion: true
-      continue: (char, cursor, options) ->
-        cursor.findNextChar char, {cursor: options}
-    FIND_PREV_CHAR:
-      display: 'Move cursor to previous occurrence of character in line'
-      motion: true
-      continue: (char, cursor, options) ->
-        cursor.findPrevChar char, {cursor: options}
-    TO_NEXT_CHAR:
-      display: 'Move cursor to just before next occurrence of character in line'
-      motion: true
-      continue: (char, cursor, options) ->
-        cursor.findNextChar char, {cursor: options, beforeFound: true}
-    TO_PREV_CHAR:
-      display: 'Move cursor to just after previous occurrence of character in line'
-      motion: true
-      continue: (char, cursor, options) ->
-        cursor.findPrevChar char, {cursor: options, beforeFound: true}
-
-    NEXT_SIBLING:
-      display: 'Move cursor to the next sibling of the current line'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.nextSibling options
-
-    PREV_SIBLING:
-      display: 'Move cursor to the previous sibling of the current line'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.prevSibling options
-
-    EASY_MOTION:
-      display: 'Jump to a visible row (based on EasyMotion)'
-      motion: true
-      fn: () ->
-        ids = do @view.getVisibleRows
-        ids = ids.filter (row) => return (row.id != @view.cursor.row.id)
-        keys = [
-          'z', 'x', 'c', 'v',
-          'q', 'w', 'e', 'r', 't',
-          'a', 's', 'd', 'f',
-          'g', 'h', 'j', 'k', 'l',
-          'y', 'u', 'i', 'o', 'p',
-          'b', 'n', 'm',
-        ]
-
-        if keys.length > ids.length
-          start = (keys.length - ids.length) / 2
-          keys = keys.slice(start, start + ids.length)
-        else
-          start = (ids.length - keys.length) / 2
-          ids = ids.slice(start, start + ids.length)
-
-        mappings = {
-          key_to_id: {}
-          id_to_key: {}
-        }
-        for [id, key] in _.zip(ids, keys)
-          mappings.key_to_id[key] = id
-          mappings.id_to_key[id] = key
-        @view.easy_motion_mappings = mappings
-      continue: (char, cursor, options) ->
-        if char of @view.easy_motion_mappings.key_to_id
-          id = @view.easy_motion_mappings.key_to_id[char]
-          row = @view.data.canonicalInstance id
-          cursor.set row, 0
-        @view.easy_motion_mappings = null
-
-    GO:
-      display: 'Various commands for navigation (operator)'
-      motion: true
-      bindings:
-        GO:
-          display: 'Go to the beginning of visible document'
-          motion: true
-          fn: (cursor, options) ->
-            cursor.visibleHome options
-        PARENT:
-          display: 'Go to the parent of current line'
-          motion: true
-          fn: (cursor, options) ->
-            cursor.parent options
-        MARK:
-          display: 'Go to the mark indicated by the cursor, if it exists'
-          normal: () ->
-            do @view.goMark
-            do @keyStream.save
-    GO_END:
-      display: 'Go to end of visible document'
-      motion: true
-      fn: (cursor, options) ->
-        cursor.visibleEnd options
     DELETE_CHAR:
       display: 'Delete character at the cursor (i.e. del key)'
       # behaves like row delete, in visual line
@@ -585,6 +593,7 @@ For more info/context, see keyBindings.coffee
           includeEnd: true
         }
         @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
+
     DELETE:
       display: 'Delete (operator)'
       visual_line: do visual_line_mode_delete_fn
@@ -597,9 +606,12 @@ For more info/context, see keyBindings.coffee
             do @keyStream.save
         MOTION:
           display: 'Delete from cursor with motion'
-          normal: (cursor, options = {}) ->
-            options.yank = true
-            @view.deleteBetween @view.cursor, cursor, options
+          normal: (motion) ->
+            cursor = do @view.cursor.clone
+            for i in [1..@repeat]
+              motion cursor, {pastEnd: true, pastEndWord: true}
+
+            @view.deleteBetween @view.cursor, cursor, { yank: true }
             do @keyStream.save
         MARK:
           display: 'Delete mark at cursor'
@@ -623,11 +635,13 @@ For more info/context, see keyBindings.coffee
             @view.delBlocksAtCursor @repeat, {addNew: true}
         MOTION:
           display: 'Delete from cursor with motion, and enter insert mode'
-          normal: (cursor, options = {}) ->
+          normal: (motion) ->
+            cursor = do @view.cursor.clone
+            for i in [1..@repeat]
+              motion cursor, {pastEnd: true, pastEndWord: true}
+
             @view.setMode MODES.INSERT
-            options.yank = true
-            options.cursor = {pastEnd: true}
-            @view.deleteBetween @view.cursor, cursor, options
+            @view.deleteBetween @view.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
 
     YANK:
       display: 'Yank (operator)'
@@ -648,8 +662,12 @@ For more info/context, see keyBindings.coffee
             do @keyStream.forget
         MOTION:
           display: 'Yank from cursor with motion'
-          normal: (cursor, options = {}) ->
-            @view.yankBetween @view.cursor, cursor, options
+          normal: (motion) ->
+            cursor = do @view.cursor.clone
+            for i in [1..@repeat]
+              motion cursor, {pastEnd: true, pastEndWord: true}
+
+            @view.yankBetween @view.cursor, cursor, {}
             do @keyStream.forget
     PASTE_AFTER:
       display: 'Paste after cursor'
@@ -763,6 +781,10 @@ For more info/context, see keyBindings.coffee
       visual_line: text_format_visual_line 'strikethrough'
       visual: text_format_visual 'strikethrough'
 
-  module?.exports = keyDefinitions
+  module?.exports = {
+    keyDefinitions: keyDefinitions
+    motionDefinitions: motionDefinitions
+  }
   window?.keyDefinitions = keyDefinitions
+  window?.motionDefinitions = motionDefinitions
 )()
