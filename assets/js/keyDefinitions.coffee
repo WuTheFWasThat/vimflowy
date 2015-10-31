@@ -88,141 +88,188 @@ For more info/context, see keyBindings.coffee
       do @keyStream.save
 
   # MOTIONS
-  # take a cursor, and and options dictionary.  should move the cursor, somehow
+  # should have a fn, returns a motion fn (or null)
+  # the motion itself should take a cursor, and and options dictionary
+  # (it should presumably move the cursor, somehow)
   # options include:
   #     pastEnd: whether to allow going past the end of the line
   #     pastEndWord: whether we consider the end of a word to be after the last letter
   motionDefinitions =
     LEFT:
       display: 'Move cursor left'
-      fn: (cursor, options) ->
-        cursor.left options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.left options
     RIGHT:
       display: 'Move cursor right'
-      fn: (cursor, options) ->
-        cursor.right options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.right options
     UP:
       display: 'Move cursor up'
-      fn: (cursor, options) ->
-        cursor.up options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.up options
     DOWN:
       display: 'Move cursor down'
-      fn: (cursor, options) ->
-        cursor.down options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.down options
     HOME:
       display: 'Move cursor to beginning of line'
-      fn: (cursor, options) ->
-        cursor.home options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.home options
     END:
       display: 'Move cursor to end of line'
-      fn: (cursor, options) ->
-        cursor.end options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.end options
     BEGINNING_WORD:
       display: 'Move cursor to the first word-beginning before it'
-      fn: (cursor, options) ->
-        cursor.beginningWord {cursor: options}
+      fn: () ->
+        return (cursor, options) ->
+          cursor.beginningWord {cursor: options}
     END_WORD:
       display: 'Move cursor to the first word-ending after it'
-      fn: (cursor, options) ->
-        cursor.endWord {cursor: options}
+      fn: () ->
+        return (cursor, options) ->
+          cursor.endWord {cursor: options}
     NEXT_WORD:
       display: 'Move cursor to the beginning of the next word'
-      fn: (cursor, options) ->
-        cursor.nextWord {cursor: options}
+      fn: () ->
+        return (cursor, options) ->
+          cursor.nextWord {cursor: options}
     BEGINNING_WWORD:
       display: 'Move cursor to the first Word-beginning before it'
-      fn: (cursor, options) ->
-        cursor.beginningWord {cursor: options, whitespaceWord: true}
+      fn: () ->
+        return (cursor, options) ->
+          cursor.beginningWord {cursor: options, whitespaceWord: true}
     END_WWORD:
       display: 'Move cursor to the first Word-ending after it'
-      fn: (cursor, options) ->
-        cursor.endWord {cursor: options, whitespaceWord: true}
+      fn: () ->
+        return (cursor, options) ->
+          cursor.endWord {cursor: options, whitespaceWord: true}
     NEXT_WWORD:
       display: 'Move cursor to the beginning of the next Word'
-      fn: (cursor, options) ->
-        cursor.nextWord {cursor: options, whitespaceWord: true}
+      fn: () ->
+        return (cursor, options) ->
+          cursor.nextWord {cursor: options, whitespaceWord: true}
     FIND_NEXT_CHAR:
       display: 'Move cursor to next occurrence of character in line'
-      continue: (char, cursor, options) ->
-        cursor.findNextChar char, {cursor: options}
+      fn: () ->
+        key = do @keyStream.dequeue
+        if key == null
+          do @keyStream.wait
+          return null
+        return (cursor, options) ->
+          cursor.findNextChar key, {cursor: options}
     FIND_PREV_CHAR:
       display: 'Move cursor to previous occurrence of character in line'
-      continue: (char, cursor, options) ->
-        cursor.findPrevChar char, {cursor: options}
+      fn: () ->
+        key = do @keyStream.dequeue
+        if key == null
+          do @keyStream.wait
+          return null
+        return (cursor, options) ->
+          cursor.findPrevChar key, {cursor: options}
     TO_NEXT_CHAR:
       display: 'Move cursor to just before next occurrence of character in line'
-      continue: (char, cursor, options) ->
-        cursor.findNextChar char, {cursor: options, beforeFound: true}
+      fn: () ->
+        key = do @keyStream.dequeue
+        if key == null
+          do @keyStream.wait
+          return null
+        return (cursor, options) ->
+          cursor.findNextChar key, {cursor: options, beforeFound: true}
     TO_PREV_CHAR:
       display: 'Move cursor to just after previous occurrence of character in line'
-      continue: (char, cursor, options) ->
-        cursor.findPrevChar char, {cursor: options, beforeFound: true}
+      fn: () ->
+        key = do @keyStream.dequeue
+        if key == null
+          do @keyStream.wait
+          return null
+        return (cursor, options) ->
+          cursor.findPrevChar key, {cursor: options, beforeFound: true}
 
     NEXT_SIBLING:
       display: 'Move cursor to the next sibling of the current line'
-      fn: (cursor, options) ->
-        cursor.nextSibling options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.nextSibling options
 
     PREV_SIBLING:
       display: 'Move cursor to the previous sibling of the current line'
-      fn: (cursor, options) ->
-        cursor.prevSibling options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.prevSibling options
 
     EASY_MOTION:
       display: 'Jump to a visible row (based on EasyMotion)'
       fn: () ->
-        ids = do @view.getVisibleRows
-        ids = ids.filter (row) => return (row.id != @view.cursor.row.id)
-        keys = [
-          'z', 'x', 'c', 'v',
-          'q', 'w', 'e', 'r', 't',
-          'a', 's', 'd', 'f',
-          'g', 'h', 'j', 'k', 'l',
-          'y', 'u', 'i', 'o', 'p',
-          'b', 'n', 'm',
-        ]
+        key = do @keyStream.dequeue
+        if key == null
+          do @keyStream.wait
 
-        if keys.length > ids.length
-          start = (keys.length - ids.length) / 2
-          keys = keys.slice(start, start + ids.length)
+          ids = do @view.getVisibleRows
+          ids = ids.filter (row) => return (row.id != @view.cursor.row.id)
+          keys = [
+            'z', 'x', 'c', 'v',
+            'q', 'w', 'e', 'r', 't',
+            'a', 's', 'd', 'f',
+            'g', 'h', 'j', 'k', 'l',
+            'y', 'u', 'i', 'o', 'p',
+            'b', 'n', 'm',
+          ]
+
+          if keys.length > ids.length
+            start = (keys.length - ids.length) / 2
+            keys = keys.slice(start, start + ids.length)
+          else
+            start = (ids.length - keys.length) / 2
+            ids = ids.slice(start, start + ids.length)
+
+          mappings = {
+            key_to_id: {}
+            id_to_key: {}
+          }
+          for [id, key] in _.zip(ids, keys)
+            mappings.key_to_id[key] = id
+            mappings.id_to_key[id] = key
+          @view.easy_motion_mappings = mappings
+
+          return null
         else
-          start = (ids.length - keys.length) / 2
-          ids = ids.slice(start, start + ids.length)
-
-        mappings = {
-          key_to_id: {}
-          id_to_key: {}
-        }
-        for [id, key] in _.zip(ids, keys)
-          mappings.key_to_id[key] = id
-          mappings.id_to_key[id] = key
-        @view.easy_motion_mappings = mappings
-      continue: (char, cursor, options) ->
-        if char of @view.easy_motion_mappings.key_to_id
-          id = @view.easy_motion_mappings.key_to_id[char]
-          row = @view.data.canonicalInstance id
-          cursor.set row, 0
-        @view.easy_motion_mappings = null
+          return (cursor, options) ->
+            if key of @view.easy_motion_mappings.key_to_id
+              id = @view.easy_motion_mappings.key_to_id[key]
+              row = @view.data.canonicalInstance id
+              cursor.set row, 0
+            @view.easy_motion_mappings = null
 
     GO:
       display: 'Various commands for navigation (operator)'
       bindings:
         GO:
           display: 'Go to the beginning of visible document'
-          fn: (cursor, options) ->
-            cursor.visibleHome options
+          fn: () ->
+            return (cursor, options) ->
+              cursor.visibleHome options
         PARENT:
           display: 'Go to the parent of current line'
-          fn: (cursor, options) ->
-            cursor.parent options
+          fn: () ->
+            return (cursor, options) ->
+              cursor.parent options
         MARK:
           display: 'Go to the mark indicated by the cursor, if it exists'
-          fn: (cursor, options) ->
-            do cursor.goMark
+          fn: () ->
+            return (cursor, options) ->
+              do cursor.goMark
     GO_END:
       display: 'Go to end of visible document'
-      fn: (cursor, options) ->
-        cursor.visibleEnd options
+      fn: () ->
+        return (cursor, options) ->
+          cursor.visibleEnd options
 
   keyDefinitions =
     MOTION:

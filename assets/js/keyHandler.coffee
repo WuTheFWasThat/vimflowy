@@ -134,7 +134,6 @@ if module?
       while not keyStream.done() and not keyStream.waiting
         do keyStream.checkpoint
         handled = (@processOnce keyStream) or handled
-      # TODO: stop re-rendering everything every time?
       do @view.render
       return handled
 
@@ -396,23 +395,17 @@ if module?
 
       info = bindings[motionKey]
 
-      fn = null
+      if info.bindings
+        return (@getMotion keyStream, null, info.bindings, repeat)
 
-      if info.continue
-        key = do keyStream.dequeue
-        if key == null
-          do keyStream.wait
-          if info.fn # bit of a hack, for easy-motion
-            info.fn.apply {view: @view}
-          return [null, repeat]
-        fn = info.continue.bind @, key
-      else if info.bindings
-        answer = (@getMotion keyStream, null, info.bindings, repeat)
-        return answer
-      else if info.fn
-        fn = info.fn
-
-      return [fn, repeat]
+      context = {
+        view: @view
+        repeat: repeat
+        keyStream: keyStream
+        keyHandler: @
+      }
+      motion = info.fn.apply context, []
+      return [motion, repeat]
 
     processNormalMode: (keyStream, bindings = @keyBindings.bindings[MODES.NORMAL], repeat = 1) ->
       [newrepeat, key] = @getRepeat keyStream
