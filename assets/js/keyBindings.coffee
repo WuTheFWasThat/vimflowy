@@ -164,8 +164,8 @@ It also internally maintains
     TO_NEXT_CHAR      : []
     TO_PREV_CHAR      : []
 
-    BACKSPACE         : ['backspace']
-    DELKEY            : ['shift+backspace']
+    DELETE_LAST_CHAR  : ['backspace']
+    DELETE_CHAR       : ['shift+backspace']
     SPLIT_LINE        : ['enter']
 
     INDENT_RIGHT      : []
@@ -218,43 +218,17 @@ It also internally maintains
   commands = {}
 
   commands[MODES.NORMAL] = [
-    'HELP',
-    'INSERT', 'INSERT_HOME', 'INSERT_AFTER', 'INSERT_END', 'INSERT_LINE_BELOW', 'INSERT_LINE_ABOVE',
-
-    # TODO: make these part of motions
+    # TODO: these are motions...
     'GO', 'GO_END', 'PARENT',
     'EASY_MOTION',
 
-    'DELETE', 'DELETE_CHAR',
-    'CHANGE', 'CHANGE_CHAR',
-    'DELETE_TO_HOME', 'DELETE_TO_END', 'DELETE_LAST_CHAR', 'DELETE_LAST_WORD'
-    'REPLACE',
-    'YANK', 'PASTE_AFTER', 'PASTE_BEFORE',
-    'JOIN_LINE', 'SPLIT_LINE',
-
-    'INDENT_RIGHT', 'INDENT_LEFT',
-    'MOVE_BLOCK_LEFT', 'MOVE_BLOCK_RIGHT', 'MOVE_BLOCK_UP', 'MOVE_BLOCK_DOWN',
-
-    'NEXT_SIBLING', 'PREV_SIBLING',
-
-    'TOGGLE_FOLD',
-    'ZOOM_IN', 'ZOOM_OUT', 'ZOOM_IN_ALL', 'ZOOM_OUT_ALL',
-    'SCROLL_DOWN', 'SCROLL_UP',
-
-    'SEARCH',
-    'MARK', 'MARK_SEARCH',
-    'JUMP_PREVIOUS', 'JUMP_NEXT',
-
-    'UNDO', 'REDO',
-    'REPLAY',
-    'RECORD_MACRO', 'PLAY_MACRO',
-
-    'BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
-
-    'ENTER_VISUAL', 'ENTER_VISUAL_LINE',
+    'DELETE', 'CHANGE', 'YANK',
   ]
   for motion in ALL_MOTIONS
     commands[MODES.NORMAL].push motion
+  for k of keyDefinitions
+    if keyDefinitions[k].normal
+      commands[MODES.NORMAL].push k
 
   # WTF: this iteration messes things up
   # for k,v of keyDefinitions

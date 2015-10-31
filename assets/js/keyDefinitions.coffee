@@ -11,22 +11,14 @@ Each definition has the following required fields:
         a string used for display in keybindings help screen
     motion:
         a boolean indicating whether the function is a motion (default false)
-The definition should also have 1 of the following 3 fields
-    fn:
-        takes a view and mutates it
-        if this is a motion, takes an extra cursor argument first
-    continue:
-        a function which takes additionally an extra key as its first argument
-    bindings:
-        another (recursive) set of key definitions, i.e. a dictionary from command names to definitions
-It may also have:
-    to_mode:
-        a mode to switch to
-And for menu mode functions,
-    menu:
-      function taking a view and chars, and
-      returning a list of {contents, renderOptions, fn}
-      SEE: menu.coffee
+The definition should have functions for each mode that it supports
+The functions will be passed contexts depending on each mode
+  TODO: document these
+  view:
+  keyStream:
+  repeat:
+It may also have, bindings:
+    another (recursive) set of key definitions, i.e. a dictionary from command names to definitions
 
 NOTE: there is a special command called 'MOTION', which is used in the bindings dictionaries
     much like if the motion boolean is true, this command always takes an extra cursor argument.
@@ -38,9 +30,10 @@ For more info/context, see keyBindings.coffee
 ((exports) ->
   MODES = constants.MODES
 
-  text_format_definition = (property) ->
+  text_format_normal = (property) ->
     return () ->
       @view.toggleRowProperty property
+      do @keyStream.save
 
   text_format_insert = (property) ->
     return () ->
@@ -67,7 +60,9 @@ For more info/context, see keyBindings.coffee
       do @keyStream.save
 
   exit_normal_fn = () ->
-    return () -> @view.setMode MODES.NORMAL
+    return () ->
+      @view.setMode MODES.NORMAL
+      do @keyStream.forget
 
   visual_line_mode_delete_fn = () ->
     return () ->
@@ -97,81 +92,92 @@ For more info/context, see keyBindings.coffee
   keyDefinitions =
     HELP:
       display: 'Show/hide key bindings (edit in settings)'
-      drop: true
-      fn: () ->
+      normal: () ->
         do @view.toggleBindingsDiv
+        do @keyStream.forget
     ZOOM_IN:
       display: 'Zoom in by one level'
-      fn: () ->
+      normal: () ->
         do @view.rootDown
+        do @keyStream.save
       insert: () ->
         do @view.rootDown
     ZOOM_OUT:
       display: 'Zoom out by one level'
-      fn: () ->
+      normal: () ->
         do @view.rootUp
+        do @keyStream.save
       insert: () ->
         do @view.rootUp
     ZOOM_IN_ALL:
       display: 'Zoom in onto cursor'
-      fn: () ->
+      normal: () ->
         do @view.rootInto
+        do @keyStream.save
       insert: () ->
         do @view.rootInto
     ZOOM_OUT_ALL:
       display: 'Zoom out to home'
-      fn: () ->
+      normal: () ->
         do @view.reroot
+        do @keyStream.save
       insert: () ->
         do @view.reroot
 
     INDENT_RIGHT:
       display: 'Indent row right'
-      fn: () ->
+      normal: () ->
         do @view.indent
+        do @keyStream.save
       insert: () ->
         do @view.indent
       # NOTE: this matches block indent behavior, in visual line
       visual_line: do visual_line_indent
     INDENT_LEFT:
       display: 'Indent row left'
-      fn: () ->
+      normal: () ->
         do @view.unindent
+        do @keyStream.save
       insert: () ->
         do @view.unindent
       # NOTE: this matches block indent behavior, in visual line
       visual_line: do visual_line_unindent
     MOVE_BLOCK_RIGHT:
       display: 'Move block right'
-      fn: () ->
+      normal: () ->
         @view.indentBlocks @view.cursor.row, @repeat
+        do @keyStream.save
       insert: () ->
         @view.indentBlocks @view.cursor.row, 1
       visual_line: do visual_line_indent
     MOVE_BLOCK_LEFT:
       display: 'Move block left'
-      fn: () ->
+      normal: () ->
         @view.unindentBlocks @view.cursor.row, @repeat
+        do @keyStream.save
       insert: () ->
         @view.unindentBlocks @view.cursor.row, 1
       visual_line: do visual_line_unindent
     MOVE_BLOCK_DOWN:
       display: 'Move block down'
-      fn: () ->
+      normal: () ->
         do @view.swapDown
+        do @keyStream.save
       insert: () ->
         do @view.swapDown
     MOVE_BLOCK_UP:
       display: 'Move block up'
-      fn: () ->
+      normal: () ->
         do @view.swapUp
+        do @keyStream.save
       insert: () ->
         do @view.swapUp
 
     TOGGLE_FOLD:
       display: 'Toggle whether a block is folded'
-      fn: () ->
+      normal: () ->
         do @view.toggleCurBlock
+        do @keyStream.save
       insert: () ->
         do @view.toggleCurBlock
 
@@ -179,36 +185,40 @@ For more info/context, see keyBindings.coffee
 
     SEARCH:
       display: 'Search'
-      drop: true
-      menu: (view, chars) ->
-        results = []
+      normal: () ->
+        @view.setMode MODES.SEARCH
+        @view.menu = new Menu @view.menuDiv, (chars) =>
+          results = []
 
-        selectRow = (row) ->
-          view.rootInto row
+          selectRow = (row) ->
+            @view.rootInto row
 
-        for found in view.find chars
-          row = found.row
+          for found in @view.find chars
+            row = found.row
 
-          highlights = {}
-          for i in found.matches
-            highlights[i] = true
+            highlights = {}
+            for i in found.matches
+              highlights[i] = true
 
-          results.push {
-            contents: view.data.getLine row
-            renderOptions: {
-              highlights: highlights
+            results.push {
+              contents: @view.data.getLine row
+              renderOptions: {
+                highlights: highlights
+              }
+              fn: selectRow.bind(@, row)
             }
-            fn: selectRow.bind(@, row)
-          }
-        return results
+          return results
+
+        do @view.menu.update
+        do @keyStream.forget
 
     MARK:
       display: 'Mark a line'
-      drop: true
-      to_mode: MODES.MARK
+      normal: () ->
+        @view.setMode MODES.MARK
+        do @keyStream.forget
     FINISH_MARK:
       display: 'Finish typing mark'
-      to_mode: MODES.NORMAL
       mark: () ->
         mark = (do @view.markview.curText).join ''
         @view.setMark @view.markrow, mark
@@ -216,86 +226,121 @@ For more info/context, see keyBindings.coffee
         do @keyStream.save
     MARK_SEARCH:
       display: 'Go to (search for) a mark'
-      drop: true
-      menu: (view, chars) ->
-        results = []
+      normal: () ->
+        @view.setMode MODES.SEARCH
+        @view.menu = new Menu @view.menuDiv, (chars) =>
+          results = []
 
-        selectRow = (row) ->
-          view.rootInto row
+          selectRow = (row) ->
+            @view.rootInto row
 
-        text = chars.join('')
-        for found in view.data.findMarks text
-          row = found.row
-          mark = found.mark
-          results.push {
-            contents: view.data.getLine row
-            renderOptions: {
-              mark: mark
+          text = chars.join('')
+          for found in @view.data.findMarks text
+            row = found.row
+            mark = found.mark
+            results.push {
+              contents: @view.data.getLine row
+              renderOptions: {
+                mark: mark
+              }
+              fn: selectRow.bind(@, row)
             }
-            fn: selectRow.bind(@, row)
-          }
-        return results
+          return results
+
+        do @view.menu.update
+        do @keyStream.forget
     JUMP_PREVIOUS:
       display: 'Jump to previous location'
-      drop: true
-      fn: () ->
+      normal: () ->
         do @view.jumpPrevious
+        do @keyStream.forget
     JUMP_NEXT:
       display: 'Jump to next location'
-      drop: true
-      fn: () ->
+      normal: () ->
         do @view.jumpNext
+        do @keyStream.forget
 
     # traditional vim stuff
     INSERT:
       display: 'Insert at character'
-      to_mode: MODES.INSERT
-      fn: () -> return
+      normal: () ->
+        @view.setMode MODES.INSERT
     INSERT_AFTER:
       display: 'Insert after character'
-      to_mode: MODES.INSERT
-      fn: () ->
+      normal: () ->
+        @view.setMode MODES.INSERT
         @view.cursor.right {pastEnd: true}
     INSERT_HOME:
       display: 'Insert at beginning of line'
-      to_mode: MODES.INSERT
-      fn: () ->
+      normal: () ->
+        @view.setMode MODES.INSERT
         do @view.cursor.home
     INSERT_END:
       display: 'Insert after end of line'
-      to_mode: MODES.INSERT
-      fn: () ->
+      normal: () ->
+        @view.setMode MODES.INSERT
         @view.cursor.end {pastEnd: true}
     INSERT_LINE_BELOW:
       display: 'Insert on new line after current line'
-      to_mode: MODES.INSERT
-      fn: () ->
+      normal: () ->
+        @view.setMode MODES.INSERT
         do @view.newLineBelow
     INSERT_LINE_ABOVE:
       display: 'Insert on new line before current line'
-      to_mode: MODES.INSERT
-      fn: () ->
+      normal: () ->
+        @view.setMode MODES.INSERT
         do @view.newLineAbove
     REPLACE:
       # TODO: visual and visual_line mode
       display: 'Replace character'
-      continue: (char) ->
-        @view.replaceCharsAfterCursor char, @repeat, {setCursor: 'end'}
+      normal: () ->
+        key = do @keyStream.dequeue
+        if key == null then return do @keyStream.wait
+        @view.replaceCharsAfterCursor key, @repeat, {setCursor: 'end'}
+        do @keyStream.save
 
     UNDO:
       display: 'Undo'
-      drop: true
-      fn: () ->
+      normal: () ->
         for i in [1..@repeat]
           do @view.undo
+        do @keyStream.forget
     REDO:
       display: 'Redo'
-      drop: true
-      fn: () ->
+      normal: () ->
         for i in [1..@repeat]
           do @view.redo
+        do @keyStream.forget
     REPLAY:
       display: 'Replay last command'
+      normal: () ->
+        for i in [1..@repeat]
+          @keyHandler.playRecording @keyStream.lastSequence
+          do @view.save
+        do @keyStream.forget
+    RECORD_MACRO:
+      display: 'Begin/stop recording a macro'
+      normal: () ->
+        if @keyHandler.recording.stream == null
+          key = do @keyStream.dequeue
+          if key == null then return do @keyStream.wait
+          @keyHandler.beginRecording key
+        else
+          # pop off the RECORD_MACRO itself
+          do @keyHandler.recording.stream.queue.pop
+          do @keyHandler.finishRecording
+        do @keyStream.forget
+    PLAY_MACRO:
+      display: 'Play a macro'
+      normal: () ->
+        key = do @keyStream.dequeue
+        if key == null then return do @keyStream.wait
+        recording = @keyHandler.macros[key]
+        if recording == undefined then return do @keyStream.forget
+        for i in [1..@repeat]
+          @keyHandler.playRecording recording
+        # save the macro-playing sequence itself
+        do @keyStream.save
 
     LEFT:
       display: 'Move cursor left'
@@ -443,41 +488,61 @@ For more info/context, see keyBindings.coffee
             cursor.parent options
         MARK:
           display: 'Go to the mark indicated by the cursor, if it exists'
-          fn: () ->
+          normal: () ->
             do @view.goMark
+            do @keyStream.save
     GO_END:
       display: 'Go to end of visible document'
       motion: true
       fn: (cursor, options) ->
         cursor.visibleEnd options
     DELETE_CHAR:
-      display: 'Delete character'
+      display: 'Delete character at the cursor (i.e. del key)'
       # behaves like row delete, in visual line
       visual_line: do visual_line_mode_delete_fn
       visual: do visual_mode_delete_fn
-      fn: () ->
+      normal: () ->
         @view.delCharsAfterCursor @repeat, {yank: true}
+        do @keyStream.save
+      insert: () ->
+        @view.delCharsAfterCursor 1
+      mark: () ->
+        @view.markview.delCharsAfterCursor 1
+      search: () ->
+        @view.menu.view.delCharsAfterCursor 1
     DELETE_LAST_CHAR:
-      display: 'Delete last character'
-      fn: () ->
+      display: 'Delete last character (i.e. backspace key)'
+      # behaves like row delete, in visual line
+      visual_line: do visual_line_mode_delete_fn
+      visual: do visual_mode_delete_fn
+      normal: () ->
         num = Math.min @view.cursor.col, @repeat
         if num > 0
           @view.delCharsBeforeCursor num, {yank: true}
+        do @keyStream.save
+      insert: () ->
+        do @view.deleteAtCursor
+      mark: () ->
+        do @view.markview.deleteAtCursor
+      search: () ->
+        do @view.menu.view.deleteAtCursor
+
     CHANGE_CHAR:
       display: 'Change character'
-      to_mode: MODES.INSERT
-      fn: () ->
+      normal: () ->
         @view.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
+        @view.setMode MODES.INSERT
     DELETE_TO_HOME:
       display: 'Delete to the beginning of the line'
       # TODO: something like this would be nice...
       # macro: ['DELETE', 'HOME']
-      fn: () ->
+      normal: () ->
         options = {
           cursor: {}
           yank: true
         }
         @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
+        do @keyStream.save
       insert: () ->
         options = {
           cursor: {pastEnd: true}
@@ -487,13 +552,14 @@ For more info/context, see keyBindings.coffee
     DELETE_TO_END:
       display: 'Delete to the end of the line'
       # macro: ['DELETE', 'END']
-      fn: () ->
+      normal: () ->
         options = {
           yank: true
           cursor: {}
           includeEnd: true
         }
         @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
+        do @keyStream.save
       insert: () ->
         options = {
           yank: true
@@ -504,13 +570,14 @@ For more info/context, see keyBindings.coffee
     DELETE_LAST_WORD:
       display: 'Delete to the beginning of the previous word'
       # macro: ['DELETE', 'BEGINNING_WWORD']
-      fn: () ->
+      normal: () ->
         options = {
           yank: true
           cursor: {}
           includeEnd: true
         }
         @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
+        do @keyStream.save
       insert: () ->
         options = {
           yank: true
@@ -525,17 +592,20 @@ For more info/context, see keyBindings.coffee
       bindings:
         DELETE:
           display: 'Delete blocks'
-          fn: () ->
+          normal: () ->
             @view.delBlocksAtCursor @repeat, {addNew: false}
+            do @keyStream.save
         MOTION:
           display: 'Delete from cursor with motion'
-          fn: (cursor, options = {}) ->
+          normal: (cursor, options = {}) ->
             options.yank = true
             @view.deleteBetween @view.cursor, cursor, options
+            do @keyStream.save
         MARK:
           display: 'Delete mark at cursor'
-          fn: () ->
+          normal: () ->
             @view.setMark @view.cursor.row, ''
+            do @keyStream.save
     CHANGE:
       display: 'Change (operator)'
       visual_line: () ->
@@ -548,13 +618,13 @@ For more info/context, see keyBindings.coffee
       bindings:
         CHANGE:
           display: 'Delete blocks, and enter insert mode'
-          to_mode: MODES.INSERT
-          fn: () ->
+          normal: () ->
+            @view.setMode MODES.INSERT
             @view.delBlocksAtCursor @repeat, {addNew: true}
         MOTION:
           display: 'Delete from cursor with motion, and enter insert mode'
-          to_mode: MODES.INSERT
-          fn: (cursor, options = {}) ->
+          normal: (cursor, options = {}) ->
+            @view.setMode MODES.INSERT
             options.yank = true
             options.cursor = {pastEnd: true}
             @view.deleteBetween @view.cursor, cursor, options
@@ -573,56 +643,55 @@ For more info/context, see keyBindings.coffee
       bindings:
         YANK:
           display: 'Yank blocks'
-          drop: true
-          fn: () ->
+          normal: () ->
             @view.yankBlocksAtCursor @repeat
+            do @keyStream.forget
         MOTION:
           display: 'Yank from cursor with motion'
-          drop: true
-          fn: (cursor, options = {}) ->
+          normal: (cursor, options = {}) ->
             @view.yankBetween @view.cursor, cursor, options
+            do @keyStream.forget
     PASTE_AFTER:
       display: 'Paste after cursor'
-      fn: () ->
+      normal: () ->
         do @view.pasteAfter
+        do @keyStream.save
       # NOTE: paste after doesn't make sense for insert mode
     PASTE_BEFORE:
       display: 'Paste before cursor'
-      fn: () ->
+      normal: () ->
         @view.pasteBefore {}
+        do @keyStream.save
       insert: () ->
         @view.pasteBefore {cursor: {pastEnd: true}}
 
     JOIN_LINE:
       display: 'Join current line with line below'
-      fn: () ->
+      normal: () ->
         do @view.joinAtCursor
+        do @keyStream.save
     SPLIT_LINE:
       display: 'Split line at cursor (i.e. enter key)'
-      fn: () ->
+      normal: () ->
         do @view.newLineAtCursor
+        do @keyStream.save
       insert: () ->
         do @view.newLineAtCursor
 
     SCROLL_DOWN:
       display: 'Scroll half window down'
-      drop: true
-      fn: () ->
+      normal: () ->
         @view.scrollPages 0.5
+        do @keyStream.forget
       insert: () ->
         @view.scrollPages 0.5
     SCROLL_UP:
       display: 'Scroll half window up'
-      drop: true
-      fn: () ->
+      normal: () ->
         @view.scrollPages -0.5
+        do @keyStream.forget
       insert: () ->
         @view.scrollPages -0.5
-
-    RECORD_MACRO:
-      display: 'Begin/stop recording a macro'
-    PLAY_MACRO:
-      display: 'Play a macro'
 
     # for everything but normal mode
     EXIT_MODE:
@@ -634,47 +703,22 @@ For more info/context, see keyBindings.coffee
       insert: () ->
         do @view.cursor.left
         @view.setMode MODES.NORMAL
+        # unlike other modes, esc in insert mode keeps changes
         do @keyStream.save
 
     # for visual mode
     ENTER_VISUAL:
       display: 'Enter visual mode'
-      to_mode: MODES.VISUAL
-      fn: () ->
-        @view.anchor = do @view.cursor.clone
+      normal: () ->
+        @view.setMode MODES.VISUAL
     ENTER_VISUAL_LINE:
       display: 'Enter visual line mode'
-      to_mode: MODES.VISUAL_LINE
-      fn: () ->
-        @view.lineSelect = true
-        @view.anchor = do @view.cursor.clone
+      normal: () ->
+        @view.setMode MODES.VISUAL_LINE
     SWAP_CURSOR:
       display: 'Swap cursor to other end of selection, in visual and visual line mode'
       visual: do get_swap_cursor_fn
       visual_line: do get_swap_cursor_fn
-
-    # for insert mode
-
-    BACKSPACE:
-      display: 'Delete a character before the cursor (i.e. backspace key)'
-      insert: () ->
-        do @view.deleteAtCursor
-      mark: () ->
-        do @view.markview.deleteAtCursor
-      search: () ->
-        do @view.menu.view.deleteAtCursor
-      fn: () ->
-        do @view.deleteAtCursor
-    DELKEY:
-      display: 'Delete a character after the cursor (i.e. del key)'
-      insert: () ->
-        @view.delCharsAfterCursor 1
-      mark: () ->
-        @view.markview.delCharsAfterCursor 1
-      search: () ->
-        @view.menu.view.delCharsAfterCursor 1
-      fn: () ->
-        @view.delCharsAfterCursor 1
 
     # for menu mode
     MENU_SELECT:
@@ -694,27 +738,27 @@ For more info/context, see keyBindings.coffee
     # FORMATTING
     BOLD:
       display: 'Bold text'
-      fn: text_format_definition 'bold'
+      normal: text_format_normal 'bold'
       insert: text_format_insert 'bold'
       visual_line: text_format_visual_line 'bold'
       visual: text_format_visual 'bold'
     ITALIC:
       display: 'Italicize text'
-      fn: text_format_definition 'italic'
+      normal: text_format_normal 'italic'
       insert: text_format_insert 'italic'
       visual_line: text_format_visual_line 'italic'
       visual: text_format_visual 'italic'
 
     UNDERLINE:
       display: 'Underline text'
-      fn: text_format_definition 'underline'
+      normal: text_format_normal 'underline'
       insert: text_format_insert 'underline'
       visual_line: text_format_visual_line 'underline'
       visual: text_format_visual 'underline'
 
     STRIKETHROUGH:
       display: 'Strike through text'
-      fn: text_format_definition 'strikethrough'
+      normal: text_format_normal 'strikethrough'
       insert: text_format_insert 'strikethrough'
       visual_line: text_format_visual_line 'strikethrough'
       visual: text_format_visual 'strikethrough'

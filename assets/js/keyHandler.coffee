@@ -85,12 +85,37 @@ if module?
       @keyBindings = keyBindings
 
       @macros = {}
-      @recording = null
-      @recording_key = null
+      @recording = {
+        stream: null
+        key: null
+      }
 
       @keyStream = new KeyStream
       @keyStream.on 'save', () =>
         do @view.save
+
+    ############
+    # for macros
+    ############
+
+    beginRecording: (key) ->
+      @recording.stream = new KeyStream
+      @recording.key = key
+
+    finishRecording: () ->
+      macro = @recording.stream.queue
+      @macros[@recording.key] = macro
+      @recording.stream = null
+      @recording.key = null
+
+    playRecording: (recording) ->
+      # the recording shouldn't save, (i.e. no @view.save)
+      recordKeyStream = new KeyStream recording
+      @processKeys recordKeyStream
+
+    ###################
+    # general handling
+    ###################
 
     handleKey: (key) ->
       if do @view.showingSettings
@@ -98,8 +123,8 @@ if module?
           return true
       Logger.logger.debug 'Handling key:', key
       @keyStream.enqueue key
-      if @recording
-        @recording.enqueue key
+      if @recording.stream
+        @recording.stream.enqueue key
       handled = @processKeys @keyStream
       return handled
 
@@ -404,76 +429,13 @@ if module?
         do keyStream.forget
         return true
 
-      if info.menu
-        @view.setMode MODES.SEARCH
-        @view.menu = new Menu @view.menuDiv, (info.menu.bind @, @view)
-        do @view.menu.update
-        do keyStream.forget
-        return true
-
-      if info.continue
-        key = do keyStream.dequeue
-        if key == null then return do keyStream.wait
-
-        fn = info.continue
-        args.push key
-      else if info.fn
-        fn = info.fn
-
-      if fn
-        context = {
-          view: @view,
-          repeat: repeat,
-        }
-        fn.apply context, args
-
-      if info.to_mode
-        @view.setMode info.to_mode
-        if info.to_mode == MODES.SEARCH
-          do keyStream.forget
-        return true
-
-      if info.name == 'RECORD_MACRO'
-        if @recording == null
-          nkey = do keyStream.dequeue
-          if nkey == null then return do keyStream.wait
-          @recording = new KeyStream
-          @recording_key = nkey
-        else
-          macro = @recording.queue
-          do macro.pop # pop off the RECORD_MACRO itself
-          @macros[@recording_key] = macro
-          @recording = null
-          @recording_key = null
-        do keyStream.forget
-        return true
-      if info.name == 'PLAY_MACRO'
-          nkey = do keyStream.dequeue
-          if nkey == null then return do keyStream.wait
-          recording = @macros[nkey]
-          if recording == undefined then return do keyStream.forget
-
-          for i in [1..repeat]
-            # the recording shouldn't save, (i.e. no @view.save)
-            recordKeyStream = new KeyStream recording
-            @processKeys recordKeyStream
-          # but we should save the macro-playing sequence itself
-          do keyStream.save
-          return true
-
-      if info.name == 'REPLAY'
-        for i in [1..repeat]
-          newStream = new KeyStream @keyStream.lastSequence
-          newStream.on 'save', () =>
-            do @view.save
-          @processKeys newStream
-        do keyStream.forget
-        return true
-
-      if info.drop
-        do keyStream.forget
-      else
-        do keyStream.save
+      context = {
+        view: @view
+        repeat: repeat
+        keyStream: keyStream
+        keyHandler: @
+      }
+      info.normal.apply context, args
       return true
 
   module?.exports = KeyHandler

@@ -302,6 +302,11 @@ window?.renderLine = renderLine
         @markrow = @cursor.row
       else if mode == MODES.NORMAL
         do @cursor.backIfNeeded
+      else if mode == MODES.VISUAL
+        @anchor = do @cursor.clone
+      else if mode == MODES.VISUAL_LINE
+        @lineSelect = true
+        @anchor = do @cursor.clone
 
       if @menuDiv
         @menuDiv.toggleClass 'hidden', (mode != MODES.SEARCH)
