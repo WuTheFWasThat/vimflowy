@@ -94,182 +94,168 @@ For more info/context, see keyBindings.coffee
   # options include:
   #     pastEnd: whether to allow going past the end of the line
   #     pastEndWord: whether we consider the end of a word to be after the last letter
-  motionDefinitions =
-    LEFT:
-      display: 'Move cursor left'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.left options
-    RIGHT:
-      display: 'Move cursor right'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.right options
-    UP:
-      display: 'Move cursor up'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.up options
-    DOWN:
-      display: 'Move cursor down'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.down options
-    HOME:
-      display: 'Move cursor to beginning of line'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.home options
-    END:
-      display: 'Move cursor to end of line'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.end options
-    BEGINNING_WORD:
-      display: 'Move cursor to the first word-beginning before it'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.beginningWord {cursor: options}
-    END_WORD:
-      display: 'Move cursor to the first word-ending after it'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.endWord {cursor: options}
-    NEXT_WORD:
-      display: 'Move cursor to the beginning of the next word'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.nextWord {cursor: options}
-    BEGINNING_WWORD:
-      display: 'Move cursor to the first Word-beginning before it'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.beginningWord {cursor: options, whitespaceWord: true}
-    END_WWORD:
-      display: 'Move cursor to the first Word-ending after it'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.endWord {cursor: options, whitespaceWord: true}
-    NEXT_WWORD:
-      display: 'Move cursor to the beginning of the next Word'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.nextWord {cursor: options, whitespaceWord: true}
-    FIND_NEXT_CHAR:
-      display: 'Move cursor to next occurrence of character in line'
-      fn: () ->
-        key = do @keyStream.dequeue
-        if key == null
-          do @keyStream.wait
-          return null
-        return (cursor, options) ->
-          cursor.findNextChar key, {cursor: options}
-    FIND_PREV_CHAR:
-      display: 'Move cursor to previous occurrence of character in line'
-      fn: () ->
-        key = do @keyStream.dequeue
-        if key == null
-          do @keyStream.wait
-          return null
-        return (cursor, options) ->
-          cursor.findPrevChar key, {cursor: options}
-    TO_NEXT_CHAR:
-      display: 'Move cursor to just before next occurrence of character in line'
-      fn: () ->
-        key = do @keyStream.dequeue
-        if key == null
-          do @keyStream.wait
-          return null
-        return (cursor, options) ->
-          cursor.findNextChar key, {cursor: options, beforeFound: true}
-    TO_PREV_CHAR:
-      display: 'Move cursor to just after previous occurrence of character in line'
-      fn: () ->
-        key = do @keyStream.dequeue
-        if key == null
-          do @keyStream.wait
-          return null
-        return (cursor, options) ->
-          cursor.findPrevChar key, {cursor: options, beforeFound: true}
 
-    NEXT_SIBLING:
-      display: 'Move cursor to the next sibling of the current line'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.nextSibling options
+  motionDefinitions = {}
 
-    PREV_SIBLING:
-      display: 'Move cursor to the previous sibling of the current line'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.prevSibling options
+  registerSubmotion = (
+    mainDefinition,
+    name,
+    description,
+    definition
+  ) ->
+    mainDefinition[name] = {
+      name: name
+      description: description
+      definition: definition
+    }
 
-    EASY_MOTION:
-      display: 'Jump to a visible row (based on EasyMotion)'
-      fn: () ->
-        key = do @keyStream.dequeue
-        if key == null
-          do @keyStream.wait
+  registerMotion = registerSubmotion.bind @, motionDefinitions
 
-          ids = do @view.getVisibleRows
-          ids = ids.filter (row) => return (row.id != @view.cursor.row.id)
-          keys = [
-            'z', 'x', 'c', 'v',
-            'q', 'w', 'e', 'r', 't',
-            'a', 's', 'd', 'f',
-            'g', 'h', 'j', 'k', 'l',
-            'y', 'u', 'i', 'o', 'p',
-            'b', 'n', 'm',
-          ]
+  registerMotion 'LEFT', 'Move cursor left', () ->
+    return (cursor, options) ->
+      cursor.left options
 
-          if keys.length > ids.length
-            start = (keys.length - ids.length) / 2
-            keys = keys.slice(start, start + ids.length)
-          else
-            start = (ids.length - keys.length) / 2
-            ids = ids.slice(start, start + ids.length)
+  registerMotion 'RIGHT', 'Move cursor right', () ->
+    return (cursor, options) ->
+      cursor.right options
 
-          mappings = {
-            key_to_id: {}
-            id_to_key: {}
-          }
-          for [id, key] in _.zip(ids, keys)
-            mappings.key_to_id[key] = id
-            mappings.id_to_key[id] = key
-          @view.easy_motion_mappings = mappings
+  registerMotion 'UP', 'Move cursor up', () ->
+    return (cursor, options) ->
+      cursor.up options
 
-          return null
-        else
-          return (cursor, options) ->
-            if key of @view.easy_motion_mappings.key_to_id
-              id = @view.easy_motion_mappings.key_to_id[key]
-              row = @view.data.canonicalInstance id
-              cursor.set row, 0
-            @view.easy_motion_mappings = null
+  registerMotion 'DOWN', 'Move cursor down', () ->
+    return (cursor, options) ->
+      cursor.down options
 
-    GO:
-      display: 'Various commands for navigation (operator)'
-      bindings:
-        GO:
-          display: 'Go to the beginning of visible document'
-          fn: () ->
-            return (cursor, options) ->
-              cursor.visibleHome options
-        PARENT:
-          display: 'Go to the parent of current line'
-          fn: () ->
-            return (cursor, options) ->
-              cursor.parent options
-        MARK:
-          display: 'Go to the mark indicated by the cursor, if it exists'
-          fn: () ->
-            return (cursor, options) ->
-              do cursor.goMark
-    GO_END:
-      display: 'Go to end of visible document'
-      fn: () ->
-        return (cursor, options) ->
-          cursor.visibleEnd options
+  registerMotion 'HOME', 'Move cursor to beginning of line', () ->
+    return (cursor, options) ->
+      cursor.home options
+
+  registerMotion 'END', 'Move cursor to end of line', () ->
+    return (cursor, options) ->
+      cursor.end options
+
+  registerMotion 'BEGINNING_WORD', 'Move cursor to the first word-beginning before it', () ->
+    return (cursor, options) ->
+      cursor.beginningWord {cursor: options}
+
+  registerMotion 'END_WORD', 'Move cursor to the first word-ending after it', () ->
+    return (cursor, options) ->
+      cursor.endWord {cursor: options}
+
+  registerMotion 'NEXT_WORD', 'Move cursor to the beginning of the next word', () ->
+    return (cursor, options) ->
+      cursor.nextWord {cursor: options}
+
+  registerMotion 'BEGINNING_WWORD', 'Move cursor to the first Word-beginning before it', () ->
+    return (cursor, options) ->
+      cursor.beginningWord {cursor: options, whitespaceWord: true}
+
+  registerMotion 'END_WWORD', 'Move cursor to the first Word-ending after it', () ->
+    return (cursor, options) ->
+      cursor.endWord {cursor: options, whitespaceWord: true}
+
+  registerMotion 'NEXT_WWORD', 'Move cursor to the beginning of the next Word', () ->
+    return (cursor, options) ->
+      cursor.nextWord {cursor: options, whitespaceWord: true}
+
+  registerMotion 'FIND_NEXT_CHAR', 'Move cursor to next occurrence of character in line', () ->
+    key = do @keyStream.dequeue
+    if key == null
+      do @keyStream.wait
+      return null
+    return (cursor, options) ->
+      cursor.findNextChar key, {cursor: options}
+
+  registerMotion 'FIND_PREV_CHAR', 'Move cursor to previous occurrence of character in line', () ->
+    key = do @keyStream.dequeue
+    if key == null
+      do @keyStream.wait
+      return null
+    return (cursor, options) ->
+      cursor.findPrevChar key, {cursor: options}
+
+  registerMotion 'TO_NEXT_CHAR', 'Move cursor to just before next occurrence of character in line', () ->
+    key = do @keyStream.dequeue
+    if key == null
+      do @keyStream.wait
+      return null
+    return (cursor, options) ->
+      cursor.findNextChar key, {cursor: options, beforeFound: true}
+
+  registerMotion 'TO_PREV_CHAR', 'Move cursor to just after previous occurrence of character in line', () ->
+    key = do @keyStream.dequeue
+    if key == null
+      do @keyStream.wait
+      return null
+    return (cursor, options) ->
+      cursor.findPrevChar key, {cursor: options, beforeFound: true}
+
+  registerMotion 'NEXT_SIBLING', 'Move cursor to the next sibling of the current line', () ->
+    return (cursor, options) ->
+      cursor.nextSibling options
+
+  registerMotion 'PREV_SIBLING', 'Move cursor to the previous sibling of the current line', () ->
+    return (cursor, options) ->
+      cursor.prevSibling options
+
+
+  registerMotion 'GO_END', 'Go to end of visible document', () ->
+    return (cursor, options) ->
+      cursor.visibleEnd options
+
+  registerMotion 'EASY_MOTION', 'Jump to a visible row (based on EasyMotion)', () ->
+    key = do @keyStream.dequeue
+    if key == null
+      do @keyStream.wait
+
+      ids = do @view.getVisibleRows
+      ids = ids.filter (row) => return (row.id != @view.cursor.row.id)
+      keys = [
+        'z', 'x', 'c', 'v',
+        'q', 'w', 'e', 'r', 't',
+        'a', 's', 'd', 'f',
+        'g', 'h', 'j', 'k', 'l',
+        'y', 'u', 'i', 'o', 'p',
+        'b', 'n', 'm',
+      ]
+
+      if keys.length > ids.length
+        start = (keys.length - ids.length) / 2
+        keys = keys.slice(start, start + ids.length)
+      else
+        start = (ids.length - keys.length) / 2
+        ids = ids.slice(start, start + ids.length)
+
+      mappings = {
+        key_to_id: {}
+        id_to_key: {}
+      }
+      for [id, key] in _.zip(ids, keys)
+        mappings.key_to_id[key] = id
+        mappings.id_to_key[id] = key
+      @view.easy_motion_mappings = mappings
+
+      return null
+    else
+      return (cursor, options) ->
+        if key of @view.easy_motion_mappings.key_to_id
+          id = @view.easy_motion_mappings.key_to_id[key]
+          row = @view.data.canonicalInstance id
+          cursor.set row, 0
+        @view.easy_motion_mappings = null
+
+  go_definition = {} # bindings for second key
+  registerSubmotion go_definition, 'GO', 'Go to the beginning of visible document', () ->
+    return (cursor, options) ->
+      cursor.visibleHome options
+  registerSubmotion go_definition, 'PARENT', 'Go to the parent of current line', () ->
+    return (cursor, options) ->
+      cursor.parent options
+  registerSubmotion go_definition, 'MARK', 'Go to the mark indicated by the cursor, if it exists', () ->
+    return (cursor, options) ->
+      do cursor.goMark
+  registerMotion 'GO', 'Various commands for navigation (operator)', go_definition
 
   keyDefinitions =
     MOTION:

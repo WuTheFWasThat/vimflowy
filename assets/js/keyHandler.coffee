@@ -393,19 +393,21 @@ if module?
         do keyStream.forget
         return [null, repeat]
 
-      info = bindings[motionKey]
-
-      if info.bindings
-        return (@getMotion keyStream, null, info.bindings, repeat)
-
-      context = {
-        view: @view
-        repeat: repeat
-        keyStream: keyStream
-        keyHandler: @
-      }
-      motion = info.fn.apply context, []
-      return [motion, repeat]
+      definition = bindings[motionKey].definition
+      if typeof definition == 'object'
+        # recursive definition
+        return (@getMotion keyStream, null, definition, repeat)
+      else if typeof definition == 'function'
+        context = {
+          view: @view
+          repeat: repeat
+          keyStream: keyStream
+          keyHandler: @
+        }
+        motion = definition.apply context, []
+        return [motion, repeat]
+      else
+        throw new errors.UnexpectedValue "definition", definition
 
     processNormalMode: (keyStream, bindings = @keyBindings.bindings[MODES.NORMAL], repeat = 1) ->
       [newrepeat, key] = @getRepeat keyStream

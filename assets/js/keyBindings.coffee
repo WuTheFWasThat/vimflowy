@@ -302,6 +302,14 @@ It also internally maintains
 
         v = _.clone v
         v.name = name
+
+        if typeof v.definition == 'object'
+          [err, sub_bindings] = getBindings v.definition, keyMap
+          if err
+            return [err, null]
+          else
+            v.definition= sub_bindings
+
         if v.bindings
           [err, sub_bindings] = getBindings v.bindings, keyMap
           if err
