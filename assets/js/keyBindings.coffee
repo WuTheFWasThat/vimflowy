@@ -3,8 +3,7 @@ if module?
   global._ = require('lodash')
   global.constants = require('./constants.coffee')
   global.errors = require('./errors.coffee')
-  global.keyDefinitions = require('./keyDefinitions.coffee').keyDefinitions
-  global.motionDefinitions = require('./keyDefinitions.coffee').motionDefinitions
+  global.keyDefinitions = require('./keyDefinitions.coffee')
   global.Logger = require('./logger.coffee')
 
 ###
@@ -231,51 +230,51 @@ It also internally maintains
   ]
   for motion in ALL_MOTIONS
     commands[MODES.NORMAL].push motion
-  for k of keyDefinitions
+  for k of keyDefinitions.actions
     if k != 'MOTION'
-      if keyDefinitions[k].normal
+      if keyDefinitions.actions[k].normal
         commands[MODES.NORMAL].push k
 
   # WTF: this iteration messes things up
-  # for k,v of keyDefinitions
+  # for k,v of keyDefinitions.actions
   #   console.log k, v
 
   commands[MODES.VISUAL] = []
-  for k of keyDefinitions
+  for k of keyDefinitions.actions
     if k != 'MOTION'
-      if keyDefinitions[k].visual
+      if keyDefinitions.actions[k].visual
         commands[MODES.VISUAL].push k
   for motion in ALL_MOTIONS
     commands[MODES.VISUAL].push motion
 
   commands[MODES.VISUAL_LINE] = []
-  for k of keyDefinitions
+  for k of keyDefinitions.actions
     if k != 'MOTION'
-      if keyDefinitions[k].visual_line
+      if keyDefinitions.actions[k].visual_line
         commands[MODES.VISUAL_LINE].push k
   for motion in ALL_MOTIONS
     commands[MODES.VISUAL_LINE].push motion
 
   commands[MODES.INSERT] = []
-  for k of keyDefinitions
+  for k of keyDefinitions.actions
     if k != 'MOTION'
-      if keyDefinitions[k].insert
+      if keyDefinitions.actions[k].insert
         commands[MODES.INSERT].push k
   for motion in ALL_MOTIONS
     commands[MODES.INSERT].push motion
 
   commands[MODES.SEARCH] = []
-  for k of keyDefinitions
+  for k of keyDefinitions.actions
     if k != 'MOTION'
-      if keyDefinitions[k].search
+      if keyDefinitions.actions[k].search
         commands[MODES.SEARCH].push k
   for motion in WITHIN_ROW_MOTIONS
     commands[MODES.SEARCH].push motion
 
   commands[MODES.MARK] = []
-  for k of keyDefinitions
+  for k of keyDefinitions.actions
     if k != 'MOTION'
-      if keyDefinitions[k].mark
+      if keyDefinitions.actions[k].mark
         commands[MODES.MARK].push k
   for motion in WITHIN_ROW_MOTIONS
     commands[MODES.MARK].push motion
@@ -288,7 +287,7 @@ It also internally maintains
     )
 
   class KeyBindings
-    # takes keyDefinitions and keyMappings, and combines them to key bindings
+    # takes key definitions and keyMappings, and combines them to key bindings
     getBindings = (definitions, keyMap) ->
       bindings = {}
       for name, v of definitions
@@ -370,13 +369,13 @@ It also internally maintains
 
       bindings = {}
       for mode_name, mode of MODES
-        [err, mode_bindings] = getBindings keyDefinitions, keyMaps[mode]
+        [err, mode_bindings] = getBindings keyDefinitions.actions, keyMaps[mode]
         if err then return "Error getting bindings for #{mode_name}: #{err}"
         bindings[mode] = mode_bindings
 
       motion_bindings = {}
       for mode_name, mode of MODES
-        [err, mode_bindings] = getBindings motionDefinitions, keyMaps[mode]
+        [err, mode_bindings] = getBindings keyDefinitions.motions, keyMaps[mode]
         if err then return "Error getting motion bindings for #{mode_name}: #{err}"
         motion_bindings[mode] = mode_bindings
 
@@ -419,7 +418,7 @@ It also internally maintains
           # row.append $('<td>').text keys[0]
           row.append $('<td>').text keys.join(' OR ')
 
-          display_cell = $('<td>').css('width', '100%').html v.display
+          display_cell = $('<td>').css('width', '100%').html v.description
           if v.bindings
             buildTableContents v.bindings, display_cell, true
           row.append display_cell
@@ -428,7 +427,7 @@ It also internally maintains
 
       tables = $('<div>')
 
-      for [label, definitions] in [['Actions', keyDefinitions], ['Motions', motionDefinitions]]
+      for [label, definitions] in [['Actions', keyDefinitions.actions], ['Motions', keyDefinitions.motions]]
         tables.append($('<h5>').text(label).css('margin', '5px 10px'))
         table = $('<table>').addClass('keybindings-table theme-bg-secondary')
         buildTableContents definitions, table

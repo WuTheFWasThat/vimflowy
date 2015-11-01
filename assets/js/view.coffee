@@ -868,6 +868,7 @@ window?.renderLine = renderLine
     indentBlocks: (row, numblocks = 1) ->
       newparent = @data.getSiblingBefore row
       unless newparent?
+        @showMessage "Cannot indent without higher sibling", {text_class: 'error'}
         return null # cannot indent
 
       if @data.collapsed newparent
@@ -881,6 +882,7 @@ window?.renderLine = renderLine
     unindentBlocks: (row, numblocks = 1, options = {}) ->
       parent = do row.getParent
       if parent.id == @data.viewRoot.id
+        @showMessage "Cannot unindent past root", {text_class: 'error'}
         return null
 
       siblings = @data.getSiblingRange row, 0, (numblocks-1)
@@ -910,6 +912,7 @@ window?.renderLine = renderLine
         return @unindentBlocks row
 
       if @data.hasChildren row
+        @showMessage "Cannot unindent line with children", {text_class: 'error'}
         return
 
       parent = do row.getParent

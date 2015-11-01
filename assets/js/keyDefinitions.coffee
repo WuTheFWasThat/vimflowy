@@ -7,8 +7,8 @@ Each command has a name, which the keyDefinitions dictionary maps to a definitio
 which describes what the command should do in various modes.
 
 Each definition has the following required fields:
-    display:
-        a string used for display in keybindings help screen
+    description:
+        a string used for description in keybindings help screen
 The definition should have functions for each mode that it supports
 The functions will be passed contexts depending on each mode
   TODO: document these
@@ -257,9 +257,9 @@ For more info/context, see keyBindings.coffee
       do cursor.goMark
   registerMotion 'GO', 'Various commands for navigation (operator)', go_definition
 
-  keyDefinitions =
+  actionDefinitions =
     MOTION:
-      display: 'Move the cursor'
+      description: 'Move the cursor'
       normal: (motion) ->
         for i in [1..@repeat]
           motion @view.cursor, {}
@@ -286,33 +286,33 @@ For more info/context, see keyBindings.coffee
         motion @view.menu.view.cursor, {pastEnd: true}
 
     HELP:
-      display: 'Show/hide key bindings (edit in settings)'
+      description: 'Show/hide key bindings (edit in settings)'
       normal: () ->
         do @view.toggleBindingsDiv
         do @keyStream.forget
     ZOOM_IN:
-      display: 'Zoom in by one level'
+      description: 'Zoom in by one level'
       normal: () ->
         do @view.rootDown
         do @keyStream.save
       insert: () ->
         do @view.rootDown
     ZOOM_OUT:
-      display: 'Zoom out by one level'
+      description: 'Zoom out by one level'
       normal: () ->
         do @view.rootUp
         do @keyStream.save
       insert: () ->
         do @view.rootUp
     ZOOM_IN_ALL:
-      display: 'Zoom in onto cursor'
+      description: 'Zoom in onto cursor'
       normal: () ->
         do @view.rootInto
         do @keyStream.save
       insert: () ->
         do @view.rootInto
     ZOOM_OUT_ALL:
-      display: 'Zoom out to home'
+      description: 'Zoom out to home'
       normal: () ->
         do @view.reroot
         do @keyStream.save
@@ -320,7 +320,7 @@ For more info/context, see keyBindings.coffee
         do @view.reroot
 
     INDENT_RIGHT:
-      display: 'Indent row right'
+      description: 'Indent row right'
       normal: () ->
         do @view.indent
         do @keyStream.save
@@ -329,7 +329,7 @@ For more info/context, see keyBindings.coffee
       # NOTE: this matches block indent behavior, in visual line
       visual_line: do visual_line_indent
     INDENT_LEFT:
-      display: 'Indent row left'
+      description: 'Indent row left'
       normal: () ->
         do @view.unindent
         do @keyStream.save
@@ -338,7 +338,7 @@ For more info/context, see keyBindings.coffee
       # NOTE: this matches block indent behavior, in visual line
       visual_line: do visual_line_unindent
     MOVE_BLOCK_RIGHT:
-      display: 'Move block right'
+      description: 'Move block right'
       normal: () ->
         @view.indentBlocks @view.cursor.row, @repeat
         do @keyStream.save
@@ -346,7 +346,7 @@ For more info/context, see keyBindings.coffee
         @view.indentBlocks @view.cursor.row, 1
       visual_line: do visual_line_indent
     MOVE_BLOCK_LEFT:
-      display: 'Move block left'
+      description: 'Move block left'
       normal: () ->
         @view.unindentBlocks @view.cursor.row, @repeat
         do @keyStream.save
@@ -354,14 +354,14 @@ For more info/context, see keyBindings.coffee
         @view.unindentBlocks @view.cursor.row, 1
       visual_line: do visual_line_unindent
     MOVE_BLOCK_DOWN:
-      display: 'Move block down'
+      description: 'Move block down'
       normal: () ->
         do @view.swapDown
         do @keyStream.save
       insert: () ->
         do @view.swapDown
     MOVE_BLOCK_UP:
-      display: 'Move block up'
+      description: 'Move block up'
       normal: () ->
         do @view.swapUp
         do @keyStream.save
@@ -369,7 +369,7 @@ For more info/context, see keyBindings.coffee
         do @view.swapUp
 
     TOGGLE_FOLD:
-      display: 'Toggle whether a block is folded'
+      description: 'Toggle whether a block is folded'
       normal: () ->
         do @view.toggleCurBlock
         do @keyStream.save
@@ -379,7 +379,7 @@ For more info/context, see keyBindings.coffee
     # content-based navigation
 
     SEARCH:
-      display: 'Search'
+      description: 'Search'
       normal: () ->
         @view.setMode MODES.SEARCH
         @view.menu = new Menu @view.menuDiv, (chars) =>
@@ -408,19 +408,19 @@ For more info/context, see keyBindings.coffee
         do @keyStream.forget
 
     MARK:
-      display: 'Mark a line'
+      description: 'Mark a line'
       normal: () ->
         @view.setMode MODES.MARK
         do @keyStream.forget
     FINISH_MARK:
-      display: 'Finish typing mark'
+      description: 'Finish typing mark'
       mark: () ->
         mark = (do @view.markview.curText).join ''
         @view.setMark @view.markrow, mark
         @view.setMode MODES.NORMAL
         do @keyStream.save
     MARK_SEARCH:
-      display: 'Go to (search for) a mark'
+      description: 'Go to (search for) a mark'
       normal: () ->
         @view.setMode MODES.SEARCH
         @view.menu = new Menu @view.menuDiv, (chars) =>
@@ -445,49 +445,49 @@ For more info/context, see keyBindings.coffee
         do @view.menu.update
         do @keyStream.forget
     JUMP_PREVIOUS:
-      display: 'Jump to previous location'
+      description: 'Jump to previous location'
       normal: () ->
         do @view.jumpPrevious
         do @keyStream.forget
     JUMP_NEXT:
-      display: 'Jump to next location'
+      description: 'Jump to next location'
       normal: () ->
         do @view.jumpNext
         do @keyStream.forget
 
     # traditional vim stuff
     INSERT:
-      display: 'Insert at character'
+      description: 'Insert at character'
       normal: () ->
         @view.setMode MODES.INSERT
     INSERT_AFTER:
-      display: 'Insert after character'
+      description: 'Insert after character'
       normal: () ->
         @view.setMode MODES.INSERT
         @view.cursor.right {pastEnd: true}
     INSERT_HOME:
-      display: 'Insert at beginning of line'
+      description: 'Insert at beginning of line'
       normal: () ->
         @view.setMode MODES.INSERT
         do @view.cursor.home
     INSERT_END:
-      display: 'Insert after end of line'
+      description: 'Insert after end of line'
       normal: () ->
         @view.setMode MODES.INSERT
         @view.cursor.end {pastEnd: true}
     INSERT_LINE_BELOW:
-      display: 'Insert on new line after current line'
+      description: 'Insert on new line after current line'
       normal: () ->
         @view.setMode MODES.INSERT
         do @view.newLineBelow
     INSERT_LINE_ABOVE:
-      display: 'Insert on new line before current line'
+      description: 'Insert on new line before current line'
       normal: () ->
         @view.setMode MODES.INSERT
         do @view.newLineAbove
     REPLACE:
       # TODO: visual and visual_line mode
-      display: 'Replace character'
+      description: 'Replace character'
       normal: () ->
         key = do @keyStream.dequeue
         if key == null then return do @keyStream.wait
@@ -495,26 +495,26 @@ For more info/context, see keyBindings.coffee
         do @keyStream.save
 
     UNDO:
-      display: 'Undo'
+      description: 'Undo'
       normal: () ->
         for i in [1..@repeat]
           do @view.undo
         do @keyStream.forget
     REDO:
-      display: 'Redo'
+      description: 'Redo'
       normal: () ->
         for i in [1..@repeat]
           do @view.redo
         do @keyStream.forget
     REPLAY:
-      display: 'Replay last command'
+      description: 'Replay last command'
       normal: () ->
         for i in [1..@repeat]
           @keyHandler.playRecording @keyStream.lastSequence
           do @view.save
         do @keyStream.forget
     RECORD_MACRO:
-      display: 'Begin/stop recording a macro'
+      description: 'Begin/stop recording a macro'
       normal: () ->
         if @keyHandler.recording.stream == null
           key = do @keyStream.dequeue
@@ -526,7 +526,7 @@ For more info/context, see keyBindings.coffee
           do @keyHandler.finishRecording
         do @keyStream.forget
     PLAY_MACRO:
-      display: 'Play a macro'
+      description: 'Play a macro'
       normal: () ->
         key = do @keyStream.dequeue
         if key == null then return do @keyStream.wait
@@ -538,7 +538,7 @@ For more info/context, see keyBindings.coffee
         do @keyStream.save
 
     DELETE_CHAR:
-      display: 'Delete character at the cursor (i.e. del key)'
+      description: 'Delete character at the cursor (i.e. del key)'
       # behaves like row delete, in visual line
       visual_line: do visual_line_mode_delete_fn
       visual: do visual_mode_delete_fn
@@ -552,7 +552,7 @@ For more info/context, see keyBindings.coffee
       search: () ->
         @view.menu.view.delCharsAfterCursor 1
     DELETE_LAST_CHAR:
-      display: 'Delete last character (i.e. backspace key)'
+      description: 'Delete last character (i.e. backspace key)'
       # behaves like row delete, in visual line
       visual_line: do visual_line_mode_delete_fn
       visual: do visual_mode_delete_fn
@@ -569,12 +569,12 @@ For more info/context, see keyBindings.coffee
         do @view.menu.view.deleteAtCursor
 
     CHANGE_CHAR:
-      display: 'Change character'
+      description: 'Change character'
       normal: () ->
         @view.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
         @view.setMode MODES.INSERT
     DELETE_TO_HOME:
-      display: 'Delete to the beginning of the line'
+      description: 'Delete to the beginning of the line'
       # TODO: something like this would be nice...
       # macro: ['DELETE', 'HOME']
       normal: () ->
@@ -591,7 +591,7 @@ For more info/context, see keyBindings.coffee
         }
         @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
     DELETE_TO_END:
-      display: 'Delete to the end of the line'
+      description: 'Delete to the end of the line'
       # macro: ['DELETE', 'END']
       normal: () ->
         options = {
@@ -609,7 +609,7 @@ For more info/context, see keyBindings.coffee
         }
         @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
     DELETE_LAST_WORD:
-      display: 'Delete to the beginning of the previous word'
+      description: 'Delete to the beginning of the previous word'
       # macro: ['DELETE', 'BEGINNING_WWORD']
       normal: () ->
         options = {
@@ -628,17 +628,17 @@ For more info/context, see keyBindings.coffee
         @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
 
     DELETE:
-      display: 'Delete (operator)'
+      description: 'Delete (operator)'
       visual_line: do visual_line_mode_delete_fn
       visual: do visual_mode_delete_fn
       bindings:
         DELETE:
-          display: 'Delete blocks'
+          description: 'Delete blocks'
           normal: () ->
             @view.delBlocksAtCursor @repeat, {addNew: false}
             do @keyStream.save
         MOTION:
-          display: 'Delete from cursor with motion'
+          description: 'Delete from cursor with motion'
           normal: (motion) ->
             cursor = do @view.cursor.clone
             for i in [1..@repeat]
@@ -647,12 +647,12 @@ For more info/context, see keyBindings.coffee
             @view.deleteBetween @view.cursor, cursor, { yank: true }
             do @keyStream.save
         MARK:
-          display: 'Delete mark at cursor'
+          description: 'Delete mark at cursor'
           normal: () ->
             @view.setMark @view.cursor.row, ''
             do @keyStream.save
     CHANGE:
-      display: 'Change (operator)'
+      description: 'Change (operator)'
       visual_line: () ->
         @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: true}
         @view.setMode MODES.INSERT
@@ -662,12 +662,12 @@ For more info/context, see keyBindings.coffee
         @view.setMode MODES.INSERT
       bindings:
         CHANGE:
-          display: 'Delete blocks, and enter insert mode'
+          description: 'Delete blocks, and enter insert mode'
           normal: () ->
             @view.setMode MODES.INSERT
             @view.delBlocksAtCursor @repeat, {addNew: true}
         MOTION:
-          display: 'Delete from cursor with motion, and enter insert mode'
+          description: 'Delete from cursor with motion, and enter insert mode'
           normal: (motion) ->
             cursor = do @view.cursor.clone
             for i in [1..@repeat]
@@ -677,7 +677,7 @@ For more info/context, see keyBindings.coffee
             @view.deleteBetween @view.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
 
     YANK:
-      display: 'Yank (operator)'
+      description: 'Yank (operator)'
       visual_line: () ->
         @view.yankBlocks @row_start, @num_rows
         @view.setMode MODES.NORMAL
@@ -689,12 +689,12 @@ For more info/context, see keyBindings.coffee
         do @keyStream.forget
       bindings:
         YANK:
-          display: 'Yank blocks'
+          description: 'Yank blocks'
           normal: () ->
             @view.yankBlocksAtCursor @repeat
             do @keyStream.forget
         MOTION:
-          display: 'Yank from cursor with motion'
+          description: 'Yank from cursor with motion'
           normal: (motion) ->
             cursor = do @view.cursor.clone
             for i in [1..@repeat]
@@ -703,13 +703,13 @@ For more info/context, see keyBindings.coffee
             @view.yankBetween @view.cursor, cursor, {}
             do @keyStream.forget
     PASTE_AFTER:
-      display: 'Paste after cursor'
+      description: 'Paste after cursor'
       normal: () ->
         do @view.pasteAfter
         do @keyStream.save
       # NOTE: paste after doesn't make sense for insert mode
     PASTE_BEFORE:
-      display: 'Paste before cursor'
+      description: 'Paste before cursor'
       normal: () ->
         @view.pasteBefore {}
         do @keyStream.save
@@ -717,12 +717,12 @@ For more info/context, see keyBindings.coffee
         @view.pasteBefore {cursor: {pastEnd: true}}
 
     JOIN_LINE:
-      display: 'Join current line with line below'
+      description: 'Join current line with line below'
       normal: () ->
         do @view.joinAtCursor
         do @keyStream.save
     SPLIT_LINE:
-      display: 'Split line at cursor (i.e. enter key)'
+      description: 'Split line at cursor (i.e. enter key)'
       normal: () ->
         do @view.newLineAtCursor
         do @keyStream.save
@@ -730,14 +730,14 @@ For more info/context, see keyBindings.coffee
         do @view.newLineAtCursor
 
     SCROLL_DOWN:
-      display: 'Scroll half window down'
+      description: 'Scroll half window down'
       normal: () ->
         @view.scrollPages 0.5
         do @keyStream.forget
       insert: () ->
         @view.scrollPages 0.5
     SCROLL_UP:
-      display: 'Scroll half window up'
+      description: 'Scroll half window up'
       normal: () ->
         @view.scrollPages -0.5
         do @keyStream.forget
@@ -746,7 +746,7 @@ For more info/context, see keyBindings.coffee
 
     # for everything but normal mode
     EXIT_MODE:
-      display: 'Exit back to normal mode'
+      description: 'Exit back to normal mode'
       visual_line: do exit_normal_fn
       visual: do exit_normal_fn
       search: do exit_normal_fn
@@ -759,65 +759,67 @@ For more info/context, see keyBindings.coffee
 
     # for visual mode
     ENTER_VISUAL:
-      display: 'Enter visual mode'
+      description: 'Enter visual mode'
       normal: () ->
         @view.setMode MODES.VISUAL
     ENTER_VISUAL_LINE:
-      display: 'Enter visual line mode'
+      description: 'Enter visual line mode'
       normal: () ->
         @view.setMode MODES.VISUAL_LINE
     SWAP_CURSOR:
-      display: 'Swap cursor to other end of selection, in visual and visual line mode'
+      description: 'Swap cursor to other end of selection, in visual and visual line mode'
       visual: do get_swap_cursor_fn
       visual_line: do get_swap_cursor_fn
 
     # for menu mode
     MENU_SELECT:
-      display: 'Select current menu selection'
+      description: 'Select current menu selection'
       search: () ->
         do @view.menu.select
         @view.setMode MODES.NORMAL
     MENU_UP:
-      display: 'Select previous menu selection'
+      description: 'Select previous menu selection'
       search: () ->
         do @view.menu.up
     MENU_DOWN:
-      display: 'Select next menu selection'
+      description: 'Select next menu selection'
       search: () ->
         do @view.menu.down
 
     # FORMATTING
     BOLD:
-      display: 'Bold text'
+      description: 'Bold text'
       normal: text_format_normal 'bold'
       insert: text_format_insert 'bold'
       visual_line: text_format_visual_line 'bold'
       visual: text_format_visual 'bold'
     ITALIC:
-      display: 'Italicize text'
+      description: 'Italicize text'
       normal: text_format_normal 'italic'
       insert: text_format_insert 'italic'
       visual_line: text_format_visual_line 'italic'
       visual: text_format_visual 'italic'
 
     UNDERLINE:
-      display: 'Underline text'
+      description: 'Underline text'
       normal: text_format_normal 'underline'
       insert: text_format_insert 'underline'
       visual_line: text_format_visual_line 'underline'
       visual: text_format_visual 'underline'
 
     STRIKETHROUGH:
-      display: 'Strike through text'
+      description: 'Strike through text'
       normal: text_format_normal 'strikethrough'
       insert: text_format_insert 'strikethrough'
       visual_line: text_format_visual_line 'strikethrough'
       visual: text_format_visual 'strikethrough'
 
   module?.exports = {
-    keyDefinitions: keyDefinitions
-    motionDefinitions: motionDefinitions
+    actions: actionDefinitions
+    motions: motionDefinitions
   }
-  window?.keyDefinitions = keyDefinitions
-  window?.motionDefinitions = motionDefinitions
+  window?.keyDefinitions = {
+    actions: actionDefinitions
+    motions: motionDefinitions
+  }
 )()
