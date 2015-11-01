@@ -28,40 +28,6 @@ For more info/context, see keyBindings.coffee
 ((exports) ->
   MODES = constants.MODES
 
-  text_format_normal = (property) ->
-    return () ->
-      @view.toggleRowProperty property
-      do @keyStream.save
-
-  text_format_insert = (property) ->
-    return () ->
-      @view.cursor.toggleProperty property
-
-  text_format_visual_line = (property) ->
-    return () ->
-      rows = @view.data.getChildRange @parent, @row_start_i, @row_end_i
-      @view.toggleRowsProperty property, rows
-      @view.setMode MODES.NORMAL
-      do @keyStream.save
-
-  text_format_visual = (property) ->
-    return () ->
-      @view.toggleRowPropertyBetween property, @view.cursor, @view.anchor, {includeEnd: true}
-      @view.setMode MODES.NORMAL
-      do @keyStream.save
-
-  get_swap_cursor_fn = () ->
-    return () ->
-      tmp = do @view.anchor.clone
-      @view.anchor.from @view.cursor
-      @view.cursor.from tmp
-      do @keyStream.save
-
-  exit_normal_fn = () ->
-    return () ->
-      @view.setMode MODES.NORMAL
-      do @keyStream.forget
-
   visual_line_mode_delete_fn = () ->
     return () ->
       @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
@@ -258,374 +224,6 @@ For more info/context, see keyBindings.coffee
   registerMotion 'GO', 'Various commands for navigation (operator)', go_definition
 
   actionDefinitions =
-    MOTION:
-      description: 'Move the cursor'
-      normal: (motion) ->
-        for i in [1..@repeat]
-          motion @view.cursor, {}
-        do @keyStream.forget
-      insert: (motion) ->
-        motion @view.cursor, {pastEnd: true}
-      visual: (motion) ->
-        # this is necessary until we figure out multiline
-        tmp = do @view.cursor.clone
-
-        for i in [1..@repeat]
-          motion tmp, {pastEnd: true}
-
-        if tmp.row != @view.cursor.row # only allow same-row movement
-          @view.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
-        else
-          @view.cursor.from tmp
-      visual_line: (motion) ->
-        for i in [1..@repeat]
-          motion @view.cursor, {pastEnd: true}
-      mark: (motion) ->
-        motion @view.markview.cursor, {pastEnd: true}
-      search: (motion) ->
-        motion @view.menu.view.cursor, {pastEnd: true}
-
-    HELP:
-      description: 'Show/hide key bindings (edit in settings)'
-      normal: () ->
-        do @view.toggleBindingsDiv
-        do @keyStream.forget
-    ZOOM_IN:
-      description: 'Zoom in by one level'
-      normal: () ->
-        do @view.rootDown
-        do @keyStream.save
-      insert: () ->
-        do @view.rootDown
-    ZOOM_OUT:
-      description: 'Zoom out by one level'
-      normal: () ->
-        do @view.rootUp
-        do @keyStream.save
-      insert: () ->
-        do @view.rootUp
-    ZOOM_IN_ALL:
-      description: 'Zoom in onto cursor'
-      normal: () ->
-        do @view.rootInto
-        do @keyStream.save
-      insert: () ->
-        do @view.rootInto
-    ZOOM_OUT_ALL:
-      description: 'Zoom out to home'
-      normal: () ->
-        do @view.reroot
-        do @keyStream.save
-      insert: () ->
-        do @view.reroot
-
-    INDENT_RIGHT:
-      description: 'Indent row right'
-      normal: () ->
-        do @view.indent
-        do @keyStream.save
-      insert: () ->
-        do @view.indent
-      # NOTE: this matches block indent behavior, in visual line
-      visual_line: do visual_line_indent
-    INDENT_LEFT:
-      description: 'Indent row left'
-      normal: () ->
-        do @view.unindent
-        do @keyStream.save
-      insert: () ->
-        do @view.unindent
-      # NOTE: this matches block indent behavior, in visual line
-      visual_line: do visual_line_unindent
-    MOVE_BLOCK_RIGHT:
-      description: 'Move block right'
-      normal: () ->
-        @view.indentBlocks @view.cursor.row, @repeat
-        do @keyStream.save
-      insert: () ->
-        @view.indentBlocks @view.cursor.row, 1
-      visual_line: do visual_line_indent
-    MOVE_BLOCK_LEFT:
-      description: 'Move block left'
-      normal: () ->
-        @view.unindentBlocks @view.cursor.row, @repeat
-        do @keyStream.save
-      insert: () ->
-        @view.unindentBlocks @view.cursor.row, 1
-      visual_line: do visual_line_unindent
-    MOVE_BLOCK_DOWN:
-      description: 'Move block down'
-      normal: () ->
-        do @view.swapDown
-        do @keyStream.save
-      insert: () ->
-        do @view.swapDown
-    MOVE_BLOCK_UP:
-      description: 'Move block up'
-      normal: () ->
-        do @view.swapUp
-        do @keyStream.save
-      insert: () ->
-        do @view.swapUp
-
-    TOGGLE_FOLD:
-      description: 'Toggle whether a block is folded'
-      normal: () ->
-        do @view.toggleCurBlock
-        do @keyStream.save
-      insert: () ->
-        do @view.toggleCurBlock
-
-    # content-based navigation
-
-    SEARCH:
-      description: 'Search'
-      normal: () ->
-        @view.setMode MODES.SEARCH
-        @view.menu = new Menu @view.menuDiv, (chars) =>
-          results = []
-
-          selectRow = (row) ->
-            @view.rootInto row
-
-          for found in @view.find chars
-            row = found.row
-
-            highlights = {}
-            for i in found.matches
-              highlights[i] = true
-
-            results.push {
-              contents: @view.data.getLine row
-              renderOptions: {
-                highlights: highlights
-              }
-              fn: selectRow.bind(@, row)
-            }
-          return results
-
-        do @view.menu.update
-        do @keyStream.forget
-
-    MARK:
-      description: 'Mark a line'
-      normal: () ->
-        @view.setMode MODES.MARK
-        do @keyStream.forget
-    FINISH_MARK:
-      description: 'Finish typing mark'
-      mark: () ->
-        mark = (do @view.markview.curText).join ''
-        @view.setMark @view.markrow, mark
-        @view.setMode MODES.NORMAL
-        do @keyStream.save
-    MARK_SEARCH:
-      description: 'Go to (search for) a mark'
-      normal: () ->
-        @view.setMode MODES.SEARCH
-        @view.menu = new Menu @view.menuDiv, (chars) =>
-          results = []
-
-          selectRow = (row) ->
-            @view.rootInto row
-
-          text = chars.join('')
-          for found in @view.data.findMarks text
-            row = found.row
-            mark = found.mark
-            results.push {
-              contents: @view.data.getLine row
-              renderOptions: {
-                mark: mark
-              }
-              fn: selectRow.bind(@, row)
-            }
-          return results
-
-        do @view.menu.update
-        do @keyStream.forget
-    JUMP_PREVIOUS:
-      description: 'Jump to previous location'
-      normal: () ->
-        do @view.jumpPrevious
-        do @keyStream.forget
-    JUMP_NEXT:
-      description: 'Jump to next location'
-      normal: () ->
-        do @view.jumpNext
-        do @keyStream.forget
-
-    # traditional vim stuff
-    INSERT:
-      description: 'Insert at character'
-      normal: () ->
-        @view.setMode MODES.INSERT
-    INSERT_AFTER:
-      description: 'Insert after character'
-      normal: () ->
-        @view.setMode MODES.INSERT
-        @view.cursor.right {pastEnd: true}
-    INSERT_HOME:
-      description: 'Insert at beginning of line'
-      normal: () ->
-        @view.setMode MODES.INSERT
-        do @view.cursor.home
-    INSERT_END:
-      description: 'Insert after end of line'
-      normal: () ->
-        @view.setMode MODES.INSERT
-        @view.cursor.end {pastEnd: true}
-    INSERT_LINE_BELOW:
-      description: 'Insert on new line after current line'
-      normal: () ->
-        @view.setMode MODES.INSERT
-        do @view.newLineBelow
-    INSERT_LINE_ABOVE:
-      description: 'Insert on new line before current line'
-      normal: () ->
-        @view.setMode MODES.INSERT
-        do @view.newLineAbove
-    REPLACE:
-      # TODO: visual and visual_line mode
-      description: 'Replace character'
-      normal: () ->
-        key = do @keyStream.dequeue
-        if key == null then return do @keyStream.wait
-        @view.replaceCharsAfterCursor key, @repeat, {setCursor: 'end'}
-        do @keyStream.save
-
-    UNDO:
-      description: 'Undo'
-      normal: () ->
-        for i in [1..@repeat]
-          do @view.undo
-        do @keyStream.forget
-    REDO:
-      description: 'Redo'
-      normal: () ->
-        for i in [1..@repeat]
-          do @view.redo
-        do @keyStream.forget
-    REPLAY:
-      description: 'Replay last command'
-      normal: () ->
-        for i in [1..@repeat]
-          @keyHandler.playRecording @keyStream.lastSequence
-          do @view.save
-        do @keyStream.forget
-    RECORD_MACRO:
-      description: 'Begin/stop recording a macro'
-      normal: () ->
-        if @keyHandler.recording.stream == null
-          key = do @keyStream.dequeue
-          if key == null then return do @keyStream.wait
-          @keyHandler.beginRecording key
-        else
-          # pop off the RECORD_MACRO itself
-          do @keyHandler.recording.stream.queue.pop
-          do @keyHandler.finishRecording
-        do @keyStream.forget
-    PLAY_MACRO:
-      description: 'Play a macro'
-      normal: () ->
-        key = do @keyStream.dequeue
-        if key == null then return do @keyStream.wait
-        recording = @keyHandler.macros[key]
-        if recording == undefined then return do @keyStream.forget
-        for i in [1..@repeat]
-          @keyHandler.playRecording recording
-        # save the macro-playing sequence itself
-        do @keyStream.save
-
-    DELETE_CHAR:
-      description: 'Delete character at the cursor (i.e. del key)'
-      # behaves like row delete, in visual line
-      visual_line: do visual_line_mode_delete_fn
-      visual: do visual_mode_delete_fn
-      normal: () ->
-        @view.delCharsAfterCursor @repeat, {yank: true}
-        do @keyStream.save
-      insert: () ->
-        @view.delCharsAfterCursor 1
-      mark: () ->
-        @view.markview.delCharsAfterCursor 1
-      search: () ->
-        @view.menu.view.delCharsAfterCursor 1
-    DELETE_LAST_CHAR:
-      description: 'Delete last character (i.e. backspace key)'
-      # behaves like row delete, in visual line
-      visual_line: do visual_line_mode_delete_fn
-      visual: do visual_mode_delete_fn
-      normal: () ->
-        num = Math.min @view.cursor.col, @repeat
-        if num > 0
-          @view.delCharsBeforeCursor num, {yank: true}
-        do @keyStream.save
-      insert: () ->
-        do @view.deleteAtCursor
-      mark: () ->
-        do @view.markview.deleteAtCursor
-      search: () ->
-        do @view.menu.view.deleteAtCursor
-
-    CHANGE_CHAR:
-      description: 'Change character'
-      normal: () ->
-        @view.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
-        @view.setMode MODES.INSERT
-    DELETE_TO_HOME:
-      description: 'Delete to the beginning of the line'
-      # TODO: something like this would be nice...
-      # macro: ['DELETE', 'HOME']
-      normal: () ->
-        options = {
-          cursor: {}
-          yank: true
-        }
-        @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
-        do @keyStream.save
-      insert: () ->
-        options = {
-          cursor: {pastEnd: true}
-          yank: true
-        }
-        @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
-    DELETE_TO_END:
-      description: 'Delete to the end of the line'
-      # macro: ['DELETE', 'END']
-      normal: () ->
-        options = {
-          yank: true
-          cursor: {}
-          includeEnd: true
-        }
-        @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
-        do @keyStream.save
-      insert: () ->
-        options = {
-          yank: true
-          cursor: {pastEnd: true}
-          includeEnd: true
-        }
-        @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
-    DELETE_LAST_WORD:
-      description: 'Delete to the beginning of the previous word'
-      # macro: ['DELETE', 'BEGINNING_WWORD']
-      normal: () ->
-        options = {
-          yank: true
-          cursor: {}
-          includeEnd: true
-        }
-        @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
-        do @keyStream.save
-      insert: () ->
-        options = {
-          yank: true
-          cursor: {pastEnd: true}
-          includeEnd: true
-        }
-        @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
 
     DELETE:
       description: 'Delete (operator)'
@@ -702,117 +300,406 @@ For more info/context, see keyBindings.coffee
 
             @view.yankBetween @view.cursor, cursor, {}
             do @keyStream.forget
-    PASTE_AFTER:
-      description: 'Paste after cursor'
-      normal: () ->
-        do @view.pasteAfter
-        do @keyStream.save
-      # NOTE: paste after doesn't make sense for insert mode
-    PASTE_BEFORE:
-      description: 'Paste before cursor'
-      normal: () ->
-        @view.pasteBefore {}
-        do @keyStream.save
-      insert: () ->
-        @view.pasteBefore {cursor: {pastEnd: true}}
 
-    JOIN_LINE:
-      description: 'Join current line with line below'
-      normal: () ->
-        do @view.joinAtCursor
-        do @keyStream.save
-    SPLIT_LINE:
-      description: 'Split line at cursor (i.e. enter key)'
-      normal: () ->
-        do @view.newLineAtCursor
-        do @keyStream.save
-      insert: () ->
-        do @view.newLineAtCursor
+  registerSubaction = (
+    mainDefinition,
+    name,
+    description,
+    modes,
+    definition
+  ) ->
+    if not (name of mainDefinition)
+      mainDefinition[name] = {}
+    mainDefinition[name].name = name
+    mainDefinition[name].description = description
+    for mode in modes
+      mainDefinition[name][mode] = definition
 
-    SCROLL_DOWN:
-      description: 'Scroll half window down'
-      normal: () ->
-        @view.scrollPages 0.5
-        do @keyStream.forget
-      insert: () ->
-        @view.scrollPages 0.5
-    SCROLL_UP:
-      description: 'Scroll half window up'
-      normal: () ->
-        @view.scrollPages -0.5
-        do @keyStream.forget
-      insert: () ->
-        @view.scrollPages -0.5
+  registerAction = registerSubaction.bind @, actionDefinitions
 
-    # for everything but normal mode
-    EXIT_MODE:
-      description: 'Exit back to normal mode'
-      visual_line: do exit_normal_fn
-      visual: do exit_normal_fn
-      search: do exit_normal_fn
-      mark: do exit_normal_fn
-      insert: () ->
-        do @view.cursor.left
-        @view.setMode MODES.NORMAL
-        # unlike other modes, esc in insert mode keeps changes
-        do @keyStream.save
+  registerAction 'MOTION', 'Move the cursor', ['normal'], (motion) ->
+    for i in [1..@repeat]
+      motion @view.cursor, {}
+    do @keyStream.forget
+  registerAction 'MOTION', 'Move the cursor', ['insert'], (motion) ->
+    motion @view.cursor, {pastEnd: true}
+  registerAction 'MOTION', 'Move the cursor', ['visual'], (motion) ->
+    # this is necessary until we figure out multiline
+    tmp = do @view.cursor.clone
+    for i in [1..@repeat]
+      motion tmp, {pastEnd: true}
 
-    # for visual mode
-    ENTER_VISUAL:
-      description: 'Enter visual mode'
-      normal: () ->
-        @view.setMode MODES.VISUAL
-    ENTER_VISUAL_LINE:
-      description: 'Enter visual line mode'
-      normal: () ->
-        @view.setMode MODES.VISUAL_LINE
-    SWAP_CURSOR:
-      description: 'Swap cursor to other end of selection, in visual and visual line mode'
-      visual: do get_swap_cursor_fn
-      visual_line: do get_swap_cursor_fn
+    if tmp.row != @view.cursor.row # only allow same-row movement
+      @view.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
+    else
+      @view.cursor.from tmp
+  registerAction 'MOTION', 'Move the cursor', ['visual_line'], (motion) ->
+    for i in [1..@repeat]
+      motion @view.cursor, {pastEnd: true}
+  registerAction 'MOTION', 'Move the cursor', ['mark'], (motion) ->
+    motion @view.markview.cursor, {pastEnd: true}
+  registerAction 'MOTION', 'Move the cursor', ['search'], (motion) ->
+    motion @view.menu.view.cursor, {pastEnd: true}
 
-    # for menu mode
-    MENU_SELECT:
-      description: 'Select current menu selection'
-      search: () ->
-        do @view.menu.select
-        @view.setMode MODES.NORMAL
-    MENU_UP:
-      description: 'Select previous menu selection'
-      search: () ->
-        do @view.menu.up
-    MENU_DOWN:
-      description: 'Select next menu selection'
-      search: () ->
-        do @view.menu.down
+  registerAction 'HELP', 'Show/hide key bindings (edit in settings)', ['normal'], () ->
+    do @view.toggleBindingsDiv
+    do @keyStream.forget
 
-    # FORMATTING
-    BOLD:
-      description: 'Bold text'
-      normal: text_format_normal 'bold'
-      insert: text_format_insert 'bold'
-      visual_line: text_format_visual_line 'bold'
-      visual: text_format_visual 'bold'
-    ITALIC:
-      description: 'Italicize text'
-      normal: text_format_normal 'italic'
-      insert: text_format_insert 'italic'
-      visual_line: text_format_visual_line 'italic'
-      visual: text_format_visual 'italic'
+  registerAction 'ZOOM_IN', 'Zoom in by one level', ['normal', 'insert'], () ->
+    do @view.rootDown
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+  registerAction 'ZOOM_OUT', 'Zoom out by one level', ['normal', 'insert'], () ->
+    do @view.rootUp
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+  registerAction 'ZOOM_IN_ALL', 'Zoom in onto cursor', ['normal', 'insert'], () ->
+    do @view.rootInto
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+  registerAction 'ZOOM_OUT_ALL', 'Zoom out to home', ['normal', 'insert'], () ->
+    do @view.reroot
+    if @mode == MODES.NORMAL
+      do @keyStream.save
 
-    UNDERLINE:
-      description: 'Underline text'
-      normal: text_format_normal 'underline'
-      insert: text_format_insert 'underline'
-      visual_line: text_format_visual_line 'underline'
-      visual: text_format_visual 'underline'
+  registerAction 'INDENT_RIGHT', 'Indent row right', ['normal'], () ->
+    do @view.indent
+    do @keyStream.save
+  registerAction 'INDENT_RIGHT', 'Indent row right', ['insert'], () ->
+    do @view.indent
+  # NOTE: this matches block indent behavior, in visual line
+  registerAction 'INDENT_RIGHT', 'Indent row right', ['visual_line'], (do visual_line_indent)
+  registerAction 'INDENT_LEFT', 'Indent row left', ['normal'], () ->
+    do @view.unindent
+    do @keyStream.save
+  registerAction 'INDENT_LEFT', 'Indent row left', ['insert'], () ->
+    do @view.unindent
+  # NOTE: this matches block indent behavior, in visual line
+  registerAction 'INDENT_LEFT', 'Indent row left', ['visual_line'], (do visual_line_unindent)
 
-    STRIKETHROUGH:
-      description: 'Strike through text'
-      normal: text_format_normal 'strikethrough'
-      insert: text_format_insert 'strikethrough'
-      visual_line: text_format_visual_line 'strikethrough'
-      visual: text_format_visual 'strikethrough'
+  registerAction 'MOVE_BLOCK_RIGHT', 'Move block right', ['normal'], () ->
+    @view.indentBlocks @view.cursor.row, @repeat
+    do @keyStream.save
+  registerAction 'MOVE_BLOCK_RIGHT', 'Move block right', ['insert'], () ->
+    @view.indentBlocks @view.cursor.row, 1
+  registerAction 'MOVE_BLOCK_RIGHT', 'Move block right', ['visual_line'], (do visual_line_indent)
+  registerAction 'MOVE_BLOCK_LEFT', 'Move block left', ['normal'], () ->
+    @view.unindentBlocks @view.cursor.row, @repeat
+    do @keyStream.save
+  registerAction 'MOVE_BLOCK_LEFT', 'Move block left', ['insert'], () ->
+    @view.unindentBlocks @view.cursor.row, 1
+  registerAction 'MOVE_BLOCK_LEFT', 'Move block left', ['visual_line'], (do visual_line_unindent)
+  registerAction 'MOVE_BLOCK_DOWN', 'Move block down', ['normal', 'insert'], () ->
+    do @view.swapDown
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+  registerAction 'MOVE_BLOCK_UP', 'Move block up', ['normal', 'insert'], () ->
+    do @view.swapUp
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+
+  registerAction 'TOGGLE_FOLD', 'Toggle whether a block is folded', ['normal', 'insert'], () ->
+    do @view.toggleCurBlock
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+
+  # content-based navigation
+
+  registerAction 'SEARCH', 'Search', ['normal'], () ->
+    @view.setMode MODES.SEARCH
+    @view.menu = new Menu @view.menuDiv, (chars) =>
+      results = []
+
+      selectRow = (row) ->
+        @view.rootInto row
+
+      for found in @view.find chars
+        row = found.row
+
+        highlights = {}
+        for i in found.matches
+          highlights[i] = true
+
+        results.push {
+          contents: @view.data.getLine row
+          renderOptions: {
+            highlights: highlights
+          }
+          fn: selectRow.bind(@, row)
+        }
+      return results
+
+    do @view.menu.update
+    do @keyStream.forget
+
+  registerAction 'MARK', 'Mark a line', ['normal'], () ->
+    @view.setMode MODES.MARK
+    do @keyStream.forget
+  registerAction 'FINISH_MARK', 'Finish typing mark', ['mark'], () ->
+    mark = (do @view.markview.curText).join ''
+    @view.setMark @view.markrow, mark
+    @view.setMode MODES.NORMAL
+    do @keyStream.save
+  registerAction 'MARK_SEARCH', 'Go to (search for) a mark', ['normal'], () ->
+    @view.setMode MODES.SEARCH
+    @view.menu = new Menu @view.menuDiv, (chars) =>
+      results = []
+
+      selectRow = (row) ->
+        @view.rootInto row
+
+      text = chars.join('')
+      for found in @view.data.findMarks text
+        row = found.row
+        mark = found.mark
+        results.push {
+          contents: @view.data.getLine row
+          renderOptions: {
+            mark: mark
+          }
+          fn: selectRow.bind(@, row)
+        }
+      return results
+
+    do @view.menu.update
+    do @keyStream.forget
+  registerAction 'JUMP_PREVIOUS', 'Jump to previous location', ['normal'], () ->
+    do @view.jumpPrevious
+    do @keyStream.forget
+  registerAction 'JUMP_NEXT', 'Jump to next location', ['normal'], () ->
+    do @view.jumpNext
+    do @keyStream.forget
+
+  # traditional vim stuff
+  registerAction 'INSERT', 'Insert at character', ['normal'], () ->
+    @view.setMode MODES.INSERT
+  registerAction 'INSERT_AFTER', 'Insert after character', ['normal'], () ->
+    @view.setMode MODES.INSERT
+    @view.cursor.right {pastEnd: true}
+  registerAction 'INSERT_HOME', 'Insert at beginning of line', ['normal'], () ->
+    @view.setMode MODES.INSERT
+    do @view.cursor.home
+  registerAction 'INSERT_END', 'Insert after end of line', ['normal'], () ->
+    @view.setMode MODES.INSERT
+    @view.cursor.end {pastEnd: true}
+  registerAction 'INSERT_LINE_BELOW', 'Insert on new line after current line', ['normal'], () ->
+    @view.setMode MODES.INSERT
+    do @view.newLineBelow
+  registerAction 'INSERT_LINE_ABOVE', 'Insert on new line before current line', ['normal'], () ->
+    @view.setMode MODES.INSERT
+    do @view.newLineAbove
+
+  # TODO: visual and visual_line mode
+  registerAction 'REPLACE', 'Replace character', ['normal'], () ->
+    key = do @keyStream.dequeue
+    if key == null then return do @keyStream.wait
+    @view.replaceCharsAfterCursor key, @repeat, {setCursor: 'end'}
+    do @keyStream.save
+
+  registerAction 'UNDO', 'Undo', ['normal'], () ->
+    for i in [1..@repeat]
+      do @view.undo
+    do @keyStream.forget
+  registerAction 'REDO', 'Redo', ['normal'], () ->
+    for i in [1..@repeat]
+      do @view.redo
+    do @keyStream.forget
+  registerAction 'REPLAY', 'Replay last command', ['normal'], () ->
+    for i in [1..@repeat]
+      @keyHandler.playRecording @keyStream.lastSequence
+      do @view.save
+    do @keyStream.forget
+  registerAction 'RECORD_MACRO', 'Begin/stop recording a macro', ['normal'], () ->
+    if @keyHandler.recording.stream == null
+      key = do @keyStream.dequeue
+      if key == null then return do @keyStream.wait
+      @keyHandler.beginRecording key
+    else
+      # pop off the RECORD_MACRO itself
+      do @keyHandler.recording.stream.queue.pop
+      do @keyHandler.finishRecording
+    do @keyStream.forget
+  registerAction 'PLAY_MACRO', 'Play a macro', ['normal'], () ->
+    key = do @keyStream.dequeue
+    if key == null then return do @keyStream.wait
+    recording = @keyHandler.macros[key]
+    if recording == undefined then return do @keyStream.forget
+    for i in [1..@repeat]
+      @keyHandler.playRecording recording
+    # save the macro-playing sequence itself
+    do @keyStream.save
+
+  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', ['normal'], () ->
+    @view.delCharsAfterCursor @repeat, {yank: true}
+    do @keyStream.save
+  # behaves like row delete, in visual line
+  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', ['visual'], (do visual_mode_delete_fn)
+  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', ['visual_line'], (do visual_line_mode_delete_fn)
+  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', ['insert'], () ->
+    @view.delCharsAfterCursor 1
+  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', ['mark'], () ->
+    @view.markview.delCharsAfterCursor 1
+  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', ['search'], () ->
+    @view.menu.view.delCharsAfterCursor 1
+
+  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', ['normal'], () ->
+    num = Math.min @view.cursor.col, @repeat
+    if num > 0
+      @view.delCharsBeforeCursor num, {yank: true}
+    do @keyStream.save
+  # behaves like row delete, in visual line
+  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', ['visual'], (do visual_mode_delete_fn)
+  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', ['visual_line'], (do visual_line_mode_delete_fn)
+  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', ['insert'], () ->
+    do @view.deleteAtCursor
+  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', ['mark'], () ->
+    do @view.markview.deleteAtCursor
+  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', ['search'], () ->
+    do @view.menu.view.deleteAtCursor
+
+  registerAction 'CHANGE_CHAR', 'Change character', ['normal'], () ->
+    @view.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
+    @view.setMode MODES.INSERT
+
+  # TODO: something like this would be nice...
+  # registerActionAsMacro 'DELETE_TO_HOME', ['DELETE', 'HOME']
+  registerAction 'DELETE_TO_HOME', 'Delete to the beginning of the line', ['normal', 'insert'], () ->
+    options = {
+      cursor: {}
+      yank: true
+    }
+    if @mode == MODES.INSERT
+      options.cursor.pastEnd = true
+    @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+
+  # macro: ['DELETE', 'END']
+  registerAction 'DELETE_TO_END', 'Delete to the end of the line', ['normal', 'insert'], () ->
+    options = {
+      yank: true
+      cursor: {}
+      includeEnd: true
+    }
+    if @mode == MODES.INSERT
+      options.cursor.pastEnd = true
+    @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+
+  # define action as... macro: ['DELETE', 'BEGINNING_WWORD']
+  registerAction 'DELETE_LAST_WORD', 'Delete to the beginning of the previous word', ['normal', 'insert'], () ->
+    options = {
+      yank: true
+      cursor: {}
+      includeEnd: true
+    }
+    if @mode == MODES.INSERT
+      options.cursor.pastEnd = true
+    @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+
+  registerAction 'PASTE_AFTER', 'Paste after cursor', ['normal'], () ->
+    do @view.pasteAfter
+    do @keyStream.save
+  # NOTE: paste after doesn't make sense for insert mode
+  registerAction 'PASTE_BEFORE', 'Paste before cursor', ['normal'], () ->
+    @view.pasteBefore {}
+    do @keyStream.save
+  registerAction 'PASTE_BEFORE', 'Paste before cursor', ['insert'], () ->
+    @view.pasteBefore {cursor: {pastEnd: true}}
+
+  registerAction 'JOIN_LINE', 'Join current line with line below', ['normal'], () ->
+    do @view.joinAtCursor
+    do @keyStream.save
+  registerAction 'SPLIT_LINE', 'Split line at cursor (i.e. enter key)', ['normal', 'insert'], () ->
+    do @view.newLineAtCursor
+    if @mode == MODES.NORMAL
+      do @keyStream.save
+
+  registerAction 'SCROLL_DOWN', 'Scroll half window down', ['normal', 'insert'], () ->
+    @view.scrollPages 0.5
+    if @mode == MODES.NORMAL
+      do @keyStream.forget
+    # TODO: if insert, forget *only this*
+
+  registerAction 'SCROLL_UP', 'Scroll half window up', ['normal', 'insert'], () ->
+    @view.scrollPages -0.5
+    if @mode == MODES.NORMAL
+      do @keyStream.forget
+
+  # for everything but normal mode
+  registerAction 'EXIT_MODE', 'Exit back to normal mode', ['visual', 'visual_line', 'search', 'mark'], () ->
+    @view.setMode MODES.NORMAL
+    do @keyStream.forget
+  registerAction 'EXIT_MODE', 'Exit back to normal mode', ['insert'], () ->
+    do @view.cursor.left
+    @view.setMode MODES.NORMAL
+    # unlike other modes, esc in insert mode keeps changes
+    do @keyStream.save
+
+  # for visual and visual line mode
+  registerAction 'ENTER_VISUAL', 'Enter visual mode', ['normal'], () ->
+    @view.setMode MODES.VISUAL
+  registerAction 'ENTER_VISUAL_LINE', 'Enter visual line mode', ['normal'], () ->
+    @view.setMode MODES.VISUAL_LINE
+  registerAction 'SWAP_CURSOR', 'Swap cursor to other end of selection, in visual and visual line mode', ['visual', 'visual_line'], () ->
+    tmp = do @view.anchor.clone
+    @view.anchor.from @view.cursor
+    @view.cursor.from tmp
+    do @keyStream.save
+
+  # for menu mode
+
+  registerAction 'MENU_SELECT', 'Select current menu selection', ['search'], () ->
+    do @view.menu.select
+    @view.setMode MODES.NORMAL
+  registerAction 'MENU_UP', 'Select previous menu selection', ['search'], () ->
+    do @view.menu.up
+  registerAction 'MENU_DOWN', 'Select next menu selection', ['search'], () ->
+    do @view.menu.down
+
+  # FORMATTING
+
+  text_format_normal = (property) ->
+    return () ->
+      @view.toggleRowProperty property
+      do @keyStream.save
+
+  text_format_insert = (property) ->
+    return () ->
+      @view.cursor.toggleProperty property
+
+  text_format_visual_line = (property) ->
+    return () ->
+      rows = @view.data.getChildRange @parent, @row_start_i, @row_end_i
+      @view.toggleRowsProperty property, rows
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
+
+  text_format_visual = (property) ->
+    return () ->
+      @view.toggleRowPropertyBetween property, @view.cursor, @view.anchor, {includeEnd: true}
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
+
+  registerAction 'BOLD', 'Bold text', ['normal'], (text_format_normal 'bold')
+  registerAction 'BOLD', 'Bold text', ['insert'], (text_format_insert 'bold')
+  registerAction 'BOLD', 'Bold text', ['visual'], (text_format_visual 'bold')
+  registerAction 'BOLD', 'Bold text', ['visual_line'], (text_format_visual_line 'bold')
+  registerAction 'ITALIC', 'Italicize text', ['normal'], (text_format_normal 'italic')
+  registerAction 'ITALIC', 'Italicize text', ['insert'], (text_format_insert 'italic')
+  registerAction 'ITALIC', 'Italicize text', ['visual'], (text_format_visual 'italic')
+  registerAction 'ITALIC', 'Italicize text', ['visual_line'], (text_format_visual_line 'italic')
+  registerAction 'UNDERLINE', 'Underline text', ['normal'], (text_format_normal 'underline')
+  registerAction 'UNDERLINE', 'Underline text', ['insert'], (text_format_insert 'underline')
+  registerAction 'UNDERLINE', 'Underline text', ['visual'], (text_format_visual 'underline')
+  registerAction 'UNDERLINE', 'Underline text', ['visual_line'], (text_format_visual_line 'underline')
+  registerAction 'STRIKETHROUGH', 'Strike through text', ['normal'], (text_format_normal 'strikethrough')
+  registerAction 'STRIKETHROUGH', 'Strike through text', ['insert'], (text_format_insert 'strikethrough')
+  registerAction 'STRIKETHROUGH', 'Strike through text', ['visual'], (text_format_visual 'strikethrough')
+  registerAction 'STRIKETHROUGH', 'Strike through text', ['visual_line'], (text_format_visual_line 'strikethrough')
 
   module?.exports = {
     actions: actionDefinitions

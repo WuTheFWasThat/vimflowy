@@ -191,8 +191,9 @@ if module?
 
       fn = info.insert
       context = {
-        view: @view,
-        keyStream: keyStream,
+        mode: MODES.INSERT
+        view: @view
+        keyStream: keyStream
       }
       fn.apply context, args
 
@@ -227,6 +228,7 @@ if module?
         repeat = 1
 
       context = {
+        mode: MODES.VISUAL
         view: @view
         keyStream: @keyStream
         repeat: repeat
@@ -265,6 +267,7 @@ if module?
       [parent, index1, index2] = do @view.getVisualLineSelections
       # TODO: get a row, instead of id, for parent
       context = {
+        mode: MODES.VISUAL_LINE
         view: @view,
         repeat: repeat,
         keyStream: @keyStream,
@@ -312,6 +315,7 @@ if module?
 
       fn = info.search
       context = {
+        mode: MODES.SEARCH
         view: @view,
         keyStream: @keyStream
       }
@@ -354,6 +358,7 @@ if module?
 
       fn = info.mark
       context = {
+        mode: MODES.MARK
         view: @view
         keyStream: @keyStream
       }
@@ -443,6 +448,7 @@ if module?
         return @processNormalMode keyStream, info.bindings, repeat
 
       context = {
+        mode: MODES.NORMAL
         view: @view
         repeat: repeat
         keyStream: keyStream
