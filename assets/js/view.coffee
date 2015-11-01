@@ -2,7 +2,7 @@
 if module?
   global._ = require('lodash')
 
-  global.actions = require('./actions.coffee')
+  global.mutations = require('./mutations.coffee')
   global.constants = require('./constants.coffee')
   global.errors = require('./errors.coffee')
   global.Cursor = require('./cursor.coffee')
@@ -214,7 +214,7 @@ window?.renderLine = renderLine
       @cursor = new Cursor @, row, 0
       @register = new Register @
 
-      @actions = [] # full action history
+      @mutations = [] # full mutation history
       @history = [{
         index: 0
       }]
@@ -445,14 +445,14 @@ window?.renderLine = renderLine
       else
           throw new errors.UnexpectedValue "mimetype", mimetype
 
-    # ACTIONS
+    # MUTATIONS
 
     save: () ->
       if @historyIndex != @history.length - 1
           # haven't acted, otherwise would've sliced
           return
-      if @history[@historyIndex].index == @actions.length
-          # haven't acted, otherwise there would be more actions
+      if @history[@historyIndex].index == @mutations.length
+          # haven't acted, otherwise there would be more mutations
           return
 
       state = @history[@historyIndex]
@@ -463,7 +463,7 @@ window?.renderLine = renderLine
 
       @historyIndex += 1
       @history.push {
-        index: @actions.length
+        index: @mutations.length
       }
 
     restoreViewState: (state) ->
@@ -480,9 +480,9 @@ window?.renderLine = renderLine
 
         Logger.logger.debug "UNDOING ("
         for i in [(oldState.index-1)...(newState.index-1)]
-            action = @actions[i]
-            Logger.logger.debug "  Undoing action #{action.constructor.name}(#{action.str()})"
-            action.rewind @
+            mutation = @mutations[i]
+            Logger.logger.debug "  Undoing mutation #{mutation.constructor.name}(#{mutation.str()})"
+            mutation.rewind @
         Logger.logger.debug ") END UNDO"
         @restoreViewState newState.before
 
@@ -494,27 +494,27 @@ window?.renderLine = renderLine
 
         Logger.logger.debug "REDOING ("
         for i in [oldState.index...newState.index]
-            action = @actions[i]
-            Logger.logger.debug "  Redoing action #{action.constructor.name}(#{action.str()})"
-            action.reapply @
+            mutation = @mutations[i]
+            Logger.logger.debug "  Redoing mutation #{mutation.constructor.name}(#{mutation.str()})"
+            mutation.remutate @
         Logger.logger.debug ") END REDO"
         @restoreViewState oldState.after
 
-    act: (action) ->
+    do: (mutation) ->
       if @historyIndex != @history.length - 1
           @history = @history.slice 0, (@historyIndex + 1)
-          @actions = @actions.slice 0, @history[@historyIndex].index
+          @mutations = @mutations.slice 0, @history[@historyIndex].index
 
       state = @history[@historyIndex]
-      if @actions.length == state.index
+      if @mutations.length == state.index
         state.before = {
           cursor: do @cursor.clone
           viewRoot: @data.viewRoot
         }
 
-      Logger.logger.debug "Applying action #{action.constructor.name}(#{action.str()})"
-      action.apply @
-      @actions.push action
+      Logger.logger.debug "Applying mutation #{mutation.constructor.name}(#{mutation.str()})"
+      mutation.mutate @
+      @mutations.push mutation
 
     curLine: () ->
       return @data.getLine @cursor.row
@@ -649,7 +649,7 @@ window?.renderLine = renderLine
         return false
 
     addChars: (row, col, chars, options) ->
-      @act new actions.AddChars row, col, chars, options
+      @do new mutations.AddChars row, col, chars, options
 
     addCharsAtCursor: (chars, options) ->
       @addChars @cursor.row, @cursor.col, chars, options
@@ -664,9 +664,9 @@ window?.renderLine = renderLine
       n = @data.getLength row
       deleted = []
       if (n > 0) and (nchars > 0) and (col < n)
-        delAction = new actions.DelChars row, col, nchars, options
-        @act delAction
-        deleted = delAction.deletedChars
+        mutation = new mutations.DelChars row, col, nchars, options
+        @do mutation
+        deleted = mutation.deletedChars
         if options.yank
           @register.saveChars deleted
       return deleted
@@ -762,26 +762,26 @@ window?.renderLine = renderLine
     newLineBelow: () ->
       children = @data.getChildren @cursor.row
       if (not @data.collapsed @cursor.row) and children.length > 0
-        @act new actions.InsertRow @cursor.row, 0
+        @do new mutations.InsertRow @cursor.row, 0
       else
         parent = do @cursor.row.getParent
         index = @data.indexOf @cursor.row
-        @act new actions.InsertRow parent, (index+1)
+        @do new mutations.InsertRow parent, (index+1)
 
     newLineAbove: () ->
       parent = do @cursor.row.getParent
       index = @data.indexOf @cursor.row
-      @act new actions.InsertRow parent, index
+      @do new mutations.InsertRow parent, index
 
     # behavior of "enter", splitting a line
     newLineAtCursor: () ->
-      delAction = new actions.DelChars @cursor.row, 0, @cursor.col
-      @act delAction
+      mutation = new mutations.DelChars @cursor.row, 0, @cursor.col
+      @do mutation
       row = @cursor.row
 
       do @newLineAbove
       # cursor now is at inserted row, add the characters
-      @addCharsAfterCursor delAction.deletedChars
+      @addCharsAfterCursor mutation.deletedChars
       # restore cursor
       @cursor.set row, 0, {keepProperties: true}
 
@@ -797,8 +797,8 @@ window?.renderLine = renderLine
       @detachBlock second
 
       newCol = @data.getLength first
-      action = new actions.AddChars first, newCol, line
-      @act action
+      mutation = new mutations.AddChars first, newCol, line
+      @do mutation
 
       @cursor.set first, newCol, options.cursor
 
@@ -819,9 +819,9 @@ window?.renderLine = renderLine
         @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
     delBlocks: (parent, index, nrows, options = {}) ->
-      action = new actions.DeleteBlocks parent, index, nrows, options
-      @act action
-      @register.saveRows action.deleted_rows
+      mutation = new mutations.DeleteBlocks parent, index, nrows, options
+      @do mutation
+      @register.saveRows mutation.deleted_rows
 
     delBlocksAtCursor: (nrows, options = {}) ->
       parent = do @cursor.row.getParent
@@ -829,8 +829,8 @@ window?.renderLine = renderLine
       @delBlocks parent, index, nrows, options
 
     addBlocks: (serialized_rows, parent, index = -1, options = {}) ->
-      action = new actions.AddBlocks serialized_rows, parent, index, options
-      @act action
+      mutation = new mutations.AddBlocks serialized_rows, parent, index, options
+      @do mutation
 
     yankBlocks: (row, nrows) ->
       siblings = @data.getSiblingRange row, 0, (nrows-1)
@@ -842,9 +842,9 @@ window?.renderLine = renderLine
       @yankBlocks @cursor.row, nrows
 
     detachBlock: (row, options = {}) ->
-      action = new actions.DetachBlock row, options
-      @act action
-      return action
+      mutation = new mutations.DetachBlock row, options
+      @do mutation
+      return mutation
 
     attachBlocks: (rows, parent, index, options = {}) ->
       for row in rows
@@ -852,7 +852,7 @@ window?.renderLine = renderLine
         index += 1
 
     attachBlock: (row, parent, index = -1, options = {}) ->
-      @act new actions.AttachBlock row, parent, index, options
+      @do new mutations.AttachBlock row, parent, index, options
 
     moveBlock: (row, parent, index = -1, options = {}) ->
       @detachBlock row, options
@@ -953,7 +953,7 @@ window?.renderLine = renderLine
       @toggleBlock @cursor.row
 
     toggleBlock: (row) ->
-      @act new actions.ToggleBlock row
+      @do new mutations.ToggleBlock row
 
     pasteBefore: (options = {}) ->
       options.before = true
@@ -969,7 +969,7 @@ window?.renderLine = renderLine
     setMark: (row, mark) ->
       allMarks = do @data.store.getAllMarks
       if not (mark of allMarks)
-        @act new actions.SetMark row, mark
+        @do new mutations.SetMark row, mark
         return true
       else
         @showMessage "Mark '#{mark}' is already taken", {text_class: 'error'}

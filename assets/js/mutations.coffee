@@ -1,37 +1,37 @@
 ###
-actions mutate the data of a view, and are undoable
-each action should implement a constructor, as well as the following methods:
+mutations mutate the data of a view, and are undoable
+each mutation should implement a constructor, as well as the following methods:
 
     str: () -> string
         prints itself
-    apply: (view) -> void
+    mutate: (view) -> void
         takes a view and acts on it (mutates the view)
     rewind: (view) -> void
-        takes a view, assumed be in the state right after the action was applied, and undoes the action
+        takes a view, assumed be in the state right after the mutation was applied, and undoes the mutation
 
-the action may also optionally implement
+the mutation may also optionally implement
 
-    reapply: (view) -> void
-        takes a view, and acts on it.  assumes that apply has been called once already
-        by default, reapply is the same as apply.
-        it should be implemented only if it is more efficient than the apply implementation
+    remutate: (view) -> void
+        takes a view, and acts on it.  assumes that mutate has been called once already
+        by default, remutate is the same as mutate.
+        it should be implemented only if it is more efficient than the mutate implementation
 ###
 
 if module?
   global.errors = require('./errors.coffee')
 
 ((exports) ->
-  class Action
+  class Mutation
     str: () ->
       return ''
-    apply: (view) ->
+    mutate: (view) ->
       return
     rewind: (view) ->
       return
-    reapply: (view) ->
-      return @apply view
+    remutate: (view) ->
+      return @mutate view
 
-  class AddChars extends Action
+  class AddChars extends Mutation
     # options:
     #   setCursor: if you wish to set the cursor, set to 'beginning' or 'end'
     #              indicating where the cursor should go to
@@ -43,7 +43,7 @@ if module?
     str: () ->
       return "row #{@row.id}, col #{@col}, nchars #{@chars.length}"
 
-    apply: (view) ->
+    mutate: (view) ->
       view.data.writeChars @row, @col, @chars
 
       shift = if @options.cursor.pastEnd then 1 else 0
@@ -55,7 +55,7 @@ if module?
     rewind: (view) ->
       view.data.deleteChars @row, @col, @chars.length
 
-  class DelChars extends Action
+  class DelChars extends Mutation
     constructor: (@row, @col, @nchars, @options = {}) ->
       @options.setCursor ?= 'before'
       @options.cursor ?= {}
@@ -63,7 +63,7 @@ if module?
     str: () ->
       return "row #{@row.id}, col #{@col}, nchars #{@nchars}"
 
-    apply: (view) ->
+    mutate: (view) ->
       @deletedChars = view.data.deleteChars @row, @col, @nchars
       if @options.setCursor == 'before'
         view.cursor.set @row, @col, @options.cursor
@@ -73,54 +73,54 @@ if module?
     rewind: (view) ->
       view.data.writeChars @row, @col, @deletedChars
 
-  class InsertRow extends Action
+  class InsertRow extends Mutation
     constructor: (@parent, @index) ->
 
     str: () ->
       return "parent #{@parent.id} index #{@index}"
 
-    apply: (view) ->
+    mutate: (view) ->
       @newrow = view.data.addChild @parent, @index
       view.cursor.set @newrow, 0
 
     rewind: (view) ->
       @rewinded = view.data.detach @newrow
 
-    reapply: (view) ->
+    remutate: (view) ->
       view.data.attachChild @parent, @newrow, @index
 
-  class DetachBlock extends Action
+  class DetachBlock extends Mutation
     constructor: (@row, @options = {}) ->
 
     str: () ->
       return "row #{@row.id}"
 
-    apply: (view) ->
+    mutate: (view) ->
       errors.assert_not_equals @row.id, view.data.root.id, "Cannot detach root"
       @detached = view.data.detach @row
 
     rewind: (view) ->
       view.data.attachChild @detached.parent, @row, @detached.index
 
-  class AttachBlock extends Action
+  class AttachBlock extends Mutation
     constructor: (@row, @parent, @index = -1, @options = {}) ->
 
     str: () ->
       return "row #{@row.id}, parent #{@parent}"
 
-    apply: (view) ->
+    mutate: (view) ->
       view.data.attachChild @parent, @row, @index
 
     rewind: (view) ->
       view.data.detach @row
 
-  class DeleteBlocks extends Action
+  class DeleteBlocks extends Mutation
     constructor: (@parent, @index, @nrows = 1, @options = {}) ->
 
     str: () ->
       return "parent #{@parent.id}, index #{@index}, nrows #{@nrows}"
 
-    apply: (view) ->
+    mutate: (view) ->
       @deleted_rows = []
       delete_rows = view.data.getChildRange @parent, @index, (@index+@nrows-1)
       for sib in delete_rows
@@ -152,13 +152,13 @@ if module?
         view.data.attachChild @parent, row, index
         index += 1
 
-    reapply: (view) ->
+    remutate: (view) ->
       for row in @deleted_rows
         view.data.detach row
       if @created != null
         view.data.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 
-  class AddBlocks extends Action
+  class AddBlocks extends Mutation
     # options:
     #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
     #              indicating which block the cursor should go to
@@ -169,7 +169,7 @@ if module?
     str: () ->
       return "parent #{@parent.id}, index #{@index}"
 
-    apply: (view) ->
+    mutate: (view) ->
       index = @index
 
       first = true
@@ -189,26 +189,26 @@ if module?
       for sib in @delete_siblings
         view.data.detach sib
 
-    reapply: (view) ->
+    remutate: (view) ->
       index = @index
       for sib in @delete_siblings
         view.data.attachChild @parent, sib, index
         index += 1
 
-  class ToggleBlock extends Action
+  class ToggleBlock extends Mutation
     constructor: (@row) ->
     str: () ->
       return "row #{@row.id}"
-    apply: (view) ->
+    mutate: (view) ->
       view.data.toggleCollapsed @row
     rewind: (view) ->
       view.data.toggleCollapsed @row
 
-  class SetMark extends Action
+  class SetMark extends Mutation
     constructor: (@row, @mark) ->
     str: () ->
       return "row #{@row.id}, mark #{@mark}"
-    apply: (view) ->
+    mutate: (view) ->
       @oldmark = view.data.getMark @row
       view.data.setMark @row, @mark
     rewind: (view) ->
@@ -223,4 +223,4 @@ if module?
   exports.AddBlocks = AddBlocks
   exports.ToggleBlock = ToggleBlock
   exports.SetMark = SetMark
-)(if typeof exports isnt 'undefined' then exports else window.actions = {})
+)(if typeof exports isnt 'undefined' then exports else window.mutations = {})

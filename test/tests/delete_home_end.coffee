@@ -56,7 +56,7 @@ describe "delete to home/end in insert mode", () ->
     t.sendKey 's'
     t.expect ['some random texts']
 
-  it "doesn't cause an undoable action when nothing happens", () ->
+  it "doesn't cause an undoable mutation when nothing happens", () ->
     t = new TestCase ['some random text']
     t.sendKeys 'x'
     t.expect ['ome random text']
