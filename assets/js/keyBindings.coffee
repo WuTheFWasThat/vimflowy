@@ -391,12 +391,13 @@ It also internally maintains
 
     # build table to visualize hotkeys
     buildTable: (keyMap) ->
-      table = $('<table>').addClass('keybindings-table theme-bg-secondary')
-
-      buildTableContents = (bindings, onto) ->
+      buildTableContents = (bindings, onto, recursed=false) ->
         for k,v of bindings
           if k == 'MOTION'
-            keys = ['<MOTION>']
+            if recursed
+              keys = ['<MOTION>']
+            else
+              keys = []
           else
             keys = keyMap[k]
             if not keys
@@ -412,12 +413,20 @@ It also internally maintains
 
           display_cell = $('<td>').css('width', '100%').html v.display
           if v.bindings
-            buildTableContents v.bindings, display_cell
+            buildTableContents v.bindings, display_cell, true
           row.append display_cell
 
           onto.append row
-      buildTableContents keyDefinitions, table
-      return table
+
+      tables = $('<div>')
+
+      for [label, definitions] in [['Actions', keyDefinitions], ['Motions', motionDefinitions]]
+        tables.append($('<h5>').text(label).css('margin', '5px 10px'))
+        table = $('<table>').addClass('keybindings-table theme-bg-secondary')
+        buildTableContents definitions, table
+        tables.append(table)
+
+      return tables
 
     renderModeTable: (mode) ->
       if not @modebindingsDiv
