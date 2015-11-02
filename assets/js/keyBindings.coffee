@@ -225,53 +225,25 @@ It also internally maintains
   # set of possible commands for each mode
   commands = {}
 
-  commands[MODES.NORMAL] = [
-    'DELETE', 'CHANGE', 'YANK',
-  ]
-  for motion in ALL_MOTIONS
-    commands[MODES.NORMAL].push motion
-  for k of keyDefinitions.actions[MODES.NORMAL]
-    if k != 'MOTION'
-      commands[MODES.NORMAL].push k
-
   # WTF: this iteration messes things up
   # for k,v of keyDefinitions.actions
   #   console.log k, v
 
-  commands[MODES.VISUAL] = []
-  for k of keyDefinitions.actions[MODES.VISUAL]
-    if k != 'MOTION'
-      commands[MODES.VISUAL].push k
-  for motion in ALL_MOTIONS
-    commands[MODES.VISUAL].push motion
+  get_commands_for_mode = (mode, options={}) ->
+    mode_commands = []
+    for motion in (if options.within_row_motions then WITHIN_ROW_MOTIONS else ALL_MOTIONS)
+      mode_commands.push motion
+    for k of keyDefinitions.actions[mode]
+      if k != 'MOTION'
+        mode_commands.push k
+    return mode_commands
 
-  commands[MODES.VISUAL_LINE] = []
-  for k of keyDefinitions.actions[MODES.VISUAL_LINE]
-    if k != 'MOTION'
-      commands[MODES.VISUAL_LINE].push k
-  for motion in ALL_MOTIONS
-    commands[MODES.VISUAL_LINE].push motion
-
-  commands[MODES.INSERT] = []
-  for k of keyDefinitions.actions[MODES.INSERT]
-    if k != 'MOTION'
-      commands[MODES.INSERT].push k
-  for motion in ALL_MOTIONS
-    commands[MODES.INSERT].push motion
-
-  commands[MODES.SEARCH] = []
-  for k of keyDefinitions.actions[MODES.SEARCH]
-    if k != 'MOTION'
-      commands[MODES.SEARCH].push k
-  for motion in WITHIN_ROW_MOTIONS
-    commands[MODES.SEARCH].push motion
-
-  commands[MODES.MARK] = []
-  for k of keyDefinitions.actions[MODES.MARK]
-    if k != 'MOTION'
-      commands[MODES.MARK].push k
-  for motion in WITHIN_ROW_MOTIONS
-    commands[MODES.MARK].push motion
+  commands[MODES.NORMAL] = get_commands_for_mode MODES.NORMAL
+  commands[MODES.VISUAL] = get_commands_for_mode MODES.VISUAL
+  commands[MODES.VISUAL_LINE] = get_commands_for_mode MODES.VISUAL_LINE
+  commands[MODES.INSERT] = get_commands_for_mode MODES.INSERT
+  commands[MODES.SEARCH] = get_commands_for_mode MODES.SEARCH, {within_row_motions: true}
+  commands[MODES.MARK] = get_commands_for_mode MODES.MARK, {within_row_motions: true}
 
   # make sure that the default hotkeys accurately represents the set of possible commands under that mode_type
   for mode_type, mode_type_obj of MODE_TYPES
