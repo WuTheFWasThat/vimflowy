@@ -189,7 +189,7 @@ if module?
       else
         info = bindings[key]
 
-      fn = info.insert
+      fn = info.definition
       context = {
         mode: MODES.INSERT
         view: @view
@@ -233,7 +233,7 @@ if module?
         keyStream: @keyStream
         repeat: repeat
       }
-      info.visual.apply context, args
+      info.definition.apply context, args
       return true
 
     processVisualLineMode: (keyStream) ->
@@ -278,7 +278,7 @@ if module?
         parent: parent
         num_rows: index2 - index1 + 1
       }
-      info.visual_line.apply context, args
+      info.definition.apply context, args
       return true
 
     processSearchMode: (keyStream) ->
@@ -313,7 +313,7 @@ if module?
       else
         info = bindings[key]
 
-      fn = info.search
+      fn = info.definition
       context = {
         mode: MODES.SEARCH
         view: @view,
@@ -356,7 +356,7 @@ if module?
       else
         info = bindings[key]
 
-      fn = info.mark
+      fn = info.definition
       context = {
         mode: MODES.MARK
         view: @view
@@ -444,18 +444,22 @@ if module?
       else
         info = bindings[key] || {}
 
-      if info.bindings
-        return @processNormalMode keyStream, info.bindings, repeat
-
-      context = {
-        mode: MODES.NORMAL
-        view: @view
-        repeat: repeat
-        keyStream: keyStream
-        keyHandler: @
-      }
-      info.normal.apply context, args
-      return true
+      definition = info.definition
+      if typeof definition == 'object'
+        # recursive definition
+        return @processNormalMode keyStream, info.definition, repeat
+      else if typeof definition == 'function'
+        context = {
+          mode: MODES.NORMAL
+          view: @view
+          repeat: repeat
+          keyStream: keyStream
+          keyHandler: @
+        }
+        info.definition.apply context, args
+        return true
+      else
+        throw new errors.UnexpectedValue "definition", definition
 
   module?.exports = KeyHandler
   window?.KeyHandler = KeyHandler

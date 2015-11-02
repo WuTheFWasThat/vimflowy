@@ -230,52 +230,46 @@ It also internally maintains
   ]
   for motion in ALL_MOTIONS
     commands[MODES.NORMAL].push motion
-  for k of keyDefinitions.actions
+  for k of keyDefinitions.actions[MODES.NORMAL]
     if k != 'MOTION'
-      if keyDefinitions.actions[k].normal
-        commands[MODES.NORMAL].push k
+      commands[MODES.NORMAL].push k
 
   # WTF: this iteration messes things up
   # for k,v of keyDefinitions.actions
   #   console.log k, v
 
   commands[MODES.VISUAL] = []
-  for k of keyDefinitions.actions
+  for k of keyDefinitions.actions[MODES.VISUAL]
     if k != 'MOTION'
-      if keyDefinitions.actions[k].visual
-        commands[MODES.VISUAL].push k
+      commands[MODES.VISUAL].push k
   for motion in ALL_MOTIONS
     commands[MODES.VISUAL].push motion
 
   commands[MODES.VISUAL_LINE] = []
-  for k of keyDefinitions.actions
+  for k of keyDefinitions.actions[MODES.VISUAL_LINE]
     if k != 'MOTION'
-      if keyDefinitions.actions[k].visual_line
-        commands[MODES.VISUAL_LINE].push k
+      commands[MODES.VISUAL_LINE].push k
   for motion in ALL_MOTIONS
     commands[MODES.VISUAL_LINE].push motion
 
   commands[MODES.INSERT] = []
-  for k of keyDefinitions.actions
+  for k of keyDefinitions.actions[MODES.INSERT]
     if k != 'MOTION'
-      if keyDefinitions.actions[k].insert
-        commands[MODES.INSERT].push k
+      commands[MODES.INSERT].push k
   for motion in ALL_MOTIONS
     commands[MODES.INSERT].push motion
 
   commands[MODES.SEARCH] = []
-  for k of keyDefinitions.actions
+  for k of keyDefinitions.actions[MODES.SEARCH]
     if k != 'MOTION'
-      if keyDefinitions.actions[k].search
-        commands[MODES.SEARCH].push k
+      commands[MODES.SEARCH].push k
   for motion in WITHIN_ROW_MOTIONS
     commands[MODES.SEARCH].push motion
 
   commands[MODES.MARK] = []
-  for k of keyDefinitions.actions
+  for k of keyDefinitions.actions[MODES.MARK]
     if k != 'MOTION'
-      if keyDefinitions.actions[k].mark
-        commands[MODES.MARK].push k
+      commands[MODES.MARK].push k
   for motion in WITHIN_ROW_MOTIONS
     commands[MODES.MARK].push motion
 
@@ -309,13 +303,6 @@ It also internally maintains
           else
             v.definition= sub_bindings
 
-        if v.bindings
-          [err, sub_bindings] = getBindings v.bindings, keyMap
-          if err
-            return [err, null]
-          else
-            v.bindings = sub_bindings
-
         for key in keys
           if key of bindings
             return ["Duplicate binding on key #{key}", bindings]
@@ -342,13 +329,13 @@ It also internally maintains
         $('#hotkey-edit-normal').empty().append(
           $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
         ).append(
-          @buildTable @hotkeys[NORMAL_MODE_TYPE]
+          @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (keyDefinitions.actions[mode] for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
         )
 
         $('#hotkey-edit-insert').empty().append(
           $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
         ).append(
-          @buildTable @hotkeys[INSERT_MODE_TYPE]
+          @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (keyDefinitions.actions[mode] for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
         )
 
     # tries to apply new hotkey settings, returning an error if there was one
@@ -369,7 +356,7 @@ It also internally maintains
 
       bindings = {}
       for mode_name, mode of MODES
-        [err, mode_bindings] = getBindings keyDefinitions.actions, keyMaps[mode]
+        [err, mode_bindings] = getBindings keyDefinitions.actions[mode], keyMaps[mode]
         if err then return "Error getting bindings for #{mode_name}: #{err}"
         bindings[mode] = mode_bindings
 
@@ -397,20 +384,20 @@ It also internally maintains
         @save_settings {}
 
     # build table to visualize hotkeys
-    buildTable: (keyMap) ->
+    buildTable: (keyMap, actions, helpMenu) ->
       buildTableContents = (bindings, onto, recursed=false) ->
         for k,v of bindings
           if k == 'MOTION'
             if recursed
               keys = ['<MOTION>']
             else
-              keys = []
+              continue
           else
             keys = keyMap[k]
             if not keys
               continue
 
-          if keys.length == 0
+          if keys.length == 0 and helpMenu
             continue
 
           row = $('<tr>')
@@ -419,15 +406,15 @@ It also internally maintains
           row.append $('<td>').text keys.join(' OR ')
 
           display_cell = $('<td>').css('width', '100%').html v.description
-          if v.bindings
-            buildTableContents v.bindings, display_cell, true
+          if typeof v.definition == 'object'
+            buildTableContents v.definition, display_cell, true
           row.append display_cell
 
           onto.append row
 
       tables = $('<div>')
 
-      for [label, definitions] in [['Actions', keyDefinitions.actions], ['Motions', keyDefinitions.motions]]
+      for [label, definitions] in [['Actions', actions], ['Motions', keyDefinitions.motions]]
         tables.append($('<h5>').text(label).css('margin', '5px 10px'))
         table = $('<table>').addClass('keybindings-table theme-bg-secondary')
         buildTableContents definitions, table
@@ -441,7 +428,7 @@ It also internally maintains
       if not (@settings.getSetting 'showKeyBindings')
         return
 
-      table = @buildTable @_keyMaps[mode]
+      table = @buildTable @_keyMaps[mode], keyDefinitions.actions[mode], true
       @modebindingsDiv.empty().append(table)
 
     # TODO getBindings: (mode) -> return @bindings[mode]
