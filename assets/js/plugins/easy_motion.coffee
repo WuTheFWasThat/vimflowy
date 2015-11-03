@@ -1,0 +1,2 @@
+
+console.log 'LOADED EASY MOTION COFFEE'

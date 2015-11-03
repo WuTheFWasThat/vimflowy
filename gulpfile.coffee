@@ -1,4 +1,5 @@
 gulp = require 'gulp'
+fs = require 'fs'
 
 coffee = require 'gulp-coffee'
 del = require 'del'
@@ -32,9 +33,18 @@ gulp.task 'coffee', ->
     .pipe gulp.dest "#{out_folder}/js"
 
 gulp.task 'jade', ->
-  gulp.src 'assets/html/index.jade'
-    .pipe handle jade({})
-    .pipe gulp.dest "#{out_folder}/"
+  fs.readdir 'assets/js/plugins', (err, filenames) ->
+    plugins = filenames
+      .filter (filename) ->
+        filename[0] != '.'
+      .map (filename) ->
+        filename.split('.')[0]
+
+    gulp.src 'assets/html/index.jade'
+      .pipe handle jade({
+        locals: {plugins: plugins}
+      })
+      .pipe gulp.dest "#{out_folder}/"
 
 gulp.task 'sass', ->
   gulp.src 'assets/css/*.sass'
@@ -76,6 +86,7 @@ gulp.task 'test', () ->
 gulp.task 'watch', ->
   gulp.watch 'assets/css/**/*', ['sass']
   gulp.watch 'assets/html/**/*', ['jade']
+  # TODO: jade when assets/js/plugins directory changes?
   gulp.watch coffee_files, ['coffee', 'test']
   gulp.watch test_files, ['test']
 

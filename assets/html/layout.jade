@@ -35,6 +35,7 @@ html
     script(src='/js/eventEmitter.js')
     script(src='/js/keyEmitter.js')
     script(src='/js/keyHandler.js')
+
     script(src='/js/datastore.js')
     script(src='/js/data.js')
     script(src='/js/mutations.js')
@@ -43,7 +44,11 @@ html
     script(src='/js/settings.js')
     script(src='/js/view.js')
     script(src='/js/menu.js')
+
     script(src='/js/keyDefinitions.js')
+    each plugin in plugins
+      script(src='/js/plugins/' + plugin + '.js')
+
     script(src='/js/keyBindings.js')
     script(src='/js/index.js')
 
