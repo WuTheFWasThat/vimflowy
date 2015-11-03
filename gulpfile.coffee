@@ -76,6 +76,7 @@ gulp.task 'test', () ->
 gulp.task 'watch', ->
   gulp.watch 'assets/css/**/*', ['sass']
   gulp.watch 'assets/html/**/*', ['jade']
+  gulp.watch 'vendor/**/*', ['vendor']
   gulp.watch coffee_files, ['coffee', 'test']
   gulp.watch test_files, ['test']
 

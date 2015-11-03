@@ -14,13 +14,14 @@
   },
   "config": {
     "blanket": {
-      "pattern": "/\/assets\/js\/.*\\.coffee$/",
+      "pattern": "//assets/js/.*\\.coffee$/",
       "loader": "./node-loaders/coffee-script"
     }
   },
   "dependencies": {
     "async": "latest",
     "coffee-script": "latest",
+    "dependencies-online": "latest",
     "express": "latest",
     "lodash": "latest"
   },
@@ -28,7 +29,6 @@
     "blanket": "latest",
     "mocha": "latest",
     "mocha-multi": "latest",
-
     "del": "latest",
     "gulp": "latest",
     "gulp-coffee": "latest",
