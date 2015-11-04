@@ -66,6 +66,10 @@ create_view = (data) ->
   window.key_bindings = key_bindings
 
   $(document).ready ->
+    # Register plugins
+    if window.PluginList?
+      for plugin in PluginList
+        view.pluginAPI?.registerPlugin?(plugin)
     do view.hideSettings
     do view.render
 

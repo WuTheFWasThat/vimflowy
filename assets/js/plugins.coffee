@@ -30,8 +30,8 @@ if module?
       requirements = _.result plugin.metadata, 'requirements', []
       # Load the plugin after all its dependencies have loaded
       @pluginDependencies.add plugin.name, requirements, () =>
-        Logger.logger.info "Plugin #{name} loaded"
-        @plugins[name] = new @pluginClass[name] @
+        Logger.logger.info "Plugin #{plugin.name} loaded"
+        @plugins[plugin.name] = new @pluginClass[plugin.name] @
 
   # exports
   module?.exports = PluginAPI

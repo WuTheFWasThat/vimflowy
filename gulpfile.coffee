@@ -47,7 +47,6 @@ gulp.task 'jade', () ->
     (toArray stream).then (pluginSourceFiles) ->
       pluginJsFiles = pluginSourceFiles.map (x) ->
         x.relative.replace /\.coffee$/, '.js'
-      console.log pluginJsFiles
       stream = gulp.src 'assets/html/index.jade'
         .pipe handle jade({
           locals: {pluginJsFiles: pluginJsFiles}
