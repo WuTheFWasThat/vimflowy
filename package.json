@@ -23,7 +23,8 @@
     "coffee-script": "latest",
     "dependencies-online": "latest",
     "express": "latest",
-    "lodash": "latest"
+    "lodash": "latest",
+    "stream-to-array": "latest"
   },
   "devDependencies": {
     "blanket": "latest",
