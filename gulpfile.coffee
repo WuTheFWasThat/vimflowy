@@ -1,5 +1,4 @@
 gulp = require 'gulp'
-fs = require 'fs'
 
 coffee = require 'gulp-coffee'
 del = require 'del'
@@ -43,8 +42,8 @@ gulp.task 'js', ->
     .pipe gulp.dest "#{out_folder}/js/plugin"
 
 gulp.task 'jade', () ->
-    stream = gulp.src ["plugins/**/*.coffee", "plugins/**/*.js"], { base: 'plugins' }
-    (toArray stream).then (pluginSourceFiles) ->
+    pluginSourceFilesStream = gulp.src ["plugins/**/*.coffee", "plugins/**/*.js"], { base: 'plugins' }
+    (toArray pluginSourceFilesStream).then (pluginSourceFiles) ->
       pluginJsFiles = pluginSourceFiles.map (x) ->
         x.relative.replace /\.coffee$/, '.js'
       stream = gulp.src 'assets/html/index.jade'

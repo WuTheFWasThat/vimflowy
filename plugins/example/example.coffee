@@ -7,7 +7,7 @@
       version: 1
       stores_data: false
       #data_version: 0
-      requires: []
+      requirements: []
 
     constructor: (@api) ->
       do @enable
@@ -17,6 +17,5 @@
 
     # exports
     module?.exports = HelloWorldPlugin
-    if window?
-      (window.PluginList ?= []).push HelloWorldPlugin
+    window?.registerPlugin?(HelloWorldPlugin)
 )()
