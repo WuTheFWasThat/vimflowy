@@ -10,6 +10,8 @@ if module?
       @pluginClass = {}
       @metadata = {}
       @pluginDependencies = new DependencyGraph()
+      # Convenience accessors
+      @cursor = @view.cursor
 
     registerPlugin: (plugin) ->
       # Validate metadata before accepting registration
