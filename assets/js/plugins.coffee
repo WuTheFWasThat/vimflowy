@@ -4,6 +4,43 @@ if module?
   global.DependencyGraph = require('dependencies-online')
 
 (() ->
+  class PluginDatabaseAccess
+    constructor: (@data, @pluginName) ->
+
+    getVersion: () ->
+      @data.store.getPluginVersion @pluginName
+    setVersion: (version) ->
+      @data.store.setPluginVersion @pluginName, version
+    setRowData: (row, args...) ->
+      if args.length == 1
+        [key, [data]] = ['data', args]
+      else if args.length == 2
+        [key, data] = args
+      @data.store.setPluginRowData @pluginName, row.id, key, data
+    getRowData: (row, key='data') ->
+      @data.store.getPluginRowData @pluginName, row.id, key
+    setGlobalData: (key, args...) ->
+      if args.length == 1
+        [key, [data]] = ['data', args]
+      else if args.length == 2
+        [key, data] = args
+      @data.store.setPluginGlobalData @pluginName, key, data
+    getGlobalData: (key='data') ->
+      @data.store.getPluginGlobalData @pluginName, key
+
+    transformRowData: (row, args...) ->
+      if args.length == 1
+        [key, [transform]] = ['data', args]
+      else if args.length == 2
+        [key, transform] = args
+      @setRowData row, (transform (@getRowData row))
+    transformGlobalData: (args...) ->
+      if args.length == 1
+        [key, [transform]] = ['data', args]
+      else if args.length == 2
+        [key, transform] = args
+      @setGlobalData key, (transform (do @getGlobalData))
+  
   class PluginAPI
     constructor: (@view) ->
       @plugins = {}
@@ -32,8 +69,26 @@ if module?
       requirements = _.result plugin.metadata, 'requirements', []
       # Load the plugin after all its dependencies have loaded
       @pluginDependencies.add plugin.name, requirements, () =>
-        Logger.logger.info "Plugin #{plugin.name} loaded"
+        Logger.logger.info "Plugin #{plugin.name} loading"
+        @_currentlyRegistering = plugin.name
         @plugins[plugin.name] = new @pluginClass[plugin.name] @
+        delete @_currentlyRegistering
+        @plugins[plugin.name]._metadata = @metadata[plugin.name]
+
+        Logger.logger.info "Plugin #{plugin.name} loading"
+
+
+    # Should be called during initialization
+    getDatabase: (plugin) ->
+      plugin ?= @_currentlyRegistering
+      access = new PluginDatabaseAccess @view.data, plugin
+      dataVersion = do access.getVersion
+      pluginVersion = @metadata[plugin].version
+      unless dataVersion?
+        access.setVersion pluginVersion
+        dataVersion = do access.getVersion
+      errors.assert_equals dataVersion, pluginVersion, "Plugin data versions are not identical, please contact the plugin author for migration support" # TODO: Come up with some migration system for both vimflowy and plugins
+      return access
 
   # exports
   module?.exports = PluginAPI
