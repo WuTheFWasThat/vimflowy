@@ -90,6 +90,10 @@ if module?
       errors.assert_equals dataVersion, pluginVersion, "Plugin data versions are not identical, please contact the plugin author for migration support" # TODO: Come up with some migration system for both vimflowy and plugins
       return access
 
+    getLogger: (plugin) ->
+      plugin ?= @_currentlyRegistering
+      Logger.logger # TODO: Add subloggers and prefix all log messages with the plugin name
+
   # exports
   module?.exports = PluginAPI
   window?.PluginAPI = PluginAPI
