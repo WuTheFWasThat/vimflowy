@@ -9,6 +9,7 @@ sass = require 'gulp-sass'
 sourcemaps = require 'gulp-sourcemaps'
 util = require 'gulp-util'
 mocha = require 'gulp-mocha'
+toArray = require 'stream-to-array'
 
 out_folder = 'public'
 
@@ -19,7 +20,7 @@ handle = (stream) ->
     do stream.end
 
 test_files = 'test/tests/*.coffee'
-coffee_files = 'assets/js/**/*'
+coffee_files = 'assets/**/*.coffee'
 
 gulp.task 'clean', (cb) ->
   del ["#{out_folder}"], cb
@@ -29,12 +30,29 @@ gulp.task 'coffee', ->
     .pipe sourcemaps.init()
     .pipe handle coffee()
     .pipe sourcemaps.write()
-    .pipe gulp.dest "#{out_folder}/js"
+    .pipe gulp.dest "#{out_folder}"
+  gulp.src 'plugins/**/*.coffee', { base: 'plugins' }
+    .pipe sourcemaps.init()
+    .pipe handle coffee()
+    .pipe sourcemaps.write()
+    .pipe gulp.dest "#{out_folder}/js/plugin"
 
-gulp.task 'jade', ->
-  gulp.src 'assets/html/index.jade'
-    .pipe handle jade({})
-    .pipe gulp.dest "#{out_folder}/"
+gulp.task 'js', ->
+  gulp.src 'plugins/**/*.js', { base: 'plugins' }
+    .pipe gulp.dest "#{out_folder}/js/plugin"
+
+gulp.task 'jade', () ->
+    pluginSourceFilesStream = gulp.src ["plugins/**/*.coffee", "plugins/**/*.js"], { base: 'plugins' }
+    (toArray pluginSourceFilesStream).then (pluginSourceFiles) ->
+      pluginJsFiles = pluginSourceFiles.map (x) ->
+        x.relative.replace /\.coffee$/, '.js'
+      stream = gulp.src 'assets/html/index.jade'
+        .pipe handle jade({
+          locals: {pluginJsFiles: pluginJsFiles}
+        })
+        .pipe gulp.dest "#{out_folder}/"
+      new Promise (resolve, reject) ->
+        stream.on 'finish', resolve
 
 gulp.task 'sass', ->
   gulp.src 'assets/css/*.sass'
@@ -61,6 +79,7 @@ gulp.task 'vendor', ->
     .pipe gulp.dest "#{out_folder}/"
 
 gulp.task 'assets', [
+  'js',
   'coffee',
   'sass',
   'jade',
@@ -76,6 +95,9 @@ gulp.task 'test', () ->
 gulp.task 'watch', ->
   gulp.watch 'assets/css/**/*', ['sass']
   gulp.watch 'assets/html/**/*', ['jade']
+  gulp.watch 'vendor/**/*', ['vendor']
+  gulp.watch 'plugins/**/*.js', ['js', 'jade']
+  gulp.watch 'plugins/**/*.coffee', ['coffee', 'jade']
   gulp.watch coffee_files, ['coffee', 'test']
   gulp.watch test_files, ['test']
 

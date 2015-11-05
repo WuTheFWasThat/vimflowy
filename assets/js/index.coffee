@@ -64,6 +64,9 @@ create_view = (data) ->
   window.key_handler = key_handler
   window.key_emitter = key_emitter
   window.key_bindings = key_bindings
+  # expose global for plugin registration
+  if view.pluginAPI?
+    window.registerPlugin = view.pluginAPI.registerPlugin.bind view.pluginAPI
 
   $(document).ready ->
     do view.hideSettings

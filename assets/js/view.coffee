@@ -10,6 +10,7 @@ if module?
   global.dataStore = require('./datastore.coffee')
   global.Register = require('./register.coffee')
   global.Logger = require('./logger.coffee')
+  global.PluginAPI = require('./plugins.coffee')
 
 ###
 a View represents the actual viewport onto the vimflowy document
@@ -213,6 +214,7 @@ window?.renderLine = renderLine
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @, row, 0
       @register = new Register @
+      @pluginAPI = new PluginAPI @
 
       @mutations = [] # full mutation history
       @history = [{

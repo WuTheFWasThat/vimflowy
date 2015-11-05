@@ -23,6 +23,7 @@ html
   body.theme-bg-primary#default-theme
     block content
 
+    script(src='/dependencies-online.js')
     script(src='/jquery-2.1.1.min.js')
     script(src='/jquery.cookie.min.js')
     script(src='/lodash.js')
@@ -41,10 +42,13 @@ html
     script(src='/js/cursor.js')
     script(src='/js/register.js')
     script(src='/js/settings.js')
+    script(src='/js/plugins.js')
     script(src='/js/view.js')
     script(src='/js/menu.js')
     script(src='/js/keyDefinitions.js')
     script(src='/js/keyBindings.js')
     script(src='/js/index.js')
+    each pluginJsFile in pluginJsFiles
+      script(src='/js/plugin/' + pluginJsFile)
 
     block morefoot
