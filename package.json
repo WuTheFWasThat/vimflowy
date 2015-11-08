@@ -14,7 +14,7 @@
   },
   "config": {
     "blanket": {
-      "pattern": "/\/assets\/js\/.*\\.coffee$/",
+      "pattern": "//assets/js/.*\\.coffee$/",
       "loader": "./node-loaders/coffee-script"
     }
   },
@@ -37,6 +37,7 @@
     "gulp-rename": "latest",
     "gulp-sass": "latest",
     "gulp-sourcemaps": "latest",
-    "gulp-util": "latest"
+    "gulp-util": "latest",
+    "stream-to-array": "latest"
   }
 }

@@ -46,5 +46,7 @@ html
     script(src='/js/keyDefinitions.js')
     script(src='/js/keyBindings.js')
     script(src='/js/index.js')
+    each pluginJsFile in pluginJsFiles
+      script(src='/js/plugin/' + pluginJsFile)
 
     block morefoot
