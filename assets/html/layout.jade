@@ -18,6 +18,9 @@ html
     link(rel="stylesheet" href="/font-awesome.min.css")
     link(rel="icon" type="image/png" href="images/vimflowy-32.png")
 
+    each plugin_css_file in plugin_css_files
+      link(rel="stylesheet" href='/' + plugin_css_path + '/' + plugin_css_file)
+
     block morehead
 
   body.theme-bg-primary#default-theme
@@ -46,7 +49,7 @@ html
     script(src='/js/keyDefinitions.js')
     script(src='/js/keyBindings.js')
     script(src='/js/index.js')
-    each pluginJsFile in pluginJsFiles
-      script(src='/js/plugin/' + pluginJsFile)
+    each plugin_js_file in plugin_js_files
+      script(src='/' + plugin_js_path + '/' + plugin_js_file)
 
     block morefoot
