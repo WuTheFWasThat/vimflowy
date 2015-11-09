@@ -270,6 +270,23 @@ class Data
     errors.assert instance?, "No canonical instance found for id: #{id}"
     return instance
 
+  allAncestors: (id) ->
+    # Return all ancestor ids. Does not include <id>.
+    # If A is a parent of B, B is returned earlier in the list than A. This is called 'topological sort'.
+    sorted = {}
+    preprocessed = {} # No repeats
+    ancestors = [] # Same contents as 'sorted' with preserved insert order
+    ancestors[id] = true
+    visit (n) -> # Do a DFS and add each node which points only to things the DFS has visited in turn (Tarjan's algorithm)
+      for parent in @getParents n
+        if parent not of preprocessed
+          preprocessed[parent] = true
+          visit parent
+      if n not of sorted
+        sorted[n] = true
+        ancestors.unshift n
+    ancestors[1..] # Leave out <id>
+
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (row) ->
     return (not @collapsed row) or (row.is @viewRoot)
