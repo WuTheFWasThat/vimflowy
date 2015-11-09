@@ -21,6 +21,7 @@
   "dependencies": {
     "async": "latest",
     "coffee-script": "latest",
+    "dependencies-online": "latest",
     "express": "latest",
     "lodash": "latest"
   },
