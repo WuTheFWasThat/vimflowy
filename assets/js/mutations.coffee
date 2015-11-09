@@ -96,7 +96,7 @@ if module?
       return "row #{@row.id}"
 
     mutate: (view) ->
-      errors.assert_not_equals @row.id, view.data.root.id, "Cannot detach root"
+      errors.assert (not do @row.isRoot), "Cannot detach root"
       @detached = view.data.detach @row
 
     rewind: (view) ->

@@ -247,7 +247,7 @@ class Data
   countInstances: (id) ->
     # Precondition: No circular references in ancestry
     errors.assert id?, "Empty id passed to countInstances"
-    if id == @root.id
+    if id == constants.root_id
       return 1
     parentCount = 0
     for parent_id in (@store.getParents id)
@@ -261,7 +261,7 @@ class Data
     # TODO: Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
     # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
     errors.assert id?, "Empty id passed to canonicalInstance"
-    if id == @root.id
+    if id == constants.root_id
       return @root
     parentId = (@store.getParents id)[0] # This is the only actual choice made
     errors.assert parentId?, "No parent found for id: #{id}"
@@ -327,7 +327,7 @@ class Data
   getAncestry: (row, stop = @root) ->
     ancestors = []
     until row.is stop
-      errors.assert_not_equals row.id, @root.id, "Failed to get ancestry for #{row} going up until #{stop}"
+      errors.assert (not do row.isRoot), "Failed to get ancestry for #{row} going up until #{stop}"
       ancestors.push row
       row = do row.getParent
     ancestors.push stop
@@ -393,7 +393,7 @@ class Data
       cur = do last.getParent
       if cur.is @viewRoot
         return last
-      if cur.id == @root.id
+      if do cur.isRoot
         return null
       last = cur
 
@@ -406,23 +406,18 @@ class Data
       cur = do cur.getParent
       if cur.is @viewRoot
         return answer
-      if cur.id == @root.id
+      if do cur.isRoot
         return null
       if @collapsed cur
         answer = cur
 
-  # Checks whether the ancestor is visible. Does not include the given node but does
-  # include viewRoot
-  hasVisibleAncestor: (row, checkAncestorId) ->
-    cur = row
-    until (cur.is @viewRoot) or (do cur.isRoot)
-      cur = do cur.getParent
-      if cur.id == checkAncestorId
-        return true
-    return false
-
   wouldBeCircularInsertLine: (row, parent) ->
-    return parent.id == row.id or (@hasVisibleAncestor parent, row.id)
+    cur = parent
+    until do cur.isRoot
+      if cur.id == row.id
+        return true
+      cur = do cur.getParent
+    return false
   wouldBeCircularInsertTree: (row, parent) ->
     # Precondition: tree is not already circular
     if @wouldBeCircularInsertLine row, parent
@@ -439,7 +434,7 @@ class Data
   isAttached: (row) ->
     # TODO: Refactor where this is used in light of cloning
     while true
-      if row.id == @root.id
+      if do row.isRoot
         return true
       if (@indexOf row) == -1
         return false
@@ -580,7 +575,7 @@ class Data
         struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
         pretty = false
 
-    if row.id == @root.id and @viewRoot.id != @root.id
+    if (do row.isRoot) and not (do @viewRoot.isRoot)
       struct.viewRoot = @viewRoot
 
     if @collapsed row
@@ -598,7 +593,7 @@ class Data
   loadTo: (serialized, parent = @root, index = -1) ->
     row = new Row parent, (do @store.getNew)
 
-    if row.id != @root.id
+    if not (do row.isRoot)
       @attachChild parent, row, index
     else
       row.setParent null
