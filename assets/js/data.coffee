@@ -1,6 +1,5 @@
 # imports
 if module?
-  global.BiMap = require('bimap')
   global._ = require('lodash')
   global.utils = require('./utils.coffee')
   global.errors = require('./errors.coffee')
@@ -82,7 +81,6 @@ class Data
   constructor: (store) ->
     @store = store
     @viewRoot = Row.loadFromAncestry (do @store.getLastViewRoot || [])
-    @detached_marks = {}
     return @
 
   changeViewRoot: (row) ->
@@ -160,53 +158,71 @@ class Data
 
   # get mark for a row, '' if it doesn't exist
   getMark: (row) ->
-    allMarks = new BiMap (do @store.getAllMarks)
-    return (allMarks.val row.id)
+    marks = @store.getMarks row.id
+    return marks[row.id] or ''
 
-  setMark: (row, mark = '') ->
+  _updateAllMarks: (id, mark = '') ->
     allMarks = do @store.getAllMarks
 
-    if mark and (mark of allMarks)
-      if allMarks[mark] == row.id
+    if mark of allMarks
+      if allMarks[mark] == id
         return true
       return false
 
-    oldmark = @getMark row
+    oldmark = (@store.getMarks id)[id]
     if oldmark
       delete allMarks[oldmark]
 
     if mark
-      allMarks[mark] = row.id
+      allMarks[mark] = id
     @store.setAllMarks allMarks
     return true
+
+  _updateMark: (id, markId, mark) ->
+    marks = @store.getMarks id
+    if mark
+      marks[markId] = mark
+    else
+      delete marks[markId]
+    @store.setMarks id, marks
+
+  # Set the mark for the entire database id
+  setMark: (id, mark = '') ->
+    if @_updateAllMarks id, mark
+      for ancestorId in @allAncestors
+        @_updateMark ancestorId, id, mark
+      return true
+    return false
 
   # detach the marks of an id that is being detached
   # assumes that the old parent of the id is set
   detachMarks: (row) ->
-    success = true
-    for child in @getChildren row
-      if not @detachMarks child
-        success = false
-    mark = @getMark row
-    @detached_marks[row.id] = mark # For re-attaching
-    if @exactlyOneInstance row.id
-      if not @setMark row, ''
-        success = false
-    return success
+    marks = @store.getMarks row.id
+    isOnly = @exactlyOneInstance row.id
+    for id, mark of marks
+      if isOnly
+        @_updateAllMarks id, ''
+      # Remove the mark from all ancestors of the id which will no longer be ancestors once this Row is removed.
+      for ancestorId in @deltaAncestry row.id, row
+        @_updateMark ancestorId, row.id, ''
 
   # try to restore the marks of an id that was detached
   # assumes that the new to-be-parent of the id is already set
   # and that the marks dictionary contains the old values
   attachMarks: (row) ->
-    success = true
-    mark = @detached_marks[row.id]
-    if mark
-      if not @setMark row, mark
-        success = false
-    for child in @getChildren row
-      if not @attachMarks child
-        success = false
-    return success
+    marks = @store.getMarks row.id
+    for id, mark of marks
+      if not (@setMark id, mark) # Sets all ancestors regardless of current value
+        # Roll back mark on all descendents
+        @_removeMarkFromTree row, id, mark
+  # Helper method for attachMarks rollback. Rolls back exactly one id:mark pair from a subtree in O(marked-nodes) time
+  _removeMarkFromTree: (row, markId, mark) ->
+    marks = @store.getMarks row.id
+    if markId of marks
+      assertEqual marks[markId], mark, "Unexpected mark"
+      @_updateMark row, markId
+      for child in @getChildren row
+        @_removeMarkFromTree child, markId, mark
 
   getAllMarks: () ->
     _.mapValues (do @store.getAllMarks), @canonicalInstance, @
@@ -286,6 +302,21 @@ class Data
         sorted[n] = true
         ancestors.unshift n
     ancestors[1..] # Leave out <id>
+
+  # Precondition: row.id == id
+  # Returns all ancestors of row, which are ancestors of only row and not any other instance of 'id'
+  # If A is a parent of B, B is returned earlier in the list than A. This is called 'topological sort'.
+  deltaAncestry: (id, row) ->
+    errors.assertEqual id, row.id, "Row is expected to be an instance of id"
+    parentAncestry = (parentId) ->
+      [parentId].concat (@allAncestors parentId)
+
+    parentId = (do @row.getParent).id
+    rowAncestry = parentAncestry parentId
+    idAncestry = []
+    for otherParentId in _.without (@getParents id), parentId
+      idAncestry = _.union idAncestry (parentAncestry otherParentId)
+    return _.difference rowAncestry, idAncestry
 
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (row) ->
