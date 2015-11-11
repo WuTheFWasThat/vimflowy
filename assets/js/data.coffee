@@ -468,11 +468,8 @@ class Data
   wouldBeCircularInsertTree: (row, parent) ->
     # Precondition: tree is not already circular
     # Rather than checking for each descendent, whether that descendent is an ancestor (old method)
-    # Instead, check for each ancestor, whether that ancestor is a descendent
-    for ancestorId in @allAncestors parent.id, { inclusive: true }
-      if _.contains (@allAncestors ancestorId, { inclusive: true }), row.id
-        return true
-    return false
+    # Instead, check if the row is an ancestor of the new parent, which is sufficient.
+    _.contains (@allAncestors parent.id, { inclusive: true }), row.id
   wouldBeDoubledSiblingInsert: (row, parent) ->
     (@getChild parent, row.id)?
 
