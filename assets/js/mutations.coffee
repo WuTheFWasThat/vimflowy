@@ -215,7 +215,7 @@ if module?
         originals.push original
 
       for original in originals
-        if not view.validateRowInsertionValid original, @parent
+        if not view.validateRowInsertion original, @parent
           return
 
       index = @index

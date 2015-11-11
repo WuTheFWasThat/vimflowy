@@ -869,8 +869,8 @@ window?.renderLine = renderLine
     attachBlock: (row, parent, index = -1, options = {}) ->
       @do new mutations.AttachBlock row, parent, index, options
 
-    validateRowInsertionValid: (row, parent, sameParent=false) ->
-      if (not sameParent) and @data.wouldBeDoubledSiblingInsert row, parent, sameParent
+    validateRowInsertion: (row, parent, sameParent=false) ->
+      if (not sameParent) and @data.wouldBeDoubledSiblingInsert row, parent
         @showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
         return false
       if @data.wouldBeCircularInsertTree row, parent
@@ -882,7 +882,7 @@ window?.renderLine = renderLine
       sameParent = parent.id == (do row.getParent).id
       if sameParent and index > @data.indexOf row
         index = index - 1
-      if not (@validateRowInsertionValid row, parent, sameParent)
+      if not (@validateRowInsertion row, parent, sameParent)
         return row
       @detachBlock row, options
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
