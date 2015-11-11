@@ -206,7 +206,7 @@ class Data
       if isOnly
         @_updateAllMarks markId, ''
       # Remove the mark from all ancestors of the id which will no longer be ancestors once this Row is removed.
-      for ancestorId in @deltaAncestry row.id, row
+      for ancestorId in @deltaAncestry row.id, row, { inclusive: false }
         @_updateMark ancestorId, markId, ''
 
   # try to restore the marks of an row that was detached
@@ -289,13 +289,15 @@ class Data
     errors.assert instance?, "No canonical instance found for id: #{id}"
     return instance
 
-  allAncestors: (id) ->
+  allAncestors: (id, options) ->
     # Return all ancestor ids. Does not include <id>.
     # If A is a parent of B, B is returned earlier in the list than A. This is called 'topological sort'.
+    options = _.defaults {}, options, { inclusive: false }
     sorted = {}
     preprocessed = {} # No repeats
     ancestors = [] # Same contents as 'sorted' with preserved insert order
-    sorted[id] = true # Leave out <id>
+    unless options.inclusive
+      sorted[id] = true # Leave out <id>
     visit = (n) => # Do a DFS and add each node which points only to things the DFS has visited in turn (Tarjan's algorithm)
       for parent in @store.getParents n
         if parent not of preprocessed
@@ -310,16 +312,15 @@ class Data
   # Precondition: row.id == id
   # Returns all ancestors of row, which are ancestors of only row and not any other instance of 'id'
   # If A is a parent of B, B is returned earlier in the list than A. This is called 'topological sort'.
-  deltaAncestry: (id, row) ->
+  deltaAncestry: (id, row, options) ->
     errors.assert_equals id, row.id, "Row is expected to be an instance of id"
-    parentAncestry = (parentId) =>
-      [parentId].concat (@allAncestors parentId)
+    options = _.defaults {}, options, { inclusive: false }
 
     parentId = (do row.getParent).id
-    rowAncestry = parentAncestry parentId
+    rowAncestry = @allAncestors parentId, { inclusive: options.inclusive }
     idAncestry = []
     for otherParentId in _.without (@getParents row), parentId
-      idAncestry = _.union idAncestry, (parentAncestry otherParentId)
+      idAncestry = _.union idAncestry, (@allAncestors otherParentId, { inclusive: true })
     return _.difference rowAncestry, idAncestry
 
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
@@ -464,19 +465,12 @@ class Data
       if @collapsed cur
         answer = cur
 
-  wouldBeCircularInsertLine: (row, parent) ->
-    cur = parent
-    until do cur.isRoot
-      if cur.id == row.id
-        return true
-      cur = do cur.getParent
-    return false
   wouldBeCircularInsertTree: (row, parent) ->
     # Precondition: tree is not already circular
-    if @wouldBeCircularInsertLine row, parent
-      return true
-    for child in @getChildren row
-      if @wouldBeCircularInsertTree child, parent # Because the tree is not circular, just have to check from the parent up
+    # Rather than checking for each descendent, whether that descendent is an ancestor (old method)
+    # Instead, check for each ancestor, whether that ancestor is a descendent
+    for ancestorId in @allAncestors parent.id, { inclusive: true }
+      if _.contains (@allAncestors ancestorId, { inclusive: true }), row.id
         return true
     return false
   wouldBeDoubledSiblingInsert: (row, parent) ->
