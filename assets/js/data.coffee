@@ -187,40 +187,43 @@ class Data
     @store.setMarks id, marks
 
   # Set the mark for the entire database id
-  setMark: (id, mark = '') ->
+  setMark: (row, mark = '') ->
+    @_setMark row.id, mark
+  _setMark: (id, mark='') ->
     if @_updateAllMarks id, mark
-      for ancestorId in @allAncestors
+      @_updateMark id, id, mark
+      for ancestorId in @allAncestors id
         @_updateMark ancestorId, id, mark
       return true
     return false
 
-  # detach the marks of an id that is being detached
-  # assumes that the old parent of the id is set
+  # detach the marks of an row that is being detached
   detachMarks: (row) ->
     marks = @store.getMarks row.id
     isOnly = @exactlyOneInstance row.id
-    for id, mark of marks
+    for markIdStr, mark of marks
+      markId = parseInt markIdStr
       if isOnly
-        @_updateAllMarks id, ''
+        @_updateAllMarks markId, ''
       # Remove the mark from all ancestors of the id which will no longer be ancestors once this Row is removed.
       for ancestorId in @deltaAncestry row.id, row
-        @_updateMark ancestorId, row.id, ''
+        @_updateMark ancestorId, markId, ''
 
-  # try to restore the marks of an id that was detached
-  # assumes that the new to-be-parent of the id is already set
-  # and that the marks dictionary contains the old values
+  # try to restore the marks of an row that was detached
+  # assumes that the marks dictionary contains the old values
   attachMarks: (row) ->
     marks = @store.getMarks row.id
-    for id, mark of marks
-      if not (@setMark id, mark) # Sets all ancestors regardless of current value
+    for markIdStr, mark of marks
+      markId = parseInt markIdStr
+      if not (@_setMark markId, mark) # Sets all ancestors regardless of current value
         # Roll back mark on all descendents
-        @_removeMarkFromTree row, id, mark
+        @_removeMarkFromTree row, markId, mark
   # Helper method for attachMarks rollback. Rolls back exactly one id:mark pair from a subtree in O(marked-nodes) time
   _removeMarkFromTree: (row, markId, mark) ->
     marks = @store.getMarks row.id
     if markId of marks
-      assertEqual marks[markId], mark, "Unexpected mark"
-      @_updateMark row, markId
+      errors.assert_equals marks[markId], mark, "Unexpected mark"
+      @_updateMark row.id, markId, ''
       for child in @getChildren row
         @_removeMarkFromTree child, markId, mark
 
@@ -292,30 +295,31 @@ class Data
     sorted = {}
     preprocessed = {} # No repeats
     ancestors = [] # Same contents as 'sorted' with preserved insert order
-    ancestors[id] = true
-    visit (n) -> # Do a DFS and add each node which points only to things the DFS has visited in turn (Tarjan's algorithm)
-      for parent in @getParents n
+    sorted[id] = true # Leave out <id>
+    visit = (n) => # Do a DFS and add each node which points only to things the DFS has visited in turn (Tarjan's algorithm)
+      for parent in @store.getParents n
         if parent not of preprocessed
           preprocessed[parent] = true
           visit parent
       if n not of sorted
         sorted[n] = true
         ancestors.unshift n
-    ancestors[1..] # Leave out <id>
+    visit id
+    ancestors
 
   # Precondition: row.id == id
   # Returns all ancestors of row, which are ancestors of only row and not any other instance of 'id'
   # If A is a parent of B, B is returned earlier in the list than A. This is called 'topological sort'.
   deltaAncestry: (id, row) ->
-    errors.assertEqual id, row.id, "Row is expected to be an instance of id"
-    parentAncestry = (parentId) ->
+    errors.assert_equals id, row.id, "Row is expected to be an instance of id"
+    parentAncestry = (parentId) =>
       [parentId].concat (@allAncestors parentId)
 
-    parentId = (do @row.getParent).id
+    parentId = (do row.getParent).id
     rowAncestry = parentAncestry parentId
     idAncestry = []
-    for otherParentId in _.without (@getParents id), parentId
-      idAncestry = _.union idAncestry (parentAncestry otherParentId)
+    for otherParentId in _.without (@getParents row), parentId
+      idAncestry = _.union idAncestry, (parentAncestry otherParentId)
     return _.difference rowAncestry, idAncestry
 
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
@@ -368,6 +372,7 @@ class Data
 
     for child in new_children
       @attachMarks child
+    return new_children
 
   # returns an array representing the ancestry of a row,
   # up until the ancestor specified by the `stop` parameter
