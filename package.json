@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "async": "latest",
-    "bimap": "0.0.15",
     "coffee-script": "latest",
     "express": "latest",
     "lodash": "latest"
