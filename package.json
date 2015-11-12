@@ -29,7 +29,6 @@
     "blanket": "latest",
     "mocha": "latest",
     "mocha-multi": "latest",
-
     "del": "latest",
     "gulp": "latest",
     "gulp-coffee": "latest",
