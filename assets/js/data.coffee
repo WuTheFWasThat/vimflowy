@@ -263,15 +263,17 @@ class Data
   toggleCollapsed: (row) ->
     @store.setCollapsed row.id, (not @collapsed row)
 
-  countInstances: (id) ->
+  countInstances: (id, cache={}) ->
     # Precondition: No circular references in ancestry
-    errors.assert id?, "Empty id passed to countInstances"
-    if id == constants.root_id
-      return 1
-    parentCount = 0
-    for parent_id in (@store.getParents id)
-      parentCount += @countInstances parent_id # Always exactly once under every parent
-    return parentCount
+    unless cache[id]?
+      errors.assert id?, "Empty id passed to countInstances"
+      if id == constants.root_id
+        return 1
+      parentCount = 0
+      for parent_id in (@store.getParents id)
+        parentCount += @countInstances parent_id, cache # Always exactly once under every parent
+      cache[id] = parentCount
+    cache[id]
 
   exactlyOneInstance: (id) ->
     1 == @countInstances id
