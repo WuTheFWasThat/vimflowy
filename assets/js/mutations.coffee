@@ -207,16 +207,7 @@ if module?
       return "parent #{@parent.id}, index #{@index}"
 
     mutate: (view) ->
-      originals = []
-      for clone_id in @cloned_rows
-        original = view.data.canonicalInstance clone_id
-        unless original?
-          continue
-        originals.push original
-
-      for original in originals
-        if not view.validateRowInsertion original, @parent
-          return
+      originals = (view.data.canonicalInstance id for id in @cloned_rows)
 
       index = @index
       first = true
