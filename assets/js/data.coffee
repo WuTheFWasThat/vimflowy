@@ -4,6 +4,7 @@ if module?
   global.utils = require('./utils.coffee')
   global.errors = require('./errors.coffee')
   global.constants = require('./constants.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
   global.Logger = require('./logger.coffee')
   global.EventEmitter = require('./eventEmitter.coffee')
 

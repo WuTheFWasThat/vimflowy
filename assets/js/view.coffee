@@ -9,6 +9,7 @@ if module?
   global.Cursor = require('./cursor.coffee')
   global.Data = require('./data.coffee')
   global.dataStore = require('./datastore.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
   global.Register = require('./register.coffee')
   global.Logger = require('./logger.coffee')
   global.PluginAPI = require('./plugins.coffee')
