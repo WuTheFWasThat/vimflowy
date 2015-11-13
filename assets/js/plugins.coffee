@@ -1,7 +1,7 @@
 if module?
   global._ = require('lodash')
-  global.Logger = require('./logger.coffee')
   global.DependencyGraph = require('dependencies-online')
+  global.Logger = require('./logger.coffee')
 
 (() ->
   class PluginDatabaseAccess

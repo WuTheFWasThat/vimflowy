@@ -4,6 +4,7 @@ if module?
   global.utils = require('./utils.coffee')
   global.errors = require('./errors.coffee')
   global.constants = require('./constants.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
   global.Logger = require('./logger.coffee')
 
 class Row
@@ -75,10 +76,11 @@ also deals with loading the initial data from the datastore, and serializing the
 
 Currently, the separation between the View and Data classes is not very good.  (see view.coffee)
 ###
-class Data
+class Data extends EventEmitter
   root: do Row.getRoot
 
   constructor: (store) ->
+    super
     @store = store
     @viewRoot = Row.loadFromAncestry (do @store.getLastViewRoot || [])
     return @
@@ -335,6 +337,12 @@ class Data
     # and remembers its old mark
 
     @detachMarks row # Requires parent to be set correctly, so it's at the beginning
+    # Notify all ancestors that their list of descendents changed
+    for ancestorId in @deltaAncestry row.id, row, { inclusive: false }
+      @emit "descendentRemoved", { ancestorId: ancestorId, descendentId: row.id }
+    @emit "childRemoved", { parentId: (do row.getParent).id, childId: row.id }
+    if @exactlyOneInstance row.id
+      @emit "rowRemoved", { id: row.id}
 
     parent = do row.getParent
     children = @getSiblings row
@@ -375,6 +383,11 @@ class Data
 
     for child in new_children
       @attachMarks child
+      for ancestorId in @deltaAncestry child.id, child, { inclusive: false }
+        @emit "descendentAdded", { ancestorId: ancestorId, descendentId: child.id }
+      @emit "childAdded", { parentId: row.id, childId: child.id }
+      if @exactlyOneInstance child.id
+        @emit "rowAdded", { id: child.id }
     return new_children
 
   # returns an array representing the ancestry of a row,
