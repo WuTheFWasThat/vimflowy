@@ -833,6 +833,11 @@ window?.renderLine = renderLine
       @do mutation
 
     addClones: (cloned_rows, parent, index = -1, options = {}) ->
+      for id in cloned_rows
+        original = @data.canonicalInstance id
+        if not @validateRowInsertion original, parent
+          return
+
       mutation= new mutations.CloneBlocks cloned_rows, parent, index, options
       @do mutation
 
@@ -956,7 +961,7 @@ window?.renderLine = renderLine
       next = @data.nextVisible (@data.lastVisible row)
       unless next?
         return
-    
+
       if (@data.hasChildren next) and (not @data.collapsed next)
         # make it the first child
         @moveBlock row, next, 0

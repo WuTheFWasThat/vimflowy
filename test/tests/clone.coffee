@@ -3,8 +3,8 @@ TestCase = require '../testcase.coffee'
 swapDownKey = 'ctrl+j'
 swapUpKey = 'ctrl+k'
 
-describe "cloning tests", () ->
-  it "test yc and p", () ->
+describe "cloning", () ->
+  it "works in basic case", () ->
     t = new TestCase [
       { text: 'one', children: [
         'uno',
@@ -34,7 +34,7 @@ describe "cloning tests", () ->
       ] }
     ]
 
-  it "test editing in clone and original; test movement from original", () ->
+  it "works editing both clone and original; works with basic movement", () ->
     t = new TestCase [
       { text: 'one', children: [
         'uno',
@@ -86,7 +86,7 @@ describe "cloning tests", () ->
       ] }
     ]
 
-  it "test cursor movement in complex clones", () ->
+  it "works with movement in complex case", () ->
     t = new TestCase [
       { text: 'Clone', children: [
           'Clone child'
@@ -170,7 +170,7 @@ describe "cloning tests", () ->
     ]
     t.expectMarks {'mark2': 2}
 
-  it "cloning to a sibling is impossible", () ->
+  it "prevents cloning to a sibling", () ->
     t = new TestCase [
       'one',
       'two',
@@ -185,7 +185,7 @@ describe "cloning tests", () ->
       'three'
     ]
 
-  it "cloning into a cycle is impossible", () ->
+  it "prevents cycles", () ->
     t = new TestCase [
       { text: 'one', children: [
         'uno',
@@ -199,6 +199,157 @@ describe "cloning tests", () ->
         'uno',
       ] }
     ]
+
+  it "prevents cycles part 2", () ->
+    t = new TestCase [
+      { text: 'blah', children: [
+        'blah'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.sendKeys 'jdd'
+    t.expect [
+      'blah'
+      { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.sendKeys 'jjyckP'
+    t.expect [
+      'blah'
+      { text: 'Will be cloned', children: [
+        'Will be cloned'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.sendKeys 'jjyckp'
+    t.expect [
+      'blah'
+      { text: 'Will be cloned', children: [
+        'Will be cloned'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.sendKeys 'kp'
+    t.expect [
+      'blah'
+      { text: 'Will be cloned', children: [
+        'Will be cloned'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.sendKeys 'u'
+    t.expect [
+      'blah'
+      { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.sendKeys 'u'
+    t.expect [
+      { text: 'blah', children: [
+        'blah'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.sendKeys 'p'
+    t.expect [
+      { text: 'blah', children: [
+        'blah'
+        { text: 'Not a clone', children: [
+          { text: 'Will be cloned', children: [
+            'Will be cloned'
+          ] }
+        ] }
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+
+
+  it "works with repeat", () ->
+    t = new TestCase [
+      'one'
+      'two'
+      { text: 'three', children: [
+        'child',
+      ] }
+    ]
+    t.sendKeys '2yc'
+    t.sendKeys 'p'
+    t.expect [
+      'one'
+      'two'
+      { text: 'three', children: [
+        'child',
+      ] }
+    ]
+    t.sendKeys 'jjp'
+    t.expect [
+      'one'
+      'two'
+      { text: 'three', children: [
+        'one'
+        'two'
+        'child',
+      ] }
+    ]
+
+  it "does not add to history when constraints are violated", () ->
+     t = new TestCase [
+       'blah'
+       { text: 'Will be cloned', children: [
+         'not a clone'
+       ] }
+     ]
+     t.sendKeys 'x'
+     t.expect [
+       'lah'
+       { text: 'Will be cloned', children: [
+         'not a clone'
+       ] }
+     ]
+     t.sendKeys 'jycp'
+     t.expect [
+       'lah'
+       { text: 'Will be cloned', children: [
+         'not a clone'
+       ] }
+     ]
+     t.sendKeys 'u'
+     t.expect [
+       'blah'
+       { text: 'Will be cloned', children: [
+         'not a clone'
+       ] }
+     ]
 
   it "enforces constraints upon movement", () ->
     t = new TestCase [
@@ -275,3 +426,112 @@ describe "cloning tests", () ->
     t.sendKeys 'dd'
     t.expect [ "" ]
     t.expectMarks { }
+
+  it "works with marks in tricky case 2", () ->
+    t = new TestCase [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jycGp'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            { text: 'Marked child', mark: 'mark' }
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jj'
+    t.sendKeys ['m', 'enter']
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          'Marked child'
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            'Marked child'
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks {}
+
+    t.sendKeys 'ggdd'
+    t.expect [
+      ''
+    ]
+    t.expectMarks {}
+
+    t.sendKeys 'u'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          'Marked child'
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            'Marked child'
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks {}
+
+  it "remove the last marked instance when it is a descendent of a cloned node", () ->
+    t = new TestCase [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jycGp'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            { text: 'Marked child', mark: 'mark' }
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jjdd'
+    t.expect [
+      { text: 'parent', children: [
+        'Will be cloned'
+        { text: 'blah', children: [
+          'blah'
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.expectMarks {}
