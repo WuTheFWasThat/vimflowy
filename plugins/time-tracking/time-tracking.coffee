@@ -10,7 +10,7 @@
       description: "Keeps track of how much time has been spent in each row (including its descendents)"
       version: 1 # TODO: DO NOT RELEASE until optimized (TODOs in this file done)
       stores_data: true
-      data_version: 1
+      data_version: 2
       requirements: []
 
     constructor: (@api) ->
@@ -21,69 +21,58 @@
       @logger.info "Loading time tracking"
       @database = do @api.getDatabase
       @api.cursor.on 'rowChange', (@onRowChange.bind @)
+      @onRowChange undefined, @api.cursor.row # Initial setup
       @api.view.on 'renderLine', (@onRenderLine.bind @)
+      @rowChanges = []
+      @currentRow = null
       @displayTime = true
       # TODO: Add view.on 'exit' to view
       #@api.view.on 'exit', (@onExit.bind @)
+
+    _date: (timestamp) ->
+      "#{timestamp.getFullYear()}-#{timestamp.getMonth()}-#{timestamp.getDate()}"
+    _timeForDayKey: (timestamp) ->
+      "totalTimeForDay-#{@_date timestamp}"
+    dateRange: (start, stop) ->
+      [stop] #TODO: Not done at all
 
     #onExit: () ->
     #  @onRowFrom @api.cursor.row
 
     onRowChange: (from, to) ->
-      @logger.debug "Switching from row #{from.id} to row #{to.id}"
-      @onRowFrom from
-      @onRowTo to
+      @logger.debug "Switching from row #{from?.id} to row #{to?.id}"
+      time = new Date()
+      if @currentRow? and @currentRow.id != to.id
+        @onRowPeriod { start: @currentRow.time, stop: time, id: @currentRow.id, row: from }
+        delete @currentRow
+      @currentRow ?= { id: to.id, time: time }
 
-    onRowFrom: (from) ->
-      time = new Date()
-      @database.transformRowData from, "raw", (current) =>
+    # TODO: Debounce this function for batch processing
+    # TODO: Update summary statistics for all ancestors including this one -- make sure ancestors update on delete/add/move
+    onRowPeriod: (period) ->
+      @database.transformRowData period.row, "timePeriods", (current) =>
         current ?= []
-        current.push
-          stop: time
-          row: do from.getAncestry
-        @logger.debug current
+        current.push period
         current
-      # TODO: Update summary statistics for all ancestors including this one
-      # TODO: Debounce raw data; this is too much
-     
-     onRowTo: (to) ->
-      time = new Date()
-      @database.transformRowData to, "raw", (current) =>
-        current ?= []
-        current.push
-          start: time
-          row: do to.getAncestry
-        @logger.debug current
-        current
+      @database.transformRowData period.row, "totalTime", (current) =>
+        (current ? 0) + (period.stop - period.start)
+      @database.transformRowData period.row, (@_timeForDayKey period.stop), (current) =>
+        (current ? 0) + (period.stop - period.start)
     
-     rowTime: (row, range) ->
+    rowTime: (row, range) ->
       if range?
-        # To implement range queries effectively on a hierarchical datastructure, we'd need 2-D range trees which support an efficient move/delete operator.
-        # This is possible, but would take around 2 days to implement
         @api.showMessage "Range queries are very slow, please wait"
-        start = null
         time = 0
-        for datum in (@database.getRowData row, "raw") || []
-          start ?= datum.start
-          if datum.stop?
-            start = null
-            time += datum.stop - sstart
-        return time
+        for date in @dateRange range.start, range.stop
+          time += @database.getRowData row, (@_timeForDayKey date)
+          for child in @api.view.data.getChildren row
+            time += @rowTime child
+        time
       else
-        # Uses linear scan right now as a proof of concept; do not release yet
-        # TODO: Include children
-        start = null
-        time = 0
-        for datum in (@database.getRowData row, "raw") || []
-          if datum.start?
-            start ?= Date.parse datum.start
-          if start? and datum.stop?
-            stop = Date.parse datum.stop
-            time += stop - start
-            start = null
+        time = @database.getRowData row, "totalTime"
         for child in @api.view.data.getChildren row
           time += @rowTime child
-        return time
+        time
     printTime: (ms) ->
       seconds = Math.floor (ms /     1000 % 60)
       minutes = Math.floor (ms /    60000 % 60)
