@@ -18,6 +18,7 @@ the mutation may also optionally implement
 ###
 
 if module?
+  global._ = require('lodash')
   global.errors = require('./errors.coffee')
 
 ((exports) ->
@@ -207,29 +208,15 @@ if module?
       return "parent #{@parent.id}, index #{@index}"
 
     mutate: (view) ->
-      originals = []
-      for clone_id in @cloned_rows
-        original = view.data.canonicalInstance clone_id
-        unless original?
-          continue
-        originals.push original
-
-      for original in originals
-        if not view.validateRowInsertion original, @parent
-          return
+      originals = _.compact (view.data.canonicalInstance id for id in @cloned_rows)
 
       index = @index
-      first = true
-      for original in originals
-        clone = view.data.cloneRow original, @parent, index
-        index += 1
+      clones = view.data.cloneRows originals, @parent, index
 
-        if @options.setCursor == 'first' and first
-          view.cursor.set clone, 0
-          first = false
-
-      if @options.setCursor == 'last' and row?
-        view.cursor.set clone, 0
+      if @options.setCursor == 'first'
+        view.cursor.set clones[0], 0
+      else if @options.setCursor == 'last'
+        view.cursor.set clones[-1], 0
 
     rewind: (view) ->
       delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
