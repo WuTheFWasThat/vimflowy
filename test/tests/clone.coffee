@@ -430,7 +430,7 @@ describe "cloning", () ->
   it "works with marks in tricky case 2", () ->
     t = new TestCase [
       { text: 'parent', children: [
-        { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
           { text: 'Marked child', mark: 'mark' }
         ] }
         { text: 'blah', children: [
@@ -443,12 +443,12 @@ describe "cloning", () ->
     t.sendKeys 'jycGp'
     t.expect [
       { text: 'parent', children: [
-        { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
           { text: 'Marked child', mark: 'mark' }
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Not a clone', children: [
+          { text: 'Will be cloned', children: [
             { text: 'Marked child', mark: 'mark' }
           ] }
         ] }
@@ -460,12 +460,12 @@ describe "cloning", () ->
     t.sendKeys ['m', 'enter']
     t.expect [
       { text: 'parent', children: [
-        { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
           'Marked child'
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Not a clone', children: [
+          { text: 'Will be cloned', children: [
             'Marked child'
           ] }
         ] }
@@ -482,57 +482,15 @@ describe "cloning", () ->
     t.sendKeys 'u'
     t.expect [
       { text: 'parent', children: [
-        { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
           'Marked child'
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Not a clone', children: [
+          { text: 'Will be cloned', children: [
             'Marked child'
           ] }
         ] }
       ] }
     ]
     t.expectMarks {}
-
-  it "works with marks in tricky case 3", () ->
-    t = new TestCase [
-      { text: 'parent', children: [
-        { text: 'Not a clone', children: [
-          { text: 'Marked child', mark: 'mark' }
-        ] }
-        { text: 'blah', children: [
-          'blah'
-        ] }
-      ] }
-    ]
-    t.expectMarks { 'mark': 3 }
-
-    t.sendKeys 'jycGp'
-    t.expect [
-      { text: 'parent', children: [
-        { text: 'Not a clone', children: [
-          { text: 'Marked child', mark: 'mark' }
-        ] }
-        { text: 'blah', children: [
-          'blah'
-          { text: 'Not a clone', children: [
-            { text: 'Marked child', mark: 'mark' }
-          ] }
-        ] }
-      ] }
-    ]
-    t.expectMarks { 'mark': 3 }
-
-    t.sendKeys 'jjdd'
-    t.expect [
-      { text: 'parent', children: [
-        'Not a clone'
-        { text: 'blah', children: [
-          'blah'
-          'Not a clone'
-        ] }
-      ] }
-    ]
-    t.expectMarks {}
-
