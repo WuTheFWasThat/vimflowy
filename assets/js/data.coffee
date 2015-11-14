@@ -364,8 +364,7 @@ class Data extends EventEmitter
   # attaches a detached child to a parent
   # the child should not have a parent already
   attachChild: (row, child, index = -1) ->
-    @attachChildren row, [child], index
-    return child
+    (@attachChildren row, [child], index)[0]
 
   attachChildren: (row, new_children, index = -1) ->
     children = @getChildren row
@@ -416,6 +415,7 @@ class Data extends EventEmitter
     firstDifference = commonAncestry.length
     return [common, ancestors1[firstDifference..], ancestors2[firstDifference..]]
 
+  # extends a row's path using descendents (used when moving blocks around)
   combineAncestry: (row, descendents) ->
     for descendent in descendents
       row = @getChild row, descendent.id
@@ -529,10 +529,10 @@ class Data extends EventEmitter
     id = do @store.getNew
     child = new Row row, id
     @attachChild row, child, index
-    return child
 
-  cloneRow: (row, parent, index = -1) ->
-    @attachChild parent, (do row.clone), index
+  cloneRows: (rows, parent, index = -1) ->
+    clones = ((do row.clone) for row in rows)
+    @attachChildren parent, clones, index
 
   _insertSiblingHelper: (row, after) ->
     if row.id == @viewRoot.id
