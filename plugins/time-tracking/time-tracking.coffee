@@ -3,14 +3,19 @@
     val += ''
     numPads = length - val.length
     if (numPads > 0) then new Array(numPads + 1).join(padChar) + val else val
+  sum = (a) ->
+    total = 0
+    for x in a
+      total += x
+    total
   class TimeTrackingPlugin
     @metadata =
       name: "Time Tracking"
       author: "Zachary Vance"
       description: "Keeps track of how much time has been spent in each row (including its descendents)"
-      version: 1 # TODO: DO NOT RELEASE until optimized (TODOs in this file done)
+      version: 3
       stores_data: true
-      data_version: 2
+      data_version: 3
       requirements: []
 
     constructor: (@api) ->
@@ -23,6 +28,8 @@
       @api.cursor.on 'rowChange', (@onRowChange.bind @)
       @onRowChange undefined, @api.cursor.row # Initial setup
       @api.view.on 'renderLine', (@onRenderLine.bind @)
+      @api.view.data.on 'descendentRemoved', (@onDescendentRemoved.bind @)
+      @api.view.data.on 'descendentAdded', (@onDescendentAdded.bind @)
       @rowChanges = []
       @currentRow = null
       @displayTime = true
@@ -31,10 +38,21 @@
 
     _date: (timestamp) ->
       "#{timestamp.getFullYear()}-#{timestamp.getMonth()}-#{timestamp.getDate()}"
-    _timeForDayKey: (timestamp) ->
-      "totalTimeForDay-#{@_date timestamp}"
-    dateRange: (start, stop) ->
-      [stop] #TODO: Not done at all
+    dateOf: (timestamp) ->
+      day = new Date(timestamp)
+      day.setHours 0
+      day.setMinutes 0
+      day.setSeconds 0
+      day.setMilliseconds 0
+      day
+    # Return one timestamp on each day between the two timetamps, inclusive
+    daysBetween: (start, stop) ->
+      cur = @dateOf start
+      days = []
+      while cur < stop
+        days.push (new Date cur)
+        cur.setDay (cur.getDay() + 1)
+      days
 
     #onExit: () ->
     #  @onRowFrom @api.cursor.row
@@ -48,31 +66,79 @@
       @currentRow ?= { id: to.id, time: time }
 
     # TODO: Debounce this function for batch processing
-    # TODO: Update summary statistics for all ancestors including this one -- make sure ancestors update on delete/add/move
     onRowPeriod: (period) ->
+      period.time = (period.stop - period.start)
       @database.transformRowData period.row, "timePeriods", (current) =>
         current ?= []
         current.push period
         current
-      @database.transformRowData period.row, "totalTime", (current) =>
-        (current ? 0) + (period.stop - period.start)
-      @database.transformRowData period.row, (@_timeForDayKey period.stop), (current) =>
-        (current ? 0) + (period.stop - period.start)
+      @_addTimeToRow period.row, period.time, period.stop
+      @_addTimeToAncestors period.row, period.time, period.stop
+    onDescendentRemoved: (event) ->
+      ancestor = @api.view.data.canonicalInstance event.ancestorId
+      @_rebuildTreeTimes ancestor # Could avoid lookups by knowing exact changes, if needed
+    onDescendentAdded: (event) ->
+      ancestor = @api.view.data.canonicalInstance event.ancestorId
+      @_rebuildTreeTimes ancestor # Could avoid lookups by knowing exact changes, if needed
+
+    _combineDailyTimes: (dailyTimes...) ->
+      combined = {}
+      for date in  _.union (_.map _.keys, dailyTimes)
+        combined[date] = 0
+        for dailyTime in dailyTimes
+          combined[date] += dailyTime[date] ? 0
+      combined
+    _addTimeToRow: (row, time, day) ->
+      @database.transformRowData row, "rowTotalTime", (current) ->
+        (current ? 0) + time
+      @database.transformRowData row, "rowDailyTime", (current) =>
+        key = @_date day
+        current ?= {}
+        current[key] = (current[key] ? 0) + time
+        current
+    _rebuildRowTimes: (row) -> # Unused, but keep for data migration in future versions
+      totalTime = 0
+      dailyTime = {}
+      for period in @database.getRowData row, "timePeriods" ? []
+        totalTime += period.time
+        key = @_date day
+        dailyTime[key] = (dailyTime[key] ? 0) + period.time
+      @database.setRowData row, "rowTotalTime", totalTime
+      @database.setRowData row, "rowDailyTime", dailyTime
+    _addTimeToAncestors: (row, time, day) ->
+      for ancestorId in @api.view.data.allAncestors row.id, { inclusive: true }
+        ancestor = @api.view.data.canonicalInstance ancestorId
+        @database.transformRowData ancestor, "treeTotalTime", (current) ->
+          (current ? 0) + time
+        @database.transformRowData ancestor, "treeDailyTime", (current) =>
+          key = @_date day
+          current ?= {}
+          current[key] = (current[key] ? 0) + time
+          current
+    _rebuildTreeTimes: (row) ->
+      children = @api.view.data.getChildren row
+
+      childTotalTimes = _.map children, (child) -> @database.getRowData child, "treeTotalTime"
+      rowTotalTime = @database.getRowData row, "rowTotalTime"
+      totalTimes = _.compact ([rowTotalTime].concat childTotalTimes)
+      totalTime = sum totalTimes
+      @database.setRowData row, "treeTotalTime", (current) =>
+
+      childDailyTimes = _.map children, (child) -> @database.getRowData child, "treeDailyTime"
+      rowDailyTime = @database.getRowData row, "rowDailyTime"
+      dailyTimes = _.compact ([rowDailyTime].concat childDailyTimes)
+      dailyTime = @_combineDailyTimes.apply @, dailyTimes
+      @database.setRowData row, "treeDailyTime", dailyTime
     
     rowTime: (row, range) ->
       if range?
-        @api.showMessage "Range queries are very slow, please wait"
+        times = @database.getRowData row, "treeDailyTime"
         time = 0
-        for date in @dateRange range.start, range.stop
-          time += @database.getRowData row, (@_timeForDayKey date)
-          for child in @api.view.data.getChildren row
-            time += @rowTime child
+        for date in @daysBetween range.start, range.stop
+          time += times[@_date date] ? 0
         time
       else
-        time = @database.getRowData row, "totalTime"
-        for child in @api.view.data.getChildren row
-          time += @rowTime child
-        time
+        @database.getRowData row, "treeTotalTime"
     printTime: (ms) ->
       seconds = Math.floor (ms /     1000 % 60)
       minutes = Math.floor (ms /    60000 % 60)
@@ -90,7 +156,7 @@
     onRenderLine: (row, renderArray, options) ->
       if @displayTime
         time = @rowTime row
-        if time > 0
+        if time > 1000
           @logger.info "Rendering time for row #{row.id} as #{time}"
           renderArray.push virtualDom.h 'span', {
             className: 'time'
