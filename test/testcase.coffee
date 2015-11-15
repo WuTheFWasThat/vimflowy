@@ -42,7 +42,7 @@ class TestCase
         \nBut got:
         \n#{JSON.stringify(actual, null, 2)}
       "
-      throw Error message
+      throw new Error message
 
   _expectEqual: (actual, expected, message) ->
     if actual != expected
@@ -53,7 +53,7 @@ class TestCase
         \nBut got:
         \n#{actual}
       "
-      throw Error message
+      throw new Error message
 
   sendKeys: (keys) ->
     for key in keys

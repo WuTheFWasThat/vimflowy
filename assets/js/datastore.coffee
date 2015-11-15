@@ -22,9 +22,8 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_collapsedKey_ = (row) -> "#{@prefix}:#{row}:collapsed"
       @_marksKey_ = (row) -> "#{@prefix}:#{row}:marks"
 
-      @_pluginRowKey_ = (plugin, row, key) -> "#{@prefix}:#{plugin}:#{row}:#{key}"
-      @_pluginGlobalKey_ = (plugin, key) -> "#{@prefix}:#{plugin}:global:#{key}"
-      @_pluginVersionKey_ = (plugin) -> "#{@prefix}:#{plugin}:version"
+      @_pluginDataKey_ = (plugin, key) -> "#{@prefix}:plugin:#{plugin}:data:#{key}"
+      @_pluginDataVersionKey_ = (plugin) -> "#{@prefix}:plugin:#{plugin}:version"
 
       # no prefix, meaning it's global
       @_settingKey_ = (setting) -> "settings:#{setting}"
@@ -94,18 +93,14 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     getSchemaVersion: () ->
       @get @_schemaVersionKey_, 1
 
-    setPluginVersion: (plugin, version) ->
-      @set (@_pluginVersionKey_ plugin), version
-    getPluginVersion: (plugin) ->
-      @get (@_pluginVersionKey_ plugin)
-    setPluginGlobalData: (plugin, key, data) ->
-      @set (@_pluginGlobalKey_ plugin, key), data
-    getPluginGlobalData: (plugin, key) ->
-      _.cloneDeep (@get (@_pluginGlobalKey_ plugin, key))
-    setPluginRowData: (plugin, row, key, data) ->
-      @set (@_pluginRowKey_ plugin, row, key), data
-    getPluginRowData: (plugin, row, key) ->
-      _.cloneDeep (@get (@_pluginRowKey_ plugin, row, key))
+    setPluginDataVersion: (plugin, version) ->
+      @set (@_pluginDataVersionKey_ plugin), version
+    getPluginDataVersion: (plugin) ->
+      @get (@_pluginDataVersionKey_ plugin)
+    setPluginData: (plugin, key, data) ->
+      @set (@_pluginDataKey_ plugin, key), data
+    getPluginData: (plugin, key) ->
+      _.cloneDeep (@get (@_pluginDataKey_ plugin, key))
 
     # get next row ID
     getId: () -> # Suggest to override this for efficiency
