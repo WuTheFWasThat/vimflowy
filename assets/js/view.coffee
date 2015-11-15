@@ -10,6 +10,7 @@ if module?
   global.dataStore = require('./datastore.coffee')
   global.Register = require('./register.coffee')
   global.Logger = require('./logger.coffee')
+  global.PluginAPI = require('./plugins.coffee')
 
 ###
 a View represents the actual viewport onto the vimflowy document
@@ -188,7 +189,7 @@ window?.renderLine = renderLine
 (() ->
   MODES = constants.MODES
 
-  class View
+  class View extends EventEmitter
     containerDivID = (id) ->
       return 'node-' + id
 
@@ -199,6 +200,7 @@ window?.renderLine = renderLine
       return 'node-' + id + '-children'
 
     constructor: (data, options = {}) ->
+      super
       @data = data
 
       @bindings = options.bindings
@@ -213,6 +215,7 @@ window?.renderLine = renderLine
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @, row, 0
       @register = new Register @
+      @pluginAPI = new PluginAPI @
 
       @mutations = [] # full mutation history
       @history = [{
@@ -1220,6 +1223,7 @@ window?.renderLine = renderLine
           do @render
       lineContents = renderLine lineData, lineoptions
       [].push.apply results, lineContents
+      @emit 'renderLine', row, results, options # Listeners mutate the 'results' array to change rendering #TODO: Jeff, a better interface?
       return results
 
   # exports
