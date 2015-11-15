@@ -8,6 +8,7 @@ if module?
   global.Cursor = require('./cursor.coffee')
   global.Data = require('./data.coffee')
   global.dataStore = require('./datastore.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
   global.Register = require('./register.coffee')
   global.Logger = require('./logger.coffee')
 
@@ -188,7 +189,7 @@ window?.renderLine = renderLine
 (() ->
   MODES = constants.MODES
 
-  class View
+  class View extends EventEmitter
     containerDivID = (id) ->
       return 'node-' + id
 
@@ -199,6 +200,7 @@ window?.renderLine = renderLine
       return 'node-' + id + '-children'
 
     constructor: (data, options = {}) ->
+      super
       @data = data
 
       @bindings = options.bindings
@@ -832,6 +834,15 @@ window?.renderLine = renderLine
       mutation = new mutations.AddBlocks serialized_rows, parent, index, options
       @do mutation
 
+    addClones: (cloned_rows, parent, index = -1, options = {}) ->
+      for id in cloned_rows
+        original = @data.canonicalInstance id
+        if not @validateRowInsertion original, parent
+          return
+
+      mutation= new mutations.CloneBlocks cloned_rows, parent, index, options
+      @do mutation
+
     yankBlocks: (row, nrows) ->
       siblings = @data.getSiblingRange row, 0, (nrows-1)
       siblings = siblings.filter ((x) -> return x != null)
@@ -840,6 +851,14 @@ window?.renderLine = renderLine
 
     yankBlocksAtCursor: (nrows) ->
       @yankBlocks @cursor.row, nrows
+
+    yankBlocksClone: (row, nrows) ->
+      siblings = @data.getSiblingRange row, 0, (nrows-1)
+      siblings = siblings.filter ((x) -> return x != null)
+      @register.saveClonedRows (siblings.map (sibling) -> sibling.id)
+
+    yankBlocksCloneAtCursor: (nrows) ->
+      @yankBlocksClone @cursor.row, nrows
 
     detachBlock: (row, options = {}) ->
       mutation = new mutations.DetachBlock row, options
@@ -854,7 +873,21 @@ window?.renderLine = renderLine
     attachBlock: (row, parent, index = -1, options = {}) ->
       @do new mutations.AttachBlock row, parent, index, options
 
+    validateRowInsertion: (row, parent, sameParent=false) ->
+      if (not sameParent) and @data.wouldBeDoubledSiblingInsert row, parent
+        @showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
+        return false
+      if @data.wouldBeCircularInsertTree row, parent
+        @showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
+        return false
+      return true
+
     moveBlock: (row, parent, index = -1, options = {}) ->
+      sameParent = parent.id == (do row.getParent).id
+      if sameParent and index > @data.indexOf row
+        index = index - 1
+      if not (@validateRowInsertion row, parent, sameParent)
+        return row
       @detachBlock row, options
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
       @attachBlock row, parent, index, options
@@ -928,29 +961,27 @@ window?.renderLine = renderLine
 
     swapDown: (row = @cursor.row) ->
       next = @data.nextVisible (@data.lastVisible row)
-      if next == null
+      unless next?
         return
 
-      @detachBlock row
       if (@data.hasChildren next) and (not @data.collapsed next)
         # make it the first child
-        @attachBlock row, next, 0
+        @moveBlock row, next, 0
       else
         # make it the next sibling
         parent = do next.getParent
         p_i = @data.indexOf next
-        @attachBlock row, parent, (p_i+1)
+        @moveBlock row, parent, (p_i+1)
 
     swapUp: (row = @cursor.row) ->
       prev = @data.prevVisible row
-      if prev == null
+      unless prev?
         return
 
-      @detachBlock row
       # make it the previous sibling
       parent = do prev.getParent
       p_i = @data.indexOf prev
-      @attachBlock row, parent, p_i
+      @moveBlock row, parent, p_i
 
     toggleCurBlock: () ->
       @toggleBlock @cursor.row
@@ -1121,7 +1152,11 @@ window?.renderLine = renderLine
       childrenNodes = []
 
       for row in @data.getChildren parent
+        rowElements = []
 
+        if (@data.getParents row).length > 1
+          cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon' }
+          rowElements.push cloneIcon
         if @easy_motion_mappings and row.id of @easy_motion_mappings.id_to_key
           char = @easy_motion_mappings.id_to_key[row.id]
           bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent'}, [char]
@@ -1143,17 +1178,20 @@ window?.renderLine = renderLine
             ).bind(@, row)
 
           bullet = virtualDom.h 'i', bulletOpts
+        rowElements.push bullet
 
         elLine = virtualDom.h 'div', {
           id: rowDivID row.id
           className: 'node-text'
         }, (@virtualRenderLine row, options)
+        rowElements.push elLine
 
         options.ignoreCollapse = false
         children = virtualDom.h 'div', {
           id: childrenDivID row.id
           className: 'node-children'
         }, (@virtualRenderTree row, options)
+        rowElements.push children
 
         className = 'node'
         if row.id of options.highlight_blocks
@@ -1162,7 +1200,7 @@ window?.renderLine = renderLine
         childNode = virtualDom.h 'div', {
           id: containerDivID row.id
           className: className
-        }, [bullet, elLine, children]
+        }, rowElements
 
         childrenNodes.push childNode
       return childrenNodes
@@ -1220,6 +1258,7 @@ window?.renderLine = renderLine
           do @render
       lineContents = renderLine lineData, lineoptions
       [].push.apply results, lineContents
+      @emit 'renderLine', row, results, options # Listeners mutate the 'results' array to change rendering #TODO: Jeff, a better interface?
       return results
 
   # exports

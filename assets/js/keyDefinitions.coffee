@@ -527,7 +527,18 @@ For more info/context, see keyBindings.coffee
 
         @view.yankBetween @view.cursor, cursor, {}
         do @keyStream.forget
+    CLONE:
+      display: 'Yank blocks as a clone'
+      definition: () ->
+        @view.yankBlocksCloneAtCursor @repeat
+        do @keyStream.forget
   }
+
+  # jeff: c conflicts with change, so this doesn't work
+  # registerAction 'CLONE', 'Yank blocks as a clone', [MODES.VISUAL_LINE], () ->
+  #     @view.yankBlocksClone @row_start, @num_rows
+  #     @view.setMode MODES.NORMAL
+  #     do @keyStream.forget
 
   registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', [MODES.NORMAL], () ->
     @view.delCharsAfterCursor @repeat, {yank: true}
