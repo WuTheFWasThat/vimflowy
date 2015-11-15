@@ -1,30 +1,31 @@
 (() ->
+
   pad = (val, length, padChar = '0') ->
     val += ''
     numPads = length - val.length
     if (numPads > 0) then new Array(numPads + 1).join(padChar) + val else val
+
   sum = (a) ->
     total = 0
     for x in a
       total += x
     total
-  class TimeTrackingPlugin
-    @metadata =
-      name: "Time Tracking"
-      author: "Zachary Vance"
-      description: "Keeps track of how much time has been spent in each row (including its descendents)"
-      version: 3
-      stores_data: true
-      data_version: 3
-      requirements: []
 
+  Plugins.register {
+    name: "Time Tracking"
+    author: "Zachary Vance"
+    description: "Keeps track of how much time has been spent in each row (including its descendents)"
+    version: 3
+  }, (api) ->
+    time_tracker = new TimeTrackingPlugin api
+
+  class TimeTrackingPlugin
     constructor: (@api) ->
       do @enableAPI
-    
+
     enableAPI: () ->
-      @logger = do @api.getLogger
+      @logger = @api.logger
       @logger.info "Loading time tracking"
-      @database = do @api.getDatabase
       @api.cursor.on 'rowChange', (@onRowChange.bind @)
       @onRowChange undefined, @api.cursor.row # Initial setup
       @api.view.on 'renderLine', (@onRenderLine.bind @)
@@ -35,6 +36,15 @@
       @displayTime = true
       # TODO: Add view.on 'exit' to view
       #@api.view.on 'exit', (@onExit.bind @)
+
+    getRowData: (row, keytype) ->
+      key = "#{row.id}:#{keytype}"
+      @api.getData key
+    setRowData: (row, keytype, value) ->
+      key = "#{row.id}:#{keytype}"
+      @api.setData key, value
+    transformRowData: (row, keytype, transform) ->
+      @setRowData row, keytype, (transform (@getRowData row, keytype))
 
     _date: (timestamp) ->
       "#{timestamp.getFullYear()}-#{timestamp.getMonth()}-#{timestamp.getDate()}"
@@ -68,7 +78,7 @@
     # TODO: Debounce this function for batch processing
     onRowPeriod: (period) ->
       period.time = (period.stop - period.start)
-      @database.transformRowData period.row, "timePeriods", (current) =>
+      @transformRowData period.row, "timePeriods", (current) =>
         current ?= []
         current.push period
         current
@@ -89,9 +99,9 @@
           combined[date] += dailyTime[date] ? 0
       combined
     _addTimeToRow: (row, time, day) ->
-      @database.transformRowData row, "rowTotalTime", (current) ->
+      @transformRowData row, "rowTotalTime", (current) ->
         (current ? 0) + time
-      @database.transformRowData row, "rowDailyTime", (current) =>
+      @transformRowData row, "rowDailyTime", (current) =>
         key = @_date day
         current ?= {}
         current[key] = (current[key] ? 0) + time
@@ -99,18 +109,18 @@
     _rebuildRowTimes: (row) -> # Unused, but keep for data migration in future versions
       totalTime = 0
       dailyTime = {}
-      for period in @database.getRowData row, "timePeriods" ? []
+      for period in @getRowData row, "timePeriods" ? []
         totalTime += period.time
         key = @_date day
         dailyTime[key] = (dailyTime[key] ? 0) + period.time
-      @database.setRowData row, "rowTotalTime", totalTime
-      @database.setRowData row, "rowDailyTime", dailyTime
+      @setRowData row, "rowTotalTime", totalTime
+      @setRowData row, "rowDailyTime", dailyTime
     _addTimeToAncestors: (row, time, day) ->
       for ancestorId in @api.view.data.allAncestors row.id, { inclusive: true }
         ancestor = @api.view.data.canonicalInstance ancestorId
-        @database.transformRowData ancestor, "treeTotalTime", (current) ->
+        @transformRowData ancestor, "treeTotalTime", (current) ->
           (current ? 0) + time
-        @database.transformRowData ancestor, "treeDailyTime", (current) =>
+        @transformRowData ancestor, "treeDailyTime", (current) =>
           key = @_date day
           current ?= {}
           current[key] = (current[key] ? 0) + time
@@ -118,27 +128,28 @@
     _rebuildTreeTimes: (row) ->
       children = @api.view.data.getChildren row
 
-      childTotalTimes = _.map children, (child) -> @database.getRowData child, "treeTotalTime"
-      rowTotalTime = @database.getRowData row, "rowTotalTime"
+      childTotalTimes = _.map children, (child) => @getRowData child, "treeTotalTime"
+      rowTotalTime = @getRowData row, "rowTotalTime"
       totalTimes = _.compact ([rowTotalTime].concat childTotalTimes)
       totalTime = sum totalTimes
-      @database.setRowData row, "treeTotalTime", (current) =>
+      @setRowData row, "treeTotalTime", (current) =>
 
-      childDailyTimes = _.map children, (child) -> @database.getRowData child, "treeDailyTime"
-      rowDailyTime = @database.getRowData row, "rowDailyTime"
+      childDailyTimes = _.map children, (child) => @getRowData child, "treeDailyTime"
+      rowDailyTime = @getRowData row, "rowDailyTime"
       dailyTimes = _.compact ([rowDailyTime].concat childDailyTimes)
       dailyTime = @_combineDailyTimes.apply @, dailyTimes
-      @database.setRowData row, "treeDailyTime", dailyTime
-    
+      @setRowData row, "treeDailyTime", dailyTime
+
     rowTime: (row, range) ->
       if range?
-        times = @database.getRowData row, "treeDailyTime"
+        times = @getRowData row, "treeDailyTime"
         time = 0
         for date in @daysBetween range.start, range.stop
           time += times[@_date date] ? 0
         time
       else
-        @database.getRowData row, "treeTotalTime"
+        @getRowData row, "treeTotalTime"
+
     printTime: (ms) ->
       seconds = Math.floor (ms /     1000 % 60)
       minutes = Math.floor (ms /    60000 % 60)
@@ -162,7 +173,4 @@
             className: 'time'
           }, " " + (@printTime time)
 
-    # exports
-    module?.exports = TimeTrackingPlugin
-    window?.registerPlugin?(TimeTrackingPlugin)
 )()
