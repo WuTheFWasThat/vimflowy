@@ -112,6 +112,9 @@ gulp.task 'vendor', ->
   gulp.src 'node_modules/lodash/index.js'
     .pipe rename "lodash.js"
     .pipe gulp.dest "#{out_folder}/"
+  gulp.src 'node_modules/tv4/tv4.js'
+    .pipe rename "tv4.js"
+    .pipe gulp.dest "#{out_folder}/"
 
 gulp.task 'plugins', [
   'plugins_coffee',
