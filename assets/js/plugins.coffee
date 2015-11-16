@@ -1,5 +1,7 @@
 if module?
   global._ = require('lodash')
+  global.tv4 = require('tv4')
+
   global.Logger = require('./logger.coffee')
   global.errors = require('./errors.coffee')
   global.DependencyGraph = require('dependencies-online')
@@ -27,30 +29,50 @@ if module?
       @data.store.getPluginData @name, key
 
   PLUGIN_SCHEMA = {
-     name: {
-       required: true
-       type: String
-     }
-     version: {
-       type: Number
-       default: 1
-     }
-     requirements: {
-       type: [String]
-       # a list of other plugins
-       default: []
-     }
-     author: {
-       type: String
-     }
-     description: {
-       type: String
-     }
-     data_version: {
-       type: Number
-       default: 1
-     }
+    title: "Plugin metadata schema"
+    type: "object"
+    required: [ 'name' ]
+    properties: {
+      name: {
+        description: "Name of the plugin"
+        pattern: "^[A-Za-z0-9_ ]{3,20}$"
+        type: "string"
+      }
+      version: {
+        description: "Version of the plugin"
+        type: "number"
+        default: 1
+        minimum: 1
+      }
+      author: {
+        description: "Author of the plugin"
+        type: "string"
+      }
+      description: {
+        description: "Description of the plugin"
+        type: "string"
+      }
+      dependencies: {
+        description: "Dependencies of the plugin - a list of other plugins"
+        type: "array"
+        items: { type: "string" }
+        default: []
+      }
+      data_version: {
+        description: "Version of data format for plugin"
+        type: "integer"
+        default: 1
+        minimum: 1
+      }
+    }
   }
+
+  # shim for filling in default values, with tv4
+  tv4.fill_defaults = (data, schema) ->
+    for prop, prop_info of schema.properties
+      if prop not of data
+        if 'default' of prop_info
+          data[prop] = prop_info['default']
 
   class PluginsManager
     constructor: () ->
@@ -58,22 +80,11 @@ if module?
       @pluginDependencies = new DependencyGraph
 
     validate: (plugin_metadata) ->
-      for prop, prop_info of PLUGIN_SCHEMA
-        if prop not of plugin_metadata
-          if 'default' of prop_info
-            plugin_metadata[prop] = prop_info['default']
-          else
-            throw new errors.GenericError(
-              "Plugin #{plugin_metadata?.name ? "<Unnamed Plugin>"} has missing metadata field #{prop}"
-            )
-        else
-          # TODO: validate the type?
-
-      for prop, value of plugin_metadata
-        if prop not of PLUGIN_SCHEMA
-          throw new errors.GenericError(
-            "Property #{prop} not valid plugin property"
-          )
+      if not tv4.validate(plugin_metadata, PLUGIN_SCHEMA, true, true)
+        throw new errors.GenericError(
+          "Error validating plugin #{JSON.stringify(plugin_metadata, null, 2)}: #{JSON.stringify(tv4.error)}"
+        )
+      tv4.fill_defaults plugin_metadata, PLUGIN_SCHEMA
 
     resolveView: (view) ->
       @view = view
@@ -101,11 +112,11 @@ if module?
       @plugins[plugin_metadata.name] = plugin_metadata
       Logger.logger.info "Plugin #{plugin_metadata.name} registered"
 
-      requirements = _.clone (_.result plugin_metadata, 'requirements', [])
-      requirements.push '_view'
+      dependencies = _.clone (_.result plugin_metadata, 'dependencies', [])
+      dependencies.push '_view'
 
       # Load the plugin after all its dependencies have loaded
-      @pluginDependencies.add plugin_metadata.name, requirements, () =>
+      @pluginDependencies.add plugin_metadata.name, dependencies, () =>
         @load plugin_metadata, cb
 
   Plugins = new PluginsManager

@@ -1,4 +1,7 @@
 if module?
+  global.tv4 = require('tv4')
+
+  global.errors = require('./errors.coffee')
   global.constants = require('./constants.coffee')
 
 ###
@@ -61,71 +64,126 @@ For more info/context, see keyBindings.coffee
   #     pastEnd: whether to allow going past the end of the line
   #     pastEndWord: whether we consider the end of a word to be after the last letter
 
+  MOTION_SCHEMA = {
+    title: "Motion metadata schema"
+    type: "object"
+    required: [ 'name', 'description' ]
+    properties: {
+      name: {
+        description: "Name of the motion"
+        type: "string"
+      }
+      description: {
+        description: "Description of the plugin"
+        type: "string"
+      }
+    }
+  }
+
   motionDefinitions = {}
 
   registerSubmotion = (
     mainDefinition,
-    name,
-    description,
+    motion,
     definition
   ) ->
-    mainDefinition[name] = {
-      name: name
-      description: description
-      definition: definition
-    }
+    if not tv4.validate(motion, MOTION_SCHEMA, true, true)
+      throw new errors.GenericError(
+        "Error validating motion #{JSON.stringify(motion, null, 2)}: #{JSON.stringify(tv4.error)}"
+      )
+    motion.definition = definition
+    mainDefinition[motion.name] = motion
 
   registerMotion = registerSubmotion.bind @, motionDefinitions
 
-  registerMotion 'LEFT', 'Move cursor left', () ->
+  registerMotion {
+    name: 'LEFT',
+    description: 'Move cursor left',
+  }, () ->
     return (cursor, options) ->
       cursor.left options
 
-  registerMotion 'RIGHT', 'Move cursor right', () ->
+  registerMotion {
+    name: 'RIGHT',
+    description: 'Move cursor right',
+  }, () ->
     return (cursor, options) ->
       cursor.right options
 
-  registerMotion 'UP', 'Move cursor up', () ->
+  registerMotion {
+    name: 'UP',
+    description: 'Move cursor up',
+  }, () ->
     return (cursor, options) ->
       cursor.up options
 
-  registerMotion 'DOWN', 'Move cursor down', () ->
+  registerMotion {
+    name: 'DOWN',
+    description: 'Move cursor down',
+  }, () ->
     return (cursor, options) ->
       cursor.down options
 
-  registerMotion 'HOME', 'Move cursor to beginning of line', () ->
+  registerMotion {
+    name: 'HOME',
+    description: 'Move cursor to beginning of line',
+  }, () ->
     return (cursor, options) ->
       cursor.home options
 
-  registerMotion 'END', 'Move cursor to end of line', () ->
+  registerMotion {
+    name: 'END',
+    description: 'Move cursor to end of line',
+  }, () ->
     return (cursor, options) ->
       cursor.end options
 
-  registerMotion 'BEGINNING_WORD', 'Move cursor to the first word-beginning before it', () ->
+  registerMotion {
+    name: 'BEGINNING_WORD',
+    description: 'Move cursor to the first word-beginning before it',
+  }, () ->
     return (cursor, options) ->
       cursor.beginningWord {cursor: options}
 
-  registerMotion 'END_WORD', 'Move cursor to the first word-ending after it', () ->
+  registerMotion {
+    name: 'END_WORD',
+    description: 'Move cursor to the first word-ending after it',
+  }, () ->
     return (cursor, options) ->
       cursor.endWord {cursor: options}
 
-  registerMotion 'NEXT_WORD', 'Move cursor to the beginning of the next word', () ->
+  registerMotion {
+    name: 'NEXT_WORD',
+    description: 'Move cursor to the beginning of the next word',
+  }, () ->
     return (cursor, options) ->
       cursor.nextWord {cursor: options}
 
-  registerMotion 'BEGINNING_WWORD', 'Move cursor to the first Word-beginning before it', () ->
+  registerMotion {
+    name: 'BEGINNING_WWORD',
+    description: 'Move cursor to the first Word-beginning before it',
+  }, () ->
     return (cursor, options) ->
       cursor.beginningWord {cursor: options, whitespaceWord: true}
 
-  registerMotion 'END_WWORD', 'Move cursor to the first Word-ending after it', () ->
+  registerMotion {
+    name: 'END_WWORD',
+    description: 'Move cursor to the first Word-ending after it',
+  }, () ->
     return (cursor, options) ->
       cursor.endWord {cursor: options, whitespaceWord: true}
 
-  registerMotion 'NEXT_WWORD', 'Move cursor to the beginning of the next Word', () ->
+  registerMotion {
+    name: 'NEXT_WWORD',
+    description: 'Move cursor to the beginning of the next Word',
+  }, () ->
     return (cursor, options) ->
       cursor.nextWord {cursor: options, whitespaceWord: true}
 
-  registerMotion 'FIND_NEXT_CHAR', 'Move cursor to next occurrence of character in line', () ->
+  registerMotion {
+    name: 'FIND_NEXT_CHAR',
+    description: 'Move cursor to next occurrence of character in line',
+  }, () ->
     key = do @keyStream.dequeue
     if key == null
       do @keyStream.wait
@@ -133,7 +191,10 @@ For more info/context, see keyBindings.coffee
     return (cursor, options) ->
       cursor.findNextChar key, {cursor: options}
 
-  registerMotion 'FIND_PREV_CHAR', 'Move cursor to previous occurrence of character in line', () ->
+  registerMotion {
+    name: 'FIND_PREV_CHAR',
+    description: 'Move cursor to previous occurrence of character in line',
+  }, () ->
     key = do @keyStream.dequeue
     if key == null
       do @keyStream.wait
@@ -141,7 +202,10 @@ For more info/context, see keyBindings.coffee
     return (cursor, options) ->
       cursor.findPrevChar key, {cursor: options}
 
-  registerMotion 'TO_NEXT_CHAR', 'Move cursor to just before next occurrence of character in line', () ->
+  registerMotion {
+    name: 'TO_NEXT_CHAR',
+    description: 'Move cursor to just before next occurrence of character in line',
+  }, () ->
     key = do @keyStream.dequeue
     if key == null
       do @keyStream.wait
@@ -149,7 +213,10 @@ For more info/context, see keyBindings.coffee
     return (cursor, options) ->
       cursor.findNextChar key, {cursor: options, beforeFound: true}
 
-  registerMotion 'TO_PREV_CHAR', 'Move cursor to just after previous occurrence of character in line', () ->
+  registerMotion {
+    name: 'TO_PREV_CHAR',
+    description: 'Move cursor to just after previous occurrence of character in line',
+  }, () ->
     key = do @keyStream.dequeue
     if key == null
       do @keyStream.wait
@@ -157,20 +224,31 @@ For more info/context, see keyBindings.coffee
     return (cursor, options) ->
       cursor.findPrevChar key, {cursor: options, beforeFound: true}
 
-  registerMotion 'NEXT_SIBLING', 'Move cursor to the next sibling of the current line', () ->
+  registerMotion {
+    name: 'NEXT_SIBLING',
+    description: 'Move cursor to the next sibling of the current line',
+  }, () ->
     return (cursor, options) ->
       cursor.nextSibling options
 
-  registerMotion 'PREV_SIBLING', 'Move cursor to the previous sibling of the current line', () ->
+  registerMotion {
+    name: 'PREV_SIBLING',
+    description: 'Move cursor to the previous sibling of the current line',
+  }, () ->
     return (cursor, options) ->
       cursor.prevSibling options
 
-
-  registerMotion 'GO_END', 'Go to end of visible document', () ->
+  registerMotion {
+    name: 'GO_END',
+    description: 'Go to end of visible document',
+  }, () ->
     return (cursor, options) ->
       cursor.visibleEnd options
 
-  registerMotion 'EASY_MOTION', 'Jump to a visible row (based on EasyMotion)', () ->
+  registerMotion {
+    name: 'EASY_MOTION',
+    description: 'Jump to a visible row (based on EasyMotion)',
+  }, () ->
     key = do @keyStream.dequeue
     if key == null
       do @keyStream.wait
@@ -212,44 +290,81 @@ For more info/context, see keyBindings.coffee
         @view.easy_motion_mappings = null
 
   go_definition = {} # bindings for second key
-  registerSubmotion go_definition, 'GO', 'Go to the beginning of visible document', () ->
+  registerSubmotion go_definition, {
+    name: 'GO',
+    description: 'Go to the beginning of visible document',
+  }, () ->
     return (cursor, options) ->
       cursor.visibleHome options
-  registerSubmotion go_definition, 'PARENT', 'Go to the parent of current line', () ->
+  registerSubmotion go_definition, {
+    name: 'PARENT',
+    description: 'Go to the parent of current line',
+  }, () ->
     return (cursor, options) ->
       cursor.parent options
-  registerSubmotion go_definition, 'MARK', 'Go to the mark indicated by the cursor, if it exists', () ->
+  registerSubmotion go_definition, {
+    name: 'MARK',
+    description: 'Go to the mark indicated by the cursor, if it exists',
+  },  () ->
     return (cursor, options) ->
       do cursor.goMark
-  registerMotion 'GO', 'Various commands for navigation (operator)', go_definition
+  registerMotion {
+    name: 'GO',
+    description: 'Various commands for navigation (operator)',
+  }, go_definition
+
+  ACTION_SCHEMA = {
+    title: "Action metadata schema"
+    type: "object"
+    required: [ 'name', 'description' ]
+    properties: {
+      name: {
+        description: "Name of the action"
+        type: "string"
+      }
+      description: {
+        description: "Description of the action"
+        type: "string"
+      }
+    }
+  }
 
   actionDefinitions = {}
 
   registerSubaction = (
     mainDefinition,
-    name,
-    description,
     modes,
+    action,
     definition
   ) ->
+    if not tv4.validate(action, ACTION_SCHEMA, true, true)
+      throw new errors.GenericError(
+        "Error validating action #{JSON.stringify(action, null, 2)}: #{JSON.stringify(tv4.error)}"
+      )
     for mode in modes
       if not (mode of mainDefinition)
         mainDefinition[mode] = {}
-      if not (name of mainDefinition[mode])
-        mainDefinition[mode][name] = {}
-      mainDefinition[mode][name].name = name
-      mainDefinition[mode][name].description = description
-      mainDefinition[mode][name].definition = definition
+      mainDefinition[mode][action.name] = _.cloneDeep action
+      mainDefinition[mode][action.name].definition = definition
 
   registerAction = registerSubaction.bind @, actionDefinitions
 
-  registerAction 'MOTION', 'Move the cursor', [MODES.NORMAL], (motion) ->
+  registerAction [MODES.NORMAL], {
+    name: 'MOTION',
+    description: 'Move the cursor',
+  }, (motion) ->
     for i in [1..@repeat]
       motion @view.cursor, {}
     do @keyStream.forget
-  registerAction 'MOTION', 'Move the cursor', [MODES.INSERT], (motion) ->
+  registerAction [MODES.INSERT], {
+    name: 'MOTION',
+    description: 'Move the cursor',
+  }, (motion) ->
     motion @view.cursor, {pastEnd: true}
-  registerAction 'MOTION', 'Move the cursor', [MODES.VISUAL], (motion) ->
+  registerAction [MODES.VISUAL], {
+    name: 'MOTION',
+    description: 'Move the cursor',
+  }, (motion) ->
     # this is necessary until we figure out multiline
     tmp = do @view.cursor.clone
     for i in [1..@repeat]
@@ -259,79 +374,151 @@ For more info/context, see keyBindings.coffee
       @view.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
     else
       @view.cursor.from tmp
-  registerAction 'MOTION', 'Move the cursor', [MODES.VISUAL_LINE], (motion) ->
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'MOTION',
+    description: 'Move the cursor',
+  }, (motion) ->
     for i in [1..@repeat]
       motion @view.cursor, {pastEnd: true}
-  registerAction 'MOTION', 'Move the cursor', [MODES.MARK], (motion) ->
+  registerAction [MODES.MARK], {
+    name: 'MOTION',
+    description: 'Move the cursor',
+  }, (motion) ->
     motion @view.markview.cursor, {pastEnd: true}
-  registerAction 'MOTION', 'Move the cursor', [MODES.SEARCH], (motion) ->
+  registerAction [MODES.SEARCH], {
+    name: 'MOTION',
+    description: 'Move the cursor',
+  }, (motion) ->
     motion @view.menu.view.cursor, {pastEnd: true}
 
-  registerAction 'HELP', 'Show/hide key bindings (edit in settings)', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'HELP',
+    description: 'Show/hide key bindings (edit in settings)',
+  }, () ->
     do @view.toggleBindingsDiv
     do @keyStream.forget
 
-  registerAction 'ZOOM_IN', 'Zoom in by one level', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'ZOOM_IN',
+    description: 'Zoom in by one level',
+  }, () ->
     do @view.rootDown
     if @mode == MODES.NORMAL
       do @keyStream.save
-  registerAction 'ZOOM_OUT', 'Zoom out by one level', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'ZOOM_OUT',
+    description: 'Zoom out by one level',
+  }, () ->
     do @view.rootUp
     if @mode == MODES.NORMAL
       do @keyStream.save
-  registerAction 'ZOOM_IN_ALL', 'Zoom in onto cursor', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'ZOOM_IN_ALL',
+    description: 'Zoom in onto cursor',
+  }, () ->
     do @view.rootInto
     if @mode == MODES.NORMAL
       do @keyStream.save
-  registerAction 'ZOOM_OUT_ALL', 'Zoom out to home', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'ZOOM_OUT_ALL',
+    description: 'Zoom out to home',
+  }, () ->
     do @view.reroot
     if @mode == MODES.NORMAL
       do @keyStream.save
 
-  registerAction 'INDENT_RIGHT', 'Indent row right', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'INDENT_RIGHT',
+    description: 'Indent row right',
+  }, () ->
     do @view.indent
     do @keyStream.save
-  registerAction 'INDENT_RIGHT', 'Indent row right', [MODES.INSERT], () ->
+  registerAction [MODES.INSERT], {
+    name: 'INDENT_RIGHT',
+    description: 'Indent row right',
+  }, () ->
     do @view.indent
   # NOTE: this matches block indent behavior, in visual line
-  registerAction 'INDENT_RIGHT', 'Indent row right', [MODES.VISUAL_LINE], (do visual_line_indent)
-  registerAction 'INDENT_LEFT', 'Indent row left', [MODES.NORMAL], () ->
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'INDENT_RIGHT',
+    description: 'Indent row right',
+  }, (do visual_line_indent)
+  registerAction [MODES.NORMAL], {
+    name: 'INDENT_LEFT',
+    description: 'Indent row left',
+  }, () ->
     do @view.unindent
     do @keyStream.save
-  registerAction 'INDENT_LEFT', 'Indent row left', [MODES.INSERT], () ->
+  registerAction [MODES.INSERT], {
+    name: 'INDENT_LEFT',
+    description: 'Indent row left',
+  }, () ->
     do @view.unindent
   # NOTE: this matches block indent behavior, in visual line
-  registerAction 'INDENT_LEFT', 'Indent row left', [MODES.VISUAL_LINE], (do visual_line_unindent)
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'INDENT_LEFT',
+    description: 'Indent row left',
+  }, (do visual_line_unindent)
 
-  registerAction 'MOVE_BLOCK_RIGHT', 'Move block right', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'MOVE_BLOCK_RIGHT',
+    description: 'Move block right',
+  }, () ->
     @view.indentBlocks @view.cursor.row, @repeat
     do @keyStream.save
-  registerAction 'MOVE_BLOCK_RIGHT', 'Move block right', [MODES.INSERT], () ->
+  registerAction [MODES.INSERT], {
+    name: 'MOVE_BLOCK_RIGHT',
+    description: 'Move block right',
+  }, () ->
     @view.indentBlocks @view.cursor.row, 1
-  registerAction 'MOVE_BLOCK_RIGHT', 'Move block right', [MODES.VISUAL_LINE], (do visual_line_indent)
-  registerAction 'MOVE_BLOCK_LEFT', 'Move block left', [MODES.NORMAL], () ->
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'MOVE_BLOCK_RIGHT',
+    description: 'Move block right',
+  }, (do visual_line_indent)
+  registerAction [MODES.NORMAL], {
+    name: 'MOVE_BLOCK_LEFT',
+    description: 'Move block left',
+  }, () ->
     @view.unindentBlocks @view.cursor.row, @repeat
     do @keyStream.save
-  registerAction 'MOVE_BLOCK_LEFT', 'Move block left', [MODES.INSERT], () ->
+  registerAction [MODES.INSERT], {
+    name: 'MOVE_BLOCK_LEFT',
+    description: 'Move block left',
+  }, () ->
     @view.unindentBlocks @view.cursor.row, 1
-  registerAction 'MOVE_BLOCK_LEFT', 'Move block left', [MODES.VISUAL_LINE], (do visual_line_unindent)
-  registerAction 'MOVE_BLOCK_DOWN', 'Move block down', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'MOVE_BLOCK_LEFT',
+    description: 'Move block left',
+  }, (do visual_line_unindent)
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'MOVE_BLOCK_DOWN',
+    description: 'Move block down',
+  }, () ->
     do @view.swapDown
     if @mode == MODES.NORMAL
       do @keyStream.save
-  registerAction 'MOVE_BLOCK_UP', 'Move block up', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'MOVE_BLOCK_UP',
+    description: 'Move block up',
+  }, () ->
     do @view.swapUp
     if @mode == MODES.NORMAL
       do @keyStream.save
 
-  registerAction 'TOGGLE_FOLD', 'Toggle whether a block is folded', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'TOGGLE_FOLD',
+    description: 'Toggle whether a block is folded',
+  }, () ->
     do @view.toggleCurBlock
     if @mode == MODES.NORMAL
       do @keyStream.save
 
   # content-based navigation
 
-  registerAction 'SEARCH', 'Search', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'SEARCH',
+    description: 'Search',
+  }, () ->
     @view.setMode MODES.SEARCH
     @view.menu = new Menu @view.menuDiv, (chars) =>
       results = []
@@ -358,15 +545,24 @@ For more info/context, see keyBindings.coffee
     do @view.menu.update
     do @keyStream.forget
 
-  registerAction 'MARK', 'Mark a line', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'MARK',
+    description: 'Mark a line',
+  }, () ->
     @view.setMode MODES.MARK
     do @keyStream.forget
-  registerAction 'FINISH_MARK', 'Finish typing mark', [MODES.MARK], () ->
+  registerAction [MODES.MARK], {
+    name: 'FINISH_MARK',
+    description: 'Finish typing mark',
+  }, () ->
     mark = (do @view.markview.curText).join ''
     @view.setMark @view.markrow, mark
     @view.setMode MODES.NORMAL
     do @keyStream.save
-  registerAction 'MARK_SEARCH', 'Go to (search for) a mark', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'MARK_SEARCH',
+    description: 'Go to (search for) a mark',
+  }, () ->
     @view.setMode MODES.SEARCH
     @view.menu = new Menu @view.menuDiv, (chars) =>
       results = []
@@ -389,53 +585,92 @@ For more info/context, see keyBindings.coffee
 
     do @view.menu.update
     do @keyStream.forget
-  registerAction 'JUMP_PREVIOUS', 'Jump to previous location', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'JUMP_PREVIOUS',
+    description: 'Jump to previous location',
+  }, () ->
     do @view.jumpPrevious
     do @keyStream.forget
-  registerAction 'JUMP_NEXT', 'Jump to next location', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'JUMP_NEXT',
+    description: 'Jump to next location',
+  }, () ->
     do @view.jumpNext
     do @keyStream.forget
 
   # traditional vim stuff
-  registerAction 'INSERT', 'Insert at character', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'INSERT',
+    description: 'Insert at character',
+  }, () ->
     @view.setMode MODES.INSERT
-  registerAction 'INSERT_AFTER', 'Insert after character', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'INSERT_AFTER',
+    description: 'Insert after character',
+  }, () ->
     @view.setMode MODES.INSERT
     @view.cursor.right {pastEnd: true}
-  registerAction 'INSERT_HOME', 'Insert at beginning of line', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'INSERT_HOME',
+    description: 'Insert at beginning of line',
+  }, () ->
     @view.setMode MODES.INSERT
     do @view.cursor.home
-  registerAction 'INSERT_END', 'Insert after end of line', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'INSERT_END',
+    description: 'Insert after end of line',
+  }, () ->
     @view.setMode MODES.INSERT
     @view.cursor.end {pastEnd: true}
-  registerAction 'INSERT_LINE_BELOW', 'Insert on new line after current line', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'INSERT_LINE_BELOW',
+    description: 'Insert on new line after current line',
+  }, () ->
     @view.setMode MODES.INSERT
     do @view.newLineBelow
-  registerAction 'INSERT_LINE_ABOVE', 'Insert on new line before current line', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'INSERT_LINE_ABOVE',
+    description: 'Insert on new line before current line',
+  }, () ->
     @view.setMode MODES.INSERT
     do @view.newLineAbove
 
   # TODO: visual and visual_line mode
-  registerAction 'REPLACE', 'Replace character', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'REPLACE',
+    description: 'Replace character',
+  }, () ->
     key = do @keyStream.dequeue
     if key == null then return do @keyStream.wait
     @view.replaceCharsAfterCursor key, @repeat, {setCursor: 'end'}
     do @keyStream.save
 
-  registerAction 'UNDO', 'Undo', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'UNDO',
+    description: 'Undo',
+  }, () ->
     for i in [1..@repeat]
       do @view.undo
     do @keyStream.forget
-  registerAction 'REDO', 'Redo', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'REDO',
+    description: 'Redo',
+  }, () ->
     for i in [1..@repeat]
       do @view.redo
     do @keyStream.forget
-  registerAction 'REPLAY', 'Replay last command', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'REPLAY',
+    description: 'Replay last command',
+  }, () ->
     for i in [1..@repeat]
       @keyHandler.playRecording @keyStream.lastSequence
       do @view.save
     do @keyStream.forget
-  registerAction 'RECORD_MACRO', 'Begin/stop recording a macro', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'RECORD_MACRO',
+    description: 'Begin/stop recording a macro',
+  }, () ->
     if @keyHandler.recording.stream == null
       key = do @keyStream.dequeue
       if key == null then return do @keyStream.wait
@@ -445,7 +680,10 @@ For more info/context, see keyBindings.coffee
       do @keyHandler.recording.stream.queue.pop
       do @keyHandler.finishRecording
     do @keyStream.forget
-  registerAction 'PLAY_MACRO', 'Play a macro', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'PLAY_MACRO',
+    description: 'Play a macro',
+  }, () ->
     key = do @keyStream.dequeue
     if key == null then return do @keyStream.wait
     recording = @keyHandler.macros[key]
@@ -455,9 +693,18 @@ For more info/context, see keyBindings.coffee
     # save the macro-playing sequence itself
     do @keyStream.save
 
-  registerAction 'DELETE', 'Delete', [MODES.VISUAL], (do visual_mode_delete_fn)
-  registerAction 'DELETE', 'Delete', [MODES.VISUAL_LINE], (do visual_line_mode_delete_fn)
-  registerAction 'DELETE', 'Delete (operator)', [MODES.NORMAL], {
+  registerAction [MODES.VISUAL], {
+    name: 'DELETE',
+    description: 'Delete',
+  }, (do visual_mode_delete_fn)
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'DELETE',
+    description: 'Delete',
+  }, (do visual_line_mode_delete_fn)
+  registerAction [MODES.NORMAL], {
+    name: 'DELETE',
+    description: 'Delete (operator)',
+  }, {
     DELETE:
       description: 'Delete blocks'
       definition: () ->
@@ -479,14 +726,23 @@ For more info/context, see keyBindings.coffee
         do @keyStream.save
   }
 
-  registerAction 'CHANGE', 'Change', [MODES.VISUAL], () ->
+  registerAction [MODES.VISUAL], {
+    name: 'CHANGE',
+    description: 'Change',
+  }, () ->
     options = {includeEnd: true, yank: true, cursor: {pastEnd: true}}
     @view.deleteBetween @view.cursor, @view.anchor, options
     @view.setMode MODES.INSERT
-  registerAction 'CHANGE', 'Change', [MODES.VISUAL_LINE], () ->
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'CHANGE',
+    description: 'Change',
+  }, () ->
     @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: true}
     @view.setMode MODES.INSERT
-  registerAction 'CHANGE', 'Change (operator)', [MODES.NORMAL], {
+  registerAction [MODES.NORMAL], {
+    name: 'CHANGE',
+    description: 'Change (operator)',
+  }, {
     CHANGE:
       description: 'Delete blocks, and enter insert mode'
       definition: () ->
@@ -503,16 +759,25 @@ For more info/context, see keyBindings.coffee
         @view.deleteBetween @view.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
   }
 
-  registerAction 'YANK', 'Yank', [MODES.VISUAL], () ->
+  registerAction [MODES.VISUAL], {
+    name: 'YANK',
+    description: 'Yank',
+  }, () ->
     options = {includeEnd: true}
     @view.yankBetween @view.cursor, @view.anchor, options
     @view.setMode MODES.NORMAL
     do @keyStream.forget
-  registerAction 'YANK', 'Yank', [MODES.VISUAL_LINE], () ->
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'YANK',
+    description: 'Yank',
+  }, () ->
     @view.yankBlocks @row_start, @num_rows
     @view.setMode MODES.NORMAL
     do @keyStream.forget
-  registerAction 'YANK', 'Yank (operator)', [MODES.NORMAL], {
+  registerAction [MODES.NORMAL], {
+    name: 'YANK',
+    description: 'Yank (operator)',
+  }, {
     YANK:
       description: 'Yank blocks'
       definition: () ->
@@ -529,41 +794,83 @@ For more info/context, see keyBindings.coffee
         do @keyStream.forget
   }
 
-  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'DELETE_CHAR',
+    description: 'Delete character at the cursor (i.e. del key)',
+  }, () ->
     @view.delCharsAfterCursor @repeat, {yank: true}
     do @keyStream.save
   # behaves like row delete, in visual line
-  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', [MODES.VISUAL], (do visual_mode_delete_fn)
-  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', [MODES.VISUAL_LINE], (do visual_line_mode_delete_fn)
-  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', [MODES.INSERT], () ->
+  registerAction [MODES.VISUAL], {
+    name: 'DELETE_CHAR',
+    description: 'Delete character at the cursor (i.e. del key)',
+  }, (do visual_mode_delete_fn)
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'DELETE_CHAR',
+    description: 'Delete character at the cursor (i.e. del key)',
+  }, (do visual_line_mode_delete_fn)
+  registerAction [MODES.INSERT], {
+    name: 'DELETE_CHAR',
+    description: 'Delete character at the cursor (i.e. del key)',
+  }, () ->
     @view.delCharsAfterCursor 1
-  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', [MODES.MARK], () ->
+  registerAction [MODES.MARK], {
+    name: 'DELETE_CHAR',
+    description: 'Delete character at the cursor (i.e. del key)',
+  }, () ->
     @view.markview.delCharsAfterCursor 1
-  registerAction 'DELETE_CHAR', 'Delete character at the cursor (i.e. del key)', [MODES.SEARCH], () ->
+  registerAction [MODES.SEARCH], {
+    name: 'DELETE_CHAR',
+    description: 'Delete character at the cursor (i.e. del key)',
+  }, () ->
     @view.menu.view.delCharsAfterCursor 1
 
-  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'DELETE_LAST_CHAR',
+    description: 'Delete last character (i.e. backspace key)',
+  }, () ->
     num = Math.min @view.cursor.col, @repeat
     if num > 0
       @view.delCharsBeforeCursor num, {yank: true}
     do @keyStream.save
   # behaves like row delete, in visual line
-  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', [MODES.VISUAL], (do visual_mode_delete_fn)
-  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', [MODES.VISUAL_LINE], (do visual_line_mode_delete_fn)
-  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', [MODES.INSERT], () ->
+  registerAction [MODES.VISUAL], {
+    name: 'DELETE_LAST_CHAR',
+    description: 'Delete last character (i.e. backspace key)',
+  }, (do visual_mode_delete_fn)
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'DELETE_LAST_CHAR',
+    description: 'Delete last character (i.e. backspace key)',
+  }, (do visual_line_mode_delete_fn)
+  registerAction [MODES.INSERT], {
+    name: 'DELETE_LAST_CHAR',
+    description: 'Delete last character (i.e. backspace key)',
+  }, () ->
     do @view.deleteAtCursor
-  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', [MODES.MARK], () ->
+  registerAction [MODES.MARK], {
+    name: 'DELETE_LAST_CHAR',
+    description: 'Delete last character (i.e. backspace key)',
+  }, () ->
     do @view.markview.deleteAtCursor
-  registerAction 'DELETE_LAST_CHAR', 'Delete last character (i.e. backspace key)', [MODES.SEARCH], () ->
+  registerAction [MODES.SEARCH], {
+    name: 'DELETE_LAST_CHAR',
+    description: 'Delete last character (i.e. backspace key)',
+  }, () ->
     do @view.menu.view.deleteAtCursor
 
-  registerAction 'CHANGE_CHAR', 'Change character', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'CHANGE_CHAR',
+    description: 'Change character',
+  }, () ->
     @view.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
     @view.setMode MODES.INSERT
 
   # TODO: something like this would be nice...
   # registerActionAsMacro 'DELETE_TO_HOME', ['DELETE', 'HOME']
-  registerAction 'DELETE_TO_HOME', 'Delete to the beginning of the line', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'DELETE_TO_HOME',
+    description: 'Delete to the beginning of the line',
+  }, () ->
     options = {
       cursor: {}
       yank: true
@@ -575,7 +882,10 @@ For more info/context, see keyBindings.coffee
       do @keyStream.save
 
   # macro: ['DELETE', 'END']
-  registerAction 'DELETE_TO_END', 'Delete to the end of the line', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'DELETE_TO_END',
+    description: 'Delete to the end of the line',
+  }, () ->
     options = {
       yank: true
       cursor: {}
@@ -588,7 +898,10 @@ For more info/context, see keyBindings.coffee
       do @keyStream.save
 
   # define action as... macro: ['DELETE', 'BEGINNING_WWORD']
-  registerAction 'DELETE_LAST_WORD', 'Delete to the beginning of the previous word', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'DELETE_LAST_WORD',
+    description: 'Delete to the beginning of the previous word',
+  }, () ->
     options = {
       yank: true
       cursor: {}
@@ -600,51 +913,87 @@ For more info/context, see keyBindings.coffee
     if @mode == MODES.NORMAL
       do @keyStream.save
 
-  registerAction 'PASTE_AFTER', 'Paste after cursor', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'PASTE_AFTER',
+    description: 'Paste after cursor',
+  }, () ->
     do @view.pasteAfter
     do @keyStream.save
   # NOTE: paste after doesn't make sense for insert mode
-  registerAction 'PASTE_BEFORE', 'Paste before cursor', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'PASTE_BEFORE',
+    description: 'Paste before cursor',
+  }, () ->
     @view.pasteBefore {}
     do @keyStream.save
-  registerAction 'PASTE_BEFORE', 'Paste before cursor', [MODES.INSERT], () ->
+  registerAction [MODES.INSERT], {
+    name: 'PASTE_BEFORE',
+    description: 'Paste before cursor',
+  }, () ->
     @view.pasteBefore {cursor: {pastEnd: true}}
 
-  registerAction 'JOIN_LINE', 'Join current line with line below', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'JOIN_LINE',
+    description: 'Join current line with line below',
+  }, () ->
     do @view.joinAtCursor
     do @keyStream.save
-  registerAction 'SPLIT_LINE', 'Split line at cursor (i.e. enter key)', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'SPLIT_LINE',
+    description: 'Split line at cursor (i.e. enter key)',
+  }, () ->
     do @view.newLineAtCursor
     if @mode == MODES.NORMAL
       do @keyStream.save
 
-  registerAction 'SCROLL_DOWN', 'Scroll half window down', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'SCROLL_DOWN',
+    description: 'Scroll half window down',
+  }, () ->
     @view.scrollPages 0.5
     if @mode == MODES.NORMAL
       do @keyStream.forget
     # TODO: if insert, forget *only this*
 
-  registerAction 'SCROLL_UP', 'Scroll half window up', [MODES.NORMAL, MODES.INSERT], () ->
+  registerAction [MODES.NORMAL, MODES.INSERT], {
+    name: 'SCROLL_UP',
+    description: 'Scroll half window up',
+  }, () ->
     @view.scrollPages -0.5
     if @mode == MODES.NORMAL
       do @keyStream.forget
 
   # for everything but normal mode
-  registerAction 'EXIT_MODE', 'Exit back to normal mode', [MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MODES.MARK], () ->
+  registerAction [MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MODES.MARK], {
+    name: 'EXIT_MODE',
+    description: 'Exit back to normal mode',
+  }, () ->
     @view.setMode MODES.NORMAL
     do @keyStream.forget
-  registerAction 'EXIT_MODE', 'Exit back to normal mode', [MODES.INSERT], () ->
+  registerAction [MODES.INSERT], {
+    name: 'EXIT_MODE',
+    description: 'Exit back to normal mode',
+  }, () ->
     do @view.cursor.left
     @view.setMode MODES.NORMAL
     # unlike other modes, esc in insert mode keeps changes
     do @keyStream.save
 
   # for visual and visual line mode
-  registerAction 'ENTER_VISUAL', 'Enter visual mode', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'ENTER_VISUAL',
+    description: 'Enter visual mode',
+  }, () ->
     @view.setMode MODES.VISUAL
-  registerAction 'ENTER_VISUAL_LINE', 'Enter visual line mode', [MODES.NORMAL], () ->
+  registerAction [MODES.NORMAL], {
+    name: 'ENTER_VISUAL_LINE',
+    description: 'Enter visual line mode',
+  }, () ->
     @view.setMode MODES.VISUAL_LINE
-  registerAction 'SWAP_CURSOR', 'Swap cursor to other end of selection, in visual and visual line mode', [MODES.VISUAL, MODES.VISUAL_LINE], () ->
+  registerAction [MODES.VISUAL, MODES.VISUAL_LINE], {
+    name: 'SWAP_CURSOR',
+    description: 'Swap cursor to other end of selection, in visual and visual line mode',
+  }, () ->
     tmp = do @view.anchor.clone
     @view.anchor.from @view.cursor
     @view.cursor.from tmp
@@ -652,12 +1001,21 @@ For more info/context, see keyBindings.coffee
 
   # for menu mode
 
-  registerAction 'MENU_SELECT', 'Select current menu selection', [MODES.SEARCH], () ->
+  registerAction [MODES.SEARCH], {
+    name: 'MENU_SELECT',
+    description: 'Select current menu selection',
+  }, () ->
     do @view.menu.select
     @view.setMode MODES.NORMAL
-  registerAction 'MENU_UP', 'Select previous menu selection', [MODES.SEARCH], () ->
+  registerAction [MODES.SEARCH], {
+    name: 'MENU_UP',
+    description: 'Select previous menu selection',
+  }, () ->
     do @view.menu.up
-  registerAction 'MENU_DOWN', 'Select next menu selection', [MODES.SEARCH], () ->
+  registerAction [MODES.SEARCH], {
+    name: 'MENU_DOWN',
+    description: 'Select next menu selection',
+  }, () ->
     do @view.menu.down
 
   # FORMATTING
@@ -684,22 +1042,70 @@ For more info/context, see keyBindings.coffee
       @view.setMode MODES.NORMAL
       do @keyStream.save
 
-  registerAction 'BOLD', 'Bold text', [MODES.NORMAL], (text_format_normal 'bold')
-  registerAction 'BOLD', 'Bold text', [MODES.INSERT], (text_format_insert 'bold')
-  registerAction 'BOLD', 'Bold text', [MODES.VISUAL], (text_format_visual 'bold')
-  registerAction 'BOLD', 'Bold text', [MODES.VISUAL_LINE], (text_format_visual_line 'bold')
-  registerAction 'ITALIC', 'Italicize text', [MODES.NORMAL], (text_format_normal 'italic')
-  registerAction 'ITALIC', 'Italicize text', [MODES.INSERT], (text_format_insert 'italic')
-  registerAction 'ITALIC', 'Italicize text', [MODES.VISUAL], (text_format_visual 'italic')
-  registerAction 'ITALIC', 'Italicize text', [MODES.VISUAL_LINE], (text_format_visual_line 'italic')
-  registerAction 'UNDERLINE', 'Underline text', [MODES.NORMAL], (text_format_normal 'underline')
-  registerAction 'UNDERLINE', 'Underline text', [MODES.INSERT], (text_format_insert 'underline')
-  registerAction 'UNDERLINE', 'Underline text', [MODES.VISUAL], (text_format_visual 'underline')
-  registerAction 'UNDERLINE', 'Underline text', [MODES.VISUAL_LINE], (text_format_visual_line 'underline')
-  registerAction 'STRIKETHROUGH', 'Strike through text', [MODES.NORMAL], (text_format_normal 'strikethrough')
-  registerAction 'STRIKETHROUGH', 'Strike through text', [MODES.INSERT], (text_format_insert 'strikethrough')
-  registerAction 'STRIKETHROUGH', 'Strike through text', [MODES.VISUAL], (text_format_visual 'strikethrough')
-  registerAction 'STRIKETHROUGH', 'Strike through text', [MODES.VISUAL_LINE], (text_format_visual_line 'strikethrough')
+  registerAction [MODES.NORMAL], {
+    name: 'BOLD',
+    description: 'Bold text',
+  }, (text_format_normal 'bold')
+  registerAction [MODES.INSERT], {
+    name: 'BOLD',
+    description: 'Bold text',
+  }, (text_format_insert 'bold')
+  registerAction [MODES.VISUAL], {
+    name: 'BOLD',
+    description: 'Bold text',
+  }, (text_format_visual 'bold')
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'BOLD',
+    description: 'Bold text',
+  }, (text_format_visual_line 'bold')
+  registerAction [MODES.NORMAL], {
+    name: 'ITALIC',
+    description: 'Italicize text',
+  }, (text_format_normal 'italic')
+  registerAction [MODES.INSERT], {
+    name: 'ITALIC',
+    description: 'Italicize text',
+  }, (text_format_insert 'italic')
+  registerAction [MODES.VISUAL], {
+    name: 'ITALIC',
+    description: 'Italicize text',
+  }, (text_format_visual 'italic')
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'ITALIC',
+    description: 'Italicize text',
+  }, (text_format_visual_line 'italic')
+  registerAction [MODES.NORMAL], {
+    name: 'UNDERLINE',
+    description: 'Underline text',
+  }, (text_format_normal 'underline')
+  registerAction [MODES.INSERT], {
+    name: 'UNDERLINE',
+    description: 'Underline text',
+  }, (text_format_insert 'underline')
+  registerAction [MODES.VISUAL], {
+    name: 'UNDERLINE',
+    description: 'Underline text',
+  }, (text_format_visual 'underline')
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'UNDERLINE',
+    description: 'Underline text',
+  }, (text_format_visual_line 'underline')
+  registerAction [MODES.NORMAL], {
+    name: 'STRIKETHROUGH',
+    description: 'Strike through text',
+  }, (text_format_normal 'strikethrough')
+  registerAction [MODES.INSERT], {
+    name: 'STRIKETHROUGH',
+    description: 'Strike through text',
+  }, (text_format_insert 'strikethrough')
+  registerAction [MODES.VISUAL], {
+    name: 'STRIKETHROUGH',
+    description: 'Strike through text',
+  }, (text_format_visual 'strikethrough')
+  registerAction [MODES.VISUAL_LINE], {
+    name: 'STRIKETHROUGH',
+    description: 'Strike through text',
+  }, (text_format_visual_line 'strikethrough')
 
   module?.exports = {
     actions: actionDefinitions
