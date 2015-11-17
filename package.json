@@ -21,8 +21,10 @@
   "dependencies": {
     "async": "latest",
     "coffee-script": "latest",
+    "dependencies-online": "latest",
     "express": "latest",
-    "lodash": "latest"
+    "lodash": "latest",
+    "tv4": "latest"
   },
   "devDependencies": {
     "blanket": "latest",
@@ -36,6 +38,7 @@
     "gulp-rename": "latest",
     "gulp-sass": "latest",
     "gulp-sourcemaps": "latest",
-    "gulp-util": "latest"
+    "gulp-util": "latest",
+    "stream-to-array": "latest"
   }
 }

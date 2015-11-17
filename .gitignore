@@ -1,10 +1,7 @@
 node_modules/
 public/
 npm-debug.log
-*.swp
-*.swn
-*.swm
-*.swo
+*.sw*
 dist/
 .sass-cache
 .bitballoon

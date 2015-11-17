@@ -18,6 +18,9 @@ html
     link(rel="stylesheet" href="/font-awesome.min.css")
     link(rel="icon" type="image/png" href="images/vimflowy-32.png")
 
+    each plugin_css_file in plugin_css_files
+      link(rel="stylesheet" href='/' + plugin_css_path + '/' + plugin_css_file)
+
     block morehead
 
   body.theme-bg-primary#default-theme
@@ -26,7 +29,9 @@ html
     script(src='/jquery-2.1.1.min.js')
     script(src='/jquery.cookie.min.js')
     script(src='/lodash.js')
+    script(src='/tv4.js')
     script(src='/virtual-dom.js')
+    script(src='/dependencies-online.js')
 
     script(src='/js/constants.js')
     script(src='/js/errors.js')
@@ -41,10 +46,13 @@ html
     script(src='/js/cursor.js')
     script(src='/js/register.js')
     script(src='/js/settings.js')
+    script(src='/js/plugins.js')
     script(src='/js/view.js')
     script(src='/js/menu.js')
     script(src='/js/keyDefinitions.js')
     script(src='/js/keyBindings.js')
     script(src='/js/index.js')
+    each plugin_js_file in plugin_js_files
+      script(src='/' + plugin_js_path + '/' + plugin_js_file)
 
     block morefoot

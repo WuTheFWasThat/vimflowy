@@ -26,6 +26,8 @@ create_view = (data) ->
     menuDiv: $('#menu')
   }
 
+  Plugins.resolveView view
+
   # needed for safari
   $('#paste-hack').focus()
   $(document).on('click', () ->

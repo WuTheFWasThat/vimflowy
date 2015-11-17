@@ -1,13 +1,15 @@
 if module?
   global.utils = require('./utils.coffee')
   global.constants = require('./constants.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
 
 ###
 Cursor represents a cursor with a view
 it handles movement logic, insert mode line properties (e.g. bold/italic)
 ###
-class Cursor
+class Cursor extends EventEmitter
   constructor: (view, row = null, col = null, moveCol = null) ->
+    super
     @view = view
     @data = view.data
     @row = row ? (@data.getChildren @data.viewRoot)[0]
@@ -21,9 +23,17 @@ class Cursor
   clone: () ->
     return new Cursor @view, @row, @col, @moveCol
 
+  _setRow: (row) ->
+    @emit 'rowChange', @row, row
+    @row = row
+
+  _setCol: (col) ->
+    @emit 'colChange', @col, col
+    @col = col
+
   from: (other) ->
-    @row = other.row
-    @col = other.col
+    @_setRow other.row
+    @_setCol other.col
     @moveCol = other.moveCol
 
   # cursorOptions:
@@ -35,15 +45,12 @@ class Cursor
   #   - keepProperties:  for movement, whether we should keep italic/bold state
 
   set: (row, col, cursorOptions) ->
-    @row = row
+    @_setRow row
     @setCol col, cursorOptions
 
   setRow: (row, cursorOptions) ->
-    @row = row
+    @_setRow row
     @_fromMoveCol cursorOptions
-
-  _setRow: (row) ->
-    @row = row
 
   setCol: (moveCol, cursorOptions = {pastEnd: true}) ->
     @moveCol = moveCol
@@ -57,9 +64,10 @@ class Cursor
     len = @data.getLength @row
     maxcol = len - (if cursorOptions.pastEnd then 0 else 1)
     if @moveCol < 0
-      @col = Math.max(0, len + @moveCol + 1)
+      col = Math.max(0, len + @moveCol + 1)
     else
-      @col = Math.max(0, Math.min(maxcol, @moveCol))
+      col = Math.max(0, Math.min(maxcol, @moveCol))
+    @_setCol col
     if not cursorOptions.keepProperties
       do @_getPropertiesFromContext
 

@@ -1,6 +1,7 @@
 # imports
 if module?
   global._ = require('lodash')
+
   global.constants = require('./constants.coffee')
   global.errors = require('./errors.coffee')
   global.keyDefinitions = require('./keyDefinitions.coffee')

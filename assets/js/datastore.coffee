@@ -22,6 +22,9 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_collapsedKey_ = (row) -> "#{@prefix}:#{row}:collapsed"
       @_marksKey_ = (row) -> "#{@prefix}:#{row}:marks"
 
+      @_pluginDataKey_ = (plugin, key) -> "#{@prefix}:plugin:#{plugin}:data:#{key}"
+      @_pluginDataVersionKey_ = (plugin) -> "#{@prefix}:plugin:#{plugin}:version"
+
       # no prefix, meaning it's global
       @_settingKey_ = (setting) -> "settings:#{setting}"
 
@@ -92,6 +95,15 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @set @_schemaVersionKey_, version
     getSchemaVersion: () ->
       @get @_schemaVersionKey_, 1
+
+    setPluginDataVersion: (plugin, version) ->
+      @set (@_pluginDataVersionKey_ plugin), version
+    getPluginDataVersion: (plugin) ->
+      @get (@_pluginDataVersionKey_ plugin)
+    setPluginData: (plugin, key, data) ->
+      @set (@_pluginDataKey_ plugin, key), data
+    getPluginData: (plugin, key) ->
+      _.cloneDeep (@get (@_pluginDataKey_ plugin, key))
 
     # get next row ID
     getId: () -> # Suggest to override this for efficiency
