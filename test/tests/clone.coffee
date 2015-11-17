@@ -495,10 +495,10 @@ describe "cloning", () ->
     ]
     t.expectMarks {}
 
-  it "works with marks in tricky case 3", () ->
+  it "remove the last marked instance when it is a descendent of a cloned node", () ->
     t = new TestCase [
       { text: 'parent', children: [
-        { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
           { text: 'Marked child', mark: 'mark' }
         ] }
         { text: 'blah', children: [
@@ -511,12 +511,12 @@ describe "cloning", () ->
     t.sendKeys 'jycGp'
     t.expect [
       { text: 'parent', children: [
-        { text: 'Not a clone', children: [
+        { text: 'Will be cloned', children: [
           { text: 'Marked child', mark: 'mark' }
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Not a clone', children: [
+          { text: 'Will be cloned', children: [
             { text: 'Marked child', mark: 'mark' }
           ] }
         ] }
@@ -527,10 +527,10 @@ describe "cloning", () ->
     t.sendKeys 'jjdd'
     t.expect [
       { text: 'parent', children: [
-        'Not a clone'
+        'Will be cloned'
         { text: 'blah', children: [
           'blah'
-          'Not a clone'
+          'Will be cloned'
         ] }
       ] }
     ]

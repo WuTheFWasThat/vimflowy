@@ -200,10 +200,10 @@ class Data
   # detach the marks of an row that is being detached
   detachMarks: (row) ->
     marks = @store.getMarks row.id
-    isOnly = @exactlyOneInstance row.id
+    lastClone = not @isClone row.id
     for markIdStr, mark of marks
       markId = parseInt markIdStr
-      if isOnly
+      if lastClone
         @_updateAllMarks markId, ''
       # Remove the mark from all ancestors of the id which will no longer be ancestors once this Row is removed.
       for ancestorId in @deltaAncestry row.id, row, { inclusive: false }
@@ -263,20 +263,9 @@ class Data
   toggleCollapsed: (row) ->
     @store.setCollapsed row.id, (not @collapsed row)
 
-  countInstances: (id, cache={}) ->
-    # Precondition: No circular references in ancestry
-    unless cache[id]?
-      errors.assert id?, "Empty id passed to countInstances"
-      if id == constants.root_id
-        return 1
-      parentCount = 0
-      for parent_id in (@store.getParents id)
-        parentCount += @countInstances parent_id, cache # Always exactly once under every parent
-      cache[id] = parentCount
-    cache[id]
-
-  exactlyOneInstance: (id) ->
-    1 == @countInstances id
+  # For the purpose of 'isClone', a node is cloned only if it has multiple parents. This means some instances will return false for 'isClone' but appear multiple times in the display. The intent is to see whether adding/removing a node will add/remove the corresponding id when maintaining metadata.
+  isClone: (id) ->
+    (@store.getParents id).length > 1
 
   canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
     # TODO: Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
