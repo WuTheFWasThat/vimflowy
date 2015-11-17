@@ -875,7 +875,7 @@ window?.renderLine = renderLine
       if (not sameParent) and @data.wouldBeDoubledSiblingInsert row, parent
         @showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
         return false
-      if @data.wouldBeCircularInsertTree row, parent
+      if @data.wouldBeCircularInsert row, parent
         @showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
         return false
       return true
@@ -1155,6 +1155,7 @@ window?.renderLine = renderLine
         if (@data.getParents row).length > 1
           cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon' }
           rowElements.push cloneIcon
+
         if @easy_motion_mappings and row.id of @easy_motion_mappings.id_to_key
           char = @easy_motion_mappings.id_to_key[row.id]
           bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent'}, [char]
@@ -1230,7 +1231,7 @@ window?.renderLine = renderLine
             className: 'mark theme-bg-secondary theme-trim-accent'
           }, markresults
       else
-          mark = @data.getMark row
+          mark = @data.getMark row.id
 
       lineoptions = {
         cursors: cursors

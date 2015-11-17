@@ -237,10 +237,10 @@ if module?
     str: () ->
       return "row #{@row.id}, mark #{@mark}"
     mutate: (view) ->
-      @oldmark = view.data.getMark @row
-      view.data.setMark @row, @mark
+      @oldmark = view.data.getMark @row.id
+      view.data.setMark @row.id, @mark
     rewind: (view) ->
-      view.data.setMark @row, @oldmark
+      view.data.setMark @row.id, @oldmark
 
   exports.AddChars = AddChars
   exports.DelChars = DelChars

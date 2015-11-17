@@ -156,11 +156,13 @@ class Data
   # marks #
   #########
 
-  # get mark for a row, '' if it doesn't exist
-  getMark: (row) ->
-    marks = @store.getMarks row.id
-    return marks[row.id] or ''
+  # get mark for an id, '' if it doesn't exist
+  getMark: (id) ->
+    marks = @store.getMarks id
+    return marks[id] or ''
 
+  # tries to update allMarks with (id, mark)
+  # can return false if the mark was already taken
   _updateAllMarks: (id, mark = '') ->
     allMarks = do @store.getAllMarks
 
@@ -169,7 +171,7 @@ class Data
         return true
       return false
 
-    oldmark = (@store.getMarks id)[id]
+    oldmark = @getMark id
     if oldmark
       delete allMarks[oldmark]
 
@@ -187,9 +189,7 @@ class Data
     @store.setMarks id, marks
 
   # Set the mark for the entire database id
-  setMark: (row, mark = '') ->
-    @_setMark row.id, mark
-  _setMark: (id, mark='') ->
+  setMark: (id, mark = '') ->
     if @_updateAllMarks id, mark
       @_updateMark id, id, mark
       for ancestorId in @allAncestors id
@@ -206,25 +206,26 @@ class Data
       if lastClone
         @_updateAllMarks markId, ''
       # Remove the mark from all ancestors of the id which will no longer be ancestors once this Row is removed.
-      for ancestorId in @deltaAncestry row.id, row, { inclusive: false }
+      for ancestorId in @deltaAncestry row
         @_updateMark ancestorId, markId, ''
 
-  # try to restore the marks of an row that was detached
+  # try to restore the marks of an id that was detached
   # assumes that the marks dictionary contains the old values
-  attachMarks: (row) ->
-    marks = @store.getMarks row.id
+  attachMarks: (id) ->
+    marks = @store.getMarks id
     for markIdStr, mark of marks
       markId = parseInt markIdStr
-      if not (@_setMark markId, mark) # Sets all ancestors regardless of current value
+      if not (@setMark markId, mark) # Sets all ancestors regardless of current value
         # Roll back mark on all descendents
-        @_removeMarkFromTree row, markId, mark
+        @_removeMarkFromTree id, markId, mark
+
   # Helper method for attachMarks rollback. Rolls back exactly one id:mark pair from a subtree in O(marked-nodes) time
-  _removeMarkFromTree: (row, markId, mark) ->
-    marks = @store.getMarks row.id
+  _removeMarkFromTree: (id, markId, mark) ->
+    marks = @store.getMarks id
     if markId of marks
       errors.assert_equals marks[markId], mark, "Unexpected mark"
-      @_updateMark row.id, markId, ''
-      for child in @getChildren row
+      @_updateMark id, markId, ''
+      for child in @store.getChildren id
         @_removeMarkFromTree child, markId, mark
 
   getAllMarks: () ->
@@ -240,7 +241,7 @@ class Data
   setChildren: (id, children) ->
     @store.setChildren id, (do child.serialize for child in children)
 
-  getChild: (row, id) ->
+  findChild: (row, id) ->
     _.find (@getChildren row), (x) -> x.id == id
 
   getParents: (row) ->
@@ -263,48 +264,43 @@ class Data
   toggleCollapsed: (row) ->
     @store.setCollapsed row.id, (not @collapsed row)
 
-  # For the purpose of 'isClone', a node is cloned only if it has multiple parents. This means some instances will return false for 'isClone' but appear multiple times in the display. The intent is to see whether adding/removing a node will add/remove the corresponding id when maintaining metadata.
+  # a node is cloned only if it has multiple parents.
+  # note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
+  # The intent is to see whether adding/removing a node will add/remove the corresponding id when maintaining metadata.
   isClone: (id) ->
     (@store.getParents id).length > 1
 
+  # Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
-    # TODO: Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
-    # This probably isn't as performant as it could be for how often it gets called, but I'd rather make it called less often before optimizing.
     errors.assert id?, "Empty id passed to canonicalInstance"
     if id == constants.root_id
       return @root
     parentId = (@store.getParents id)[0] # This is the only actual choice made
     errors.assert parentId?, "No parent found for id: #{id}"
     canonicalParent = @canonicalInstance parentId
-    instance = @getChild canonicalParent, id
+    instance = @findChild canonicalParent, id
     errors.assert instance?, "No canonical instance found for id: #{id}"
     return instance
 
+  # Return all ancestor ids, topologically sorted (root is *last*).
+  # Includes 'id' itself unless options.inclusive is specified
   allAncestors: (id, options) ->
-    # Return all ancestor ids. Does not include <id>.
-    # If A is a parent of B, B is returned earlier in the list than A. This is called 'topological sort'.
     options = _.defaults {}, options, { inclusive: false }
-    sorted = {}
-    preprocessed = {} # No repeats
-    ancestors = [] # Same contents as 'sorted' with preserved insert order
-    unless options.inclusive
-      sorted[id] = true # Leave out <id>
-    visit = (n) => # Do a DFS and add each node which points only to things the DFS has visited in turn (Tarjan's algorithm)
+    visited = {}
+    ancestors = [] # 'visited' with preserved insert order
+    if options.inclusive
+      ancestors.push id
+    visit = (n) => # DFS
+      visited[n] = true
       for parent in @store.getParents n
-        if parent not of preprocessed
-          preprocessed[parent] = true
+        if parent not of visited
+          ancestors.push parent
           visit parent
-      if n not of sorted
-        sorted[n] = true
-        ancestors.unshift n
     visit id
     ancestors
 
-  # Precondition: row.id == id
-  # Returns all ancestors of row, which are ancestors of only row and not any other instance of 'id'
-  # If A is a parent of B, B is returned earlier in the list than A. This is called 'topological sort'.
-  deltaAncestry: (id, row, options) ->
-    errors.assert_equals id, row.id, "Row is expected to be an instance of id"
+  # Returns all ancestors of row, which are ancestors of only row and not any other instance of 'row.id'
+  deltaAncestry: (row, options) ->
     options = _.defaults {}, options, { inclusive: false }
 
     parentId = (do row.getParent).id
@@ -362,7 +358,7 @@ class Data
     @setChildren row.id, children
 
     for child in new_children
-      @attachMarks child
+      @attachMarks child.id
     return new_children
 
   # returns an array representing the ancestry of a row,
@@ -394,7 +390,7 @@ class Data
   # extends a row's path using descendents (used when moving blocks around)
   combineAncestry: (row, descendents) ->
     for descendent in descendents
-      row = @getChild row, descendent.id
+      row = @findChild row, descendent.id
       unless row?
         return null
     return row
@@ -456,13 +452,17 @@ class Data
       if @collapsed cur
         answer = cur
 
-  wouldBeCircularInsertTree: (row, parent) ->
-    # Precondition: tree is not already circular
-    # Rather than checking for each descendent, whether that descendent is an ancestor (old method)
-    # Instead, check if the row is an ancestor of the new parent, which is sufficient.
+  # checks whether inserting a clone of row under parent would create a cycle
+  # Precondition: tree is not already circular
+  #
+  # It is sufficient to check if the row is an ancestor of the new parent,
+  # because if there was a clone underneath the row which was an ancestor of 'parent',
+  # then 'row' would also be an ancestor of 'parent'.
+  wouldBeCircularInsert: (row, parent) ->
     _.contains (@allAncestors parent.id, { inclusive: true }), row.id
+
   wouldBeDoubledSiblingInsert: (row, parent) ->
-    (@getChild parent, row.id)?
+    (@findChild parent, row.id)?
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
@@ -616,7 +616,7 @@ class Data
     if @collapsed row
       struct.collapsed = true
 
-    mark = @getMark row
+    mark = @getMark row.id
     if mark
       struct.mark = mark
 
@@ -648,7 +648,7 @@ class Data
       @store.setCollapsed row.id, serialized.collapsed
 
       if serialized.mark
-        @setMark row, serialized.mark
+        @setMark row.id, serialized.mark
 
       if serialized.children
         for serialized_child in serialized.children
