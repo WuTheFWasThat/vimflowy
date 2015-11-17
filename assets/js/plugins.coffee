@@ -1,3 +1,8 @@
+# TODO: Handle dependencies automatically for the notion of "enabled" plugins.
+#       pluginEnabled  - Return true if it's a dependency of something enabled
+#       enablePlugin   - Enable required dependencies first
+#       disablePlugin  - Unload any dependency which isn't explicitly enabled or required by another enabled plugin.
+
 if module?
   global._ = require('lodash')
   global.tv4 = require('tv4')
@@ -9,7 +14,7 @@ if module?
 (() ->
   # class for exposing plugin API
   class PluginApi
-    constructor: (@view, @plugin_metadata) ->
+    constructor: (@view, @plugin_metadata, @pluginManager) ->
       @name = @plugin_metadata.name
       @data = @view.data
       @cursor = @view.cursor
@@ -27,6 +32,23 @@ if module?
 
     getData: (key) ->
       @data.store.getPluginData @name, key
+
+    getPlugin: (name) ->
+      @pluginManager.getPlugin name
+
+    panic: _.once () =>
+      alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."
+      @pluginManager.disablePlugin @name
+
+  # Core plugins are always enabled and can never be disabled (e.g. bold/italic)
+  CORE_PLUGINS = {
+  }
+
+  # Other plugins are maintained in a list of "enabled plugins", which default to this value. Plugins are disabled by default.
+  DEFAULT_ENABLED_PLUGINS = {
+    "Hello World coffee": true
+    "Hello World js": true
+  }
 
   PLUGIN_SCHEMA = {
     title: "Plugin metadata schema"
@@ -58,7 +80,7 @@ if module?
         items: { type: "string" }
         default: []
       }
-      data_version: {
+      dataVersion: {
         description: "Version of data format for plugin"
         type: "integer"
         default: 1
@@ -75,7 +97,8 @@ if module?
           data[prop] = prop_info['default']
 
   class PluginsManager
-    constructor: () ->
+    constructor: (options) ->
+      @enabledPlugins = DEFAULT_ENABLED_PLUGINS # Will be overridden before plugin loading, during 'resolveView'
       @plugins = {}
       @pluginDependencies = new DependencyGraph
 
@@ -88,36 +111,88 @@ if module?
 
     resolveView: (view) ->
       @view = view
-      @pluginDependencies.resolve '_view', true
+      enabledPlugins = view.settings.getSetting "enabledPlugins"
+      if enabledPlugins?
+        @enabledPlugins = enabledPlugins
+      @pluginDependencies.resolve '_view', view
 
-    load: (plugin_metadata, cb) ->
-      api = new PluginApi @view, plugin_metadata
+    getPluginNames: () ->
+      _.keys @plugins
 
-      # validate data version
-      dataVersion = do api.getDataVersion
-      unless dataVersion?
-        api.setDataVersion plugin_metadata.data_version
-        dataVersion = plugin_metadata.data_version
-      # TODO: Come up with some migration system for both vimflowy and plugins
-      errors.assert_equals dataVersion, plugin_metadata.data_version,
-        "Plugin data versions are not identical, please contact the plugin author for migration support"
+    status: (name) -> # Returns one of: Unregistered Registered Loading (Disabled|Loaded)
+      @plugins[name]?.status || "Unregistered"
 
-      Logger.logger.info "Plugin #{plugin_metadata.name} loading"
-      cb(api)
-      Logger.logger.info "Plugin #{plugin_metadata.name} loaded"
+    enablePlugin: (name) ->
+      @enabledPlugins[name] = true
+      @view.settings.setSetting "enabledPlugins", @enabledPlugins
+      if (@status name) in ["Disabled"] # If it's ready to load
+        @load @plugins[name]
 
-    register: (plugin_metadata, cb) ->
+    disablePlugin: (name) ->
+      delete @enabledPlugins[name]
+      @view.settings.setSetting "enabledPlugins", @enabledPlugins
+      if (@status name) in ["Loaded"] and not @pluginEnabled name # calling disablePlugin CORE-PLUGIN still does not disable it
+        @unload @plugins[name]
+
+    getPlugin: (name) ->
+      @plugins[name]?.value
+
+    pluginEnabled: (name) ->
+      (name of CORE_PLUGINS) or (name of @enabledPlugins)
+
+    unload: (plugin) ->
+      if plugin.unload
+        plugin.unload plugin.value
+      else
+        # Default unload method, which is to tell the user to refresh
+        @_displayUnloadAlert ?= _.once (plugin) ->
+          alert "The plugin '#{plugin.name}' was disabled. Refresh to unload all disabled plugins."
+        @_displayUnloadAlert plugin
+      delete plugin.value
+      plugin.status = "Disabled"
+
+    load: (plugin) ->
+      if @pluginEnabled plugin.name
+        api = new PluginApi @view, plugin, @
+
+        # validate data version
+        dataVersion = do api.getDataVersion
+        unless dataVersion?
+          api.setDataVersion plugin.dataVersion
+          dataVersion = plugin.dataVersion
+        # TODO: Come up with some migration system for both vimflowy and plugins
+        errors.assert_equals dataVersion, plugin.dataVersion,
+          "Plugin data versions are not identical, please contact the plugin author for migration support"
+
+        Logger.logger.info "Plugin #{plugin.name} loading"
+        plugin.value = plugin.enable api
+        @pluginDependencies.resolve plugin.name, plugin.value
+        plugin.status = "Loaded"
+        Logger.logger.info "Plugin #{plugin.name} loaded"
+      else
+        plugin.status = "Disabled"
+
+    register: (plugin_metadata, enable, disable) ->
       @validate plugin_metadata
+      errors.assert enable?, "Plugin #{plugin_metadata.name} needs to register with a callback"
 
-      @plugins[plugin_metadata.name] = plugin_metadata
-      Logger.logger.info "Plugin #{plugin_metadata.name} registered"
-
-      dependencies = _.clone (_.result plugin_metadata, 'dependencies', [])
-      dependencies.push '_view'
+      # Create the plugin object
+      # Plugin stores all data about a plugin, including metadata
+      # plugin.value contains the actual resolved value
+      plugin = _.cloneDeep plugin_metadata
+      plugin.originalMetadata = plugin_metadata
+      @plugins[plugin.name] = plugin
+      plugin.enable = enable
+      plugin.disable = disable
+      plugin.dependencies = _.clone (_.result plugin_metadata, 'dependencies', [])
+      plugin.dependencies.push '_view'
+      Logger.logger.info "Plugin #{plugin.name} registered"
 
       # Load the plugin after all its dependencies have loaded
-      @pluginDependencies.add plugin_metadata.name, dependencies, () =>
-        @load plugin_metadata, cb
+      plugin.status = "Registered"
+      (@pluginDependencies.add plugin.name, plugin.dependencies).then () =>
+        plugin.status = "Loading"
+        @load plugin
 
   Plugins = new PluginsManager
 
