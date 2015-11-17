@@ -1,0 +1,53 @@
+Plugin API
+##########
+
+To make a plugin, you can place .js, .css, .coffee, or .sass files anywhere within 'plugins' in the vimflowy source directory.
+You may have to rebuild vimflowy if using a static distribution.
+A 'hello world' sample plugin is included.
+
+Plugins are disabled by default. You can enable your plugin from the 'Plugin Settings' menu within vimflowy.
+
+A plugin registers using Plugin.register(metadata, enableCallback[, disableCallback])
+    metadata:  For the detailed format of 'metadata', read the tv4 PLUGIN_SCHEMA in plugins.coffee
+        name (required): string
+          This will be displayed to the user in options. Never change it.
+        version (required): whole number
+        author: string
+        description: string
+        dependencies: array of strings
+        dataVersion: whole number
+          Increase if the data format ever changes, so users can avoid data corruption
+    enableCallback: `enableCallback(api)` is called when the plugin is enabled, which is guaranteed to happen after all dependencies are loaded. enableCallback can optionally return a plugin object. Other plugins may wish to use your plugin as a dependency and get a reference to it--the returned object is what is given to them.
+    disableCallback: `disableCallback()` is called if the plugin is ever disabled by the user
+
+The API (passed to your enableCallback) includes the following:
+    api.name:  The metadata.name of your plugin, as you registered it
+    api.data:  A reference of the internal @data object in vimflowy
+    api.cursor:  A reference of the internal @cursor object in vimflowy
+    api.logger:  Log message from your plugin using methods on this object
+      Call one of: api.logger.debug, api.logger.info, api.logger.warn, api.logger.error, api.logger.fatal
+      The default output is to the javascript console.
+    api.getDataVersion():  The last data version of your plugin this document used 
+    api.setDataVersion(version)
+    api.getData(key):  A key-value store for adding data to the document.
+    api.setData(key, value)
+    api.getPlugin(name):  Return a plugin
+    api.panic():  Report a fatal problem in the plugin
+      Shows a message to the user, then unloads and disables the plugin.
+
+Style guidelines for plugin developers
+    Key-Value Store
+      Make sure to version data
+        - That way vimflowy can detect incompatible formats upgrades which would otherwise make vimflowy crash.
+        - If possible, document your storage schema. Migrations are in the works.
+      Data is stored as serialized JSON.
+        - Do not use circular references, or vimflowy will crash.
+        - Small changes to a large object take a large write to store.
+      Use ":" as a path delimiter if you want internal key structure. For example, 'settings:display:fontColor'
+      If you are storing data for a row, use "row.id" in the key to store data for the row.
+        - There is only one 'row.id' for multiple cloned instances -- by design, cloned instances should be identical.
+    Enable/Disable
+      You don't need to implement 'disableCallback', but if you do, make sure that the plugin can be disabled and re-enabled multiple times
+    Feedback
+      Let the vimflowy dev team know if you need help, want additional features, or think the API could be made better in some way.
+      Contact us at github: https://github.com/WuTheFWasThat/vimflowy
