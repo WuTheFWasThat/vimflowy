@@ -289,8 +289,10 @@ It also internally maintains
       # a recursive mapping from keys to commands
       @bindings = null
 
+
       hotkey_settings = @settings.getSetting 'hotkeys'
       err = @apply_hotkey_settings hotkey_settings
+
       if err
         Logger.logger.error "Failed to apply saved hotkeys #{hotkey_settings}"
         Logger.logger.error err
@@ -303,13 +305,13 @@ It also internally maintains
         $('#hotkey-edit-normal').empty().append(
           $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
         ).append(
-          @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (keyDefinitions.actions[mode] for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
+          @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep keyDefinitions.actions[mode] for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
         )
 
         $('#hotkey-edit-insert').empty().append(
           $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
         ).append(
-          @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (keyDefinitions.actions[mode] for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
+          @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep keyDefinitions.actions[mode] for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
         )
 
     # tries to apply new hotkey settings, returning an error if there was one

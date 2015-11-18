@@ -892,7 +892,7 @@ window?.renderLine = renderLine
 
       # Move the cursor also, if it is in the moved block
       if commonAncestor.is row
-        newCursorRow = @data.combineAncestry row, cursorAncestors
+        newCursorRow = @data.combineAncestry row, (x.id for x in cursorAncestors)
         @cursor._setRow newCursorRow
       return row
 
@@ -1152,7 +1152,7 @@ window?.renderLine = renderLine
       for row in @data.getChildren parent
         rowElements = []
 
-        if (@data.getParents row).length > 1
+        if @data.isClone row.id
           cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon' }
           rowElements.push cloneIcon
 

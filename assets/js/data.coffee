@@ -19,9 +19,6 @@ class Row
   setParent: (parent) ->
     @parent = parent
 
-  getId: () ->
-    @id
-
   debug: () ->
     ancestors = do @getAncestry
     ids = _.map ancestors, (row) -> row.id
@@ -211,7 +208,8 @@ class Data
 
   # try to restore the marks of an id that was detached
   # assumes that the marks dictionary contains the old values
-  attachMarks: (id) ->
+  attachMarks: (row) ->
+    id = row.id
     marks = @store.getMarks id
     for markIdStr, mark of marks
       markId = parseInt markIdStr
@@ -238,14 +236,19 @@ class Data
   getChildren: (parent) ->
     (Row.loadFrom parent, serialized) for serialized in @store.getChildren parent.id
 
-  setChildren: (id, children) ->
-    @store.setChildren id, (do child.serialize for child in children)
+  setChildren: (parent, children) ->
+    for child in children
+      errors.assert (child.parent == parent)
+    @store.setChildren parent.id, (do child.serialize for child in children)
 
   findChild: (row, id) ->
     _.find (@getChildren row), (x) -> x.id == id
 
-  getParents: (row) ->
-    return @store.getParents row.id
+  _getParents: (id) ->
+    return @store.getParents id
+
+  _setParents: (id, children_id) ->
+    @store.setParents id, children_id
 
   hasChildren: (row) ->
     return ((@getChildren row).length > 0)
@@ -268,14 +271,14 @@ class Data
   # note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
   # The intent is to see whether adding/removing a node will add/remove the corresponding id when maintaining metadata.
   isClone: (id) ->
-    (@store.getParents id).length > 1
+    (@_getParents id).length > 1
 
   # Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
     errors.assert id?, "Empty id passed to canonicalInstance"
     if id == constants.root_id
       return @root
-    parentId = (@store.getParents id)[0] # This is the only actual choice made
+    parentId = (@_getParents id)[0] # This is the only actual choice made
     errors.assert parentId?, "No parent found for id: #{id}"
     canonicalParent = @canonicalInstance parentId
     instance = @findChild canonicalParent, id
@@ -292,7 +295,7 @@ class Data
       ancestors.push id
     visit = (n) => # DFS
       visited[n] = true
-      for parent in @store.getParents n
+      for parent in @_getParents n
         if parent not of visited
           ancestors.push parent
           visit parent
@@ -306,7 +309,7 @@ class Data
     parentId = (do row.getParent).id
     rowAncestry = @allAncestors parentId, { inclusive: options.inclusive }
     idAncestry = []
-    for otherParentId in _.without (@getParents row), parentId
+    for otherParentId in _.without (@_getParents row.id), parentId
       idAncestry = _.union idAncestry, (@allAncestors otherParentId, { inclusive: true })
     return _.difference rowAncestry, idAncestry
 
@@ -325,13 +328,13 @@ class Data
     children = @getSiblings row
     ci = @indexOf row
     children.splice ci, 1
-    parents = @getParents row
+    parents = @_getParents row.id
     pi = _.findIndex parents, (par) ->
         par == parent.id
     parents.splice pi, 1
 
-    @setChildren parent.id, children
-    @store.setParents row.id, parents
+    @setChildren parent, children
+    @_setParents row.id, parents
 
     return {
       parent: parent
@@ -351,14 +354,14 @@ class Data
       children.splice.apply children, [index, 0].concat(new_children)
     for child in new_children
       child.setParent row
-      parents = @store.getParents child.id
+      parents = @_getParents child.id
       parents.push row.id
-      @store.setParents child.id, parents
+      @_setParents child.id, parents
 
-    @setChildren row.id, children
+    @setChildren row, children
 
     for child in new_children
-      @attachMarks child.id
+      @attachMarks child
     return new_children
 
   # returns an array representing the ancestry of a row,
@@ -387,10 +390,10 @@ class Data
     firstDifference = commonAncestry.length
     return [common, ancestors1[firstDifference..], ancestors2[firstDifference..]]
 
-  # extends a row's path using descendents (used when moving blocks around)
-  combineAncestry: (row, descendents) ->
-    for descendent in descendents
-      row = @findChild row, descendent.id
+  # extends a row's path by a path of ids going downwards (used when moving blocks around)
+  combineAncestry: (row, id_path) ->
+    for id in id_path
+      row = @findChild row, id
       unless row?
         return null
     return row
@@ -632,7 +635,7 @@ class Data
       @attachChild parent, row, index
     else
       row.setParent null
-      @store.setParents row.id, [@root.id]
+      @_setParents row.id, [@root.id]
 
     if typeof serialized == 'string'
       @setLine row, (serialized.split '')
