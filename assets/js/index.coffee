@@ -74,6 +74,9 @@ create_view = (data) ->
     $("#settings-link").click () =>
       do view.settingsToggle
 
+    $("#settings-nav li").click (e) ->
+      view.selectSettingsTab ($(e.target).data "tab")
+
     load_file = (filesDiv, cb) ->
         file = filesDiv.files[0]
         if not file?

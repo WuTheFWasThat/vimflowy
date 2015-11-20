@@ -64,17 +64,11 @@ $bottom-bar-height: 25px
     z-index: 2
     overflow-y: auto
 
-    #settings-left
-        position: absolute
-        padding: 20px
-        left: 0%
-        right: 75%
+    .tabs, .tab-pane
+        margin: 20px
 
-    #settings-right
-        position: absolute
-        padding: 20px
-        left: 25%
-        right: 0%
+    .settings-content
+        padding: 20px 0px
 
     .settings-header
         $header-padding: 5px
@@ -82,9 +76,6 @@ $bottom-bar-height: 25px
         border-radius: 5px
         -moz-border-radius: 5px
         padding: $header-padding
-
-    .settings-content
-        padding: 20px 0px
 
     #hotkey-actions
         margin-bottom: 10px
@@ -140,3 +131,34 @@ $bottom-bar-height: 25px
                 margin-left: 20px
 
         font-size: 10px
+
+// Tabs do not respect color styling right now
+.tabs
+    list-style: none
+    position: relative
+    z-index: 2
+    & > li
+        display: inline-block
+        border: 1px solid #AAA
+        margin: 0 10px
+        padding: 0 10px
+        min-height: 20px
+        background: #ECECEC
+        position: relative
+        &.active
+            background: #FFF
+            color: #000
+            z-index: 4
+            border-bottom-color: #FFF
+.tabs:after
+    position: absolute
+    content: ""
+    width: 100%
+    bottom: 0
+    left: 0
+    border-bottom: 1px solid #AAA
+    z-index: 3
+.tab-pane
+    display: none
+    &.active
+        display: block

@@ -255,6 +255,12 @@ window?.renderLine = renderLine
       @modeDiv.addClass 'hidden'
       @settings.mainDiv.removeClass 'hidden'
 
+    selectSettingsTab: (tab) ->
+      @settings.mainDiv.find('.tabs > li').removeClass('active')
+      @settings.mainDiv.find('.tab-pane').removeClass('active')
+      @settings.mainDiv.find(".tabs > li[data-tab=#{tab}]").addClass('active')
+      @settings.mainDiv.find(".tab-pane##{tab}").addClass('active')
+
     settingsToggle: () ->
       if do @showingSettings
         do @hideSettings

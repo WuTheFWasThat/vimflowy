@@ -10,7 +10,10 @@ block content
         #keybindings.theme-bg-secondary
 
     #settings.hidden.theme-bg-primary
-        #settings-left
+        ul.tabs#settings-nav
+            li.active(data-tab="main-settings") Settings
+            li(data-tab="hotkeys") Keybindings
+        .tab-pane.active#main-settings
             .settings-header.theme-bg-secondary.theme-trim Visual Theme
             .settings-content
                 select.theme-selection
@@ -40,7 +43,7 @@ block content
                 a.theme-text-link(href="https://github.com/WuTheFWasThat/vimflowy") the github website
                 | .
 
-        #settings-right
+        .tab-pane#hotkeys
             .settings-header.theme-bg-secondary.theme-trim Hotkeys
             .settings-content
               #hotkey-actions.clearfix
