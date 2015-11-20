@@ -89,6 +89,20 @@ $bottom-bar-height: 25px
             height: 100%
             vertical-align: top
 
+    #plugins > table
+        width: 100%
+        border-collapse: collapse
+        & > tr:nth-child(even)
+            background-color: #EAF2D3
+        .plugin-version
+            max-width: 25px
+        .plugin-status
+            max-width: 30px
+        .plugin-actions
+            max-width: 100px
+            .btn
+                width: 60px
+
 #contents
     display: flex
     flex-direction: row

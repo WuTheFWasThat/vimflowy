@@ -114,13 +114,75 @@ if module?
       enabledPlugins = view.settings.getSetting "enabledPlugins"
       if enabledPlugins?
         @enabledPlugins = enabledPlugins
+      @div = view.pluginsDiv
+      do @render
       @pluginDependencies.resolve '_view', view
 
+    render: () ->
+      unless @div?
+        return
+      vtree = do @virtualRender
+      if @vtree?
+        patches = virtualDom.diff @vtree, vtree
+        @vnode = virtualDom.patch @vnode, patches
+        @vtree = vtree
+      else
+        $(@div).find(".before-load").remove()
+        @vtree = do @virtualRender
+        @vnode = virtualDom.create @vtree
+        @div.append @vnode
+
+    virtualRender: () ->
+      header = virtualDom.h 'tr', {}, [
+        virtualDom.h 'th', { className: 'plugin-name' }, "Plugin"
+        virtualDom.h 'th', { className: 'plugin-version' }, "Version"
+        virtualDom.h 'th', { className: 'plugin-status' }, "Status"
+        virtualDom.h 'th', { className: 'plugin-actions' }, "Actions"
+      ]
+      pluginElements = (@virtualRenderPlugin name for name in do @getPluginNames)
+      virtualDom.h 'table', {}, ([header].concat pluginElements)
+
+    virtualRenderPlugin: (name) ->
+      status = @status name
+      plugin = @plugins[name]
+      actions = []
+      if status == "Loaded"
+        # "Disable" action
+        button = virtualDom.h 'button', {
+            className: 'btn theme-bg-secondary theme-trim'
+            onclick: () =>
+                @disablePlugin name
+        }, "Disable"
+        actions.push button
+      else if status == "Disabled"
+        # "Enable" action
+        button = virtualDom.h 'button', {
+            className: 'btn theme-bg-secondary theme-trim'
+            onclick: () =>
+                @enablePlugin name
+        }, "Enable"
+        actions.push button
+      virtualDom.h 'tr', {
+        className: "plugin status-#{status.toLowerCase()}"
+      }, [
+        virtualDom.h 'td', { className: 'plugin-name' }, name
+        virtualDom.h 'td', { className: 'plugin-version' }, plugin?.version?.toString?() || "N/A"
+        virtualDom.h 'td', { className: 'plugin-status' }, status
+        virtualDom.h 'td', { className: 'plugin-actions' }, actions
+      ]
+
     getPluginNames: () ->
-      _.keys @plugins
+      do (_.keys @plugins).sort
 
     status: (name) -> # Returns one of: Unregistered Registered Loading (Disabled|Loaded)
       @plugins[name]?.status || "Unregistered"
+
+    setStatus: (name, status) ->
+      plugin = @plugins[name]
+      if status != "Unregistered" and not plugin?
+        throw new Error "Plugin status set but plugin was not registered"
+      plugin.status = status
+      do @render
 
     enablePlugin: (name) ->
       @enabledPlugins[name] = true
@@ -141,15 +203,15 @@ if module?
       (name of CORE_PLUGINS) or (name of @enabledPlugins)
 
     unload: (plugin) ->
-      if plugin.unload
-        plugin.unload plugin.value
+      if plugin.disable
+        plugin.disable plugin.value
       else
         # Default unload method, which is to tell the user to refresh
         @_displayUnloadAlert ?= _.once (plugin) ->
           alert "The plugin '#{plugin.name}' was disabled. Refresh to unload all disabled plugins."
         @_displayUnloadAlert plugin
       delete plugin.value
-      plugin.status = "Disabled"
+      @setStatus plugin.name, "Disabled"
 
     load: (plugin) ->
       if @pluginEnabled plugin.name
@@ -167,10 +229,10 @@ if module?
         Logger.logger.info "Plugin #{plugin.name} loading"
         plugin.value = plugin.enable api
         @pluginDependencies.resolve plugin.name, plugin.value
-        plugin.status = "Loaded"
+        @setStatus plugin.name, "Loaded"
         Logger.logger.info "Plugin #{plugin.name} loaded"
       else
-        plugin.status = "Disabled"
+        @setStatus plugin.name, "Disabled"
 
     register: (plugin_metadata, enable, disable) ->
       @validate plugin_metadata
@@ -189,9 +251,9 @@ if module?
       Logger.logger.info "Plugin #{plugin.name} registered"
 
       # Load the plugin after all its dependencies have loaded
-      plugin.status = "Registered"
+      @setStatus plugin.name, "Registered"
       (@pluginDependencies.add plugin.name, plugin.dependencies).then () =>
-        plugin.status = "Loading"
+        @setStatus plugin.name, "Loading"
         @load plugin
 
   Plugins = new PluginsManager

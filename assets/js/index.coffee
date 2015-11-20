@@ -22,6 +22,7 @@ create_view = (data) ->
     settingsDiv: $('#settings')
     messageDiv: $('#message')
     keybindingsDiv: $('#keybindings')
+    pluginsDiv: $('#plugins')
     modeDiv: $('#mode')
     menuDiv: $('#menu')
   }

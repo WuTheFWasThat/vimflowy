@@ -209,6 +209,7 @@ window?.renderLine = renderLine
       @messageDiv = options.messageDiv
       @menuDiv = options.menuDiv
       @modeDiv = options.modeDiv
+      @pluginsDiv = options.pluginsDiv
 
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @, row, 0

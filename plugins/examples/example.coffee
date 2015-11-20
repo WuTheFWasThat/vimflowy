@@ -5,6 +5,9 @@
     author: "Zachary Vance"
     description: "Prints 'Hello World' when the plugin is loaded"
     dependencies: []
-  }, (api) ->
+  }, ((api) ->
     console.log "Hello world plugin written in coffeescript!"
+  ), (() ->
+    console.log "Goodbye, world! - coffee"
+  )
 )()
