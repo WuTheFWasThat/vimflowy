@@ -12,7 +12,7 @@ block content
     #settings.hidden.theme-bg-primary
         ul.tabs#settings-nav
             li.active(data-tab="main-settings") Settings
-            li(data-tab="hotkeys") Keybindings
+            li(data-tab="hotkeys") Hotkeys
             li(data-tab="plugins") Plugins
         .tab-pane.active#main-settings
             .settings-header.theme-bg-secondary.theme-trim Visual Theme
@@ -45,7 +45,6 @@ block content
                 | .
 
         .tab-pane#hotkeys
-            .settings-header.theme-bg-secondary.theme-trim Hotkeys
             .settings-content
               #hotkey-actions.clearfix
                 .btn.theme-bg-secondary.theme-trim#hotkeys_export(style='float:left') Export as file
@@ -57,7 +56,6 @@ block content
                 #hotkey-edit-insert
 
         .tab-pane#plugins
-            .settings-header.theme-bg-secondary.theme-trim Plugins
             p.before-load Plugin system has not loaded.
 
     #bottom-bar.theme-bg-primary.theme-trim

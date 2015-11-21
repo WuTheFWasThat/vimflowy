@@ -1,13 +1,13 @@
 (() ->
   Plugins.register {
-    name: "Hello World coffee"
+    name: "Hello World coffee example"
     version: 1
     author: "Zachary Vance"
     description: "Prints 'Hello World' when the plugin is loaded"
     dependencies: []
   }, ((api) ->
-    console.log "Hello world plugin written in coffeescript!"
+    console.log "Coffeescript example plugin: Hello, world!"
   ), (() ->
-    console.log "Goodbye, world! - coffee"
+    console.log "Coffeescript example plugin: Goodbye, world!"
   )
 )()
