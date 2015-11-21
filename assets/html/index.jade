@@ -10,10 +10,11 @@ block content
         #keybindings.theme-bg-secondary
 
     #settings.hidden.theme-bg-primary
-        ul.tabs#settings-nav
-            li.active(data-tab="main-settings") Settings
-            li(data-tab="hotkeys") Hotkeys
-            li(data-tab="plugins") Plugins
+        // NOTE: settings-nav must have theme as well so that inherit works for tabs
+        ul.tabs#settings-nav.theme-bg-primary
+            li.theme-trim.theme-bg-secondary.active(data-tab="main-settings") Settings
+            li.theme-trim.theme-bg-secondary(data-tab="hotkeys") Hotkeys
+            li.theme-trim.theme-bg-secondary(data-tab="plugins") Plugins
         .tab-pane.active#main-settings
             .settings-header.theme-bg-secondary.theme-trim Visual Theme
             .settings-content

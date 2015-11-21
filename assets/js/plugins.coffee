@@ -166,7 +166,7 @@ if module?
         color = "green"
 
       virtualDom.h 'tr', {
-        className: "plugin status-#{status.toLowerCase()}"
+        className: "plugin theme-bg-secondary"
       }, [
         virtualDom.h 'td', { className: 'center theme-trim plugin-name' }, name
         virtualDom.h 'td', { className: 'center theme-trim plugin-version' }, (plugin.version + '')

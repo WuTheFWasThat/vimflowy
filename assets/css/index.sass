@@ -93,11 +93,11 @@ $bottom-bar-height: 25px
         width: 100%
         border-collapse: collapse
         .plugin-version
-            max-width: 25px
+            max-width: 10%
         .plugin-status
-            max-width: 30px
+            max-width: 20%
         .plugin-actions
-            max-width: 100px
+            max-width: 20%
             .btn
                 width: 60px
 
@@ -144,33 +144,36 @@ $bottom-bar-height: 25px
 
         font-size: 10px
 
-// Tabs do not respect color styling right now
 .tabs
     list-style: none
     position: relative
     z-index: 2
+    $tab-height: 20px
+    $tab-bar-height: 1px
     & > li
         display: inline-block
         cursor: pointer
-        border: 1px solid #AAA
         margin: 0 10px
         padding: 0 10px
-        min-height: 20px
-        background: #ECECEC
+        height: $tab-height
         position: relative
         &.active
-            background: #FFF
-            color: #000
+            height: $tab-height + $tab-bar-height
+            background-color: inherit !important
+            font-weight: bold
             z-index: 4
-            border-bottom-color: #FFF
-.tabs:after
-    position: absolute
-    content: ""
-    width: 100%
-    bottom: 0
-    left: 0
-    border-bottom: 1px solid #AAA
-    z-index: 3
+            border-bottom:  0px !important
+            border-color: inherit !important
+            margin-top: $tab-bar-height
+    &:after
+        position: absolute
+        content: ""
+        width: 100%
+        bottom: 0
+        left: 0
+        border-bottom: $tab-bar-height solid
+        z-index: 3
+
 .tab-pane
     display: none
     &.active
