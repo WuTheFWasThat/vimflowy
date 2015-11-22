@@ -11,6 +11,8 @@ each mutation should implement a constructor, as well as the following methods:
 
 the mutation may also optionally implement
 
+    validate: (view) -> bool
+        returns whether this action is valid at the time (i.e. whether it is okay to call mutate)
     remutate: (view) -> void
         takes a view, and acts on it.  assumes that mutate has been called once already
         by default, remutate is the same as mutate.
@@ -25,6 +27,8 @@ if module?
   class Mutation
     str: () ->
       return ''
+    validate: (view) ->
+      return true
     mutate: (view) ->
       return
     rewind: (view) ->
@@ -108,6 +112,11 @@ if module?
 
     str: () ->
       return "row #{@row.id}, parent #{@parent}"
+
+    validate: (view) ->
+      if not view.validateRowInsertion @row, @parent
+        return false
+      return true
 
     mutate: (view) ->
       view.data.attachChild @parent, @row, @index
@@ -207,8 +216,15 @@ if module?
     str: () ->
       return "parent #{@parent.id}, index #{@index}"
 
+    validate: (view) ->
+      for id in @cloned_rows
+        original = view.data.canonicalInstance id
+        if not view.validateRowInsertion original, @parent
+          return false
+      return true
+
     mutate: (view) ->
-      originals = _.compact (view.data.canonicalInstance id for id in @cloned_rows)
+      originals = (view.data.canonicalInstance id for id in @cloned_rows)
 
       index = @index
       clones = view.data.cloneRows originals, @parent, index

@@ -503,6 +503,9 @@ window?.renderLine = renderLine
         for i in [oldState.index...newState.index]
             mutation = @mutations[i]
             Logger.logger.debug "  Redoing mutation #{mutation.constructor.name}(#{mutation.str()})"
+            if not mutation.validate @
+                # this should not happen, since the state should be the same as before
+                throw new errors.GenericError "Failed to redo mutation: #{mutation.str()}"
             mutation.remutate @
         Logger.logger.debug ") END REDO"
         @restoreViewState oldState.after
@@ -520,8 +523,11 @@ window?.renderLine = renderLine
         }
 
       Logger.logger.debug "Applying mutation #{mutation.constructor.name}(#{mutation.str()})"
+      if not mutation.validate @
+          return false
       mutation.mutate @
       @mutations.push mutation
+      return true
 
     curLine: () ->
       return @data.getLine @cursor.row
@@ -840,12 +846,7 @@ window?.renderLine = renderLine
       @do mutation
 
     addClones: (cloned_rows, parent, index = -1, options = {}) ->
-      for id in cloned_rows
-        original = @data.canonicalInstance id
-        if not @validateRowInsertion original, parent
-          return
-
-      mutation= new mutations.CloneBlocks cloned_rows, parent, index, options
+      mutation = new mutations.CloneBlocks cloned_rows, parent, index, options
       @do mutation
 
     yankBlocks: (row, nrows) ->

@@ -535,3 +535,51 @@ describe "cloning", () ->
       ] }
     ]
     t.expectMarks {}
+
+  it "prevents alias creation on regular paste", () ->
+    t = new TestCase [
+      'Will be deleted',
+      'hm...'
+    ]
+    t.sendKeys 'dd'
+    t.sendKeys 'u'
+    t.expect [
+      'Will be deleted',
+      'hm...'
+    ]
+    t.sendKeys 'p'
+    t.expect [
+      'Will be deleted',
+      'hm...'
+    ]
+
+  it "prevents constraint violation on paste", () ->
+    t = new TestCase [
+      'Will be cloned',
+      { text: 'parent', children: [
+        { text: 'blah', children: [
+          'blah'
+        ] }
+      ] }
+    ]
+    t.sendKeys 'ycjp'
+
+    t.expect [
+      'Will be cloned',
+      { text: 'parent', children: [
+        'Will be cloned',
+        { text: 'blah', children: [
+          'blah'
+        ] }
+      ] }
+    ]
+
+    t.sendKeys 'ddkkp'
+    t.expect [
+      'Will be cloned',
+      { text: 'parent', children: [
+        { text: 'blah', children: [
+          'blah'
+        ] }
+      ] }
+    ]

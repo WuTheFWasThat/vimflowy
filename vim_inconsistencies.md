@@ -6,8 +6,10 @@ This catalogs some more subtle differences.  Most have been entirely intentional
 If you feel any of them make vimflowy feel significantly less familiar, contact me and I'll take it into consideration.
 And feel free to report more!
 
-- when deleting an entire line (or multiple lines), pasting it only works once.  this is for efficiency reasons.  if the line is very large
-  then one must copy (which takes awhile).  the typical use case is to move things around.  when another copy is needed, just yank
+- When using `dd` to delete blocks, the line(s) are "cloned" rather than copied, for efficiency reasons.
+  The typical use case for dd is to move things around, in which case it doesn't matter.  It only matters when pasting twice.
+  For example, if you delete a block, paste it once, change the pasted block, and paste again, the second paste will contain the modifications
+  and be synced with the first paste.  In cases where you need a copy, use yank instead.
 - 5$ doesn't work
 - I goes to the beginning of the line, irrespective of whitespace
 
