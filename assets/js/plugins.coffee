@@ -9,8 +9,8 @@ if module?
 (() ->
   # class for exposing plugin API
   class PluginApi
-    constructor: (@view, @plugin_metadata, @pluginManager) ->
-      @name = @plugin_metadata.name
+    constructor: (@view, @metadata, @pluginManager) ->
+      @name = @metadata.name
       @data = @view.data
       @cursor = @view.cursor
       # TODO: Add subloggers and prefix all log messages with the plugin name
