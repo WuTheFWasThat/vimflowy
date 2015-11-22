@@ -892,16 +892,13 @@ window?.renderLine = renderLine
       sameParent = parent.id == (do row.getParent).id
       if sameParent and index > @data.indexOf row
         index = index - 1
-      if not (@validateRowInsertion row, parent, sameParent)
-        return row
-      @detachBlock row, options
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
-      @attachBlock row, parent, index, options
-
-      # Move the cursor also, if it is in the moved block
-      if commonAncestor.is row
-        newCursorRow = @data.combineAncestry row, (x.id for x in cursorAncestors)
-        @cursor._setRow newCursorRow
+      moved = @do new mutations.MoveBlock row, parent, index, options
+      if moved
+        # Move the cursor also, if it is in the moved block
+        if commonAncestor.is row
+          newCursorRow = @data.combineAncestry row, (x.id for x in cursorAncestors)
+          @cursor._setRow newCursorRow
       return row
 
     indentBlocks: (row, numblocks = 1) ->

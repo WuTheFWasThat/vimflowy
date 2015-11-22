@@ -94,6 +94,28 @@ if module?
     remutate: (view) ->
       view.data.attachChild @parent, @newrow, @index
 
+  class MoveBlock extends Mutation
+    constructor: (@row, @parent, @index = -1, @options = {}) ->
+
+    str: () ->
+      return "row #{@row.id} from #{@row.parent.id} to #{@parent.id}"
+
+    validate: (view) ->
+      sameParent = @parent.id == (do @row.getParent).id
+      # if parent is the same, don't do sibling clone validation
+      if not (view.validateRowInsertion @row, @parent, sameParent)
+        return false
+      return true
+
+    mutate: (view) ->
+      errors.assert (not do @row.isRoot), "Cannot detach root"
+      @detached = view.data.detach @row
+      view.data.attachChild @parent, @row, @index
+
+    rewind: (view) ->
+      view.data.detach @row
+      view.data.attachChild @detached.parent, @row, @detached.index
+
   class DetachBlock extends Mutation
     constructor: (@row, @options = {}) ->
 
@@ -263,6 +285,7 @@ if module?
   exports.InsertRow = InsertRow
   exports.DetachBlock = DetachBlock
   exports.AttachBlock = AttachBlock
+  exports.MoveBlock = MoveBlock
   exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
   exports.CloneBlocks = CloneBlocks

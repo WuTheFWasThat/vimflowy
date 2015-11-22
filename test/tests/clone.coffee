@@ -536,7 +536,44 @@ describe "cloning", () ->
     ]
     t.expectMarks {}
 
-  it "prevents alias creation on regular paste", () ->
+  it "creates clone on regular paste", () ->
+    t = new TestCase [
+      'Will be cloned via delete',
+      { text: 'parent', children: [
+        'hm...'
+      ] }
+    ]
+    t.sendKeys 'x'
+    t.expect [
+      'ill be cloned via delete',
+      { text: 'parent', children: [
+        'hm...'
+      ] }
+    ]
+    t.sendKeys 'dd'
+    t.expect [
+      { text: 'parent', children: [
+        'hm...'
+      ] }
+    ]
+    t.sendKeys 'uu'
+    t.expect [
+      'Will be cloned via delete',
+      { text: 'parent', children: [
+        'hm...'
+      ] }
+    ]
+    t.sendKeys 'jp'
+    # pastes with the W even though it was deleted while cloned
+    t.expect [
+      'Will be cloned via delete',
+      { text: 'parent', children: [
+        'Will be cloned via delete',
+        'hm...'
+      ] }
+    ]
+
+  it "prevents constraint violation on regular paste", () ->
     t = new TestCase [
       'Will be deleted',
       'hm...'
@@ -582,4 +619,31 @@ describe "cloning", () ->
           'blah'
         ] }
       ] }
+    ]
+
+  it "prevents constraint violation on indent", () ->
+    t = new TestCase [
+      { text: 'parent', children: [
+        'blah'
+      ] }
+      'Will be cloned',
+    ]
+    t.sendKeys 'Gyckp'
+
+    t.expect [
+      { text: 'parent', children: [
+        'blah'
+        'Will be cloned',
+      ] }
+      'Will be cloned',
+    ]
+
+    t.sendKeys 'G'
+    t.sendKeys '>'
+    t.expect [
+      { text: 'parent', children: [
+        'blah'
+        'Will be cloned',
+      ] }
+      'Will be cloned',
     ]
