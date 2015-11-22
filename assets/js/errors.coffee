@@ -5,8 +5,11 @@ if module? # imports
 
   # takes a constructor and returns an error class
   errorFactory = (f) ->
-    f.prototype = new Error()
-    return f
+    g = () ->
+      @stack = new Error().stack
+      f.apply @, arguments
+    g.prototype = Object.create(Error.prototype)
+    return g
 
   exports.NotImplemented = errorFactory (message) -> @message = "Not implemented!"
   exports.UnexpectedValue = errorFactory (name, value) -> @message = "Unexpected value for `#{name}`: #{value}"

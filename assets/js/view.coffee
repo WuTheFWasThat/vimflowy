@@ -1160,7 +1160,7 @@ window?.renderLine = renderLine
         rowElements = []
 
         if @data.isClone row.id
-          cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon' }
+          cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon', title: 'Cloned' }
           rowElements.push cloneIcon
 
         if @easy_motion_mappings and row.id of @easy_motion_mappings.id_to_key
