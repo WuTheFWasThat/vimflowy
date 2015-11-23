@@ -73,15 +73,32 @@
       if to?
         @currentRow ?= { id: to.id, time: time }
 
-    # TODO: Debounce this function for batch processing
-    onRowPeriod: (period) ->
-      period.time = (period.stop - period.start)
+    _onRowPeriod: (period) ->
+      period.time ?= period.stop - period.start
       @transformRowData period.row, "timePeriods", (current) =>
         current ?= []
         current.push period
         current
       @_addTimeToRow period.row, period.time, period.stop
       @_addTimeToAncestors period.row, period.time, period.stop
+    # onRowPeriod gets called with a period, but we don't want to write
+    # data to localstorage constantly. So instead, we store a list of
+    # events that come in, and at most once a second, batch-process them,
+    # combining any events that are on the same row.
+    onRowPeriod: (period) ->
+      @accPeriods ?= []
+      @accPeriods.push period
+      @_rowPeriodDebounce ?= _.throttle ((periods) =>
+        delete @accPeriods
+        periods = _.reduce periods, ((combined, period) ->
+          combined[period.id] ?= { id: period.id, time: 0, start: period.start, row: period.row }
+          combined[period.id].time += (period.stop - period.start)
+          combined[period.id].stop = period.stop
+          combined
+        ), {}, @
+        _.each periods, @_onRowPeriod, @
+      ), 1000
+      @_rowPeriodDebounce @accPeriods
     onDescendentRemoved: (event) ->
       ancestor = @api.view.data.canonicalInstance event.ancestorId
       @_rebuildTreeTimes ancestor # Could avoid lookups by knowing exact changes, if needed
