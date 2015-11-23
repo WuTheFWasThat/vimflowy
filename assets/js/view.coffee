@@ -11,6 +11,7 @@ if module?
   global.dataStore = require('./datastore.coffee')
   global.Register = require('./register.coffee')
   global.Logger = require('./logger.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
 
 ###
 a View represents the actual viewport onto the vimflowy document
@@ -190,7 +191,7 @@ window?.renderLine = renderLine
 (() ->
   MODES = Modes.modes
 
-  class View
+  class View extends EventEmitter
     containerDivID = (id) ->
       return 'node-' + id
 
@@ -201,6 +202,8 @@ window?.renderLine = renderLine
       return 'node-' + id + '-children'
 
     constructor: (data, options = {}) ->
+      super
+
       @data = data
 
       @bindings = options.bindings
@@ -240,6 +243,9 @@ window?.renderLine = renderLine
       @setMode MODES.NORMAL
 
       return @
+
+    exit: () ->
+      @emit "exit"
 
     ###################
     # settings related

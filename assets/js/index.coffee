@@ -144,6 +144,9 @@ create_view = (data) ->
         download_file filename, mimetype, content
         view.showMessage "Exported to #{filename}!", {text_class: 'success'}
 
+  $(window).unload () =>
+    do view.exit
+
 
 if chrome?.storage?.sync
   Logger.logger.info 'using chrome storage'
