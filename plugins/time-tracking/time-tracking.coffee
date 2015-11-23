@@ -34,8 +34,8 @@
       @rowChanges = []
       @currentRow = null
       @displayTime = true
-      # TODO: Add view.on 'exit' to view
-      #@api.view.on 'exit', (@onExit.bind @)
+      @api.view.on 'exit', () =>
+        @onRowChange @currentRow, null
 
     getRowData: (row, keytype) ->
       key = "#{row.id}:#{keytype}"
@@ -64,16 +64,14 @@
         cur.setDay (cur.getDay() + 1)
       days
 
-    #onExit: () ->
-    #  @onRowFrom @api.cursor.row
-
     onRowChange: (from, to) ->
       @logger.debug "Switching from row #{from?.id} to row #{to?.id}"
       time = new Date()
-      if @currentRow? and @currentRow.id != to.id
+      if @currentRow and @currentRow.id != to?.id
         @onRowPeriod { start: @currentRow.time, stop: time, id: @currentRow.id, row: from }
         delete @currentRow
-      @currentRow ?= { id: to.id, time: time }
+      if to?
+        @currentRow ?= { id: to.id, time: time }
 
     # TODO: Debounce this function for batch processing
     onRowPeriod: (period) ->

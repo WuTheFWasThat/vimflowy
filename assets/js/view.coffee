@@ -243,6 +243,9 @@ window?.renderLine = renderLine
 
       return @
 
+    exit: () ->
+      @emit "exit"
+
     ###################
     # settings related
     ###################

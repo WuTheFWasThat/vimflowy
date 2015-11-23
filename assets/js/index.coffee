@@ -143,6 +143,8 @@ create_view = (data) ->
         content = view.exportContent mimetype
         download_file filename, mimetype, content
         view.showMessage "Exported to #{filename}!", {text_class: 'success'}
+  $(window).unload () =>
+    do view.exit
 
 
 if chrome?.storage?.sync
