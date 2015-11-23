@@ -1,8 +1,6 @@
 TestCase = require '../testcase.coffee'
 Register = require '../../assets/js/register.coffee'
 
-secondPasteDisabled = true
-
 describe "yank", () ->
   describe "characters", () ->
     it "works in basic case", () ->
@@ -95,18 +93,15 @@ describe "yank", () ->
       t.expectRegisterType Register.TYPES.ROWS
       t.expect [ 'dumpty' ]
       t.sendKeys 'p'
-      if secondPasteDisabled
-        t.expectRegisterType Register.TYPES.NONE
-      else
-        t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
+      t.expectRegisterType Register.TYPES.ROWS
       t.expect [ 'dumpty', 'humpty' ]
       t.sendKeys 'u'
       t.expect ['dumpty']
       t.sendKeys 'u'
       t.expect ['humpty', 'dumpty']
-      if not secondPasteDisabled
-        t.sendKeys 'p'
-        t.expect ['humpty', 'humpty', 'dumpty']
+      # violates cloning constraints
+      t.sendKeys 'p'
+      t.expect ['humpty', 'dumpty']
 
     it "works behind", () ->
       t = new TestCase ['humpty', 'dumpty']
@@ -133,8 +128,6 @@ describe "yank", () ->
         ] },
       ]
 
-      if secondPasteDisabled
-        t.sendKeys 'yy'
       t.sendKeys 'u'
       t.expect [
         { text: 'herpy', children: [
@@ -292,47 +285,94 @@ describe "yank", () ->
         ] }
       ]
 
-    if not secondPasteDisabled
-      it "becomes serialized after first paste", () ->
-        t = new TestCase [
-          { text: 'hey', collapsed: true, children: [
-            'yo'
-          ] }
-          'me'
-          'cool'
-        ]
-        t.sendKeys 'Vjd'
-        t.expect [
-          'cool'
-        ]
-        t.expectRegisterType Register.TYPES.ROWS
-        t.sendKeys 'p'
-        t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
-        t.expect [
-          'cool'
-          { text: 'hey', collapsed: true, children: [
-            'yo'
-          ] }
-          'me'
-        ]
-        t.sendKeys 'zryjrh'
-        t.expect [
-          'cool'
+    it "pastes clones", () ->
+      t = new TestCase [
+        { text: 'hey', collapsed: true, children: [
+          'yo'
+        ] }
+        'yo'
+        { text: 'what', children: [
+          'up'
+        ] }
+      ]
+      t.sendKeys 'Vjd'
+      t.expect [
+        { text: 'what', children: [
+          'up'
+        ] }
+      ]
+      t.expectRegisterType Register.TYPES.ROWS
+      t.sendKeys 'P'
+      t.expect [
+        { text: 'hey', collapsed: true, children: [
+          'yo'
+        ] }
+        'yo'
+        { text: 'what', children: [
+          'up'
+        ] }
+      ]
+      t.sendKeys 'zryjrh'
+      t.expect [
+        { text: 'yey', children: [
+          'ho'
+        ] }
+        'yo'
+        { text: 'what', children: [
+          'up'
+        ] }
+      ]
+      # second paste should be changed thing
+      t.sendKeys 'GP'
+      t.expect [
+        { text: 'yey', children: [
+          'ho'
+        ] }
+        'yo'
+        { text: 'what', children: [
           { text: 'yey', children: [
             'ho'
           ] }
-          'me'
-        ]
-        # second paste should be original thing
-        t.sendKeys 'P'
-        t.expect [
-          'cool'
-          { text: 'yey', children: [
-            { text: 'hey', collapsed: true, children: [
-              'yo'
-            ] }
-            'me'
-            'ho'
+          'yo'
+          'up'
+        ] }
+      ]
+
+    it "yanks serialized (not cloned)", () ->
+      t = new TestCase [
+        { text: 'hey', collapsed: true, children: [
+          'yo'
+        ] }
+        'yo'
+        { text: 'what', children: [
+          'up'
+        ] }
+      ]
+      t.sendKeys 'Vjy'
+      t.expectRegisterType Register.TYPES.SERIALIZED_ROWS
+      t.sendKeys 'gg'
+      t.sendKeys 'zryjrh'
+      t.expect [
+        { text: 'yey', children: [
+          'ho'
+        ] }
+        'yo'
+        { text: 'what', children: [
+          'up'
+        ] }
+      ]
+      # second paste should be changed thing
+      t.sendKeys 'GP'
+      t.expect [
+        { text: 'yey', children: [
+          'ho'
+        ] }
+        'yo'
+        { text: 'what', children: [
+          { text: 'hey', collapsed: true, children: [
+            'yo'
           ] }
-          'me'
-        ]
+          'yo'
+          'up'
+        ] }
+      ]

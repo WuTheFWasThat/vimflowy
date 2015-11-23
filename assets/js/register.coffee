@@ -88,11 +88,6 @@ class Register
 
     @view.cursor.set @rows[0], 0
 
-    # now that rows are in action, must switch to serialized version
-    # @saveSerializedRows (@view.data.serialize row for row in @rows)
-    # For efficiency, just wipe registers for now
-    do @saveNone
-
   pasteSerializedRows: (options = {}) ->
     row = @view.cursor.row
     parent = do row.getParent

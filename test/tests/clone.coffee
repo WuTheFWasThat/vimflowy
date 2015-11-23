@@ -647,3 +647,46 @@ describe "cloning", () ->
       ] }
       'Will be cloned',
     ]
+
+  it "can paste clones of removed items", () ->
+    t = new TestCase [
+      'test',
+      'hi',
+    ]
+    t.sendKeys 'jddu'
+    t.sendKeys 'yc'
+    t.sendKey 'ctrl+r'
+
+    t.expect [
+      'test'
+    ]
+
+    t.sendKeys 'p'
+    t.expect [
+      'test'
+      'hi'
+    ]
+
+  it "can paste clones of removed items, part 2", () ->
+    t = new TestCase [
+      'test',
+    ]
+    t.sendKeys 'ohi'
+    t.sendKey 'esc'
+
+    t.expect [
+      'test'
+      'hi'
+    ]
+
+    t.sendKeys 'ycu'
+    t.expect [
+      'test'
+    ]
+
+    t.sendKeys 'p'
+    # the pasted row is empty, since the typing got undone!
+    t.expect [
+      'test'
+      ''
+    ]
