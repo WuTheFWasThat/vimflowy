@@ -807,7 +807,7 @@ window?.renderLine = renderLine
       if line.length and options.delimiter
         if line[0].char != options.delimiter
           line = [{char: options.delimiter}].concat line
-      @detachBlock second
+      @delBlock second, {noNew: true, noSave: true}
 
       newCol = @data.getLength first
       mutation = new mutations.AddChars first, newCol, line
@@ -831,10 +831,14 @@ window?.renderLine = renderLine
       else
         @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
+    delBlock: (row, options) ->
+       @delBlocks row.parent, (@data.indexOf row), 1, options
+
     delBlocks: (parent, index, nrows, options = {}) ->
-      mutation = new mutations.DeleteBlocks parent, index, nrows, options
+      mutation = new mutations.DetachBlocks parent, index, nrows, options
       @do mutation
-      @register.saveRows mutation.deleted_rows
+      unless options.noSave
+        @register.saveRows mutation.deleted_rows
 
     delBlocksAtCursor: (nrows, options = {}) ->
       parent = do @cursor.row.getParent
@@ -846,7 +850,7 @@ window?.renderLine = renderLine
       @do mutation
 
     addClones: (cloned_rows, parent, index = -1, options = {}) ->
-      mutation = new mutations.CloneBlocks cloned_rows, parent, index, options
+      mutation = new mutations.AttachBlocks parent, cloned_rows, index, options
       @do mutation
 
     yankBlocks: (row, nrows) ->
@@ -866,18 +870,13 @@ window?.renderLine = renderLine
     yankBlocksCloneAtCursor: (nrows) ->
       @yankBlocksClone @cursor.row, nrows
 
-    detachBlock: (row, options = {}) ->
-      mutation = new mutations.DetachBlock row, options
-      @do mutation
-      return mutation
-
     attachBlocks: (rows, parent, index, options = {}) ->
+      @do new mutations.AttachBlocks parent, (row.id for row in rows), index, options
       for row in rows
-        @attachBlock row, parent, index, options
-        index += 1
+        row.setParent parent
 
     attachBlock: (row, parent, index = -1, options = {}) ->
-      @do new mutations.AttachBlock row, parent, index, options
+      @attachBlocks [row], parent, index, options
 
     validateRowInsertion: (parent, id, sameParent=false) ->
       if (not sameParent) and @data.wouldBeDoubledSiblingInsert parent, id

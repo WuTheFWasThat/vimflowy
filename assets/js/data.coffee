@@ -206,10 +206,7 @@ class Data
       for ancestorId in @deltaAncestry row
         @_updateMark ancestorId, markId, ''
 
-  # try to restore the marks of an id that was detached
-  # assumes that the marks dictionary contains the old values
-  attachMarks: (row) ->
-    id = row.id
+  _attachMarks: (id) ->
     marks = @store.getMarks id
     for markIdStr, mark of marks
       markId = parseInt markIdStr
@@ -233,22 +230,28 @@ class Data
   # structure #
   #############
 
-  getChildren: (parent) ->
-    (Row.loadFrom parent, serialized) for serialized in @store.getChildren parent.id
+  _getChildren: (id) ->
+    return @store.getChildren id
 
-  setChildren: (parent, children) ->
-    for child in children
-      errors.assert (child.parent == parent)
-    @store.setChildren parent.id, (do child.serialize for child in children)
-
-  findChild: (row, id) ->
-    _.find (@getChildren row), (x) -> x.id == id
+  _setChildren: (id, children) ->
+    return @store.setChildren id, children
 
   _getParents: (id) ->
     return @store.getParents id
 
   _setParents: (id, children_id) ->
     @store.setParents id, children_id
+
+  getChildren: (parent) ->
+    (Row.loadFrom parent, serialized) for serialized in @_getChildren parent.id
+
+  setChildren: (parent, children) ->
+    for child in children
+      errors.assert (child.parent == parent)
+    @_setChildren parent.id, (do child.serialize for child in children)
+
+  findChild: (row, id) ->
+    _.find (@getChildren row), (x) -> x.id == id
 
   hasChildren: (row) ->
     return ((@getChildren row).length > 0)
@@ -343,26 +346,31 @@ class Data
 
   # attaches a detached child to a parent
   # the child should not have a parent already
-  attachChild: (row, child, index = -1) ->
-    (@attachChildren row, [child], index)[0]
+  attachChild: (parent, child, index = -1) ->
+    (@attachChildren parent, [child], index)[0]
 
-  attachChildren: (row, new_children, index = -1) ->
-    children = @getChildren row
+  attachChildren: (parent, new_children, index = -1) ->
+    @_attachChildren parent.id, (x.id for x in new_children), index
+    for child in new_children
+      child.setParent parent
+    return new_children
+
+  # takes id, [id], and attaches each of the ids to the row
+  _attachChildren: (parent, new_children, index = -1) ->
+    children = @_getChildren parent
     if index == -1
       children.push.apply children, new_children
     else
       children.splice.apply children, [index, 0].concat(new_children)
-    for child in new_children
-      child.setParent row
-      parents = @_getParents child.id
-      parents.push row.id
-      @_setParents child.id, parents
-
-    @setChildren row, children
+    @_setChildren parent, children
 
     for child in new_children
-      @attachMarks child
-    return new_children
+      parents = @_getParents child
+      parents.push parent
+      @_setParents child, parents
+
+    for child in new_children
+      @_attachMarks child
 
   # returns an array representing the ancestry of a row,
   # up until the ancestor specified by the `stop` parameter
@@ -508,10 +516,6 @@ class Data
     id = do @store.getNew
     child = new Row row, id
     @attachChild row, child, index
-
-  cloneRows: (rows, parent, index = -1) ->
-    clones = ((do row.clone) for row in rows)
-    @attachChildren parent, clones, index
 
   _insertSiblingHelper: (row, after) ->
     if row.id == @viewRoot.id

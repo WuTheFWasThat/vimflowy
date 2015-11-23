@@ -116,37 +116,37 @@ if module?
       view.data.detach @row
       view.data.attachChild @detached.parent, @row, @detached.index
 
-  class DetachBlock extends Mutation
-    constructor: (@row, @options = {}) ->
+  class AttachBlocks extends Mutation
+    # options:
+    #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
+    #              indicating which block the cursor should go to
+
+    constructor: (@parent, @cloned_rows, @index = -1, @options = {}) ->
+      @nrows = @cloned_rows.length
 
     str: () ->
-      return "row #{@row.id}"
-
-    mutate: (view) ->
-      errors.assert (not do @row.isRoot), "Cannot detach root"
-      @detached = view.data.detach @row
-
-    rewind: (view) ->
-      view.data.attachChild @detached.parent, @row, @detached.index
-
-  class AttachBlock extends Mutation
-    constructor: (@row, @parent, @index = -1, @options = {}) ->
-
-    str: () ->
-      return "row #{@row.id}, parent #{@parent}"
+      return "parent #{@parent.id}, index #{@index}"
 
     validate: (view) ->
-      if not view.validateRowInsertion @parent, @row.id
-        return false
+      for id in @cloned_rows
+        if not view.validateRowInsertion @parent, id
+          return false
       return true
 
     mutate: (view) ->
-      view.data.attachChild @parent, @row, @index
+      view.data._attachChildren @parent.id, @cloned_rows, @index
+
+      if @options.setCursor == 'first'
+        view.cursor.set (view.data.findChild @parent, @cloned_rows[0]), 0
+      else if @options.setCursor == 'last'
+        view.cursor.set (view.data.findChild @parent, @cloned_rows[@cloned_rows.length-1]), 0
 
     rewind: (view) ->
-      view.data.detach @row
+      delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+      for sib in delete_siblings
+        view.data.detach sib
 
-  class DeleteBlocks extends Mutation
+  class DetachBlocks extends Mutation
     constructor: (@parent, @index, @nrows = 1, @options = {}) ->
 
     str: () ->
@@ -171,8 +171,9 @@ if module?
       else
         next = if @index == 0 then @parent else children[@index - 1]
         if next.id == view.data.viewRoot.id
-          next = view.data.addChild @parent
-          @created = next
+          unless @options.noNew
+            next = view.data.addChild @parent
+            @created = next
 
       view.cursor.set next, 0
 
@@ -190,6 +191,7 @@ if module?
       if @created != null
         view.data.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 
+  # creates new blocks (as opposed to attaching ones that already exist)
   class AddBlocks extends Mutation
     # options:
     #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
@@ -227,40 +229,6 @@ if module?
         view.data.attachChild @parent, sib, index
         index += 1
 
-  class CloneBlocks extends Mutation
-    # options:
-    #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
-    #              indicating which block the cursor should go to
-
-    constructor: (@cloned_rows, @parent, @index = -1, @options = {}) ->
-      @nrows = @cloned_rows.length
-
-    str: () ->
-      return "parent #{@parent.id}, index #{@index}"
-
-    validate: (view) ->
-      for id in @cloned_rows
-        original = view.data.canonicalInstance id
-        if not view.validateRowInsertion original, @parent
-          return false
-      return true
-
-    mutate: (view) ->
-      originals = (view.data.canonicalInstance id for id in @cloned_rows)
-
-      index = @index
-      clones = view.data.cloneRows originals, @parent, index
-
-      if @options.setCursor == 'first'
-        view.cursor.set clones[0], 0
-      else if @options.setCursor == 'last'
-        view.cursor.set clones[-1], 0
-
-    rewind: (view) ->
-      delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
-      for sib in delete_siblings
-        view.data.detach sib
-
   class ToggleBlock extends Mutation
     constructor: (@row) ->
     str: () ->
@@ -283,12 +251,10 @@ if module?
   exports.AddChars = AddChars
   exports.DelChars = DelChars
   exports.InsertRow = InsertRow
-  exports.DetachBlock = DetachBlock
-  exports.AttachBlock = AttachBlock
+  exports.AttachBlocks = AttachBlocks
+  exports.DetachBlocks = DetachBlocks
   exports.MoveBlock = MoveBlock
-  exports.DeleteBlocks = DeleteBlocks
   exports.AddBlocks = AddBlocks
-  exports.CloneBlocks = CloneBlocks
   exports.ToggleBlock = ToggleBlock
   exports.SetMark = SetMark
 )(if typeof exports isnt 'undefined' then exports else window.mutations = {})

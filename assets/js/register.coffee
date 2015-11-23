@@ -37,6 +37,7 @@ class Register
   saveRows: (data) ->
     @type = Register.TYPES.ROWS
     @data = data
+
   saveSerializedRows: (data) ->
     @type = Register.TYPES.SERIALIZED_ROWS
     @data = data

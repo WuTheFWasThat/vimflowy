@@ -88,3 +88,12 @@ describe "join", () ->
     t = new TestCase ['empty', '']
     t.sendKeys 'J'
     t.expect ['empty']
+
+  it "doesnt affect registers", () ->
+    t = new TestCase ['af', 'as', 'df']
+    t.sendKeys 'dd'
+    t.expect ['as', 'df']
+    t.sendKeys 'J'
+    t.expect ['as df']
+    t.sendKeys 'p'
+    t.expect ['as df', 'af']

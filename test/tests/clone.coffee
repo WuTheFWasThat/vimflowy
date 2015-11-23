@@ -90,16 +90,25 @@ describe "cloning", () ->
     t = new TestCase [
       { text: 'Clone', children: [
           'Clone child'
-        ]
-      }
+      ] }
       { text: 'Not a clone', children: [
-          'Also not a clone and going to be deleted'
-        ]
-      }
+        'Also not a clone and going to be deleted'
+      ] }
     ]
     t.sendKeys 'yc'
     t.sendKeys 'jjjj'
     t.sendKeys 'p'
+    t.expect [
+      { text: 'Clone', children: [
+        'Clone child',
+      ] }
+      { text: 'Not a clone', children: [
+        'Also not a clone and going to be deleted'
+        { text: 'Clone', children: [
+          'Clone child',
+        ] }
+      ] }
+    ]
     t.sendKeys 'kddk'
     t.expect [
       { text: 'Clone', children: [
