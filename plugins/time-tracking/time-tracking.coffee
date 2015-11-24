@@ -37,14 +37,14 @@
       @api.view.on 'exit', () =>
         @onRowChange @currentRow, null
 
-    getRowData: (row, keytype) ->
-      key = "#{row.id}:#{keytype}"
+    getRowData: (id, keytype) ->
+      key = "#{id}:#{keytype}"
       @api.getData key
-    setRowData: (row, keytype, value) ->
-      key = "#{row.id}:#{keytype}"
+    setRowData: (id, keytype, value) ->
+      key = "#{id}:#{keytype}"
       @api.setData key, value
-    transformRowData: (row, keytype, transform) ->
-      @setRowData row, keytype, (transform (@getRowData row, keytype))
+    transformRowData: (id, keytype, transform) ->
+      @setRowData id, keytype, (transform (@getRowData id, keytype))
 
     _date: (timestamp) ->
       "#{timestamp.getFullYear()}-#{timestamp.getMonth()}-#{timestamp.getDate()}"
@@ -100,11 +100,11 @@
       ), 1000
       @_rowPeriodDebounce @accPeriods
     onDescendentRemoved: (event) ->
-      ancestor = @api.view.data.canonicalInstance event.ancestorId
-      @_rebuildTreeTimes ancestor # Could avoid lookups by knowing exact changes, if needed
+      # Could avoid lookups by knowing exact changes, if needed
+      @_rebuildTreeTimes event.ancestorId
     onDescendentAdded: (event) ->
-      ancestor = @api.view.data.canonicalInstance event.ancestorId
-      @_rebuildTreeTimes ancestor # Could avoid lookups by knowing exact changes, if needed
+      # Could avoid lookups by knowing exact changes, if needed
+      @_rebuildTreeTimes event.ancestorId
 
     _combineDailyTimes: (dailyTimes...) ->
       combined = {}
@@ -114,9 +114,9 @@
           combined[date] += dailyTime[date] ? 0
       combined
     _addTimeToRow: (row, time, day) ->
-      @transformRowData row, "rowTotalTime", (current) ->
+      @transformRowData row.id, "rowTotalTime", (current) ->
         (current ? 0) + time
-      @transformRowData row, "rowDailyTime", (current) =>
+      @transformRowData row.id, "rowDailyTime", (current) =>
         key = @_date day
         current ?= {}
         current[key] = (current[key] ? 0) + time
@@ -128,42 +128,41 @@
         totalTime += period.time
         key = @_date day
         dailyTime[key] = (dailyTime[key] ? 0) + period.time
-      @setRowData row, "rowTotalTime", totalTime
-      @setRowData row, "rowDailyTime", dailyTime
+      @setRowData row.id, "rowTotalTime", totalTime
+      @setRowData row.id, "rowDailyTime", dailyTime
     _addTimeToAncestors: (row, time, day) ->
       for ancestorId in @api.view.data.allAncestors row.id, { inclusive: true }
-        ancestor = @api.view.data.canonicalInstance ancestorId
-        @transformRowData ancestor, "treeTotalTime", (current) ->
+        @transformRowData ancestorId, "treeTotalTime", (current) ->
           (current ? 0) + time
-        @transformRowData ancestor, "treeDailyTime", (current) =>
+        @transformRowData ancestorId, "treeDailyTime", (current) =>
           key = @_date day
           current ?= {}
           current[key] = (current[key] ? 0) + time
           current
-    _rebuildTreeTimes: (row) ->
-      children = @api.view.data.getChildren row
+    _rebuildTreeTimes: (id) ->
+      children = @api.view.data._getChildren id
 
       childTotalTimes = _.map children, (child) => @getRowData child, "treeTotalTime"
-      rowTotalTime = @getRowData row, "rowTotalTime"
+      rowTotalTime = @getRowData id, "rowTotalTime"
       totalTimes = _.compact ([rowTotalTime].concat childTotalTimes)
       totalTime = sum totalTimes
-      @setRowData row, "treeTotalTime", (current) =>
+      @setRowData id, "treeTotalTime", (current) =>
 
       childDailyTimes = _.map children, (child) => @getRowData child, "treeDailyTime"
-      rowDailyTime = @getRowData row, "rowDailyTime"
+      rowDailyTime = @getRowData id, "rowDailyTime"
       dailyTimes = _.compact ([rowDailyTime].concat childDailyTimes)
       dailyTime = @_combineDailyTimes.apply @, dailyTimes
-      @setRowData row, "treeDailyTime", dailyTime
+      @setRowData id, "treeDailyTime", dailyTime
 
     rowTime: (row, range) ->
       if range?
-        times = @getRowData row, "treeDailyTime"
+        times = @getRowData row.id, "treeDailyTime"
         time = 0
         for date in @daysBetween range.start, range.stop
           time += times[@_date date] ? 0
         time
       else
-        @getRowData row, "treeTotalTime"
+        @getRowData row.id, "treeTotalTime"
 
     printTime: (ms) ->
       seconds = Math.floor (ms /     1000 % 60)
