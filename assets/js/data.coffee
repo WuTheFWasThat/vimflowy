@@ -72,10 +72,11 @@ also deals with loading the initial data from the datastore, and serializing the
 
 Currently, the separation between the View and Data classes is not very good.  (see view.coffee)
 ###
-class Data
+class Data extends EventEmitter
   root: do Row.getRoot
 
   constructor: (store) ->
+    super
     @store = store
     @viewRoot = Row.loadFromAncestry (do @store.getLastViewRoot || [])
     return @
@@ -310,35 +311,43 @@ class Data
   viewable: (row) ->
     return (not @collapsed row) or (row.is @viewRoot)
 
+  # detach a block from the graph
   detach: (row) ->
-    # detach a block from the graph
-    # though it is detached, it remembers its old parent
-    # and remembers its old mark
-
-    original_ancestry = @allAncestors row.id, { inclusive: true }
-
     parent = do row.getParent
-    children = @getSiblings row
-    ci = @indexOf row
-    children.splice ci, 1
-    parents = @_getParents row.id
-    pi = _.findIndex parents, (par) ->
-        par == parent.id
-    parents.splice pi, 1
-
-    @setChildren parent, children
-    @_setParents row.id, parents
-
-    new_ancestry = @allAncestors row.id, { inclusive: true }
-    delta_ancestry = _.difference original_ancestry, new_ancestry
-
-    # Requires parent to be removed
-    @_detachMarks row.id, delta_ancestry
-
+    index = @indexOf row
+    @_detach parent.id, row.id
     return {
       parent: parent
-      index: ci
+      index: index
     }
+
+  _detach: (parent_id, id) ->
+    original_ancestry = @allAncestors id, { inclusive: true }
+
+    children = @_getChildren parent_id
+    ci = _.findIndex children, (sib) -> (sib == id)
+    children.splice ci, 1
+    @_setChildren parent_id, children
+
+    parents = @_getParents id
+    pi = _.findIndex parents, (par) -> (par == parent_id)
+    parents.splice pi, 1
+    @_setParents id, parents
+
+    new_ancestry = @allAncestors id, { inclusive: true }
+    delta_ancestry = _.difference original_ancestry, new_ancestry
+
+    # TODO: make this a plugin and have it use events
+    @_detachMarks id, delta_ancestry
+
+    # Notify all ancestors that their list of descendents changed
+    for ancestorId in delta_ancestry
+      @emit "descendentRemoved", { ancestorId: ancestorId, descendentId: id }
+    @emit "childRemoved", { parentId: parent_id, childId: id }
+    # TODO: prevent emission if it was from a move
+    wasLast = (parents.length == 0)
+    if wasLast
+      @emit "rowRemoved", { id: id}
 
   # attaches a detached child to a parent
   # the child should not have a parent already
@@ -351,22 +360,38 @@ class Data
       child.setParent parent
     return new_children
 
-  # takes id, [id], and attaches each of the ids to the row
   _attachChildren: (parent, new_children, index = -1) ->
-    children = @_getChildren parent
+    for child in new_children
+      @_attach parent, child, index
+      if index >= 0
+        index += 1
+
+  _attach: (parent_id, child_id, index = -1) ->
+    original_ancestry = @allAncestors child_id, { inclusive: true }
+
+    children = @_getChildren parent_id
     if index == -1
-      children.push.apply children, new_children
+      children.push child_id
     else
-      children.splice.apply children, [index, 0].concat(new_children)
-    @_setChildren parent, children
+      children.splice index, 0, child_id
+    @_setChildren parent_id, children
 
-    for child in new_children
-      parents = @_getParents child
-      parents.push parent
-      @_setParents child, parents
+    parents = @_getParents child_id
+    parents.push parent_id
+    @_setParents child_id, parents
 
-    for child in new_children
-      @_attachMarks child
+    # TODO: make this a plugin and have it use events
+    @_attachMarks child_id
+
+    new_ancestry = @allAncestors child_id, { inclusive: true }
+    delta_ancestry = _.difference new_ancestry, original_ancestry
+
+    for ancestorId in delta_ancestry
+      @emit "descendentAdded", { ancestorId: ancestorId, descendentId: child_id }
+    @emit "childAdded", { parentId: parent_id, childId: child_id }
+    # TODO: prevent emission if it was from a move
+    if parents.length == 1
+      @emit "rowAdded", { id: child_id }
 
   # returns an array representing the ancestry of a row,
   # up until the ancestor specified by the `stop` parameter

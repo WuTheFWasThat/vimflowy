@@ -2,18 +2,24 @@
 
 class EventEmitter
   constructor: ->
-    @events = {}
+    # mapping from event to list of listeners
+    @listeners = {}
 
   # emit an event and return all responses from the listeners
   emit: (event, args...) ->
-    return ((listener args...) for listener in (@events[event] or []))
+    ((listener event, args...) for listener in (@listeners['all'] or []))
+    return ((listener args...) for listener in (@listeners[event] or []))
 
   addListener: (event, listener) ->
     @emit 'newListener', event, listener
-    (@events[event]?=[]).push listener
+    (@listeners[event]?=[]).push listener
     return @
 
+  addListenerForAll: (listener) ->
+    @addListener 'all', listener
+
   on: @::addListener
+  onAll: @::addListenerForAll
 
   once: (event, listener) ->
     fn = =>
@@ -23,12 +29,12 @@ class EventEmitter
     return @
 
   removeListener: (event, listener) ->
-    return @ unless @events[event]
-    @events[event] = (l for l in @events[event] when l isnt listener)
+    return @ unless @listeners[event]
+    @listeners[event] = (l for l in @listeners[event] when l isnt listener)
     return @
 
   removeAllListeners: (event) ->
-    delete @events[event]
+    delete @listeners[event]
     return @
 
 # exports
