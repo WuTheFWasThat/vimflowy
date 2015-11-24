@@ -370,7 +370,7 @@ For more info/context, see keyBindings.coffee
     for i in [1..@repeat]
       motion tmp, {pastEnd: true}
 
-    if tmp.row != @view.cursor.row # only allow same-row movement
+    if not (tmp.row.is @view.cursor.row) # only allow same-row movement
       @view.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
     else
       @view.cursor.from tmp

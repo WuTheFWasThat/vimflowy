@@ -712,7 +712,7 @@ window?.renderLine = renderLine
     # options:
     #   - includeEnd says whether to also delete cursor2 location
     yankBetween: (cursor1, cursor2, options = {}) ->
-      if cursor2.row != cursor1.row
+      if not (cursor2.row.is cursor1.row)
         Logger.logger.warn "Not yet implemented"
         return
 
@@ -725,7 +725,7 @@ window?.renderLine = renderLine
     # options:
     #   - includeEnd says whether to also delete cursor2 location
     deleteBetween: (cursor1, cursor2, options = {}) ->
-      if cursor2.row != cursor1.row
+      if not (cursor2.row.is cursor1.row)
         Logger.logger.warn "Not yet implemented"
         return
 
@@ -762,7 +762,7 @@ window?.renderLine = renderLine
       @toggleProperty property, null, row, 0, (@data.getLength row)
 
     toggleRowPropertyBetween: (property, cursor1, cursor2, options) ->
-      if cursor2.row != cursor1.row
+      if not (cursor2.row.is cursor1.row)
         Logger.logger.warn "Not yet implemented"
         return
 
@@ -879,11 +879,11 @@ window?.renderLine = renderLine
     attachBlock: (row, parent, index = -1, options = {}) ->
       @do new mutations.AttachBlock row, parent, index, options
 
-    validateRowInsertion: (row, parent, sameParent=false) ->
-      if (not sameParent) and @data.wouldBeDoubledSiblingInsert row, parent
+    validateRowInsertion: (parent, id, sameParent=false) ->
+      if (not sameParent) and @data.wouldBeDoubledSiblingInsert parent, id
         @showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
         return false
-      if @data.wouldBeCircularInsert row, parent
+      if @data.wouldBeCircularInsert parent, id
         @showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
         return false
       return true

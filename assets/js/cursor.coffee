@@ -21,7 +21,7 @@ class Cursor extends EventEmitter
     @moveCol = moveCol ? col
 
   clone: () ->
-    return new Cursor @view, @row, @col, @moveCol
+    return new Cursor @view, (do @row.clone), @col, @moveCol
 
   _setRow: (row) ->
     @emit 'rowChange', @row, row

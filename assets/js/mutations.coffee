@@ -103,7 +103,7 @@ if module?
     validate: (view) ->
       sameParent = @parent.id == (do @row.getParent).id
       # if parent is the same, don't do sibling clone validation
-      if not (view.validateRowInsertion @row, @parent, sameParent)
+      if not (view.validateRowInsertion @parent, @row.id, sameParent)
         return false
       return true
 
@@ -136,7 +136,7 @@ if module?
       return "row #{@row.id}, parent #{@parent}"
 
     validate: (view) ->
-      if not view.validateRowInsertion @row, @parent
+      if not view.validateRowInsertion @parent, @row.id
         return false
       return true
 

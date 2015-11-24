@@ -461,11 +461,11 @@ class Data
   # It is sufficient to check if the row is an ancestor of the new parent,
   # because if there was a clone underneath the row which was an ancestor of 'parent',
   # then 'row' would also be an ancestor of 'parent'.
-  wouldBeCircularInsert: (row, parent) ->
-    _.contains (@allAncestors parent.id, { inclusive: true }), row.id
+  wouldBeCircularInsert: (parent, id) ->
+    _.contains (@allAncestors parent.id, { inclusive: true }), id
 
-  wouldBeDoubledSiblingInsert: (row, parent) ->
-    (@findChild parent, row.id)?
+  wouldBeDoubledSiblingInsert: (parent, id) ->
+    (@findChild parent, id)?
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
