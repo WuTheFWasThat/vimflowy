@@ -34,10 +34,6 @@ class Register
     @type = Register.TYPES.CHARS
     @data = data
 
-  saveRows: (data) ->
-    @type = Register.TYPES.ROWS
-    @data = data
-
   saveSerializedRows: (data) ->
     @type = Register.TYPES.SERIALIZED_ROWS
     @data = data
@@ -60,8 +56,6 @@ class Register
   paste: (options = {}) ->
     if @type == Register.TYPES.CHARS
       @pasteChars options
-    else if @type == Register.TYPES.ROWS
-      @pasteRows options
     else if @type == Register.TYPES.SERIALIZED_ROWS
       @pasteSerializedRows options
     else if @type == Register.TYPES.CLONED_ROWS
@@ -72,22 +66,6 @@ class Register
       @view.addCharsAtCursor @chars, {cursor: options.cursor}
     else
       @view.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
-
-  pasteRows: (options = {}) ->
-    row = @view.cursor.row
-    parent = do row.getParent
-    index = @view.data.indexOf row
-
-    if options.before
-      @view.attachBlocks @rows, parent, index
-    else
-      children = @view.data.getChildren row
-      if (not @view.data.collapsed row) and (children.length > 0)
-        @view.attachBlocks @rows, row, 0
-      else
-        @view.attachBlocks @rows, parent, (index + 1)
-
-    @view.cursor.set @rows[0], 0
 
   pasteSerializedRows: (options = {}) ->
     row = @view.cursor.row
@@ -109,13 +87,13 @@ class Register
     index = @view.data.indexOf row
 
     if options.before
-      @view.addClones @cloned_rows, parent, index, {setCursor: 'first'}
+      @view._attachBlocks parent, @cloned_rows, index, {setCursor: 'first'}
     else
       children = @view.data.getChildren row
       if (not @view.data.collapsed row) and (children.length > 0)
-        @view.addClones @cloned_rows, row, 0, {setCursor: 'first'}
+        @view._attachBlocks row, @cloned_rows, 0, {setCursor: 'first'}
       else
-        @view.addClones @cloned_rows, parent, (index + 1), {setCursor: 'first'}
+        @view._attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}
 
 # exports
 module?.exports = Register

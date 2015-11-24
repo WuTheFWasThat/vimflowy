@@ -90,10 +90,10 @@ describe "yank", () ->
     it "works in a basic case", () ->
       t = new TestCase ['humpty', 'dumpty']
       t.sendKeys 'dd'
-      t.expectRegisterType Register.TYPES.ROWS
+      t.expectRegisterType Register.TYPES.CLONED_ROWS
       t.expect [ 'dumpty' ]
       t.sendKeys 'p'
-      t.expectRegisterType Register.TYPES.ROWS
+      t.expectRegisterType Register.TYPES.CLONED_ROWS
       t.expect [ 'dumpty', 'humpty' ]
       t.sendKeys 'u'
       t.expect ['dumpty']
@@ -301,7 +301,7 @@ describe "yank", () ->
           'up'
         ] }
       ]
-      t.expectRegisterType Register.TYPES.ROWS
+      t.expectRegisterType Register.TYPES.CLONED_ROWS
       t.sendKeys 'P'
       t.expect [
         { text: 'hey', collapsed: true, children: [

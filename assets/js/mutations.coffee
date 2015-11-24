@@ -153,12 +153,12 @@ if module?
       return "parent #{@parent.id}, index #{@index}, nrows #{@nrows}"
 
     mutate: (view) ->
-      @deleted_rows = []
+      @deleted = []
       delete_rows = view.data.getChildRange @parent, @index, (@index+@nrows-1)
       for sib in delete_rows
         if sib == null then break
         view.data.detach sib
-        @deleted_rows.push sib
+        @deleted.push sib.id
 
       @created = null
       if @options.addNew
@@ -181,13 +181,11 @@ if module?
       if @created != null
         @created_rewinded = view.data.detach @created
       index = @index
-      for row in @deleted_rows
-        view.data.attachChild @parent, row, index
-        index += 1
+      view.data._attachChildren @parent.id, @deleted, index
 
     remutate: (view) ->
-      for row in @deleted_rows
-        view.data.detach row
+      for id in @deleted
+        view.data._detach @parent.id, id
       if @created != null
         view.data.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 

@@ -838,7 +838,7 @@ window?.renderLine = renderLine
       mutation = new mutations.DetachBlocks parent, index, nrows, options
       @do mutation
       unless options.noSave
-        @register.saveRows mutation.deleted_rows
+        @register.saveClonedRows mutation.deleted
 
     delBlocksAtCursor: (nrows, options = {}) ->
       parent = do @cursor.row.getParent
@@ -847,10 +847,6 @@ window?.renderLine = renderLine
 
     addBlocks: (serialized_rows, parent, index = -1, options = {}) ->
       mutation = new mutations.AddBlocks serialized_rows, parent, index, options
-      @do mutation
-
-    addClones: (cloned_rows, parent, index = -1, options = {}) ->
-      mutation = new mutations.AttachBlocks parent, cloned_rows, index, options
       @do mutation
 
     yankBlocks: (row, nrows) ->
@@ -870,8 +866,12 @@ window?.renderLine = renderLine
     yankBlocksCloneAtCursor: (nrows) ->
       @yankBlocksClone @cursor.row, nrows
 
+    _attachBlocks: (parent, ids, index = -1, options = {}) ->
+      mutation = new mutations.AttachBlocks parent, ids, index, options
+      @do mutation
+
     attachBlocks: (rows, parent, index, options = {}) ->
-      @do new mutations.AttachBlocks parent, (row.id for row in rows), index, options
+      @_attachBlocks parent, (row.id for row in rows), index, options
       for row in rows
         row.setParent parent
 
