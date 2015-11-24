@@ -195,15 +195,16 @@ class Data
     return false
 
   # detach the marks of an row that is being detached
-  detachMarks: (row) ->
-    marks = @store.getMarks row.id
-    lastClone = not @isClone row.id
+  _detachMarks: (id, delta_ancestry) ->
+    marks = @store.getMarks id
+    wasLast = (@_getParents id).length == 0
+
     for markIdStr, mark of marks
       markId = parseInt markIdStr
-      if lastClone
+      if wasLast
         @_updateAllMarks markId, ''
       # Remove the mark from all ancestors of the id which will no longer be ancestors once this Row is removed.
-      for ancestorId in @deltaAncestry row
+      for ancestorId in delta_ancestry
         @_updateMark ancestorId, markId, ''
 
   _attachMarks: (id) ->
@@ -305,17 +306,6 @@ class Data
     visit id
     ancestors
 
-  # Returns all ancestors of row, which are ancestors of only row and not any other instance of 'row.id'
-  deltaAncestry: (row, options) ->
-    options = _.defaults {}, options, { inclusive: false }
-
-    parentId = (do row.getParent).id
-    rowAncestry = @allAncestors parentId, { inclusive: options.inclusive }
-    idAncestry = []
-    for otherParentId in _.without (@_getParents row.id), parentId
-      idAncestry = _.union idAncestry, (@allAncestors otherParentId, { inclusive: true })
-    return _.difference rowAncestry, idAncestry
-
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (row) ->
     return (not @collapsed row) or (row.is @viewRoot)
@@ -325,7 +315,7 @@ class Data
     # though it is detached, it remembers its old parent
     # and remembers its old mark
 
-    @detachMarks row # Requires parent to be set correctly, so it's at the beginning
+    original_ancestry = @allAncestors row.id, { inclusive: true }
 
     parent = do row.getParent
     children = @getSiblings row
@@ -338,6 +328,12 @@ class Data
 
     @setChildren parent, children
     @_setParents row.id, parents
+
+    new_ancestry = @allAncestors row.id, { inclusive: true }
+    delta_ancestry = _.difference original_ancestry, new_ancestry
+
+    # Requires parent to be removed
+    @_detachMarks row.id, delta_ancestry
 
     return {
       parent: parent
