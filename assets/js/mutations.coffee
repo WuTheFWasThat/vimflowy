@@ -24,6 +24,25 @@ if module?
   global.errors = require('./errors.coffee')
 
 ((exports) ->
+
+  # validate inserting id as a child of parent_id
+  validateRowInsertion = (view, parent_id, id, options={}) ->
+    # check that there won't be doubled siblings
+    if not options.noSiblingCheck
+      if view.data._hasChild parent_id, id
+        view.showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
+        return false
+
+    # check that there are no cycles
+    # Precondition: tree is not already circular
+    # It is sufficient to check if the row is an ancestor of the new parent,
+    # because if there was a clone underneath the row which was an ancestor of 'parent',
+    # then 'row' would also be an ancestor of 'parent'.
+    if _.contains (view.data.allAncestors parent_id, { inclusive: true }), id
+      view.showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
+      return false
+    return true
+
   class Mutation
     str: () ->
       return ''
@@ -96,25 +115,25 @@ if module?
 
   class MoveBlock extends Mutation
     constructor: (@row, @parent, @index = -1, @options = {}) ->
+      @old_parent = do @row.getParent
 
     str: () ->
       return "row #{@row.id} from #{@row.parent.id} to #{@parent.id}"
 
     validate: (view) ->
-      sameParent = @parent.id == (do @row.getParent).id
       # if parent is the same, don't do sibling clone validation
-      if not (view.validateRowInsertion @parent, @row.id, sameParent)
-        return false
-      return true
+      sameParent = @parent.id == @old_parent.id
+      return (validateRowInsertion view, @parent.id, @row.id, {noSiblingCheck: sameParent})
 
     mutate: (view) ->
       errors.assert (not do @row.isRoot), "Cannot detach root"
-      @detached = view.data.detach @row
-      view.data.attachChild @parent, @row, @index
+      info = view.data._move @row.id, @old_parent.id, @parent.id, @index
+      @old_index = info.old.childIndex
+      @row.setParent @parent
 
     rewind: (view) ->
-      view.data.detach @row
-      view.data.attachChild @detached.parent, @row, @detached.index
+      view.data._move @row.id, @parent.id, @old_parent.id, @old_index
+      @row.setParent @old_parent
 
   class AttachBlocks extends Mutation
     # options:
@@ -129,7 +148,7 @@ if module?
 
     validate: (view) ->
       for id in @cloned_rows
-        if not view.validateRowInsertion @parent, id
+        if not (validateRowInsertion view, @parent.id, id)
           return false
       return true
 
@@ -185,7 +204,7 @@ if module?
 
     remutate: (view) ->
       for id in @deleted
-        view.data._detach @parent.id, id
+        view.data._detach id, @parent.id
       if @created != null
         view.data.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 

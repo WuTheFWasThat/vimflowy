@@ -878,19 +878,7 @@ window?.renderLine = renderLine
     attachBlock: (row, parent, index = -1, options = {}) ->
       @attachBlocks [row], parent, index, options
 
-    validateRowInsertion: (parent, id, sameParent=false) ->
-      if (not sameParent) and @data.wouldBeDoubledSiblingInsert parent, id
-        @showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
-        return false
-      if @data.wouldBeCircularInsert parent, id
-        @showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
-        return false
-      return true
-
     moveBlock: (row, parent, index = -1, options = {}) ->
-      sameParent = parent.id == (do row.getParent).id
-      if sameParent and index > @data.indexOf row
-        index = index - 1
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
       moved = @do new mutations.MoveBlock row, parent, index, options
       if moved

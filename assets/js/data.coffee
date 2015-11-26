@@ -5,6 +5,7 @@ if module?
   global.errors = require('./errors.coffee')
   global.constants = require('./constants.coffee')
   global.Logger = require('./logger.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
 
 class Row
   constructor: (@parent, @id) ->
@@ -315,17 +316,21 @@ class Data extends EventEmitter
   detach: (row) ->
     parent = do row.getParent
     index = @indexOf row
-    @_detach parent.id, row.id
+    @_detach row.id, parent.id
     return {
       parent: parent
       index: index
     }
 
-  _detach: (parent_id, id) ->
-    original_ancestry = @allAncestors id, { inclusive: true }
-
+  _hasChild: (parent_id, id) ->
     children = @_getChildren parent_id
     ci = _.findIndex children, (sib) -> (sib == id)
+    return ci != -1
+
+  _removeChild: (parent_id, id) ->
+    children = @_getChildren parent_id
+    ci = _.findIndex children, (sib) -> (sib == id)
+    errors.assert (ci != -1)
     children.splice ci, 1
     @_setChildren parent_id, children
 
@@ -333,6 +338,41 @@ class Data extends EventEmitter
     pi = _.findIndex parents, (par) -> (par == parent_id)
     parents.splice pi, 1
     @_setParents id, parents
+
+    info = {
+      parentId: parent_id,
+      parentIndex: pi,
+      childId: id,
+      childIndex: ci,
+    }
+    @emit "childRemoved", info
+    return info
+
+  _addChild: (parent_id, id, index) ->
+    children = @_getChildren parent_id
+    errors.assert (index <= children.length)
+    if index == -1
+      children.push id
+    else
+      children.splice index, 0, id
+    @_setChildren parent_id, children
+
+    parents = @_getParents id
+    parents.push parent_id
+    @_setParents id, parents
+    info = {
+      parentId: parent_id,
+      parentIndex: parents.length - 1,
+      childId: id,
+      childIndex: index,
+    }
+    @emit "childAdded", info
+    return info
+
+  _detach: (id, parent_id) ->
+    original_ancestry = @allAncestors id, { inclusive: true }
+
+    info = @_removeChild parent_id, id
 
     new_ancestry = @allAncestors id, { inclusive: true }
     delta_ancestry = _.difference original_ancestry, new_ancestry
@@ -343,11 +383,47 @@ class Data extends EventEmitter
     # Notify all ancestors that their list of descendents changed
     for ancestorId in delta_ancestry
       @emit "descendentRemoved", { ancestorId: ancestorId, descendentId: id }
-    @emit "childRemoved", { parentId: parent_id, childId: id }
-    # TODO: prevent emission if it was from a move
-    wasLast = (parents.length == 0)
+    wasLast = (@_getParents id).length == 0
     if wasLast
       @emit "rowRemoved", { id: id}
+    return info
+
+  _attach: (child_id, parent_id, index = -1) ->
+    original_ancestry = @allAncestors child_id, { inclusive: true }
+
+    info = @_addChild parent_id, child_id, index
+
+    # TODO: make this a plugin and have it use events
+    @_attachMarks child_id
+
+    new_ancestry = @allAncestors child_id, { inclusive: true }
+    delta_ancestry = _.difference new_ancestry, original_ancestry
+
+    for ancestorId in delta_ancestry
+      @emit "descendentAdded", { ancestorId: ancestorId, descendentId: child_id }
+    if (@_getParents child_id).length == 1
+      @emit "rowAdded", { id: child_id }
+    return info
+
+  _move: (child_id, old_parent_id, new_parent_id, index = -1) ->
+    original_ancestry = @allAncestors child_id, { inclusive: true }
+
+    remove_info = @_removeChild old_parent_id, child_id
+
+    if (old_parent_id == new_parent_id) and (index > remove_info.childIndex)
+      index = index - 1
+    add_info = @_addChild new_parent_id, child_id, index
+
+    new_ancestry = @allAncestors child_id, { inclusive: true }
+
+    for ancestorId in (_.difference new_ancestry, original_ancestry)
+      @emit "descendentAdded", { ancestorId: ancestorId, descendentId: child_id }
+    for ancestorId in (_.difference original_ancestry, new_ancestry)
+      @emit "descendentRemoved", { ancestorId: ancestorId, descendentId: child_id }
+    return {
+      old: remove_info
+      new: add_info
+    }
 
   # attaches a detached child to a parent
   # the child should not have a parent already
@@ -362,36 +438,9 @@ class Data extends EventEmitter
 
   _attachChildren: (parent, new_children, index = -1) ->
     for child in new_children
-      @_attach parent, child, index
+      @_attach child, parent, index
       if index >= 0
         index += 1
-
-  _attach: (parent_id, child_id, index = -1) ->
-    original_ancestry = @allAncestors child_id, { inclusive: true }
-
-    children = @_getChildren parent_id
-    if index == -1
-      children.push child_id
-    else
-      children.splice index, 0, child_id
-    @_setChildren parent_id, children
-
-    parents = @_getParents child_id
-    parents.push parent_id
-    @_setParents child_id, parents
-
-    # TODO: make this a plugin and have it use events
-    @_attachMarks child_id
-
-    new_ancestry = @allAncestors child_id, { inclusive: true }
-    delta_ancestry = _.difference new_ancestry, original_ancestry
-
-    for ancestorId in delta_ancestry
-      @emit "descendentAdded", { ancestorId: ancestorId, descendentId: child_id }
-    @emit "childAdded", { parentId: parent_id, childId: child_id }
-    # TODO: prevent emission if it was from a move
-    if parents.length == 1
-      @emit "rowAdded", { id: child_id }
 
   # returns an array representing the ancestry of a row,
   # up until the ancestor specified by the `stop` parameter
@@ -483,18 +532,6 @@ class Data extends EventEmitter
         return null
       if @collapsed cur
         answer = cur
-
-  # checks whether inserting a clone of row under parent would create a cycle
-  # Precondition: tree is not already circular
-  #
-  # It is sufficient to check if the row is an ancestor of the new parent,
-  # because if there was a clone underneath the row which was an ancestor of 'parent',
-  # then 'row' would also be an ancestor of 'parent'.
-  wouldBeCircularInsert: (parent, id) ->
-    _.contains (@allAncestors parent.id, { inclusive: true }), id
-
-  wouldBeDoubledSiblingInsert: (parent, id) ->
-    (@findChild parent, id)?
 
   # returns whether a row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
