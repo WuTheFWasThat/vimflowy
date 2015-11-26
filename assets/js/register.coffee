@@ -73,13 +73,13 @@ class Register
     index = @view.data.indexOf row
 
     if options.before
-      @view.addBlocks @serialized_rows, parent, index, {setCursor: 'first'}
+      @view.addBlocks parent, index, @serialized_rows, {setCursor: 'first'}
     else
       children = @view.data.getChildren row
       if (not @view.data.collapsed row) and (children.length > 0)
-        @view.addBlocks @serialized_rows, row, 0, {setCursor: 'first'}
+        @view.addBlocks row, 0, @serialized_rows, {setCursor: 'first'}
       else
-        @view.addBlocks @serialized_rows, parent, (index + 1), {setCursor: 'first'}
+        @view.addBlocks parent, (index + 1), @serialized_rows, {setCursor: 'first'}
 
   pasteClonedRows: (options = {}) ->
     row = @view.cursor.row

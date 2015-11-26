@@ -423,9 +423,9 @@ window?.renderLine = renderLine
       if not root then return false
       row = @cursor.row
       if root.text == '' && root.children # Complete export, not one node
-        @addBlocks root.children, row, 0
+        @addBlocks row, 0, root.children
       else
-        @addBlocks [root], row, 0
+        @addBlocks row, 0, [root]
       do @save
       do @render
       return true
@@ -775,16 +775,16 @@ window?.renderLine = renderLine
     newLineBelow: () ->
       children = @data.getChildren @cursor.row
       if (not @data.collapsed @cursor.row) and children.length > 0
-        @do new mutations.InsertRow @cursor.row, 0
+        @addBlocks @cursor.row, 0, [''], {setCursor: 'first'}
       else
         parent = do @cursor.row.getParent
         index = @data.indexOf @cursor.row
-        @do new mutations.InsertRow parent, (index+1)
+        @addBlocks parent, (index+1), [''], {setCursor: 'first'}
 
     newLineAbove: () ->
       parent = do @cursor.row.getParent
       index = @data.indexOf @cursor.row
-      @do new mutations.InsertRow parent, index
+      @addBlocks parent, index, [''], {setCursor: 'first'}
 
     # behavior of "enter", splitting a line
     newLineAtCursor: () ->
@@ -845,8 +845,8 @@ window?.renderLine = renderLine
       index = @data.indexOf @cursor.row
       @delBlocks parent, index, nrows, options
 
-    addBlocks: (serialized_rows, parent, index = -1, options = {}) ->
-      mutation = new mutations.AddBlocks serialized_rows, parent, index, options
+    addBlocks: (parent, index = -1, serialized_rows, options = {}) ->
+      mutation = new mutations.AddBlocks parent, index, serialized_rows, options
       @do mutation
 
     yankBlocks: (row, nrows) ->

@@ -97,22 +97,6 @@ if module?
     rewind: (view) ->
       view.data.writeChars @row, @col, @deletedChars
 
-  class InsertRow extends Mutation
-    constructor: (@parent, @index) ->
-
-    str: () ->
-      return "parent #{@parent.id} index #{@index}"
-
-    mutate: (view) ->
-      @newrow = view.data.addChild @parent, @index
-      view.cursor.set @newrow, 0
-
-    rewind: (view) ->
-      @rewinded = view.data.detach @newrow
-
-    remutate: (view) ->
-      view.data.attachChild @parent, @newrow, @index
-
   class MoveBlock extends Mutation
     constructor: (@row, @parent, @index = -1, @options = {}) ->
       @old_parent = do @row.getParent
@@ -214,7 +198,7 @@ if module?
     #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
     #              indicating which block the cursor should go to
 
-    constructor: (@serialized_rows, @parent, @index = -1, @options = {}) ->
+    constructor: (@parent, @index = -1, @serialized_rows, @options = {}) ->
       @nrows = @serialized_rows.length
 
     str: () ->
@@ -267,11 +251,10 @@ if module?
 
   exports.AddChars = AddChars
   exports.DelChars = DelChars
-  exports.InsertRow = InsertRow
-  exports.AttachBlocks = AttachBlocks
-  exports.DetachBlocks = DetachBlocks
-  exports.MoveBlock = MoveBlock
   exports.AddBlocks = AddBlocks
+  exports.DetachBlocks = DetachBlocks
+  exports.AttachBlocks = AttachBlocks
+  exports.MoveBlock = MoveBlock
   exports.ToggleBlock = ToggleBlock
   exports.SetMark = SetMark
 )(if typeof exports isnt 'undefined' then exports else window.mutations = {})
