@@ -2,6 +2,7 @@
 if module?
   global._ = require('lodash')
 
+  global.Modes = require('./modes.coffee')
   global.mutations = require('./mutations.coffee')
   global.constants = require('./constants.coffee')
   global.errors = require('./errors.coffee')
@@ -186,7 +187,7 @@ renderLine = (lineData, options = {}) ->
 window?.renderLine = renderLine
 
 (() ->
-  MODES = constants.MODES
+  MODES = Modes.modes
 
   class View
     containerDivID = (id) ->
@@ -279,46 +280,14 @@ window?.renderLine = renderLine
       if mode == @mode
         return
 
-      oldmode = @mode
-      if oldmode == MODES.VISUAL_LINE
-        @anchor = null
-        @lineSelect = false
-      else if oldmode == MODES.VISUAL
-        @anchor = null
-      else if oldmode == MODES.MARK
-        @markview = null
-        @markrow = null
-      else if oldmode == MODES.SEARCH
-        @menu = null
+      if @mode != null
+        (Modes.getMode @mode).exit @
 
       @mode = mode
+      (Modes.getMode @mode).enter @
+
       if @modeDiv
-        for k, v of MODES
-          if v == mode
-            @modeDiv.text k
-            break
-
-      if mode == MODES.MARK
-        # initialize marks stuff
-        data = new Data (new dataStore.InMemory)
-        data.load {
-          text: ''
-          children: ['']
-        }
-        @markview = new View data
-        @markrow = @cursor.row
-      else if mode == MODES.NORMAL
-        do @cursor.backIfNeeded
-      else if mode == MODES.VISUAL
-        @anchor = do @cursor.clone
-      else if mode == MODES.VISUAL_LINE
-        @lineSelect = true
-        @anchor = do @cursor.clone
-
-      if @menuDiv
-        @menuDiv.toggleClass 'hidden', (mode != MODES.SEARCH)
-      if @mainDiv
-        @mainDiv.toggleClass 'hidden', (mode == MODES.SEARCH)
+        @modeDiv.text (Modes.getMode @mode).name
       if @bindings
         @bindings.renderModeTable mode
 

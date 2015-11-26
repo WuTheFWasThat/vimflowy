@@ -18,11 +18,13 @@ if module?
   global.EventEmitter = require('./eventEmitter.coffee')
   global.errors = require('./errors.coffee')
   global.Menu = require('./menu.coffee')
+  global.Modes = require('./modes.coffee')
   global.constants = require('./constants.coffee')
+
   global.Logger = require('./logger.coffee')
 
 (() ->
-  MODES = constants.MODES
+  MODES = Modes.modes
 
   # manages a stream of keys, with the ability to
   # - queue keys
@@ -200,12 +202,11 @@ if module?
         # note: this uses original bindings to determine what's a motion
         [motion, repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[mode], repeat
         if motion == null
-          if mode == MODES.INSERT or mode == MODES.SEARCH
-            return false
           if keyStream.waiting # motion continuing
             return true
           else
-            do keyStream.forget
+            if mode == MODES.NORMAL or mode == MODES.VISUAL or mode == MODES.VISUAL_LINE
+              do keyStream.forget
             return false
 
         args.push motion

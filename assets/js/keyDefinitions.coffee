@@ -2,7 +2,7 @@ if module?
   global.tv4 = require('tv4')
 
   global.errors = require('./errors.coffee')
-  global.constants = require('./constants.coffee')
+  global.Modes = require('./modes.coffee')
 
 ###
 keyDefinitions defines the set of possible commands.
@@ -29,7 +29,7 @@ For more info/context, see keyBindings.coffee
 ###
 
 ((exports) ->
-  MODES = constants.MODES
+  MODES = Modes.modes
 
   visual_line_mode_delete_fn = () ->
     return () ->
@@ -58,7 +58,7 @@ For more info/context, see keyBindings.coffee
 
   # MOTIONS
   # should have a fn, returns a motion fn (or null)
-  # the motion itself should take a cursor, and and options dictionary
+  # the motion itself should take a cursor, and an options dictionary
   # (it should presumably move the cursor, somehow)
   # options include:
   #     pastEnd: whether to allow going past the end of the line
@@ -74,7 +74,7 @@ For more info/context, see keyBindings.coffee
         type: "string"
       }
       description: {
-        description: "Description of the plugin"
+        description: "Description of the motion"
         type: "string"
       }
     }

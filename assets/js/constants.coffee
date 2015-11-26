@@ -1,13 +1,4 @@
 ((exports) ->
-
-  exports.MODES =
-    NORMAL      : 1
-    INSERT      : 2
-    VISUAL      : 3
-    VISUAL_LINE : 4
-    SEARCH      : 5
-    MARK        : 6
-
   exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
 
   exports.root_id = 0

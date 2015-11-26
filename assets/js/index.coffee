@@ -50,7 +50,7 @@ create_view = (data) ->
           do view.newLineAtCursor
         chars = line.split ''
         options = {}
-        if view.mode == constants.MODES.INSERT
+        if view.mode == Modes.modes.INSERT
           options.cursor = {pastEnd: true}
         view.addCharsAtCursor chars, options
       do view.render

@@ -2,7 +2,7 @@
 if module?
   global._ = require('lodash')
 
-  global.constants = require('./constants.coffee')
+  global.Modes = require('./modes.coffee')
   global.errors = require('./errors.coffee')
   global.keyDefinitions = require('./keyDefinitions.coffee')
   global.Logger = require('./logger.coffee')
@@ -37,19 +37,11 @@ It also internally maintains
 ###
 
 ((exports) ->
-  MODES = constants.MODES
+  MODES = Modes.modes
 
-  NORMAL_MODE_TYPE = 'Normal-like modes'
-  INSERT_MODE_TYPE = 'Insert-like modes'
-  MODE_TYPES = {}
-  MODE_TYPES[NORMAL_MODE_TYPE] = {
-    description: 'Modes in which text is not being inserted, and all keys are configurable as commands.  NORMAL, VISUAL, and VISUAL_LINE modes fall under this category.'
-    modes: [MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE]
-  }
-  MODE_TYPES[INSERT_MODE_TYPE] = {
-    description: 'Modes in which most text is inserted, and available hotkeys are restricted to those with modifiers.  INSERT, SEARCH, and MARK modes fall under this category.'
-    modes: [MODES.INSERT, MODES.SEARCH, MODES.MARK]
-  }
+  NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
+  INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
+  MODE_TYPES = Modes.types
 
   defaultHotkeys = {}
 
