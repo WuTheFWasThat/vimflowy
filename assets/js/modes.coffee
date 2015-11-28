@@ -163,27 +163,6 @@ if module?
       if view.menuDiv
         view.menuDiv.removeClass 'hidden'
         view.mainDiv.addClass 'hidden'
-      view.menu = new Menu view.menuDiv, (chars) =>
-        results = []
-
-        selectRow = (row) ->
-          view.rootInto row
-
-        for found in view.find chars
-          row = found.row
-
-          highlights = {}
-          for i in found.matches
-            highlights[i] = true
-
-          results.push {
-            contents: view.data.getLine row
-            renderOptions: {
-              highlights: highlights
-            }
-            fn: selectRow.bind(@, row)
-          }
-        return results
     every: (view, keyStream) ->
       do view.menu.update
       do keyStream.forget

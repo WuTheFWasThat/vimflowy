@@ -520,6 +520,53 @@ For more info/context, see keyBindings.coffee
     description: 'Search',
   }, () ->
     @view.setMode MODES.SEARCH
+    @view.menu = new Menu @view.menuDiv, (chars) =>
+      find = (data, query, options = {}) ->
+        nresults = options.nresults or 10
+        case_sensitive = options.case_sensitive
+
+        results = [] # list of (row_id, index) pairs
+
+        canonicalize = (x) ->
+          return if options.case_sensitive then x else x.toLowerCase()
+
+        get_words = (char_array) ->
+          return (char_array.join '')
+            .split(/\s/g)
+            .filter((x) -> x.length)
+            .map canonicalize
+
+        query_words = get_words query
+        if query.length == 0
+          return results
+
+        for row in do data.orderedLines
+          line = canonicalize (data.getText row).join ''
+          matches = []
+          if _.all(query_words.map ((word) ->
+                    i = line.indexOf word
+                    if i == -1 then return false
+                    matches = matches.concat [i...i+word.length]
+                    return true
+                  ))
+            results.push { row: row, matches: matches }
+          if nresults > 0 and results.length == nresults
+            break
+        return results
+
+      return _.map(
+        (find @view.data, chars),
+        (found) =>
+          row = found.row
+          highlights = {}
+          for i in found.matches
+            highlights[i] = true
+          return {
+            contents: @view.data.getLine row
+            renderOptions: { highlights: highlights }
+            fn: () => @view.rootInto row
+          }
+      )
 
   registerAction [MODES.NORMAL], {
     name: 'MARK',
@@ -541,26 +588,28 @@ For more info/context, see keyBindings.coffee
   }, () ->
     @view.setMode MODES.SEARCH
     @view.menu = new Menu @view.menuDiv, (chars) =>
-      results = []
-
-      selectRow = (row) ->
-        @view.rootInto row
+      # find marks that start with the prefix
+      findMarks = (data, prefix, nresults = 10) ->
+        results = [] # list of rows
+        for mark, row of (do data.getAllMarks)
+          if (mark.indexOf prefix) == 0
+            results.push { row: row, mark: mark }
+            if nresults > 0 and results.length == nresults
+              break
+        return results
 
       text = chars.join('')
-      for found in @view.data.findMarks text
-        row = found.row
-        mark = found.mark
-        results.push {
-          contents: @view.data.getLine row
-          renderOptions: {
-            mark: mark
+      return _.map(
+        (findMarks @view.data, text),
+        (found) =>
+          row = found.row
+          return {
+            contents: @view.data.getLine row
+            renderOptions: { mark: found.mark }
+            fn: () => @view.rootInto row
           }
-          fn: selectRow.bind(@, row)
-        }
-      return results
+      )
 
-    do @view.menu.update
-    do @keyStream.forget
   registerAction [MODES.NORMAL], {
     name: 'JUMP_PREVIOUS',
     description: 'Jump to previous location',

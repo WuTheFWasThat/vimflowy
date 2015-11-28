@@ -19,6 +19,7 @@ It exposes methods for manipulation of the document, and movement of the cursor
 It also handles rendering of everything, including settings.
 
 Currently, the separation between the View and Data classes is not very good.  (see data.coffee)
+Ideally, view shouldn't do much more than handle cursors and rendering
 ###
 
 renderLine = (lineData, options = {}) ->
@@ -314,7 +315,6 @@ window?.renderLine = renderLine
           @messageDiv.text('')
           @messageDiv.removeClass()
         ), options.time
-
 
     #################
     # import/export #
@@ -660,10 +660,6 @@ window?.renderLine = renderLine
     delCharsAfterCursor: (nchars, options) ->
       return @delChars @cursor.row, @cursor.col, nchars, options
 
-    # spliceCharsAfterCursor: (nchars, chars, options) ->
-    #   @delCharsAfterCursor nchars, {cursor: {pastEnd: true}}
-    #   @addCharsAtCursor chars, options
-
     replaceCharsAfterCursor: (char, nchars, options) ->
       deleted = @delCharsAfterCursor nchars, {cursor: {pastEnd: true}}
       chars = []
@@ -835,17 +831,9 @@ window?.renderLine = renderLine
     yankBlocksCloneAtCursor: (nrows) ->
       @yankBlocksClone @cursor.row, nrows
 
-    _attachBlocks: (parent, ids, index = -1, options = {}) ->
+    attachBlocks: (parent, ids, index = -1, options = {}) ->
       mutation = new mutations.AttachBlocks parent, ids, index, options
       @do mutation
-
-    attachBlocks: (rows, parent, index, options = {}) ->
-      @_attachBlocks parent, (row.id for row in rows), index, options
-      for row in rows
-        row.setParent parent
-
-    attachBlock: (row, parent, index = -1, options = {}) ->
-      @attachBlocks [row], parent, index, options
 
     moveBlock: (row, parent, index = -1, options = {}) ->
       [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
@@ -954,10 +942,6 @@ window?.renderLine = renderLine
 
     pasteAfter: (options = {}) ->
       @register.paste options
-
-    find: (chars, options = {}) ->
-      results = @data.find chars, options
-      return results
 
     setMark: (row, mark) ->
       allMarks = do @data.store.getAllMarks

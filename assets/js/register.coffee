@@ -86,13 +86,13 @@ class Register
     index = @view.data.indexOf row
 
     if options.before
-      @view._attachBlocks parent, @cloned_rows, index, {setCursor: 'first'}
+      @view.attachBlocks parent, @cloned_rows, index, {setCursor: 'first'}
     else
       children = @view.data.getChildren row
       if (not @view.data.collapsed row) and (children.length > 0)
-        @view._attachBlocks row, @cloned_rows, 0, {setCursor: 'first'}
+        @view.attachBlocks row, @cloned_rows, 0, {setCursor: 'first'}
       else
-        @view._attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}
+        @view.attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}
 
 # exports
 module?.exports = Register
