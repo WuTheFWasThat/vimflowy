@@ -1,10 +1,11 @@
 if module?
   global._ = require('lodash')
   global.tv4 = require('tv4')
+  global.DependencyGraph = require('dependencies-online')
 
+  global.utils = require('./utils.coffee')
   global.Logger = require('./logger.coffee')
   global.errors = require('./errors.coffee')
-  global.DependencyGraph = require('dependencies-online')
 
 (() ->
   # class for exposing plugin API
@@ -72,13 +73,6 @@ if module?
     }
   }
 
-  # shim for filling in default values, with tv4
-  tv4.fill_defaults = (data, schema) ->
-    for prop, prop_info of schema.properties
-      if prop not of data
-        if 'default' of prop_info
-          data[prop] = _.cloneDeep prop_info['default']
-
   class PluginsManager
 
     STATUS = {
@@ -102,7 +96,7 @@ if module?
         throw new errors.GenericError(
           "Error validating plugin #{JSON.stringify(plugin_metadata, null, 2)}: #{JSON.stringify(tv4.error)}"
         )
-      tv4.fill_defaults plugin_metadata, PLUGIN_SCHEMA
+      utils.fill_tv4_defaults plugin_metadata, PLUGIN_SCHEMA
 
     resolveView: (view) ->
       @view = view

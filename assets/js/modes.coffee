@@ -25,35 +25,57 @@ if module?
         description: "Function taking view, upon entering mode"
         type: "function"
       }
+      every: {
+        description: "Function executed on every action, while in the mode.  Takes view and keystream"
+        type: "function"
+      }
       exit: {
         description: "Function taking view, upon entering mode"
         type: "function"
+      }
+
+      key_transforms: {
+        description: """
+        a list of functions taking a key and view
+          (key, view, keyStream) -> key
+        if the key should be ignored, return null (in which case
+        other functions won't receive the key)
+
+        the functions are called in the order they're registered
+        """
+        type: "array"
+        default: []
+        items: {
+          type: "function"
+        }
       }
     }
   }
   class Mode
     # TODO: set mode and unset mode hooks
-
     constructor: (metadata) ->
       @metadata = metadata
       @name = metadata.name
-
-      # a list of functions taking a key and view
-      #   (key, view) -> key
-      # if the key should be ignored, return null (in which case
-      # other functions won't receive the key)
-
-      # the functions are called in the order they're registered
-      # false if the key should be filtered out
-      @key_transforms = []
+      @key_transforms = metadata.key_transforms
 
     enter: (view) ->
       if @metadata.enter
         @metadata.enter view
 
+    every: (view, keyStream) ->
+      if @metadata.every
+        @metadata.every view, keyStream
+
     exit: (view) ->
       if @metadata.exit
         @metadata.exit view
+
+    transform_key: (key, view, keyStream) ->
+      for key_transform in @key_transforms
+        key = key_transform key, view, keyStream
+        if key == null
+          break
+      return key
 
   # an enum dictionary,
   MODES_ENUM = {}
@@ -77,6 +99,8 @@ if module?
       throw new errors.GenericError(
         "Error validating mode #{JSON.stringify(mode, null, 2)}: #{JSON.stringify(tv4.error)}"
       )
+    utils.fill_tv4_defaults metadata, MODE_SCHEMA
+
     name = metadata.name
     mode = new Mode metadata
     MODES_ENUM[name] = modeCounter
@@ -84,6 +108,13 @@ if module?
     MODE_TYPES[metadata.hotkey_type].modes.push modeCounter
     modeCounter += 1
     return mode
+
+  transform_insert_key = (key) ->
+    if key == 'shift+enter'
+      key = '\n'
+    else if key == 'space' or key == 'shift+space'
+      key = ' '
+    return key
 
   registerMode {
     name: 'NORMAL'
@@ -94,6 +125,18 @@ if module?
   registerMode {
     name: 'INSERT'
     hotkey_type: INSERT_MODE_TYPE
+    key_transforms: [
+      (key, view, keyStream) ->
+        key = transform_insert_key key
+        if key.length == 1
+          # simply insert the key
+          obj = {char: key}
+          for property in constants.text_properties
+            if view.cursor.getProperty property then obj[property] = true
+          view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
+          return null
+        return key
+    ]
   }
   registerMode {
     name: 'VISUAL'
@@ -120,11 +163,46 @@ if module?
       if view.menuDiv
         view.menuDiv.removeClass 'hidden'
         view.mainDiv.addClass 'hidden'
+      view.menu = new Menu view.menuDiv, (chars) =>
+        results = []
+
+        selectRow = (row) ->
+          view.rootInto row
+
+        for found in view.find chars
+          row = found.row
+
+          highlights = {}
+          for i in found.matches
+            highlights[i] = true
+
+          results.push {
+            contents: view.data.getLine row
+            renderOptions: {
+              highlights: highlights
+            }
+            fn: selectRow.bind(@, row)
+          }
+        return results
+    every: (view, keyStream) ->
+      do view.menu.update
+      do keyStream.forget
     exit: (view) ->
       view.menu = null
       if view.menuDiv
         view.menuDiv.addClass 'hidden'
         view.mainDiv.removeClass 'hidden'
+    key_transforms: [
+      (key, view, keyStream) ->
+        key = transform_insert_key key
+        if key.length == 1
+          view.menu.view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+          do view.menu.update
+          do keyStream.forget
+          return null
+        return key
+    ]
+
   }
   registerMode {
     name: 'MARK'
@@ -141,6 +219,16 @@ if module?
     exit: (view) ->
       view.markview = null
       view.markrow = null
+    key_transforms: [
+      (key, view, keyStream) ->
+        # must be non-whitespace
+        if key.length == 1
+          if /^\S*$/.test(key)
+            view.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+            return null
+        return key
+    ]
+
   }
 
   me = {

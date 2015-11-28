@@ -1,3 +1,6 @@
+if module?
+  global._ = require('lodash')
+
 ((exports) ->
 
   exports.isWhitespace = (char) ->
@@ -23,5 +26,12 @@
     elemBottom = elemTop + $elem.height()
 
     return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop))
+
+  # shim for filling in default values, with tv4
+  exports.fill_tv4_defaults = (data, schema) ->
+    for prop, prop_info of schema.properties
+      if prop not of data
+        if 'default' of prop_info
+          data[prop] = _.cloneDeep prop_info['default']
 
 )(if typeof exports isnt 'undefined' then exports else window.utils = {})

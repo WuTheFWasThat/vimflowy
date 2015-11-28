@@ -9,9 +9,8 @@ class Register
   @TYPES = {
     NONE: 0
     CHARS: 1
-    ROWS: 2
-    SERIALIZED_ROWS: 3
-    CLONED_ROWS: 4
+    SERIALIZED_ROWS: 2
+    CLONED_ROWS: 3
   }
 
   # Register is a union type. @data holds one of several kinds of values

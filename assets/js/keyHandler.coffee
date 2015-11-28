@@ -160,40 +160,11 @@ if module?
       fn = null
       args = []
 
+      key = (Modes.getMode mode).transform_key key, @view, keyStream
+      if key == null
+        return true
+
       if not (key of bindings)
-        if mode == MODES.INSERT
-          if key == 'shift+enter'
-            key = '\n'
-          else if key == 'space' or key == 'shift+space'
-            key = ' '
-
-          if key.length == 1
-            # simply insert the key
-            obj = {char: key}
-            for property in constants.text_properties
-              if @view.cursor.getProperty property then obj[property] = true
-            @view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
-            return true
-
-        if mode == MODES.SEARCH
-          if key == 'shift+enter'
-            key = '\n'
-          else if key == 'space'
-            key = ' '
-          if key.length == 1
-            @view.menu.view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
-            do @view.menu.update
-            do keyStream.forget
-            return true
-
-        if mode == MODES.MARK
-          # must be non-whitespace
-          if key.length == 1
-            if /^\S*$/.test(key)
-              @view.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
-              return true
-            return false
-
         if not ('MOTION' of bindings)
           if mode != MODES.INSERT
             do keyStream.forget
@@ -238,10 +209,7 @@ if module?
 
         info.definition.apply context, args
 
-        if mode == MODES.SEARCH
-          if @view.mode != MODES.NORMAL
-            do @view.menu.update
-          do keyStream.forget
+        (Modes.getMode @view.mode).every @view, keyStream
 
         return true
       else
