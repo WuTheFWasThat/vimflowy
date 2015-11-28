@@ -592,6 +592,7 @@ class Data extends EventEmitter
     return @_insertSiblingHelper row, 0
 
   orderedLines: () ->
+    # TODO: deal with clones
     rows = []
 
     helper = (row) =>
@@ -679,3 +680,5 @@ class Data extends EventEmitter
 # exports
 module?.exports = Data
 window?.Data = Data
+# hacky, used only for rendering...
+window?.Row = Row

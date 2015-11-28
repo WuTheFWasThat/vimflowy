@@ -995,9 +995,14 @@ window?.renderLine = renderLine
          @scrollMain (elemBottom - window.innerHeight + bottom_margin)
 
     getVisibleRows: () ->
-      ids = $.makeArray($('.bullet')).filter((bullet) => return utils.isScrolledIntoView $(bullet), @mainDiv)
-                                   .map((x) -> return parseInt $(x).data('id'))
-      return ids
+      rows= $.makeArray($('.bullet'))
+             .filter((bullet) => return utils.isScrolledIntoView $(bullet), @mainDiv)
+             .filter((bullet) => return not $(bullet).hasClass 'fa-clone')
+             .map((x) ->
+                # NOTE: can't use $(x).data
+                # http://stackoverflow.com/questions/25876274/jquery-data-not-working
+                return Row.loadFromAncestry JSON.parse $(x).attr('data-ancestry'))
+      return rows
 
     # given an anchor and cursor, figures out the right blocks to be deleting
     # returns a parent, minindex, and maxindex
@@ -1101,8 +1106,9 @@ window?.renderLine = renderLine
           cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon', title: 'Cloned' }
           rowElements.push cloneIcon
 
-        if @easy_motion_mappings and row.id of @easy_motion_mappings.id_to_key
-          char = @easy_motion_mappings.id_to_key[row.id]
+        ancestry_str = JSON.stringify do row.getAncestry
+        if @easy_motion_mappings and ancestry_str of @easy_motion_mappings.row_to_key
+          char = @easy_motion_mappings.row_to_key[ancestry_str]
           bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent'}, [char]
         else
           icon = 'fa-circle'
@@ -1111,7 +1117,7 @@ window?.renderLine = renderLine
 
           bulletOpts = {
             className: 'fa ' + icon + ' bullet'
-            attributes: {'data-id': row.id}
+            attributes: {'data-id': row.id, 'data-ancestry': ancestry_str}
           }
           if @data.hasChildren row
             bulletOpts.style = {cursor: 'pointer'}

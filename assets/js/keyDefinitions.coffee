@@ -253,8 +253,8 @@ For more info/context, see keyBindings.coffee
     if key == null
       do @keyStream.wait
 
-      ids = do @view.getVisibleRows
-      ids = ids.filter (row) => return (row.id != @view.cursor.row.id)
+      rows = (do @view.getVisibleRows).filter (row) =>
+               return not (row.is @view.cursor.row)
       keys = [
         'z', 'x', 'c', 'v',
         'q', 'w', 'e', 'r', 't',
@@ -264,28 +264,27 @@ For more info/context, see keyBindings.coffee
         'b', 'n', 'm',
       ]
 
-      if keys.length > ids.length
-        start = (keys.length - ids.length) / 2
-        keys = keys.slice(start, start + ids.length)
+      if keys.length > rows.length
+        start = (keys.length - rows.length) / 2
+        keys = keys.slice(start, start + rows.length)
       else
-        start = (ids.length - keys.length) / 2
-        ids = ids.slice(start, start + ids.length)
+        start = (rows.length - keys.length) / 2
+        rows = rows.slice(start, start + rows.length)
 
       mappings = {
-        key_to_id: {}
-        id_to_key: {}
+        key_to_row: {}
+        row_to_key: {}
       }
-      for [id, key] in _.zip(ids, keys)
-        mappings.key_to_id[key] = id
-        mappings.id_to_key[id] = key
+      for [row, key] in _.zip(rows, keys)
+        mappings.key_to_row[key] = row
+        mappings.row_to_key[JSON.stringify do row.getAncestry] = key
       @view.easy_motion_mappings = mappings
 
       return null
     else
       return (cursor, options) ->
-        if key of @view.easy_motion_mappings.key_to_id
-          id = @view.easy_motion_mappings.key_to_id[key]
-          row = @view.data.canonicalInstance id
+        if key of @view.easy_motion_mappings.key_to_row
+          row = @view.easy_motion_mappings.key_to_row[key]
           cursor.set row, 0
         @view.easy_motion_mappings = null
 
