@@ -29,8 +29,8 @@
       @api.cursor.on 'rowChange', (@onRowChange.bind @)
       @onRowChange undefined, @api.cursor.row # Initial setup
       @api.view.on 'renderLine', (@onRenderLine.bind @)
-      @api.view.data.on 'descendentRemoved', (@onDescendentRemoved.bind @)
-      @api.view.data.on 'descendentAdded', (@onDescendentAdded.bind @)
+      @api.view.data.on 'afterDescendentRemoved', (@onDescendentRemoved.bind @)
+      @api.view.data.on 'afterDescendentAdded', (@onDescendentAdded.bind @)
       @rowChanges = []
       @currentRow = null
       @displayTime = true
@@ -73,7 +73,7 @@
       if to?
         @currentRow ?= { id: to.id, time: time }
 
-    _onRowPeriod: (period) ->
+    onRowPeriod: (period) ->
       period.time ?= period.stop - period.start
       @transformRowData period.row, "timePeriods", (current) =>
         current ?= []
@@ -81,34 +81,18 @@
         current
       @_addTimeToRow period.row, period.time, period.stop
       @_addTimeToAncestors period.row, period.time, period.stop
-    # onRowPeriod gets called with a period, but we don't want to write
-    # data to localstorage constantly. So instead, we store a list of
-    # events that come in, and at most once a second, batch-process them,
-    # combining any events that are on the same row.
-    onRowPeriod: (period) ->
-      @accPeriods ?= []
-      @accPeriods.push period
-      @_rowPeriodDebounce ?= _.throttle ((periods) =>
-        delete @accPeriods
-        periods = _.reduce periods, ((combined, period) ->
-          combined[period.id] ?= { id: period.id, time: 0, start: period.start, row: period.row }
-          combined[period.id].time += (period.stop - period.start)
-          combined[period.id].stop = period.stop
-          combined
-        ), {}, @
-        _.each periods, @_onRowPeriod, @
-      ), 1000
-      @_rowPeriodDebounce @accPeriods
     onDescendentRemoved: (event) ->
+      @logger.debug "Descendent #{event.descendentId} removed from #{event.ancestorId}"
       # Could avoid lookups by knowing exact changes, if needed
       @_rebuildTreeTimes event.ancestorId
     onDescendentAdded: (event) ->
+      @logger.debug "Descendent #{event.descendentId} added to #{event.ancestorId}"
       # Could avoid lookups by knowing exact changes, if needed
       @_rebuildTreeTimes event.ancestorId
 
     _combineDailyTimes: (dailyTimes...) ->
       combined = {}
-      for date in  _.union (_.map _.keys, dailyTimes)
+      for date in  _.union (_.map dailyTimes, _.keys)
         combined[date] = 0
         for dailyTime in dailyTimes
           combined[date] += dailyTime[date] ? 0
@@ -142,13 +126,13 @@
     _rebuildTreeTimes: (id) ->
       children = @api.view.data._getChildren id
 
-      childTotalTimes = _.map children, (child) => @getRowData child, "treeTotalTime"
+      childTotalTimes = _.map children, (child_id) => @getRowData child_id, "treeTotalTime"
       rowTotalTime = @getRowData id, "rowTotalTime"
       totalTimes = _.compact ([rowTotalTime].concat childTotalTimes)
       totalTime = sum totalTimes
-      @setRowData id, "treeTotalTime", (current) =>
+      @setRowData id, "treeTotalTime", totalTime
 
-      childDailyTimes = _.map children, (child) => @getRowData child, "treeDailyTime"
+      childDailyTimes = _.map children, (child_id) => @getRowData child_id, "treeDailyTime"
       rowDailyTime = @getRowData id, "rowDailyTime"
       dailyTimes = _.compact ([rowDailyTime].concat childDailyTimes)
       dailyTime = @_combineDailyTimes.apply @, dailyTimes

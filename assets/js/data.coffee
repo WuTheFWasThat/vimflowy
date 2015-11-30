@@ -306,6 +306,14 @@ class Data extends EventEmitter
           visit parent
     visit id
     ancestors
+  allAncestorsWithoutParent: (id, excluded_parent_id, options) ->
+    options = _.defaults {}, options, { inclusive: false }
+    ancestors = []
+    if options.inclusive
+      ancestors.push id
+    for parent_id in _.without (@_getParents id), excluded_parent_id
+      ancestors = _.union ancestors, (@allAncestors parent_id, { inclusive: true })
+    ancestors
 
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (row) ->
@@ -370,42 +378,63 @@ class Data extends EventEmitter
 
   _detach: (id, parent_id) ->
     original_ancestry = @allAncestors id, { inclusive: true }
+    new_ancestry = @allAncestorsWithoutParent id, parent_id, { inclusive: true }
+    removed_ancestry = _.difference original_ancestry, new_ancestry
+    wasLast = (@_getParents id).length == 1
+
+    # Notify all ancestors that their list of descendants changed
+    for ancestorId in removed_ancestry
+      @emit "beforeDescendantRemoved", { ancestorId: ancestorId, descendantId: id }
+    if wasLast
+      @emit "beforeRowRemoved", { id: id }
 
     info = @_removeChild parent_id, id
 
-    new_ancestry = @allAncestors id, { inclusive: true }
-    delta_ancestry = _.difference original_ancestry, new_ancestry
-
     # TODO: make this a plugin and have it use events
-    @_detachMarks id, delta_ancestry
+    @_detachMarks id, removed_ancestry
 
     # Notify all ancestors that their list of descendants changed
-    for ancestorId in delta_ancestry
-      @emit "descendantRemoved", { ancestorId: ancestorId, descendantId: id }
-    wasLast = (@_getParents id).length == 0
+    for ancestorId in removed_ancestry
+      @emit "afterDescendantRemoved", { ancestorId: ancestorId, descendantId: id }
     if wasLast
-      @emit "rowRemoved", { id: id}
+      @emit "afterRowRemoved", { id: id }
     return info
 
   _attach: (child_id, parent_id, index = -1) ->
     original_ancestry = @allAncestors child_id, { inclusive: true }
+    new_ancestry = _.union (@allAncestors child_id, { inclusive: true }), (@allAncestors parent_id, { inclusive: true })
+    added_ancestry = _.difference new_ancestry, original_ancestry
+    isFirst = (@_getParents child_id).length == 0
+
+    # Notify all ancestors thaat their list of descendants changed
+    for ancestorId in added_ancestry
+      @emit "afterDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
+    if isFirst
+      @emit "afterRowAdded", { id: child_id }
 
     info = @_addChild parent_id, child_id, index
 
     # TODO: make this a plugin and have it use events
     @_attachMarks child_id
 
-    new_ancestry = @allAncestors child_id, { inclusive: true }
-    delta_ancestry = _.difference new_ancestry, original_ancestry
-
-    for ancestorId in delta_ancestry
-      @emit "descendantAdded", { ancestorId: ancestorId, descendantId: child_id }
-    if (@_getParents child_id).length == 1
-      @emit "rowAdded", { id: child_id }
+    # Notify all ancestors thaat their list of descendants changed
+    for ancestorId in added_ancestry
+      @emit "afterDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
+    if isFirst
+      @emit "afterRowAdded", { id: child_id }
     return info
 
   _move: (child_id, old_parent_id, new_parent_id, index = -1) ->
     original_ancestry = @allAncestors child_id, { inclusive: true }
+    new_ancestry = _.union (@allAncestorsWithoutParent child_id, old_parent_id, { inclusive: true }), (@allAncestors new_parent_id, { inclusive: true })
+    added_ancestry = _.difference new_ancestry, original_ancestry
+    removed_ancestry = _.difference original_ancestry, new_ancestry
+
+    # Notify all ancestors thaat their list of descendants changed
+    for ancestorId in added_ancestry
+      @emit "beforeDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
+    for ancestorId in removed_ancestry
+      @emit "beforeDescendantRemoved", { ancestorId: ancestorId, descendantId: child_id }
 
     remove_info = @_removeChild old_parent_id, child_id
 
@@ -413,12 +442,11 @@ class Data extends EventEmitter
       index = index - 1
     add_info = @_addChild new_parent_id, child_id, index
 
-    new_ancestry = @allAncestors child_id, { inclusive: true }
-
-    for ancestorId in (_.difference new_ancestry, original_ancestry)
-      @emit "descendantAdded", { ancestorId: ancestorId, descendantId: child_id }
-    for ancestorId in (_.difference original_ancestry, new_ancestry)
-      @emit "descendantRemoved", { ancestorId: ancestorId, descendantId: child_id }
+    # Notify all ancestors thaat their list of descendants changed
+    for ancestorId in added_ancestry
+      @emit "afterDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
+    for ancestorId in removed_ancestry
+      @emit "afterDescendantRemoved", { ancestorId: ancestorId, descendantId: child_id }
     return {
       old: remove_info
       new: add_info
