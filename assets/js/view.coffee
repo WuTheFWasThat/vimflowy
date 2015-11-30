@@ -1247,6 +1247,16 @@ window?.renderLine = renderLine
 
       lineContents = renderLine lineData, lineoptions
       [].push.apply results, lineContents
+      lineContents = @applyRenderHook 'lineContents', lineContents, { row: row }
+
+      infoChildren = @applyRenderHook 'infoElements', [], { row: row }
+      info = virtualDom.h 'div', {
+        className: 'node-info'
+      }, infoChildren
+      results.push info
+
+      results = @applyRenderHook 'lineElements', results, { row: row }
+
       return results
 
   # exports
