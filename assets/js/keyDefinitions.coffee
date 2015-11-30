@@ -1,5 +1,5 @@
 if module?
-  global.tv4 = require('tv4')
+  global.utils= require('./utils.coffee')
 
   global.errors = require('./errors.coffee')
   global.Modes = require('./modes.coffee')
@@ -72,6 +72,7 @@ For more info/context, see keyBindings.coffee
       name: {
         description: "Name of the motion"
         type: "string"
+        pattern: "^[A-Z_]{2,32}$"
       }
       description: {
         description: "Description of the motion"
@@ -87,10 +88,7 @@ For more info/context, see keyBindings.coffee
     motion,
     definition
   ) ->
-    if not tv4.validate(motion, MOTION_SCHEMA, true, true)
-      throw new errors.GenericError(
-        "Error validating motion #{JSON.stringify(motion, null, 2)}: #{JSON.stringify(tv4.error)}"
-      )
+    utils.tv4_validate(motion, MOTION_SCHEMA, "motion")
     motion.definition = definition
     mainDefinition[motion.name] = motion
 
@@ -336,10 +334,8 @@ For more info/context, see keyBindings.coffee
     action,
     definition
   ) ->
-    if not tv4.validate(action, ACTION_SCHEMA, true, true)
-      throw new errors.GenericError(
-        "Error validating action #{JSON.stringify(action, null, 2)}: #{JSON.stringify(tv4.error)}"
-      )
+    utils.tv4_validate(action, ACTION_SCHEMA, "action")
+
     for mode in modes
       if not (mode of mainDefinition)
         mainDefinition[mode] = {}
@@ -390,12 +386,12 @@ For more info/context, see keyBindings.coffee
   }, (motion) ->
     motion @view.menu.view.cursor, {pastEnd: true}
 
-  registerAction [MODES.NORMAL], {
+  registerAction [MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE, MODES.INSERT, MODES.MARK, MODES.SEARCH], {
     name: 'HELP',
     description: 'Show/hide key bindings (edit in settings)',
   }, () ->
     do @view.toggleBindingsDiv
-    do @keyStream.forget
+    @keyStream.forget 1
 
   registerAction [MODES.NORMAL, MODES.INSERT], {
     name: 'ZOOM_IN',
@@ -572,7 +568,6 @@ For more info/context, see keyBindings.coffee
     description: 'Mark a line',
   }, () ->
     @view.setMode MODES.MARK
-    do @keyStream.forget
   registerAction [MODES.MARK], {
     name: 'FINISH_MARK',
     description: 'Finish typing mark',
@@ -614,13 +609,13 @@ For more info/context, see keyBindings.coffee
     description: 'Jump to previous location',
   }, () ->
     do @view.jumpPrevious
-    do @keyStream.forget
+    @keyStream.forget 1
   registerAction [MODES.NORMAL], {
     name: 'JUMP_NEXT',
     description: 'Jump to next location',
   }, () ->
     do @view.jumpNext
-    do @keyStream.forget
+    @keyStream.forget 1
 
   # traditional vim stuff
   registerAction [MODES.NORMAL], {
@@ -989,17 +984,14 @@ For more info/context, see keyBindings.coffee
     description: 'Scroll half window down',
   }, () ->
     @view.scrollPages 0.5
-    if @mode == MODES.NORMAL
-      do @keyStream.forget
-    # TODO: if insert, forget *only this*
+    @keyStream.forget 1
 
   registerAction [MODES.NORMAL, MODES.INSERT], {
     name: 'SCROLL_UP',
     description: 'Scroll half window up',
   }, () ->
     @view.scrollPages -0.5
-    if @mode == MODES.NORMAL
-      do @keyStream.forget
+    @keyStream.forget 1
 
   # for everything but normal mode
   registerAction [MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MODES.MARK], {

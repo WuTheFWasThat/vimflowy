@@ -74,9 +74,15 @@ if module?
       @lastSequence = processed
       @emit 'save'
 
-    forget: () ->
-      dropped = @queue.splice 0, @index
-      @index = 0
+    # forgets the most recently processed n items
+    forget: (n = null) ->
+      if n == null
+        # forget everything remembered, by default
+        n = @index
+
+      errors.assert (@index >= n)
+      dropped = @queue.splice (@index-n), n
+      @index = @index - n
       return dropped
 
   class KeyHandler

@@ -1,5 +1,5 @@
 if module?
-  global.tv4 = require('tv4')
+  global.utils = require('./utils.coffee')
 
 ((exports) ->
 
@@ -95,10 +95,7 @@ if module?
 
   modeCounter = 1
   registerMode = (metadata, options = {}) ->
-    if not tv4.validate(metadata, MODE_SCHEMA, true, true)
-      throw new errors.GenericError(
-        "Error validating mode #{JSON.stringify(mode, null, 2)}: #{JSON.stringify(tv4.error)}"
-      )
+    utils.tv4_validate(metadata, MODE_SCHEMA, "mode")
     utils.fill_tv4_defaults metadata, MODE_SCHEMA
 
     name = metadata.name

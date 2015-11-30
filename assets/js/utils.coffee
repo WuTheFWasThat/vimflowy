@@ -1,5 +1,6 @@
 if module?
   global._ = require('lodash')
+  global.tv4 = require('tv4')
 
 ((exports) ->
 
@@ -27,11 +28,24 @@ if module?
 
     return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop))
 
+  exports.tv4_validate = (data, schema, object="data") ->
+      # 3rd argument: checks recursive
+      # 4th argument: bans unknown properties
+      if not tv4.validate(data, schema, true, true)
+        throw new errors.GenericError(
+          "Error validating #{object} schema #{JSON.stringify(data, null, 2)}: #{JSON.stringify(tv4.error)}"
+        )
+
   # shim for filling in default values, with tv4
   exports.fill_tv4_defaults = (data, schema) ->
     for prop, prop_info of schema.properties
       if prop not of data
         if 'default' of prop_info
           data[prop] = _.cloneDeep prop_info['default']
+      # recursively fill in defaults for objects
+      if prop_info.type == 'object'
+        if prop not of data
+          data[prop] = {}
+        exports.fill_tv4_defaults data[prop], prop_info
 
 )(if typeof exports isnt 'undefined' then exports else window.utils = {})

@@ -1,6 +1,5 @@
 if module?
   global._ = require('lodash')
-  global.tv4 = require('tv4')
   global.DependencyGraph = require('dependencies-online')
 
   global.utils = require('./utils.coffee')
@@ -92,10 +91,7 @@ if module?
       @pluginDependencies = new DependencyGraph
 
     validate: (plugin_metadata) ->
-      if not tv4.validate(plugin_metadata, PLUGIN_SCHEMA, true, true)
-        throw new errors.GenericError(
-          "Error validating plugin #{JSON.stringify(plugin_metadata, null, 2)}: #{JSON.stringify(tv4.error)}"
-        )
+      utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, "plugin")
       utils.fill_tv4_defaults plugin_metadata, PLUGIN_SCHEMA
 
     resolveView: (view) ->
