@@ -21,9 +21,7 @@ class Row
     @parent = parent
 
   debug: () ->
-    ancestors = do @getAncestry
-    ids = _.map ancestors, (row) -> row.id
-    ids.join ", "
+    (do @getAncestry).join ", "
 
   isRoot: () ->
     @id == constants.root_id
