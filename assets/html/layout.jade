@@ -51,10 +51,16 @@ html
     script(src='/js/plugins.js')
     script(src='/js/view.js')
     script(src='/js/menu.js')
+
+    // first expose definition functionality,
+    // then define everything
+    // then initialize bindings
+    // TODO: this is finnicky, should fix
     script(src='/js/keyDefinitions.js')
-    script(src='/js/keyBindings.js')
-    script(src='/js/index.js')
     each plugin_js_file in plugin_js_files
       script(src='/' + plugin_js_path + '/' + plugin_js_file)
+    script(src='/js/keyBindings.js')
+
+    script(src='/js/index.js')
 
     block morefoot

@@ -31,30 +31,102 @@ For more info/context, see keyBindings.coffee
 ((exports) ->
   MODES = Modes.modes
 
-  visual_line_mode_delete_fn = () ->
-    return () ->
-      @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
-      @view.setMode MODES.NORMAL
-      do @keyStream.save
+  NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
+  INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
 
-  visual_mode_delete_fn = () ->
-    return () ->
-      options = {includeEnd: true, yank: true}
-      @view.deleteBetween @view.cursor, @view.anchor, options
-      @view.setMode MODES.NORMAL
-      do @keyStream.save
+  WITHIN_ROW_MOTIONS = [
+    'LEFT', 'RIGHT',
+    'HOME', 'END',
+    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
+    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
+    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
+  ]
 
-  visual_line_indent = () ->
-    return () ->
-      @view.indentBlocks @row_start, @num_rows
-      @view.setMode MODES.NORMAL
-      do @keyStream.save
+  ALL_MOTIONS = [
+    WITHIN_ROW_MOTIONS...,
 
-  visual_line_unindent = () ->
-    return () ->
-      @view.unindentBlocks @row_start, @num_rows
-      @view.setMode MODES.NORMAL
-      do @keyStream.save
+    'UP', 'DOWN',
+    'NEXT_SIBLING', 'PREV_SIBLING',
+
+    'GO', 'GO_END', 'PARENT',
+    'EASY_MOTION',
+  ]
+
+  # set of possible commands for each mode
+  commands = {}
+  for modename, mode of MODES
+    commands[mode] = []
+
+  [].push.apply commands[MODES.NORMAL], (_.clone ALL_MOTIONS)
+  [].push.apply commands[MODES.VISUAL], (_.clone ALL_MOTIONS)
+  [].push.apply commands[MODES.VISUAL_LINE], (_.clone ALL_MOTIONS)
+  [].push.apply commands[MODES.INSERT], (_.clone ALL_MOTIONS)
+  [].push.apply commands[MODES.SEARCH], (_.clone WITHIN_ROW_MOTIONS)
+  [].push.apply commands[MODES.MARK], (_.clone WITHIN_ROW_MOTIONS)
+
+  # TODO: handle subdict case properly
+  commands[MODES.NORMAL].push('CLONE') # is in a sub-dict
+
+  defaultHotkeys = {}
+
+  # key mappings for normal-like modes (normal, visual, visual-line)
+  defaultHotkeys[NORMAL_MODE_TYPE] = {}
+  # key mappings for insert-like modes (insert, mark, menu)
+  defaultHotkeys[INSERT_MODE_TYPE] = {}
+
+  COMMAND_SCHEMA = {
+    title: "Command metadata schema"
+    type: "object"
+    required: [ 'name' ]
+    properties: {
+      name: {
+        description: "Name of the command"
+        type: "string"
+        pattern: "^[A-Z_]{2,32}$"
+      }
+      description: {
+        description: "Description of the command"
+        type: "string"
+      }
+      default_hotkeys: {
+        description: "Default hotkeys for the command"
+        type: "object"
+        properties: {
+          all: {
+            description: "Default hotkeys for all modes"
+            type: "array"
+            default: []
+            items: { type: "string" }
+          }
+          normal_like: {
+            description: "Default hotkey for normal-like modes"
+            type: "array"
+            default: []
+            items: { type: "string" }
+          }
+          insert_like: {
+            description: "Default hotkey for insert-like modes"
+            type: "array"
+            default: []
+            items: { type: "string" }
+          }
+        }
+      }
+    }
+  }
+
+  registerCommand = (metadata) ->
+    utils.tv4_validate(metadata, COMMAND_SCHEMA, "command")
+    utils.fill_tv4_defaults(metadata, COMMAND_SCHEMA)
+    name = metadata.name
+    defaultHotkeys[NORMAL_MODE_TYPE][name] =
+      (_.cloneDeep metadata.default_hotkeys.all).concat(
+       _.cloneDeep metadata.default_hotkeys.normal_like
+      )
+    defaultHotkeys[INSERT_MODE_TYPE][name] =
+      (_.cloneDeep metadata.default_hotkeys.all).concat(
+       _.cloneDeep metadata.default_hotkeys.insert_like
+      )
 
   # MOTIONS
   # should have a fn, returns a motion fn (or null)
@@ -90,9 +162,509 @@ For more info/context, see keyBindings.coffee
   ) ->
     utils.tv4_validate(motion, MOTION_SCHEMA, "motion")
     motion.definition = definition
+    if motion.name of mainDefinition
+      throw new errors.GenericError "Motion #{motion.name} has already been defined"
     mainDefinition[motion.name] = motion
 
   registerMotion = registerSubmotion.bind @, motionDefinitions
+
+  # TODO: make sure that the default hotkeys accurately represents the set of possible commands under that mode_type
+  #       the following used to work, and should be replaced
+  # for mode_type, mode_type_obj of MODE_TYPES
+  #   errors.assert_arrays_equal(
+  #     _.keys(defaultHotkeys[mode_type]),
+  #     _.union.apply(_, mode_type_obj.modes.map((mode) -> commands[mode]))
+  #   )
+
+  ACTION_SCHEMA = {
+    title: "Action metadata schema"
+    type: "object"
+    required: [ 'name', 'description' ]
+    properties: {
+      name: {
+        description: "Name of the action"
+        type: "string"
+      }
+      description: {
+        description: "Description of the action"
+        type: "string"
+      }
+    }
+  }
+
+  actionDefinitions = {}
+  for modename, mode of MODES
+    actionDefinitions[mode] = {}
+
+  registerSubaction = (
+    mainDefinition,
+    action,
+    definition
+  ) ->
+    utils.tv4_validate(action, ACTION_SCHEMA, "action")
+    if action.name of mainDefinition
+      throw new errors.GenericError "Action #{action.name} has already been defined"
+
+    mainDefinition[action.name] = _.cloneDeep action
+    mainDefinition[action.name].definition = definition
+
+  registerAction = (modes, action, definition) ->
+    for mode in modes
+      registerSubaction actionDefinitions[mode], action, definition
+      if action.name != 'MOTION'
+        commands[mode].push action.name
+
+  ####################
+  # COMMANDS
+  ####################
+
+  registerCommand {
+    name: 'HELP'
+    default_hotkeys:
+      insert_like: ['ctrl+?']
+      normal_like: ['?']
+  }
+
+  registerCommand {
+    name: 'INSERT'
+    default_hotkeys:
+      normal_like: ['i']
+  }
+  registerCommand {
+    name: 'INSERT_HOME'
+    default_hotkeys:
+      normal_like: ['I']
+  }
+  registerCommand {
+    name: 'INSERT_AFTER'
+    default_hotkeys:
+      normal_like: ['a']
+  }
+  registerCommand {
+    name: 'INSERT_END'
+    default_hotkeys:
+      normal_like: ['A']
+  }
+  registerCommand {
+    name: 'INSERT_LINE_BELOW'
+    default_hotkeys:
+      normal_like: ['o']
+  }
+  registerCommand {
+    name: 'INSERT_LINE_ABOVE'
+    default_hotkeys:
+      normal_like: ['O']
+  }
+
+  registerCommand {
+    name: 'LEFT'
+    default_hotkeys:
+      all: ['left']
+      normal_like: ['h']
+  }
+  registerCommand {
+    name: 'RIGHT'
+    default_hotkeys:
+      all: ['right']
+      normal_like: ['l']
+  }
+
+  registerCommand {
+    name: 'UP'
+    default_hotkeys:
+      all: ['up']
+      normal_like: ['k']
+  }
+  registerCommand {
+    name: 'DOWN'
+    default_hotkeys:
+      all: ['down']
+      normal_like: ['j']
+  }
+
+  registerCommand {
+    name: 'HOME'
+    default_hotkeys:
+      all: ['home']
+      normal_like: ['0', '^']
+      insert_like: ['ctrl+a']
+  }
+  registerCommand {
+    name: 'END'
+    default_hotkeys:
+      all: ['end']
+      normal_like : ['$']
+      insert_like: ['ctrl+e']
+  }
+
+  registerCommand {
+    name: 'BEGINNING_WORD'
+    default_hotkeys:
+      normal_like: ['b']
+      insert_like: ['alt+b']
+  }
+  registerCommand {
+    name: 'END_WORD'
+    default_hotkeys:
+      normal_like: ['e']
+      insert_like: ['alt+f']
+  }
+  registerCommand {
+    name: 'NEXT_WORD'
+    default_hotkeys:
+      normal_like: ['w']
+  }
+  registerCommand {
+    name: 'BEGINNING_WWORD'
+    default_hotkeys:
+      normal_like: ['B']
+  }
+  registerCommand {
+    name: 'END_WWORD'
+    default_hotkeys:
+      normal_like: ['E']
+  }
+  registerCommand {
+    name: 'NEXT_WWORD'
+    default_hotkeys:
+      normal_like: ['W']
+  }
+  registerCommand {
+    name: 'FIND_NEXT_CHAR'
+    default_hotkeys:
+      normal_like: ['f']
+  }
+  registerCommand {
+    name: 'FIND_PREV_CHAR'
+    default_hotkeys:
+      normal_like: ['F']
+  }
+  registerCommand {
+    name: 'TO_NEXT_CHAR'
+    default_hotkeys:
+      normal_like: ['t']
+  }
+  registerCommand {
+    name: 'TO_PREV_CHAR'
+    default_hotkeys:
+      normal_like: ['T']
+  }
+
+  registerCommand {
+    name: 'GO'
+    default_hotkeys:
+      normal_like: ['g']
+  }
+  registerCommand {
+    name: 'PARENT'
+    default_hotkeys:
+      normal_like: ['p']
+  }
+  registerCommand {
+    name: 'GO_END'
+    default_hotkeys:
+      normal_like: ['G']
+  }
+  registerCommand {
+    name: 'EASY_MOTION'
+    default_hotkeys:
+      normal_like: ['space']
+  }
+
+  registerCommand {
+    name: 'DELETE'
+    default_hotkeys:
+      normal_like: ['d']
+  }
+  registerCommand {
+    name: 'DELETE_TO_END'
+    default_hotkeys:
+      normal_like: ['D']
+      insert_like: ['ctrl+k']
+  }
+  registerCommand {
+    name: 'DELETE_TO_HOME'
+    default_hotkeys:
+      normal_like: []
+      insert_like: ['ctrl+u']
+  }
+  registerCommand {
+    name: 'DELETE_LAST_WORD'
+    default_hotkeys:
+      normal_like: []
+      insert_like: ['ctrl+w']
+  }
+  registerCommand {
+    name: 'CHANGE'
+    default_hotkeys:
+      normal_like: ['c']
+  }
+  registerCommand {
+    name: 'DELETE_CHAR'
+    default_hotkeys:
+      normal_like: ['x']
+      insert_like: ['shift+backspace']
+  }
+  registerCommand {
+    name: 'DELETE_LAST_CHAR'
+    default_hotkeys:
+      normal_like: ['X']
+      insert_like: ['backspace']
+  }
+  registerCommand {
+    name: 'CHANGE_CHAR'
+    default_hotkeys:
+      normal_like: ['s']
+  }
+  registerCommand {
+    name: 'REPLACE'
+    default_hotkeys:
+      normal_like: ['r']
+  }
+  registerCommand {
+    name: 'YANK'
+    default_hotkeys:
+      normal_like: ['y']
+  }
+  registerCommand {
+    name: 'CLONE'
+    default_hotkeys:
+      normal_like: ['c']
+  }
+  registerCommand {
+    name: 'PASTE_AFTER'
+    default_hotkeys:
+      normal_like: ['p']
+  }
+  registerCommand {
+    name: 'PASTE_BEFORE'
+    default_hotkeys:
+      normal_like: ['P']
+      insert_like: ['ctrl+y']
+  }
+  registerCommand {
+    name: 'JOIN_LINE'
+    default_hotkeys:
+      normal_like: ['J']
+  }
+  registerCommand {
+    name: 'SPLIT_LINE'
+    default_hotkeys:
+      normal_like: ['K']
+      insert_like: ['enter']
+  }
+
+  registerCommand {
+    name: 'INDENT_RIGHT'
+    default_hotkeys:
+      normal_like: ['>']
+  }
+  registerCommand {
+    name: 'INDENT_LEFT'
+    default_hotkeys:
+      normal_like: ['<']
+  }
+  registerCommand {
+    name: 'MOVE_BLOCK_RIGHT'
+    default_hotkeys:
+      normal_like: ['tab', 'ctrl+l']
+      insert_like: ['tab']
+  }
+  registerCommand {
+    name: 'MOVE_BLOCK_LEFT'
+    default_hotkeys:
+      normal_like: ['shift+tab', 'ctrl+h']
+      insert_like: ['shift+tab']
+  }
+  registerCommand {
+    name: 'MOVE_BLOCK_DOWN'
+    default_hotkeys:
+      normal_like: ['ctrl+j']
+  }
+  registerCommand {
+    name: 'MOVE_BLOCK_UP'
+    default_hotkeys:
+      normal_like: ['ctrl+k']
+  }
+
+  registerCommand {
+    name: 'NEXT_SIBLING'
+    default_hotkeys:
+      normal_like: ['alt+j']
+  }
+  registerCommand {
+    name: 'PREV_SIBLING'
+    default_hotkeys:
+      normal_like: ['alt+k']
+  }
+
+  registerCommand {
+    name: 'TOGGLE_FOLD'
+    default_hotkeys:
+      normal_like: ['z']
+      insert_like: ['ctrl+z']
+  }
+  registerCommand {
+    name: 'ZOOM_IN'
+    default_hotkeys:
+      normal_like: [']', 'alt+l', 'ctrl+right']
+      insert_like: ['ctrl+right']
+  }
+  registerCommand {
+    name: 'ZOOM_OUT'
+    default_hotkeys:
+      normal_like: ['[', 'alt+h', 'ctrl+left']
+      insert_like: ['ctrl+left']
+  }
+  registerCommand {
+    name: 'ZOOM_IN_ALL'
+    default_hotkeys:
+      normal_like: ['enter', '}']
+      insert_like: ['ctrl+shift+right']
+  }
+  registerCommand {
+    name: 'ZOOM_OUT_ALL'
+    default_hotkeys:
+      normal_like: ['shift+enter', '{']
+      insert_like: ['ctrl+shift+left']
+  }
+  registerCommand {
+    name: 'SCROLL_DOWN'
+    default_hotkeys:
+      all: ['page down']
+      normal_like: ['ctrl+d']
+      insert_like: ['ctrl+down']
+  }
+  registerCommand {
+    name: 'SCROLL_UP'
+    default_hotkeys:
+      all: ['page up']
+      normal_like: ['ctrl+u']
+      insert_like: ['ctrl+up']
+  }
+
+  registerCommand {
+    name: 'SEARCH'
+    default_hotkeys:
+      normal_like: ['/', 'ctrl+f']
+  }
+  registerCommand {
+    name: 'MARK'
+    default_hotkeys:
+      normal_like: ['m']
+  }
+  registerCommand {
+    name: 'MARK_SEARCH'
+    default_hotkeys:
+      normal_like: ['\'', '`']
+  }
+  registerCommand {
+    name: 'JUMP_PREVIOUS'
+    default_hotkeys:
+      normal_like: ['ctrl+o']
+  }
+  registerCommand {
+    name: 'JUMP_NEXT'
+    default_hotkeys:
+      normal_like: ['ctrl+i']
+  }
+
+  registerCommand {
+    name: 'UNDO'
+    default_hotkeys:
+      normal_like: ['u']
+  }
+  registerCommand {
+    name: 'REDO'
+    default_hotkeys:
+      normal_like: ['ctrl+r']
+  }
+  registerCommand {
+    name: 'REPLAY'
+    default_hotkeys:
+      normal_like: ['.']
+  }
+  registerCommand {
+    name: 'RECORD_MACRO'
+    default_hotkeys:
+      normal_like: ['q']
+  }
+  registerCommand {
+    name: 'PLAY_MACRO'
+    default_hotkeys:
+      normal_like: ['@']
+  }
+
+  registerCommand {
+    name: 'BOLD'
+    default_hotkeys:
+      all: ['ctrl+B']
+  }
+  registerCommand {
+    name: 'ITALIC'
+    default_hotkeys:
+      all: ['ctrl+I']
+  }
+  registerCommand {
+    name: 'UNDERLINE'
+    default_hotkeys:
+      all: ['ctrl+U']
+  }
+  registerCommand {
+    name: 'STRIKETHROUGH'
+    default_hotkeys:
+      all: ['ctrl+enter']
+  }
+
+  registerCommand {
+    name: 'ENTER_VISUAL'
+    default_hotkeys:
+      normal_like: ['v']
+  }
+  registerCommand {
+    name: 'ENTER_VISUAL_LINE'
+    default_hotkeys:
+      normal_like: ['V']
+  }
+
+  registerCommand {
+    name: 'SWAP_CURSOR'
+    default_hotkeys:
+      normal_like: ['o', 'O']
+  }
+  registerCommand {
+    name: 'EXIT_MODE'
+    default_hotkeys:
+      all: ['esc', 'ctrl+c']
+  }
+
+  # TODO: SWAP_CASE         : ['~']
+
+  registerCommand {
+    name: 'MENU_SELECT'
+    default_hotkeys:
+      insert_like: ['enter']
+  }
+  registerCommand {
+    name: 'MENU_UP'
+    default_hotkeys:
+      insert_like: ['ctrl+k', 'up', 'tab']
+  }
+  registerCommand {
+    name: 'MENU_DOWN'
+    default_hotkeys:
+      insert_like: ['ctrl+j', 'down', 'shift+tab']
+  }
+
+  registerCommand {
+    name: 'FINISH_MARK'
+    default_hotkeys:
+      insert_like: ['enter']
+  }
+
+  ####################
+  # MOTIONS
+  ####################
 
   registerMotion {
     name: 'LEFT',
@@ -310,39 +882,34 @@ For more info/context, see keyBindings.coffee
     description: 'Various commands for navigation (operator)',
   }, go_definition
 
-  ACTION_SCHEMA = {
-    title: "Action metadata schema"
-    type: "object"
-    required: [ 'name', 'description' ]
-    properties: {
-      name: {
-        description: "Name of the action"
-        type: "string"
-      }
-      description: {
-        description: "Description of the action"
-        type: "string"
-      }
-    }
-  }
+  ####################
+  # ACTIONS
+  ####################
 
-  actionDefinitions = {}
+  visual_line_mode_delete_fn = () ->
+    return () ->
+      @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
 
-  registerSubaction = (
-    mainDefinition,
-    modes,
-    action,
-    definition
-  ) ->
-    utils.tv4_validate(action, ACTION_SCHEMA, "action")
+  visual_mode_delete_fn = () ->
+    return () ->
+      options = {includeEnd: true, yank: true}
+      @view.deleteBetween @view.cursor, @view.anchor, options
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
 
-    for mode in modes
-      if not (mode of mainDefinition)
-        mainDefinition[mode] = {}
-      mainDefinition[mode][action.name] = _.cloneDeep action
-      mainDefinition[mode][action.name].definition = definition
+  visual_line_indent = () ->
+    return () ->
+      @view.indentBlocks @row_start, @num_rows
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
 
-  registerAction = registerSubaction.bind @, actionDefinitions
+  visual_line_unindent = () ->
+    return () ->
+      @view.unindentBlocks @row_start, @num_rows
+      @view.setMode MODES.NORMAL
+      do @keyStream.save
 
   registerAction [MODES.NORMAL], {
     name: 'MOTION',
@@ -720,30 +1287,35 @@ For more info/context, see keyBindings.coffee
     name: 'DELETE',
     description: 'Delete',
   }, (do visual_line_mode_delete_fn)
+
+  delete_definition = {}
+  registerSubaction delete_definition, {
+    name: 'DELETE'
+    description: 'Delete blocks'
+  }, () ->
+    @view.delBlocksAtCursor @repeat, {addNew: false}
+    do @keyStream.save
+  registerSubaction delete_definition, {
+    name: 'MOTION'
+    description: 'Delete from cursor with motion'
+  }, (motion) ->
+    cursor = do @view.cursor.clone
+    for i in [1..@repeat]
+      motion cursor, {pastEnd: true, pastEndWord: true}
+
+    @view.deleteBetween @view.cursor, cursor, { yank: true }
+    do @keyStream.save
+  registerSubaction delete_definition, {
+    name: 'MARK'
+    description: 'Delete mark at cursor'
+  }, () ->
+    @view.setMark @view.cursor.row, ''
+    do @keyStream.save
+
   registerAction [MODES.NORMAL], {
     name: 'DELETE',
     description: 'Delete (operator)',
-  }, {
-    DELETE:
-      description: 'Delete blocks'
-      definition: () ->
-        @view.delBlocksAtCursor @repeat, {addNew: false}
-        do @keyStream.save
-    MOTION:
-      description: 'Delete from cursor with motion'
-      definition: (motion) ->
-        cursor = do @view.cursor.clone
-        for i in [1..@repeat]
-          motion cursor, {pastEnd: true, pastEndWord: true}
-
-        @view.deleteBetween @view.cursor, cursor, { yank: true }
-        do @keyStream.save
-    MARK:
-      description: 'Delete mark at cursor'
-      definition: () ->
-        @view.setMark @view.cursor.row, ''
-        do @keyStream.save
-  }
+  }, delete_definition
 
   registerAction [MODES.VISUAL], {
     name: 'CHANGE',
@@ -758,25 +1330,26 @@ For more info/context, see keyBindings.coffee
   }, () ->
     @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: true}
     @view.setMode MODES.INSERT
+  change_definition = {}
+  registerSubaction change_definition, {
+    name: 'CHANGE',
+    description: 'Delete blocks, and enter insert mode'
+  }, () ->
+    @view.setMode MODES.INSERT
+    @view.delBlocksAtCursor @repeat, {addNew: true}
+  registerSubaction change_definition, {
+    name: 'MOTION',
+    description: 'Delete from cursor with motion, and enter insert mode'
+  }, (motion) ->
+    cursor = do @view.cursor.clone
+    for i in [1..@repeat]
+      motion cursor, {pastEnd: true, pastEndWord: true}
+    @view.setMode MODES.INSERT
+    @view.deleteBetween @view.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
   registerAction [MODES.NORMAL], {
     name: 'CHANGE',
     description: 'Change (operator)',
-  }, {
-    CHANGE:
-      description: 'Delete blocks, and enter insert mode'
-      definition: () ->
-        @view.setMode MODES.INSERT
-        @view.delBlocksAtCursor @repeat, {addNew: true}
-    MOTION:
-      description: 'Delete from cursor with motion, and enter insert mode'
-      definition: (motion) ->
-        cursor = do @view.cursor.clone
-        for i in [1..@repeat]
-          motion cursor, {pastEnd: true, pastEndWord: true}
-
-        @view.setMode MODES.INSERT
-        @view.deleteBetween @view.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
-  }
+  }, change_definition
 
   registerAction [MODES.VISUAL], {
     name: 'YANK',
@@ -793,30 +1366,33 @@ For more info/context, see keyBindings.coffee
     @view.yankBlocks @row_start, @num_rows
     @view.setMode MODES.NORMAL
     do @keyStream.forget
+  yank_definition = {}
+  registerSubaction yank_definition, {
+    name: 'YANK'
+    description: 'Yank blocks'
+  }, () ->
+    @view.yankBlocksAtCursor @repeat
+    do @keyStream.forget
+  registerSubaction yank_definition, {
+    name: 'MOTION'
+    description: 'Yank from cursor with motion'
+  }, (motion) ->
+    cursor = do @view.cursor.clone
+    for i in [1..@repeat]
+      motion cursor, {pastEnd: true, pastEndWord: true}
+
+    @view.yankBetween @view.cursor, cursor, {}
+    do @keyStream.forget
+  registerSubaction yank_definition, {
+    name: 'CLONE'
+    description: 'Yank blocks as a clone'
+  }, () ->
+    @view.yankBlocksCloneAtCursor @repeat
+    do @keyStream.forget
   registerAction [MODES.NORMAL], {
     name: 'YANK',
     description: 'Yank (operator)',
-  }, {
-    YANK:
-      description: 'Yank blocks'
-      definition: () ->
-        @view.yankBlocksAtCursor @repeat
-        do @keyStream.forget
-    MOTION:
-      description: 'Yank from cursor with motion'
-      definition: (motion) ->
-        cursor = do @view.cursor.clone
-        for i in [1..@repeat]
-          motion cursor, {pastEnd: true, pastEndWord: true}
-
-        @view.yankBetween @view.cursor, cursor, {}
-        do @keyStream.forget
-    CLONE:
-      display: 'Yank blocks as a clone'
-      definition: () ->
-        @view.yankBlocksCloneAtCursor @repeat
-        do @keyStream.forget
-  }
+  }, yank_definition
 
   #   jeff: c conflicts with change, so this doesn't work
   # registerAction [MODES.VISUAL_LINE], {
@@ -1137,12 +1713,15 @@ For more info/context, see keyBindings.coffee
     description: 'Strike through text',
   }, (text_format_visual_line 'strikethrough')
 
-  module?.exports = {
+  me = {
+    commands: commands
     actions: actionDefinitions
     motions: motionDefinitions
+    defaultHotkeys: defaultHotkeys
+    registerCommand: registerCommand
+    registerMotion: registerMotion
+    registerAction: registerAction
   }
-  window?.keyDefinitions = {
-    actions: actionDefinitions
-    motions: motionDefinitions
-  }
+  module?.exports = me
+  window?.keyDefinitions = me
 )()
