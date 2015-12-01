@@ -57,6 +57,8 @@ html
     // then initialize bindings
     // TODO: this is finnicky, should fix
     script(src='/js/keyDefinitions.js')
+    each definitions_js_file in definitions_js_files
+      script(src='/' + definitions_js_path + '/' + definitions_js_file)
     each plugin_js_file in plugin_js_files
       script(src='/' + plugin_js_path + '/' + plugin_js_file)
     script(src='/js/keyBindings.js')

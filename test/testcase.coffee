@@ -2,10 +2,15 @@ require 'blanket'
 require 'coffee-script/register'
 assert = require 'assert'
 _ = require 'lodash'
+fs = require 'fs'
+path = require 'path'
 
 dataStore = require '../assets/js/datastore.coffee'
 Data = require '../assets/js/data.coffee'
 View = require '../assets/js/view.coffee'
+for file in fs.readdirSync path.resolve __dirname, '../assets/js/definitions'
+  if (file.match /.*\.js$/) or (file.match /.*\.coffee$/)
+    require path.join '../assets/js/definitions', file
 KeyBindings = require '../assets/js/keyBindings.coffee'
 KeyHandler = require '../assets/js/keyHandler.coffee'
 Register = require '../assets/js/register.coffee'

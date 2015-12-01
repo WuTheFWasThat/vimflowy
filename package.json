@@ -31,6 +31,7 @@
     "mocha": "latest",
     "mocha-multi": "latest",
     "del": "latest",
+    "es6-promisify": "latest",
     "gulp": "latest",
     "gulp-coffee": "latest",
     "gulp-jade": "latest",

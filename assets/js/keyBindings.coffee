@@ -114,7 +114,7 @@ It also internally maintains
       for mode_type, mode_type_obj of MODE_TYPES
         for mode in mode_type_obj.modes
           modeKeyMap = {}
-          for command in keyDefinitions.commands[mode]
+          for command in keyDefinitions.commands_by_mode[mode]
             modeKeyMap[command] = hotkeys[mode_type][command].slice()
           keyMaps[mode] = modeKeyMap
 

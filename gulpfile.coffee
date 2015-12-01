@@ -1,4 +1,6 @@
 gulp = require 'gulp'
+fs = require 'fs'
+promisify = require 'es6-promisify'
 
 coffee = require 'gulp-coffee'
 del = require 'del'
@@ -55,34 +57,41 @@ gulp.task 'plugins_js', ->
     .pipe gulp.dest plugin_js_dst
 
 gulp.task 'jade', () ->
-    plugin_js_files_stream = gulp.src [
-      plugin_coffee_glob, plugin_js_glob
-    ], { base: plugins_folder }
+    (promisify fs.readdir)("assets/js/definitions").then (definitions_js_files) ->
+      definitions_js_filenames = definitions_js_files
+        .filter (x) -> (x.match /\.coffee$/) or (x.match /\.js$/)
+        .map (x) -> x.replace /\.coffee$/, '.js'
 
-    plugin_css_files_stream = gulp.src [
-      plugin_sass_glob, plugin_css_glob
-    ], { base: plugins_folder }
+      plugin_js_files_stream = gulp.src [
+        plugin_coffee_glob, plugin_js_glob
+      ], { base: plugins_folder }
 
-    (toArray plugin_js_files_stream).then (plugin_js_files) ->
-      plugin_js_filenames = plugin_js_files.map (x) ->
-        x.relative.replace /\.coffee$/, '.js'
+      plugin_css_files_stream = gulp.src [
+        plugin_sass_glob, plugin_css_glob
+      ], { base: plugins_folder }
 
-      (toArray plugin_css_files_stream).then (plugin_css_files) ->
-        plugin_css_filenames = plugin_css_files.map (x) ->
-          x.relative.replace /\.sass$/, '.css'
+      (toArray plugin_js_files_stream).then (plugin_js_files) ->
+        plugin_js_filenames = plugin_js_files.map (x) ->
+          x.relative.replace /\.coffee$/, '.js'
 
-        stream = gulp.src 'assets/html/index.jade'
-          .pipe handle jade({
-            locals: {
-              plugin_js_path: plugin_js_dst_path
-              plugin_js_files: plugin_js_filenames
-              plugin_css_path: plugin_css_dst_path
-              plugin_css_files: plugin_css_filenames
-            }
-          })
-          .pipe gulp.dest "#{out_folder}/"
-        new Promise (resolve, reject) ->
-          stream.on 'finish', resolve
+        (toArray plugin_css_files_stream).then (plugin_css_files) ->
+          plugin_css_filenames = plugin_css_files.map (x) ->
+            x.relative.replace /\.sass$/, '.css'
+
+          stream = gulp.src 'assets/html/index.jade'
+            .pipe handle jade({
+              locals: {
+                definitions_js_path: "js/definitions"
+                definitions_js_files: definitions_js_filenames
+                plugin_js_path: plugin_js_dst_path
+                plugin_js_files: plugin_js_filenames
+                plugin_css_path: plugin_css_dst_path
+                plugin_css_files: plugin_css_filenames
+              }
+            })
+            .pipe gulp.dest "#{out_folder}/"
+          new Promise (resolve, reject) ->
+            stream.on 'finish', resolve
 
 gulp.task 'sass', ->
   gulp.src sass_glob, { base: 'assets/css' }
