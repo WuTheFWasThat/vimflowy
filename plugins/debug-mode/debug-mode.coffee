@@ -6,17 +6,12 @@
     description: "Display internal IDs for each node"
     version: 1
   }, (api) ->
-    new DebuggingPlugin api
-
-  class DebuggingPlugin
-    constructor: (@api) ->
-      do @enableAPI
-
-    enableAPI: () ->
-      @api.view.on 'renderLine', (@onRenderLine.bind @)
-
-    onRenderLine: (row, renderArray, options) ->
-      renderArray.push virtualDom.h 'span', {
-        className: 'debug'
-      }, " " + (do row.debug)
+    api.view.addRenderHook 'rowElements', (rowElements, info) ->
+      rowElements.unshift virtualDom.h 'span', {
+        style: {
+          position: 'relative'
+          'font-weight': 'bold'
+        }
+      }, " " + (do info.row.debug)
+      return rowElements
 )()

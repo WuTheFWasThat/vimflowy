@@ -1160,6 +1160,8 @@ window?.renderLine = renderLine
         if row.id of options.highlight_blocks
           className += ' theme-bg-highlight'
 
+        rowElements = @applyRenderHook 'rowElements', rowElements, { row: row }
+
         childNode = virtualDom.h 'div', {
           id: containerDivID row.id
           className: className
@@ -1219,6 +1221,7 @@ window?.renderLine = renderLine
           @rootInto row
           do @save
           do @render
+
       lineContents = renderLine lineData, lineoptions
       [].push.apply results, lineContents
       return results
