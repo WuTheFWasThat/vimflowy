@@ -77,7 +77,10 @@ It also internally maintains
       # a recursive mapping from keys to commands
       @bindings = null
 
+      @modebindingsDiv = options.modebindingsDiv
+      do @init
 
+    init: () ->
       hotkey_settings = @settings.getSetting 'hotkeys'
       err = @apply_hotkey_settings hotkey_settings
 
@@ -85,8 +88,6 @@ It also internally maintains
         Logger.logger.error "Failed to apply saved hotkeys #{hotkey_settings}"
         Logger.logger.error err
         do @apply_default_hotkey_settings
-
-      @modebindingsDiv = options.modebindingsDiv
 
     render_hotkeys: () ->
       if $? # TODO: pass this in as an argument

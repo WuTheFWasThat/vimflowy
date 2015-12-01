@@ -3,6 +3,8 @@ if module?
   global.DependencyGraph = require('dependencies-online')
 
   global.utils = require('./utils.coffee')
+  global.keyDefinitions = require('./keyDefinitions.coffee')
+  global.Modes = require('./modes.coffee')
   global.Logger = require('./logger.coffee')
   global.errors = require('./errors.coffee')
 
@@ -15,6 +17,7 @@ if module?
       @cursor = @view.cursor
       # TODO: Add subloggers and prefix all log messages with the plugin name
       @logger = Logger.logger
+      @modes = Modes
 
     getDataVersion: () ->
       @data.store.getPluginDataVersion @name
@@ -27,6 +30,15 @@ if module?
 
     getData: (key) ->
       @data.store.getPluginData @name, key
+
+    registerCommand: (metadata) ->
+      keyDefinitions.registerCommand metadata
+
+    registerMotion: (commands, motion, definition) ->
+      keyDefinitions.registerMotion commands, motion, definition
+
+    registerAction: (modes, commands, action, definition) ->
+      keyDefinitions.registerAction modes, commands, action, definition
 
     panic: _.once () =>
       alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."
@@ -221,6 +233,8 @@ if module?
       # TODO: allow enable to be async?
       plugin.value = plugin.enable api
       @pluginDependencies.resolve plugin.name, plugin.value
+      # refresh hotkeys, if any new ones were added
+      do @view.bindings.init
       @setStatus plugin.name, STATUS.ENABLED
 
     register: (plugin_metadata, enable, disable) ->

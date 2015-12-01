@@ -1,7 +1,6 @@
 TestCase = require '../testcase.coffee'
 siblingDownKey = 'alt+j'
 siblingUpKey = 'alt+k'
-easyMotionKey = 'space'
 
 describe "visual line mode", () ->
   it "delete works in basic case", () ->

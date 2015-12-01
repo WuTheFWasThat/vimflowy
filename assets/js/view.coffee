@@ -213,6 +213,8 @@ window?.renderLine = renderLine
       @modeDiv = options.modeDiv
       @pluginsDiv = options.pluginsDiv
 
+      @renderHooks = {}
+
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @, row, 0
       @register = new Register @
@@ -1025,7 +1027,19 @@ window?.renderLine = renderLine
           [index1, index2] = [index2, index1]
         return [common, index1, index2]
 
+    ##################
     # RENDERING
+    ##################
+
+    # rendering hooks
+
+    addRenderHook: (event, transform) ->
+      (@renderHooks[event]?=[]).push transform
+
+    applyRenderHook: (event, obj, info) ->
+      for transform in (@renderHooks[event] or [])
+        obj = transform obj, info
+      return obj
 
     render: (options = {}) ->
       if @menu
@@ -1107,27 +1121,26 @@ window?.renderLine = renderLine
           rowElements.push cloneIcon
 
         ancestry_str = JSON.stringify do row.getAncestry
-        if @easy_motion_mappings and ancestry_str of @easy_motion_mappings.row_to_key
-          char = @easy_motion_mappings.row_to_key[ancestry_str]
-          bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent'}, [char]
-        else
-          icon = 'fa-circle'
-          if @data.hasChildren row
-            icon = if @data.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
 
-          bulletOpts = {
-            className: 'fa ' + icon + ' bullet'
-            attributes: {'data-id': row.id, 'data-ancestry': ancestry_str}
-          }
-          if @data.hasChildren row
-            bulletOpts.style = {cursor: 'pointer'}
-            bulletOpts.onclick = ((row) =>
-              @toggleBlock row
-              do @save
-              do @render
-            ).bind(@, row)
+        icon = 'fa-circle'
+        if @data.hasChildren row
+          icon = if @data.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
 
-          bullet = virtualDom.h 'i', bulletOpts
+        bulletOpts = {
+          className: 'fa ' + icon + ' bullet'
+          attributes: {'data-id': row.id, 'data-ancestry': ancestry_str}
+        }
+        if @data.hasChildren row
+          bulletOpts.style = {cursor: 'pointer'}
+          bulletOpts.onclick = ((row) =>
+            @toggleBlock row
+            do @save
+            do @render
+          ).bind(@, row)
+
+        bullet = virtualDom.h 'i', bulletOpts
+        bullet = @applyRenderHook 'bullet', bullet, { row: row }
+
         rowElements.push bullet
 
         elLine = virtualDom.h 'div', {
