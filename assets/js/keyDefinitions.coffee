@@ -34,6 +34,7 @@ For more info/context, see keyBindings.coffee
   NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
   INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
 
+  # TODO: have these be meta-data of motions
   WITHIN_ROW_MOTIONS = [
     'LEFT', 'RIGHT',
     'HOME', 'END',
@@ -57,15 +58,14 @@ For more info/context, see keyBindings.coffee
   for modename, mode of MODES
     commands_by_mode[mode] = []
 
+  # TODO: do this when 'MOTION' is registered
+  # TODO: make it possible register 'WITHIN_ROW_MOTION' instead?
   [].push.apply commands_by_mode[MODES.NORMAL], (_.clone ALL_MOTIONS)
   [].push.apply commands_by_mode[MODES.VISUAL], (_.clone ALL_MOTIONS)
   [].push.apply commands_by_mode[MODES.VISUAL_LINE], (_.clone ALL_MOTIONS)
   [].push.apply commands_by_mode[MODES.INSERT], (_.clone ALL_MOTIONS)
   [].push.apply commands_by_mode[MODES.SEARCH], (_.clone WITHIN_ROW_MOTIONS)
   [].push.apply commands_by_mode[MODES.MARK], (_.clone WITHIN_ROW_MOTIONS)
-
-  # TODO: handle subdict case properly
-  commands_by_mode[MODES.NORMAL].push('CLONE') # is in a sub-dict
 
   defaultHotkeys = {}
 
@@ -160,20 +160,28 @@ For more info/context, see keyBindings.coffee
 
   motionDefinitions = {}
 
-  registerSubmotion = (
-    mainDefinition,
-    command,
-    motion,
-    definition
-  ) ->
+  registerMotion = (commands, motion, definition) ->
     utils.tv4_validate(motion, MOTION_SCHEMA, "motion")
     motion.definition = definition
-    # motion.name = command.name
-    if command.name of mainDefinition
-      throw new errors.GenericError "Motion #{command.name} has already been defined"
-    mainDefinition[command.name] = motion
 
-  registerMotion = registerSubmotion.bind @, motionDefinitions
+    if not commands.slice?
+      # commands isn't an array
+      commands = [commands]
+
+    obj = motionDefinitions
+    for i in [0...commands.length-1]
+      command = commands[i]
+      if command.name not of obj
+        throw new errors.GenericError "Motion #{command.name} doesn't exist"
+      else if typeof obj[command.name] != 'object'
+        throw new errors.GenericError "Motion #{command.name} has already been defined"
+      obj = obj[command.name].definition
+
+    command = commands[commands.length-1]
+    # motion.name = command.name
+    if command.name of obj
+      throw new errors.GenericError "Motion #{command.name} has already been defined"
+    obj[command.name] = motion
 
   # TODO: make sure that the default hotkeys accurately represents the set of possible commands under that mode_type
   #       the following used to work, and should be replaced
@@ -199,24 +207,36 @@ For more info/context, see keyBindings.coffee
   for modename, mode of MODES
     actionDefinitions[mode] = {}
 
-  registerSubaction = (
-    mainDefinition,
-    command,
-    action,
-    definition
-  ) ->
+  registerAction = (modes, commands, action, definition) ->
     utils.tv4_validate(action, ACTION_SCHEMA, "action")
-    if command.name of mainDefinition
-      throw new errors.GenericError "Action #{command.name} has already been defined"
+    action = _.cloneDeep action
+    action.definition = definition
 
-    mainDefinition[command.name] = _.cloneDeep action
-    mainDefinition[command.name].definition = definition
+    if not commands.slice?
+      # commands isn't an array
+      commands = [commands]
 
-  registerAction = (modes, command, action, definition) ->
     for mode in modes
-      registerSubaction actionDefinitions[mode], command, action, definition
+      obj = actionDefinitions[mode]
+
+      for i in [0...commands.length-1]
+        command = commands[i]
+        if command.name != 'MOTION'
+          commands_by_mode[mode].push command.name
+
+        if command.name not of obj
+          throw new errors.GenericError "Action #{command.name} doesn't exist"
+        else if typeof obj[command.name] != 'object'
+          throw new errors.GenericError "Action #{command.name} has already been defined"
+        obj = obj[command.name].definition
+
+      command = commands[commands.length-1]
       if command.name != 'MOTION'
         commands_by_mode[mode].push command.name
+      # motion.name = command.name
+      if command.name of obj
+        throw new errors.GenericError "Action #{command.name} has already been defined"
+      obj[command.name] = action
 
   ####################
   # COMMANDS
@@ -230,9 +250,7 @@ For more info/context, see keyBindings.coffee
     defaultHotkeys: defaultHotkeys
     registerCommand: registerCommand
     registerMotion: registerMotion
-    registerSubmotion: registerSubmotion
     registerAction: registerAction
-    registerSubaction: registerSubaction
   }
   module?.exports = me
   window?.keyDefinitions = me
