@@ -132,8 +132,9 @@ if module?
     virtualRender: () ->
       header = virtualDom.h 'tr', {}, [
         virtualDom.h 'th', { className: 'plugin-name' }, "Plugin"
+        virtualDom.h 'th', { className: 'plugin-description' }, "Description"
         virtualDom.h 'th', { className: 'plugin-version' }, "Version"
-        virtualDom.h 'th', { className: 'plugin-name' }, "Author"
+        virtualDom.h 'th', { className: 'plugin-author' }, "Author"
         virtualDom.h 'th', { className: 'plugin-status' }, "Status"
         virtualDom.h 'th', { className: 'plugin-actions' }, "Actions"
       ]
@@ -171,9 +172,10 @@ if module?
         className: "plugin theme-bg-secondary"
       }, [
         virtualDom.h 'td', { className: 'center theme-trim plugin-name' }, name
+        virtualDom.h 'td', { className: 'theme-trim plugin-description', style: {'font-size': '12px'} }, (plugin.description)
         virtualDom.h 'td', { className: 'center theme-trim plugin-version' }, (plugin.version + '')
-        virtualDom.h 'td', { className: 'center theme-trim plugin-author' }, plugin.author
-        virtualDom.h 'td', { className: 'center theme-trim plugin-status', style: {'background-color': color}}, status
+        virtualDom.h 'td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, plugin.author
+        virtualDom.h 'td', { className: 'center theme-trim plugin-status', style: {'box-shadow': 'inset 0px 0px 0px 2px ' + color } }, status
         virtualDom.h 'td', { className: 'center theme-trim plugin-actions' }, actions
       ]
 

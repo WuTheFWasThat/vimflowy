@@ -3,7 +3,7 @@
   Plugins.register {
     name: "ID Debug Mode"
     author: "Zachary Vance"
-    description: "Display internal IDs for each node"
+    description: "Display internal IDs for each node (for debugging for developers)"
     version: 1
   }, (api) ->
     api.view.addRenderHook 'rowElements', (rowElements, info) ->
