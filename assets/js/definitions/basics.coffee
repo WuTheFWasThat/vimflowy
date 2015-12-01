@@ -137,14 +137,17 @@ if module?
   # TODO: change this
   keyDefinitions.registerMotion CMD_GO, {
     description: 'Various commands for navigation (operator)',
+    multirow: true
   }, {}
   keyDefinitions.registerMotion [CMD_GO, CMD_GO], {
     description: 'Go to the beginning of visible document',
+    multirow: true
   }, () ->
     return (cursor, options) ->
       cursor.visibleHome options
   keyDefinitions.registerMotion [CMD_GO, CMD_PARENT], {
     description: 'Go to the parent of current line',
+    multirow: true
   }, () ->
     return (cursor, options) ->
       cursor.parent options
@@ -668,6 +671,7 @@ if module?
   }
   keyDefinitions.registerMotion CMD_EASY_MOTION, {
     description: 'Jump to a visible row (based on EasyMotion)',
+    multirow: true
   }, () ->
     key = do @keyStream.dequeue
     if key == null

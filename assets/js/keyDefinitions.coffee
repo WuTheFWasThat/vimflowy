@@ -34,38 +34,13 @@ For more info/context, see keyBindings.coffee
   NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
   INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
 
-  # TODO: have these be meta-data of motions
-  WITHIN_ROW_MOTIONS = [
-    'LEFT', 'RIGHT',
-    'HOME', 'END',
-    'BEGINNING_WORD', 'END_WORD', 'NEXT_WORD',
-    'BEGINNING_WWORD', 'END_WWORD', 'NEXT_WWORD',
-    'FIND_NEXT_CHAR', 'FIND_PREV_CHAR', 'TO_NEXT_CHAR', 'TO_PREV_CHAR',
-  ]
-
-  ALL_MOTIONS = [
-    WITHIN_ROW_MOTIONS...,
-
-    'UP', 'DOWN',
-    'NEXT_SIBLING', 'PREV_SIBLING',
-
-    'GO', 'GO_END', 'PARENT',
-    'EASY_MOTION',
-  ]
+  WITHIN_ROW_MOTIONS = {}
+  ALL_MOTIONS = {}
 
   # set of possible commands for each mode
   commands_by_mode = {}
   for modename, mode of MODES
     commands_by_mode[mode] = []
-
-  # TODO: do this when 'MOTION' is registered
-  # TODO: make it possible register 'WITHIN_ROW_MOTION' instead?
-  [].push.apply commands_by_mode[MODES.NORMAL], (_.clone ALL_MOTIONS)
-  [].push.apply commands_by_mode[MODES.VISUAL], (_.clone ALL_MOTIONS)
-  [].push.apply commands_by_mode[MODES.VISUAL_LINE], (_.clone ALL_MOTIONS)
-  [].push.apply commands_by_mode[MODES.INSERT], (_.clone ALL_MOTIONS)
-  [].push.apply commands_by_mode[MODES.SEARCH], (_.clone WITHIN_ROW_MOTIONS)
-  [].push.apply commands_by_mode[MODES.MARK], (_.clone WITHIN_ROW_MOTIONS)
 
   defaultHotkeys = {}
 
@@ -155,6 +130,11 @@ For more info/context, see keyBindings.coffee
         description: "Description of the motion"
         type: "string"
       }
+      multirow: {
+        description: "Whether the motion is only for multi-row movements"
+        type: "boolean"
+        default: false
+      }
     }
   }
 
@@ -162,6 +142,7 @@ For more info/context, see keyBindings.coffee
 
   registerMotion = (commands, motion, definition) ->
     utils.tv4_validate(motion, MOTION_SCHEMA, "motion")
+    utils.fill_tv4_defaults(motion, MOTION_SCHEMA)
     motion.definition = definition
 
     if not commands.slice?
@@ -171,6 +152,11 @@ For more info/context, see keyBindings.coffee
     obj = motionDefinitions
     for i in [0...commands.length-1]
       command = commands[i]
+
+      if not motion.multirow
+          WITHIN_ROW_MOTIONS[command.name] = true
+      ALL_MOTIONS[command.name] = true
+
       if command.name not of obj
         throw new errors.GenericError "Motion #{command.name} doesn't exist"
       else if typeof obj[command.name] != 'object'
@@ -178,6 +164,10 @@ For more info/context, see keyBindings.coffee
       obj = obj[command.name].definition
 
     command = commands[commands.length-1]
+    if not motion.multirow
+        WITHIN_ROW_MOTIONS[command.name] = true
+    ALL_MOTIONS[command.name] = true
+
     # motion.name = command.name
     if command.name of obj
       throw new errors.GenericError "Motion #{command.name} has already been defined"
@@ -251,6 +241,8 @@ For more info/context, see keyBindings.coffee
     registerCommand: registerCommand
     registerMotion: registerMotion
     registerAction: registerAction
+    ALL_MOTIONS: ALL_MOTIONS
+    WITHIN_ROW_MOTIONS: WITHIN_ROW_MOTIONS
   }
   module?.exports = me
   window?.keyDefinitions = me

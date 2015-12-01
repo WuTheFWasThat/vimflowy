@@ -37,6 +37,7 @@ if module?
   }
   keyDefinitions.registerMotion CMD_UP, {
     description: 'Move cursor up',
+    multirow: true
   }, () ->
     return (cursor, options) ->
       cursor.up options
@@ -49,6 +50,7 @@ if module?
   }
   keyDefinitions.registerMotion CMD_DOWN, {
     description: 'Move cursor down',
+    multirow: true
   }, () ->
     return (cursor, options) ->
       cursor.down options
@@ -225,6 +227,7 @@ if module?
   }
   keyDefinitions.registerMotion CMD_NEXT_SIBLING, {
     description: 'Move cursor to the next sibling of the current line',
+    multirow: true
   }, () ->
     return (cursor, options) ->
       cursor.nextSibling options
@@ -236,6 +239,7 @@ if module?
   }
   keyDefinitions.registerMotion CMD_PREV_SIBLING, {
     description: 'Move cursor to the previous sibling of the current line',
+    multirow: true
   }, () ->
     return (cursor, options) ->
       cursor.prevSibling options

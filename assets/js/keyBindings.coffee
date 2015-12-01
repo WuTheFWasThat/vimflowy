@@ -116,6 +116,14 @@ It also internally maintains
           modeKeyMap = {}
           for command in keyDefinitions.commands_by_mode[mode]
             modeKeyMap[command] = hotkeys[mode_type][command].slice()
+
+          if mode == MODES.SEARCH or mode == MODES.MARK
+            motions = Object.keys keyDefinitions.WITHIN_ROW_MOTIONS
+          else
+            motions = Object.keys keyDefinitions.ALL_MOTIONS
+          for command in motions
+            modeKeyMap[command] = hotkeys[mode_type][command].slice()
+
           keyMaps[mode] = modeKeyMap
 
       bindings = {}
