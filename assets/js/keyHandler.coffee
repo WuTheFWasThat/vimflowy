@@ -126,7 +126,11 @@ if module?
     ###################
 
     handleKey: (key) ->
+      # TODO: make settings actually a mode, and have hotkeys for everything?
       if do @view.showingSettings
+          # allow stuff like page refresh while on settings
+          if key.length > 1
+              return false
           @view.handleSettings key
           return true
       Logger.logger.debug 'Handling key:', key
@@ -221,6 +225,8 @@ if module?
       else
         throw new errors.UnexpectedValue "definition", definition
 
+    # NOTE: this should maybe be normal-mode specific
+    #       but it would also need to be done for the motions
     # takes keyStream, key, returns repeat number and key
     getRepeat: (keyStream, key = null) ->
       if key == null

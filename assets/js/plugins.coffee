@@ -235,8 +235,11 @@ if module?
       # TODO: allow enable to be async?
       plugin.value = plugin.enable api
       @pluginDependencies.resolve plugin.name, plugin.value
+
       # refresh hotkeys, if any new ones were added
       do @view.bindings.init
+      @view.bindings.renderModeTable @view.mode
+
       @setStatus plugin.name, STATUS.ENABLED
 
     register: (plugin_metadata, enable, disable) ->
