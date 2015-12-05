@@ -27,15 +27,41 @@
       @logger = @api.logger
       @logger.info "Loading time tracking"
       @api.cursor.on 'rowChange', (@onRowChange.bind @)
-      @onRowChange undefined, @api.cursor.row # Initial setup
+      @onRowChange null, @api.cursor.row # Initial setup
       @api.view.on 'renderLine', (@onRenderLine.bind @)
       @api.view.data.on 'afterDescendentRemoved', (@onDescendentRemoved.bind @)
       @api.view.data.on 'afterDescendentAdded', (@onDescendentAdded.bind @)
       @rowChanges = []
       @currentRow = null
-      @displayTime = true
       @api.view.on 'exit', () =>
         @onRowChange @currentRow, null
+      CMD_TOGGLE = @api.registerCommand {
+        name: 'TOGGLE'
+        default_hotkeys:
+          normal_like: ['Z']
+      }
+      CMD_TOGGLE_DISPLAY = @api.registerCommand {
+        name: 'TOGGLE_DISPLAY'
+        default_hotkeys:
+          normal_like: ['d']
+      }
+      CMD_TOGGLE_LOGGING = @api.registerCommand {
+        name: 'TOGGLE_LOGGING'
+        default_hotkeys:
+          normal_like: ['l']
+      }
+      @api.registerAction [@api.modes.modes.NORMAL], CMD_TOGGLE, {
+        description: 'Toggle a setting',
+      }, {}
+      @api.registerAction [@api.modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_DISPLAY], {
+        description: 'Toggle whether time spent on each row is displayed',
+      }, () =>
+        do @toggleDisplay
+      @api.registerAction [@api.modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
+        description: 'Toggle whether time is being logged',
+      }, () =>
+        do @toggleLogging
+      
 
     getRowData: (id, keytype) ->
       key = "#{id}:#{keytype}"
@@ -45,6 +71,25 @@
       @api.setData key, value
     transformRowData: (id, keytype, transform) ->
       @setRowData id, keytype, (transform (@getRowData id, keytype))
+
+    DEFAULT_LOGGING = true
+    DEFAULT_DISPLAY = true
+    isLogging: () ->
+      (@api.getData "isLogging") ? DEFAULT_LOGGING
+    shouldDisplayTime: () ->
+      (@api.getData "display") ? DEFAULT_DISPLAY
+    toggleLogging: () ->
+      @logger.info "Turning logging #{if (do @isLogging) then "off" else "on"}"
+      if do @isLogging
+        @onRowChange @api.cursor.row, null # Final close
+      else
+        @onRowChange null, @api.cursor.row # Initial setup
+      @api.setData "isLogging", not (do @isLogging)
+      do @api.view.render
+    toggleDisplay: () ->
+      @logger.info "Turning display #{if (do @shouldDisplayTime) then "off" else "on"}"
+      @api.setData "display", not (do @shouldDisplayTime)
+      do @api.view.render
 
     _date: (timestamp) ->
       "#{timestamp.getFullYear()}-#{timestamp.getMonth()}-#{timestamp.getDate()}"
@@ -66,6 +111,8 @@
 
     onRowChange: (from, to) ->
       @logger.debug "Switching from row #{from?.id} to row #{to?.id}"
+      if not do @isLogging
+        return
       time = new Date()
       if @currentRow and @currentRow.id != to?.id
         @onRowPeriod { start: @currentRow.time, stop: time, id: @currentRow.id, row: from }
@@ -163,7 +210,7 @@
         "#{seconds}s"
 
     onRenderLine: (row, renderArray, options) ->
-      if @displayTime
+      if do @shouldDisplayTime
         time = @rowTime row
         if time > 1000
           @logger.info "Rendering time for row #{row.id} as #{time}"
