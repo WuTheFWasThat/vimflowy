@@ -504,7 +504,7 @@ describe "cloning", () ->
     ]
     t.expectMarks {}
 
-  it "remove the last marked instance when it is a descendent of a cloned node", () ->
+  it "remove the last marked instance when it is a descendant of a cloned node", () ->
     t = new TestCase [
       { text: 'parent', children: [
         { text: 'Will be cloned', children: [

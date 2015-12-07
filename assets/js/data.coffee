@@ -212,7 +212,7 @@ class Data extends EventEmitter
     for markIdStr, mark of marks
       markId = parseInt markIdStr
       if not (@setMark markId, mark) # Sets all ancestors regardless of current value
-        # Roll back mark on all descendents
+        # Roll back mark on all descendants
         @_removeMarkFromTree id, markId, mark
 
   # Helper method for attachMarks rollback. Rolls back exactly one id:mark pair from a subtree in O(marked-nodes) time
@@ -378,9 +378,9 @@ class Data extends EventEmitter
     # TODO: make this a plugin and have it use events
     @_detachMarks id, delta_ancestry
 
-    # Notify all ancestors that their list of descendents changed
+    # Notify all ancestors that their list of descendants changed
     for ancestorId in delta_ancestry
-      @emit "descendentRemoved", { ancestorId: ancestorId, descendentId: id }
+      @emit "descendantRemoved", { ancestorId: ancestorId, descendantId: id }
     wasLast = (@_getParents id).length == 0
     if wasLast
       @emit "rowRemoved", { id: id}
@@ -398,7 +398,7 @@ class Data extends EventEmitter
     delta_ancestry = _.difference new_ancestry, original_ancestry
 
     for ancestorId in delta_ancestry
-      @emit "descendentAdded", { ancestorId: ancestorId, descendentId: child_id }
+      @emit "descendantAdded", { ancestorId: ancestorId, descendantId: child_id }
     if (@_getParents child_id).length == 1
       @emit "rowAdded", { id: child_id }
     return info
@@ -415,9 +415,9 @@ class Data extends EventEmitter
     new_ancestry = @allAncestors child_id, { inclusive: true }
 
     for ancestorId in (_.difference new_ancestry, original_ancestry)
-      @emit "descendentAdded", { ancestorId: ancestorId, descendentId: child_id }
+      @emit "descendantAdded", { ancestorId: ancestorId, descendantId: child_id }
     for ancestorId in (_.difference original_ancestry, new_ancestry)
-      @emit "descendentRemoved", { ancestorId: ancestorId, descendentId: child_id }
+      @emit "descendantRemoved", { ancestorId: ancestorId, descendantId: child_id }
     return {
       old: remove_info
       new: add_info
