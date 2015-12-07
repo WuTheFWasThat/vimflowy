@@ -58,26 +58,6 @@ describe "jumps", () ->
       ] },
     ]
 
-  it "works with marks", () ->
-    t = new TestCase [
-      { text: 'okay', mark: 'goto', children: [
-        'stuff'
-      ] },
-      'third'
-    ]
-    t.sendKeys '\'goto'
-    t.sendKey 'enter'
-    t.expectViewRoot 1
-    t.expectCursor 2, 0
-    t.expectJumpIndex 1, 2
-
-    # does nothing due to being the same spot
-    t.sendKeys '\'goto'
-    t.sendKey 'enter'
-    t.expectViewRoot 1
-    t.expectCursor 2, 0
-    t.expectJumpIndex 1, 2
-
   it "erases history properly", () ->
     t = new TestCase [
       { text: 'first', children: [

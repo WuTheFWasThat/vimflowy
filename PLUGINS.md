@@ -105,8 +105,11 @@ The data API is a simple key-value store
 ```
     api.getDataVersion():  The last data version of your plugin this document used
     api.setDataVersion(version)
-    api.getData(key):  A key-value store for adding data to the document.
+    api.getData(key, default_value=null):
+        Gets value for a key.
+        Default value is returned if key doesn't exist
     api.setData(key, value)
+        Sets value for a key.
 ```
 
 Make sure to version data!  That way vimflowy can detect incompatible formats upgrades which would otherwise make vimflowy crash.

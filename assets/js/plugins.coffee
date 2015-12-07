@@ -6,6 +6,7 @@ if module?
   global.Modes = require('./modes.coffee')
   global.Logger = require('./logger.coffee')
   global.errors = require('./errors.coffee')
+  global.mutations = require('../../assets/js/mutations.coffee')
 
 (() ->
   # class for exposing plugin API
@@ -18,6 +19,8 @@ if module?
       @logger = Logger.logger
       @Modes = Modes
       @modes = Modes.modes
+      @Mutation = mutations.Mutation
+      @errors = errors
 
       @bindings = @view.bindings
       @definitions = @bindings.definitions
@@ -32,8 +35,8 @@ if module?
     setData: (key, value) ->
       @data.store.setPluginData @name, key, value
 
-    getData: (key) ->
-      @data.store.getPluginData @name, key
+    getData: (key, default_value=null) ->
+      @data.store.getPluginData @name, key, default_value
 
     registerCommand: (metadata) ->
       cmd = @definitions.registerCommand metadata
@@ -104,8 +107,12 @@ if module?
     }
 
     constructor: (options) ->
-      # Will be overridden before plugin loading, during 'resolveView'
-      @enabledPlugins = {}
+      # Default set of enabled plugins
+      # Will be overridden before plugin loading, during 'resolveView',
+      # if any settings have been set
+      @enabledPlugins = {
+        "Marks": true
+      }
 
       @plugins = {}
       @pluginDependencies = new DependencyGraph
@@ -123,10 +130,12 @@ if module?
         # since each testcase uses the same pluginmanager but different view
         for name of @plugins
           @setStatus name, STATUS.DISABLED
+
       if enabledPlugins?
         @enabledPlugins = enabledPlugins
       @div = view.pluginsDiv
       do @render
+
       @pluginDependencies.resolve '_view', view
 
     render: () ->
