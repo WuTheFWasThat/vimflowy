@@ -327,9 +327,6 @@ class Cursor extends EventEmitter
     for property in constants.text_properties
       @setProperty property, obj[property]
 
-  goMark: () ->
-    @view.goMark @
-
 # exports
 module?.exports = Cursor
 window?.Cursor = Cursor

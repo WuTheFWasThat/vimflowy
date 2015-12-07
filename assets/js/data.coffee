@@ -66,7 +66,6 @@ the data itself includes:
   - the location that is currently being viewed
   - the text in each line, including text properties like bold/italic
   - the parent/child relationships and collapsed-ness of lines
-  - marks datastructures
 also deals with loading the initial data from the datastore, and serializing the data to a string
 
 Currently, the separation between the View and Data classes is not very good.  (see view.coffee)
@@ -148,85 +147,6 @@ class Data extends EventEmitter
 
   getLength: (row) ->
     return @getLine(row).length
-
-  #########
-  # marks #
-  #########
-
-  # get mark for an id, '' if it doesn't exist
-  getMark: (id) ->
-    marks = @store.getMarks id
-    return marks[id] or ''
-
-  # tries to update allMarks with (id, mark)
-  # can return false if the mark was already taken
-  _updateAllMarks: (id, mark = '') ->
-    allMarks = do @store.getAllMarks
-
-    if mark of allMarks
-      if allMarks[mark] == id
-        return true
-      return false
-
-    oldmark = @getMark id
-    if oldmark
-      delete allMarks[oldmark]
-
-    if mark
-      allMarks[mark] = id
-    @store.setAllMarks allMarks
-    return true
-
-  _updateMark: (id, markId, mark) ->
-    marks = @store.getMarks id
-    if mark
-      marks[markId] = mark
-    else
-      delete marks[markId]
-    @store.setMarks id, marks
-
-  # Set the mark for the entire database id
-  setMark: (id, mark = '') ->
-    if @_updateAllMarks id, mark
-      @_updateMark id, id, mark
-      for ancestorId in @allAncestors id
-        @_updateMark ancestorId, id, mark
-      return true
-    return false
-
-  # detach the marks of an row that is being detached
-  _detachMarks: (id, delta_ancestry) ->
-    marks = @store.getMarks id
-    wasLast = (@_getParents id).length == 0
-
-    for markIdStr, mark of marks
-      markId = parseInt markIdStr
-      if wasLast
-        @_updateAllMarks markId, ''
-      # Remove the mark from all ancestors of the id which will no longer be ancestors once this Row is removed.
-      for ancestorId in delta_ancestry
-        @_updateMark ancestorId, markId, ''
-
-  _attachMarks: (id) ->
-    marks = @store.getMarks id
-    for markIdStr, mark of marks
-      markId = parseInt markIdStr
-      if not (@setMark markId, mark) # Sets all ancestors regardless of current value
-        # Roll back mark on all descendants
-        @_removeMarkFromTree id, markId, mark
-
-  # Helper method for attachMarks rollback. Rolls back exactly one id:mark pair from a subtree in O(marked-nodes) time
-  _removeMarkFromTree: (id, markId, mark) ->
-    marks = @store.getMarks id
-    if markId of marks
-      errors.assert_equals marks[markId], mark, "Unexpected mark"
-      @_updateMark id, markId, ''
-      for child in @store.getChildren id
-        @_removeMarkFromTree child, markId, mark
-
-  getAllMarks: () ->
-    _.mapValues (do @store.getAllMarks), @canonicalInstance, @
-
   #############
   # structure #
   #############
@@ -278,7 +198,7 @@ class Data extends EventEmitter
     (@_getParents id).length > 1
 
   # Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
-  canonicalInstance: (id) -> # Given an id (for example with search or mark), return a row with that id
+  canonicalInstance: (id) -> # Given an id, return a row with that id
     errors.assert id?, "Empty id passed to canonicalInstance"
     if id == constants.root_id
       return @root
@@ -393,9 +313,6 @@ class Data extends EventEmitter
 
     info = @_removeChild parent_id, id
 
-    # TODO: make this a plugin and have it use events
-    @_detachMarks id, removed_ancestry
-
     # Notify all ancestors that their list of descendants changed
     for ancestorId in removed_ancestry
       @emit "afterDescendantRemoved", { ancestorId: ancestorId, descendantId: id }
@@ -416,9 +333,6 @@ class Data extends EventEmitter
       @emit "beforeRowAdded", { id: child_id, parent_id: parent_id }
 
     info = @_addChild parent_id, child_id, index
-
-    # TODO: make this a plugin and have it use events
-    @_attachMarks child_id
 
     # Notify all ancestors thaat their list of descendants changed
     for ancestorId in added_ancestry
@@ -653,12 +567,12 @@ class Data extends EventEmitter
     if @collapsed row
       struct.collapsed = true
 
-    mark = @getMark row.id
-    if mark
-      struct.mark = mark
+    struct = @applyHook 'serializeRow', struct, {row: row}
 
     if pretty
-      if children.length == 0 and not mark
+      if children.length == 0 and \
+          (_.all Object.keys(struct), (key) ->
+            return key in ['children', 'text', 'collapsed'])
         return text
     return struct
 
@@ -684,12 +598,11 @@ class Data extends EventEmitter
       @setLine row, line
       @store.setCollapsed row.id, serialized.collapsed
 
-      if serialized.mark
-        @setMark row.id, serialized.mark
-
       if serialized.children
         for serialized_child in serialized.children
           @loadTo serialized_child, row
+
+    @emit 'loadRow', row, serialized
 
     return row
 

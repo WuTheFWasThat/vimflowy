@@ -20,7 +20,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_parentKey_ = (row) -> "#{@prefix}:#{row}:parent"
       @_childrenKey_ = (row) -> "#{@prefix}:#{row}:children"
       @_collapsedKey_ = (row) -> "#{@prefix}:#{row}:collapsed"
-      @_marksKey_ = (row) -> "#{@prefix}:#{row}:marks"
 
       @_pluginDataKey_ = (plugin, key) -> "#{@prefix}:plugin:#{plugin}:data:#{key}"
       @_pluginDataVersionKey_ = (plugin) -> "#{@prefix}:plugin:#{plugin}:version"
@@ -30,7 +29,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
       @_lastSaveKey_ = "#{@prefix}:lastSave"
       @_lastViewrootKey_ = "#{@prefix}:lastviewroot2"
-      @_allMarksKey_ = "#{@prefix}:allMarks"
       @_macrosKey_ = "#{@prefix}:macros"
       @_IDKey_ = "#{@prefix}:lastID"
       @_schemaVersionKey_ = "#{@prefix}:schemaVersion"
@@ -66,14 +64,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     setCollapsed: (row, collapsed) ->
       @set (@_collapsedKey_ row), collapsed
 
-    # get mapping of row -> mark, for subtree beneath row
-    getMarks: (row) ->
-      @get (@_marksKey_ row), {}
-
-    # set mapping of row -> mark, for subtree beneath row
-    setMarks: (row, marks) ->
-      @set (@_marksKey_ row), marks
-
     # get mapping of macro_key -> macro
     getMacros: () ->
       @get @_macrosKey_, {}
@@ -87,12 +77,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @get (@_settingKey_ setting)
     setSetting: (setting, value) ->
       @set (@_settingKey_ setting), value
-
-    # maintain global marks datastructure.  maps mark -> row
-    getAllMarks: () ->
-      @get @_allMarksKey_, {}
-    setAllMarks: (marks) ->
-      @set @_allMarksKey_, marks
 
     # get last view (for page reload)
     setLastViewRoot: (ancestry) ->
@@ -111,8 +95,8 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @get (@_pluginDataVersionKey_ plugin)
     setPluginData: (plugin, key, data) ->
       @set (@_pluginDataKey_ plugin, key), data
-    getPluginData: (plugin, key) ->
-      _.cloneDeep (@get (@_pluginDataKey_ plugin, key))
+    getPluginData: (plugin, key, default_value=null) ->
+      _.cloneDeep (@get (@_pluginDataKey_ plugin, key), default_value)
 
     # get next row ID
     getId: () -> # Suggest to override this for efficiency

@@ -124,9 +124,4 @@ class TestCase
     @_expectEqual export_, expected, "Unexpected export content"
     return @
 
-  expectMarks: (expected) ->
-    marks = do @view.data.store.getAllMarks
-    @_expectDeepEqual marks, expected, "Unexpected marks"
-    return @
-
 module.exports = TestCase

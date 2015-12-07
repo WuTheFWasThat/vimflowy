@@ -239,15 +239,7 @@ if module?
     rewind: (view) ->
       view.data.toggleCollapsed @row
 
-  class SetMark extends Mutation
-    constructor: (@row, @mark) ->
-    str: () ->
-      return "row #{@row.id}, mark #{@mark}"
-    mutate: (view) ->
-      @oldmark = view.data.getMark @row.id
-      view.data.setMark @row.id, @mark
-    rewind: (view) ->
-      view.data.setMark @row.id, @oldmark
+  exports.Mutation = Mutation
 
   exports.AddChars = AddChars
   exports.DelChars = DelChars
@@ -256,5 +248,4 @@ if module?
   exports.AttachBlocks = AttachBlocks
   exports.MoveBlock = MoveBlock
   exports.ToggleBlock = ToggleBlock
-  exports.SetMark = SetMark
 )(if typeof exports isnt 'undefined' then exports else window.mutations = {})

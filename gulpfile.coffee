@@ -153,8 +153,8 @@ gulp.task 'watch', ->
   gulp.watch coffee_glob, ['coffee', 'test']
   gulp.watch test_glob, ['test']
 
-  gulp.watch plugin_coffee_glob, ['plugins_coffee']
-  gulp.watch plugin_js_glob, ['plugins_js']
+  gulp.watch plugin_coffee_glob, ['plugins_coffee', 'test']
+  gulp.watch plugin_js_glob, ['plugins_js', 'test']
   gulp.watch plugin_sass_glob, ['plugins_sass']
   gulp.watch plugin_css_glob, ['plugins_css']
   # only needs to happen when set of files change

@@ -26,7 +26,6 @@ Ideally, view shouldn't do much more than handle cursors and rendering
 renderLine = (lineData, options = {}) ->
   options.cursors ?= {}
   options.highlights ?= {}
-  options.marks ?= {}
 
   results = []
 
@@ -122,12 +121,15 @@ renderLine = (lineData, options = {}) ->
       line[i].renderOptions.href = url_word.word
 
   if options.onclickmark?
+    # TODO: do this better
+    marks_to_ids = view.data.store.getPluginData 'marks', 'marks_to_ids', {}
     # gather words that are marks
     for word in words
       if word.word[0] == '@'
         mark = word.word[1..]
-        if mark of options.marks
-          row = options.marks[mark]
+        if mark of marks_to_ids
+          id = marks_to_ids[mark]
+          row = view.data.canonicalInstance id
           for i in [word.start..word.end]
             line[i].renderOptions.type = 'a'
             line[i].renderOptions.classes.push 'theme-text-link'
@@ -230,11 +232,7 @@ window?.renderLine = renderLine
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @, row, 0
 
-      @mutations = [] # full mutation history
-      @history = [{
-        index: 0
-      }]
-      @historyIndex = 0 # index into indices
+      do @reset_history
 
       do @reset_jump_history
 
@@ -321,6 +319,7 @@ window?.renderLine = renderLine
 
     showMessage: (message, options = {}) ->
       options.time ?= 5000
+      Logger.logger.info "Showing message: #{message}"
       if @messageDiv
         clearTimeout @messageDivTimeout
 
@@ -439,6 +438,13 @@ window?.renderLine = renderLine
           throw new errors.UnexpectedValue "mimetype", mimetype
 
     # MUTATIONS
+
+    reset_history: () ->
+      @mutations = [] # full mutation history
+      @history = [{
+        index: 0
+      }]
+      @historyIndex = 0 # index into indices
 
     save: () ->
       if @historyIndex != @history.length - 1
@@ -651,20 +657,6 @@ window?.renderLine = renderLine
       if @reroot newroot
         return true
       return false
-
-    # go to the mark under the cursor, if it exists
-    goMark: (cursor) ->
-      word = @data.getWord cursor.row, cursor.col
-      if word.length < 1 or word[0] != '@'
-        return false
-      mark = word[1..]
-      allMarks = do @data.getAllMarks
-      if mark of allMarks
-        row = allMarks[mark]
-        @rootToParent row
-        return true
-      else
-        return false
 
     addChars: (row, col, chars, options) ->
       @do new mutations.AddChars row, col, chars, options
@@ -979,15 +971,6 @@ window?.renderLine = renderLine
     pasteAfter: (options = {}) ->
       @register.paste options
 
-    setMark: (row, mark) ->
-      allMarks = do @data.store.getAllMarks
-      if not (mark of allMarks)
-        @do new mutations.SetMark row, mark
-        return true
-      else
-        @showMessage "Mark '#{mark}' is already taken", {text_class: 'error'}
-        return false
-
     scrollPages: (npages) ->
       # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
       line_height = do $('.node-text').height
@@ -1227,12 +1210,14 @@ window?.renderLine = renderLine
             className: 'mark theme-bg-secondary theme-trim-accent'
           }, markresults
       else
-          mark = @data.getMark row.id
+          # TODO: fix this
+          console.log (@data.store.getPluginData 'Marks', 'ids_to_marks', {})
+          mark = (@data.store.getPluginData 'Marks', 'ids_to_marks', {})[row.id]
+          # mark = @data.getMark row.id
 
       lineoptions = {
         cursors: cursors
         highlights: highlights
-        marks: (do @data.getAllMarks)
         mark: mark
       }
 

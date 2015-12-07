@@ -35,6 +35,17 @@ if module? # imports
   exports.assert_not_equals = (a, b, message="assert_not_equals error") ->
     if a == b then throw new AssertionError "#{message}\nExpected #{a} != #{b}"
 
+  # for asserting object equality
+  exports.assert_deep_equals = (a, b, message="assert_deep_equals error") ->
+    if not _.isEqual a, b
+      throw new AssertionError "#{message}
+        \nExpected:
+        \n#{JSON.stringify(a, null, 2)}
+        \nBut got:
+        \n#{JSON.stringify(b, null, 2)}
+      "
+      throw new Error message
+
   exports.assert_arrays_equal = (arr_a, arr_b) ->
     a_minus_b = _.difference(arr_a, arr_b)
     if a_minus_b.length then throw new AssertionError "Arrays not same, first contains: #{a_minus_b}"

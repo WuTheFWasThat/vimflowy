@@ -1,4 +1,5 @@
 TestCase = require '../testcase.coffee'
+require '../../plugins/marks/marks.coffee'
 
 describe "marks", () ->
   it "works in basic cases", () ->
@@ -417,3 +418,292 @@ describe "marks", () ->
     ]
     # new IDs happen since it's the second paste
     t.expectMarks {'row': 7, 'too': 6, 'deep': 11}
+
+  it "can be cloned and pasted", () ->
+    t = new TestCase [
+      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1'
+      ] }
+    ]
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+    t.sendKeys 'yc'
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+    t.sendKeys 'jj'
+    t.sendKeys 'p'
+    t.expect [
+      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1',
+        { text: 'line 1', mark: 'mark1' }
+      ] }
+    ]
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+
+  it "deletes marks only on last clone delete", () ->
+    t = new TestCase [
+      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1'
+      ] }
+    ]
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+    t.sendKeys 'yc'
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+    t.sendKeys 'jj'
+    t.sendKeys 'p'
+    t.sendKeys 'dd'
+    t.expect [
+      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1',
+      ] }
+    ]
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+    t.sendKeys 'kk'
+    t.sendKeys 'dd'
+    t.expect [
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1',
+      ] }
+    ]
+    t.expectMarks {'mark2': 2}
+
+
+  it "works with marks in tricky case", () ->
+    t = new TestCase [
+      { text: 'Marked clone', mark: 'mark', children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        'Not a clone'
+      ] }
+    ]
+    t.expectMarks { 'mark': 1 }
+
+    t.sendKeys 'ycjjp'
+    t.expect [
+      { text: 'Marked clone', mark: 'mark', children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        { text: 'Marked clone', mark: 'mark', children: [
+          'Clone child'
+        ] }
+        'Not a clone'
+      ] }
+    ]
+
+    t.sendKeys 'ggdd'
+    t.expect [
+      { text: 'Not a clone', children: [
+        { text: 'Marked clone', mark: 'mark', children: [
+          'Clone child'
+        ] }
+        'Not a clone'
+      ] }
+    ]
+    t.expectMarks { 'mark': 1 }
+
+    t.sendKeys 'dd'
+    t.expect [ "" ]
+    t.expectMarks { }
+
+  it "works with marks in tricky case 2", () ->
+    t = new TestCase [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jycGp'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            { text: 'Marked child', mark: 'mark' }
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jj'
+    t.sendKeys ['m', 'enter']
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          'Marked child'
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            'Marked child'
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks {}
+
+    t.sendKeys 'ggdd'
+    t.expect [
+      ''
+    ]
+    t.expectMarks {}
+
+    t.sendKeys 'u'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          'Marked child'
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            'Marked child'
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks {}
+
+  it "remove the last marked instance when it is a descendant of a cloned node", () ->
+    t = new TestCase [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jycGp'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            { text: 'Marked child', mark: 'mark' }
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jjdd'
+    t.expect [
+      { text: 'parent', children: [
+        'Will be cloned'
+        { text: 'blah', children: [
+          'blah'
+          'Will be cloned'
+        ] }
+      ] }
+    ]
+    t.expectMarks {}
+
+  it "works with jumps", () ->
+    t = new TestCase [
+      { text: 'okay', mark: 'goto', children: [
+        'stuff'
+      ] },
+      'third'
+    ]
+    t.sendKeys '\'goto'
+    t.sendKey 'enter'
+    t.expectViewRoot 1
+    t.expectCursor 2, 0
+    t.expectJumpIndex 1, 2
+
+    # does nothing due to being the same spot
+    t.sendKeys '\'goto'
+    t.sendKey 'enter'
+    t.expectViewRoot 1
+    t.expectCursor 2, 0
+    t.expectJumpIndex 1, 2
+
+  it "node deletion doesnt always mean mark deletion", () ->
+    t = new TestCase [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'jycGp'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { text: 'Will be cloned', children: [
+            { text: 'Marked child', mark: 'mark' }
+          ] }
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'kkdd'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+  it "works with tricky failed re-attach undo case", () ->
+    t = new TestCase [
+      { text: 'row', mark: 'mark', children: [
+        'blah'
+      ] }
+      'random'
+    ]
+    t.sendKeys 'dd'
+    t.expect [
+      'random'
+    ]
+    t.sendKeys 'mmark'
+    t.sendKey 'enter'
+    t.expect [
+      { text: 'random', mark: 'mark' }
+    ]
+    t.sendKeys 'p'
+    t.expect [
+      { text: 'random', mark: 'mark' }
+      { text: 'row', children: [
+        'blah'
+      ] }
+    ]
+    t.sendKeys 'uuu'
+    t.expect [
+      { text: 'row', mark: 'mark', children: [
+        'blah'
+      ] }
+      'random'
+    ]
