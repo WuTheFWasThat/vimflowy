@@ -48,6 +48,12 @@ if module?
       #     _.union.apply(_, mode_type_obj.modes.map((mode) -> @commands_by_mode[mode]))
       #   )
 
+    clone: () ->
+      other = new KeyDefinitions
+      for k in ['WITHIN_ROW_MOTIONS', 'ALL_MOTIONS', 'commands_by_mode', 'defaultHotkeys', 'commands', 'motions', 'actions']
+        other[k] = _.cloneDeep @[k]
+      return other
+
     COMMAND_SCHEMA = {
       title: "Command metadata schema"
       type: "object"

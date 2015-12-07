@@ -3,7 +3,6 @@ if module?
   global.DependencyGraph = require('dependencies-online')
 
   global.utils = require('./utils.coffee')
-  global.keyDefinitions = require('./keyDefinitions.coffee')
   global.Modes = require('./modes.coffee')
   global.Logger = require('./logger.coffee')
   global.errors = require('./errors.coffee')
@@ -20,7 +19,9 @@ if module?
       @Modes = Modes
       @modes = Modes.modes
 
-      @commands = keyDefinitions.commands
+      @bindings = @view.bindings
+      @definitions = @bindings.definitions
+      @commands = @definitions.commands
 
     getDataVersion: () ->
       @data.store.getPluginDataVersion @name
@@ -35,18 +36,17 @@ if module?
       @data.store.getPluginData @name, key
 
     registerCommand: (metadata) ->
-      cmd = keyDefinitions.registerCommand metadata
+      cmd = @definitions.registerCommand metadata
       do @view.bindings.init
       return cmd
 
     registerMotion: (commands, motion, definition) ->
-      keyDefinitions.registerMotion commands, motion, definition
+      @definitions.registerMotion commands, motion, definition
       do @view.bindings.init
 
     registerAction: (modes, commands, action, definition) ->
-      keyDefinitions.registerAction modes, commands, action, definition
+      @definitions.registerAction modes, commands, action, definition
       do @view.bindings.init
-
 
     panic: _.once () =>
       alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."
@@ -118,6 +118,11 @@ if module?
       @view = view
       if view.settings
         enabledPlugins = view.settings.getSetting "enabledPlugins"
+      else
+        # TODO: BAD HACK... to make unit tests work,
+        # since each testcase uses the same pluginmanager but different view
+        for name of @plugins
+          @setStatus name, STATUS.DISABLED
       if enabledPlugins?
         @enabledPlugins = enabledPlugins
       @div = view.pluginsDiv

@@ -5,13 +5,12 @@ if module?
   global.utils = require('./utils.coffee')
   global.Modes = require('./modes.coffee')
   global.errors = require('./errors.coffee')
-  global.keyDefinitions = require('./keyDefinitions.coffee')
   global.Logger = require('./logger.coffee')
 
 ###
 Terminology:
       key       - a key corresponds to a keypress, including modifiers/special keys
-      command   - a command is a semantic event.  each command has a string name, and a definition (see keyDefinitions)
+      command   - a command is a semantic event (see keyDefinitions.coffee)
       mode      - same as vim's notion of modes.  each mode determines the set of possible commands, and a new set of bindings
       mode type - there are two mode types: insert-like and normal-like.  Each mode falls into precisely one of these two categories.
                   'insert-like' describes modes in which typing characters inserts the characters.
@@ -71,7 +70,7 @@ It also internally maintains
           bindings[key] = v
       return [null, bindings]
 
-    constructor: (@settings, options = {}) ->
+    constructor: (@definitions, @settings, options = {}) ->
       # a mapping from commands to keys
       @_keyMaps = null
       # a recursive mapping from keys to commands
@@ -94,13 +93,13 @@ It also internally maintains
         $('#hotkey-edit-normal').empty().append(
           $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
         ).append(
-          @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep keyDefinitions.actions[mode] for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
+          @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep @definitions.actions[mode] for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
         )
 
         $('#hotkey-edit-insert').empty().append(
           $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
         ).append(
-          @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep keyDefinitions.actions[mode] for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
+          @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep @definitions.actions[mode] for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
         )
 
     # tries to apply new hotkey settings, returning an error if there was one
@@ -108,20 +107,20 @@ It also internally maintains
       # merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
       hotkeys = {}
       for mode_type of MODE_TYPES
-        hotkeys[mode_type] = _.extend({}, keyDefinitions.defaultHotkeys[mode_type], hotkey_settings[mode_type] or {})
+        hotkeys[mode_type] = _.extend({}, @definitions.defaultHotkeys[mode_type], hotkey_settings[mode_type] or {})
 
       # for each mode, get key mapping for that particular mode - a mapping from command to set of keys
       keyMaps = {}
       for mode_type, mode_type_obj of MODE_TYPES
         for mode in mode_type_obj.modes
           modeKeyMap = {}
-          for command in keyDefinitions.commands_by_mode[mode]
+          for command in @definitions.commands_by_mode[mode]
             modeKeyMap[command] = hotkeys[mode_type][command].slice()
 
           if mode == MODES.SEARCH or mode == MODES.MARK
-            motions = Object.keys keyDefinitions.WITHIN_ROW_MOTIONS
+            motions = Object.keys @definitions.WITHIN_ROW_MOTIONS
           else
-            motions = Object.keys keyDefinitions.ALL_MOTIONS
+            motions = Object.keys @definitions.ALL_MOTIONS
           for command in motions
             modeKeyMap[command] = hotkeys[mode_type][command].slice()
 
@@ -129,13 +128,13 @@ It also internally maintains
 
       bindings = {}
       for mode_name, mode of MODES
-        [err, mode_bindings] = getBindings keyDefinitions.actions[mode], keyMaps[mode]
+        [err, mode_bindings] = getBindings @definitions.actions[mode], keyMaps[mode]
         if err then return "Error getting bindings for #{mode_name}: #{err}"
         bindings[mode] = mode_bindings
 
       motion_bindings = {}
       for mode_name, mode of MODES
-        [err, mode_bindings] = getBindings keyDefinitions.motions, keyMaps[mode]
+        [err, mode_bindings] = getBindings @definitions.motions, keyMaps[mode]
         if err then return "Error getting motion bindings for #{mode_name}: #{err}"
         motion_bindings[mode] = mode_bindings
 
@@ -187,7 +186,7 @@ It also internally maintains
 
       tables = $('<div>')
 
-      for [label, definitions] in [['Actions', actions], ['Motions', keyDefinitions.motions]]
+      for [label, definitions] in [['Actions', actions], ['Motions', @definitions.motions]]
         tables.append($('<h5>').text(label).css('margin', '5px 10px'))
         table = $('<table>').addClass('keybindings-table theme-bg-secondary')
         buildTableContents definitions, table
@@ -201,7 +200,7 @@ It also internally maintains
       if not (@settings.getSetting 'showKeyBindings')
         return
 
-      table = @buildTable @_keyMaps[mode], keyDefinitions.actions[mode], true
+      table = @buildTable @_keyMaps[mode], @definitions.actions[mode], true
       @modebindingsDiv.empty().append(table)
 
     # TODO getBindings: (mode) -> return @bindings[mode]

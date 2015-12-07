@@ -11,6 +11,7 @@ View = require '../assets/js/view.coffee'
 for file in fs.readdirSync path.resolve __dirname, '../assets/js/definitions'
   if (file.match /.*\.js$/) or (file.match /.*\.coffee$/)
     require path.join '../assets/js/definitions', file
+KeyDefinitions = require '../assets/js/keyDefinitions.coffee'
 KeyBindings = require '../assets/js/keyBindings.coffee'
 KeyHandler = require '../assets/js/keyHandler.coffee'
 Register = require '../assets/js/register.coffee'
@@ -33,7 +34,7 @@ class TestCase
     @settings =  new Settings @store
 
     # will have default bindings
-    keyBindings = new KeyBindings @settings
+    keyBindings = new KeyBindings (do KeyDefinitions.clone), @settings
 
     @view = new View @data, {bindings: keyBindings}
     @view.render = -> return
