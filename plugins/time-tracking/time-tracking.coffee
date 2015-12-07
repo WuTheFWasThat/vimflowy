@@ -28,7 +28,7 @@
       @logger.info "Loading time tracking"
       @api.cursor.on 'rowChange', (@onRowChange.bind @)
       @onRowChange null, @api.cursor.row # Initial setup
-      @api.view.on 'renderLine', (@onRenderLine.bind @)
+      @api.view.addRenderHook 'infoElements', (@renderTime.bind @)
       @api.view.data.on 'afterDescendantRemoved', (@onDescendantRemoved.bind @)
       @api.view.data.on 'afterDescendantAdded', (@onDescendantAdded.bind @)
       @rowChanges = []
@@ -209,13 +209,13 @@
       else if seconds > 0
         "#{seconds}s"
 
-    onRenderLine: (row, renderArray, options) ->
+    renderTime: (elements, renderData) ->
       if do @shouldDisplayTime
-        time = @rowTime row
+        time = @rowTime renderData.row
         if time > 1000
-          @logger.info "Rendering time for row #{row.id} as #{time}"
-          renderArray.push virtualDom.h 'span', {
+          @logger.info "Rendering time for row #{renderData.row.id} as #{time}"
+          elements.push virtualDom.h 'span', {
             className: 'time'
           }, " " + (@printTime time)
-
+      elements
 )()

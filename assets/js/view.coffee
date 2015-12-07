@@ -1235,7 +1235,16 @@ window?.renderLine = renderLine
 
       lineContents = renderLine lineData, lineoptions
       [].push.apply results, lineContents
-      @emit 'renderLine', row, results, options # Listeners mutate the 'results' array to change rendering #TODO: Jeff, a better interface?
+      lineContents = @applyRenderHook 'lineContents', lineContents, { row: row }
+
+      infoChildren = @applyRenderHook 'infoElements', [], { row: row }
+      info = virtualDom.h 'div', {
+        className: 'node-info'
+      }, infoChildren
+      results.push info
+
+      results = @applyRenderHook 'lineElements', results, { row: row }
+
       return results
 
   # exports
