@@ -129,10 +129,7 @@ if module?
       # TODO: make settings actually a mode, and have hotkeys for everything?
       if do @view.showingSettings
           # allow stuff like page refresh while on settings
-          if key.length > 1
-              return false
-          @view.handleSettings key
-          return true
+          return @view.handleSettings key
       Logger.logger.debug 'Handling key:', key
       @keyStream.enqueue key
       if @recording.stream

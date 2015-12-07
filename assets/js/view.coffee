@@ -273,7 +273,13 @@ window?.renderLine = renderLine
         do @showSettings
 
     handleSettings: (key) ->
+      if key == 'esc'
+        do @hideSettings
+        return true
+      if key.length > 1
+        return false
       do @hideSettings
+      return true
 
     #################
     # modes related

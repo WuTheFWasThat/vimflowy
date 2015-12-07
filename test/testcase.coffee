@@ -16,6 +16,7 @@ KeyHandler = require '../assets/js/keyHandler.coffee'
 Register = require '../assets/js/register.coffee'
 Settings = require '../assets/js/settings.coffee'
 Logger = require '../assets/js/logger.coffee'
+Plugins = require '../assets/js/plugins.coffee'
 
 Logger.logger.setStream Logger.STREAM.QUEUE
 afterEach 'empty the queue', () ->
@@ -30,13 +31,19 @@ class TestCase
       children: serialized
 
     @settings =  new Settings @store
-    @view = new View @data
-    @view.render = -> return
 
     # will have default bindings
     keyBindings = new KeyBindings @settings
+
+    @view = new View @data, {bindings: keyBindings}
+    @view.render = -> return
+
     @keyhandler = new KeyHandler @view, keyBindings
     @register = @view.register
+
+    Plugins.resolveView @view
+    for name of Plugins.plugins
+      Plugins.enable name
 
   _expectDeepEqual: (actual, expected, message) ->
     if not _.isEqual actual, expected

@@ -17,7 +17,10 @@ if module?
       @cursor = @view.cursor
       # TODO: Add subloggers and prefix all log messages with the plugin name
       @logger = Logger.logger
-      @modes = Modes
+      @Modes = Modes
+      @modes = Modes.modes
+
+      @commands = keyDefinitions.commands
 
     getDataVersion: () ->
       @data.store.getPluginDataVersion @name
@@ -32,13 +35,18 @@ if module?
       @data.store.getPluginData @name, key
 
     registerCommand: (metadata) ->
-      keyDefinitions.registerCommand metadata
+      cmd = keyDefinitions.registerCommand metadata
+      do @view.bindings.init
+      return cmd
 
     registerMotion: (commands, motion, definition) ->
       keyDefinitions.registerMotion commands, motion, definition
+      do @view.bindings.init
 
     registerAction: (modes, commands, action, definition) ->
       keyDefinitions.registerAction modes, commands, action, definition
+      do @view.bindings.init
+
 
     panic: _.once () =>
       alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."
@@ -108,7 +116,8 @@ if module?
 
     resolveView: (view) ->
       @view = view
-      enabledPlugins = view.settings.getSetting "enabledPlugins"
+      if view.settings
+        enabledPlugins = view.settings.getSetting "enabledPlugins"
       if enabledPlugins?
         @enabledPlugins = enabledPlugins
       @div = view.pluginsDiv
@@ -194,53 +203,68 @@ if module?
       do @render
 
     enable: (name) ->
+      status = @getStatus name
+      if status == STATUS.UNREGISTERED
+        throw new errors.GenericError("No plugin registered as #{name}")
+      if status == STATUS.ENABLING
+        throw new errors.GenericError("Already enabling plugin #{name}")
+      if status == STATUS.DISABLING
+        throw new errors.GenericError("Still disabling plugin #{name}")
+
       @enabledPlugins[name] = true
-      @view.settings.setSetting "enabledPlugins", @enabledPlugins
-      if (@getStatus name) == STATUS.DISABLED
-        @_enable @plugins[name]
+      if @view.settings
+        @view.settings.setSetting "enabledPlugins", @enabledPlugins
+      plugin = @plugins[name]
+      if (status == STATUS.DISABLED) or (status == STATUS.REGISTERED)
+        # TODO: require dependencies to be enabled first, notify user if not
 
-    disable: (name) ->
-      delete @enabledPlugins[name]
-      @view.settings.setSetting "enabledPlugins", @enabledPlugins
-      if (@getStatus name) == STATUS.ENABLED
-        @_disable @plugins[name]
+        api = new PluginApi @view, plugin, @
 
-    _disable: (plugin) ->
-      # TODO: require that no other plugin has this as a dependency, notify user otherwise
+        # validate data version
+        dataVersion = do api.getDataVersion
+        unless dataVersion?
+          api.setDataVersion plugin.dataVersion
+          dataVersion = plugin.dataVersion
+        # TODO: Come up with some migration system for both vimflowy and plugins
+        errors.assert_equals dataVersion, plugin.dataVersion,
+          "Plugin data versions are not identical, please contact the plugin author for migration support"
 
-      @setStatus plugin.name, STATUS.DISABLING
-      api = plugin.api
-      # TODO: allow disable to be async?
-      plugin.disable api
-      delete plugin.api
-      delete plugin.value
-      @setStatus plugin.name, STATUS.DISABLED
+        @setStatus plugin.name, STATUS.ENABLING
+        plugin.api = api
+        # TODO: allow enable to be async?
+        plugin.value = plugin.enable api
+        @pluginDependencies.resolve plugin.name, plugin.value
 
-    _enable: (plugin) ->
-      # TODO: require dependencies to be enabled first, notify user if not
-
-      api = new PluginApi @view, plugin, @
-
-      # validate data version
-      dataVersion = do api.getDataVersion
-      unless dataVersion?
-        api.setDataVersion plugin.dataVersion
-        dataVersion = plugin.dataVersion
-      # TODO: Come up with some migration system for both vimflowy and plugins
-      errors.assert_equals dataVersion, plugin.dataVersion,
-        "Plugin data versions are not identical, please contact the plugin author for migration support"
-
-      @setStatus plugin.name, STATUS.ENABLING
-      plugin.api = api
-      # TODO: allow enable to be async?
-      plugin.value = plugin.enable api
-      @pluginDependencies.resolve plugin.name, plugin.value
-
-      # refresh hotkeys, if any new ones were added
-      do @view.bindings.init
-      @view.bindings.renderModeTable @view.mode
+        # refresh hotkeys, if any new ones were added
+        do @view.bindings.init
+        @view.bindings.renderModeTable @view.mode
 
       @setStatus plugin.name, STATUS.ENABLED
+
+    disable: (name) ->
+      status = @getStatus name
+      if status == STATUS.UNREGISTERED
+        throw new errors.GenericError("No plugin registered as #{name}")
+      if status == STATUS.ENABLING
+        throw new errors.GenericError("Still enabling plugin #{name}")
+      if status == STATUS.DISABLING
+        throw new errors.GenericError("Already disabling plugin #{name}")
+
+      delete @enabledPlugins[name]
+      if @view.settings
+        @view.settings.setSetting "enabledPlugins", @enabledPlugins
+      plugin = @plugins[name]
+
+      # TODO: require that no other plugin has this as a dependency, notify user otherwise
+
+      if status == STATUS.ENABLED
+          @setStatus plugin.name, STATUS.DISABLING
+          api = plugin.api
+          # TODO: allow disable to be async?
+          plugin.disable api
+          delete plugin.api
+          delete plugin.value
+      @setStatus plugin.name, STATUS.DISABLED
 
     register: (plugin_metadata, enable, disable) ->
       @validate plugin_metadata
@@ -261,9 +285,9 @@ if module?
       (@pluginDependencies.add plugin.name, plugin.dependencies).then () =>
         # TODO: handle dependency being disabled
         if plugin.name of @enabledPlugins
-          @_enable plugin
+          @enable plugin.name
         else
-          @setStatus plugin.name, STATUS.DISABLED
+          @disable plugin.name
 
   Plugins = new PluginsManager
 
