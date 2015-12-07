@@ -14,7 +14,7 @@
   Plugins.register {
     name: "Time Tracking"
     author: "Zachary Vance"
-    description: "Keeps track of how much time has been spent in each row (including its descendents)"
+    description: "Keeps track of how much time has been spent in each row (including its descendants)"
     version: 3
   }, (api) ->
     time_tracker = new TimeTrackingPlugin api
@@ -29,8 +29,8 @@
       @api.cursor.on 'rowChange', (@onRowChange.bind @)
       @onRowChange null, @api.cursor.row # Initial setup
       @api.view.on 'renderLine', (@onRenderLine.bind @)
-      @api.view.data.on 'afterDescendentRemoved', (@onDescendentRemoved.bind @)
-      @api.view.data.on 'afterDescendentAdded', (@onDescendentAdded.bind @)
+      @api.view.data.on 'afterDescendantRemoved', (@onDescendantRemoved.bind @)
+      @api.view.data.on 'afterDescendantAdded', (@onDescendantAdded.bind @)
       @rowChanges = []
       @currentRow = null
       @api.view.on 'exit', () =>
@@ -50,18 +50,18 @@
         default_hotkeys:
           normal_like: ['l']
       }
-      @api.registerAction [@api.modes.modes.NORMAL], CMD_TOGGLE, {
+      @api.registerAction [@api.modes.NORMAL], CMD_TOGGLE, {
         description: 'Toggle a setting',
       }, {}
-      @api.registerAction [@api.modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_DISPLAY], {
+      @api.registerAction [@api.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_DISPLAY], {
         description: 'Toggle whether time spent on each row is displayed',
       }, () =>
         do @toggleDisplay
-      @api.registerAction [@api.modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
+      @api.registerAction [@api.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
         description: 'Toggle whether time is being logged',
       }, () =>
         do @toggleLogging
-      
+
 
     getRowData: (id, keytype) ->
       key = "#{id}:#{keytype}"
@@ -128,12 +128,12 @@
         current
       @_addTimeToRow period.row, period.time, period.stop
       @_addTimeToAncestors period.row, period.time, period.stop
-    onDescendentRemoved: (event) ->
-      @logger.debug "Descendent #{event.descendentId} removed from #{event.ancestorId}"
+    onDescendantRemoved: (event) ->
+      @logger.debug "Descendant #{event.descendantId} removed from #{event.ancestorId}"
       # Could avoid lookups by knowing exact changes, if needed
       @_rebuildTreeTimes event.ancestorId
-    onDescendentAdded: (event) ->
-      @logger.debug "Descendent #{event.descendentId} added to #{event.ancestorId}"
+    onDescendantAdded: (event) ->
+      @logger.debug "Descendant #{event.descendantId} added to #{event.ancestorId}"
       # Could avoid lookups by knowing exact changes, if needed
       @_rebuildTreeTimes event.ancestorId
 
