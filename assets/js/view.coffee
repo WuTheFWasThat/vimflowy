@@ -1003,13 +1003,19 @@ window?.renderLine = renderLine
          @scrollMain (elemBottom - window.innerHeight + bottom_margin)
 
     getVisibleRows: () ->
-      rows= $.makeArray($('.bullet'))
-             .filter((bullet) => return utils.isScrolledIntoView $(bullet), @mainDiv)
-             .filter((bullet) => return not $(bullet).hasClass 'fa-clone')
-             .map((x) ->
-                # NOTE: can't use $(x).data
-                # http://stackoverflow.com/questions/25876274/jquery-data-not-working
-                return Row.loadFromAncestry JSON.parse $(x).attr('data-ancestry'))
+      rows = []
+      for bullet in $.makeArray($('.bullet'))
+          if not (utils.isScrolledIntoView $(bullet), @mainDiv)
+              continue
+          if $(bullet).hasClass 'fa-clone'
+              continue
+          # NOTE: can't use $(x).data
+          # http://stackoverflow.com/questions/25876274/jquery-data-not-working
+          ancestry = $(bullet).attr('data-ancestry')
+          if not ancestry # as far as i know, this only happens because of menu mode
+              continue
+          row = Row.loadFromAncestry JSON.parse ancestry
+          rows.push row
       return rows
 
     # given an anchor and cursor, figures out the right blocks to be deleting
