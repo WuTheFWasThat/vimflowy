@@ -211,14 +211,14 @@ describe "marks", () ->
       ] }
     ]
     t.sendKeys 'gmx'
-    t.expectViewRoot 4
+    t.expectViewRoot 0
     t.expect [
       { text: '@mark2 @mark3', children: [
         'line'
         { text: 'line', mark: 'mark3' }
       ] }
-      { text: 'stuff', mark: 'mark2', children: [
-        'ore stuff'
+      { text: 'tuff', mark: 'mark2', children: [
+        'more stuff'
       ] }
     ]
     # goes nowhere
@@ -228,23 +228,24 @@ describe "marks", () ->
         'line'
         { text: 'line', mark: 'mark3' }
       ] }
-      { text: 'stuff', mark: 'mark2', children: [
-        'ore stuf'
+      { text: 'tuf', mark: 'mark2', children: [
+        'more stuff'
       ] }
     ]
     # back to top
-    t.sendKeys '{gg'
+    t.sendKeys 'gg'
     t.expectViewRoot 0
     t.expectCursor 1, 0
     t.sendKeys '$gmx'
+    t.expectViewRoot 1
     t.expectCursor 3, 2
     t.expect [
       { text: '@mark2 @mark3', children: [
         'line'
         { text: 'lin', mark: 'mark3' }
       ] }
-      { text: 'stuff', mark: 'mark2', children: [
-        'ore stuf'
+      { text: 'tuf', mark: 'mark2', children: [
+        'more stuff'
       ] }
     ]
 

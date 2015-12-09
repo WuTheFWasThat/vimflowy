@@ -607,6 +607,11 @@ window?.renderLine = renderLine
     rootInto: (row = @cursor.row) ->
       if @reroot row
         return true
+      else
+        return @rootToParent row
+
+    # set cursor to row, changing view to its parent
+    rootToParent: (row = @cursor.row) ->
       parent = do row.getParent
       if @reroot parent
         @cursor.setRow row
@@ -633,7 +638,7 @@ window?.renderLine = renderLine
       allMarks = do @data.getAllMarks
       if mark of allMarks
         row = allMarks[mark]
-        @rootInto row
+        @rootToParent row
         return true
       else
         return false
