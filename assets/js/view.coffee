@@ -9,6 +9,7 @@ if module?
   global.Cursor = require('./cursor.coffee')
   global.Data = require('./data.coffee')
   global.dataStore = require('./datastore.coffee')
+  global.EventEmitter = require('./eventEmitter.coffee')
   global.Register = require('./register.coffee')
   global.Logger = require('./logger.coffee')
 
@@ -190,7 +191,7 @@ window?.renderLine = renderLine
 (() ->
   MODES = Modes.modes
 
-  class View
+  class View extends EventEmitter
     containerDivID = (id) ->
       return 'node-' + id
 
@@ -201,6 +202,7 @@ window?.renderLine = renderLine
       return 'node-' + id + '-children'
 
     constructor: (data, options = {}) ->
+      super
       @data = data
 
       @bindings = options.bindings
@@ -240,6 +242,9 @@ window?.renderLine = renderLine
       @setMode MODES.NORMAL
 
       return @
+
+    exit: () ->
+      @emit "exit"
 
     ###################
     # settings related
@@ -1240,7 +1245,17 @@ window?.renderLine = renderLine
           do @render
 
       lineContents = renderLine lineData, lineoptions
+      lineContents = @applyRenderHook 'lineContents', lineContents, { row: row }
       [].push.apply results, lineContents
+
+      infoChildren = @applyRenderHook 'infoElements', [], { row: row }
+      info = virtualDom.h 'div', {
+        className: 'node-info'
+      }, infoChildren
+      results.push info
+
+      results = @applyRenderHook 'lineElements', results, { row: row }
+
       return results
 
   # exports
