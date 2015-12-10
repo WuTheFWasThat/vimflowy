@@ -412,9 +412,9 @@ class Data extends EventEmitter
 
     # Notify all ancestors thaat their list of descendants changed
     for ancestorId in added_ancestry
-      @emit "afterDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
+      @emit "beforeDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
     if isFirst
-      @emit "afterRowAdded", { id: child_id }
+      @emit "beforeRowAdded", { id: child_id }
 
     info = @_addChild parent_id, child_id, index
 
