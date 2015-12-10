@@ -291,7 +291,7 @@ class Data extends EventEmitter
     return instance
 
   # Return all ancestor ids, topologically sorted (root is *last*).
-  # Includes 'id' itself unless options.inclusive is specified
+  # Excludes 'id' itself unless options.inclusive is specified
   allAncestors: (id, options) ->
     options = _.defaults {}, options, { inclusive: false }
     visited = {}
@@ -306,6 +306,10 @@ class Data extends EventEmitter
           visit parent
     visit id
     ancestors
+
+  # Return what would be all the ancestors of 'id', if 'excluded_parent_id'
+  # were removed as a parent of 'id'.
+  # Excludes 'id' itself unless options.inclusive is specified
   allAncestorsWithoutParent: (id, excluded_parent_id, options) ->
     options = _.defaults {}, options, { inclusive: false }
     ancestors = []

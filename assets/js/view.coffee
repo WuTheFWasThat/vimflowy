@@ -1234,8 +1234,8 @@ window?.renderLine = renderLine
           do @render
 
       lineContents = renderLine lineData, lineoptions
-      [].push.apply results, lineContents
       lineContents = @applyRenderHook 'lineContents', lineContents, { row: row }
+      [].push.apply results, lineContents
 
       infoChildren = @applyRenderHook 'infoElements', [], { row: row }
       info = virtualDom.h 'div', {
