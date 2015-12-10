@@ -6,7 +6,6 @@ if module?
   global.constants = require('./constants.coffee')
   global.EventEmitter = require('./eventEmitter.coffee')
   global.Logger = require('./logger.coffee')
-  global.EventEmitter = require('./eventEmitter.coffee')
 
 class Row
   constructor: (@parent, @id) ->
