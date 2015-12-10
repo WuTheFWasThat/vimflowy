@@ -1,3 +1,5 @@
+# Time-tracking keeps track of the amount of time spent in each subtree.
+# Clones are double-counted. This is a known bug and will not be fixed.
 (() ->
 
   pad = (val, length, padChar = '0') ->
@@ -31,6 +33,8 @@
       @api.view.addRenderHook 'infoElements', (@renderTime.bind @)
       @api.view.data.on 'afterDescendantRemoved', (@onDescendantRemoved.bind @)
       @api.view.data.on 'afterDescendantAdded', (@onDescendantAdded.bind @)
+      @api.view.data.on 'beforeRowRemoved', (@onRowRemoved.bind @)
+      @api.view.data.on 'afterRowAdded', (@onRowAdded.bind @)
       @rowChanges = []
       @currentRow = null
       @api.view.on 'exit', () =>
@@ -172,18 +176,38 @@
           current
     _rebuildTreeTimes: (id) ->
       children = @api.view.data._getChildren id
+      deletedChildren = (@getRowData id, 'deletedChildren') ? {}
 
       childTotalTimes = _.map children, (child_id) => @getRowData child_id, "treeTotalTime"
       rowTotalTime = @getRowData id, "rowTotalTime"
-      totalTimes = _.compact ([rowTotalTime].concat childTotalTimes)
+      deletedChildrenTotalTimes = _.pluck deletedChildren, 'totalTime'
+      totalTimes = _.compact [rowTotalTime].concat(childTotalTimes).concat(deletedChildrenTotalTimes)
       totalTime = sum totalTimes
       @setRowData id, "treeTotalTime", totalTime
 
       childDailyTimes = _.map children, (child_id) => @getRowData child_id, "treeDailyTime"
       rowDailyTime = @getRowData id, "rowDailyTime"
-      dailyTimes = _.compact ([rowDailyTime].concat childDailyTimes)
+      deletedChildrenDailyTimes = _.pluck deletedChildren, 'dailyTime'
+      dailyTimes = _.compact [rowDailyTime].concat(childDailyTimes).concat(deletedChildrenDailyTimes)
       dailyTime = @_combineDailyTimes.apply @, dailyTimes
       @setRowData id, "treeDailyTime", dailyTime
+
+    onRowRemoved: (event) ->
+      deletedChildren = (@getRowData event.parent_id, 'deletedChildren') ? {}
+      deletedChildren[event.id] = {
+        totalTime: (@getRowData event.id, "treeTotalTime") ? 0
+        dailyTime: (@getRowData event.id, "treeDailyTime") ? {}
+      }
+      @setRowData event.parent_id, 'deletedChildren', deletedChildren
+      for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
+        @_rebuildTreeTimes ancestor_id
+    onRowAdded: (event) ->
+      deletedChildren = (@getRowData event.parent_id, 'deletedChildren') ? {}
+      if event.id of deletedChildren
+        delete deletedChildren[event.id]
+        @setRowData event.parent_id, 'deletedChildren', deletedChildren
+        for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
+          @_rebuildTreeTimes ancestor_id
 
     rowTime: (row, range) ->
       if range?

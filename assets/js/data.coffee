@@ -390,7 +390,7 @@ class Data extends EventEmitter
     for ancestorId in removed_ancestry
       @emit "beforeDescendantRemoved", { ancestorId: ancestorId, descendantId: id }
     if wasLast
-      @emit "beforeRowRemoved", { id: id }
+      @emit "beforeRowRemoved", { id: id, parent_id: parent_id }
 
     info = @_removeChild parent_id, id
 
@@ -401,7 +401,7 @@ class Data extends EventEmitter
     for ancestorId in removed_ancestry
       @emit "afterDescendantRemoved", { ancestorId: ancestorId, descendantId: id }
     if wasLast
-      @emit "afterRowRemoved", { id: id }
+      @emit "afterRowRemoved", { id: id, parent_id: parent_id }
     return info
 
   _attach: (child_id, parent_id, index = -1) ->
@@ -414,7 +414,7 @@ class Data extends EventEmitter
     for ancestorId in added_ancestry
       @emit "beforeDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
     if isFirst
-      @emit "beforeRowAdded", { id: child_id }
+      @emit "beforeRowAdded", { id: child_id, parent_id: parent_id }
 
     info = @_addChild parent_id, child_id, index
 
@@ -425,7 +425,7 @@ class Data extends EventEmitter
     for ancestorId in added_ancestry
       @emit "afterDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
     if isFirst
-      @emit "afterRowAdded", { id: child_id }
+      @emit "afterRowAdded", { id: child_id, parent_id: parent_id }
     return info
 
   _move: (child_id, old_parent_id, new_parent_id, index = -1) ->
