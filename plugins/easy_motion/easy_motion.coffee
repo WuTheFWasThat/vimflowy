@@ -23,12 +23,18 @@
         rows = (do @view.getVisibleRows).filter (row) =>
                  return not (row.is @view.cursor.row)
         keys = [
+          'Z', 'X', 'C', 'V',
+          'Q', 'W', 'E', 'R', 'T',
+          'A', 'S', 'D', 'F',
           'z', 'x', 'c', 'v',
           'q', 'w', 'e', 'r', 't',
           'a', 's', 'd', 'f',
           'g', 'h', 'j', 'k', 'l',
           'y', 'u', 'i', 'o', 'p',
           'b', 'n', 'm',
+          'G', 'H', 'J', 'K', 'L',
+          'Y', 'U', 'I', 'O', 'P',
+          'B', 'N', 'M',
         ]
 
         if keys.length > rows.length
