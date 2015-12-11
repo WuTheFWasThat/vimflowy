@@ -92,7 +92,7 @@ if module?
 
       @keyBindings = keyBindings
 
-      @macros = {}
+      @macros = do @view.data.store.getMacros
       @recording = {
         stream: null
         key: null
@@ -113,6 +113,7 @@ if module?
     finishRecording: () ->
       macro = @recording.stream.queue
       @macros[@recording.key] = macro
+      @view.data.store.setMacros @macros
       @recording.stream = null
       @recording.key = null
 

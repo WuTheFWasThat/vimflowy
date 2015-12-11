@@ -31,6 +31,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_lastSaveKey_ = "#{@prefix}:lastSave"
       @_lastViewrootKey_ = "#{@prefix}:lastviewroot2"
       @_allMarksKey_ = "#{@prefix}:allMarks"
+      @_macrosKey_ = "#{@prefix}:macros"
       @_IDKey_ = "#{@prefix}:lastID"
       @_schemaVersionKey_ = "#{@prefix}:schemaVersion"
       do @validateSchemaVersion
@@ -72,6 +73,14 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
     # set mapping of row -> mark, for subtree beneath row
     setMarks: (row, marks) ->
       @set (@_marksKey_ row), marks
+
+    # get mapping of macro_key -> macro
+    getMacros: () ->
+      @get @_macrosKey_, {}
+
+    # set mapping of macro_key -> macro
+    setMacros: (macros) ->
+      @set @_macrosKey_, macros
 
     # get global settings (data not specific to a document)
     getSetting: (setting) ->

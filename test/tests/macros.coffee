@@ -127,3 +127,20 @@ describe "macros", () ->
       '10101010'
       '01010101'
     ]
+
+  it "works even if sequence contains q", () ->
+    t = new TestCase [
+      "a q b q c q d q"
+    ]
+    t.sendKeys 'qxfqxq'
+    t.expect [
+      "a  b q c q d q"
+    ]
+    t.sendKeys '@x'
+    t.expect [
+      "a  b  c q d q"
+    ]
+    t.sendKeys '2@x'
+    t.expect [
+      "a  b  c  d "
+    ]
