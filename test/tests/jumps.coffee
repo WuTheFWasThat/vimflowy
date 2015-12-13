@@ -193,16 +193,15 @@ describe "jumps", () ->
     t.expectCursor 2, 0
 
     t.sendKey jumpPreviousKey
-    t.sendKeys 'Gp'
+    t.sendKeys 'G'
     t.expect [
       { text: 'first', children: [
         'second'
       ] },
       'third'
-      'cursor'
     ]
     t.expectViewRoot 0
-    t.expectCursor 3, 0
+    t.expectCursor 4, 0
 
     t.sendKey jumpPreviousKey
     t.expectViewRoot 1
@@ -219,14 +218,13 @@ describe "jumps", () ->
 
     t.sendKey jumpNextKey
     t.expectViewRoot 0
-    t.expectCursor 3, 0
+    t.expectCursor 4, 0
 
     # delete last child of 1
-    t.sendKeys 'kkdd'
+    t.sendKeys 'kdd'
     t.expect [
       'first'
       'third'
-      'cursor'
     ]
 
     t.sendKey jumpNextKey # fails due to 1 not having children anymore
@@ -241,7 +239,6 @@ describe "jumps", () ->
         'ok'
       ] }
       'third'
-      'cursor'
     ]
 
     t.sendKey jumpNextKey # fails due to 1 not having children anymore
@@ -254,7 +251,6 @@ describe "jumps", () ->
     t.expect [
       'first'
       'third'
-      'cursor'
     ]
     t.expectViewRoot 0
     t.expectCursor 1, 0
@@ -263,3 +259,54 @@ describe "jumps", () ->
     t.expectJumpIndex 4
     t.sendKey jumpPreviousKey
     t.expectJumpIndex 4
+
+  it "considers clones the same", () ->
+    t = new TestCase [
+      { text: 'first', children: [
+        'second'
+        'cursor'
+      ] },
+      'third'
+    ]
+    t.expectViewRoot 0
+    t.expectCursor 1, 0
+
+    t.sendKeys ']'
+    t.expectViewRoot 1
+    t.expectCursor 2, 0
+
+    t.sendKey jumpPreviousKey
+    t.expectViewRoot 0
+    t.expectJumpIndex 0
+    t.sendKey jumpNextKey
+    t.expectCursor 2, 0
+    t.expectJumpIndex 1
+
+    t.sendKey jumpPreviousKey
+    t.expectViewRoot 0
+    t.expectJumpIndex 0
+    t.sendKeys 'dd'
+    t.expectCursor 4, 0
+    t.expect [ 'third' ]
+
+    # unable to jump because of delete
+    t.sendKey jumpNextKey
+    t.expectCursor 4, 0
+    t.expectJumpIndex 0
+
+    t.sendKeys 'p'
+    t.expect [
+      'third'
+      { text: 'first', children: [
+        'second'
+        'cursor'
+      ] }
+    ]
+    # now able to jump to clone
+    t.sendKey jumpNextKey
+    t.expectCursor 2, 0
+    t.expectJumpIndex 1
+
+    t.sendKey jumpPreviousKey
+    t.expectCursor 1, 0
+    t.expectJumpIndex 0

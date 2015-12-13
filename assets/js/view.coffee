@@ -538,7 +538,7 @@ window?.renderLine = renderLine
       if jump.viewRoot.id == @data.viewRoot.id
         return false # not moving, don't jump
 
-      if not @data.isAttached jump.viewRoot
+      if not @data.isAttached jump.viewRoot.id
         return false # invalid location
 
       children = @data.getChildren jump.viewRoot
@@ -548,7 +548,7 @@ window?.renderLine = renderLine
       @data.changeViewRoot jump.viewRoot
       @cursor.setRow children[0]
 
-      if @data.isAttached jump.cursor_after.row
+      if @data.isAttached jump.cursor_after.row.id
         # if the row is attached and under the view root, switch to it
         cursor_row = @data.youngestVisibleAncestor jump.cursor_after.row
         if cursor_row != null

@@ -563,16 +563,10 @@ class Data extends EventEmitter
       if @collapsed cur
         answer = cur
 
-  # returns whether a row is actually reachable from the root node
+  # returns whether an id is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
-  isAttached: (row) ->
-    # TODO: Refactor where this is used in light of cloning
-    while true
-      if do row.isRoot
-        return true
-      if (@indexOf row) == -1
-        return false
-      row = do row.getParent
+  isAttached: (id) ->
+    return (@root.id in @allAncestors id, {inclusive: true})
 
   getSiblingBefore: (row) ->
     return @getSiblingOffset row, -1
