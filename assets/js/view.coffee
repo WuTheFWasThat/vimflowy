@@ -29,11 +29,6 @@ renderLine = (lineData, options = {}) ->
 
   results = []
 
-  if options.mark
-    results.push virtualDom.h 'span', {
-      className: 'mark theme-bg-secondary theme-trim'
-    }, options.mark
-
 
   # ideally this takes up space but is unselectable (uncopyable)
   cursorChar = ' '
@@ -120,21 +115,8 @@ renderLine = (lineData, options = {}) ->
       line[i].renderOptions.classes.push 'theme-text-link'
       line[i].renderOptions.href = url_word.word
 
-  if options.onclickmark?
-    # TODO: do this better
-    marks_to_ids = view.data.store.getPluginData 'marks', 'marks_to_ids', {}
-    # gather words that are marks
-    for word in words
-      if word.word[0] == '@'
-        mark = word.word[1..]
-        if mark of marks_to_ids
-          id = marks_to_ids[mark]
-          row = view.data.canonicalInstance id
-          for i in [word.start..word.end]
-            line[i].renderOptions.type = 'a'
-            line[i].renderOptions.classes.push 'theme-text-link'
-            line[i].renderOptions.onclick = options.onclickmark.bind @, row
-
+  if options.lineHook?
+    line = options.lineHook line, {words: words}
 
   renderSpec = []
   # Normally, we collect things of the same type and render them in one div
@@ -1189,9 +1171,7 @@ window?.renderLine = renderLine
       cursors = {}
       highlights = {}
 
-      marking = @markrow? and @markrow.is row
-
-      if (row.is @cursor.row) and not marking
+      if row.is @cursor.row
         cursors[@cursor.col] = true
 
         if @anchor and not @lineSelect
@@ -1201,24 +1181,13 @@ window?.renderLine = renderLine
           else
             Logger.logger.warn "Multiline not yet implemented"
 
-      results = []
+        cursors = @applyHook 'renderCursorsDict', cursors, { row: row }
 
-      mark = null
-      if marking
-          markresults = @markview.virtualRenderLine @markview.cursor.row, {no_clicks: true}
-          results.push virtualDom.h 'span', {
-            className: 'mark theme-bg-secondary theme-trim-accent'
-          }, markresults
-      else
-          # TODO: fix this
-          console.log (@data.store.getPluginData 'Marks', 'ids_to_marks', {})
-          mark = (@data.store.getPluginData 'Marks', 'ids_to_marks', {})[row.id]
-          # mark = @data.getMark row.id
+      results = []
 
       lineoptions = {
         cursors: cursors
         highlights: highlights
-        mark: mark
       }
 
       if options.handle_clicks
@@ -1231,15 +1200,13 @@ window?.renderLine = renderLine
         lineoptions.linemouseover = () =>
           @render {handle_clicks: true}
 
-      if @mode == MODES.NORMAL
-        lineoptions.onclickmark = (row) =>
-          @rootInto row
-          do @save
-          do @render
+      lineoptions.lineHook = (line, info) =>
+        line = @applyHook 'renderLineTextOptions', line, info
+        return line
 
       lineContents = renderLine lineData, lineoptions
-      [].push.apply results, lineContents
       lineContents = @applyHook 'renderLineContents', lineContents, { row: row }
+      [].push.apply results, lineContents
 
       infoChildren = @applyHook 'renderInfoElements', [], { row: row }
       info = virtualDom.h 'div', {

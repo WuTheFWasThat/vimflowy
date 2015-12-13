@@ -24,7 +24,7 @@ if module?
       api.setData 'marks_to_ids', mark_to_ids
 
     # get mark for an id, '' if it doesn't exist
-    getMark = (id) ->
+    _getMark = (id) ->
       marks = _getIdsToMarks()
       return marks[id] or ''
 
@@ -47,6 +47,15 @@ if module?
       delete ids_to_marks[id]
       _setMarksToIds marks_to_ids
       _setIdsToMarks ids_to_marks
+
+    getIdForMark = (mark) ->
+      marks_to_ids = _getMarksToIds()
+      if not (mark of marks_to_ids)
+        return null
+      id = marks_to_ids[mark]
+      if data.isAttached id
+        return id
+      return null
 
     listMarks = () ->
       marks_to_ids = _getMarksToIds()
@@ -79,7 +88,7 @@ if module?
       str: () ->
         return "row #{@id}"
       mutate: (view) ->
-        @mark = getMark @id
+        @mark = _getMark @id
         _unsetMark @id, @mark
       rewind: (view) ->
         _setMark @id, @mark
@@ -116,7 +125,7 @@ if module?
     # Serialization #
 
     data.addHook 'serializeRow', (struct, info) ->
-      mark = getMark info.row.id
+      mark = _getMark info.row.id
       if mark
         struct.mark = mark
       return struct
@@ -218,6 +227,48 @@ if module?
               fn: () => @view.rootInto row
             }
         )
+
+    view.addHook 'renderCursorsDict', (cursors, info) ->
+      marking = view.markrow? and view.markrow.is info.row
+      if marking
+        return {} # do not render any cursors on the regular line
+      return cursors
+
+    view.addHook 'renderLineContents', (lineContents, info) ->
+      marking = view.markrow? and view.markrow.is info.row
+
+      if marking
+          markresults = view.markview.virtualRenderLine view.markview.cursor.row, {no_clicks: true}
+          lineContents.unshift virtualDom.h 'span', {
+            className: 'mark theme-bg-secondary theme-trim-accent'
+          }, markresults
+      else
+          mark = _getMark info.row.id
+          if mark
+            lineContents.unshift virtualDom.h 'span', {
+              className: 'mark theme-bg-secondary theme-trim'
+            }, mark
+      return lineContents
+
+    view.addHook 'renderLineTextOptions', (line, info) ->
+      if view.mode == MODES.NORMAL
+        goMark = (row) =>
+          view.rootToParent row
+          do view.save
+          do view.render
+
+        # gather words that are marks
+        for word in info.words
+          if word.word[0] == '@'
+            mark = word.word[1..]
+            id = getIdForMark mark
+            if id != null
+              markrow = data.canonicalInstance id
+              for i in [word.start..word.end]
+                line[i].renderOptions.type = 'a'
+                line[i].renderOptions.classes.push 'theme-text-link'
+                line[i].renderOptions.onclick = goMark.bind @, markrow
+      return line
 
   Plugins.register {
     name: "Marks"
