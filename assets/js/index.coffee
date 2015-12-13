@@ -8,7 +8,7 @@ initialize the main page
 ###
 
 view = null
-create_view = (data) ->
+create_view = (data, to_load) ->
 
   settings = new Settings data.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
   do settings.loadRenderSettings
@@ -28,6 +28,16 @@ create_view = (data) ->
   }
 
   Plugins.resolveView view
+
+  # NOTE: this is because resolveView takes a little while before
+  # the plugins are actually enabled...
+  setTimeout (() ->
+    view.init to_load
+
+    $(document).ready ->
+      do view.hideSettings
+      do view.render
+  ), 100
 
   # needed for safari
   $('#paste-hack').focus()
@@ -69,9 +79,6 @@ create_view = (data) ->
   window.key_bindings = key_bindings
 
   $(document).ready ->
-    do view.hideSettings
-    do view.render
-
     $("#settings-link").click () =>
       do view.settingsToggle
 
@@ -157,10 +164,7 @@ if chrome?.storage?.sync
   datastore = new dataStore.InMemory
   data = new Data datastore
   chrome.storage.sync.get 'save', (results) ->
-    if results.save
-      data.load results.save
-    else
-      data.load constants.default_data
+    create_view data, (results.save or constants.default_data)
 
     # save every 5 seconds
     setInterval (() ->
@@ -171,24 +175,21 @@ if chrome?.storage?.sync
         Logger.logger.info 'Saved'
     ), 5000
 
-    create_view data
 else if localStorage?
   docname = window.location.pathname.split('/')[1]
   datastore = new dataStore.LocalStorageLazy docname
   data = new Data datastore
 
+  to_load = null
   if (do datastore.getLastSave) == 0
-    data.load constants.default_data
+    to_load = constants.default_data
 
-  create_view data
+  create_view data, to_load
 else
   alert('You need local storage support for data to be persisted!')
   datastore = new dataStore.InMemory
-
   data = new Data datastore
-  data.load constants.default_data
-
-  create_view data
+  create_view data, constants.default_data
 
 window.onerror = (msg, url, line, col, err) ->
     Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"

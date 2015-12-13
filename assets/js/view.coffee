@@ -216,9 +216,19 @@ window?.renderLine = renderLine
       @modeDiv = options.modeDiv
       @pluginsDiv = options.pluginsDiv
 
+      @register = new Register @
+
+      @mode = null
+
+      @initialized = false
+      return @
+
+    init: (to_load = null) ->
+      if to_load != null
+        @data.load to_load
+
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @, row, 0
-      @register = new Register @
 
       @mutations = [] # full mutation history
       @history = [{
@@ -226,21 +236,16 @@ window?.renderLine = renderLine
       }]
       @historyIndex = 0 # index into indices
 
-      @jumpHistory = [{
-        viewRoot: @data.viewRoot
-        cursor_before: do @cursor.clone
-      }]
-      @jumpIndex = 0 # index into jump history
+      do @reset_jump_history
+
+      @setMode MODES.NORMAL
 
       if @mainDiv?
         @vtree = do @virtualRender
         @vnode = virtualDom.create @vtree
         @mainDiv.append @vnode
 
-      @mode = null
-      @setMode MODES.NORMAL
-
-      return @
+      @initialized = true
 
     exit: () ->
       @emit "exit"
@@ -492,6 +497,13 @@ window?.renderLine = renderLine
         @restoreViewState oldState.after
 
     do: (mutation) ->
+      if not @history
+        # NOTE: we let mutations through since some plugins may apply mutations on load
+        # these mutations won't be undoable, which is desired
+        Logger.logger.warn "Tried mutation #{mutation} before init!"
+        mutation.mutate @
+        return true
+
       if @historyIndex != @history.length - 1
           @history = @history.slice 0, (@historyIndex + 1)
           @mutations = @mutations.slice 0, @history[@historyIndex].index
@@ -518,6 +530,13 @@ window?.renderLine = renderLine
 
     curLineLength: () ->
       return @data.getLength @cursor.row
+
+    reset_jump_history: () ->
+      @jumpHistory = [{
+        viewRoot: @data.viewRoot
+        cursor_before: do @cursor.clone
+      }]
+      @jumpIndex = 0 # index into jump history
 
     addToJumpHistory: (jump_fn) ->
       jump = @jumpHistory[@jumpIndex]

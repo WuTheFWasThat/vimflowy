@@ -242,7 +242,8 @@ if module?
 
         # refresh hotkeys, if any new ones were added
         do @view.bindings.init
-        @view.bindings.renderModeTable @view.mode
+        if @view.initialized
+          @view.bindings.renderModeTable @view.mode
 
       @setStatus plugin.name, STATUS.ENABLED
 
