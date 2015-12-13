@@ -6,6 +6,7 @@ APP_DIR=${DIST_DIR}/vimflowy
 vimflowy:
 	mkdir -p ${APP_DIR}
 	rm -rf ${APP_DIR}
+	npm install
 	# builds everything into public/
 	npm run gulp clean
 	npm run gulp assets
