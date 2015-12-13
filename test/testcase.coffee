@@ -27,9 +27,6 @@ class TestCase
   constructor: (serialized = ['']) ->
     @store = new dataStore.InMemory
     @data = new Data @store
-    @data.load
-      text: ''
-      children: serialized
 
     @settings =  new Settings @store
 
@@ -45,6 +42,10 @@ class TestCase
     Plugins.resolveView @view
     for name of Plugins.plugins
       Plugins.enable name
+
+    @view.init
+      text: ''
+      children: serialized
 
   _expectDeepEqual: (actual, expected, message) ->
     if not _.isEqual actual, expected
