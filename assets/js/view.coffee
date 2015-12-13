@@ -216,8 +216,6 @@ window?.renderLine = renderLine
       @modeDiv = options.modeDiv
       @pluginsDiv = options.pluginsDiv
 
-      @renderHooks = {}
-
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @, row, 0
       @register = new Register @
@@ -1054,16 +1052,6 @@ window?.renderLine = renderLine
     # RENDERING
     ##################
 
-    # rendering hooks
-
-    addRenderHook: (event, transform) ->
-      (@renderHooks[event]?=[]).push transform
-
-    applyRenderHook: (event, obj, info) ->
-      for transform in (@renderHooks[event] or [])
-        obj = transform obj, info
-      return obj
-
     render: (options = {}) ->
       if @menu
         do @menu.render
@@ -1162,7 +1150,7 @@ window?.renderLine = renderLine
           ).bind(@, row)
 
         bullet = virtualDom.h 'i', bulletOpts
-        bullet = @applyRenderHook 'bullet', bullet, { row: row }
+        bullet = @applyHook 'renderBullet', bullet, { row: row }
 
         rowElements.push bullet
 
@@ -1183,7 +1171,7 @@ window?.renderLine = renderLine
         if row.id of options.highlight_blocks
           className += ' theme-bg-highlight'
 
-        rowElements = @applyRenderHook 'rowElements', rowElements, { row: row }
+        rowElements = @applyHook 'renderRowElements', rowElements, { row: row }
 
         childNode = virtualDom.h 'div', {
           id: containerDivID row.id
@@ -1247,15 +1235,15 @@ window?.renderLine = renderLine
 
       lineContents = renderLine lineData, lineoptions
       [].push.apply results, lineContents
-      lineContents = @applyRenderHook 'lineContents', lineContents, { row: row }
+      lineContents = @applyHook 'renderLineContents', lineContents, { row: row }
 
-      infoChildren = @applyRenderHook 'infoElements', [], { row: row }
+      infoChildren = @applyHook 'renderInfoElements', [], { row: row }
       info = virtualDom.h 'div', {
         className: 'node-info'
       }, infoChildren
       results.push info
 
-      results = @applyRenderHook 'lineElements', results, { row: row }
+      results = @applyHook 'renderLineElements', results, { row: row }
 
       return results
 

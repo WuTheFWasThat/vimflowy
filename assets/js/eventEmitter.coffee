@@ -4,6 +4,7 @@ class EventEmitter
   constructor: ->
     # mapping from event to list of listeners
     @listeners = {}
+    @hooks = {}
 
   # emit an event and return all responses from the listeners
   emit: (event, args...) ->
@@ -36,6 +37,17 @@ class EventEmitter
   removeAllListeners: (event) ->
     delete @listeners[event]
     return @
+
+  # hooks for mutating
+  # NOTE: a little weird for eventEmitter to be in charge of this
+
+  addHook: (event, transform) ->
+    (@hooks[event]?=[]).push transform
+
+  applyHook: (event, obj, info) ->
+    for transform in (@hooks[event] or [])
+      obj = transform obj, info
+    return obj
 
 # exports
 module?.exports = EventEmitter

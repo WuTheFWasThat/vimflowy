@@ -6,7 +6,7 @@
     description: "Display internal IDs for each node (for debugging for developers)"
     version: 1
   }, (api) ->
-    api.view.addRenderHook 'infoElements', (rowElements, info) ->
+    api.view.addHook 'renderInfoElements', (rowElements, info) ->
       rowElements.unshift virtualDom.h 'span', {
         style: {
           position: 'relative'

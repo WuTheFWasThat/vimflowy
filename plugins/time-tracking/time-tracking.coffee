@@ -30,7 +30,7 @@
       @logger.info "Loading time tracking"
       @api.cursor.on 'rowChange', (@onRowChange.bind @)
       @onRowChange null, @api.cursor.row # Initial setup
-      @api.view.addRenderHook 'infoElements', (@renderTime.bind @)
+      @api.view.addHook 'renderInfoElements', (@renderTime.bind @)
       @api.view.data.on 'afterDescendantRemoved', (@onDescendantRemoved.bind @)
       @api.view.data.on 'afterDescendantAdded', (@onDescendantAdded.bind @)
       @api.view.data.on 'beforeRowRemoved', (@onRowRemoved.bind @)

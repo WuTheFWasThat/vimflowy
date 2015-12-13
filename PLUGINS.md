@@ -93,9 +93,9 @@ This section will be documented better in the future, when the API is better and
 
 We expose an API for rendering via a family of hooks
 ```
-    api.view.addRenderHook(hookname, fn),
+    api.view.addHook(hookname, fn),
 ```
-where `fn(v, info)` is a callback taking a virtualDom element and any additional information the hook provides.
+where `fn(v, info)` is a callback taking a virtualDom element and any additional information the hook provides. `hookname` will begin with `render`.
 
 More info on this later.
 
