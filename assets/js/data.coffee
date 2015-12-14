@@ -195,7 +195,11 @@ class Data extends EventEmitter
   # note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
   # The intent is to see whether adding/removing a node will add/remove the corresponding id when maintaining metadata.
   isClone: (id) ->
-    (@_getParents id).length > 1
+    parents = @_getParents id
+    if parents.length < 2 # for efficiency reasons
+      return false
+    numAttachedParents = (parents.filter (parent) => @isAttached parent).length
+    return numAttachedParents > 1
 
   # Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   canonicalInstance: (id) -> # Given an id, return a row with that id
