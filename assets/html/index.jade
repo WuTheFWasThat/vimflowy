@@ -26,11 +26,17 @@ block content
 
             .settings-header.theme-bg-secondary.theme-trim Export
             .settings-content
-                select.export-fileformat-selection
-                    option(value="vimflowy.json" selected=selected) Export as JSON
-                    option(value="vimflowy.txt") Export as text
-
-                .btn.theme-bg-secondary.theme-trim#data_export(style='float:right') Export!
+                table
+                    tr
+                      td
+                        .btn.theme-bg-secondary.theme-trim#data_export_json Export as JSON
+                      td
+                        | Best for vimflowy backups, re-imports preserving all features.
+                    tr
+                      td
+                        .btn.theme-bg-secondary.theme-trim#data_export_plain Export as plaintext
+                      td
+                        | Workflowy compatible, but does not support some features, e.g. marks and clones
 
             .settings-header.theme-bg-secondary.theme-trim Import
             .settings-content

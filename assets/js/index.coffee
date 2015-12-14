@@ -141,15 +141,17 @@ create_view = (data, to_load) ->
             else
                 view.showMessage 'Import failed due to parsing issue', {text_class: 'error'}
 
-    $("#data_export").click () =>
-        view.showMessage 'Exporting...'
+    export_type = (type) ->
+      view.showMessage 'Exporting...'
+      filename = 'vimflowy.' + type
+      # Infer mimetype from file extension
+      mimetype = utils.mimetypeLookup filename
+      content = view.exportContent mimetype
+      download_file filename, mimetype, content
+      view.showMessage "Exported to #{filename}!", {text_class: 'success'}
 
-        filename = (view.settings.getSetting 'export_filename') || 'vimflowy.json'
-        # Infer mimetype from file extension
-        mimetype = utils.mimetypeLookup filename
-        content = view.exportContent mimetype
-        download_file filename, mimetype, content
-        view.showMessage "Exported to #{filename}!", {text_class: 'success'}
+    $("#data_export_json").click (export_type.bind @, 'json')
+    $("#data_export_plain").click (export_type.bind @, 'txt')
 
   $(window).unload () =>
     do view.exit

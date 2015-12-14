@@ -8,7 +8,6 @@ Uses a data store key which is agnostic to which document is being viewed
   class Settings
     default_settings:
       theme: 'default-theme'
-      export_filename: 'vimflowy.json'
       showKeyBindings: true
       hotkeys: {}
 
@@ -41,14 +40,11 @@ Uses a data store key which is agnostic to which document is being viewed
         theme = @value
         me.setSetting 'theme', theme
         me.changeStyle theme
-      @mainDiv.find(".export-fileformat-selection").on 'input', (e) ->
-        me.setSetting 'export_filename', @value
 
     loadRenderSettings: () ->
       @changeStyle (@getSetting 'theme')
       # Populate setings menu itself as well
       @mainDiv.find(".theme-selection").val (@getSetting 'theme')
-      @mainDiv.find(".export-fileformat-selection").val (@getSetting 'export_filename')
 
       if @getSetting 'showKeyBindings'
         @keybindingsDiv.addClass 'active'
