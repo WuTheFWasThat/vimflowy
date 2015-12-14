@@ -4,6 +4,10 @@ body, html
     margin: 0
     font-family: 'Monaco', monospace // Courier New?
 
+    // required for selection of text in the chrome app
+    // SEE: http://stackoverflow.com/questions/19149993/how-to-select-highlight-text-in-chrome-app
+    -webkit-user-select: text;
+
 $bottom-bar-height: 25px
 #bottom-bar
     z-index: 3
