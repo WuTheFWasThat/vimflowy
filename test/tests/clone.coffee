@@ -499,3 +499,114 @@ describe "cloning", () ->
       'test'
       ''
     ]
+
+  it "works nested, basic test", () ->
+    t = new TestCase [
+      { text: 'jango', children: [
+        { text: 'clone', id: 2, children: [
+          { text: 'subclone', id: 3 }
+          { text: 'fett', children: [
+            { clone: 3 }
+          ] }
+        ] }
+      ] }
+      { clone: 2 }
+    ]
+
+    t.sendKeys 'Gdd'
+    t.expect [
+      { text: 'jango', children: [
+        { text: 'clone', id: 2, children: [
+          'subclone'
+          'fett'
+        ] }
+      ] }
+      { clone: 2 }
+    ]
+    t.sendKeys 'ggjdd'
+    t.expect [
+      'jango'
+      { text: 'clone', children: [
+        'subclone'
+        'fett'
+      ] }
+    ]
+    t.sendKeys 'u'
+    t.expect [
+      { text: 'jango', children: [
+        { text: 'clone', id: 2, children: [
+          'subclone'
+          'fett'
+        ] }
+      ] }
+      { clone: 2 }
+    ]
+    t.sendKeys 'u'
+    t.expect [
+      { text: 'jango', children: [
+        { text: 'clone', id: 2, children: [
+          { text: 'subclone', id: 3 }
+          { text: 'fett', children: [
+            { clone: 3 }
+          ] }
+        ] }
+      ] }
+      { clone: 2 }
+    ]
+
+  it "works nested, second basic test", () ->
+    t = new TestCase [
+      { text: 'jango', children: [
+        { text: 'clone', id: 2, children: [
+          { text: 'subclone', id: 3 }
+          { text: 'fett', children: [
+            { clone: 3 }
+          ] }
+        ] }
+      ] }
+      { clone: 2 }
+    ]
+
+    t.sendKeys 'jdd'
+    t.expect [
+      'jango'
+      { text: 'clone', children: [
+        { text: 'subclone', id: 3 }
+        { text: 'fett', children: [
+          { clone: 3 }
+        ] }
+      ] }
+    ]
+    t.sendKeys 'jjdd'
+    t.expect [
+      'jango'
+      { text: 'clone', children: [
+        { text: 'fett', children: [
+          'subclone'
+        ] }
+      ] }
+    ]
+
+    t.sendKeys 'u'
+    t.expect [
+      'jango'
+      { text: 'clone', children: [
+        { text: 'subclone', id: 3 }
+        { text: 'fett', children: [
+          { clone: 3 }
+        ] }
+      ] }
+    ]
+
+    t.sendKeys 'u'
+    t.expect [
+      { text: 'jango', children: [
+        { text: 'clone', id: 2, children: [
+          { text: 'subclone', id: 3 }
+          { text: 'fett', children: [
+            { clone: 3 }
+          ] }
+        ] }
+      ] }
+      { clone: 2 }
+    ]
