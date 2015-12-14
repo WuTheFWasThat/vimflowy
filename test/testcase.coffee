@@ -82,7 +82,7 @@ class TestCase
     @view.importContent content, mimetype
 
   expect: (expected) ->
-    serialized = @data.serialize @data.root, true
+    serialized = @data.serialize @data.root, {pretty: true}
     @_expectDeepEqual serialized.children, expected, "Unexpected serialized content"
     return @
 

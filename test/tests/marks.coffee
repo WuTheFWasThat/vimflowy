@@ -432,7 +432,16 @@ describe "marks", () ->
     t.sendKeys 'jj'
     t.sendKeys 'p'
     t.expect [
-      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 1', mark: 'mark1', id: 1 }
+      { text: 'line 2', mark: 'mark2', children: [
+        'line 2.1',
+        { clone: 1 }
+      ] }
+    ]
+    t.expectMarks {'mark1': 1, 'mark2': 2}
+
+    t.sendKeys 'ggdd'
+    t.expect [
       { text: 'line 2', mark: 'mark2', children: [
         'line 2.1',
         { text: 'line 1', mark: 'mark1' }
@@ -470,7 +479,7 @@ describe "marks", () ->
     t.expectMarks {'mark2': 2}
 
 
-  it "works with marks in tricky case", () ->
+  it "survives transferring to different clone", () ->
     t = new TestCase [
       { text: 'Marked clone', mark: 'mark', children: [
         'Clone child'
@@ -483,13 +492,11 @@ describe "marks", () ->
 
     t.sendKeys 'ycjjp'
     t.expect [
-      { text: 'Marked clone', mark: 'mark', children: [
+      { text: 'Marked clone', mark: 'mark', id: 1, children: [
         'Clone child'
       ] }
       { text: 'Not a clone', children: [
-        { text: 'Marked clone', mark: 'mark', children: [
-          'Clone child'
-        ] }
+        { clone: 1 }
         'Not a clone'
       ] }
     ]
@@ -509,7 +516,7 @@ describe "marks", () ->
     t.expect [ "" ]
     t.expectMarks { }
 
-  it "works with marks in tricky case 2", () ->
+  it "works with deletes and clones properly", () ->
     t = new TestCase [
       { text: 'parent', children: [
         { text: 'Will be cloned', children: [
@@ -525,14 +532,12 @@ describe "marks", () ->
     t.sendKeys 'jycGp'
     t.expect [
       { text: 'parent', children: [
-        { text: 'Will be cloned', children: [
+        { text: 'Will be cloned', id: 2, children: [
           { text: 'Marked child', mark: 'mark' }
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Will be cloned', children: [
-            { text: 'Marked child', mark: 'mark' }
-          ] }
+          { clone: 2 }
         ] }
       ] }
     ]
@@ -542,14 +547,12 @@ describe "marks", () ->
     t.sendKeys ['m', 'enter']
     t.expect [
       { text: 'parent', children: [
-        { text: 'Will be cloned', children: [
+        { text: 'Will be cloned', id: 2, children: [
           'Marked child'
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Will be cloned', children: [
-            'Marked child'
-          ] }
+          { clone: 2 }
         ] }
       ] }
     ]
@@ -564,16 +567,34 @@ describe "marks", () ->
     t.sendKeys 'u'
     t.expect [
       { text: 'parent', children: [
-        { text: 'Will be cloned', children: [
+        { text: 'Will be cloned', id: 2, children: [
           'Marked child'
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Will be cloned', children: [
-            'Marked child'
-          ] }
+          { clone: 2 }
         ] }
       ] }
+    ]
+    t.expectMarks {}
+
+    t.sendKeys 'u'
+    t.expect [
+      { text: 'parent', children: [
+        { text: 'Will be cloned', id: 2, children: [
+          { text: 'Marked child', mark: 'mark' }
+        ] }
+        { text: 'blah', children: [
+          'blah'
+          { clone: 2 }
+        ] }
+      ] }
+    ]
+    t.expectMarks { 'mark': 3 }
+
+    t.sendKeys 'ggdd'
+    t.expect [
+      ''
     ]
     t.expectMarks {}
 
@@ -593,14 +614,12 @@ describe "marks", () ->
     t.sendKeys 'jycGp'
     t.expect [
       { text: 'parent', children: [
-        { text: 'Will be cloned', children: [
+        { text: 'Will be cloned', id: 2, children: [
           { text: 'Marked child', mark: 'mark' }
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Will be cloned', children: [
-            { text: 'Marked child', mark: 'mark' }
-          ] }
+          { clone: 2 }
         ] }
       ] }
     ]
@@ -609,10 +628,10 @@ describe "marks", () ->
     t.sendKeys 'jjdd'
     t.expect [
       { text: 'parent', children: [
-        'Will be cloned'
+        { text: 'Will be cloned', id: 2 }
         { text: 'blah', children: [
           'blah'
-          'Will be cloned'
+          { clone: 2 }
         ] }
       ] }
     ]
@@ -654,14 +673,12 @@ describe "marks", () ->
     t.sendKeys 'jycGp'
     t.expect [
       { text: 'parent', children: [
-        { text: 'Will be cloned', children: [
+        { text: 'Will be cloned', id: 2, children: [
           { text: 'Marked child', mark: 'mark' }
         ] }
         { text: 'blah', children: [
           'blah'
-          { text: 'Will be cloned', children: [
-            { text: 'Marked child', mark: 'mark' }
-          ] }
+          { clone: 2 }
         ] }
       ] }
     ]

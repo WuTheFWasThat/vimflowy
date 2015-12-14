@@ -20,14 +20,12 @@ describe "cloning", () ->
     t.sendKeys 'jjj'
     t.sendKeys 'p'
     t.expect [
-      { text: 'one', children: [
+      { text: 'one', id: 1, children: [
         'uno',
       ] }
       { text: 'two', children: [
         'dos',
-        { text: 'one', children: [
-          'uno',
-        ] }
+        { clone: 1 }
       ] }
       { text: 'tacos', children: [
         'tacos',
@@ -54,14 +52,12 @@ describe "cloning", () ->
     t.sendKeys 'jjjj'
     t.sendKeys 'x'
     t.expect [
-      { text: 'e', children: [
+      { text: 'e', id: 1, children: [
         'uno',
       ] }
       { text: 'two', children: [
         'dos',
-        { text: 'e', children: [
-          'uno',
-        ] }
+        { clone: 1 }
       ] }
       { text: 'tacos', children: [
         'tacos',
@@ -72,14 +68,12 @@ describe "cloning", () ->
     t.sendKeys 'jj'
     t.sendKeys 'x'
     t.expect [
-      { text: 'e', children: [
+      { text: 'e', id: 1, children: [
         'uno',
       ] }
       { text: 'two', children: [
         'dos',
-        { text: 'e', children: [
-          'uno',
-        ] }
+        { clone: 1 }
       ] }
       { text: 'acos', children: [
         'tacos',
@@ -99,25 +93,21 @@ describe "cloning", () ->
     t.sendKeys 'jjjj'
     t.sendKeys 'p'
     t.expect [
-      { text: 'Clone', children: [
+      { text: 'Clone', id: 1, children: [
         'Clone child',
       ] }
       { text: 'Not a clone', children: [
         'Also not a clone and going to be deleted'
-        { text: 'Clone', children: [
-          'Clone child',
-        ] }
+        { clone: 1 }
       ] }
     ]
     t.sendKeys 'kddk'
     t.expect [
-      { text: 'Clone', children: [
+      { text: 'Clone', id: 1, children: [
         'Clone child',
       ] }
       { text: 'Not a clone', children: [
-        { text: 'Clone', children: [
-          'Clone child',
-        ] }
+        { clone: 1 }
       ] }
     ]
     t.expectCursor 3, 0
@@ -164,7 +154,7 @@ describe "cloning", () ->
       { text: 'blah', children: [
         'blah'
       ] }
-      { text: 'Not a clone', children: [
+      { text: 'eventually cloned', children: [
         { text: 'Will be cloned', children: [
           'Will be cloned'
         ] }
@@ -173,7 +163,7 @@ describe "cloning", () ->
     t.sendKeys 'jdd'
     t.expect [
       'blah'
-      { text: 'Not a clone', children: [
+      { text: 'eventually cloned', children: [
         { text: 'Will be cloned', children: [
           'Will be cloned'
         ] }
@@ -182,43 +172,37 @@ describe "cloning", () ->
     t.sendKeys 'jjyckP'
     t.expect [
       'blah'
-      { text: 'Will be cloned', children: [
+      { text: 'Will be cloned', id: 4, children: [
         'Will be cloned'
       ] }
-      { text: 'Not a clone', children: [
-        { text: 'Will be cloned', children: [
-          'Will be cloned'
-        ] }
+      { text: 'eventually cloned', children: [
+        { clone: 4 }
       ] }
     ]
     t.sendKeys 'jjyckp'
     t.expect [
       'blah'
-      { text: 'Will be cloned', children: [
+      { text: 'Will be cloned', id: 4, children: [
         'Will be cloned'
       ] }
-      { text: 'Not a clone', children: [
-        { text: 'Will be cloned', children: [
-          'Will be cloned'
-        ] }
+      { text: 'eventually cloned', children: [
+        { clone: 4 }
       ] }
     ]
     t.sendKeys 'kp'
     t.expect [
       'blah'
-      { text: 'Will be cloned', children: [
+      { text: 'Will be cloned', id: 4, children: [
         'Will be cloned'
       ] }
-      { text: 'Not a clone', children: [
-        { text: 'Will be cloned', children: [
-          'Will be cloned'
-        ] }
+      { text: 'eventually cloned', children: [
+        { clone: 4 }
       ] }
     ]
     t.sendKeys 'u'
     t.expect [
       'blah'
-      { text: 'Not a clone', children: [
+      { text: 'eventually cloned', children: [
         { text: 'Will be cloned', children: [
           'Will be cloned'
         ] }
@@ -229,7 +213,7 @@ describe "cloning", () ->
       { text: 'blah', children: [
         'blah'
       ] }
-      { text: 'Not a clone', children: [
+      { text: 'eventually cloned', children: [
         { text: 'Will be cloned', children: [
           'Will be cloned'
         ] }
@@ -239,17 +223,13 @@ describe "cloning", () ->
     t.expect [
       { text: 'blah', children: [
         'blah'
-        { text: 'Not a clone', children: [
+        { text: 'eventually cloned', id: 3, children: [
           { text: 'Will be cloned', children: [
             'Will be cloned'
           ] }
         ] }
       ] }
-      { text: 'Not a clone', children: [
-        { text: 'Will be cloned', children: [
-          'Will be cloned'
-        ] }
-      ] }
+      { clone: 3 }
     ]
 
 
@@ -272,11 +252,11 @@ describe "cloning", () ->
     ]
     t.sendKeys 'jjp'
     t.expect [
-      'one'
-      'two'
+      { text: 'one', id: 1 }
+      { text: 'two', id: 2 }
       { text: 'three', children: [
-        'one'
-        'two'
+        { clone: 1 }
+        { clone: 2 }
         'child',
       ] }
     ]
@@ -322,9 +302,40 @@ describe "cloning", () ->
 
     t.sendKeys 'ycjjp'
     t.expect [
+      { text: 'Clone', id: 1, children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        { clone: 1 }
+        'Not a clone'
+      ] }
+    ]
+
+    t.sendKeys 'gg'
+    t.sendKey swapDownKey
+    t.expect [
+      { text: 'Clone', id: 1, children: [
+        'Clone child'
+      ] }
+      { text: 'Not a clone', children: [
+        { clone: 1 }
+        'Not a clone'
+      ] }
+    ]
+
+    t.sendKeys 'u'
+    t.expect [
       { text: 'Clone', children: [
         'Clone child'
       ] }
+      { text: 'Not a clone', children: [
+        'Not a clone'
+      ] }
+    ]
+
+    t.sendKeys 'gg'
+    t.sendKey swapDownKey
+    t.expect [
       { text: 'Not a clone', children: [
         { text: 'Clone', children: [
           'Clone child'
@@ -333,19 +344,6 @@ describe "cloning", () ->
       ] }
     ]
 
-    t.sendKeys 'gg'
-    t.sendKey swapDownKey
-    t.expect [
-      { text: 'Clone', children: [
-        'Clone child'
-      ] }
-      { text: 'Not a clone', children: [
-        { text: 'Clone', children: [
-          'Clone child'
-        ] }
-        'Not a clone'
-      ] }
-    ]
 
   it "creates clone on regular paste", () ->
     t = new TestCase [
@@ -377,9 +375,9 @@ describe "cloning", () ->
     t.sendKeys 'jp'
     # pastes with the W even though it was deleted while cloned
     t.expect [
-      'Will be cloned via delete',
+      { text: 'Will be cloned via delete', id: 1 }
       { text: 'parent', children: [
-        'Will be cloned via delete',
+        { clone: 1 }
         'hm...'
       ] }
     ]
@@ -413,9 +411,9 @@ describe "cloning", () ->
     t.sendKeys 'ycjp'
 
     t.expect [
-      'Will be cloned',
+      { text: 'Will be cloned', id: 1 },
       { text: 'parent', children: [
-        'Will be cloned',
+        { clone: 1 }
         { text: 'blah', children: [
           'blah'
         ] }
@@ -444,9 +442,9 @@ describe "cloning", () ->
     t.expect [
       { text: 'parent', children: [
         'blah'
-        'Will be cloned',
+        { text: 'Will be cloned', id: 3 }
       ] }
-      'Will be cloned',
+      { clone: 3 }
     ]
 
     t.sendKeys 'G'
@@ -454,9 +452,9 @@ describe "cloning", () ->
     t.expect [
       { text: 'parent', children: [
         'blah'
-        'Will be cloned',
+        { text: 'Will be cloned', id: 3 }
       ] }
-      'Will be cloned',
+      { clone: 3 }
     ]
 
   it "can paste clones of removed items", () ->

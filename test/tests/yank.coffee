@@ -325,15 +325,13 @@ describe "yank", () ->
       # second paste should be changed thing
       t.sendKeys 'GP'
       t.expect [
-        { text: 'yey', children: [
+        { text: 'yey', id: 1, children: [
           'ho'
         ] }
-        'yo'
+        { text: 'yo', id: 3 }
         { text: 'what', children: [
-          { text: 'yey', children: [
-            'ho'
-          ] }
-          'yo'
+          { clone: 1 }
+          { clone: 3 }
           'up'
         ] }
       ]

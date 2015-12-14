@@ -549,21 +549,25 @@ class Data extends EventEmitter
   #################
 
   # important: serialized automatically garbage collects
-  serialize: (row = @root, pretty=false) ->
+  serialize: (row = @root, options={}, serialized={}) ->
     line = @getLine row
     text = (@getText row).join('')
+
+    if row.id of serialized
+      struct = serialized[row.id]
+      struct.id = row.id
+      return { clone: row.id }
 
     struct = {
       text: text
     }
-    children = (@serialize childrow, pretty for childrow in @getChildren row)
+    children = (@serialize childrow, options, serialized for childrow in @getChildren row)
     if children.length
       struct.children = children
 
     for property in constants.text_properties
       if _.any (line.map ((obj) -> obj[property]))
         struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
-        pretty = false
 
     if (do row.isRoot) and not (do @viewRoot.isRoot)
       struct.viewRoot = @viewRoot
@@ -572,16 +576,24 @@ class Data extends EventEmitter
       struct.collapsed = true
 
     struct = @applyHook 'serializeRow', struct, {row: row}
+    serialized[row.id] = struct
 
-    if pretty
-      if children.length == 0 and \
+    if options.pretty
+      if children.length == 0 and (not @isClone row.id) and \
           (_.all Object.keys(struct), (key) ->
             return key in ['children', 'text', 'collapsed'])
         return text
     return struct
 
-  loadTo: (serialized, parent = @root, index = -1) ->
-    row = new Row parent, (do @store.getNew)
+  loadTo: (serialized, parent = @root, index = -1, id_mapping = {}) ->
+    if serialized.clone
+      # NOTE: this assumes we load in the same order we serialize
+      errors.assert (serialized.clone of id_mapping)
+      id = id_mapping[serialized.clone]
+    else
+      id = do @store.getNew
+
+    row = new Row parent, id
 
     if not (do row.isRoot)
       @attachChild parent, row, index
@@ -589,9 +601,14 @@ class Data extends EventEmitter
       row.setParent null
       @_setParents row.id, [@root.id]
 
+    if serialized.clone
+      return row
+
     if typeof serialized == 'string'
       @setLine row, (serialized.split '')
     else
+      if serialized.id
+        id_mapping[serialized.id] = row.id
       line = (serialized.text.split '').map((char) -> {char: char})
       for property in constants.text_properties
         if serialized[property]
@@ -604,7 +621,7 @@ class Data extends EventEmitter
 
       if serialized.children
         for serialized_child in serialized.children
-          @loadTo serialized_child, row
+          @loadTo serialized_child, row, -1, id_mapping
 
     @emit 'loadRow', row, serialized
 

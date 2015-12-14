@@ -325,6 +325,8 @@ window?.renderLine = renderLine
         @showMessage "The uploaded file is not valid JSON", {text_class: 'error'}
         return false
       verify = (node) ->
+        if node.clone
+          return true
         unless node.text || node.text == '' then return false
         if node.children
           for child in node.children
