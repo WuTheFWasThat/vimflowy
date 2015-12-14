@@ -414,6 +414,8 @@ window?.renderLine = renderLine
               lines = []
               lines.push "- #{node.text}"
               for child in node.children ? []
+                  if child.clone
+                      continue
                   for line in exportLines child
                       lines.push "#{indent}#{line}"
               return lines

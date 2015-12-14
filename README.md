@@ -36,11 +36,15 @@ This is a productivity tool which draws great inspiration from workflowy and vim
   - macros
 - Extras
   - search
-  - marks (not quite like vim's)
+  - cloning (bullets with multiple parents)
   - data import/export
   - different themes
   - multiple documents in online version (by visiting /documentname)
   - lazy loads data, for big documents
+  - plugins system, for adding new features (see [PLUGINS.md](PLUGINS.md))
+    - marks (not quite like vim's)
+    - easy_motion for moving between bullets quickly
+    - time-tracking
 
 ## CONTRIBUTE ##
 

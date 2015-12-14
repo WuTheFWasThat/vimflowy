@@ -17,21 +17,6 @@
         ] }
         'Use tab and shift+tab to indent and unindent blocks'
         'Use < and > to indent and unindent just a single line'
-        { text: 'Text formatting', collapsed: true, children: [
-          {
-            text:      'Bold (ctrl+shift+b), italicized (ctrl+shift+i), and underlined (ctrl+shift+u) text.  Bold italic underlined!'
-            bold:      '....                                                                                 ...................... '
-            italic:    '                     ..........                                                      ...................... '
-            underline: '                                                    ..........                       ...................... '
-          }
-          {
-            text:          'Strike through (ctrl+enter)!'
-            children: [ {
-              text:          'Try using it for todo lists'
-              strikethrough: '...........................'
-            } ]
-          }
-        ] }
       ] }
       { text: 'All the normal vim goodness', collapsed: true, children: [
         { text: 'Most of vim\'s movement commands', collapsed: true, children: [
@@ -78,6 +63,27 @@
           'ctrl+o and ctrl+i will cycle through your zoom/jump history'
         ] }
       ] }
+      { text: 'Customizability', collapsed: true, children: [
+        'Different color themes (see Settings)'
+        'Customizable hotkeys (via downloading/uploading a json file)'
+        { text: 'Plugins system', collapsed: true, children: [
+          'Write your own plugins, or use plugins others have written!'
+          { text: 'See settings menu for some plugins', children: [
+            { text: 'Easy motion', collapsed: true, children: [
+              'Hit space to jump to a row quickly'
+              'Based on https://github.com/easymotion/vim-easymotion'
+            ] }
+            { text: 'Timing', collapsed: true, children: [
+              'Keep track of how long you\'ve spent on various bullets'
+            ] }
+            'Marks is actually written as a plugin, too!'
+          ] }
+          'See here for plugins documentation: https://github.com/WuTheFWasThat/vimflowy/blob/master/PLUGINS.md'
+        ] }
+      ] }
+      { text: 'Import and export data', collapsed: true, children: [
+        'Supports both JSON and Workflowy-compatible plaintext formats'
+      ] }
       { text: 'Search', collapsed: true, children: [
         'Press / to start searching, and then just type what you want to find'
         'ctrl+j and ctrl+k to page through the results'
@@ -93,17 +99,29 @@
         ] }
         'Delete marks by using dm, or just mark with empty string'
       ] }
-      { text: 'Customizable', collapsed: true, children: [
-        'Different color themes (see Menu)'
-        'Customizable hotkeys (via downloading/uploading a json file)'
+      { text: 'Cloning', collapsed: true, children: [
+        { text: 'I am a clone!  Try editing me', id: 1 }
+        { text: 'Clones can\'t be siblings of each other', children: [
+          { clone: 1 }
+        ] }
+        'And clones can\'t be descendants of each other'
+        'Make new clones with yc'
       ] }
-      { text: 'Import and export data', collapsed: true, children: [
-        'Supports both JSON and Workflowy-compatible plaintext formats'
+      { text: 'Text formatting', collapsed: true, children: [
+        {
+          text:      'Bold (ctrl+shift+b), italicized (ctrl+shift+i), and underlined (ctrl+shift+u) text.  Bold italic underlined!'
+          bold:      '....                                                                                 ...................... '
+          italic:    '                     ..........                                                      ...................... '
+          underline: '                                                    ..........                       ...................... '
+        }
+        {
+          text:          'Strike through (ctrl+enter)!'
+          children: [ {
+            text:          'Try using it for todo lists'
+            strikethrough: '...........................'
+          } ]
+        }
       ] }
-      # TODO: document plugins
-      # { text: 'Easy motion', collapsed: true, children: [
-      #   'Hit space to jump to a row quickly'
-      # ] }
     ] }
     { text: 'Tips', collapsed: true, children: [
       'Collapse things often to avoid clutter.  Zoom into collapsed bullets'
