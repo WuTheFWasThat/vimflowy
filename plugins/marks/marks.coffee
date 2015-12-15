@@ -191,7 +191,7 @@ if module?
     api.registerAction [MODES.NORMAL], [CMD_DELETE, CMD_MARK], {
       description: 'Delete mark at cursor'
     }, () ->
-      err = (updateMark @view.cursor.row, '')
+      err = (updateMark @view.cursor.row.id, '')
       if err then @view.showMessage err, {text_class: 'error'}
       do @keyStream.save
 

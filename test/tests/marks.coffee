@@ -164,7 +164,7 @@ describe "marks", () ->
     ]
 
     t.sendKeys 'yy'
-    t.sendKeys ['m', 'enter']
+    t.sendKeys ['d', 'm']
     t.expect [
       'line 1'
     ]
