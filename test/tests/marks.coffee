@@ -724,3 +724,35 @@ describe "marks", () ->
       ] }
       'random'
     ]
+
+  it "canonical instance handles non-trivial case, i.e. first parent detached", () ->
+    t = new TestCase [
+      { text: 'parent1', children: [
+        { text: 'row', mark: 'mark' }
+      ] }
+      { text: 'parent2', children: [
+        'blah'
+      ] }
+    ]
+    t.sendKeys 'jycjp'
+    t.expect [
+      { text: 'parent1', children: [
+        { text: 'row', mark: 'mark', id: 2 }
+      ] }
+      { text: 'parent2', children: [
+        { clone: 2 }
+        'blah'
+      ] }
+    ]
+    t.sendKeys 'ggdd'
+    t.expect [
+      { text: 'parent2', children: [
+        { text: 'row', mark: 'mark' }
+        'blah'
+      ] }
+    ]
+    t.expectMarks { 'mark': 2 }
+    t.expectCursor 3, 0
+    t.sendKeys '`'
+    t.sendKey 'enter'
+    t.expectCursor 2, 0

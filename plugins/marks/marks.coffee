@@ -264,6 +264,7 @@ if module?
             id = getIdForMark mark
             if id != null
               markrow = data.canonicalInstance id
+              errors.assert (markrow != null)
               for i in [word.start..word.end]
                 line[i].renderOptions.type = 'a'
                 line[i].renderOptions.classes.push 'theme-text-link'

@@ -202,16 +202,16 @@ class Data extends EventEmitter
     return numAttachedParents > 1
 
   # Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
+  # TODO: this is not very efficient, in the worst case, but probably doesn't matter
   canonicalInstance: (id) -> # Given an id, return a row with that id
     errors.assert id?, "Empty id passed to canonicalInstance"
     if id == constants.root_id
       return @root
-    parentId = (@_getParents id)[0] # This is the only actual choice made
-    errors.assert parentId?, "No parent found for id: #{id}"
-    canonicalParent = @canonicalInstance parentId
-    instance = @findChild canonicalParent, id
-    errors.assert instance?, "No canonical instance found for id: #{id}"
-    return instance
+    for parentId in @_getParents id
+      canonicalParent = @canonicalInstance parentId
+      if canonicalParent != null
+        return @findChild canonicalParent, id
+    return null
 
   # Return all ancestor ids, topologically sorted (root is *last*).
   # Excludes 'id' itself unless options.inclusive is specified
