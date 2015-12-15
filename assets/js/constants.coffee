@@ -7,18 +7,35 @@
     'Welcome to vimflowy!'
     '(I hope you know to use j and k to move up and down!)'
     { text: 'Features', children: [
-      { text: 'Nested bullets', children: [
-        { text: 'Use enter to zoom in to a bullet', children: [
-          'And shift+enter to go all the way back out'
-          'Use ] and [ to zoom in and out just one level'
+      { text: 'Workflowy features', children: [
+        { text: 'Nested bullets', children: [
+          { text: 'Use enter to zoom in to a bullet', children: [
+            'And shift+enter to go all the way back out'
+            'Use ] and [ to zoom in and out just one level'
+          ] }
+          { text: 'Collapsed bullets.  z to toggle collapsedness', collapsed: true, children: [
+            'You found me! :)'
+          ] }
+          'Use tab and shift+tab to indent and unindent blocks'
+          'Use < and > to indent and unindent just a single line'
         ] }
-        { text: 'Collapsed bullets.  z to toggle collapsedness', collapsed: true, children: [
-          'You found me! :)'
+        { text: 'Text formatting', collapsed: true, children: [
+          {
+            text:      'Bold (ctrl+shift+b), italicized (ctrl+shift+i), and underlined (ctrl+shift+u) text.  Bold italic underlined!'
+            bold:      '....                                                                                 ...................... '
+            italic:    '                     ..........                                                      ...................... '
+            underline: '                                                    ..........                       ...................... '
+          }
+          {
+            text:          'Strike through (ctrl+enter)!'
+            children: [ {
+              text:          'Try using it for todo lists'
+              strikethrough: '...........................'
+            } ]
+          }
         ] }
-        'Use tab and shift+tab to indent and unindent blocks'
-        'Use < and > to indent and unindent just a single line'
       ] }
-      { text: 'All the normal vim goodness', collapsed: true, children: [
+      { text: 'Vim features', collapsed: true, children: [
         { text: 'Most of vim\'s movement commands', collapsed: true, children: [
           'h, j, k, and l'
           '$ and 0'
@@ -106,21 +123,6 @@
         ] }
         'And clones can\'t be descendants of each other'
         'Make new clones with yc'
-      ] }
-      { text: 'Text formatting', collapsed: true, children: [
-        {
-          text:      'Bold (ctrl+shift+b), italicized (ctrl+shift+i), and underlined (ctrl+shift+u) text.  Bold italic underlined!'
-          bold:      '....                                                                                 ...................... '
-          italic:    '                     ..........                                                      ...................... '
-          underline: '                                                    ..........                       ...................... '
-        }
-        {
-          text:          'Strike through (ctrl+enter)!'
-          children: [ {
-            text:          'Try using it for todo lists'
-            strikethrough: '...........................'
-          } ]
-        }
       ] }
     ] }
     { text: 'Tips', collapsed: true, children: [
