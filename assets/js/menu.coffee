@@ -96,6 +96,8 @@ class Menu
 
         renderOptions = result.renderOptions || {}
         contents = renderLine result.contents, renderOptions
+        if result.renderHook?
+          contents = result.renderHook contents
         resultLineDiv = virtualDom.create virtualDom.h 'span', {}, contents
         resultDiv.append resultLineDiv
 

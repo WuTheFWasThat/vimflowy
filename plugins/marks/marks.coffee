@@ -223,7 +223,11 @@ if module?
             row = found.row
             return {
               contents: @view.data.getLine row
-              renderOptions: { mark: found.mark }
+              renderHook: (contents) ->
+                contents.unshift virtualDom.h 'span', {
+                  className: 'mark theme-bg-secondary theme-trim'
+                }, found.mark
+                return contents
               fn: () => @view.rootInto row
             }
         )
