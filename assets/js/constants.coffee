@@ -85,7 +85,7 @@
         'Customizable hotkeys (via downloading/uploading a json file)'
         { text: 'Plugins system', collapsed: true, children: [
           'Write your own plugins, or use plugins others have written!'
-          { text: 'See settings menu for some plugins', children: [
+          { text: 'See the settings menu to turn on some plugins!', children: [
             { text: 'Easy motion', collapsed: true, children: [
               'Hit space to jump to a row quickly'
               'Based on https://github.com/easymotion/vim-easymotion'
@@ -93,9 +93,9 @@
             { text: 'Timing', collapsed: true, children: [
               'Keep track of how long you\'ve spent on various bullets'
             ] }
-            'Marks is actually written as a plugin, too!'
+            'Marks is actually written as a plugin, too!  It\'s on by default, but you can turn it off from the settings menu.'
           ] }
-          'See here for plugins documentation: https://github.com/WuTheFWasThat/vimflowy/blob/master/PLUGINS.md'
+          'See here for documentation on writing plugins: https://github.com/WuTheFWasThat/vimflowy/blob/master/PLUGINS.md'
         ] }
       ] }
       { text: 'Import and export data', collapsed: true, children: [
@@ -129,7 +129,7 @@
       'Collapse things often to avoid clutter.  Zoom into collapsed bullets'
       'Use ctrl+[hjkl] to move blocks of content around easily'
       'Use ? to hide the keybindings menu, once you become an expert'
-      'Make many documents.  Just visit /documentname'
+      'For local version only: Multiple documents.  Just visit /documentname'
     ] }
     'Press i to enter insert mode and start adding your own content!'
     'For more info, visit https://github.com/WuTheFWasThat/vimflowy'

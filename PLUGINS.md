@@ -1,13 +1,19 @@
+NOTE: *PLUGINS IS A WORK IN PROGRESS.  THE API IS INCOMPLETE AND UNSTABLE*
+
+Nevertheless, if you think you've written a useful plugin, please make a PR!
+When/if it gets merged, we'll try not to break it.
+
 # Plugin API
 
-NOTE: PLUGINS IS A WORK IN PROGRESS.  THE API IS INCOMPLETE AND UNSTABLE
-
 To make a plugin, you can place `.js`, `.css`, `.coffee`, or `.sass` files
-anywhere within the `plugins` in the vimflowy source directory.
-A "hello world" sample plugin is included, in both coffeescript and plain javascript.
-You may have to rebuild vimflowy if using a static distribution.
+anywhere within the `plugins` folder in the vimflowy source directory.
+A "hello world" sample plugin is included, in both
+[coffeescript](plugins/examples/example.coffee) and [plain javascript](plugins/examples/example2.js).
 
-This documentation may be less useful than just [looking at some example plugins](plugins).
+You will have to rebuild vimflowy if using a static distribution.
+See [here](CONTRIBUTING.md) for details on development setup.
+
+Generally, this documentation may be less useful than just [looking at some example plugins](plugins).
 
 ## Registering a plugin
 
@@ -17,7 +23,7 @@ A plugin registers using
 Plugins.register(metadata, enableCallback[, disableCallback])
 ```
 where
-- `metadata`:  For the detailed format, read the tv4 PLUGIN_SCHEMA in plugins.coffee
+- `metadata`:  For the detailed format, read the tv4 PLUGIN_SCHEMA in [plugins.coffee](assets/js/plugins.coffee)
   - name (required): string
     This will be displayed to the user in options. It should not be changed!
   - version (required): positive integer
@@ -35,7 +41,9 @@ where
   If unimplemented, disabling will simply advise the user to refresh the page.
   If implemented, make sure that the plugin can be disabled and re-enabled multiple times (i.e. enable followed by disabled should not leave state).
 
-Plugins are disabled by default. You can enable your plugin from the plugins section of the settings menu within vimflowy.
+Plugins are generally disabled by default.
+
+You can enable your plugin from the plugins section of the settings menu within vimflowy.
 
 ## Using the API
 
@@ -70,6 +78,8 @@ For other example usages, see the folder [`assets/js/definitions`](assets/js/def
 ```
 See [`keyDefinitions.coffee`](assets/js/keyDefinitions.coffee) for detailed schema for each of these.
 
+We plan on adding ways to unregister commands/actions/motions.
+
 #### vimflowy internals
 
 ```
@@ -95,13 +105,16 @@ We expose an API for rendering via a family of hooks
 ```
     api.view.addHook(hookname, fn),
 ```
-where `fn(v, info)` is a callback taking a virtualDom element and any additional information the hook provides. `hookname` will begin with `render`.
+where `fn(v, info)` is a callback taking a virtualDom element (or array of them) and any additional information the hook provides.
+This hook function should return a new virtualDom element (or array of them).
 
-More info on this later.
+Typically, rendering hooks will have `hookname` beginning with `render`.
+
+More detailed info on these hooks will be added later.
 
 #### data persistence
 
-The data API is a simple key-value store
+The data API is a simple key-value store:
 ```
     api.getDataVersion():  The last data version of your plugin this document used
     api.setDataVersion(version)
@@ -112,13 +125,15 @@ The data API is a simple key-value store
         Sets value for a key.
 ```
 
-Make sure to version data!  That way vimflowy can detect incompatible formats upgrades which would otherwise make vimflowy crash.
-If possible, document your storage schema. Data migrations may be implemented eventually.
+The keys should always be strings.  The values can be anything JSON-serializable.
 
-NOTE:
-- Data is stored as serialized JSON.  Thus, DO NOT use circular references, or vimflowy will crash.
-- Small changes to a large object result in a large write to store.
+Keep in mind:
+- Reads are cached.  It's assumed nobody else is writing data.
+- Small changes to a large object result in a large write to store
+- Version your data!  That way vimflowy can detect incompatible formats upgrades which would otherwise make vimflowy crash.
+- Document your storage schema when appropriate. Data migrations may be implemented eventually.
 
 # Feedback
-Please let the vimflowy dev team know if you need help, want additional features, or think the API could be made better in some way.
+
+Please let the vimflowy dev team know if you need help, want additional features, think the API and/or documentation could be made better in some way, etc.
 Contact us on github: https://github.com/WuTheFWasThat/vimflowy
