@@ -166,11 +166,6 @@ class Data extends EventEmitter
   getChildren: (parent) ->
     (Row.loadFrom parent, serialized) for serialized in @_getChildren parent.id
 
-  setChildren: (parent, children) ->
-    for child in children
-      errors.assert (child.parent == parent)
-    @_setChildren parent.id, (do child.serialize for child in children)
-
   findChild: (row, id) ->
     _.find (@getChildren row), (x) -> x.id == id
 
@@ -516,22 +511,6 @@ class Data extends EventEmitter
     id = do @store.getNew
     child = new Row row, id
     @attachChild row, child, index
-
-  _insertSiblingHelper: (row, after) ->
-    if row.id == @viewRoot.id
-      Logger.logger.error 'Cannot insert sibling of view root'
-      return null
-
-    parent = do row.getParent
-    index = @indexOf row
-
-    return (@addChild parent, (index + after))
-
-  insertSiblingAfter: (row) ->
-    return @_insertSiblingHelper row, 1
-
-  insertSiblingBefore: (row) ->
-    return @_insertSiblingHelper row, 0
 
   orderedLines: () ->
     # TODO: deal with clones
