@@ -119,6 +119,11 @@ describe "random set of basic tests", () ->
     t.sendKeys '0d$iab'
     t.expect ['ab']
 
+  it "replaces with space properly", () ->
+    t = new TestCase ['space']
+    t.sendKeys ['f', 'a', 'r', 'space']
+    t.expect ['sp ce']
+
 describe "numbers (repeat next action)", () ->
 
   it "works on movement", () ->

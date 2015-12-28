@@ -193,6 +193,8 @@ if module?
   }, () ->
     key = do @keyStream.dequeue
     if key == null then return do @keyStream.wait
+    # TODO: refactor keys so this is unnecessary
+    if key == 'space' then key = ' '
     @view.replaceCharsAfterCursor key, @repeat, {setCursor: 'end'}
     do @keyStream.save
 
