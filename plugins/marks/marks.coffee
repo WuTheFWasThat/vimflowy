@@ -23,12 +23,21 @@ if module?
     _setMarksToIds = (mark_to_ids) ->
       api.setData 'marks_to_ids', mark_to_ids
 
+    _sanityCheckMarks = () ->
+      marks_to_ids = _getMarksToIds()
+      ids_to_marks = _getIdsToMarks()
+      marks_to_ids2 = {}
+      for id, mark of ids_to_marks
+        marks_to_ids2[mark] = parseInt id
+      api.errors.assert_deep_equals marks_to_ids, marks_to_ids2, "Inconsistent ids_to_marks"
+
     # get mark for an id, '' if it doesn't exist
     _getMark = (id) ->
       marks = _getIdsToMarks()
       return marks[id] or ''
 
     _setMark = (id, mark) ->
+      do _sanityCheckMarks
       marks_to_ids = _getMarksToIds()
       ids_to_marks = _getIdsToMarks()
       api.errors.assert not (mark in marks_to_ids)
@@ -37,8 +46,10 @@ if module?
       ids_to_marks[id] = mark
       _setMarksToIds marks_to_ids
       _setIdsToMarks ids_to_marks
+      do _sanityCheckMarks
 
     _unsetMark = (id, mark) ->
+      do _sanityCheckMarks
       marks_to_ids = _getMarksToIds()
       ids_to_marks = _getIdsToMarks()
       api.errors.assert_equals marks_to_ids[mark], id
@@ -47,8 +58,10 @@ if module?
       delete ids_to_marks[id]
       _setMarksToIds marks_to_ids
       _setIdsToMarks ids_to_marks
+      do _sanityCheckMarks
 
     getIdForMark = (mark) ->
+      do _sanityCheckMarks
       marks_to_ids = _getMarksToIds()
       if not (mark of marks_to_ids)
         return null
@@ -58,14 +71,8 @@ if module?
       return null
 
     listMarks = () ->
+      do _sanityCheckMarks
       marks_to_ids = _getMarksToIds()
-
-      # sanity check
-      ids_to_marks = _getIdsToMarks()
-      marks_to_ids2 = {}
-      for id, mark of ids_to_marks
-        marks_to_ids2[mark] = parseInt id
-      api.errors.assert_deep_equals marks_to_ids, marks_to_ids2, "Inconsistent ids_to_marks"
 
       all_marks = {}
       for mark,id of marks_to_ids
