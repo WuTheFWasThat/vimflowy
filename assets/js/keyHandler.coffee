@@ -154,71 +154,50 @@ if module?
       if bindings == null
         bindings = @keyBindings.bindings[mode]
 
-      if mode == MODES.NORMAL
-        [newrepeat, key] = @getRepeat keyStream
-        # TODO: something better for passing repeat through?
-        repeat = repeat * newrepeat
-      else
-        key = do keyStream.dequeue
+      context = {
+        mode: mode
+        view: @view
+        repeat: repeat
+        keyStream: keyStream
+        keyHandler: @
+      }
 
-      if key == null
-        do keyStream.wait
-        return true
+      mode_obj = Modes.getMode mode
 
-      fn = null
+      key = do keyStream.dequeue
+
       args = []
 
-      key = (Modes.getMode mode).transform_key key, @view, keyStream
+      [key, context] = mode_obj.transform_key key, context
       if key == null
-        return true
+        if keyStream.waiting # continuing
+          return true
+        return false
 
-      if not (key of bindings)
+      if (key of bindings)
+        info = bindings[key]
+      else
         if not ('MOTION' of bindings)
-          if mode != MODES.INSERT
-            do keyStream.forget
-          return false
+          return mode_obj.handle_bad_key key, keyStream
 
         # note: this uses original bindings to determine what's a motion
-        [motion, repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[mode], repeat
+        [motion, context.repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[mode], context.repeat
         if motion == null
           if keyStream.waiting # motion continuing
             return true
-          else
-            if mode == MODES.NORMAL or mode == MODES.VISUAL or mode == MODES.VISUAL_LINE
-              do keyStream.forget
-            return false
+          return mode_obj.handle_bad_key key, keyStream
 
         args.push motion
         info = bindings['MOTION']
-      else
-        info = bindings[key]
 
       definition = info.definition
       if typeof definition == 'object'
         # recursive definition
-        return @processMode mode, keyStream, info.definition, repeat
+        return @processMode mode, keyStream, info.definition, context.repeat
       else if typeof definition == 'function'
-        context = {
-          mode: mode
-          view: @view
-          repeat: repeat
-          keyStream: keyStream
-          keyHandler: @
-        }
-        if mode == MODES.VISUAL_LINE
-          [parent, index1, index2] = do @view.getVisualLineSelections
-          # TODO: get a row, instead of id, for parent
-          context.row_start_i = index1
-          context.row_end_i = index2
-          context.row_start = (@view.data.getChildren parent)[index1]
-          context.row_end = (@view.data.getChildren parent)[index2]
-          context.parent = parent
-          context.num_rows = index2 - index1 + 1
-
+        context = mode_obj.transform_context context
         info.definition.apply context, args
-
         (Modes.getMode @view.mode).every @view, keyStream
-
         return true
       else
         throw new errors.UnexpectedValue "definition", definition
@@ -243,10 +222,7 @@ if module?
       return [parseInt(numStr), key]
 
     # useful when you expect a motion
-    getMotion: (keyStream,
-                motionKey = null,
-                bindings = @keyBindings.motion_bindings[MODES.NORMAL],
-                repeat = 1) =>
+    getMotion: (keyStream, motionKey, bindings, repeat) =>
       [motionRepeat, motionKey] = @getRepeat keyStream, motionKey
       repeat = repeat * motionRepeat
 

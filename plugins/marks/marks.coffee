@@ -145,7 +145,7 @@ if module?
     # Testing #
     if TestCase?
       TestCase.prototype.expectMarks = (expected) ->
-        @_expectDeepEqual expected, (do listMarks), "Wrong marks"
+        @_expectDeepEqual (do listMarks), expected, "Wrong marks"
         return @
 
     # Commands #

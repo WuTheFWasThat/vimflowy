@@ -36,9 +36,9 @@ if module?
 
       key_transforms: {
         description: """
-        a list of functions taking a key and view
-          (key, view, keyStream) -> key
-        if the key should be ignored, return null (in which case
+        a list of functions taking a key and context
+          (key, context) -> [key, context]
+        if the key should be ignored, return it as null (in which case
         other functions won't receive the key)
 
         the functions are called in the order they're registered
@@ -49,14 +49,23 @@ if module?
           type: "function"
         }
       }
+      transform_context: {
+        description: """
+        a functions taking a context and returning a new context
+        in which definition functions will be executed
+        (this is called right before execution)
+        """
+        type: "function"
+        default: ((context) -> return context)
+      }
     }
   }
   class Mode
-    # TODO: set mode and unset mode hooks
     constructor: (metadata) ->
       @metadata = metadata
       @name = metadata.name
       @key_transforms = metadata.key_transforms
+      @transform_context = metadata.transform_context
 
     enter: (view) ->
       if @metadata.enter
@@ -70,12 +79,19 @@ if module?
       if @metadata.exit
         @metadata.exit view
 
-    transform_key: (key, view, keyStream) ->
+    transform_key: (key, context) ->
       for key_transform in @key_transforms
-        key = key_transform key, view, keyStream
+        [key, context] = key_transform key, context
         if key == null
           break
-      return key
+      return [key, context]
+
+    handle_bad_key: (key, keyStream) ->
+      # for normal mode types, single bad key -> forgotten sequence
+      if @metadata.hotkey_type == NORMAL_MODE_TYPE
+        do keyStream.forget
+      return false
+
 
   # an enum dictionary,
   MODES_ENUM = {}
@@ -118,21 +134,29 @@ if module?
     hotkey_type: NORMAL_MODE_TYPE
     enter: (view) ->
       do view.cursor.backIfNeeded
+    key_transforms: [
+      (key, context) ->
+        [newrepeat, key] = context.keyHandler.getRepeat context.keyStream, key
+        context.repeat = context.repeat * newrepeat
+        if key == null
+          do context.keyStream.wait
+        return [key, context]
+    ]
   }
   registerMode {
     name: 'INSERT'
     hotkey_type: INSERT_MODE_TYPE
     key_transforms: [
-      (key, view, keyStream) ->
+      (key, context) ->
         key = transform_insert_key key
         if key.length == 1
           # simply insert the key
           obj = {char: key}
           for property in constants.text_properties
-            if view.cursor.getProperty property then obj[property] = true
-          view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
-          return null
-        return key
+            if context.view.cursor.getProperty property then obj[property] = true
+          context.view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
+          return [null, context]
+        return [key, context]
     ]
   }
   registerMode {
@@ -152,6 +176,16 @@ if module?
     exit: (view) ->
       view.anchor = null
       view.lineSelect = false
+    transform_context: (context) ->
+      view = context.view
+      [parent, index1, index2] = do view.getVisualLineSelections
+      context.row_start_i = index1
+      context.row_end_i = index2
+      context.row_start = (view.data.getChildren parent)[index1]
+      context.row_end = (view.data.getChildren parent)[index2]
+      context.parent = parent
+      context.num_rows = index2 - index1 + 1
+      return context
   }
   registerMode {
     name: 'SEARCH'
@@ -169,14 +203,14 @@ if module?
         view.menuDiv.addClass 'hidden'
         view.mainDiv.removeClass 'hidden'
     key_transforms: [
-      (key, view, keyStream) ->
+      (key, context) ->
         key = transform_insert_key key
         if key.length == 1
-          view.menu.view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
-          do view.menu.update
-          do keyStream.forget
-          return null
-        return key
+          context.view.menu.view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+          do context.view.menu.update
+          do context.keyStream.forget
+          return [null, context]
+        return [key, context]
     ]
 
   }
@@ -196,13 +230,13 @@ if module?
       view.markview = null
       view.markrow = null
     key_transforms: [
-      (key, view, keyStream) ->
+      (key, context) ->
         # must be non-whitespace
         if key.length == 1
           if /^\S*$/.test(key)
-            view.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
-            return null
-        return key
+            context.view.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+            return [null, context]
+        return [key, context]
     ]
 
   }

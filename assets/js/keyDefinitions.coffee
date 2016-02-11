@@ -40,14 +40,6 @@ if module?
       for modename, mode of Modes.modes
         @actions[mode] = {}
 
-      # TODO: make sure that the default hotkeys accurately represents the set of possible commands under that mode_type
-      #       the following used to work, and should be replaced
-      # for mode_type, mode_type_obj of MODE_TYPES
-      #   errors.assert_arrays_equal(
-      #     _.keys(@defaultHotkeys[mode_type]),
-      #     _.union.apply(_, mode_type_obj.modes.map((mode) -> @commands_by_mode[mode]))
-      #   )
-
     clone: () ->
       other = new KeyDefinitions
       for k in ['WITHIN_ROW_MOTIONS', 'ALL_MOTIONS', 'commands_by_mode', 'defaultHotkeys', 'commands', 'motions', 'actions']

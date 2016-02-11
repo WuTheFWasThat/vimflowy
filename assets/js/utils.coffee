@@ -41,7 +41,10 @@ if module?
     for prop, prop_info of schema.properties
       if prop not of data
         if 'default' of prop_info
-          data[prop] = _.cloneDeep prop_info['default']
+          def_val = prop_info['default']
+          if typeof def_val != "function"
+            def_val = _.cloneDeep def_val
+          data[prop] = def_val
       # recursively fill in defaults for objects
       if prop_info.type == 'object'
         if prop not of data

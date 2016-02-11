@@ -197,7 +197,7 @@ class Data extends EventEmitter
     return numAttachedParents > 1
 
   # Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
-  # TODO: this is not very efficient, in the worst case, but probably doesn't matter
+  # NOTE: this is not very efficient, in the worst case, but probably doesn't matter
   canonicalInstance: (id) -> # Given an id, return a row with that id
     errors.assert id?, "Empty id passed to canonicalInstance"
     if id == constants.root_id
