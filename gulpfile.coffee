@@ -118,8 +118,7 @@ gulp.task 'images', ->
 gulp.task 'vendor', ->
   gulp.src 'vendor/**/*'
     .pipe gulp.dest "#{out_folder}/"
-  gulp.src 'node_modules/lodash/index.js'
-    .pipe rename "lodash.js"
+  gulp.src 'node_modules/lodash/lodash.js'
     .pipe gulp.dest "#{out_folder}/"
   gulp.src 'node_modules/tv4/tv4.js'
     .pipe rename "tv4.js"
