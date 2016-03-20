@@ -111,7 +111,7 @@ class Data extends EventEmitter
   setLine: (row, line) ->
     return (@store.setLine row.id, (line.map (obj) ->
       # if no properties are true, serialize just the character to save space
-      if _.all constants.text_properties.map ((property) => (not obj[property]))
+      if _.every constants.text_properties.map ((property) => (not obj[property]))
         return obj.char
       else
         return obj
@@ -559,7 +559,7 @@ class Data extends EventEmitter
 
     if options.pretty
       if children.length == 0 and (not @isClone row.id) and \
-          (_.all Object.keys(struct), (key) ->
+          (_.every Object.keys(struct), (key) ->
             return key in ['children', 'text', 'collapsed'])
         return text
     return struct

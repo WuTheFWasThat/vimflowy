@@ -37,7 +37,7 @@ if module?
         for row in do data.orderedLines
           line = canonicalize (data.getText row).join ''
           matches = []
-          if _.all(query_words.map ((word) ->
+          if _.every(query_words.map ((word) ->
                     i = line.indexOf word
                     if i == -1 then return false
                     matches = matches.concat [i...i+word.length]
