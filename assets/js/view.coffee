@@ -719,7 +719,7 @@ window?.renderLine = renderLine
       deleted = @delChars row, col, n, {setCursor: 'stay'}
 
       if new_value == null
-        all_were_true = _.all deleted.map ((obj) => return obj[property])
+        all_were_true = _.every deleted.map ((obj) => return obj[property])
         new_value = not all_were_true
 
       chars = []
@@ -730,8 +730,8 @@ window?.renderLine = renderLine
       @addChars row, col, chars, {setCursor: 'stay'}
 
     toggleRowsProperty: (property, rows) ->
-      all_were_true = _.all rows.map ((row) =>
-        _.all (@data.getLine row).map ((obj) => return obj[property])
+      all_were_true = _.every rows.map ((row) =>
+        _.every (@data.getLine row).map ((obj) => return obj[property])
       )
       new_value = not all_were_true
       for row in rows

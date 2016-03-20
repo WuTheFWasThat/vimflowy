@@ -38,7 +38,7 @@ if module?
     # It is sufficient to check if the row is an ancestor of the new parent,
     # because if there was a clone underneath the row which was an ancestor of 'parent',
     # then 'row' would also be an ancestor of 'parent'.
-    if _.contains (view.data.allAncestors parent_id, { inclusive: true }), id
+    if _.includes (view.data.allAncestors parent_id, { inclusive: true }), id
       view.showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
       return false
     return true
