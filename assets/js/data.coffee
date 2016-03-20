@@ -545,7 +545,7 @@ class Data extends EventEmitter
       struct.children = children
 
     for property in constants.text_properties
-      if _.any (line.map ((obj) -> obj[property]))
+      if _.some (line.map ((obj) -> obj[property]))
         struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
 
     if (do row.isRoot) and not (do @viewRoot.isRoot)

@@ -130,6 +130,6 @@ class KeyEmitter extends EventEmitter
       Logger.logger.debug 'keycode', e.keyCode, 'key', key
       results = @emit 'keydown', key
       # return false to stop propagation, if any handler handled the key
-      return not _.any results
+      return not _.some results
 
 window.KeyEmitter = KeyEmitter
