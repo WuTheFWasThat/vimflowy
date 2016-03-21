@@ -1,10 +1,11 @@
 .node
     $node-padding: 50px
+    $node-min-height: 25px
 
     padding-left: $node-padding
 
     // min height should be at least font size
-    min-height: 25px
+    min-height: $node-min-height
     font-size: 14px
 
     .bullet
@@ -23,6 +24,7 @@
         display: block
         overflow-wrap: break-word
         white-space: pre-wrap
+        min-height: $node-min-height
 
     .node-info
         display: inline-block
