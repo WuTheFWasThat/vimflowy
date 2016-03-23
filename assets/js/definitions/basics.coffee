@@ -322,7 +322,7 @@ if module?
     name: 'DELETE_CHAR'
     default_hotkeys:
       normal_like: ['x']
-      insert_like: ['shift+backspace']
+      insert_like: ['delete']
   }
   keyDefinitions.registerAction [MODES.NORMAL], CMD_DELETE_CHAR, {
     description: 'Delete character at the cursor (i.e. del key)',
@@ -353,7 +353,7 @@ if module?
     name: 'DELETE_LAST_CHAR'
     default_hotkeys:
       normal_like: ['X']
-      insert_like: ['backspace']
+      insert_like: ['backspace', 'shift+backspace']
   }
   keyDefinitions.registerAction [MODES.NORMAL], CMD_DELETE_LAST_CHAR, {
     description: 'Delete last character (i.e. backspace key)',

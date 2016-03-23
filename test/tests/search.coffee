@@ -124,7 +124,7 @@ describe "search", () ->
     t.sendKeys '/blurb'
     t.expectNumMenuResults 0
     t.sendKey 'left'
-    t.sendKey 'shift+backspace'
+    t.sendKey 'delete'
     t.expectNumMenuResults 1
     t.sendKey 'enter'
     t.sendKeys 'dd'

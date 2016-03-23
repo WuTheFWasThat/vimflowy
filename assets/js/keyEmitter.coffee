@@ -65,6 +65,8 @@ class KeyEmitter extends EventEmitter
     39: 'right'
     40: 'down'
 
+    46: 'delete'
+
     48: '0'
     49: '1'
     50: '2'

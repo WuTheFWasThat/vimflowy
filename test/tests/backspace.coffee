@@ -100,16 +100,16 @@ describe 'backspace', () ->
       'acd'
     ]
 
-describe 'shift+backspace', () ->
+describe 'delete', () ->
   it "works in basic case", () ->
     t = new TestCase ['ab', 'cd']
     t.sendKeys 'i'
-    t.sendKey 'shift+backspace'
+    t.sendKey 'delete'
     t.expect ['b', 'cd']
-    t.sendKey 'shift+backspace'
+    t.sendKey 'delete'
     t.expect ['', 'cd']
     # doesn't do anything, for now
-    t.sendKey 'shift+backspace'
+    t.sendKey 'delete'
     t.expect ['', 'cd']
     t.sendKey 'esc'
     t.sendKey 'u'
