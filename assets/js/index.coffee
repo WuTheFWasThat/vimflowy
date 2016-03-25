@@ -26,18 +26,13 @@ create_view = (data, to_load) ->
     modeDiv: $('#mode')
     menuDiv: $('#menu')
   }
+  view.init to_load
 
   Plugins.resolveView view
 
-  # NOTE: this is because resolveView takes a little while before
-  # the plugins are actually enabled...
-  setTimeout (() ->
-    view.init to_load
-
-    $(document).ready ->
-      do view.hideSettings
-      do view.render
-  ), 100
+  $(document).ready ->
+    do view.hideSettings
+    do view.render
 
   # needed for safari
   $('#paste-hack').focus()

@@ -43,6 +43,9 @@ class TestCase
     for name of Plugins.plugins
       Plugins.enable name
 
+    # NOTE: this is *after* resolveView because of plugins with state
+    # e.g. marks needs the database to have the marks loaded
+    # TODO: should fix, should mirror actual vimflowy order
     @view.init
       text: ''
       children: serialized

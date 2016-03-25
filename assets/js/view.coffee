@@ -204,7 +204,6 @@ window?.renderLine = renderLine
 
       @mode = null
 
-      @initialized = false
       return @
 
     init: (to_load = null) ->
@@ -215,7 +214,6 @@ window?.renderLine = renderLine
       @cursor = new Cursor @, row, 0
 
       do @reset_history
-
       do @reset_jump_history
 
       @setMode MODES.NORMAL
@@ -224,8 +222,7 @@ window?.renderLine = renderLine
         @vtree = do @virtualRender
         @vnode = virtualDom.create @vtree
         @mainDiv.append @vnode
-
-      @initialized = true
+      return @
 
     exit: () ->
       @emit "exit"
