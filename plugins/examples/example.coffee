@@ -4,7 +4,6 @@
     version: 1
     author: "Zachary Vance"
     description: "Prints 'Hello World' when the plugin is loaded"
-    dependencies: []
   }, ((api) ->
     console.log "Coffeescript example plugin: Hello, world!"
   ), (() ->

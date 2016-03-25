@@ -29,12 +29,11 @@ where
   - version (required): positive integer
   - author: string
   - description: string
-  - dependencies (NOT YET SUPPORTED): array of strings
     names of other plugins you depend on.
   - dataVersion (NOT YET SUPPORTED!): positive integer
     Bump this if the data format ever changes, so users can avoid data corruption
 - `enableCallback(api)`:
-  Called when the plugin is enabled, which is guaranteed to happen after all dependencies are loaded.
+  Called when the plugin is enabled
   Can optionally return a value, in which case other plugins that depend on yours will get access to it.
 - `disableCallback(api)`:
   Called if the plugin is ever disabled by the user.

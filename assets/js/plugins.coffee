@@ -1,6 +1,5 @@
 if module?
   global._ = require('lodash')
-  global.DependencyGraph = require('dependencies-online')
 
   global.utils = require('./utils.coffee')
   global.Modes = require('./modes.coffee')
@@ -80,12 +79,6 @@ if module?
         description: "Description of the plugin"
         type: "string"
       }
-      dependencies: {
-        description: "Dependencies of the plugin - a list of other plugins"
-        type: "array"
-        items: { type: "string" }
-        default: []
-      }
       dataVersion: {
         description: "Version of data format for plugin"
         type: "integer"
@@ -99,7 +92,6 @@ if module?
 
     STATUS = {
       UNREGISTERED: "Unregistered",
-      REGISTERED: "Registered",
       DISABLING: "Disabling",
       ENABLING: "Enabling",
       DISABLED: "Disabled",
@@ -115,7 +107,6 @@ if module?
       }
 
       @plugins = {}
-      @pluginDependencies = new DependencyGraph
 
     validate: (plugin_metadata) ->
       utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, "plugin")
@@ -136,7 +127,8 @@ if module?
       @div = view.pluginsDiv
       do @render
 
-      @pluginDependencies.resolve '_view', view
+      for plugin_name of @enabledPlugins
+        @enable plugin_name
 
     render: () ->
       unless @div?
@@ -219,7 +211,8 @@ if module?
     enable: (name) ->
       status = @getStatus name
       if status == STATUS.UNREGISTERED
-        throw new errors.GenericError("No plugin registered as #{name}")
+        Logger.logger.error "No plugin registered as #{name}"
+        return
       if status == STATUS.ENABLING
         throw new errors.GenericError("Already enabling plugin #{name}")
       if status == STATUS.DISABLING
@@ -229,9 +222,7 @@ if module?
       if @view.settings
         @view.settings.setSetting "enabledPlugins", @enabledPlugins
       plugin = @plugins[name]
-      if (status == STATUS.DISABLED) or (status == STATUS.REGISTERED)
-        # TODO: require dependencies to be enabled first, notify user if not
-
+      if (status == STATUS.DISABLED) or (status == STATUS.UNREGISTERED)
         api = new PluginApi @view, plugin, @
 
         # validate data version
@@ -247,7 +238,6 @@ if module?
         plugin.api = api
         # TODO: allow enable to be async?
         plugin.value = plugin.enable api
-        @pluginDependencies.resolve plugin.name, plugin.value
 
         # refresh hotkeys, if any new ones were added
         do @view.bindings.init
@@ -293,16 +283,7 @@ if module?
       plugin.enable = enable
       plugin.disable = disable || _.once () =>
         alert "The plugin '#{plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable."
-      plugin.dependencies.push '_view'
-      @setStatus plugin.name, STATUS.REGISTERED
-
-      # Load the plugin after all its dependencies have loaded
-      (@pluginDependencies.add plugin.name, plugin.dependencies).then () =>
-        # TODO: handle dependency being disabled
-        if plugin.name of @enabledPlugins
-          @enable plugin.name
-        else
-          @disable plugin.name
+      @setStatus plugin.name, STATUS.DISABLED
 
   Plugins = new PluginsManager
 
