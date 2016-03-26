@@ -100,7 +100,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
     # get next row ID
     getId: () -> # Suggest to override this for efficiency
-      id = 0
+      id = 1
       while (@get (@_lineKey_ id), null) != null
         id++
       id
@@ -190,7 +190,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @_setLocalStorage_ @_schemaVersionKey_, version, { doesNotAffectLastSave: true }
 
     getId: () ->
-      id = @_getLocalStorage_ @_IDKey_, 0
+      id = @_getLocalStorage_ @_IDKey_, 1
       while (@_getLocalStorage_ (@_lineKey_ id), null) != null
         id++
       @_setLocalStorage_ @_IDKey_, (id + 1)

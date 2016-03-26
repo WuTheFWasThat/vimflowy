@@ -2,8 +2,8 @@
   exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
 
   exports.root_id = 0
-
-  exports.default_data = { text: '', children: [
+  exports.empty_data = ['']
+  exports.default_data = [
     'Welcome to vimflowy!'
     '(I hope you know to use j and k to move up and down!)'
     { text: 'Features', children: [
@@ -133,6 +133,6 @@
     ] }
     'Press i to enter insert mode and start adding your own content!'
     'For more info, visit https://github.com/WuTheFWasThat/vimflowy'
-  ] }
+  ]
 
 )(if typeof exports isnt 'undefined' then exports else window.constants = {})

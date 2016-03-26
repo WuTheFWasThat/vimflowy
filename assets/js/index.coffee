@@ -26,9 +26,13 @@ create_view = (data, to_load) ->
     modeDiv: $('#mode')
     menuDiv: $('#menu')
   }
-  view.init to_load
 
   Plugins.resolveView view
+  if to_load != null
+    data.load to_load
+    # otherwise, you can undo initial marks, for example
+    do view.reset_history
+    do view.reset_jump_history
 
   $(document).ready ->
     do view.hideSettings

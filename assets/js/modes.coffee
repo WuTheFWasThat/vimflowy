@@ -221,10 +221,6 @@ if module?
       # initialize marks stuff
       data = new Data (new dataStore.InMemory)
       view.markview = new View data
-      view.markview.init {
-        text: ''
-        children: ['']
-      }
       view.markrow = view.cursor.row
     exit: (view) ->
       view.markview = null

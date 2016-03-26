@@ -202,14 +202,8 @@ window?.renderLine = renderLine
 
       @register = new Register @
 
-      @mode = null
-
-      return @
-
-    init: (to_load = null) ->
-      if to_load != null
-        @data.load to_load
-
+      if not (@data.getChildren @data.viewRoot).length
+        @data.load constants.empty_data
       row = (@data.getChildren @data.viewRoot)[0]
       @cursor = new Cursor @, row, 0
 
@@ -275,7 +269,7 @@ window?.renderLine = renderLine
       if mode == @mode
         return
 
-      if @mode != null
+      if @mode
         (Modes.getMode @mode).exit @
 
       @mode = mode

@@ -287,8 +287,8 @@ if module?
     author: "Jeff Wu"
     description:
       """
-      Lets you tag a row with a string, and then reference that row with an @<mark>.
-      Fast search for marked rows.
+      Lets you tag a row with a string, and then reference that row with @markname.
+      Fast search for marked rows, using '.
       """
   }, enableMarks
   # NOTE: because listing marks filters, disabling is okay

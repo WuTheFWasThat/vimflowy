@@ -511,6 +511,7 @@ class Data extends EventEmitter
     id = do @store.getNew
     child = new Row row, id
     @attachChild row, child, index
+    return child
 
   orderedLines: () ->
     # TODO: deal with clones
@@ -564,24 +565,21 @@ class Data extends EventEmitter
         return text
     return struct
 
-  loadTo: (serialized, parent = @root, index = -1, id_mapping = {}) ->
+  loadTo: (serialized, parent = @root, index = -1, id_mapping = {}, replace_empty = false) ->
     if serialized.clone
       # NOTE: this assumes we load in the same order we serialize
       errors.assert (serialized.clone of id_mapping)
       id = id_mapping[serialized.clone]
-    else
-      id = do @store.getNew
-
-    row = new Row parent, id
-
-    if not (do row.isRoot)
+      row = new Row parent, id
       @attachChild parent, row, index
-    else
-      row.setParent null
-      @_setParents row.id, [@root.id]
-
-    if serialized.clone
       return row
+
+    children = @getChildren parent
+    # if parent has only one child and it's empty, delete it
+    if replace_empty and children.length == 1 and ((@getLine children[0]).length == 0)
+      row = children[0]
+    else
+      row = @addChild parent, index
 
     if typeof serialized == 'string'
       @setLine row, (serialized.split '')
@@ -606,13 +604,10 @@ class Data extends EventEmitter
 
     return row
 
-  load: (serialized) ->
-    if serialized.viewRoot
-      @viewRoot = Row.loadFromAncestry serialized.viewRoot
-    else
-      @viewRoot = @root
-
-    @loadTo serialized
+  load: (serialized_rows) ->
+    id_mapping = {}
+    for serialized_row in serialized_rows
+      @loadTo serialized_row, @root, -1, id_mapping, true
 
 # exports
 module?.exports = Data

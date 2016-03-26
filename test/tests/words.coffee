@@ -32,7 +32,9 @@ describe "back word", () ->
     t.expect ['the']
 
   it "skips over whitespace-only rows", () ->
-    t = new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+    t = new TestCase ['a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+    t.sendKeys ['i', 'enter', 'esc', 'k']
+    t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
     t.sendKeys 'G$'
     t.sendKeys 'x'
     t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
@@ -134,7 +136,9 @@ describe "end word", () ->
     t.expect ['th']
 
   it "skips over whitespace-only rows", () ->
-    t = new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+    t = new TestCase ['a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+    t.sendKeys ['i', 'enter', 'esc', 'k']
+    t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
     t.sendKeys 'x'
     t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
     t.sendKeys 'ex'
@@ -232,7 +236,9 @@ describe "next word", () ->
     t.expect ['th']
 
   it "skips over whitespace-only rows", () ->
-    t = new TestCase ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+    t = new TestCase ['a word', '', '  ', '', 'the', '', 'words', 'yes', '']
+    t.sendKeys ['i', 'enter', 'esc', 'k']
+    t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
     t.sendKeys 'x'
     t.expect ['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']
     t.sendKeys 'wx'

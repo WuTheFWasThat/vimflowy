@@ -45,10 +45,9 @@ class TestCase
 
     # NOTE: this is *after* resolveView because of plugins with state
     # e.g. marks needs the database to have the marks loaded
-    # TODO: should fix, should mirror actual vimflowy order
-    @view.init
-      text: ''
-      children: serialized
+    @data.load serialized
+    do @view.reset_history
+    do @view.reset_jump_history
 
   _expectDeepEqual: (actual, expected, message) ->
     if not _.isEqual actual, expected

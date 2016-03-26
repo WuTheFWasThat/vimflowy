@@ -18,10 +18,6 @@ class Menu
 
     # a bit of a overkill-y hack, use an entire View object internally
     @view = new View data
-    @view.init {
-      text: ''
-      children: ['']
-    }
     @selection = 0
 
     # list of results:
