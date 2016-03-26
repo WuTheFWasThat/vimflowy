@@ -70,9 +70,11 @@
     getRowData: (id, keytype) ->
       key = "#{id}:#{keytype}"
       @api.getData key
+
     setRowData: (id, keytype, value) ->
       key = "#{id}:#{keytype}"
       @api.setData key, value
+
     transformRowData: (id, keytype, transform) ->
       @setRowData id, keytype, (transform (@getRowData id, keytype))
 
@@ -80,8 +82,10 @@
     DEFAULT_DISPLAY = true
     isLogging: () ->
       (@api.getData "isLogging") ? DEFAULT_LOGGING
+
     shouldDisplayTime: () ->
       (@api.getData "display") ? DEFAULT_DISPLAY
+
     toggleLogging: () ->
       @logger.info "Turning logging #{if (do @isLogging) then "off" else "on"}"
       if do @isLogging
@@ -90,6 +94,7 @@
         @onRowChange null, @api.cursor.row # Initial setup
       @api.setData "isLogging", not (do @isLogging)
       do @api.view.render
+
     toggleDisplay: () ->
       @logger.info "Turning display #{if (do @shouldDisplayTime) then "off" else "on"}"
       @api.setData "display", not (do @shouldDisplayTime)
@@ -97,6 +102,7 @@
 
     _date: (timestamp) ->
       "#{timestamp.getFullYear()}-#{timestamp.getMonth()}-#{timestamp.getDate()}"
+
     dateOf: (timestamp) ->
       day = new Date(timestamp)
       day.setHours 0
@@ -104,6 +110,7 @@
       day.setSeconds 0
       day.setMilliseconds 0
       day
+
     # Return one timestamp on each day between the two timetamps, inclusive
     daysBetween: (start, stop) ->
       cur = @dateOf start
@@ -132,10 +139,12 @@
         current
       @_addTimeToRow period.row, period.time, period.stop
       @_addTimeToAncestors period.row, period.time, period.stop
+
     onDescendantRemoved: (event) ->
       @logger.debug "Descendant #{event.descendantId} removed from #{event.ancestorId}"
       # Could avoid lookups by knowing exact changes, if needed
       @_rebuildTreeTimes event.ancestorId
+
     onDescendantAdded: (event) ->
       @logger.debug "Descendant #{event.descendantId} added to #{event.ancestorId}"
       # Could avoid lookups by knowing exact changes, if needed
@@ -143,11 +152,12 @@
 
     _combineDailyTimes: (dailyTimes...) ->
       combined = {}
-      for date in  _.union (_.map dailyTimes, _.keys)
+      for date in  _.union.apply _, (_.map dailyTimes, _.keys)
         combined[date] = 0
         for dailyTime in dailyTimes
           combined[date] += dailyTime[date] ? 0
       combined
+
     _addTimeToRow: (row, time, day) ->
       @transformRowData row.id, "rowTotalTime", (current) ->
         (current ? 0) + time
@@ -156,6 +166,7 @@
         current ?= {}
         current[key] = (current[key] ? 0) + time
         current
+
     _rebuildRowTimes: (row) -> # Unused, but keep for data migration in future versions
       totalTime = 0
       dailyTime = {}
@@ -165,6 +176,7 @@
         dailyTime[key] = (dailyTime[key] ? 0) + period.time
       @setRowData row.id, "rowTotalTime", totalTime
       @setRowData row.id, "rowDailyTime", dailyTime
+
     _addTimeToAncestors: (row, time, day) ->
       for ancestorId in @api.view.data.allAncestors row.id, { inclusive: true }
         @transformRowData ancestorId, "treeTotalTime", (current) ->
@@ -174,20 +186,21 @@
           current ?= {}
           current[key] = (current[key] ? 0) + time
           current
+
     _rebuildTreeTimes: (id) ->
       children = @api.view.data._getChildren id
       deletedChildren = (@getRowData id, 'deletedChildren') ? {}
 
       childTotalTimes = _.map children, (child_id) => @getRowData child_id, "treeTotalTime"
       rowTotalTime = @getRowData id, "rowTotalTime"
-      deletedChildrenTotalTimes = _.pluck deletedChildren, 'totalTime'
+      deletedChildrenTotalTimes = _.map deletedChildren, (x) -> x['totalTime']
       totalTimes = _.compact [rowTotalTime].concat(childTotalTimes).concat(deletedChildrenTotalTimes)
       totalTime = sum totalTimes
       @setRowData id, "treeTotalTime", totalTime
 
       childDailyTimes = _.map children, (child_id) => @getRowData child_id, "treeDailyTime"
       rowDailyTime = @getRowData id, "rowDailyTime"
-      deletedChildrenDailyTimes = _.pluck deletedChildren, 'dailyTime'
+      deletedChildrenDailyTimes = _.map deletedChildren, (x) -> x['totalTime']
       dailyTimes = _.compact [rowDailyTime].concat(childDailyTimes).concat(deletedChildrenDailyTimes)
       dailyTime = @_combineDailyTimes.apply @, dailyTimes
       @setRowData id, "treeDailyTime", dailyTime
@@ -201,6 +214,7 @@
       @setRowData event.parent_id, 'deletedChildren', deletedChildren
       for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
         @_rebuildTreeTimes ancestor_id
+
     onRowAdded: (event) ->
       deletedChildren = (@getRowData event.parent_id, 'deletedChildren') ? {}
       if event.id of deletedChildren
@@ -237,7 +251,7 @@
       if do @shouldDisplayTime
         time = @rowTime renderData.row
         if time > 1000
-          @logger.info "Rendering time for row #{renderData.row.id} as #{time}"
+          @logger.debug "Rendering time for row #{renderData.row.id} as #{time}"
           elements.push virtualDom.h 'span', {
             className: 'time'
           }, " " + (@printTime time)
