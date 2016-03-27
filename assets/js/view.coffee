@@ -29,7 +29,6 @@ renderLine = (lineData, options = {}) ->
 
   results = []
 
-
   # ideally this takes up space but is unselectable (uncopyable)
   cursorChar = ' '
 
@@ -40,24 +39,17 @@ renderLine = (lineData, options = {}) ->
     lineData.push {char: cursorChar}
 
   if lineData.length == 0
-    # if absolutely nothing, we want a character that takes up height,
-    # but doesn't copy as anything
-    results.push virtualDom.h 'span', {innerHTML: '&zwnj;'}
     return results
 
   for obj, i in lineData
     info = {
       column: i
     }
-    renderOptions = {
-      classes: []
-      type: 'span'
-    }
+    renderOptions = {}
 
-    # make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
     for property in constants.text_properties
       if obj[property]
-        renderOptions.classes.push property
+        renderOptions[property] = true
 
     x = obj.char
 
@@ -70,9 +62,9 @@ renderLine = (lineData, options = {}) ->
         x = cursorChar + x
 
     if i of options.cursors
-      renderOptions.classes.push 'theme-cursor'
+      renderOptions.cursor = true
     else if i of options.highlights
-      renderOptions.classes.push 'theme-bg-highlight'
+      renderOptions.highlight = true
 
     info.char = x
     info.renderOptions = renderOptions
@@ -80,43 +72,34 @@ renderLine = (lineData, options = {}) ->
     line.push info
 
   # collect set of words, { word: word, start: start, end: end }
-  words = []
-  word = ''
+  word_chars = []
   word_start = 0
 
-  isWhitespace = (char) ->
-    return char == '\n' or char == ' '
-  isPunctuation = (char) ->
-    return char == '.' or char == ',' or char == '!' or char == '?'
+  urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
 
   for obj, i in lineData.concat [{char: ' '}] # to make end condition easier
-    # TODO  or (isPunctuation obj.char)
+    # TODO  or (utils.isPunctuation obj.char)
     # problem is URLs have dots in them...
-    if (isWhitespace obj.char)
+    if (utils.isWhitespace obj.char)
       if i != word_start
-        words.push {
-          word: word
+        word_info = {
+          word: word_chars.join('')
           start: word_start
           end: i - 1
         }
+        if options.wordHook?
+          line = options.wordHook line, word_info
+        if urlRegex.test word_info.word
+          for j in [word_info.start..word_info.end]
+            line[j].renderOptions.type = 'a'
+            line[j].renderOptions.href = word_info.word
       word_start = i + 1
-      word = ''
+      word_chars = []
     else
-      word += obj.char
-
-  # gather words that are urls
-  urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
-  url_words = words.filter (w) ->
-    return urlRegex.test w.word
-
-  for url_word in url_words
-    for i in [url_word.start..url_word.end]
-      line[i].renderOptions.type = 'a'
-      line[i].renderOptions.classes.push 'theme-text-link'
-      line[i].renderOptions.href = url_word.word
+      word_chars.push(obj.char)
 
   if options.lineHook?
-    line = options.lineHook line, {words: words}
+    line = options.lineHook line
 
   renderSpec = []
   # Normally, we collect things of the same type and render them in one div
@@ -131,24 +114,23 @@ renderLine = (lineData, options = {}) ->
       if x.break
         renderSpec.push {type: 'div'}
   else
-    acc = ''
+    acc = []
     renderOptions = {}
 
     flush = () ->
       if acc.length
-        renderOptions.text = acc
-        renderOptions.onmouseover = options.linemouseover
+        renderOptions.text = acc.join('')
         renderSpec.push renderOptions
-      acc = ''
+        acc = []
       renderOptions = {}
 
     # collect line into groups to render
     for x in line
-      if _.isEqual x.renderOptions, renderOptions
-        acc += x.char
+      if JSON.stringify(x.renderOptions) == JSON.stringify(renderOptions)
+        acc.push(x.char)
       else
         do flush
-        acc = x.char
+        acc.push(x.char)
         renderOptions = x.renderOptions
 
       if x.break
@@ -157,17 +139,32 @@ renderLine = (lineData, options = {}) ->
     do flush
 
   for spec in renderSpec
+    classes = spec.classes or []
+    type = spec.type or 'span'
+    if type == 'a'
+      classes.push 'theme-text-link'
+
+    # make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
+    for property in constants.text_properties
+      if spec[property]
+        classes.push property
+
+    if spec.cursor
+      classes.push 'theme-cursor'
+    if spec.highlight
+      classes.push 'theme-bg-highlight'
+
     divoptions = {}
-    if spec.classes
-      divoptions.className = (spec.classes.join ' ')
+    if classes.length
+      divoptions.className = (classes.join ' ')
     if spec.href
       divoptions.href = spec.href
     if spec.onclick
       divoptions.onclick = spec.onclick
-    if spec.onmouseover
-      divoptions.onmouseover = spec.onmouseover
+    if options.linemouseover
+      divoptions.onmouseover = options.linemouseover
 
-    results.push virtualDom.h spec.type, divoptions, spec.text
+    results.push virtualDom.h type, divoptions, spec.text
 
   return results
 window?.renderLine = renderLine
@@ -378,6 +375,7 @@ window?.renderLine = renderLine
       else
         return null
 
+    # TODO: make this use replace_empty = true?
     importContent: (content, mimetype) ->
       root = @parseContent content, mimetype
       if not root then return false
@@ -1195,9 +1193,8 @@ window?.renderLine = renderLine
         lineoptions.linemouseover = () =>
           @render {handle_clicks: true}
 
-      lineoptions.lineHook = (line, info) =>
-        line = @applyHook 'renderLineTextOptions', line, info
-        return line
+      lineoptions.wordHook = @applyHook.bind @, 'renderLineWordHook'
+      lineoptions.lineHook = @applyHook.bind @, 'renderLineTextOptions'
 
       lineContents = renderLine lineData, lineoptions
       lineContents = @applyHook 'renderLineContents', lineContents, { row: row }

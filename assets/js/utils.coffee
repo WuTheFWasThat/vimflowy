@@ -4,8 +4,13 @@ if module?
 
 ((exports) ->
 
+  # TODO: is quite silly to consider undefined as whitespace
   exports.isWhitespace = (char) ->
     return (char == ' ') or (char == '\n') or (char == undefined)
+
+  # NOTE: currently unused
+  exports.isPunctuation = (char) ->
+    return char == '.' or char == ',' or char == '!' or char == '?'
 
   exports.mimetypeLookup = (filename) ->
     parts = filename.split '.'

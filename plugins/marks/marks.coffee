@@ -261,25 +261,22 @@ if module?
             }, mark
       return lineContents
 
-    view.addHook 'renderLineTextOptions', (line, info) ->
-      if view.mode == MODES.NORMAL
-        goMark = (row) =>
-          view.rootToParent row
-          do view.save
-          do view.render
+    goMark = (row) =>
+      view.rootToParent row
+      do view.save
+      do view.render
 
-        # gather words that are marks
-        for word in info.words
-          if word.word[0] == '@'
-            mark = word.word[1..]
-            id = getIdForMark mark
-            if id != null
-              markrow = data.canonicalInstance id
-              errors.assert (markrow != null)
-              for i in [word.start..word.end]
-                line[i].renderOptions.type = 'a'
-                line[i].renderOptions.classes.push 'theme-text-link'
-                line[i].renderOptions.onclick = goMark.bind @, markrow
+    view.addHook 'renderLineWordHook', (line, word_info) ->
+      if view.mode == MODES.NORMAL
+        if word_info.word[0] == '@'
+          mark = word_info.word[1..]
+          id = getIdForMark mark
+          if id != null
+            markrow = data.canonicalInstance id
+            errors.assert (markrow != null)
+            for i in [word_info.start..word_info.end]
+              line[i].renderOptions.type = 'a'
+              line[i].renderOptions.onclick = goMark.bind @, markrow
       return line
 
   Plugins.register {
