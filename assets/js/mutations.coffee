@@ -213,11 +213,11 @@ if module?
         index += 1
 
         if @options.setCursor == 'first' and first
-          view.cursor.set row, 0
+          view.cursor.set row, 0, @options.cursorOptions
           first = false
 
       if @options.setCursor == 'last'
-        view.cursor.set row, 0
+        view.cursor.set row, 0, @options.cursorOptions
 
     rewind: (view) ->
       @delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)

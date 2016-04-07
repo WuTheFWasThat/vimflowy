@@ -97,3 +97,76 @@ describe "enter", () ->
           'of goo'
       ] }
     ]
+
+  it "preserves identity at the end of a line", () ->
+    t = new TestCase [
+      { text: 'hey', id: 1 }
+      'you'
+      { clone: 1 }
+    ]
+    t.sendKey 'A'
+    t.sendKey 'enter'
+    t.sendKeys 'i like'
+    t.expect [
+      { text: 'hey', id: 1 }
+      'i like'
+      'you'
+      { clone: 1 }
+    ]
+
+  it "doesnt preserve identity in the middle of a line", () ->
+    t = new TestCase [
+      { text: 'hey', id: 1 }
+      'you'
+      { clone: 1 }
+    ]
+    t.sendKey '$'
+    t.sendKey 'i'
+    t.sendKey 'enter'
+    t.sendKeys 'ya'
+    t.expect [
+      'he'
+      { text: 'yay', id: 1 }
+      'you'
+      { clone: 1 }
+    ]
+
+  it "handles case with children at end of line", () ->
+    t = new TestCase [
+      { text: 'hey', id: 1, children: [
+        'like'
+      ]}
+      'you'
+      { clone: 1 }
+    ]
+    t.sendKey 'A'
+    t.sendKey 'enter'
+    t.sendKeys 'i'
+    t.expect [
+      { text: 'hey', id: 1, children: [
+        'i'
+        'like'
+      ]}
+      'you'
+      { clone: 1 }
+    ]
+
+  it "handles collapsed case at end of line", () ->
+    t = new TestCase [
+      { text: 'hey', id: 1, collapsed: true, children: [
+        'like'
+      ]}
+      'you'
+      { clone: 1 }
+    ]
+    t.sendKey 'A'
+    t.sendKey 'enter'
+    t.sendKeys 'i'
+    t.expect [
+      { text: 'hey', id: 1, collapsed: true, children: [
+        'like'
+      ]}
+      'i'
+      'you'
+      { clone: 1 }
+    ]

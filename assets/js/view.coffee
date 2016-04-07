@@ -740,14 +740,16 @@ window?.renderLine = renderLine
       offset = if options.includeEnd then 1 else 0
       @toggleProperty property, null, cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
 
-    newLineBelow: () ->
+    newLineBelow: (options = {}) ->
+      options.setCursor = 'first'
+
       children = @data.getChildren @cursor.row
       if (not @data.collapsed @cursor.row) and children.length > 0
-        @addBlocks @cursor.row, 0, [''], {setCursor: 'first'}
+        @addBlocks @cursor.row, 0, [''], options
       else
         parent = do @cursor.row.getParent
         index = @data.indexOf @cursor.row
-        @addBlocks parent, (index+1), [''], {setCursor: 'first'}
+        @addBlocks parent, (index+1), [''], options
 
     newLineAbove: () ->
       parent = do @cursor.row.getParent
@@ -755,16 +757,25 @@ window?.renderLine = renderLine
       @addBlocks parent, index, [''], {setCursor: 'first'}
 
     # behavior of "enter", splitting a line
+    # If enter is not at the end:
+    #     insert a new node before with the first half of the content
+    #     note that this will always preserve child-parent relationships
+    # If enter is at the end:
+    #     insert a new node after
+    #     if the node has children, this is the new first child
     newLineAtCursor: () ->
-      mutation = new mutations.DelChars @cursor.row, 0, @cursor.col
-      @do mutation
-      row = @cursor.row
+      if @cursor.col == @data.getLength @cursor.row
+        @newLineBelow {cursorOptions: {keepProperties: true}}
+      else
+        mutation = new mutations.DelChars @cursor.row, 0, @cursor.col
+        @do mutation
+        row = @cursor.row
 
-      do @newLineAbove
-      # cursor now is at inserted row, add the characters
-      @addCharsAfterCursor mutation.deletedChars
-      # restore cursor
-      @cursor.set row, 0, {keepProperties: true}
+        do @newLineAbove
+        # cursor now is at inserted row, add the characters
+        @addCharsAfterCursor mutation.deletedChars
+        # restore cursor
+        @cursor.set row, 0, {keepProperties: true}
 
     joinRows: (first, second, options = {}) ->
       for child in @data.getChildren second by -1
