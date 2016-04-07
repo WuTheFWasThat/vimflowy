@@ -2,17 +2,6 @@
 # Clones are double-counted. This is a known bug and will not be fixed.
 (() ->
 
-  pad = (val, length, padChar = '0') ->
-    val += ''
-    numPads = length - val.length
-    if (numPads > 0) then new Array(numPads + 1).join(padChar) + val else val
-
-  sum = (a) ->
-    total = 0
-    for x in a
-      total += x
-    total
-
   Plugins.register {
     name: "Time Tracking"
     author: "Zachary Vance"
@@ -78,47 +67,27 @@
     transformRowData: (id, keytype, transform) ->
       @setRowData id, keytype, (transform (@getRowData id, keytype))
 
-    DEFAULT_LOGGING = true
-    DEFAULT_DISPLAY = true
     isLogging: () ->
-      (@api.getData "isLogging") ? DEFAULT_LOGGING
-
-    shouldDisplayTime: () ->
-      (@api.getData "display") ? DEFAULT_DISPLAY
+      @api.getData "isLogging", true
 
     toggleLogging: () ->
-      @logger.info "Turning logging #{if (do @isLogging) then "off" else "on"}"
-      if do @isLogging
+      isLogging = do @isLogging
+      @logger.info "Turning logging #{if isLogging then "off" else "on"}"
+      if isLogging
         @onRowChange @api.cursor.row, null # Final close
       else
         @onRowChange null, @api.cursor.row # Initial setup
-      @api.setData "isLogging", not (do @isLogging)
+      @api.setData "isLogging", (not isLogging)
       do @api.view.render
+
+    shouldDisplayTime: () ->
+      @api.getData "display", true
 
     toggleDisplay: () ->
-      @logger.info "Turning display #{if (do @shouldDisplayTime) then "off" else "on"}"
-      @api.setData "display", not (do @shouldDisplayTime)
+      shouldDisplay = do @shouldDisplayTime
+      @logger.info "Turning display #{if shouldDisplay then "off" else "on"}"
+      @api.setData "display", (not shouldDisplay)
       do @api.view.render
-
-    _date: (timestamp) ->
-      "#{timestamp.getFullYear()}-#{timestamp.getMonth()}-#{timestamp.getDate()}"
-
-    dateOf: (timestamp) ->
-      day = new Date(timestamp)
-      day.setHours 0
-      day.setMinutes 0
-      day.setSeconds 0
-      day.setMilliseconds 0
-      day
-
-    # Return one timestamp on each day between the two timetamps, inclusive
-    daysBetween: (start, stop) ->
-      cur = @dateOf start
-      days = []
-      while cur < stop
-        days.push (new Date cur)
-        cur.setDay (cur.getDay() + 1)
-      days
 
     onRowChange: (from, to) ->
       @logger.debug "Switching from row #{from?.id} to row #{to?.id}"
@@ -133,10 +102,6 @@
 
     onRowPeriod: (period) ->
       period.time ?= period.stop - period.start
-      @transformRowData period.row, "timePeriods", (current) =>
-        current ?= []
-        current.push period
-        current
       @_addTimeToRow period.row, period.time, period.stop
       @_addTimeToAncestors period.row, period.time, period.stop
 
@@ -150,42 +115,14 @@
       # Could avoid lookups by knowing exact changes, if needed
       @_rebuildTreeTimes event.ancestorId
 
-    _combineDailyTimes: (dailyTimes...) ->
-      combined = {}
-      for date in  _.union.apply _, (_.map dailyTimes, _.keys)
-        combined[date] = 0
-        for dailyTime in dailyTimes
-          combined[date] += dailyTime[date] ? 0
-      combined
-
     _addTimeToRow: (row, time, day) ->
       @transformRowData row.id, "rowTotalTime", (current) ->
         (current ? 0) + time
-      @transformRowData row.id, "rowDailyTime", (current) =>
-        key = @_date day
-        current ?= {}
-        current[key] = (current[key] ? 0) + time
-        current
-
-    _rebuildRowTimes: (row) -> # Unused, but keep for data migration in future versions
-      totalTime = 0
-      dailyTime = {}
-      for period in @getRowData row, "timePeriods" ? []
-        totalTime += period.time
-        key = @_date day
-        dailyTime[key] = (dailyTime[key] ? 0) + period.time
-      @setRowData row.id, "rowTotalTime", totalTime
-      @setRowData row.id, "rowDailyTime", dailyTime
 
     _addTimeToAncestors: (row, time, day) ->
       for ancestorId in @api.view.data.allAncestors row.id, { inclusive: true }
         @transformRowData ancestorId, "treeTotalTime", (current) ->
           (current ? 0) + time
-        @transformRowData ancestorId, "treeDailyTime", (current) =>
-          key = @_date day
-          current ?= {}
-          current[key] = (current[key] ? 0) + time
-          current
 
     _rebuildTreeTimes: (id) ->
       children = @api.view.data._getChildren id
@@ -195,21 +132,13 @@
       rowTotalTime = @getRowData id, "rowTotalTime"
       deletedChildrenTotalTimes = _.map deletedChildren, (x) -> x['totalTime']
       totalTimes = _.compact [rowTotalTime].concat(childTotalTimes).concat(deletedChildrenTotalTimes)
-      totalTime = sum totalTimes
+      totalTime = totalTimes.reduce (a,b) -> (a+b)
       @setRowData id, "treeTotalTime", totalTime
-
-      childDailyTimes = _.map children, (child_id) => @getRowData child_id, "treeDailyTime"
-      rowDailyTime = @getRowData id, "rowDailyTime"
-      deletedChildrenDailyTimes = _.map deletedChildren, (x) -> x['totalTime']
-      dailyTimes = _.compact [rowDailyTime].concat(childDailyTimes).concat(deletedChildrenDailyTimes)
-      dailyTime = @_combineDailyTimes.apply @, dailyTimes
-      @setRowData id, "treeDailyTime", dailyTime
 
     onRowRemoved: (event) ->
       deletedChildren = (@getRowData event.parent_id, 'deletedChildren') ? {}
       deletedChildren[event.id] = {
         totalTime: (@getRowData event.id, "treeTotalTime") ? 0
-        dailyTime: (@getRowData event.id, "treeDailyTime") ? {}
       }
       @setRowData event.parent_id, 'deletedChildren', deletedChildren
       for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
@@ -223,15 +152,13 @@
         for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
           @_rebuildTreeTimes ancestor_id
 
-    rowTime: (row, range) ->
-      if range?
-        times = @getRowData row.id, "treeDailyTime"
-        time = 0
-        for date in @daysBetween range.start, range.stop
-          time += times[@_date date] ? 0
-        time
-      else
-        @getRowData row.id, "treeTotalTime"
+    rowTime: (row) ->
+      @getRowData row.id, "treeTotalTime"
+
+    pad = (val, length, padChar = '0') ->
+      val += ''
+      numPads = length - val.length
+      if (numPads > 0) then new Array(numPads + 1).join(padChar) + val else val
 
     printTime: (ms) ->
       seconds = Math.floor (ms /     1000 % 60)
