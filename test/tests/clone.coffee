@@ -610,3 +610,130 @@ describe "cloning", () ->
       ] }
       { clone: 2 }
     ]
+
+  it "can cycle between clones", () ->
+    t = new TestCase [
+      { text: 'blah', children: [
+        { text: 'clone', id: 2, children: [
+          'child'
+          'child'
+        ] }
+      ] }
+      'sibling'
+      { clone: 2 }
+      'sibling'
+    ]
+
+    t.sendKeys 'jx'
+    t.expect [
+      { text: 'blah', children: [
+        { text: 'lone', id: 2, children: [
+          'child'
+          'child'
+        ] }
+      ] }
+      'sibling'
+      { clone: 2 }
+      'sibling'
+    ]
+
+    t.sendKeys 'gckx'
+    t.expect [
+      { text: 'blah', children: [
+        { text: 'lone', id: 2, children: [
+          'child'
+          'child'
+        ] }
+      ] }
+      'ibling'
+      { clone: 2 }
+      'sibling'
+    ]
+
+    t.sendKeys 'jgckx'
+    t.expect [
+      { text: 'lah', children: [
+        { text: 'lone', id: 2, children: [
+          'child'
+          'child'
+        ] }
+      ] }
+      'ibling'
+      { clone: 2 }
+      'sibling'
+    ]
+
+    t.sendKeys 'jddjjx'
+    t.expect [
+      'lah'
+      'ibling'
+      { text: 'one', children: [
+        'child'
+        'child'
+      ] }
+      'sibling'
+    ]
+
+    t.sendKeys 'gcx'
+    t.expect [
+      'lah'
+      'ibling'
+      { text: 'ne', children: [
+        'child'
+        'child'
+      ] }
+      'sibling'
+    ]
+
+  it "can cycle between clones with stranded parents", () ->
+    t = new TestCase [
+      { text: 'blah', children: [
+        { text: 'clone', id: 2 }
+      ] }
+      { text: 'blah2', children: [
+        { clone: 2 }
+      ] }
+      'sibling'
+      { clone: 2 }
+      'sibling'
+    ]
+
+    t.sendKeys 'dd'
+    t.expect [
+      { text: 'blah2', children: [
+        { text: 'clone', id: 2 }
+      ] }
+      'sibling'
+      { clone: 2 }
+      'sibling'
+    ]
+
+    t.sendKeys 'jgckx'
+    t.expect [
+      { text: 'blah2', children: [
+        { text: 'clone', id: 2 }
+      ] }
+      'ibling'
+      { clone: 2 }
+      'sibling'
+    ]
+
+    t.sendKeys 'jgcjx'
+    t.expect [
+      { text: 'blah2', children: [
+        { text: 'clone', id: 2 }
+      ] }
+      'bling'
+      { clone: 2 }
+      'sibling'
+    ]
+
+    t.sendKeys 'kgckx'
+    t.expect [
+      { text: 'blah2', children: [
+        { text: 'clone', id: 2 }
+      ] }
+      'ling'
+      { clone: 2 }
+      'sibling'
+    ]

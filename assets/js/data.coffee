@@ -175,6 +175,19 @@ class Data extends EventEmitter
   getSiblings: (row) ->
     return @getChildren (do row.getParent)
 
+  nextClone: (row) ->
+    parents = @_getParents row.id
+    i = parents.indexOf row.parent.id
+    errors.assert i > -1
+    while true
+      i = (i + 1) % parents.length
+      new_parent = parents[i]
+      new_parent_row = @canonicalInstance new_parent
+      # this happens if the parent got detached
+      if new_parent_row != null
+        break
+    return Row.loadFrom new_parent_row, row.id
+
   indexOf: (child) ->
     children = @getSiblings child
     return _.findIndex children, (sib) ->
@@ -475,6 +488,10 @@ class Data extends EventEmitter
         return null
       if @collapsed cur
         answer = cur
+
+  isVisible: (row) ->
+    visibleAncestor = @youngestVisibleAncestor row
+    (visibleAncestor != null) and (row.is visibleAncestor)
 
   # returns whether an id is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child

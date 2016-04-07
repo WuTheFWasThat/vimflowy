@@ -152,6 +152,25 @@ if module?
     return (cursor, options) ->
       cursor.parent options
 
+  CMD_CLONE = keyDefinitions.registerCommand {
+    name: 'CLONE'
+    default_hotkeys:
+      normal_like: ['c']
+  }
+
+  keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
+    description: 'Go to next copy of this clone'
+    multirow: true
+  }, () ->
+    return (cursor, options) =>
+      if @view.mode != MODES.NORMAL
+        # doesn't work for visual_line mode due to rootToParent
+        return
+      newRow = @view.data.nextClone cursor.row
+      cursor.setRow newRow
+      if not @view.data.isVisible newRow
+        @view.rootToParent newRow
+
   ####################
   # ACTIONS
   ####################
@@ -299,11 +318,6 @@ if module?
     @view.yankBetween @view.cursor, cursor, {}
     do @keyStream.forget
 
-  CMD_CLONE = keyDefinitions.registerCommand {
-    name: 'CLONE'
-    default_hotkeys:
-      normal_like: ['c']
-  }
   keyDefinitions.registerAction [MODES.NORMAL], [CMD_YANK, CMD_CLONE], {
     description: 'Yank blocks as a clone'
   }, () ->
