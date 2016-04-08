@@ -60,7 +60,7 @@ class Menu
       'margin-right': '10px'
     )
 
-    searchRow = virtualDom.create virtualDom.h 'span', {}, (@view.virtualRenderLine @view.cursor.row)
+    searchRow = virtualDom.create virtualDom.h 'span', {}, (@view.virtualRenderLine @view.cursor.row, {cursorBetween: true, no_clicks: true})
     searchBox.append searchRow
 
     if @results.length == 0

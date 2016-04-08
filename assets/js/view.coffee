@@ -22,6 +22,11 @@ It also handles rendering of everything, including settings.
 Currently, the separation between the View and Data classes is not very good.  (see data.coffee)
 Ideally, view shouldn't do much more than handle cursors and rendering
 ###
+getCursorClass = (cursorBetween) ->
+  if cursorBetween
+    return 'theme-cursor-insert'
+  else
+    return 'theme-cursor'
 
 renderLine = (lineData, options = {}) ->
   options.cursors ?= {}
@@ -150,7 +155,7 @@ renderLine = (lineData, options = {}) ->
         classes.push property
 
     if spec.cursor
-      classes.push 'theme-cursor'
+      classes.push getCursorClass options.cursorBetween
     if spec.highlight
       classes.push 'theme-bg-highlight'
 
@@ -1045,6 +1050,8 @@ window?.renderLine = renderLine
         do @menu.render
         return
 
+      options.cursorBetween = (Modes.getMode @mode).metadata.hotkey_type == Modes.INSERT_MODE_TYPE
+
       t = Date.now()
       vtree = @virtualRender options
       patches = virtualDom.diff @vtree, vtree
@@ -1052,7 +1059,7 @@ window?.renderLine = renderLine
       @vtree = vtree
       Logger.logger.debug 'Rendering: ', !!options.handle_clicks, (Date.now()-t)
 
-      cursorDiv = $('.theme-cursor', @mainDiv)[0]
+      cursorDiv = $(".#{getCursorClass options.cursorBetween}", @mainDiv)[0]
       if cursorDiv
         @scrollIntoView cursorDiv
 
@@ -1170,7 +1177,6 @@ window?.renderLine = renderLine
       return childrenNodes
 
     virtualRenderLine: (row, options = {}) ->
-
       lineData = @data.getLine row
       cursors = {}
       highlights = {}
@@ -1192,6 +1198,7 @@ window?.renderLine = renderLine
       lineoptions = {
         cursors: cursors
         highlights: highlights
+        cursorBetween: options.cursorBetween
       }
 
       if options.handle_clicks
