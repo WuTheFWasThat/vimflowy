@@ -132,7 +132,7 @@
       rowTotalTime = @getRowData id, "rowTotalTime"
       deletedChildrenTotalTimes = _.map deletedChildren, (x) -> x['totalTime']
       totalTimes = _.compact [rowTotalTime].concat(childTotalTimes).concat(deletedChildrenTotalTimes)
-      totalTime = totalTimes.reduce (a,b) -> (a+b)
+      totalTime = totalTimes.reduce ((a,b) -> (a+b)), 0
       @setRowData id, "treeTotalTime", totalTime
 
     onRowRemoved: (event) ->
