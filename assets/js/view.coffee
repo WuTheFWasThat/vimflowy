@@ -1152,6 +1152,12 @@ window?.renderLine = renderLine
         elLine = virtualDom.h 'div', {
           id: rowDivID row.id
           className: 'node-text'
+          # if clicking outside of text, but on the row, move cursor to the end of the row
+          onclick:  ((row) =>
+            col = if options.cursorBetween then -1 else -2
+            @cursor.set row, col
+            do @render
+          ).bind(@, row)
         }, (@virtualRenderLine row, options)
         rowElements.push elLine
 
@@ -1203,10 +1209,13 @@ window?.renderLine = renderLine
 
       if options.handle_clicks
         if @mode == MODES.NORMAL or @mode == MODES.INSERT
-          lineoptions.charclick = (column) =>
+          lineoptions.charclick = (column, e) =>
             @cursor.set row, column
             # assume they might click again
             @render {handle_clicks: true}
+            # prevent overall row click
+            do e.stopPropagation
+            return false
       else if not options.no_clicks
         lineoptions.linemouseover = () =>
           @render {handle_clicks: true}
