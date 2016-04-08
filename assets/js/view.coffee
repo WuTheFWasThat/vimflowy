@@ -1063,6 +1063,12 @@ window?.renderLine = renderLine
       if cursorDiv
         @scrollIntoView cursorDiv
 
+      clearTimeout @cursorBlinkTimeout
+      $("#view").removeClass("animate-blink-cursor")
+      @cursorBlinkTimeout = setTimeout (() =>
+        $("#view").addClass("animate-blink-cursor")
+      ), 500
+
       return
 
     virtualRender: (options = {}) ->
