@@ -21,10 +21,15 @@
       @currentRow = null
       @onRowChange null, @api.cursor.row # Initial setup
       @api.view.addHook 'renderInfoElements', (@renderTime.bind @)
-      @api.view.data.on 'afterDescendantRemoved', (@onDescendantRemoved.bind @)
-      @api.view.data.on 'afterDescendantAdded', (@onDescendantAdded.bind @)
-      @api.view.data.on 'beforeRowRemoved', (@onRowRemoved.bind @)
-      @api.view.data.on 'afterRowAdded', (@onRowAdded.bind @)
+      @api.view.data.on 'afterMove', (info) =>
+        @_rebuildTreeTime info.id
+        @_rebuildTreeTime info.old_parent, true
+      @api.view.data.on 'afterAttach', (info) =>
+        @_rebuildTreeTime info.id
+        if info.old_detached_parent
+          @_rebuildTreeTime info.old_detached_parent, true
+      @api.view.data.on 'afterDetach', (info) =>
+        @_rebuildTreeTime info.id
 
       @rowChanges = []
       @api.view.on 'exit', () =>
@@ -151,37 +156,20 @@
     modifyTimeForId: (id, delta) ->
       @transformRowData id, "rowTotalTime", (current) ->
         (current ? 0) + delta
-      for ancestorId in @api.view.data.allAncestors id, { inclusive: true }
-        @transformRowData ancestorId, "treeTotalTime", (current) ->
-          (current ? 0) + delta
+      @_rebuildTreeTime id, true
 
-    onDescendantRemoved: (event) ->
-      @logger.debug "Descendant #{event.descendantId} removed from #{event.ancestorId}"
-      # Could avoid lookups by knowing exact changes, if needed
-      @_rebuildTreeTimes event.ancestorId
-
-    onDescendantAdded: (event) ->
-      @logger.debug "Descendant #{event.descendantId} added to #{event.ancestorId}"
-      # Could avoid lookups by knowing exact changes, if needed
-      @_rebuildTreeTimes event.ancestorId
-
-    _rebuildTreeTimes: (id) ->
+    _rebuildTotalTime: (id) ->
       children = @api.view.data._getChildren id
-      # TODO: also take into account lost children
+      detached_children = @api.view.data.store.getDetachedChildren id
 
-      childTotalTimes = _.map children, (child_id) => @getRowData child_id, "treeTotalTime", 1
-      rowTotalTime = @getRowData id, "rowTotalTime"
-      totalTimes = _.compact [rowTotalTime].concat(childTotalTimes)
-      totalTime = totalTimes.reduce ((a,b) -> (a+b)), 0
+      childTotalTimes = _.map children.concat(detached_children), (child_id) => @getRowData child_id, "treeTotalTime", 0
+      rowTime = @getRowData id, "rowTotalTime", 0
+      totalTime = childTotalTimes.reduce ((a,b) -> (a+b)), rowTime
       @setRowData id, "treeTotalTime", totalTime
 
-    onRowRemoved: (event) ->
-      for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
-        @_rebuildTreeTimes ancestor_id
-
-    onRowAdded: (event) ->
-      for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
-        @_rebuildTreeTimes ancestor_id
+    _rebuildTreeTime: (id, inclusive = false) ->
+      for ancestor_id in @api.view.data.allAncestors id, { inclusive: inclusive }
+        @_rebuildTotalTime ancestor_id
 
     rowTime: (row) ->
       @getRowData row.id, "treeTotalTime", 0

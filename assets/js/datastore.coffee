@@ -17,8 +17,10 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @prefix = "#{prefix}save"
 
       @_lineKey_ = (row) -> "#{@prefix}:#{row}:line"
-      @_parentKey_ = (row) -> "#{@prefix}:#{row}:parent"
+      @_parentsKey_ = (row) -> "#{@prefix}:#{row}:parent"
       @_childrenKey_ = (row) -> "#{@prefix}:#{row}:children"
+      @_detachedChildrenKey_ = (row) -> "#{@prefix}:#{row}:detached_children"
+      @_detachedParentKey_ = (row) -> "#{@prefix}:#{row}:detached_parent"
       @_collapsedKey_ = (row) -> "#{@prefix}:#{row}:collapsed"
 
       @_pluginDataKey_ = (plugin, key) -> "#{@prefix}:plugin:#{plugin}:data:#{key}"
@@ -47,17 +49,27 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
       @set (@_lineKey_ row), line
 
     getParents: (row) ->
-      parents = @get (@_parentKey_ row), []
+      parents = @get (@_parentsKey_ row), []
       if typeof parents == 'number'
         parents = [ parents ]
       parents
     setParents: (row, parents) ->
-      @set (@_parentKey_ row), parents
+      @set (@_parentsKey_ row), parents
 
     getChildren: (row) ->
       _.cloneDeep (@get (@_childrenKey_ row), [])
     setChildren: (row, children) ->
       @set (@_childrenKey_ row), children
+
+    getDetachedParent: (row) ->
+      @get (@_detachedParentKey_ row), null
+    setDetachedParent: (row, parent) ->
+      @set (@_detachedParentKey_ row), parent
+
+    getDetachedChildren: (row) ->
+      _.cloneDeep (@get (@_detachedChildrenKey_ row), [])
+    setDetachedChildren: (row, children) ->
+      @set (@_detachedChildrenKey_ row), children
 
     getCollapsed: (row) ->
       @get (@_collapsedKey_ row)

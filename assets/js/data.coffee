@@ -223,6 +223,7 @@ class Data extends EventEmitter
 
   # Return all ancestor ids, topologically sorted (root is *last*).
   # Excludes 'id' itself unless options.inclusive is specified
+  # NOTE: includes possibly detached nodes
   allAncestors: (id, options) ->
     options = _.defaults {}, options, { inclusive: false }
     visited = {}
@@ -236,18 +237,6 @@ class Data extends EventEmitter
           ancestors.push parent
           visit parent
     visit id
-    ancestors
-
-  # Return what would be all the ancestors of 'id', if 'excluded_parent_id'
-  # were removed as a parent of 'id'.
-  # Excludes 'id' itself unless options.inclusive is specified
-  allAncestorsWithoutParent: (id, excluded_parent_id, options) ->
-    options = _.defaults {}, options, { inclusive: false }
-    ancestors = []
-    if options.inclusive
-      ancestors.push id
-    for parent_id in _.without (@_getParents id), excluded_parent_id
-      ancestors = _.union ancestors, (@allAncestors parent_id, { inclusive: true })
     ancestors
 
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
@@ -275,6 +264,9 @@ class Data extends EventEmitter
     errors.assert (ci != -1)
     children.splice ci, 1
     @_setChildren parent_id, children
+
+    if children.length == 0
+      @data
 
     parents = @_getParents id
     pi = _.findIndex parents, (par) -> (par == parent_id)
@@ -312,70 +304,44 @@ class Data extends EventEmitter
     return info
 
   _detach: (id, parent_id) ->
-    original_ancestry = @allAncestors id, { inclusive: true }
-    new_ancestry = @allAncestorsWithoutParent id, parent_id, { inclusive: true }
-    removed_ancestry = _.difference original_ancestry, new_ancestry
     wasLast = (@_getParents id).length == 1
 
-    # Notify all ancestors that their list of descendants changed
-    for ancestorId in removed_ancestry
-      @emit "beforeDescendantRemoved", { ancestorId: ancestorId, descendantId: id }
-    if wasLast
-      @emit "beforeRowRemoved", { id: id, parent_id: parent_id }
-
+    @emit "beforeDetach", { id: id, parent_id: parent_id, last: wasLast }
     info = @_removeChild parent_id, id
-
-    # Notify all ancestors that their list of descendants changed
-    for ancestorId in removed_ancestry
-      @emit "afterDescendantRemoved", { ancestorId: ancestorId, descendantId: id }
     if wasLast
-      @emit "afterRowRemoved", { id: id, parent_id: parent_id }
+      @store.setDetachedParent id, parent_id
+      detached_children = @store.getDetachedChildren parent_id
+      detached_children.push id
+      @store.setDetachedChildren parent_id, detached_children
+    @emit "afterDetach", { id: id, parent_id: parent_id, last: wasLast }
     return info
 
   _attach: (child_id, parent_id, index = -1) ->
-    original_ancestry = @allAncestors child_id, { inclusive: true }
-    new_ancestry = _.union (@allAncestors child_id, { inclusive: true }), (@allAncestors parent_id, { inclusive: true })
-    added_ancestry = _.difference new_ancestry, original_ancestry
     isFirst = (@_getParents child_id).length == 0
-
-    # Notify all ancestors thaat their list of descendants changed
-    for ancestorId in added_ancestry
-      @emit "beforeDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
-    if isFirst
-      @emit "beforeRowAdded", { id: child_id, parent_id: parent_id }
-
+    @emit "beforeAttach", { id: child_id, parent_id: parent_id, first: isFirst}
     info = @_addChild parent_id, child_id, index
-
-    # Notify all ancestors thaat their list of descendants changed
-    for ancestorId in added_ancestry
-      @emit "afterDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
-    if isFirst
-      @emit "afterRowAdded", { id: child_id, parent_id: parent_id }
+    old_detached_parent = @store.getDetachedParent child_id
+    if old_detached_parent != null
+      errors.assert isFirst
+      @store.setDetachedParent child_id, null
+      detached_children = @store.getDetachedChildren old_detached_parent
+      ci = _.findIndex detached_children, (sib) -> (sib == child_id)
+      errors.assert (ci != -1)
+      detached_children.splice ci, 1
+      @store.setDetachedChildren old_detached_parent, detached_children
+    @emit "afterAttach", { id: child_id, parent_id: parent_id, first: isFirst, old_detached_parent: old_detached_parent}
     return info
 
   _move: (child_id, old_parent_id, new_parent_id, index = -1) ->
-    original_ancestry = @allAncestors child_id, { inclusive: true }
-    new_ancestry = _.union (@allAncestorsWithoutParent child_id, old_parent_id, { inclusive: true }), (@allAncestors new_parent_id, { inclusive: true })
-    added_ancestry = _.difference new_ancestry, original_ancestry
-    removed_ancestry = _.difference original_ancestry, new_ancestry
-
-    # Notify all ancestors thaat their list of descendants changed
-    for ancestorId in added_ancestry
-      @emit "beforeDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
-    for ancestorId in removed_ancestry
-      @emit "beforeDescendantRemoved", { ancestorId: ancestorId, descendantId: child_id }
+    @emit "beforeMove", { id: child_id, old_parent: old_parent_id, new_parent: new_parent_id }
 
     remove_info = @_removeChild old_parent_id, child_id
-
     if (old_parent_id == new_parent_id) and (index > remove_info.childIndex)
       index = index - 1
     add_info = @_addChild new_parent_id, child_id, index
 
-    # Notify all ancestors thaat their list of descendants changed
-    for ancestorId in added_ancestry
-      @emit "afterDescendantAdded", { ancestorId: ancestorId, descendantId: child_id }
-    for ancestorId in removed_ancestry
-      @emit "afterDescendantRemoved", { ancestorId: ancestorId, descendantId: child_id }
+    @emit "afterMove", { id: child_id, old_parent: old_parent_id, new_parent: new_parent_id }
+
     return {
       old: remove_info
       new: add_info
