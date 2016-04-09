@@ -23,3 +23,4 @@ And feel free to report more!
   - redo operator (.) redoes entire macros rather than the last sequence (easy to fix, but not desired IMO)
   - not implemented using registers
 
+- behavior of control+o is different

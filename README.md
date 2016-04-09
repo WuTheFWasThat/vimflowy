@@ -9,14 +9,6 @@ Try it out!
 
 (Video coming eventually...)
 
-## NOTES ##
-
-- The app is entirely local. The online version uses localStorage, so it should be used in only one browser.
-  If you're going to have a large document, use a browser with large localStorage limits
-- Currently, weird things happen when you use multiple tabs simultaneously
-- Tested mostly in Chrome and Firefox
-- There are [known inconsistencies with vim](vim_inconsistencies.md)
-
 ## FEATURES ##
 
 - Workflowy features
@@ -48,6 +40,14 @@ Try it out!
     - marks (not quite like vim's)
     - easy_motion for moving between bullets quickly
     - time-tracking
+
+## NOTES ##
+
+- The app is entirely local. The online version uses localStorage, so it should be used in only one browser.
+  If you're going to have a large document, use a browser with large localStorage limits
+- Currently, weird things happen when you use multiple tabs simultaneously
+- Tested mostly in Chrome and Firefox
+- There are [known inconsistencies with vim](vim_inconsistencies.md)
 
 ## CONTRIBUTE ##
 
