@@ -167,31 +167,21 @@
 
     _rebuildTreeTimes: (id) ->
       children = @api.view.data._getChildren id
-      deletedChildren = (@getRowData id, 'deletedChildren') ? {}
+      # TODO: also take into account lost children
 
-      childTotalTimes = _.map children, (child_id) => @getRowData child_id, "treeTotalTime", 0
+      childTotalTimes = _.map children, (child_id) => @getRowData child_id, "treeTotalTime", 1
       rowTotalTime = @getRowData id, "rowTotalTime"
-      deletedChildrenTotalTimes = _.map deletedChildren, (x) -> x['totalTime']
-      totalTimes = _.compact [rowTotalTime].concat(childTotalTimes).concat(deletedChildrenTotalTimes)
+      totalTimes = _.compact [rowTotalTime].concat(childTotalTimes)
       totalTime = totalTimes.reduce ((a,b) -> (a+b)), 0
       @setRowData id, "treeTotalTime", totalTime
 
     onRowRemoved: (event) ->
-      deletedChildren = (@getRowData event.parent_id, 'deletedChildren') ? {}
-      deletedChildren[event.id] = {
-        totalTime: (@getRowData event.id, "treeTotalTime", 0)
-      }
-      @setRowData event.parent_id, 'deletedChildren', deletedChildren
       for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
         @_rebuildTreeTimes ancestor_id
 
     onRowAdded: (event) ->
-      deletedChildren = (@getRowData event.parent_id, 'deletedChildren') ? {}
-      if event.id of deletedChildren
-        delete deletedChildren[event.id]
-        @setRowData event.parent_id, 'deletedChildren', deletedChildren
-        for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
-          @_rebuildTreeTimes ancestor_id
+      for ancestor_id in @api.view.data.allAncestors event.id, { inclusive: false }
+        @_rebuildTreeTimes ancestor_id
 
     rowTime: (row) ->
       @getRowData row.id, "treeTotalTime", 0
