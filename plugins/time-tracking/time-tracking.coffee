@@ -202,18 +202,22 @@
       if (numPads > 0) then new Array(numPads + 1).join(padChar) + val else val
 
     printTime: (ms) ->
+      sign = ""
+      if ms < 0
+        sign = "-"
+        ms = - ms
       seconds = Math.floor (ms /     1000 % 60)
       minutes = Math.floor (ms /    60000 % 60)
       hours   = Math.floor (ms /  3600000 % 60)
       days    = Math.floor (ms / 86400000)
       if days > 0
-        "#{days}d"
+        "#{sign}#{days}d"
       else if hours > 0
-        "#{hours}:#{pad(minutes, 2)}h"
+        "#{sign}#{hours}:#{pad(minutes, 2)}h"
       else if minutes > 0
-        "#{minutes}:#{pad(seconds, 2)}m"
+        "#{sign}#{minutes}:#{pad(seconds, 2)}m"
       else
-        "#{seconds}s"
+        "#{sign}#{seconds}s"
 
     renderTime: (elements, renderData) ->
       if do @shouldDisplayTime
