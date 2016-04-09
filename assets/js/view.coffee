@@ -113,7 +113,7 @@ renderLine = (lineData, options = {}) ->
   if options.charclick
     for x in line
       x.renderOptions.text = x.char
-      if not x.renderOptions.onclick
+      if not x.renderOptions.href
         x.renderOptions.onclick = options.charclick.bind @, x.column
       renderSpec.push x.renderOptions
       if x.break
