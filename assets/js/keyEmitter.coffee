@@ -1,3 +1,5 @@
+Logger = require './logger.coffee'
+
 ###
 KeyEmitter is an EventEmitter that emits keys
 A key corresponds to a keypress in the browser, including modifiers/special keys
@@ -134,4 +136,4 @@ class KeyEmitter extends EventEmitter
       # return false to stop propagation, if any handler handled the key
       return not _.some results
 
-window.KeyEmitter = KeyEmitter
+module.exports = KeyEmitter

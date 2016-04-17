@@ -1,8 +1,7 @@
 gulp = require 'gulp'
 fs = require 'fs'
-promisify = require 'es6-promisify'
 
-coffee = require 'gulp-coffee'
+browserify = require 'browserify'
 del = require 'del'
 express = require 'express'
 jade = require 'gulp-jade'
@@ -12,6 +11,8 @@ sourcemaps = require 'gulp-sourcemaps'
 util = require 'gulp-util'
 mocha = require 'gulp-mocha'
 toArray = require 'stream-to-array'
+source = require 'vinyl-source-stream'
+buffer = require 'vinyl-buffer'
 
 # handles errors of a stream by ending it
 handle = (stream) ->
@@ -30,70 +31,44 @@ plugin_coffee_glob = "#{plugins_folder}/**/*.coffee"
 plugin_js_glob = "#{plugins_folder}/**/*.js"
 plugin_css_glob = "#{plugins_folder}/**/*.css"
 plugin_sass_glob = "#{plugins_folder}/**/*.sass"
-plugin_js_dst_path = "js/plugins"
-plugin_js_dst = "#{out_folder}/#{plugin_js_dst_path}"
 plugin_css_dst_path = "css/plugins"
 plugin_css_dst = "#{out_folder}/#{plugin_css_dst_path}"
 
 gulp.task 'clean', (cb) ->
   del ["#{out_folder}"], cb
 
-gulp.task 'coffee', ->
-  gulp.src coffee_glob
-    .pipe sourcemaps.init()
-    .pipe handle coffee()
-    .pipe sourcemaps.write()
-    .pipe gulp.dest "#{out_folder}"
+gulp.task 'js', ->
+  browserify({
+    entries: 'assets/js/index.coffee'
+    transform: ['coffeeify', 'require-globify']
+    debug: true
+  }).bundle()
+    .pipe source 'index.js'
+    .pipe rename 'bundle.js'
+    .pipe gulp.dest "#{out_folder}/js"
+    .pipe buffer()
 
-gulp.task 'plugins_coffee', ->
-  gulp.src plugin_coffee_glob, { base: plugins_folder }
-    .pipe sourcemaps.init()
-    .pipe handle coffee()
-    .pipe sourcemaps.write()
-    .pipe gulp.dest plugin_js_dst
+gulp.task 'html', () ->
+  plugin_css_files_stream = gulp.src [
+    plugin_sass_glob, plugin_css_glob
+  ], { base: plugins_folder }
 
-gulp.task 'plugins_js', ->
-  gulp.src plugin_js_glob, { base: plugins_folder }
-    .pipe gulp.dest plugin_js_dst
+  (toArray plugin_css_files_stream).then (plugin_css_files) ->
+    plugin_css_filenames = plugin_css_files.map (x) ->
+      x.relative.replace /\.sass$/, '.css'
 
-gulp.task 'jade', () ->
-    (promisify fs.readdir)("assets/js/definitions").then (definitions_js_files) ->
-      definitions_js_filenames = definitions_js_files
-        .filter (x) -> (x.match /\.coffee$/) or (x.match /\.js$/)
-        .map (x) -> x.replace /\.coffee$/, '.js'
+    stream = gulp.src 'assets/html/index.jade'
+      .pipe handle jade({
+        locals: {
+          plugin_css_path: plugin_css_dst_path
+          plugin_css_files: plugin_css_filenames
+        }
+      })
+      .pipe gulp.dest "#{out_folder}/"
+    new Promise (resolve, reject) ->
+      stream.on 'finish', resolve
 
-      plugin_js_files_stream = gulp.src [
-        plugin_coffee_glob, plugin_js_glob
-      ], { base: plugins_folder }
-
-      plugin_css_files_stream = gulp.src [
-        plugin_sass_glob, plugin_css_glob
-      ], { base: plugins_folder }
-
-      (toArray plugin_js_files_stream).then (plugin_js_files) ->
-        plugin_js_filenames = plugin_js_files.map (x) ->
-          x.relative.replace /\.coffee$/, '.js'
-
-        (toArray plugin_css_files_stream).then (plugin_css_files) ->
-          plugin_css_filenames = plugin_css_files.map (x) ->
-            x.relative.replace /\.sass$/, '.css'
-
-          stream = gulp.src 'assets/html/index.jade'
-            .pipe handle jade({
-              locals: {
-                definitions_js_path: "js/definitions"
-                definitions_js_files: definitions_js_filenames
-                plugin_js_path: plugin_js_dst_path
-                plugin_js_files: plugin_js_filenames
-                plugin_css_path: plugin_css_dst_path
-                plugin_css_files: plugin_css_filenames
-              }
-            })
-            .pipe gulp.dest "#{out_folder}/"
-          new Promise (resolve, reject) ->
-            stream.on 'finish', resolve
-
-gulp.task 'sass', ->
+gulp.task 'css', ->
   gulp.src sass_glob, { base: 'assets/css' }
     .pipe sourcemaps.init()
     .pipe sass().on 'error', sass.logError
@@ -125,17 +100,13 @@ gulp.task 'vendor', ->
     .pipe gulp.dest "#{out_folder}/"
 
 gulp.task 'plugins', [
-  'plugins_coffee',
-  'plugins_js',
   'plugins_sass',
   'plugins_css',
 ]
 
 gulp.task 'assets', [
   'plugins',
-  'coffee',
-  'sass',
-  'jade',
+  'js', 'css', 'html',
   'vendor',
   'images',
 ]
@@ -146,18 +117,18 @@ gulp.task 'test', () ->
 
 # Rerun tasks when files changes
 gulp.task 'watch', ->
-  gulp.watch 'assets/html/**/*', ['jade']
+  gulp.watch 'assets/html/**/*', ['html']
   gulp.watch 'vendor/**/*', ['vendor']
-  gulp.watch sass_glob, ['sass']
-  gulp.watch coffee_glob, ['coffee', 'test']
+  gulp.watch sass_glob, ['css']
+  gulp.watch coffee_glob, ['js', 'test']
   gulp.watch test_glob, ['test']
 
-  gulp.watch plugin_coffee_glob, ['plugins_coffee', 'test']
-  gulp.watch plugin_js_glob, ['plugins_js', 'test']
+  gulp.watch plugin_coffee_glob, ['js', 'test']
+  gulp.watch plugin_js_glob, ['js', 'test']
   gulp.watch plugin_sass_glob, ['plugins_sass']
   gulp.watch plugin_css_glob, ['plugins_css']
   # only needs to happen when set of files change
-  gulp.watch plugins_folder, ['jade']
+  gulp.watch plugins_folder, ['html']
 
 
 # serves an express app

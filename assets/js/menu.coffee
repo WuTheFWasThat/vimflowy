@@ -1,7 +1,6 @@
-if module?
-  global.View = require('./view.coffee')
-  global.Data = require('./data.coffee')
-  global.dataStore = require('./datastore.coffee')
+View = require './view.coffee'
+Data = require './data.coffee'
+dataStore = require './datastore.coffee'
 
 ###
 Represents the menu shown in menu mode.
@@ -104,5 +103,4 @@ class Menu
     do result.fn
 
 # exports
-module?.exports = Menu
-window?.Menu = Menu
+module.exports = Menu

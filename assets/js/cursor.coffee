@@ -1,7 +1,6 @@
-if module?
-  global.utils = require('./utils.coffee')
-  global.constants = require('./constants.coffee')
-  global.EventEmitter = require('./eventEmitter.coffee')
+utils = require './utils.coffee'
+constants = require './constants.coffee'
+EventEmitter = require './eventEmitter.coffee'
 
 ###
 Cursor represents a cursor with a view
@@ -328,5 +327,4 @@ class Cursor extends EventEmitter
       @setProperty property, obj[property]
 
 # exports
-module?.exports = Cursor
-window?.Cursor = Cursor
+module.exports = Cursor

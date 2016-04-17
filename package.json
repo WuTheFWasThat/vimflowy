@@ -27,18 +27,21 @@
   },
   "devDependencies": {
     "blanket": "latest",
+    "browserify": "latest",
+    "coffeeify": "latest",
     "mocha": "latest",
     "mocha-multi": "latest",
     "del": "latest",
-    "es6-promisify": "latest",
     "gulp": "latest",
-    "gulp-coffee": "latest",
     "gulp-jade": "latest",
     "gulp-mocha": "latest",
     "gulp-rename": "latest",
     "gulp-sass": "latest",
     "gulp-sourcemaps": "latest",
     "gulp-util": "latest",
-    "stream-to-array": "latest"
+    "require-globify": "latest",
+    "stream-to-array": "latest",
+    "vinyl-buffer": "latest",
+    "vinyl-source-stream": "latest"
   }
 }

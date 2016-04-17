@@ -7,6 +7,28 @@ initialize the main page
 - initialize objects (view, settings, etc.) with relevant divs
 ###
 
+constants = require './constants.coffee'
+errors = require './errors.coffee'
+utils = require './utils.coffee'
+Logger = require './logger.coffee'
+
+Modes = require './modes.coffee'
+KeyEmitter = require './keyEmitter.coffee'
+KeyHandler = require './keyHandler.coffee'
+dataStore = require './datastore.coffee'
+Data = require './data.coffee'
+Settings = require './settings.coffee'
+Plugins = require './plugins.coffee'
+View = require './view.coffee'
+
+keyDefinitions = require './keyDefinitions.coffee'
+# load all definitions
+require './definitions/*.coffee', {mode: 'expand'}
+# load all plugins
+require '../../plugins/**/*.js', {mode: 'expand'}
+require '../../plugins/**/*.coffee', {mode: 'expand'}
+KeyBindings = require './keyBindings.coffee'
+
 view = null
 create_view = (data, to_load) ->
 

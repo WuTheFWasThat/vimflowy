@@ -5,19 +5,19 @@ _ = require 'lodash'
 fs = require 'fs'
 path = require 'path'
 
-dataStore = require '../assets/js/datastore.coffee'
-Data = require '../assets/js/data.coffee'
-View = require '../assets/js/view.coffee'
+dataStore = require '../assets/js/datastore'
+Data = require '../assets/js/data'
+View = require '../assets/js/view'
 for file in fs.readdirSync path.resolve __dirname, '../assets/js/definitions'
   if (file.match /.*\.js$/) or (file.match /.*\.coffee$/)
     require path.join '../assets/js/definitions', file
-KeyDefinitions = require '../assets/js/keyDefinitions.coffee'
-KeyBindings = require '../assets/js/keyBindings.coffee'
-KeyHandler = require '../assets/js/keyHandler.coffee'
-Register = require '../assets/js/register.coffee'
-Settings = require '../assets/js/settings.coffee'
-Logger = require '../assets/js/logger.coffee'
-Plugins = require '../assets/js/plugins.coffee'
+KeyDefinitions = require '../assets/js/keyDefinitions'
+KeyBindings = require '../assets/js/keyBindings'
+KeyHandler = require '../assets/js/keyHandler'
+Register = require '../assets/js/register'
+Settings = require '../assets/js/settings'
+Logger = require '../assets/js/logger'
+Plugins = require '../assets/js/plugins'
 
 Logger.logger.setStream Logger.STREAM.QUEUE
 afterEach 'empty the queue', () ->

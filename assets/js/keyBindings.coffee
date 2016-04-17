@@ -1,11 +1,10 @@
 # imports
-if module?
-  global._ = require('lodash')
+_ = require 'lodash'
 
-  global.utils = require('./utils.coffee')
-  global.Modes = require('./modes.coffee')
-  global.errors = require('./errors.coffee')
-  global.Logger = require('./logger.coffee')
+utils = require './utils.coffee'
+Modes = require './modes.coffee'
+errors = require './errors.coffee'
+Logger = require './logger.coffee'
 
 ###
 Terminology:
@@ -36,175 +35,172 @@ It also internally maintains
 
 ###
 
-((exports) ->
-  MODES = Modes.modes
-  NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
-  INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
-  MODE_TYPES = Modes.types
+MODES = Modes.modes
+NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
+INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
+MODE_TYPES = Modes.types
 
-  class KeyBindings
-    # takes key definitions and keyMappings, and combines them to key bindings
-    getBindings = (definitions, keyMap) ->
-      bindings = {}
-      for name, v of definitions
-        if name == 'MOTION'
-          keys = ['MOTION']
-        else if (name of keyMap)
-          keys = keyMap[name]
+class KeyBindings
+  # takes key definitions and keyMappings, and combines them to key bindings
+  getBindings = (definitions, keyMap) ->
+    bindings = {}
+    for name, v of definitions
+      if name == 'MOTION'
+        keys = ['MOTION']
+      else if (name of keyMap)
+        keys = keyMap[name]
+      else
+        continue
+
+      v = _.cloneDeep v
+      v.name = name
+
+      if typeof v.definition == 'object'
+        [err, sub_bindings] = getBindings v.definition, keyMap
+        if err
+          return [err, null]
         else
-          continue
+          v.definition= sub_bindings
 
-        v = _.cloneDeep v
-        v.name = name
+      for key in keys
+        if key of bindings
+          return ["Duplicate binding on key #{key}", bindings]
+        bindings[key] = v
+    return [null, bindings]
 
-        if typeof v.definition == 'object'
-          [err, sub_bindings] = getBindings v.definition, keyMap
-          if err
-            return [err, null]
+  constructor: (@definitions, @settings, options = {}) ->
+    # a mapping from commands to keys
+    @_keyMaps = null
+    # a recursive mapping from keys to commands
+    @bindings = null
+
+    @modebindingsDiv = options.modebindingsDiv
+    do @init
+
+  init: () ->
+    hotkey_settings = @settings.getSetting 'hotkeys'
+    err = @apply_hotkey_settings hotkey_settings
+
+    if err
+      Logger.logger.error "Failed to apply saved hotkeys #{hotkey_settings}"
+      Logger.logger.error err
+      do @apply_default_hotkey_settings
+
+  render_hotkeys: () ->
+    if $? # TODO: pass this in as an argument
+      $('#hotkey-edit-normal').empty().append(
+        $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
+      ).append(
+        @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep @definitions.actions[mode] for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
+      )
+
+      $('#hotkey-edit-insert').empty().append(
+        $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
+      ).append(
+        @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep @definitions.actions[mode] for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
+      )
+
+  # tries to apply new hotkey settings, returning an error if there was one
+  apply_hotkey_settings: (hotkey_settings) ->
+    # merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
+    hotkeys = {}
+    for mode_type of MODE_TYPES
+      hotkeys[mode_type] = _.extend({}, @definitions.defaultHotkeys[mode_type], hotkey_settings[mode_type] or {})
+
+    # for each mode, get key mapping for that particular mode - a mapping from command to set of keys
+    keyMaps = {}
+    for mode_type, mode_type_obj of MODE_TYPES
+      for mode in mode_type_obj.modes
+        modeKeyMap = {}
+        for command in @definitions.commands_by_mode[mode]
+          modeKeyMap[command] = hotkeys[mode_type][command].slice()
+
+        if mode == MODES.SEARCH or mode == MODES.MARK
+          motions = Object.keys @definitions.WITHIN_ROW_MOTIONS
+        else
+          motions = Object.keys @definitions.ALL_MOTIONS
+        for command in motions
+          modeKeyMap[command] = hotkeys[mode_type][command].slice()
+
+        keyMaps[mode] = modeKeyMap
+
+    bindings = {}
+    for mode_name, mode of MODES
+      [err, mode_bindings] = getBindings @definitions.actions[mode], keyMaps[mode]
+      if err then return "Error getting bindings for #{mode_name}: #{err}"
+      bindings[mode] = mode_bindings
+
+    motion_bindings = {}
+    for mode_name, mode of MODES
+      [err, mode_bindings] = getBindings @definitions.motions, keyMaps[mode]
+      if err then return "Error getting motion bindings for #{mode_name}: #{err}"
+      motion_bindings[mode] = mode_bindings
+
+    @hotkeys = hotkeys
+    @bindings = bindings
+    @motion_bindings = motion_bindings
+    @_keyMaps = keyMaps
+
+    do @render_hotkeys
+    return null
+
+  save_settings: (hotkey_settings) ->
+    @settings.setSetting 'hotkeys', hotkey_settings
+
+  # apply default hotkeys
+  apply_default_hotkey_settings: () ->
+      err = @apply_hotkey_settings {}
+      errors.assert_equals err, null, "Failed to apply default hotkeys"
+      @save_settings {}
+
+  # build table to visualize hotkeys
+  buildTable: (keyMap, actions, helpMenu) ->
+    buildTableContents = (bindings, onto, recursed=false) ->
+      for k,v of bindings
+        if k == 'MOTION'
+          if recursed
+            keys = ['<MOTION>']
           else
-            v.definition= sub_bindings
-
-        for key in keys
-          if key of bindings
-            return ["Duplicate binding on key #{key}", bindings]
-          bindings[key] = v
-      return [null, bindings]
-
-    constructor: (@definitions, @settings, options = {}) ->
-      # a mapping from commands to keys
-      @_keyMaps = null
-      # a recursive mapping from keys to commands
-      @bindings = null
-
-      @modebindingsDiv = options.modebindingsDiv
-      do @init
-
-    init: () ->
-      hotkey_settings = @settings.getSetting 'hotkeys'
-      err = @apply_hotkey_settings hotkey_settings
-
-      if err
-        Logger.logger.error "Failed to apply saved hotkeys #{hotkey_settings}"
-        Logger.logger.error err
-        do @apply_default_hotkey_settings
-
-    render_hotkeys: () ->
-      if $? # TODO: pass this in as an argument
-        $('#hotkey-edit-normal').empty().append(
-          $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
-        ).append(
-          @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep @definitions.actions[mode] for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
-        )
-
-        $('#hotkey-edit-insert').empty().append(
-          $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
-        ).append(
-          @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep @definitions.actions[mode] for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
-        )
-
-    # tries to apply new hotkey settings, returning an error if there was one
-    apply_hotkey_settings: (hotkey_settings) ->
-      # merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
-      hotkeys = {}
-      for mode_type of MODE_TYPES
-        hotkeys[mode_type] = _.extend({}, @definitions.defaultHotkeys[mode_type], hotkey_settings[mode_type] or {})
-
-      # for each mode, get key mapping for that particular mode - a mapping from command to set of keys
-      keyMaps = {}
-      for mode_type, mode_type_obj of MODE_TYPES
-        for mode in mode_type_obj.modes
-          modeKeyMap = {}
-          for command in @definitions.commands_by_mode[mode]
-            modeKeyMap[command] = hotkeys[mode_type][command].slice()
-
-          if mode == MODES.SEARCH or mode == MODES.MARK
-            motions = Object.keys @definitions.WITHIN_ROW_MOTIONS
-          else
-            motions = Object.keys @definitions.ALL_MOTIONS
-          for command in motions
-            modeKeyMap[command] = hotkeys[mode_type][command].slice()
-
-          keyMaps[mode] = modeKeyMap
-
-      bindings = {}
-      for mode_name, mode of MODES
-        [err, mode_bindings] = getBindings @definitions.actions[mode], keyMaps[mode]
-        if err then return "Error getting bindings for #{mode_name}: #{err}"
-        bindings[mode] = mode_bindings
-
-      motion_bindings = {}
-      for mode_name, mode of MODES
-        [err, mode_bindings] = getBindings @definitions.motions, keyMaps[mode]
-        if err then return "Error getting motion bindings for #{mode_name}: #{err}"
-        motion_bindings[mode] = mode_bindings
-
-      @hotkeys = hotkeys
-      @bindings = bindings
-      @motion_bindings = motion_bindings
-      @_keyMaps = keyMaps
-
-      do @render_hotkeys
-      return null
-
-    save_settings: (hotkey_settings) ->
-      @settings.setSetting 'hotkeys', hotkey_settings
-
-    # apply default hotkeys
-    apply_default_hotkey_settings: () ->
-        err = @apply_hotkey_settings {}
-        errors.assert_equals err, null, "Failed to apply default hotkeys"
-        @save_settings {}
-
-    # build table to visualize hotkeys
-    buildTable: (keyMap, actions, helpMenu) ->
-      buildTableContents = (bindings, onto, recursed=false) ->
-        for k,v of bindings
-          if k == 'MOTION'
-            if recursed
-              keys = ['<MOTION>']
-            else
-              continue
-          else
-            keys = keyMap[k]
-            if not keys
-              continue
-
-          if keys.length == 0 and helpMenu
+            continue
+        else
+          keys = keyMap[k]
+          if not keys
             continue
 
-          row = $('<tr>')
+        if keys.length == 0 and helpMenu
+          continue
 
-          # row.append $('<td>').text keys[0]
-          row.append $('<td>').text keys.join(' OR ')
+        row = $('<tr>')
 
-          display_cell = $('<td>').css('width', '100%').html v.description
-          if typeof v.definition == 'object'
-            buildTableContents v.definition, display_cell, true
-          row.append display_cell
+        # row.append $('<td>').text keys[0]
+        row.append $('<td>').text keys.join(' OR ')
 
-          onto.append row
+        display_cell = $('<td>').css('width', '100%').html v.description
+        if typeof v.definition == 'object'
+          buildTableContents v.definition, display_cell, true
+        row.append display_cell
 
-      tables = $('<div>')
+        onto.append row
 
-      for [label, definitions] in [['Actions', actions], ['Motions', @definitions.motions]]
-        tables.append($('<h5>').text(label).css('margin', '5px 10px'))
-        table = $('<table>').addClass('keybindings-table theme-bg-secondary')
-        buildTableContents definitions, table
-        tables.append(table)
+    tables = $('<div>')
 
-      return tables
+    for [label, definitions] in [['Actions', actions], ['Motions', @definitions.motions]]
+      tables.append($('<h5>').text(label).css('margin', '5px 10px'))
+      table = $('<table>').addClass('keybindings-table theme-bg-secondary')
+      buildTableContents definitions, table
+      tables.append(table)
 
-    renderModeTable: (mode) ->
-      if not @modebindingsDiv
-        return
-      if not (@settings.getSetting 'showKeyBindings')
-        return
+    return tables
 
-      table = @buildTable @_keyMaps[mode], @definitions.actions[mode], true
-      @modebindingsDiv.empty().append(table)
+  renderModeTable: (mode) ->
+    if not @modebindingsDiv
+      return
+    if not (@settings.getSetting 'showKeyBindings')
+      return
 
-    # TODO getBindings: (mode) -> return @bindings[mode]
+    table = @buildTable @_keyMaps[mode], @definitions.actions[mode], true
+    @modebindingsDiv.empty().append(table)
 
-  module?.exports = KeyBindings
-  window?.KeyBindings = KeyBindings
-)()
+  # TODO getBindings: (mode) -> return @bindings[mode]
+
+module.exports = KeyBindings

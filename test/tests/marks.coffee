@@ -1,5 +1,12 @@
-TestCase = require '../testcase.coffee'
-require '../../plugins/marks/marks.coffee'
+TestCase = require '../testcase'
+Marks = require '../../plugins/marks/marks'
+Plugins = require '../../assets/js/plugins'
+
+# Testing
+TestCase.prototype.expectMarks = (expected) ->
+  marksApi = Plugins.plugins[Marks.pluginName].value
+  @_expectDeepEqual (do marksApi.listMarks), expected, "Wrong marks"
+  return @
 
 describe "marks", () ->
   it "works in basic cases", () ->

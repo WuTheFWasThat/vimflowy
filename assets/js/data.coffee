@@ -1,11 +1,10 @@
 # imports
-if module?
-  global._ = require('lodash')
-  global.utils = require('./utils.coffee')
-  global.errors = require('./errors.coffee')
-  global.constants = require('./constants.coffee')
-  global.Logger = require('./logger.coffee')
-  global.EventEmitter = require('./eventEmitter.coffee')
+_ = require 'lodash'
+utils = require './utils.coffee'
+errors = require './errors.coffee'
+constants = require './constants.coffee'
+Logger = require './logger.coffee'
+EventEmitter = require './eventEmitter.coffee'
 
 class Row
   constructor: (@parent, @id) ->
@@ -593,7 +592,6 @@ class Data extends EventEmitter
       @loadTo serialized_row, @root, -1, id_mapping, true
 
 # exports
-module?.exports = Data
-window?.Data = Data
-# hacky, used only for rendering...
+module.exports = Data
+# TODO fix: hacky, used only for rendering...
 window?.Row = Row
