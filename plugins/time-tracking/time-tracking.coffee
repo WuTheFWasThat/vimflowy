@@ -186,14 +186,11 @@
         ms = - ms
       seconds = Math.floor (ms /     1000 % 60)
       minutes = Math.floor (ms /    60000 % 60)
-      hours   = Math.floor (ms /  3600000 % 60)
-      days    = Math.floor (ms / 86400000)
-      if days > 0
-        "#{sign}#{days}d"
-      else if hours > 0
-        "#{sign}#{hours}:#{pad(minutes, 2)}h"
+      hours   = Math.floor (ms /  3600000)
+      if hours > 0
+        "#{sign}#{hours}h:#{pad(minutes, 2)}m"
       else if minutes > 0
-        "#{sign}#{minutes}:#{pad(seconds, 2)}m"
+        "#{sign}#{minutes}m:#{pad(seconds, 2)}s"
       else
         "#{sign}#{seconds}s"
 
