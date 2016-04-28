@@ -5,8 +5,8 @@ _ = require 'lodash'
 fs = require 'fs'
 path = require 'path'
 
-dataStore = require '../assets/js/datastore'
-Data = require '../assets/js/data'
+DataStore = require '../assets/js/datastore'
+Document = require '../assets/js/document'
 View = require '../assets/js/view'
 for file in fs.readdirSync path.resolve __dirname, '../assets/js/definitions'
   if (file.match /.*\.js$/) or (file.match /.*\.coffee$/)
@@ -25,15 +25,15 @@ afterEach 'empty the queue', () ->
 
 class TestCase
   constructor: (serialized = ['']) ->
-    @store = new dataStore.InMemory
-    @data = new Data @store
+    @store = new DataStore.InMemory
+    @document = new Document @store
 
     @settings =  new Settings @store
 
     # will have default bindings
     keyBindings = new KeyBindings (do KeyDefinitions.clone), @settings
 
-    @view = new View @data, {bindings: keyBindings}
+    @view = new View @document, {bindings: keyBindings}
     @view.render = -> return
 
     @keyhandler = new KeyHandler @view, keyBindings
@@ -45,7 +45,7 @@ class TestCase
 
     # NOTE: this is *after* resolveView because of plugins with state
     # e.g. marks needs the database to have the marks loaded
-    @data.load serialized
+    @document.load serialized
     do @view.reset_history
     do @view.reset_jump_history
 
@@ -84,12 +84,12 @@ class TestCase
     @view.importContent content, mimetype
 
   expect: (expected) ->
-    serialized = @data.serialize @data.root, {pretty: true}
+    serialized = @document.serialize @document.root, {pretty: true}
     @_expectDeepEqual serialized.children, expected, "Unexpected serialized content"
     return @
 
   expectViewRoot: (expected) ->
-    @_expectEqual @data.viewRoot.id, expected, "Unexpected view root"
+    @_expectEqual @document.viewRoot.id, expected, "Unexpected view root"
     return @
 
   expectCursor: (row, col) ->

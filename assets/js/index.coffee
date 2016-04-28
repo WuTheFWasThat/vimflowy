@@ -3,7 +3,7 @@ initialize the main page
 - handle button clicks (import/export/hotkey stuff)
 - handle clipboard paste
 - handle errors
-- load data from localStorage or chrome storage, or just use in-memory datastructures
+- load document from localStorage/chrome storage (fall back to plain in-memory datastructures)
 - initialize objects (view, settings, etc.) with relevant divs
 ###
 
@@ -15,8 +15,8 @@ Logger = require './logger.coffee'
 Modes = require './modes.coffee'
 KeyEmitter = require './keyEmitter.coffee'
 KeyHandler = require './keyHandler.coffee'
-dataStore = require './datastore.coffee'
-Data = require './data.coffee'
+DataStore = require './datastore.coffee'
+Document = require './document.coffee'
 Settings = require './settings.coffee'
 Plugins = require './plugins.coffee'
 View = require './view.coffee'
@@ -30,14 +30,14 @@ require '../../plugins/**/*.coffee', {mode: 'expand'}
 KeyBindings = require './keyBindings.coffee'
 
 view = null
-create_view = (data, to_load) ->
+create_view = (document, to_load) ->
 
-  settings = new Settings data.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
+  settings = new Settings document.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
   do settings.loadRenderSettings
 
   key_bindings = new KeyBindings keyDefinitions, settings, {modebindingsDiv: $('#keybindings')}
 
-  view = new View data, {
+  view = new View document, {
     bindings: key_bindings
     settings: settings
     mainDiv: $('#view'),
@@ -51,7 +51,7 @@ create_view = (data, to_load) ->
 
   Plugins.resolveView view
   if to_load != null
-    data.load to_load
+    document.load to_load
     # otherwise, you can undo initial marks, for example
     do view.reset_history
     do view.reset_jump_history
@@ -182,17 +182,17 @@ if chrome?.storage?.sync
   Logger.logger.info 'using chrome storage'
 
   # TODO
-  # datastore = new dataStore.ChromeStorageLazy
+  # datastore = new DataStore.ChromeStorageLazy
 
-  datastore = new dataStore.InMemory
-  data = new Data datastore
+  datastore = new DataStore.InMemory
+  document = new Document datastore
   chrome.storage.sync.get 'save', (results) ->
-    create_view data, (results.save or constants.default_data)
+    create_view document, (results.save or constants.default_data)
 
     # save every 5 seconds
     setInterval (() ->
       chrome.storage.sync.set {
-        'save': data.serialize()
+        'save': document.serialize()
       }, () ->
         # TODO have whether saved visualized
         Logger.logger.info 'Saved'
@@ -200,19 +200,19 @@ if chrome?.storage?.sync
 
 else if localStorage?
   docname = window.location.pathname.split('/')[1]
-  datastore = new dataStore.LocalStorageLazy docname
-  data = new Data datastore
+  datastore = new DataStore.LocalStorageLazy docname
+  document = new Document datastore
 
   to_load = null
   if (do datastore.getLastSave) == 0
     to_load = constants.default_data
 
-  create_view data, to_load
+  create_view document, to_load
 else
   alert('You need local storage support for data to be persisted!')
-  datastore = new dataStore.InMemory
-  data = new Data datastore
-  create_view data, constants.default_data
+  datastore = new DataStore.InMemory
+  document = new Document datastore
+  create_view document, constants.default_data
 
 window.onerror = (msg, url, line, col, err) ->
     Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"

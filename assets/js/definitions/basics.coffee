@@ -164,9 +164,9 @@ keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
     if @view.mode != MODES.NORMAL
       # doesn't work for visual_line mode due to rootToParent
       return
-    newRow = @view.data.nextClone cursor.row
+    newRow = @view.document.nextClone cursor.row
     cursor.setRow newRow
-    if not @view.data.isVisible newRow
+    if not @view.document.isVisible newRow
       @view.rootToParent newRow
 
 ####################

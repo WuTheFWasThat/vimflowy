@@ -1,6 +1,6 @@
 View = require './view.coffee'
-Data = require './data.coffee'
-dataStore = require './datastore.coffee'
+Document = require './document.coffee'
+DataStore = require './datastore.coffee'
 
 ###
 Represents the menu shown in menu mode.
@@ -13,10 +13,10 @@ class Menu
     @div = div
     @fn = fn
 
-    data = new Data (new dataStore.InMemory)
+    document = new Document (new DataStore.InMemory)
 
     # a bit of a overkill-y hack, use an entire View object internally
-    @view = new View data
+    @view = new View document
     @selection = 0
 
     # list of results:

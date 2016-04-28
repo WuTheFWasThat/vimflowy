@@ -10,8 +10,8 @@ class Cursor extends EventEmitter
   constructor: (view, row = null, col = null, moveCol = null) ->
     super
     @view = view
-    @data = view.data
-    @row = row ? (@data.getChildren @data.viewRoot)[0]
+    @document = view.document
+    @row = row ? (@document.getChildren @document.viewRoot)[0]
     @col = col ? 0
     @properties = {}
     do @_getPropertiesFromContext
@@ -60,7 +60,7 @@ class Cursor extends EventEmitter
       @moveCol = @col
 
   _fromMoveCol: (cursorOptions = {}) ->
-    len = @data.getLength @row
+    len = @document.getLength @row
     maxcol = len - (if cursorOptions.pastEnd then 0 else 1)
     if @moveCol < 0
       col = Math.max(0, len + @moveCol + 1)
@@ -82,28 +82,28 @@ class Cursor extends EventEmitter
 
   right: (cursorOptions = {}) ->
     shift = if cursorOptions.pastEnd then 0 else 1
-    if @col < (@data.getLength @row) - shift
+    if @col < (@document.getLength @row) - shift
       do @_right
 
   backIfNeeded: () ->
-    if @col > (@data.getLength @row) - 1
+    if @col > (@document.getLength @row) - 1
       do @left
 
   atVisibleEnd: () ->
-    if @col < (@data.getLength @row) - 1
+    if @col < (@document.getLength @row) - 1
       return false
     else
-      nextrow = @data.nextVisible @row
+      nextrow = @document.nextVisible @row
       if nextrow != null
         return false
     return true
 
   nextChar: () ->
-    if @col < (@data.getLength @row) - 1
+    if @col < (@document.getLength @row) - 1
       do @_right
       return true
     else
-      nextrow = @data.nextVisible @row
+      nextrow = @document.nextVisible @row
       if nextrow != null
         @set nextrow, 0
         return true
@@ -113,7 +113,7 @@ class Cursor extends EventEmitter
     if @col > 0
       return false
     else
-      prevrow = @data.prevVisible @row
+      prevrow = @document.prevVisible @row
       if prevrow != null
         return false
     return true
@@ -123,7 +123,7 @@ class Cursor extends EventEmitter
       do @_left
       return true
     else
-      prevrow = @data.prevVisible @row
+      prevrow = @document.prevVisible @row
       if prevrow != null
         @set prevrow, -1
         return true
@@ -138,26 +138,26 @@ class Cursor extends EventEmitter
     return @
 
   visibleHome: () ->
-    row = do @data.nextVisible
+    row = do @document.nextVisible
     @set row, 0
     return @
 
   visibleEnd: () ->
-    row = do @data.lastVisible
+    row = do @document.lastVisible
     @set row, 0
     return @
 
   wordRegex = /^[a-z0-9_]+$/i
 
   isInWhitespace: (row, col) ->
-    char = @data.getChar row, col
+    char = @document.getChar row, col
     return utils.isWhitespace char
 
   isInWord: (row, col, matchChar) ->
     if utils.isWhitespace matchChar
       return false
 
-    char = @data.getChar row, col
+    char = @document.getChar row, col
     if utils.isWhitespace char
       return false
 
@@ -179,7 +179,7 @@ class Cursor extends EventEmitter
     while (not do @atVisibleStart) and @isInWhitespace @row, @col
       do @prevChar
 
-    wordcheck = @getWordCheck options, (@data.getChar @row, @col)
+    wordcheck = @getWordCheck options, (@document.getChar @row, @col)
     while (@col > 0) and wordcheck @row, (@col-1)
       do @_left
     return @
@@ -194,15 +194,15 @@ class Cursor extends EventEmitter
     while (not do @atVisibleEnd) and @isInWhitespace @row, @col
       do @nextChar
 
-    end = (@data.getLength @row) - 1
-    wordcheck = @getWordCheck options, (@data.getChar @row, @col)
+    end = (@document.getLength @row) - 1
+    wordcheck = @getWordCheck options, (@document.getChar @row, @col)
     while @col < end and wordcheck @row, (@col+1)
       do @_right
 
     if options.cursor.pastEndWord
       do @_right
 
-    end = (@data.getLength @row) - 1
+    end = (@document.getLength @row) - 1
     if @col == end and options.cursor.pastEnd
       do @_right
     return @
@@ -213,8 +213,8 @@ class Cursor extends EventEmitter
         do @_right
       return @
 
-    end = (@data.getLength @row) - 1
-    wordcheck = @getWordCheck options, (@data.getChar @row, @col)
+    end = (@document.getLength @row) - 1
+    wordcheck = @getWordCheck options, (@document.getChar @row, @col)
     while @col < end and wordcheck @row, (@col+1)
       do @_right
 
@@ -222,13 +222,13 @@ class Cursor extends EventEmitter
     while (not do @atVisibleEnd) and @isInWhitespace @row, @col
       do @nextChar
 
-    end = (@data.getLength @row) - 1
+    end = (@document.getLength @row) - 1
     if @col == end and options.cursor.pastEnd
       do @_right
     return @
 
   findNextChar: (char, options = {}) ->
-    end = (@data.getLength @row) - 1
+    end = (@document.getLength @row) - 1
     if @col == end
       return
 
@@ -239,7 +239,7 @@ class Cursor extends EventEmitter
     found = null
     while col < end
       col += 1
-      if (@data.getChar @row, col) == char
+      if (@document.getChar @row, col) == char
         found = col
         break
 
@@ -263,7 +263,7 @@ class Cursor extends EventEmitter
     found = null
     while col > 0
       col -= 1
-      if (@data.getChar @row, col) == char
+      if (@document.getChar @row, col) == char
         found = col
         break
 
@@ -275,30 +275,30 @@ class Cursor extends EventEmitter
       do @_right
 
   up: (cursorOptions = {}) ->
-    row = @data.prevVisible @row
+    row = @document.prevVisible @row
     if row?
       @setRow row, cursorOptions
 
   down: (cursorOptions = {}) ->
-    row = @data.nextVisible @row
+    row = @document.nextVisible @row
     if row?
       @setRow row, cursorOptions
 
   parent: (cursorOptions = {}) ->
     row = do @row.getParent
-    if row.id == @data.root.id
+    if row.id == @document.root.id
       return
-    if row.is @data.viewRoot
-      @data.changeViewRoot (do row.getParent)
+    if row.is @document.viewRoot
+      @document.changeViewRoot (do row.getParent)
     @setRow row, cursorOptions
 
   prevSibling: (cursorOptions = {}) ->
-    prevsib = @data.getSiblingBefore @row
+    prevsib = @document.getSiblingBefore @row
     if prevsib?
       @setRow prevsib, cursorOptions
 
   nextSibling: (cursorOptions = {}) ->
-    nextsib = @data.getSiblingAfter @row
+    nextsib = @document.getSiblingAfter @row
     if nextsib?
       @setRow nextsib, cursorOptions
 
@@ -316,7 +316,7 @@ class Cursor extends EventEmitter
   # get whether the cursor should be bold/italic based on surroundings
   # NOTE: only relevant for insert mode.
   _getPropertiesFromContext: () ->
-    line = @data.getLine @row
+    line = @document.getLine @row
     if line.length == 0
       obj = {}
     else if @col == 0

@@ -35,7 +35,7 @@ text_format_insert = (property) ->
 
 text_format_visual_line = (property) ->
   return () ->
-    rows = @view.data.getChildRange @parent, @row_start_i, @row_end_i
+    rows = @view.document.getChildRange @parent, @row_start_i, @row_end_i
     @view.toggleRowsProperty property, rows
     @view.setMode MODES.NORMAL
     do @keyStream.save

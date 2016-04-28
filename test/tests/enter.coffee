@@ -42,7 +42,7 @@ describe "enter", () ->
 
   it "does not mess up registers", () ->
     t = new TestCase ['']
-    t.setRegister {type: Register.TYPES.CHARS, data: 'unchanged'}
+    t.setRegister {type: Register.TYPES.CHARS, saved: 'unchanged'}
     t.sendKey 'i'
     t.sendKeys 'helloworld'
     for _ in [0...5]
@@ -50,7 +50,7 @@ describe "enter", () ->
     t.sendKey 'enter'
     t.sendKey 'esc'
     t.expect ['hello', 'world']
-    t.expectRegister {type: Register.TYPES.CHARS, data: 'unchanged'}
+    t.expectRegister {type: Register.TYPES.CHARS, saved: 'unchanged'}
 
   it "works at the end of a line", () ->
     t = new TestCase ['']

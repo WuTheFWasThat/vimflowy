@@ -1,7 +1,7 @@
 utils = require './utils.coffee'
 constants = require './constants.coffee'
-Data = require './data.coffee'
-dataStore = require './datastore.coffee'
+Document = require './document.coffee'
+DataStore = require './datastore.coffee'
 
 MODE_SCHEMA = {
   title: "Mode metadata schema"
@@ -181,8 +181,8 @@ registerMode {
     [parent, index1, index2] = do view.getVisualLineSelections
     context.row_start_i = index1
     context.row_end_i = index2
-    context.row_start = (view.data.getChildren parent)[index1]
-    context.row_end = (view.data.getChildren parent)[index2]
+    context.row_start = (view.document.getChildren parent)[index1]
+    context.row_end = (view.document.getChildren parent)[index2]
     context.parent = parent
     context.num_rows = index2 - index1 + 1
     return context
@@ -222,8 +222,8 @@ registerMode {
     # TODO: fix this
     View = require './view.coffee'
     # initialize marks stuff
-    data = new Data (new dataStore.InMemory)
-    view.markview = new View data
+    document = new Document (new DataStore.InMemory)
+    view.markview = new View document
     view.markrow = view.cursor.row
   exit: (view) ->
     view.markview = null

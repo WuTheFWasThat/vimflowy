@@ -81,7 +81,7 @@ We plan on adding ways to unregister commands/actions/motions.
 
 ```
     api.view:  A reference of the internal @view object in vimflowy
-    api.data:  A reference of the internal @data object in vimflowy
+    api.document:  A reference of the internal @document object in vimflowy
     api.cursor:  A reference of the internal @cursor object in vimflowy
 ```
 

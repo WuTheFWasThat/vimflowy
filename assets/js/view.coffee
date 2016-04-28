@@ -9,19 +9,18 @@ constants = require './constants.coffee'
 utils = require './utils.coffee'
 errors = require './errors.coffee'
 Cursor = require './cursor.coffee'
-Data = require './data.coffee'
-dataStore = require './datastore.coffee'
+Document = require './document.coffee'
 Register = require './register.coffee'
 Logger = require './logger.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
 ###
 a View represents the actual viewport onto the vimflowy document
-It holds a Cursor, a Data object, and a Settings object
+It holds a Cursor, a Document object, and a Settings object
 It exposes methods for manipulation of the document, and movement of the cursor
 It also handles rendering of everything, including settings.
 
-Currently, the separation between the View and Data classes is not very good.  (see data.coffee)
+Currently, the separation between the View and Document classes is not very good.  (see document.coffee)
 Ideally, view shouldn't do much more than handle cursors and rendering
 ###
 getCursorClass = (cursorBetween) ->
@@ -187,10 +186,10 @@ class View extends EventEmitter
   childrenDivID = (id) ->
     return 'node-' + id + '-children'
 
-  constructor: (data, options = {}) ->
+  constructor: (document, options = {}) ->
     super
 
-    @data = data
+    @document = document
 
     @bindings = options.bindings
 
@@ -204,9 +203,9 @@ class View extends EventEmitter
 
     @register = new Register @
 
-    if not (@data.getChildren @data.viewRoot).length
-      @data.load constants.empty_data
-    row = (@data.getChildren @data.viewRoot)[0]
+    if not (@document.getChildren @document.viewRoot).length
+      @document.load constants.empty_data
+    row = (@document.getChildren @document.viewRoot)[0]
     @cursor = new Cursor @, row, 0
 
     do @reset_history
@@ -284,7 +283,7 @@ class View extends EventEmitter
 
   toggleBindingsDiv: () ->
     @keybindingsDiv.toggleClass 'active'
-    @data.store.setSetting 'showKeyBindings', @keybindingsDiv.hasClass 'active'
+    @document.store.setSetting 'showKeyBindings', @keybindingsDiv.hasClass 'active'
     if @bindings
       @bindings.renderModeTable @mode
 
@@ -394,7 +393,7 @@ class View extends EventEmitter
     return true
 
   exportContent: (mimetype) ->
-    jsonContent = do @data.serialize
+    jsonContent = do @document.serialize
     if mimetype == 'application/json'
         delete jsonContent.viewRoot
         return JSON.stringify(jsonContent, undefined, 2)
@@ -437,7 +436,7 @@ class View extends EventEmitter
     state = @history[@historyIndex]
     state.after = {
       cursor: do @cursor.clone
-      viewRoot: @data.viewRoot
+      viewRoot: @document.viewRoot
     }
 
     @historyIndex += 1
@@ -498,7 +497,7 @@ class View extends EventEmitter
     if @mutations.length == state.index
       state.before = {
         cursor: do @cursor.clone
-        viewRoot: @data.viewRoot
+        viewRoot: @document.viewRoot
       }
 
     Logger.logger.debug "Applying mutation #{mutation.constructor.name}(#{mutation.str()})"
@@ -509,17 +508,17 @@ class View extends EventEmitter
     return true
 
   curLine: () ->
-    return @data.getLine @cursor.row
+    return @document.getLine @cursor.row
 
   curText: () ->
-    return @data.getText @cursor.row
+    return @document.getText @cursor.row
 
   curLineLength: () ->
-    return @data.getLength @cursor.row
+    return @document.getLength @cursor.row
 
   reset_jump_history: () ->
     @jumpHistory = [{
-      viewRoot: @data.viewRoot
+      viewRoot: @document.viewRoot
       cursor_before: do @cursor.clone
     }]
     @jumpIndex = 0 # index into jump history
@@ -533,29 +532,29 @@ class View extends EventEmitter
     do jump_fn
 
     @jumpHistory.push {
-      viewRoot: @data.viewRoot
+      viewRoot: @document.viewRoot
       cursor_before: do @cursor.clone
     }
     @jumpIndex += 1
 
   # try going to jump, return true if succeeds
   tryJump: (jump) ->
-    if jump.viewRoot.id == @data.viewRoot.id
+    if jump.viewRoot.id == @document.viewRoot.id
       return false # not moving, don't jump
 
-    if not @data.isAttached jump.viewRoot.id
+    if not @document.isAttached jump.viewRoot.id
       return false # invalid location
 
-    children = @data.getChildren jump.viewRoot
+    children = @document.getChildren jump.viewRoot
     if not children.length
       return false # can't root, don't jump
 
-    @data.changeViewRoot jump.viewRoot
+    @document.changeViewRoot jump.viewRoot
     @cursor.setRow children[0]
 
-    if @data.isAttached jump.cursor_after.row.id
+    if @document.isAttached jump.cursor_after.row.id
       # if the row is attached and under the view root, switch to it
-      cursor_row = @data.youngestVisibleAncestor jump.cursor_after.row
+      cursor_row = @document.youngestVisibleAncestor jump.cursor_after.row
       if cursor_row != null
         @cursor.setRow cursor_row
     return true
@@ -594,20 +593,20 @@ class View extends EventEmitter
   # fails if there is no child
   # records in jump history
   _changeView: (row) ->
-    if row.id == @data.viewRoot.id
+    if row.id == @document.viewRoot.id
       return true # not moving, do nothing
-    if @data.hasChildren row
+    if @document.hasChildren row
       @addToJumpHistory () =>
-        @data.changeViewRoot row
+        @document.changeViewRoot row
       return true
     return false
 
   # try to root into newroot, updating the cursor
-  reroot: (newroot = @data.root) ->
+  reroot: (newroot = @document.root) ->
     if @_changeView newroot
-      newrow = @data.youngestVisibleAncestor @cursor.row
+      newrow = @document.youngestVisibleAncestor @cursor.row
       if newrow == null # not visible, need to reset cursor
-        newrow = (@data.getChildren newroot)[0]
+        newrow = (@document.getChildren newroot)[0]
       @cursor.setRow newrow
       return true
     return false
@@ -628,12 +627,12 @@ class View extends EventEmitter
     throw new errors.GenericError "Failed to root into #{row}"
 
   rootUp: () ->
-    if @data.viewRoot.id != @data.root.id
-      parent = do @data.viewRoot.getParent
+    if @document.viewRoot.id != @document.root.id
+      parent = do @document.viewRoot.getParent
       @reroot parent
 
   rootDown: () ->
-    newroot = @data.oldestVisibleAncestor @cursor.row
+    newroot = @document.oldestVisibleAncestor @cursor.row
     if @reroot newroot
       return true
     return false
@@ -646,12 +645,12 @@ class View extends EventEmitter
 
   addCharsAfterCursor: (chars, options) ->
     col = @cursor.col
-    if col < (@data.getLength @cursor.row)
+    if col < (@document.getLength @cursor.row)
       col += 1
     @addChars @cursor.row, col, chars, options
 
   delChars: (row, col, nchars, options = {}) ->
-    n = @data.getLength row
+    n = @document.getLength row
     deleted = []
     if (n > 0) and (nchars > 0) and (col < n)
       mutation = new mutations.DelChars row, col, nchars, options
@@ -678,7 +677,7 @@ class View extends EventEmitter
     @addCharsAtCursor chars, options
 
   yankChars: (row, col, nchars) ->
-    line = @data.getLine row
+    line = @document.getLine row
     if line.length > 0
       @register.saveChars line.slice(col, col + nchars)
 
@@ -725,14 +724,14 @@ class View extends EventEmitter
 
   toggleRowsProperty: (property, rows) ->
     all_were_true = _.every rows.map ((row) =>
-      _.every (@data.getLine row).map ((obj) => return obj[property])
+      _.every (@document.getLine row).map ((obj) => return obj[property])
     )
     new_value = not all_were_true
     for row in rows
-      @toggleProperty property, new_value, row, 0, (@data.getLength row)
+      @toggleProperty property, new_value, row, 0, (@document.getLength row)
 
   toggleRowProperty: (property, row = @cursor.row) ->
-    @toggleProperty property, null, row, 0, (@data.getLength row)
+    @toggleProperty property, null, row, 0, (@document.getLength row)
 
   toggleRowPropertyBetween: (property, cursor1, cursor2, options) ->
     if not (cursor2.row.is cursor1.row)
@@ -748,17 +747,17 @@ class View extends EventEmitter
   newLineBelow: (options = {}) ->
     options.setCursor = 'first'
 
-    children = @data.getChildren @cursor.row
-    if (not @data.collapsed @cursor.row) and children.length > 0
+    children = @document.getChildren @cursor.row
+    if (not @document.collapsed @cursor.row) and children.length > 0
       @addBlocks @cursor.row, 0, [''], options
     else
       parent = do @cursor.row.getParent
-      index = @data.indexOf @cursor.row
+      index = @document.indexOf @cursor.row
       @addBlocks parent, (index+1), [''], options
 
   newLineAbove: () ->
     parent = do @cursor.row.getParent
-    index = @data.indexOf @cursor.row
+    index = @document.indexOf @cursor.row
     @addBlocks parent, index, [''], {setCursor: 'first'}
 
   # behavior of "enter", splitting a line
@@ -769,7 +768,7 @@ class View extends EventEmitter
   #     insert a new node after
   #     if the node has children, this is the new first child
   newLineAtCursor: () ->
-    if @cursor.col == @data.getLength @cursor.row
+    if @cursor.col == @document.getLength @cursor.row
       @newLineBelow {cursorOptions: {keepProperties: true}}
     else
       mutation = new mutations.DelChars @cursor.row, 0, @cursor.col
@@ -783,17 +782,17 @@ class View extends EventEmitter
       @cursor.set row, 0, {keepProperties: true}
 
   joinRows: (first, second, options = {}) ->
-    for child in @data.getChildren second by -1
+    for child in @document.getChildren second by -1
       # NOTE: if first is collapsed, should we uncollapse?
       @moveBlock child, first, 0
 
-    line = @data.getLine second
+    line = @document.getLine second
     if line.length and options.delimiter
       if line[0].char != options.delimiter
         line = [{char: options.delimiter}].concat line
     @delBlock second, {noNew: true, noSave: true}
 
-    newCol = @data.getLength first
+    newCol = @document.getLength first
     mutation = new mutations.AddChars first, newCol, line
     @do mutation
 
@@ -801,7 +800,7 @@ class View extends EventEmitter
 
   joinAtCursor: () ->
     row = @cursor.row
-    sib = @data.nextVisible row
+    sib = @document.nextVisible row
     if sib != null
       @joinRows row, sib, {cursor: {pastEnd: true}, delimiter: ' '}
 
@@ -809,14 +808,14 @@ class View extends EventEmitter
   deleteAtCursor: () ->
     if @cursor.col == 0
       row = @cursor.row
-      sib = @data.prevVisible row
+      sib = @document.prevVisible row
       if sib != null
         @joinRows sib, row, {cursor: {pastEnd: true}}
     else
       @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
   delBlock: (row, options) ->
-     @delBlocks row.parent, (@data.indexOf row), 1, options
+     @delBlocks row.parent, (@document.indexOf row), 1, options
 
   delBlocks: (parent, index, nrows, options = {}) ->
     mutation = new mutations.DetachBlocks parent, index, nrows, options
@@ -826,7 +825,7 @@ class View extends EventEmitter
 
   delBlocksAtCursor: (nrows, options = {}) ->
     parent = do @cursor.row.getParent
-    index = @data.indexOf @cursor.row
+    index = @document.indexOf @cursor.row
     @delBlocks parent, index, nrows, options
 
   addBlocks: (parent, index = -1, serialized_rows, options = {}) ->
@@ -834,16 +833,16 @@ class View extends EventEmitter
     @do mutation
 
   yankBlocks: (row, nrows) ->
-    siblings = @data.getSiblingRange row, 0, (nrows-1)
+    siblings = @document.getSiblingRange row, 0, (nrows-1)
     siblings = siblings.filter ((x) -> return x != null)
-    serialized = siblings.map ((x) => return @data.serialize x)
+    serialized = siblings.map ((x) => return @document.serialize x)
     @register.saveSerializedRows serialized
 
   yankBlocksAtCursor: (nrows) ->
     @yankBlocks @cursor.row, nrows
 
   yankBlocksClone: (row, nrows) ->
-    siblings = @data.getSiblingRange row, 0, (nrows-1)
+    siblings = @document.getSiblingRange row, 0, (nrows-1)
     siblings = siblings.filter ((x) -> return x != null)
     @register.saveClonedRows (siblings.map (sibling) -> sibling.id)
 
@@ -855,39 +854,39 @@ class View extends EventEmitter
     @do mutation
 
   moveBlock: (row, parent, index = -1, options = {}) ->
-    [commonAncestor, rowAncestors, cursorAncestors] = @data.getCommonAncestor row, @cursor.row
+    [commonAncestor, rowAncestors, cursorAncestors] = @document.getCommonAncestor row, @cursor.row
     moved = @do new mutations.MoveBlock row, parent, index, options
     if moved
       # Move the cursor also, if it is in the moved block
       if commonAncestor.is row
-        newCursorRow = @data.combineAncestry row, (x.id for x in cursorAncestors)
+        newCursorRow = @document.combineAncestry row, (x.id for x in cursorAncestors)
         @cursor._setRow newCursorRow
     return row
 
   indentBlocks: (row, numblocks = 1) ->
-    newparent = @data.getSiblingBefore row
+    newparent = @document.getSiblingBefore row
     unless newparent?
       @showMessage "Cannot indent without higher sibling", {text_class: 'error'}
       return null # cannot indent
 
-    if @data.collapsed newparent
+    if @document.collapsed newparent
       @toggleBlock newparent
 
-    siblings = @data.getSiblingRange row, 0, (numblocks-1)
+    siblings = @document.getSiblingRange row, 0, (numblocks-1)
     for sib in siblings
       @moveBlock sib, newparent, -1
     return newparent
 
   unindentBlocks: (row, numblocks = 1, options = {}) ->
     parent = do row.getParent
-    if parent.id == @data.viewRoot.id
+    if parent.id == @document.viewRoot.id
       @showMessage "Cannot unindent past root", {text_class: 'error'}
       return null
 
-    siblings = @data.getSiblingRange row, 0, (numblocks-1)
+    siblings = @document.getSiblingRange row, 0, (numblocks-1)
 
     newparent = do parent.getParent
-    pp_i = @data.indexOf parent
+    pp_i = @document.indexOf parent
 
     for sib in siblings
       pp_i += 1
@@ -895,58 +894,58 @@ class View extends EventEmitter
     return newparent
 
   indent: (row = @cursor.row) ->
-    if @data.collapsed row
+    if @document.collapsed row
       return @indentBlocks row
 
-    sib = @data.getSiblingBefore row
+    sib = @document.getSiblingBefore row
 
     newparent = @indentBlocks row
     unless newparent?
       return
-    for child in (@data.getChildren row).slice()
+    for child in (@document.getChildren row).slice()
       @moveBlock child, sib, -1
 
   unindent: (row = @cursor.row) ->
-    if @data.collapsed row
+    if @document.collapsed row
       return @unindentBlocks row
 
-    if @data.hasChildren row
+    if @document.hasChildren row
       @showMessage "Cannot unindent line with children", {text_class: 'error'}
       return
 
     parent = do row.getParent
-    p_i = @data.indexOf row
+    p_i = @document.indexOf row
 
     newparent = @unindentBlocks row
     unless newparent?
       return
 
-    p_children = @data.getChildren parent
+    p_children = @document.getChildren parent
     for child in p_children.slice(p_i)
       @moveBlock child, row, -1
 
   swapDown: (row = @cursor.row) ->
-    next = @data.nextVisible (@data.lastVisible row)
+    next = @document.nextVisible (@document.lastVisible row)
     unless next?
       return
 
-    if (@data.hasChildren next) and (not @data.collapsed next)
+    if (@document.hasChildren next) and (not @document.collapsed next)
       # make it the first child
       @moveBlock row, next, 0
     else
       # make it the next sibling
       parent = do next.getParent
-      p_i = @data.indexOf next
+      p_i = @document.indexOf next
       @moveBlock row, parent, (p_i+1)
 
   swapUp: (row = @cursor.row) ->
-    prev = @data.prevVisible row
+    prev = @document.prevVisible row
     unless prev?
       return
 
     # make it the previous sibling
     parent = do prev.getParent
-    p_i = @data.indexOf prev
+    p_i = @document.indexOf prev
     @moveBlock row, parent, p_i
 
   toggleCurBlock: () ->
@@ -1023,20 +1022,20 @@ class View extends EventEmitter
   # given an anchor and cursor, figures out the right blocks to be deleting
   # returns a parent, minindex, and maxindex
   getVisualLineSelections: () ->
-    [common, ancestors1, ancestors2] = @data.getCommonAncestor @cursor.row, @anchor.row
+    [common, ancestors1, ancestors2] = @document.getCommonAncestor @cursor.row, @anchor.row
     if ancestors1.length == 0
       # anchor is underneath cursor
       parent = do common.getParent
-      index = @data.indexOf @cursor.row
+      index = @document.indexOf @cursor.row
       return [parent, index, index]
     else if ancestors2.length == 0
       # cursor is underneath anchor
       parent = do common.getParent
-      index = @data.indexOf @anchor.row
+      index = @document.indexOf @anchor.row
       return [parent, index, index]
     else
-      index1 = @data.indexOf (ancestors1[0] ? @cursor.row)
-      index2 = @data.indexOf (ancestors2[0] ? @anchor.row)
+      index1 = @document.indexOf (ancestors1[0] ? @cursor.row)
+      index2 = @document.indexOf (ancestors2[0] ? @anchor.row)
       if index2 < index1
         [index1, index2] = [index2, index1]
       return [common, index1, index2]
@@ -1073,8 +1072,8 @@ class View extends EventEmitter
 
   virtualRender: (options = {}) ->
     crumbs = []
-    row = @data.viewRoot
-    until row.is @data.root
+    row = @document.viewRoot
+    until row.is @document.root
       crumbs.push row
       row = do row.getParent
 
@@ -1091,10 +1090,10 @@ class View extends EventEmitter
              ]
 
     crumbNodes = []
-    crumbNodes.push(makeCrumb @data.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
+    crumbNodes.push(makeCrumb @document.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
     for i in [crumbs.length-1..0] by -1
       row = crumbs[i]
-      text = (@data.getText row).join('')
+      text = (@document.getText row).join('')
       crumbNodes.push(makeCrumb row, text, i==0)
 
     breadcrumbsNode = virtualDom.h 'div', {
@@ -1107,10 +1106,10 @@ class View extends EventEmitter
     if @lineSelect
       # mirrors logic of finishes_visual_line in keyHandler.coffee
       [parent, index1, index2] = do @getVisualLineSelections
-      for child in @data.getChildRange parent, index1, index2
+      for child in @document.getChildRange parent, index1, index2
         options.highlight_blocks[child.id] = true
 
-    contentsChildren = @virtualRenderTree @data.viewRoot, options
+    contentsChildren = @virtualRenderTree @document.viewRoot, options
 
     contentsNode = virtualDom.h 'div', {
       id: 'treecontents'
@@ -1120,29 +1119,29 @@ class View extends EventEmitter
     }, [breadcrumbsNode, contentsNode]
 
   virtualRenderTree: (parent, options = {}) ->
-    if (not options.ignoreCollapse) and (@data.collapsed parent)
+    if (not options.ignoreCollapse) and (@document.collapsed parent)
       return
 
     childrenNodes = []
 
-    for row in @data.getChildren parent
+    for row in @document.getChildren parent
       rowElements = []
 
-      if @data.isClone row.id
+      if @document.isClone row.id
         cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon', title: 'Cloned' }
         rowElements.push cloneIcon
 
       ancestry_str = JSON.stringify do row.getAncestry
 
       icon = 'fa-circle'
-      if @data.hasChildren row
-        icon = if @data.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
+      if @document.hasChildren row
+        icon = if @document.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
 
       bulletOpts = {
         className: 'fa ' + icon + ' bullet'
         attributes: {'data-id': row.id, 'data-ancestry': ancestry_str}
       }
-      if @data.hasChildren row
+      if @document.hasChildren row
         bulletOpts.style = {cursor: 'pointer'}
         bulletOpts.onclick = ((row) =>
           @toggleBlock row
@@ -1189,7 +1188,7 @@ class View extends EventEmitter
     return childrenNodes
 
   virtualRenderLine: (row, options = {}) ->
-    lineData = @data.getLine row
+    lineData = @document.getLine row
     cursors = {}
     highlights = {}
 

@@ -10,7 +10,7 @@ mutations = require './mutations.coffee'
 class PluginApi
   constructor: (@view, @metadata, @pluginManager) ->
     @name = @metadata.name
-    @data = @view.data
+    @document = @view.document
     @cursor = @view.cursor
     # TODO: Add subloggers and prefix all log messages with the plugin name
     @logger = Logger.logger
@@ -23,10 +23,10 @@ class PluginApi
     @commands = @definitions.commands
 
   setData: (key, value) ->
-    @data.store.setPluginData @name, key, value
+    @document.store.setPluginData @name, key, value
 
   getData: (key, default_value=null) ->
-    @data.store.getPluginData @name, key, default_value
+    @document.store.getPluginData @name, key, default_value
 
   registerCommand: (metadata) ->
     cmd = @definitions.registerCommand metadata

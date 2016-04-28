@@ -1,5 +1,5 @@
 ###
-Represents a yank register.  Holds data of one of several types -
+Represents a yank register.  Holds saved data of one of several types -
 either nothing, a set of characters, a set of row ids, or a set of serialized rows
 Implements pasting for each of the types
 ###
@@ -13,12 +13,12 @@ class Register
     CLONED_ROWS: 3
   }
 
-  # Register is a union type. @data holds one of several kinds of values
+  # Register is a union type. @saved holds one of several kinds of values
   # They can be referenced as @chars, @rows etc.
   for type of Register.TYPES
     Object.defineProperty @prototype, type.toLowerCase(),
-        get: -> @data
-        set: (data) -> @data = data
+        get: -> @saved
+        set: (save) -> @saved = save
 
   constructor: (view) ->
     @view = view
@@ -27,26 +27,26 @@ class Register
 
   saveNone: () ->
     @type = Register.TYPES.NONE
-    @data = null
+    @saved = null
 
-  saveChars: (data) ->
+  saveChars: (save) ->
     @type = Register.TYPES.CHARS
-    @data = data
+    @saved = save
 
-  saveSerializedRows: (data) ->
+  saveSerializedRows: (save) ->
     @type = Register.TYPES.SERIALIZED_ROWS
-    @data = data
+    @saved = save
 
-  saveClonedRows: (data) ->
+  saveClonedRows: (save) ->
     @type = Register.TYPES.CLONED_ROWS
-    @data = data
+    @saved = save
 
   serialize: () ->
-    return {type: @type, data: @data}
+    return {type: @type, saved: @saved}
 
   deserialize: (serialized) ->
     @type = serialized.type
-    @data = serialized.data
+    @saved = serialized.saved
 
   ###########
   # Pasting
@@ -69,13 +69,13 @@ class Register
   pasteSerializedRows: (options = {}) ->
     row = @view.cursor.row
     parent = do row.getParent
-    index = @view.data.indexOf row
+    index = @view.document.indexOf row
 
     if options.before
       @view.addBlocks parent, index, @serialized_rows, {setCursor: 'first'}
     else
-      children = @view.data.getChildren row
-      if (not @view.data.collapsed row) and (children.length > 0)
+      children = @view.document.getChildren row
+      if (not @view.document.collapsed row) and (children.length > 0)
         @view.addBlocks row, 0, @serialized_rows, {setCursor: 'first'}
       else
         @view.addBlocks parent, (index + 1), @serialized_rows, {setCursor: 'first'}
@@ -83,13 +83,13 @@ class Register
   pasteClonedRows: (options = {}) ->
     row = @view.cursor.row
     parent = do row.getParent
-    index = @view.data.indexOf row
+    index = @view.document.indexOf row
 
     if options.before
       @view.attachBlocks parent, @cloned_rows, index, {setCursor: 'first'}
     else
-      children = @view.data.getChildren row
-      if (not @view.data.collapsed row) and (children.length > 0)
+      children = @view.document.getChildren row
+      if (not @view.document.collapsed row) and (children.length > 0)
         @view.attachBlocks row, @cloned_rows, 0, {setCursor: 'first'}
       else
         @view.attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}

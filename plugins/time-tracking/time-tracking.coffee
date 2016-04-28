@@ -22,14 +22,14 @@ class TimeTrackingPlugin
     @currentRow = null
     @onRowChange null, @api.cursor.row # Initial setup
     @api.view.addHook 'renderInfoElements', (@renderTime.bind @)
-    @api.view.data.on 'afterMove', (info) =>
+    @api.view.document.on 'afterMove', (info) =>
       @_rebuildTreeTime info.id
       @_rebuildTreeTime info.old_parent, true
-    @api.view.data.on 'afterAttach', (info) =>
+    @api.view.document.on 'afterAttach', (info) =>
       @_rebuildTreeTime info.id
       if info.old_detached_parent
         @_rebuildTreeTime info.old_detached_parent, true
-    @api.view.data.on 'afterDetach', (info) =>
+    @api.view.document.on 'afterDetach', (info) =>
       @_rebuildTreeTime info.id
 
     @rowChanges = []
@@ -160,8 +160,8 @@ class TimeTrackingPlugin
     @_rebuildTreeTime id, true
 
   _rebuildTotalTime: (id) ->
-    children = @api.view.data._getChildren id
-    detached_children = @api.view.data.store.getDetachedChildren id
+    children = @api.view.document._getChildren id
+    detached_children = @api.view.document.store.getDetachedChildren id
 
     childTotalTimes = _.map children.concat(detached_children), (child_id) => @getRowData child_id, "treeTotalTime", 0
     rowTime = @getRowData id, "rowTotalTime", 0
@@ -169,7 +169,7 @@ class TimeTrackingPlugin
     @setRowData id, "treeTotalTime", totalTime
 
   _rebuildTreeTime: (id, inclusive = false) ->
-    for ancestor_id in @api.view.data.allAncestors id, { inclusive: inclusive }
+    for ancestor_id in @api.view.document.allAncestors id, { inclusive: inclusive }
       @_rebuildTotalTime ancestor_id
 
   rowTime: (row) ->

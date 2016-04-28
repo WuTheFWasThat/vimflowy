@@ -60,16 +60,16 @@ Row.loadFromAncestry = (ancestry) ->
   new Row parent, id
 
 ###
-Data is a wrapper class around the actual datastore, providing methods to manipulate the data
-the data itself includes:
+Document is a wrapper class around the actual datastore, providing methods to manipulate the document
+the document itself includes:
   - the location that is currently being viewed
   - the text in each line, including text properties like bold/italic
   - the parent/child relationships and collapsed-ness of lines
-also deals with loading the initial data from the datastore, and serializing the data to a string
+also deals with loading the initial document from the datastore, and serializing the document to a string
 
-Currently, the separation between the View and Data classes is not very good.  (see view.coffee)
+Currently, the separation between the View and Document classes is not very good.  (see view.coffee)
 ###
-class Data extends EventEmitter
+class Document extends EventEmitter
   root: do Row.getRoot
 
   constructor: (store) ->
@@ -200,7 +200,6 @@ class Data extends EventEmitter
 
   # a node is cloned only if it has multiple parents.
   # note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
-  # The intent is to see whether adding/removing a node will add/remove the corresponding id when maintaining metadata.
   isClone: (id) ->
     parents = @_getParents id
     if parents.length < 2 # for efficiency reasons
@@ -263,9 +262,6 @@ class Data extends EventEmitter
     errors.assert (ci != -1)
     children.splice ci, 1
     @_setChildren parent_id, children
-
-    if children.length == 0
-      @data
 
     parents = @_getParents id
     pi = _.findIndex parents, (par) -> (par == parent_id)
@@ -592,6 +588,6 @@ class Data extends EventEmitter
       @loadTo serialized_row, @root, -1, id_mapping, true
 
 # exports
-module.exports = Data
+module.exports = Document
 # TODO fix: hacky, used only for rendering...
 window?.Row = Row

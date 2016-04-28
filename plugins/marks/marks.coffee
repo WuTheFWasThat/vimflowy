@@ -15,7 +15,7 @@ class MarksPlugin
   enableAPI: () ->
     @logger = @api.logger
     @view = @api.view
-    @data = @view.data
+    @document = @view.document
     that = @
 
     class SetMark extends mutations.Mutation
@@ -41,13 +41,13 @@ class MarksPlugin
 
     # Serialization #
 
-    @data.addHook 'serializeRow', (struct, info) =>
+    @document.addHook 'serializeRow', (struct, info) =>
       mark = @_getMark info.row.id
       if mark
         struct.mark = mark
       return struct
 
-    @data.on 'loadRow', (row, serialized) =>
+    @document.on 'loadRow', (row, serialized) =>
       if serialized.mark
         err = @updateMark row.id, serialized.mark
         if err then @view.showMessage err, {text_class: 'error'}
@@ -85,14 +85,14 @@ class MarksPlugin
       description: 'Go to the mark indicated by the cursor, if it exists',
     },  () ->
       return (cursor) =>
-        word = @view.data.getWord cursor.row, cursor.col
+        word = @view.document.getWord cursor.row, cursor.col
         if word.length < 1 or word[0] != '@'
           return false
         mark = word[1..]
         allMarks = do that.listMarks
         if mark of allMarks
           id = allMarks[mark]
-          row = @view.data.canonicalInstance id
+          row = @view.document.canonicalInstance id
           @view.rootToParent row
           return true
         else
@@ -117,11 +117,11 @@ class MarksPlugin
       @view.setMode MODES.SEARCH
       @view.menu = new Menu @view.menuDiv, (chars) =>
         # find marks that start with the prefix
-        findMarks = (data, prefix, nresults = 10) =>
+        findMarks = (document, prefix, nresults = 10) =>
           results = [] # list of rows
           for mark, id of (do that.listMarks)
             if (mark.indexOf prefix) == 0
-              row = @view.data.canonicalInstance id
+              row = @view.document.canonicalInstance id
               results.push { row: row, mark: mark }
               if nresults > 0 and results.length == nresults
                 break
@@ -129,11 +129,11 @@ class MarksPlugin
 
         text = chars.join('')
         return _.map(
-          (findMarks @view.data, text),
+          (findMarks @view.document, text),
           (found) =>
             row = found.row
             return {
-              contents: @view.data.getLine row
+              contents: @view.document.getLine row
               renderHook: (contents) ->
                 contents.unshift virtualDom.h 'span', {
                   className: 'mark theme-bg-secondary theme-trim'
@@ -171,7 +171,7 @@ class MarksPlugin
           mark = word_info.word[1..]
           id = @getIdForMark mark
           if id != null
-            markrow = @data.canonicalInstance id
+            markrow = @document.canonicalInstance id
             errors.assert (markrow != null)
             for i in [word_info.start..word_info.end]
               line[i].renderOptions.type = 'a'
@@ -234,7 +234,7 @@ class MarksPlugin
     if not (mark of marks_to_ids)
       return null
     id = marks_to_ids[mark]
-    if @data.isAttached id
+    if @document.isAttached id
       return id
     return null
 
@@ -244,7 +244,7 @@ class MarksPlugin
 
     all_marks = {}
     for mark,id of marks_to_ids
-      if @data.isAttached id
+      if @document.isAttached id
         all_marks[mark] = id
     return all_marks
 
@@ -263,7 +263,7 @@ class MarksPlugin
         return "Already marked, nothing to do!"
 
       other_id = marks_to_ids[mark]
-      if @data.isAttached other_id
+      if @document.isAttached other_id
         return "Mark '#{mark}' was already taken!"
       else
         @view.do new @UnsetMark other_id, mark

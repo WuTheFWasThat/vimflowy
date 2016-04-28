@@ -16,7 +16,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
 }, () ->
   @view.setMode MODES.SEARCH
   @view.menu = new Menu @view.menuDiv, (chars) =>
-    find = (data, query, options = {}) ->
+    find = (document, query, options = {}) ->
       nresults = options.nresults or 10
       case_sensitive = options.case_sensitive
 
@@ -35,8 +35,8 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
       if query.length == 0
         return results
 
-      for row in do data.orderedLines
-        line = canonicalize (data.getText row).join ''
+      for row in do document.orderedLines
+        line = canonicalize (document.getText row).join ''
         matches = []
         if _.every(query_words.map ((word) ->
                   i = line.indexOf word
@@ -50,14 +50,14 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
       return results
 
     return _.map(
-      (find @view.data, chars),
+      (find @view.document, chars),
       (found) =>
         row = found.row
         highlights = {}
         for i in found.matches
           highlights[i] = true
         return {
-          contents: @view.data.getLine row
+          contents: @view.document.getLine row
           renderOptions: { highlights: highlights }
           fn: () => @view.rootInto row
         }

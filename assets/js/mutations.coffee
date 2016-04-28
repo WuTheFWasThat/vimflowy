@@ -1,5 +1,5 @@
 ###
-mutations mutate the data of a view, and are undoable
+mutations mutate a document within a view, and are undoable
 each mutation should implement a constructor, as well as the following methods:
 
     str: () -> string
@@ -26,7 +26,7 @@ errors = require './errors.coffee'
 validateRowInsertion = (view, parent_id, id, options={}) ->
   # check that there won't be doubled siblings
   if not options.noSiblingCheck
-    if view.data._hasChild parent_id, id
+    if view.document._hasChild parent_id, id
       view.showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
       return false
 
@@ -35,7 +35,7 @@ validateRowInsertion = (view, parent_id, id, options={}) ->
   # It is sufficient to check if the row is an ancestor of the new parent,
   # because if there was a clone underneath the row which was an ancestor of 'parent',
   # then 'row' would also be an ancestor of 'parent'.
-  if _.includes (view.data.allAncestors parent_id, { inclusive: true }), id
+  if _.includes (view.document.allAncestors parent_id, { inclusive: true }), id
     view.showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
     return false
   return true
@@ -65,7 +65,7 @@ class AddChars extends Mutation
     return "row #{@row.id}, col #{@col}, nchars #{@chars.length}"
 
   mutate: (view) ->
-    view.data.writeChars @row, @col, @chars
+    view.document.writeChars @row, @col, @chars
 
     shift = if @options.cursor.pastEnd then 1 else 0
     if @options.setCursor == 'beginning'
@@ -74,7 +74,7 @@ class AddChars extends Mutation
       view.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
 
   rewind: (view) ->
-    view.data.deleteChars @row, @col, @chars.length
+    view.document.deleteChars @row, @col, @chars.length
 
 class DelChars extends Mutation
   constructor: (@row, @col, @nchars, @options = {}) ->
@@ -85,14 +85,14 @@ class DelChars extends Mutation
     return "row #{@row.id}, col #{@col}, nchars #{@nchars}"
 
   mutate: (view) ->
-    @deletedChars = view.data.deleteChars @row, @col, @nchars
+    @deletedChars = view.document.deleteChars @row, @col, @nchars
     if @options.setCursor == 'before'
       view.cursor.set @row, @col, @options.cursor
     else if @options.setCursor == 'after'
       view.cursor.set @row, (@col + 1), @options.cursor
 
   rewind: (view) ->
-    view.data.writeChars @row, @col, @deletedChars
+    view.document.writeChars @row, @col, @deletedChars
 
 class MoveBlock extends Mutation
   constructor: (@row, @parent, @index = -1, @options = {}) ->
@@ -108,12 +108,12 @@ class MoveBlock extends Mutation
 
   mutate: (view) ->
     errors.assert (not do @row.isRoot), "Cannot detach root"
-    info = view.data._move @row.id, @old_parent.id, @parent.id, @index
+    info = view.document._move @row.id, @old_parent.id, @parent.id, @index
     @old_index = info.old.childIndex
     @row.setParent @parent
 
   rewind: (view) ->
-    view.data._move @row.id, @parent.id, @old_parent.id, @old_index
+    view.document._move @row.id, @parent.id, @old_parent.id, @old_index
     @row.setParent @old_parent
 
 class AttachBlocks extends Mutation
@@ -134,17 +134,17 @@ class AttachBlocks extends Mutation
     return true
 
   mutate: (view) ->
-    view.data._attachChildren @parent.id, @cloned_rows, @index
+    view.document._attachChildren @parent.id, @cloned_rows, @index
 
     if @options.setCursor == 'first'
-      view.cursor.set (view.data.findChild @parent, @cloned_rows[0]), 0
+      view.cursor.set (view.document.findChild @parent, @cloned_rows[0]), 0
     else if @options.setCursor == 'last'
-      view.cursor.set (view.data.findChild @parent, @cloned_rows[@cloned_rows.length-1]), 0
+      view.cursor.set (view.document.findChild @parent, @cloned_rows[@cloned_rows.length-1]), 0
 
   rewind: (view) ->
-    delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+    delete_siblings = view.document.getChildRange @parent, @index, (@index + @nrows - 1)
     for sib in delete_siblings
-      view.data.detach sib
+      view.document.detach sib
 
 class DetachBlocks extends Mutation
   constructor: (@parent, @index, @nrows = 1, @options = {}) ->
@@ -154,40 +154,40 @@ class DetachBlocks extends Mutation
 
   mutate: (view) ->
     @deleted = []
-    delete_rows = view.data.getChildRange @parent, @index, (@index+@nrows-1)
+    delete_rows = view.document.getChildRange @parent, @index, (@index+@nrows-1)
     for sib in delete_rows
       if sib == null then break
-      view.data.detach sib
+      view.document.detach sib
       @deleted.push sib.id
 
     @created = null
     if @options.addNew
-      @created = view.data.addChild @parent, @index
+      @created = view.document.addChild @parent, @index
 
-    children = view.data.getChildren @parent
+    children = view.document.getChildren @parent
 
     if @index < children.length
       next = children[@index]
     else
       next = if @index == 0 then @parent else children[@index - 1]
-      if next.id == view.data.viewRoot.id
+      if next.id == view.document.viewRoot.id
         unless @options.noNew
-          next = view.data.addChild @parent
+          next = view.document.addChild @parent
           @created = next
 
     view.cursor.set next, 0
 
   rewind: (view) ->
     if @created != null
-      @created_rewinded = view.data.detach @created
+      @created_rewinded = view.document.detach @created
     index = @index
-    view.data._attachChildren @parent.id, @deleted, index
+    view.document._attachChildren @parent.id, @deleted, index
 
   remutate: (view) ->
     for id in @deleted
-      view.data._detach id, @parent.id
+      view.document._detach id, @parent.id
     if @created != null
-      view.data.attachChild @created_rewinded.parent, @created, @created_rewinded.index
+      view.document.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 
 # creates new blocks (as opposed to attaching ones that already exist)
 class AddBlocks extends Mutation
@@ -206,7 +206,7 @@ class AddBlocks extends Mutation
 
     first = true
     for serialized_row in @serialized_rows
-      row = view.data.loadTo serialized_row, @parent, index
+      row = view.document.loadTo serialized_row, @parent, index
       index += 1
 
       if @options.setCursor == 'first' and first
@@ -217,14 +217,14 @@ class AddBlocks extends Mutation
       view.cursor.set row, 0, @options.cursorOptions
 
   rewind: (view) ->
-    @delete_siblings = view.data.getChildRange @parent, @index, (@index + @nrows - 1)
+    @delete_siblings = view.document.getChildRange @parent, @index, (@index + @nrows - 1)
     for sib in @delete_siblings
-      view.data.detach sib
+      view.document.detach sib
 
   remutate: (view) ->
     index = @index
     for sib in @delete_siblings
-      view.data.attachChild @parent, sib, index
+      view.document.attachChild @parent, sib, index
       index += 1
 
 class ToggleBlock extends Mutation
@@ -232,9 +232,9 @@ class ToggleBlock extends Mutation
   str: () ->
     return "row #{@row.id}"
   mutate: (view) ->
-    view.data.toggleCollapsed @row
+    view.document.toggleCollapsed @row
   rewind: (view) ->
-    view.data.toggleCollapsed @row
+    view.document.toggleCollapsed @row
 
 exports.Mutation = Mutation
 

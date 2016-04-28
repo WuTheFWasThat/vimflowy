@@ -89,7 +89,7 @@ class KeyHandler
 
     @keyBindings = keyBindings
 
-    @macros = do @view.data.store.getMacros
+    @macros = do @view.document.store.getMacros
     @recording = {
       stream: null
       key: null
@@ -110,7 +110,7 @@ class KeyHandler
   finishRecording: () ->
     macro = @recording.stream.queue
     @macros[@recording.key] = macro
-    @view.data.store.setMacros @macros
+    @view.document.store.setMacros @macros
     @recording.stream = null
     @recording.key = null
 

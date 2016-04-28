@@ -599,7 +599,7 @@ describe "basic multiline tests", () ->
     t.sendKeys 'uu'
     t.expect [ 'a row' ]
     # to demonstrate we're not relying on getId behavior
-    t.data.getId = () ->
+    t.document.getId = () ->
         id = 0
         while @lines[id]
           id++
@@ -626,7 +626,7 @@ describe "basic multiline tests", () ->
     t.sendKeys 'uu'
     t.expect [ 'a row' ]
     # to demonstrate we're not relying on getId behavior
-    t.data.getId = () ->
+    t.document.getId = () ->
         id = 0
         while @lines[id]
           id++
