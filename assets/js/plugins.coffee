@@ -22,12 +22,6 @@ class PluginApi
     @definitions = @bindings.definitions
     @commands = @definitions.commands
 
-  getDataVersion: () ->
-    @data.store.getPluginDataVersion @name
-
-  setDataVersion: (version) ->
-    @data.store.setPluginDataVersion @name, version
-
   setData: (key, value) ->
     @data.store.setPluginData @name, key, value
 
@@ -75,12 +69,6 @@ PLUGIN_SCHEMA = {
     description: {
       description: "Description of the plugin"
       type: "string"
-    }
-    dataVersion: {
-      description: "Version of data format for plugin"
-      type: "integer"
-      default: 1
-      minimum: 1
     }
   }
 }
@@ -221,15 +209,6 @@ class PluginsManager
     plugin = @plugins[name]
     if (status == STATUS.DISABLED) or (status == STATUS.UNREGISTERED)
       api = new PluginApi @view, plugin, @
-
-      # validate data version
-      dataVersion = do api.getDataVersion
-      unless dataVersion?
-        api.setDataVersion plugin.dataVersion
-        dataVersion = plugin.dataVersion
-      # TODO: Come up with some migration system for both vimflowy and plugins
-      errors.assert_equals dataVersion, plugin.dataVersion,
-        "Plugin data versions are not identical, please contact the plugin author for migration support"
 
       @setStatus plugin.name, STATUS.ENABLING
       plugin.api = api

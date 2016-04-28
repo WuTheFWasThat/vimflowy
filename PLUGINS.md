@@ -30,8 +30,6 @@ where
   - author: string
   - description: string
     names of other plugins you depend on.
-  - dataVersion (NOT YET SUPPORTED!): positive integer
-    Bump this if the data format ever changes, so users can avoid data corruption
 - `enableCallback(api)`:
   Called when the plugin is enabled
   Can optionally return a value, in which case other plugins that depend on yours will get access to it.
@@ -115,8 +113,6 @@ More detailed info on these hooks will be added later.
 
 The data API is a simple key-value store:
 ```
-    api.getDataVersion():  The last data version of your plugin this document used
-    api.setDataVersion(version)
     api.getData(key, default_value=null):
         Gets value for a key.
         Default value is returned if key doesn't exist
@@ -129,8 +125,7 @@ The keys should always be strings.  The values can be anything JSON-serializable
 Keep in mind:
 - Reads are cached.  It's assumed nobody else is writing data.
 - Small changes to a large object result in a large write to store
-- Version your data!  That way vimflowy can detect incompatible formats upgrades which would otherwise make vimflowy crash.
-- Document your storage schema when appropriate. Data migrations may be implemented eventually.
+- Document and version your storage schema when appropriate. Data migrations may be implemented eventually.
 
 # Feedback
 

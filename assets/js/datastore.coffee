@@ -12,8 +12,6 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
 class DataStore
   constructor: (prefix='') ->
-    @_schemaVersion_ = 1
-
     @prefix = "#{prefix}save"
 
     @_lineKey_ = (row) -> "#{@prefix}:#{row}:line"
@@ -24,7 +22,6 @@ class DataStore
     @_collapsedKey_ = (row) -> "#{@prefix}:#{row}:collapsed"
 
     @_pluginDataKey_ = (plugin, key) -> "#{@prefix}:plugin:#{plugin}:data:#{key}"
-    @_pluginDataVersionKey_ = (plugin) -> "#{@prefix}:plugin:#{plugin}:version"
 
     # no prefix, meaning it's global
     @_settingKey_ = (setting) -> "settings:#{setting}"
@@ -33,8 +30,6 @@ class DataStore
     @_lastViewrootKey_ = "#{@prefix}:lastviewroot2"
     @_macrosKey_ = "#{@prefix}:macros"
     @_IDKey_ = "#{@prefix}:lastID"
-    @_schemaVersionKey_ = "#{@prefix}:schemaVersion"
-    do @validateSchemaVersion
 
   get: (key, default_value=null) ->
       throw new errors.NotImplemented
@@ -96,15 +91,6 @@ class DataStore
   getLastViewRoot: () ->
     @get @_lastViewrootKey_, []
 
-  setSchemaVersion: (version) ->
-    @set @_schemaVersionKey_, version
-  getSchemaVersion: () ->
-    @get @_schemaVersionKey_, 1
-
-  setPluginDataVersion: (plugin, version) ->
-    @set (@_pluginDataVersionKey_ plugin), version
-  getPluginDataVersion: (plugin) ->
-    @get (@_pluginDataVersionKey_ plugin)
   setPluginData: (plugin, key, data) ->
     @set (@_pluginDataKey_ plugin, key), data
   getPluginData: (plugin, key, default_value=null) ->
@@ -122,18 +108,6 @@ class DataStore
     @setLine id, []
     @setChildren id, []
     return id
-
-  validateSchemaVersion: () ->
-    storedVersion = do @getSchemaVersion
-    if not storedVersion? and (@getChildren 0).length == 0
-      @setSchemaVersion @_schemaVersion_
-      return
-    else if storedVersion > @_schemaVersion_
-      throw new errors.SchemaVersion "The stored data was made with a newer version of vimflowy. Please upgrade vimflowy to use this format."
-    else if storedVersion < @_schemaVersion_
-      throw new errors.SchemaVersion "The stored data was made with an older version of vimflowy, and no migration paths exist. Please report this as a bug."
-    else if storedVersion == @_schemaVersion_
-      return
 
 class InMemory extends DataStore
   constructor: () ->
