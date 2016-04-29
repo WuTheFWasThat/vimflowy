@@ -2,6 +2,7 @@
 # Clones are double-counted. This is a known bug and will not be fixed.
 #
 Plugins = require '../../assets/js/plugins.coffee'
+Modes = require '../../assets/js/modes.coffee'
 
 Plugins.register {
   name: "Time Tracking"
@@ -65,27 +66,27 @@ class TimeTrackingPlugin
       default_hotkeys:
         normal_like: ['<', 's']
     }
-    @api.registerAction [@api.modes.NORMAL], CMD_TOGGLE, {
+    @api.registerAction [Modes.modes.NORMAL], CMD_TOGGLE, {
       description: 'Toggle a setting',
     }, {}
-    @api.registerAction [@api.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_DISPLAY], {
+    @api.registerAction [Modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_DISPLAY], {
       description: 'Toggle whether time spent on each row is displayed',
     }, () =>
       do @toggleDisplay
-    @api.registerAction [@api.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
+    @api.registerAction [Modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
       description: 'Toggle whether time is being logged',
     }, () =>
       do @toggleLogging
-    @api.registerAction [@api.modes.NORMAL], [CMD_TOGGLE, CMD_CLEAR_TIME], {
+    @api.registerAction [Modes.modes.NORMAL], [CMD_TOGGLE, CMD_CLEAR_TIME], {
       description: 'Clear current row time',
     }, () =>
       do @resetCurrentRow
     me = @
-    @api.registerAction [@api.modes.NORMAL], [CMD_TOGGLE, CMD_ADD_TIME], {
+    @api.registerAction [Modes.modes.NORMAL], [CMD_TOGGLE, CMD_ADD_TIME], {
       description: 'Add time to current row (in minutes)',
     }, () ->
       me.changeTimeCurrentRow @repeat
-    @api.registerAction [@api.modes.NORMAL], [CMD_TOGGLE, CMD_SUBTRACT_TIME], {
+    @api.registerAction [Modes.modes.NORMAL], [CMD_TOGGLE, CMD_SUBTRACT_TIME], {
       description: 'Subtract time from current row (in minutes)',
     }, () ->
       me.changeTimeCurrentRow -@repeat

@@ -2,8 +2,14 @@ _ = require 'lodash'
 
 Plugins = require '../../assets/js/plugins.coffee'
 Menu = require '../../assets/js/menu.coffee'
+Modes = require '../../assets/js/modes.coffee'
+DataStore = require '../../assets/js/datastore.coffee'
+Document = (require '../../assets/js/document.coffee').Document
+Session = require '../../assets/js/session.coffee'
 mutations = require '../../assets/js/mutations.coffee'
 errors = require '../../assets/js/errors.coffee'
+
+basic_defs = require '../../assets/js/definitions/basics.coffee'
 
 # NOTE: mark mode is still in the core code
 # TODO: separate that out too?
@@ -54,7 +60,31 @@ class MarksPlugin
 
     # Commands #
 
-    MODES = @api.modes
+    MODES = Modes.modes
+
+    @api.registerMode {
+      name: 'MARK'
+      hotkey_type: Modes.INSERT_MODE_TYPE
+      within_row: true
+      enter: (session) ->
+        # initialize marks stuff
+        document = new Document (new DataStore.InMemory)
+        session.markview = new Session document
+        session.markrow = session.cursor.row
+      exit: (session) ->
+        session.markview = null
+        session.markrow = null
+      key_transforms: [
+        (key, context) ->
+          # must be non-whitespace
+          if key.length == 1
+            if /^\S*$/.test(key)
+              context.session.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+              return [null, context]
+          return [key, context]
+      ]
+
+    }
 
     CMD_MARK = @api.registerCommand {
       name: 'MARK'
@@ -142,6 +172,33 @@ class MarksPlugin
               fn: () => @session.rootInto row
             }
         )
+
+    @api.registerAction [MODES.MARK], basic_defs.CMD_MOTION, {
+      description: 'Move the cursor',
+    }, (motion) ->
+      motion @session.markview.cursor, {pastEnd: true}
+
+    @api.registerAction [MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
+      description: 'Delete last character (i.e. backspace key)',
+    }, () ->
+      do @session.markview.deleteAtCursor
+
+    @api.registerAction [MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
+      description: 'Delete character at the cursor (i.e. del key)',
+    }, () ->
+      @session.sarkvession.delCharsAfterCursor 1
+
+    @api.registerAction [MODES.MARK], basic_defs.CMD_HELP, {
+      description: 'Show/hide key bindings (edit in settings)',
+    }, () ->
+      do @session.toggleBindingsDiv
+      @keyStream.forget 1
+
+    @api.registerAction [MODES.MARK], basic_defs.CMD_EXIT_MODE, {
+      description: 'Exit back to normal mode',
+    }, () ->
+      @session.setMode MODES.NORMAL
+      do @keyStream.forget
 
     @session.addHook 'renderCursorsDict', (cursors, info) =>
       marking = @session.markrow? and @session.markrow.is info.row

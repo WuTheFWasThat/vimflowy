@@ -219,34 +219,9 @@ registerMode {
   ]
 
 }
-registerMode {
-  name: 'MARK'
-  hotkey_type: INSERT_MODE_TYPE
-  within_row: true,
-  enter: (session) ->
-    # do this late to avoid circular dependency
-    # TODO: fix this
-    Session = require './session.coffee'
-    # initialize marks stuff
-    document = new Document (new DataStore.InMemory)
-    session.markview = new Session document
-    session.markrow = session.cursor.row
-  exit: (session) ->
-    session.markview = null
-    session.markrow = null
-  key_transforms: [
-    (key, context) ->
-      # must be non-whitespace
-      if key.length == 1
-        if /^\S*$/.test(key)
-          context.session.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
-          return [null, context]
-      return [key, context]
-  ]
-
-}
 
 module.exports = {
+  registerMode: registerMode
   modes: MODES_ENUM
   types: MODE_TYPES
   getMode: (mode) -> MODES[mode]

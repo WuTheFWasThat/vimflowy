@@ -35,10 +35,6 @@ keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_MOTION, {
 }, (motion) ->
   for i in [1..@repeat]
     motion @session.cursor, {pastEnd: true}
-keyDefinitions.registerAction [MODES.MARK], CMD_MOTION, {
-  description: 'Move the cursor',
-}, (motion) ->
-  motion @session.markview.cursor, {pastEnd: true}
 keyDefinitions.registerAction [MODES.SEARCH], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->
@@ -50,7 +46,7 @@ CMD_HELP = keyDefinitions.registerCommand {
     insert_like: ['ctrl+?']
     normal_like: ['?']
 }
-keyDefinitions.registerAction [MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE, MODES.INSERT, MODES.MARK, MODES.SEARCH], CMD_HELP, {
+keyDefinitions.registerAction [MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE, MODES.INSERT, MODES.SEARCH], CMD_HELP, {
   description: 'Show/hide key bindings (edit in settings)',
 }, () ->
   do @session.toggleBindingsDiv
@@ -352,10 +348,6 @@ keyDefinitions.registerAction [MODES.INSERT], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
   @session.delCharsAfterCursor 1
-keyDefinitions.registerAction [MODES.MARK], CMD_DELETE_CHAR, {
-  description: 'Delete character at the cursor (i.e. del key)',
-}, () ->
-  @session.sarkvession.delCharsAfterCursor 1
 keyDefinitions.registerAction [MODES.SEARCH], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
@@ -385,10 +377,6 @@ keyDefinitions.registerAction [MODES.INSERT], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
   do @session.deleteAtCursor
-keyDefinitions.registerAction [MODES.MARK], CMD_DELETE_LAST_CHAR, {
-  description: 'Delete last character (i.e. backspace key)',
-}, () ->
-  do @session.markview.deleteAtCursor
 keyDefinitions.registerAction [MODES.SEARCH], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
@@ -552,7 +540,7 @@ CMD_EXIT_MODE = keyDefinitions.registerCommand {
   default_hotkeys:
     all: ['esc', 'ctrl+c']
 }
-keyDefinitions.registerAction [MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MODES.MARK], CMD_EXIT_MODE, {
+keyDefinitions.registerAction [MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH], CMD_EXIT_MODE, {
   description: 'Exit back to normal mode',
 }, () ->
   @session.setMode MODES.NORMAL
@@ -598,3 +586,9 @@ keyDefinitions.registerAction [MODES.VISUAL, MODES.VISUAL_LINE], CMD_SWAP_CURSOR
   @session.anchor.from @session.cursor
   @session.cursor.from tmp
   do @keyStream.save
+
+exports.CMD_MOTION = CMD_MOTION
+exports.CMD_DELETE_LAST_CHAR = CMD_DELETE_LAST_CHAR
+exports.CMD_DELETE_CHAR = CMD_DELETE_CHAR
+exports.CMD_HELP = CMD_HELP
+exports.CMD_EXIT_MODE = CMD_EXIT_MODE

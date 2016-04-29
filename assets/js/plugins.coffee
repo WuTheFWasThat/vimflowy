@@ -4,7 +4,6 @@ utils = require './utils.coffee'
 Modes = require './modes.coffee'
 Logger = require './logger.coffee'
 errors = require './errors.coffee'
-mutations = require './mutations.coffee'
 
 # class for exposing plugin API
 class PluginApi
@@ -14,9 +13,6 @@ class PluginApi
     @cursor = @session.cursor
     # TODO: Add subloggers and prefix all log messages with the plugin name
     @logger = Logger.logger
-    @Modes = Modes
-    @modes = Modes.modes
-    @Mutation = mutations.Mutation
 
     @bindings = @session.bindings
     @definitions = @bindings.definitions
@@ -27,6 +23,10 @@ class PluginApi
 
   getData: (key, default_value=null) ->
     @document.store.getPluginData @name, key, default_value
+
+  registerMode: (metadata) ->
+    Modes.registerMode metadata
+    do @session.bindings.init
 
   registerCommand: (metadata) ->
     cmd = @definitions.registerCommand metadata
