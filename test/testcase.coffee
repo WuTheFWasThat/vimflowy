@@ -6,7 +6,7 @@ fs = require 'fs'
 path = require 'path'
 
 DataStore = require '../assets/js/datastore'
-Document = require '../assets/js/document'
+Document = (require '../assets/js/document').Document
 View = require '../assets/js/view'
 for file in fs.readdirSync path.resolve __dirname, '../assets/js/definitions'
   if (file.match /.*\.js$/) or (file.match /.*\.coffee$/)

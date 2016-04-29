@@ -1,5 +1,5 @@
 View = require './view.coffee'
-Document = require './document.coffee'
+Document = (require './document.coffee').Document
 DataStore = require './datastore.coffee'
 
 ###

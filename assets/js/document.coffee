@@ -514,8 +514,6 @@ class Document extends EventEmitter
     for serialized_row in serialized_rows
       @loadTo serialized_row, @root, -1, id_mapping, true
 
-# TODO fix: hacky, used only for rendering...
-Document.Row = Row
-
 # exports
-module.exports = Document
+exports.Row = Row
+exports.Document = Document

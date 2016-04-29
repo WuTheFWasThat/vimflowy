@@ -9,13 +9,12 @@ constants = require './constants.coffee'
 utils = require './utils.coffee'
 errors = require './errors.coffee'
 Cursor = require './cursor.coffee'
-Document = require './document.coffee'
 Register = require './register.coffee'
 Logger = require './logger.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
-Document = require './document.coffee'
-Row = Document.Row
+document = require './document.coffee'
+Row = document.Row
 
 ###
 a View represents the actual viewport onto the vimflowy document

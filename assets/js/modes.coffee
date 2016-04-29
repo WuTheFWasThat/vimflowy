@@ -1,6 +1,6 @@
 utils = require './utils.coffee'
 constants = require './constants.coffee'
-Document = require './document.coffee'
+Document = (require './document.coffee').Document
 DataStore = require './datastore.coffee'
 
 MODE_SCHEMA = {
