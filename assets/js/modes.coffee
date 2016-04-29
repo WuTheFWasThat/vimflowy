@@ -21,6 +21,10 @@ MODE_SCHEMA = {
       description: "Either normal-like or insert-like"
       type: "string"
     }
+    within_row: {
+      description: "Only within-row motions are supported"
+      type: "boolean"
+    }
     enter: {
       description: "Function taking session, upon entering mode"
       type: "function"
@@ -190,6 +194,7 @@ registerMode {
 registerMode {
   name: 'SEARCH'
   hotkey_type: INSERT_MODE_TYPE
+  within_row: true,
   enter: (session) ->
     if session.menuDiv
       session.menuDiv.removeClass 'hidden'
@@ -217,6 +222,7 @@ registerMode {
 registerMode {
   name: 'MARK'
   hotkey_type: INSERT_MODE_TYPE
+  within_row: true,
   enter: (session) ->
     # do this late to avoid circular dependency
     # TODO: fix this

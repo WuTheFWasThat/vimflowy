@@ -91,13 +91,13 @@ class KeyBindings
       $('#hotkey-edit-normal').empty().append(
         $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
       ).append(
-        @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep @definitions.actions[mode] for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
+        @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep (@definitions.actions_for_mode mode) for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
       )
 
       $('#hotkey-edit-insert').empty().append(
         $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
       ).append(
-        @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep @definitions.actions[mode] for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
+        @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep (@definitions.actions_for_mode mode) for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
       )
 
   # tries to apply new hotkey settings, returning an error if there was one
@@ -112,10 +112,10 @@ class KeyBindings
     for mode_type, mode_type_obj of MODE_TYPES
       for mode in mode_type_obj.modes
         modeKeyMap = {}
-        for command in @definitions.commands_by_mode[mode]
+        for command in @definitions.commands_for_mode mode
           modeKeyMap[command] = hotkeys[mode_type][command].slice()
 
-        if mode == MODES.SEARCH or mode == MODES.MARK
+        if Modes.getMode(mode).within_row
           motions = Object.keys @definitions.WITHIN_ROW_MOTIONS
         else
           motions = Object.keys @definitions.ALL_MOTIONS
@@ -126,7 +126,7 @@ class KeyBindings
 
     bindings = {}
     for mode_name, mode of MODES
-      [err, mode_bindings] = getBindings @definitions.actions[mode], keyMaps[mode]
+      [err, mode_bindings] = getBindings (@definitions.actions_for_mode mode), keyMaps[mode]
       if err then return "Error getting bindings for #{mode_name}: #{err}"
       bindings[mode] = mode_bindings
 
@@ -198,7 +198,7 @@ class KeyBindings
     if not (@settings.getSetting 'showKeyBindings')
       return
 
-    table = @buildTable @_keyMaps[mode], @definitions.actions[mode], true
+    table = @buildTable @_keyMaps[mode], (@definitions.actions_for_mode mode), true
     @modebindingsDiv.empty().append(table)
 
   # TODO getBindings: (mode) -> return @bindings[mode]

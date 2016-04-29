@@ -94,6 +94,7 @@ create_view = (document, to_load) ->
   key_emitter.on 'keydown', key_handler.handleKey.bind(key_handler)
 
   # expose globals, for debugging
+  window.Modes = Modes
   window.session = session
   window.key_handler = key_handler
   window.key_emitter = key_emitter
