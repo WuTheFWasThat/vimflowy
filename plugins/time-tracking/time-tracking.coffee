@@ -21,19 +21,19 @@ class TimeTrackingPlugin
     @api.cursor.on 'rowChange', (@onRowChange.bind @)
     @currentRow = null
     @onRowChange null, @api.cursor.row # Initial setup
-    @api.view.addHook 'renderInfoElements', (@renderTime.bind @)
-    @api.view.document.on 'afterMove', (info) =>
+    @api.session.addHook 'renderInfoElements', (@renderTime.bind @)
+    @api.session.document.on 'afterMove', (info) =>
       @_rebuildTreeTime info.id
       @_rebuildTreeTime info.old_parent, true
-    @api.view.document.on 'afterAttach', (info) =>
+    @api.session.document.on 'afterAttach', (info) =>
       @_rebuildTreeTime info.id
       if info.old_detached_parent
         @_rebuildTreeTime info.old_detached_parent, true
-    @api.view.document.on 'afterDetach', (info) =>
+    @api.session.document.on 'afterDetach', (info) =>
       @_rebuildTreeTime info.id
 
     @rowChanges = []
-    @api.view.on 'exit', () =>
+    @api.session.on 'exit', () =>
       @onRowChange @currentRow, null
     CMD_TOGGLE = @api.registerCommand {
       name: 'TOGGLE'
@@ -128,7 +128,7 @@ class TimeTrackingPlugin
     else
       @onRowChange null, @api.cursor.row # Initial setup
     @api.setData "isLogging", (not isLogging)
-    do @api.view.render
+    do @api.session.render
 
   shouldDisplayTime: () ->
     @api.getData "display", true
@@ -137,7 +137,7 @@ class TimeTrackingPlugin
     shouldDisplay = do @shouldDisplayTime
     @logger.info "Turning display #{if shouldDisplay then "off" else "on"}"
     @api.setData "display", (not shouldDisplay)
-    do @api.view.render
+    do @api.session.render
 
   onRowChange: (from, to) ->
     @logger.debug "Switching from row #{from?.id} to row #{to?.id}"
@@ -160,8 +160,8 @@ class TimeTrackingPlugin
     @_rebuildTreeTime id, true
 
   _rebuildTotalTime: (id) ->
-    children = @api.view.document._getChildren id
-    detached_children = @api.view.document.store.getDetachedChildren id
+    children = @api.session.document._getChildren id
+    detached_children = @api.session.document.store.getDetachedChildren id
 
     childTotalTimes = _.map children.concat(detached_children), (child_id) => @getRowData child_id, "treeTotalTime", 0
     rowTime = @getRowData id, "rowTotalTime", 0
@@ -169,7 +169,7 @@ class TimeTrackingPlugin
     @setRowData id, "treeTotalTime", totalTime
 
   _rebuildTreeTime: (id, inclusive = false) ->
-    for ancestor_id in @api.view.document.allAncestors id, { inclusive: inclusive }
+    for ancestor_id in @api.session.document.allAncestors id, { inclusive: inclusive }
       @_rebuildTotalTime ancestor_id
 
   rowTime: (row) ->

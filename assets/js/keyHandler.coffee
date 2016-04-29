@@ -1,12 +1,12 @@
 ###
-Takes in keys, and, based on the keybindings (see keyBindings.coffee), manipulates the view (see view.coffee)
+Takes in keys, and, based on the keybindings (see keyBindings.coffee), manipulates the session (see session.coffee)
 
 The KeyHandler class manages the state of what keys have been input, dealing with the logic for
 - handling multi-key sequences, i.e. a key that semantically needs another key (e.g. the GO command, `g` in vim)
 - handling motions and commands that take motions
 - combining together and saving sequences of commands (important for the REPEAT command, `.` in vim, for macros, and for number prefixes, e.g. 3j)
 - dropping sequences of commands that are invalid
-- telling the view when to save (i.e. the proper checkpoints for undo and redo)
+- telling the session when to save (i.e. the proper checkpoints for undo and redo)
 It maintains custom logic for this, for each mode.
 (NOTE: hopefully this logic can be more unified!  It is currently quite fragile)
 
@@ -84,12 +84,12 @@ class KeyStream extends EventEmitter
 
 class KeyHandler
 
-  constructor: (view, keyBindings) ->
-    @view = view
+  constructor: (session, keyBindings) ->
+    @session = session
 
     @keyBindings = keyBindings
 
-    @macros = do @view.document.store.getMacros
+    @macros = do @session.document.store.getMacros
     @recording = {
       stream: null
       key: null
@@ -97,7 +97,7 @@ class KeyHandler
 
     @keyStream = new KeyStream
     @keyStream.on 'save', () =>
-      do @view.save
+      do @session.save
 
   ############
   # for macros
@@ -110,12 +110,12 @@ class KeyHandler
   finishRecording: () ->
     macro = @recording.stream.queue
     @macros[@recording.key] = macro
-    @view.document.store.setMacros @macros
+    @session.document.store.setMacros @macros
     @recording.stream = null
     @recording.key = null
 
   playRecording: (recording) ->
-    # the recording shouldn't save, (i.e. no @view.save)
+    # the recording shouldn't save, (i.e. no @session.save)
     recordKeyStream = new KeyStream recording
     @processKeys recordKeyStream
 
@@ -125,9 +125,9 @@ class KeyHandler
 
   handleKey: (key) ->
     # TODO: make settings actually a mode, and have hotkeys for everything?
-    if do @view.showingSettings
+    if do @session.showingSettings
         # allow stuff like page refresh while on settings
-        return @view.handleSettings key
+        return @session.handleSettings key
     Logger.logger.debug 'Handling key:', key
     @keyStream.enqueue key
     if @recording.stream
@@ -141,11 +141,11 @@ class KeyHandler
     while not keyStream.done() and not keyStream.waiting
       do keyStream.checkpoint
       handled = (@processOnce keyStream) or handled
-    do @view.render
+    do @session.render
     return handled
 
   processOnce: (keyStream) ->
-    @processMode @view.mode, keyStream
+    @processMode @session.mode, keyStream
 
   processMode: (mode, keyStream, bindings = null, repeat = 1) ->
     if bindings == null
@@ -153,7 +153,7 @@ class KeyHandler
 
     context = {
       mode: mode
-      view: @view
+      session: @session
       repeat: repeat
       keyStream: keyStream
       keyHandler: @
@@ -194,7 +194,7 @@ class KeyHandler
     else if typeof definition == 'function'
       context = mode_obj.transform_context context
       info.definition.apply context, args
-      (Modes.getMode @view.mode).every @view, keyStream
+      (Modes.getMode @session.mode).every @session, keyStream
       return true
     else
       throw new errors.UnexpectedValue "definition", definition
@@ -237,7 +237,7 @@ class KeyHandler
       return (@getMotion keyStream, null, definition, repeat)
     else if typeof definition == 'function'
       context = {
-        view: @view
+        session: @session
         repeat: repeat
         keyStream: keyStream
         keyHandler: @

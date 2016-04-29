@@ -5,14 +5,14 @@ MODES = Modes.modes
 
 visual_line_indent = () ->
   return () ->
-    @view.indentBlocks @row_start, @num_rows
-    @view.setMode MODES.NORMAL
+    @session.indentBlocks @row_start, @num_rows
+    @session.setMode MODES.NORMAL
     do @keyStream.save
 
 visual_line_unindent = () ->
   return () ->
-    @view.unindentBlocks @row_start, @num_rows
-    @view.setMode MODES.NORMAL
+    @session.unindentBlocks @row_start, @num_rows
+    @session.setMode MODES.NORMAL
     do @keyStream.save
 
 CMD_INDENT_RIGHT = keyDefinitions.registerCommand {
@@ -23,12 +23,12 @@ CMD_INDENT_RIGHT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_INDENT_RIGHT, {
   description: 'Indent row right',
 }, () ->
-  do @view.indent
+  do @session.indent
   do @keyStream.save
 keyDefinitions.registerAction [MODES.INSERT], CMD_INDENT_RIGHT, {
   description: 'Indent row right',
 }, () ->
-  do @view.indent
+  do @session.indent
 # NOTE: this matches block indent behavior, in visual line
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_INDENT_RIGHT, {
   description: 'Indent row right',
@@ -42,12 +42,12 @@ CMD_INDENT_LEFT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_INDENT_LEFT, {
   description: 'Indent row left',
 }, () ->
-  do @view.unindent
+  do @session.unindent
   do @keyStream.save
 keyDefinitions.registerAction [MODES.INSERT], CMD_INDENT_LEFT, {
   description: 'Indent row left',
 }, () ->
-  do @view.unindent
+  do @session.unindent
 # NOTE: this matches block indent behavior, in visual line
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_INDENT_LEFT, {
   description: 'Indent row left',
@@ -62,12 +62,12 @@ CMD_MOVE_BLOCK_RIGHT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
 }, () ->
-  @view.indentBlocks @view.cursor.row, @repeat
+  @session.indentBlocks @session.cursor.row, @repeat
   do @keyStream.save
 keyDefinitions.registerAction [MODES.INSERT], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
 }, () ->
-  @view.indentBlocks @view.cursor.row, 1
+  @session.indentBlocks @session.cursor.row, 1
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
 }, (do visual_line_indent)
@@ -81,12 +81,12 @@ CMD_MOVE_BLOCK_LEFT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
 }, () ->
-  @view.unindentBlocks @view.cursor.row, @repeat
+  @session.unindentBlocks @session.cursor.row, @repeat
   do @keyStream.save
 keyDefinitions.registerAction [MODES.INSERT], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
 }, () ->
-  @view.unindentBlocks @view.cursor.row, 1
+  @session.unindentBlocks @session.cursor.row, 1
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
 }, (do visual_line_unindent)
@@ -99,7 +99,7 @@ CMD_MOVE_BLOCK_DOWN = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_MOVE_BLOCK_DOWN, {
   description: 'Move block down',
 }, () ->
-  do @view.swapDown
+  do @session.swapDown
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -111,6 +111,6 @@ CMD_MOVE_BLOCK_UP = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_MOVE_BLOCK_UP, {
   description: 'Move block up',
 }, () ->
-  do @view.swapUp
+  do @session.swapUp
   if @mode == MODES.NORMAL
     do @keyStream.save

@@ -61,7 +61,7 @@ Each command is assigned default hotkeys, and can be thought of as a layer of in
 A **motion** is a movement of a cursor.
 It is defined by associating a sequence of commands with a function (that mutates a cursor).
 
-An **action** is a manipulation of the view and/or underlying data.
+An **action** is a manipulation of the document/underlying data.
 It is defined by associating a sequence of commands with a function to perform the action, for a given set of modes.
 There is a special 'MOTION' command which lets an action use any motion as a subroutine.
 See the definitions of yank and delete, in [`assets/js/definitions/basics.coffee`](assets/js/definitions/basics.coffee), for an example.
@@ -80,9 +80,10 @@ We plan on adding ways to unregister commands/actions/motions.
 #### vimflowy internals
 
 ```
-    api.view:  A reference of the internal @view object in vimflowy
+    api.session:   A reference of the internal @session object in vimflowy
+                   A session tracks the cursor, history, as well as the actual document
+    api.cursor:    A reference of the internal @cursor object in vimflowy
     api.document:  A reference of the internal @document object in vimflowy
-    api.cursor:  A reference of the internal @cursor object in vimflowy
 ```
 
 This section will be documented better in the future, when the API is better and more stable
@@ -100,7 +101,7 @@ This section will be documented better in the future, when the API is better and
 
 We expose an API for rendering via a family of hooks
 ```
-    api.view.addHook(hookname, fn),
+    api.session.addHook(hookname, fn),
 ```
 where `fn(v, info)` is a callback taking a virtualDom element (or array of them) and any additional information the hook provides.
 This hook function should return a new virtualDom element (or array of them).

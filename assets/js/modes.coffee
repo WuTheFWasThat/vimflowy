@@ -22,15 +22,15 @@ MODE_SCHEMA = {
       type: "string"
     }
     enter: {
-      description: "Function taking view, upon entering mode"
+      description: "Function taking session, upon entering mode"
       type: "function"
     }
     every: {
-      description: "Function executed on every action, while in the mode.  Takes view and keystream"
+      description: "Function executed on every action, while in the mode.  Takes session and keystream"
       type: "function"
     }
     exit: {
-      description: "Function taking view, upon entering mode"
+      description: "Function taking session, upon entering mode"
       type: "function"
     }
 
@@ -67,17 +67,17 @@ class Mode
     @key_transforms = metadata.key_transforms
     @transform_context = metadata.transform_context
 
-  enter: (view) ->
+  enter: (session) ->
     if @metadata.enter
-      @metadata.enter view
+      @metadata.enter session
 
-  every: (view, keyStream) ->
+  every: (session, keyStream) ->
     if @metadata.every
-      @metadata.every view, keyStream
+      @metadata.every session, keyStream
 
-  exit: (view) ->
+  exit: (session) ->
     if @metadata.exit
-      @metadata.exit view
+      @metadata.exit session
 
   transform_key: (key, context) ->
     for key_transform in @key_transforms
@@ -132,8 +132,8 @@ transform_insert_key = (key) ->
 registerMode {
   name: 'NORMAL'
   hotkey_type: NORMAL_MODE_TYPE
-  enter: (view) ->
-    do view.cursor.backIfNeeded
+  enter: (session) ->
+    do session.cursor.backIfNeeded
   key_transforms: [
     (key, context) ->
       [newrepeat, key] = context.keyHandler.getRepeat context.keyStream, key
@@ -153,8 +153,8 @@ registerMode {
         # simply insert the key
         obj = {char: key}
         for property in constants.text_properties
-          if context.view.cursor.getProperty property then obj[property] = true
-        context.view.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
+          if context.session.cursor.getProperty property then obj[property] = true
+        context.session.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
         return [null, context]
       return [key, context]
   ]
@@ -162,27 +162,27 @@ registerMode {
 registerMode {
   name: 'VISUAL'
   hotkey_type: NORMAL_MODE_TYPE
-  enter: (view) ->
-    view.anchor = do view.cursor.clone
-  exit: (view) ->
-    view.anchor = null
+  enter: (session) ->
+    session.anchor = do session.cursor.clone
+  exit: (session) ->
+    session.anchor = null
 }
 registerMode {
   name: 'VISUAL_LINE'
   hotkey_type: NORMAL_MODE_TYPE
-  enter: (view) ->
-    view.anchor = do view.cursor.clone
-    view.lineSelect = true
-  exit: (view) ->
-    view.anchor = null
-    view.lineSelect = false
+  enter: (session) ->
+    session.anchor = do session.cursor.clone
+    session.lineSelect = true
+  exit: (session) ->
+    session.anchor = null
+    session.lineSelect = false
   transform_context: (context) ->
-    view = context.view
-    [parent, index1, index2] = do view.getVisualLineSelections
+    session = context.session
+    [parent, index1, index2] = do session.getVisualLineSelections
     context.row_start_i = index1
     context.row_end_i = index2
-    context.row_start = (view.document.getChildren parent)[index1]
-    context.row_end = (view.document.getChildren parent)[index2]
+    context.row_start = (session.document.getChildren parent)[index1]
+    context.row_end = (session.document.getChildren parent)[index2]
     context.parent = parent
     context.num_rows = index2 - index1 + 1
     return context
@@ -190,24 +190,24 @@ registerMode {
 registerMode {
   name: 'SEARCH'
   hotkey_type: INSERT_MODE_TYPE
-  enter: (view) ->
-    if view.menuDiv
-      view.menuDiv.removeClass 'hidden'
-      view.mainDiv.addClass 'hidden'
-  every: (view, keyStream) ->
-    do view.menu.update
+  enter: (session) ->
+    if session.menuDiv
+      session.menuDiv.removeClass 'hidden'
+      session.mainDiv.addClass 'hidden'
+  every: (session, keyStream) ->
+    do session.menu.update
     do keyStream.forget
-  exit: (view) ->
-    view.menu = null
-    if view.menuDiv
-      view.menuDiv.addClass 'hidden'
-      view.mainDiv.removeClass 'hidden'
+  exit: (session) ->
+    session.menu = null
+    if session.menuDiv
+      session.menuDiv.addClass 'hidden'
+      session.mainDiv.removeClass 'hidden'
   key_transforms: [
     (key, context) ->
       key = transform_insert_key key
       if key.length == 1
-        context.view.menu.view.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
-        do context.view.menu.update
+        context.session.menu.session.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+        do context.session.menu.update
         do context.keyStream.forget
         return [null, context]
       return [key, context]
@@ -217,23 +217,23 @@ registerMode {
 registerMode {
   name: 'MARK'
   hotkey_type: INSERT_MODE_TYPE
-  enter: (view) ->
+  enter: (session) ->
     # do this late to avoid circular dependency
     # TODO: fix this
-    View = require './view.coffee'
+    Session = require './session.coffee'
     # initialize marks stuff
     document = new Document (new DataStore.InMemory)
-    view.markview = new View document
-    view.markrow = view.cursor.row
-  exit: (view) ->
-    view.markview = null
-    view.markrow = null
+    session.markview = new Session document
+    session.markrow = session.cursor.row
+  exit: (session) ->
+    session.markview = null
+    session.markrow = null
   key_transforms: [
     (key, context) ->
       # must be non-whitespace
       if key.length == 1
         if /^\S*$/.test(key)
-          context.view.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+          context.session.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
           return [null, context]
       return [key, context]
   ]

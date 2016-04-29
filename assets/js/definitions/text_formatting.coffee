@@ -26,24 +26,24 @@ CMD_STRIKETHROUGH = keyDefinitions.registerCommand {
 
 text_format_normal = (property) ->
   return () ->
-    @view.toggleRowProperty property
+    @session.toggleRowProperty property
     do @keyStream.save
 
 text_format_insert = (property) ->
   return () ->
-    @view.cursor.toggleProperty property
+    @session.cursor.toggleProperty property
 
 text_format_visual_line = (property) ->
   return () ->
-    rows = @view.document.getChildRange @parent, @row_start_i, @row_end_i
-    @view.toggleRowsProperty property, rows
-    @view.setMode MODES.NORMAL
+    rows = @session.document.getChildRange @parent, @row_start_i, @row_end_i
+    @session.toggleRowsProperty property, rows
+    @session.setMode MODES.NORMAL
     do @keyStream.save
 
 text_format_visual = (property) ->
   return () ->
-    @view.toggleRowPropertyBetween property, @view.cursor, @view.anchor, {includeEnd: true}
-    @view.setMode MODES.NORMAL
+    @session.toggleRowPropertyBetween property, @session.cursor, @session.anchor, {includeEnd: true}
+    @session.setMode MODES.NORMAL
     do @keyStream.save
 
 keyDefinitions.registerAction [MODES.NORMAL], CMD_BOLD, {

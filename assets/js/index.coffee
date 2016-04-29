@@ -4,7 +4,7 @@ initialize the main page
 - handle clipboard paste
 - handle errors
 - load document from localStorage/chrome storage (fall back to plain in-memory datastructures)
-- initialize objects (view, settings, etc.) with relevant divs
+- initialize objects (session, settings, etc.) with relevant divs
 ###
 
 constants = require './constants.coffee'
@@ -19,7 +19,7 @@ DataStore = require './datastore.coffee'
 Document = (require './document.coffee').Document
 Settings = require './settings.coffee'
 Plugins = require './plugins.coffee'
-View = require './view.coffee'
+Session = require './session.coffee'
 
 keyDefinitions = require './keyDefinitions.coffee'
 # load all definitions
@@ -29,7 +29,7 @@ require '../../plugins/**/*.js', {mode: 'expand'}
 require '../../plugins/**/*.coffee', {mode: 'expand'}
 KeyBindings = require './keyBindings.coffee'
 
-view = null
+session = null
 create_view = (document, to_load) ->
 
   settings = new Settings document.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
@@ -37,7 +37,7 @@ create_view = (document, to_load) ->
 
   key_bindings = new KeyBindings keyDefinitions, settings, {modebindingsDiv: $('#keybindings')}
 
-  view = new View document, {
+  session = new Session document, {
     bindings: key_bindings
     settings: settings
     mainDiv: $('#view'),
@@ -49,16 +49,16 @@ create_view = (document, to_load) ->
     menuDiv: $('#menu')
   }
 
-  Plugins.resolveView view
+  Plugins.resolveSession session
   if to_load != null
     document.load to_load
     # otherwise, you can undo initial marks, for example
-    do view.reset_history
-    do view.reset_jump_history
+    do session.reset_history
+    do session.reset_jump_history
 
   $(document).ready ->
-    do view.hideSettings
-    do view.render
+    do session.hideSettings
+    do session.render
 
   # needed for safari
   $('#paste-hack').focus()
@@ -78,39 +78,39 @@ create_view = (document, to_load) ->
       lines = text.split '\n'
       for line, i in lines
         if i != 0
-          do view.newLineAtCursor
+          do session.newLineAtCursor
         chars = line.split ''
         options = {}
-        if view.mode == Modes.modes.INSERT
+        if session.mode == Modes.modes.INSERT
           options.cursor = {pastEnd: true}
-        view.addCharsAtCursor chars, options
-      do view.render
-      do view.save
+        session.addCharsAtCursor chars, options
+      do session.render
+      do session.save
   )
 
   key_emitter = new KeyEmitter
   do key_emitter.listen
-  key_handler = new KeyHandler view, key_bindings
+  key_handler = new KeyHandler session, key_bindings
   key_emitter.on 'keydown', key_handler.handleKey.bind(key_handler)
 
   # expose globals, for debugging
-  window.view = view
+  window.session = session
   window.key_handler = key_handler
   window.key_emitter = key_emitter
   window.key_bindings = key_bindings
 
   $(document).ready ->
     $("#settings-link").click () =>
-      do view.settingsToggle
+      do session.settingsToggle
 
     $("#settings-nav li").click (e) ->
-      view.selectSettingsTab ($(e.target).data "tab")
+      session.selectSettingsTab ($(e.target).data "tab")
 
     load_file = (filesDiv, cb) ->
         file = filesDiv.files[0]
         if not file?
             return cb 'No file selected for import!'
-        view.showMessage 'Reading in file...'
+        session.showMessage 'Reading in file...'
         reader = new FileReader()
         reader.readAsText file, "UTF-8"
         reader.onload = (evt) ->
@@ -130,52 +130,52 @@ create_view = (document, to_load) ->
 
     $("#hotkeys_import").click () =>
         load_file $('#hotkeys_file_input')[0], (err, content) ->
-            if err then return view.showMessage err, {text_class: 'error'}
+            if err then return session.showMessage err, {text_class: 'error'}
             try
                 hotkey_settings = JSON.parse content
             catch e
-                return view.showMessage "Failed to parse JSON: #{e}", {text_class: 'error'}
+                return session.showMessage "Failed to parse JSON: #{e}", {text_class: 'error'}
             err = key_bindings.apply_hotkey_settings hotkey_settings
-            if err then return view.showMessage err, {text_class: 'error'}
+            if err then return session.showMessage err, {text_class: 'error'}
             key_bindings.save_settings hotkey_settings
-            key_bindings.renderModeTable view.mode # TODO: do this elsewhere?
-            view.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
+            key_bindings.renderModeTable session.mode # TODO: do this elsewhere?
+            session.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
 
     $("#hotkeys_export").click () =>
         filename = 'vimflowy_hotkeys.json'
         content = JSON.stringify(key_bindings.hotkeys, null, 2)
         download_file filename, 'application/json', content
-        view.showMessage "Downloaded hotkeys to #{filename}!", {text_class: 'success'}
+        session.showMessage "Downloaded hotkeys to #{filename}!", {text_class: 'success'}
 
     $("#hotkeys_default").click () =>
         do key_bindings.apply_default_hotkey_settings
-        key_bindings.renderModeTable view.mode # TODO: do this elsewhere?
-        view.showMessage "Loaded defaults!", {text_class: 'success'}
+        key_bindings.renderModeTable session.mode # TODO: do this elsewhere?
+        session.showMessage "Loaded defaults!", {text_class: 'success'}
 
     $("#data_import").click () =>
         load_file $('#import-file :file')[0], (err, content, filename) ->
-            if err then return view.showMessage err, {text_class: 'error'}
+            if err then return session.showMessage err, {text_class: 'error'}
             mimetype = utils.mimetypeLookup filename
-            if view.importContent content, mimetype
-                view.showMessage 'Imported!', {text_class: 'success'}
-                do view.hideSettings
+            if session.importContent content, mimetype
+                session.showMessage 'Imported!', {text_class: 'success'}
+                do session.hideSettings
             else
-                view.showMessage 'Import failed due to parsing issue', {text_class: 'error'}
+                session.showMessage 'Import failed due to parsing issue', {text_class: 'error'}
 
     export_type = (type) ->
-      view.showMessage 'Exporting...'
+      session.showMessage 'Exporting...'
       filename = 'vimflowy.' + type
       # Infer mimetype from file extension
       mimetype = utils.mimetypeLookup filename
-      content = view.exportContent mimetype
+      content = session.exportContent mimetype
       download_file filename, mimetype, content
-      view.showMessage "Exported to #{filename}!", {text_class: 'success'}
+      session.showMessage "Exported to #{filename}!", {text_class: 'success'}
 
     $("#data_export_json").click (export_type.bind @, 'json')
     $("#data_export_plain").click (export_type.bind @, 'txt')
 
   $(window).unload () =>
-    do view.exit
+    do session.exit
 
 
 if chrome?.storage?.sync

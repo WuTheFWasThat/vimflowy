@@ -7,7 +7,7 @@ path = require 'path'
 
 DataStore = require '../assets/js/datastore'
 Document = (require '../assets/js/document').Document
-View = require '../assets/js/view'
+Session = require '../assets/js/session'
 for file in fs.readdirSync path.resolve __dirname, '../assets/js/definitions'
   if (file.match /.*\.js$/) or (file.match /.*\.coffee$/)
     require path.join '../assets/js/definitions', file
@@ -33,21 +33,21 @@ class TestCase
     # will have default bindings
     keyBindings = new KeyBindings (do KeyDefinitions.clone), @settings
 
-    @view = new View @document, {bindings: keyBindings}
-    @view.render = -> return
+    @session = new Session @document, {bindings: keyBindings}
+    @session.render = -> return
 
-    @keyhandler = new KeyHandler @view, keyBindings
-    @register = @view.register
+    @keyhandler = new KeyHandler @session, keyBindings
+    @register = @session.register
 
-    Plugins.resolveView @view
+    Plugins.resolveSession @session
     for name of Plugins.plugins
       Plugins.enable name
 
-    # NOTE: this is *after* resolveView because of plugins with state
+    # NOTE: this is *after* resolveSession because of plugins with state
     # e.g. marks needs the database to have the marks loaded
     @document.load serialized
-    do @view.reset_history
-    do @view.reset_jump_history
+    do @session.reset_history
+    do @session.reset_jump_history
 
   _expectDeepEqual: (actual, expected, message) ->
     if not _.isEqual actual, expected
@@ -81,7 +81,7 @@ class TestCase
     return @
 
   import: (content, mimetype) ->
-    @view.importContent content, mimetype
+    @session.importContent content, mimetype
 
   expect: (expected) ->
     serialized = @document.serialize @document.root, {pretty: true}
@@ -89,22 +89,22 @@ class TestCase
     return @
 
   expectViewRoot: (expected) ->
-    @_expectEqual @view.viewRoot.id, expected, "Unexpected view root"
+    @_expectEqual @session.viewRoot.id, expected, "Unexpected view root"
     return @
 
   expectCursor: (row, col) ->
-    @_expectEqual @view.cursor.row.id, row, "Unexpected cursor row"
-    @_expectEqual @view.cursor.col, col, "Unexpected cursor col"
+    @_expectEqual @session.cursor.row.id, row, "Unexpected cursor row"
+    @_expectEqual @session.cursor.col, col, "Unexpected cursor col"
     return @
 
   expectJumpIndex: (index, historyLength = null) ->
-    @_expectEqual @view.jumpIndex, index, "Unexpected jump index"
+    @_expectEqual @session.jumpIndex, index, "Unexpected jump index"
     if historyLength != null
-      @_expectEqual @view.jumpHistory.length, historyLength, "Unexpected jump history length"
+      @_expectEqual @session.jumpHistory.length, historyLength, "Unexpected jump history length"
     return @
 
   expectNumMenuResults: (num_results) ->
-    @_expectEqual @view.menu.results.length, num_results, "Unexpected number of results"
+    @_expectEqual @session.menu.results.length, num_results, "Unexpected number of results"
     return @
 
   setRegister: (value) ->
@@ -122,7 +122,7 @@ class TestCase
     return @
 
   expectExport: (fileExtension, expected) ->
-    export_ = @view.exportContent fileExtension
+    export_ = @session.exportContent fileExtension
     @_expectEqual export_, expected, "Unexpected export content"
     return @
 

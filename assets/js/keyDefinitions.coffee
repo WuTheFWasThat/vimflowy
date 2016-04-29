@@ -164,7 +164,7 @@ class KeyDefinitions
   The definition should have functions for each mode that it supports
   The functions will be passed contexts depending on each mode
     TODO: document these
-    view:
+    session:
     keyStream:
     repeat:
   It may also have, bindings:

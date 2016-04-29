@@ -13,17 +13,19 @@ Register = require './register.coffee'
 Logger = require './logger.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
-document = require './document.coffee'
-Row = document.Row
+DocumentLib = require './document.coffee'
+Row = DocumentLib.Row
 
 ###
-a View represents the actual viewport onto the vimflowy document
+a Session represents a session with a vimflowy document
 It holds a Cursor, a Document object, and a Settings object
 It exposes methods for manipulation of the document, and movement of the cursor
-It also handles rendering of everything, including settings.
 
-Currently, the separation between the View and Document classes is not very good.  (see document.coffee)
-Ideally, view shouldn't do much more than handle cursors and rendering
+It also handles rendering of everything, including settings.
+NOTE: rendering should move to a different class
+
+Currently, the separation between the Session and Document classes is not very good.  (see document.coffee)
+Ideally, session shouldn't do much more than handle cursors and history
 ###
 getCursorClass = (cursorBetween) ->
   if cursorBetween
@@ -178,7 +180,7 @@ renderLine = (lineData, options = {}) ->
 
 MODES = Modes.modes
 
-class View extends EventEmitter
+class Session extends EventEmitter
   containerDivID = (id) ->
     return 'node-' + id
 
@@ -188,10 +190,10 @@ class View extends EventEmitter
   childrenDivID = (id) ->
     return 'node-' + id + '-children'
 
-  constructor: (document, options = {}) ->
+  constructor: (doc, options = {}) ->
     super
 
-    @document = document
+    @document = doc
 
     @bindings = options.bindings
 
@@ -1333,4 +1335,4 @@ class View extends EventEmitter
 # exports
 # TODO, fix
 window?.renderLine = renderLine
-module.exports = View
+module.exports = Session

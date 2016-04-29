@@ -3,15 +3,15 @@ constants = require './constants.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
 ###
-Cursor represents a cursor with a view
+Cursor represents a cursor within a session
 it handles movement logic, insert mode line properties (e.g. bold/italic)
 ###
 class Cursor extends EventEmitter
-  constructor: (view, row = null, col = null, moveCol = null) ->
+  constructor: (session, row = null, col = null, moveCol = null) ->
     super
-    @view = view
-    @document = view.document
-    @row = row ? (@document.getChildren @view.viewRoot)[0]
+    @session = session
+    @document = session.document
+    @row = row ? (@document.getChildren @session.viewRoot)[0]
     @col = col ? 0
     @properties = {}
     do @_getPropertiesFromContext
@@ -20,7 +20,7 @@ class Cursor extends EventEmitter
     @moveCol = moveCol ? col
 
   clone: () ->
-    return new Cursor @view, (do @row.clone), @col, @moveCol
+    return new Cursor @session, (do @row.clone), @col, @moveCol
 
   _setRow: (row) ->
     @emit 'rowChange', @row, row
@@ -93,7 +93,7 @@ class Cursor extends EventEmitter
     if @col < (@document.getLength @row) - 1
       return false
     else
-      nextrow = @view.nextVisible @row
+      nextrow = @session.nextVisible @row
       if nextrow != null
         return false
     return true
@@ -103,7 +103,7 @@ class Cursor extends EventEmitter
       do @_right
       return true
     else
-      nextrow = @view.nextVisible @row
+      nextrow = @session.nextVisible @row
       if nextrow != null
         @set nextrow, 0
         return true
@@ -113,7 +113,7 @@ class Cursor extends EventEmitter
     if @col > 0
       return false
     else
-      prevrow = @view.prevVisible @row
+      prevrow = @session.prevVisible @row
       if prevrow != null
         return false
     return true
@@ -123,7 +123,7 @@ class Cursor extends EventEmitter
       do @_left
       return true
     else
-      prevrow = @view.prevVisible @row
+      prevrow = @session.prevVisible @row
       if prevrow != null
         @set prevrow, -1
         return true
@@ -138,12 +138,12 @@ class Cursor extends EventEmitter
     return @
 
   visibleHome: () ->
-    row = do @view.nextVisible
+    row = do @session.nextVisible
     @set row, 0
     return @
 
   visibleEnd: () ->
-    row = do @view.lastVisible
+    row = do @session.lastVisible
     @set row, 0
     return @
 
@@ -275,12 +275,12 @@ class Cursor extends EventEmitter
       do @_right
 
   up: (cursorOptions = {}) ->
-    row = @view.prevVisible @row
+    row = @session.prevVisible @row
     if row?
       @setRow row, cursorOptions
 
   down: (cursorOptions = {}) ->
-    row = @view.nextVisible @row
+    row = @session.nextVisible @row
     if row?
       @setRow row, cursorOptions
 
@@ -288,8 +288,8 @@ class Cursor extends EventEmitter
     row = do @row.getParent
     if row.id == @document.root.id
       return
-    if row.is @view.viewRoot
-      @view.changeViewRoot (do row.getParent)
+    if row.is @session.viewRoot
+      @session.changeViewRoot (do row.getParent)
     @setRow row, cursorOptions
 
   prevSibling: (cursorOptions = {}) ->

@@ -62,12 +62,11 @@ Row.loadFromAncestry = (ancestry) ->
 ###
 Document is a wrapper class around the actual datastore, providing methods to manipulate the document
 the document itself includes:
-  - the location that is currently being viewed
   - the text in each line, including text properties like bold/italic
   - the parent/child relationships and collapsed-ness of lines
 also deals with loading the initial document from the datastore, and serializing the document to a string
 
-Currently, the separation between the View and Document classes is not very good.  (see view.coffee)
+Currently, the separation between the Session and Document classes is not very good.  (see session.coffee)
 ###
 class Document extends EventEmitter
   root: do Row.getRoot

@@ -1,20 +1,20 @@
 ###
-mutations mutate a document within a view, and are undoable
+mutations mutate a document within a session, and are undoable
 each mutation should implement a constructor, as well as the following methods:
 
     str: () -> string
         prints itself
-    mutate: (view) -> void
-        takes a view and acts on it (mutates the view)
-    rewind: (view) -> void
-        takes a view, assumed be in the state right after the mutation was applied, and undoes the mutation
+    mutate: (session) -> void
+        takes a session and acts on it (mutates the session)
+    rewind: (session) -> void
+        takes a session, assumed be in the state right after the mutation was applied, and undoes the mutation
 
 the mutation may also optionally implement
 
-    validate: (view) -> bool
+    validate: (session) -> bool
         returns whether this action is valid at the time (i.e. whether it is okay to call mutate)
-    remutate: (view) -> void
-        takes a view, and acts on it.  assumes that mutate has been called once already
+    remutate: (session) -> void
+        takes a session, and acts on it.  assumes that mutate has been called once already
         by default, remutate is the same as mutate.
         it should be implemented only if it is more efficient than the mutate implementation
 ###
@@ -23,11 +23,11 @@ _ = require 'lodash'
 errors = require './errors.coffee'
 
 # validate inserting id as a child of parent_id
-validateRowInsertion = (view, parent_id, id, options={}) ->
+validateRowInsertion = (session, parent_id, id, options={}) ->
   # check that there won't be doubled siblings
   if not options.noSiblingCheck
-    if view.document._hasChild parent_id, id
-      view.showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
+    if session.document._hasChild parent_id, id
+      session.showMessage "Cloned rows cannot be inserted as siblings", {text_class: 'error'}
       return false
 
   # check that there are no cycles
@@ -35,22 +35,22 @@ validateRowInsertion = (view, parent_id, id, options={}) ->
   # It is sufficient to check if the row is an ancestor of the new parent,
   # because if there was a clone underneath the row which was an ancestor of 'parent',
   # then 'row' would also be an ancestor of 'parent'.
-  if _.includes (view.document.allAncestors parent_id, { inclusive: true }), id
-    view.showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
+  if _.includes (session.document.allAncestors parent_id, { inclusive: true }), id
+    session.showMessage "Cloned rows cannot be nested under themselves", {text_class: 'error'}
     return false
   return true
 
 class Mutation
   str: () ->
     return ''
-  validate: (view) ->
+  validate: (session) ->
     return true
-  mutate: (view) ->
+  mutate: (session) ->
     return
-  rewind: (view) ->
+  rewind: (session) ->
     return
-  remutate: (view) ->
-    return @mutate view
+  remutate: (session) ->
+    return @mutate session
 
 class AddChars extends Mutation
   # options:
@@ -64,17 +64,17 @@ class AddChars extends Mutation
   str: () ->
     return "row #{@row.id}, col #{@col}, nchars #{@chars.length}"
 
-  mutate: (view) ->
-    view.document.writeChars @row, @col, @chars
+  mutate: (session) ->
+    session.document.writeChars @row, @col, @chars
 
     shift = if @options.cursor.pastEnd then 1 else 0
     if @options.setCursor == 'beginning'
-      view.cursor.set @row, (@col + shift), @options.cursor
+      session.cursor.set @row, (@col + shift), @options.cursor
     else if @options.setCursor == 'end'
-      view.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
+      session.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
 
-  rewind: (view) ->
-    view.document.deleteChars @row, @col, @chars.length
+  rewind: (session) ->
+    session.document.deleteChars @row, @col, @chars.length
 
 class DelChars extends Mutation
   constructor: (@row, @col, @nchars, @options = {}) ->
@@ -84,15 +84,15 @@ class DelChars extends Mutation
   str: () ->
     return "row #{@row.id}, col #{@col}, nchars #{@nchars}"
 
-  mutate: (view) ->
-    @deletedChars = view.document.deleteChars @row, @col, @nchars
+  mutate: (session) ->
+    @deletedChars = session.document.deleteChars @row, @col, @nchars
     if @options.setCursor == 'before'
-      view.cursor.set @row, @col, @options.cursor
+      session.cursor.set @row, @col, @options.cursor
     else if @options.setCursor == 'after'
-      view.cursor.set @row, (@col + 1), @options.cursor
+      session.cursor.set @row, (@col + 1), @options.cursor
 
-  rewind: (view) ->
-    view.document.writeChars @row, @col, @deletedChars
+  rewind: (session) ->
+    session.document.writeChars @row, @col, @deletedChars
 
 class MoveBlock extends Mutation
   constructor: (@row, @parent, @index = -1, @options = {}) ->
@@ -101,19 +101,19 @@ class MoveBlock extends Mutation
   str: () ->
     return "row #{@row.id} from #{@row.parent.id} to #{@parent.id}"
 
-  validate: (view) ->
+  validate: (session) ->
     # if parent is the same, don't do sibling clone validation
     sameParent = @parent.id == @old_parent.id
-    return (validateRowInsertion view, @parent.id, @row.id, {noSiblingCheck: sameParent})
+    return (validateRowInsertion session, @parent.id, @row.id, {noSiblingCheck: sameParent})
 
-  mutate: (view) ->
+  mutate: (session) ->
     errors.assert (not do @row.isRoot), "Cannot detach root"
-    info = view.document._move @row.id, @old_parent.id, @parent.id, @index
+    info = session.document._move @row.id, @old_parent.id, @parent.id, @index
     @old_index = info.old.childIndex
     @row.setParent @parent
 
-  rewind: (view) ->
-    view.document._move @row.id, @parent.id, @old_parent.id, @old_index
+  rewind: (session) ->
+    session.document._move @row.id, @parent.id, @old_parent.id, @old_index
     @row.setParent @old_parent
 
 class AttachBlocks extends Mutation
@@ -127,24 +127,24 @@ class AttachBlocks extends Mutation
   str: () ->
     return "parent #{@parent.id}, index #{@index}"
 
-  validate: (view) ->
+  validate: (session) ->
     for id in @cloned_rows
-      if not (validateRowInsertion view, @parent.id, id)
+      if not (validateRowInsertion session, @parent.id, id)
         return false
     return true
 
-  mutate: (view) ->
-    view.document._attachChildren @parent.id, @cloned_rows, @index
+  mutate: (session) ->
+    session.document._attachChildren @parent.id, @cloned_rows, @index
 
     if @options.setCursor == 'first'
-      view.cursor.set (view.document.findChild @parent, @cloned_rows[0]), 0
+      session.cursor.set (session.document.findChild @parent, @cloned_rows[0]), 0
     else if @options.setCursor == 'last'
-      view.cursor.set (view.document.findChild @parent, @cloned_rows[@cloned_rows.length-1]), 0
+      session.cursor.set (session.document.findChild @parent, @cloned_rows[@cloned_rows.length-1]), 0
 
-  rewind: (view) ->
-    delete_siblings = view.document.getChildRange @parent, @index, (@index + @nrows - 1)
+  rewind: (session) ->
+    delete_siblings = session.document.getChildRange @parent, @index, (@index + @nrows - 1)
     for sib in delete_siblings
-      view.document.detach sib
+      session.document.detach sib
 
 class DetachBlocks extends Mutation
   constructor: (@parent, @index, @nrows = 1, @options = {}) ->
@@ -152,42 +152,42 @@ class DetachBlocks extends Mutation
   str: () ->
     return "parent #{@parent.id}, index #{@index}, nrows #{@nrows}"
 
-  mutate: (view) ->
+  mutate: (session) ->
     @deleted = []
-    delete_rows = view.document.getChildRange @parent, @index, (@index+@nrows-1)
+    delete_rows = session.document.getChildRange @parent, @index, (@index+@nrows-1)
     for sib in delete_rows
       if sib == null then break
-      view.document.detach sib
+      session.document.detach sib
       @deleted.push sib.id
 
     @created = null
     if @options.addNew
-      @created = view.document.addChild @parent, @index
+      @created = session.document.addChild @parent, @index
 
-    children = view.document.getChildren @parent
+    children = session.document.getChildren @parent
 
     if @index < children.length
       next = children[@index]
     else
       next = if @index == 0 then @parent else children[@index - 1]
-      if next.id == view.viewRoot.id
+      if next.id == session.viewRoot.id
         unless @options.noNew
-          next = view.document.addChild @parent
+          next = session.document.addChild @parent
           @created = next
 
-    view.cursor.set next, 0
+    session.cursor.set next, 0
 
-  rewind: (view) ->
+  rewind: (session) ->
     if @created != null
-      @created_rewinded = view.document.detach @created
+      @created_rewinded = session.document.detach @created
     index = @index
-    view.document._attachChildren @parent.id, @deleted, index
+    session.document._attachChildren @parent.id, @deleted, index
 
-  remutate: (view) ->
+  remutate: (session) ->
     for id in @deleted
-      view.document._detach id, @parent.id
+      session.document._detach id, @parent.id
     if @created != null
-      view.document.attachChild @created_rewinded.parent, @created, @created_rewinded.index
+      session.document.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 
 # creates new blocks (as opposed to attaching ones that already exist)
 class AddBlocks extends Mutation
@@ -201,40 +201,40 @@ class AddBlocks extends Mutation
   str: () ->
     return "parent #{@parent.id}, index #{@index}"
 
-  mutate: (view) ->
+  mutate: (session) ->
     index = @index
 
     first = true
     for serialized_row in @serialized_rows
-      row = view.document.loadTo serialized_row, @parent, index
+      row = session.document.loadTo serialized_row, @parent, index
       index += 1
 
       if @options.setCursor == 'first' and first
-        view.cursor.set row, 0, @options.cursorOptions
+        session.cursor.set row, 0, @options.cursorOptions
         first = false
 
     if @options.setCursor == 'last'
-      view.cursor.set row, 0, @options.cursorOptions
+      session.cursor.set row, 0, @options.cursorOptions
 
-  rewind: (view) ->
-    @delete_siblings = view.document.getChildRange @parent, @index, (@index + @nrows - 1)
+  rewind: (session) ->
+    @delete_siblings = session.document.getChildRange @parent, @index, (@index + @nrows - 1)
     for sib in @delete_siblings
-      view.document.detach sib
+      session.document.detach sib
 
-  remutate: (view) ->
+  remutate: (session) ->
     index = @index
     for sib in @delete_siblings
-      view.document.attachChild @parent, sib, index
+      session.document.attachChild @parent, sib, index
       index += 1
 
 class ToggleBlock extends Mutation
   constructor: (@row) ->
   str: () ->
     return "row #{@row.id}"
-  mutate: (view) ->
-    view.document.toggleCollapsed @row
-  rewind: (view) ->
-    view.document.toggleCollapsed @row
+  mutate: (session) ->
+    session.document.toggleCollapsed @row
+  rewind: (session) ->
+    session.document.toggleCollapsed @row
 
 exports.Mutation = Mutation
 

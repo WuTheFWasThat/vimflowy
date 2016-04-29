@@ -12,7 +12,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_UNDO, {
   description: 'Undo',
 }, () ->
   for i in [1..@repeat]
-    do @view.undo
+    do @session.undo
   do @keyStream.forget
 
 CMD_REDO = keyDefinitions.registerCommand {
@@ -24,7 +24,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_REDO, {
   description: 'Redo',
 }, () ->
   for i in [1..@repeat]
-    do @view.redo
+    do @session.redo
   do @keyStream.forget
 
 CMD_REPLAY = keyDefinitions.registerCommand {
@@ -37,7 +37,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_REPLAY, {
 }, () ->
   for i in [1..@repeat]
     @keyHandler.playRecording @keyStream.lastSequence
-    do @view.save
+    do @session.save
   do @keyStream.forget
 
 CMD_RECORD_MACRO = keyDefinitions.registerCommand {

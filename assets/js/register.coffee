@@ -20,8 +20,8 @@ class Register
         get: -> @saved
         set: (save) -> @saved = save
 
-  constructor: (view) ->
-    @view = view
+  constructor: (session) ->
+    @session = session
     do @saveNone
     return @
 
@@ -62,37 +62,37 @@ class Register
 
   pasteChars: (options = {}) ->
     if options.before
-      @view.addCharsAtCursor @chars, {cursor: options.cursor}
+      @session.addCharsAtCursor @chars, {cursor: options.cursor}
     else
-      @view.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
+      @session.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
 
   pasteSerializedRows: (options = {}) ->
-    row = @view.cursor.row
+    row = @session.cursor.row
     parent = do row.getParent
-    index = @view.document.indexOf row
+    index = @session.document.indexOf row
 
     if options.before
-      @view.addBlocks parent, index, @serialized_rows, {setCursor: 'first'}
+      @session.addBlocks parent, index, @serialized_rows, {setCursor: 'first'}
     else
-      children = @view.document.getChildren row
-      if (not @view.document.collapsed row) and (children.length > 0)
-        @view.addBlocks row, 0, @serialized_rows, {setCursor: 'first'}
+      children = @session.document.getChildren row
+      if (not @session.document.collapsed row) and (children.length > 0)
+        @session.addBlocks row, 0, @serialized_rows, {setCursor: 'first'}
       else
-        @view.addBlocks parent, (index + 1), @serialized_rows, {setCursor: 'first'}
+        @session.addBlocks parent, (index + 1), @serialized_rows, {setCursor: 'first'}
 
   pasteClonedRows: (options = {}) ->
-    row = @view.cursor.row
+    row = @session.cursor.row
     parent = do row.getParent
-    index = @view.document.indexOf row
+    index = @session.document.indexOf row
 
     if options.before
-      @view.attachBlocks parent, @cloned_rows, index, {setCursor: 'first'}
+      @session.attachBlocks parent, @cloned_rows, index, {setCursor: 'first'}
     else
-      children = @view.document.getChildren row
-      if (not @view.document.collapsed row) and (children.length > 0)
-        @view.attachBlocks row, @cloned_rows, 0, {setCursor: 'first'}
+      children = @session.document.getChildren row
+      if (not @session.document.collapsed row) and (children.length > 0)
+        @session.attachBlocks row, @cloned_rows, 0, {setCursor: 'first'}
       else
-        @view.attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}
+        @session.attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}
 
 # exports
 module?.exports = Register

@@ -14,17 +14,17 @@ class MarksPlugin
 
   enableAPI: () ->
     @logger = @api.logger
-    @view = @api.view
-    @document = @view.document
+    @session = @api.session
+    @document = @session.document
     that = @
 
     class SetMark extends mutations.Mutation
       constructor: (@id, @mark) ->
       str: () ->
         return "row #{@id}, mark #{@mark}"
-      mutate: (view) ->
+      mutate: (session) ->
         that._setMark @id, @mark
-      rewind: (view) ->
+      rewind: (session) ->
         that._unsetMark @id, @mark
     @.SetMark = SetMark
 
@@ -32,10 +32,10 @@ class MarksPlugin
       constructor: (@id) ->
       str: () ->
         return "row #{@id}"
-      mutate: (view) ->
+      mutate: (session) ->
         @mark = that._getMark @id
         that._unsetMark @id, @mark
-      rewind: (view) ->
+      rewind: (session) ->
         that._setMark @id, @mark
     @.UnsetMark = UnsetMark
 
@@ -50,7 +50,7 @@ class MarksPlugin
     @document.on 'loadRow', (row, serialized) =>
       if serialized.mark
         err = @updateMark row.id, serialized.mark
-        if err then @view.showMessage err, {text_class: 'error'}
+        if err then @session.showMessage err, {text_class: 'error'}
 
     # Commands #
 
@@ -64,7 +64,7 @@ class MarksPlugin
     @api.registerAction [MODES.NORMAL], CMD_MARK, {
       description: 'Mark a line',
     }, () ->
-      @view.setMode MODES.MARK
+      @session.setMode MODES.MARK
 
     CMD_FINISH_MARK = @api.registerCommand {
       name: 'FINISH_MARK'
@@ -74,10 +74,10 @@ class MarksPlugin
     @api.registerAction [MODES.MARK], CMD_FINISH_MARK, {
       description: 'Finish typing mark',
     }, () ->
-      mark = (do @view.markview.curText).join ''
-      err = that.updateMark @view.markrow.id, mark
-      if err then @view.showMessage err, {text_class: 'error'}
-      @view.setMode MODES.NORMAL
+      mark = (do @session.markview.curText).join ''
+      err = that.updateMark @session.markrow.id, mark
+      if err then @session.showMessage err, {text_class: 'error'}
+      @session.setMode MODES.NORMAL
       do @keyStream.save
 
     CMD_GO = @api.commands.GO
@@ -85,15 +85,15 @@ class MarksPlugin
       description: 'Go to the mark indicated by the cursor, if it exists',
     },  () ->
       return (cursor) =>
-        word = @view.document.getWord cursor.row, cursor.col
+        word = @session.document.getWord cursor.row, cursor.col
         if word.length < 1 or word[0] != '@'
           return false
         mark = word[1..]
         allMarks = do that.listMarks
         if mark of allMarks
           id = allMarks[mark]
-          row = @view.document.canonicalInstance id
-          @view.rootToParent row
+          row = @session.document.canonicalInstance id
+          @session.rootToParent row
           return true
         else
           return false
@@ -102,8 +102,8 @@ class MarksPlugin
     @api.registerAction [MODES.NORMAL], [CMD_DELETE, CMD_MARK], {
       description: 'Delete mark at cursor'
     }, () ->
-      err = (that.updateMark @view.cursor.row.id, '')
-      if err then @view.showMessage err, {text_class: 'error'}
+      err = (that.updateMark @session.cursor.row.id, '')
+      if err then @session.showMessage err, {text_class: 'error'}
       do @keyStream.save
 
     CMD_MARK_SEARCH = @api.registerCommand {
@@ -114,14 +114,14 @@ class MarksPlugin
     @api.registerAction [MODES.NORMAL], CMD_MARK_SEARCH, {
       description: 'Go to (search for) a mark',
     }, () ->
-      @view.setMode MODES.SEARCH
-      @view.menu = new Menu @view.menuDiv, (chars) =>
+      @session.setMode MODES.SEARCH
+      @session.menu = new Menu @session.menuDiv, (chars) =>
         # find marks that start with the prefix
         findMarks = (document, prefix, nresults = 10) =>
           results = [] # list of rows
           for mark, id of (do that.listMarks)
             if (mark.indexOf prefix) == 0
-              row = @view.document.canonicalInstance id
+              row = @session.document.canonicalInstance id
               results.push { row: row, mark: mark }
               if nresults > 0 and results.length == nresults
                 break
@@ -129,31 +129,31 @@ class MarksPlugin
 
         text = chars.join('')
         return _.map(
-          (findMarks @view.document, text),
+          (findMarks @session.document, text),
           (found) =>
             row = found.row
             return {
-              contents: @view.document.getLine row
+              contents: @session.document.getLine row
               renderHook: (contents) ->
                 contents.unshift virtualDom.h 'span', {
                   className: 'mark theme-bg-secondary theme-trim'
                 }, found.mark
                 return contents
-              fn: () => @view.rootInto row
+              fn: () => @session.rootInto row
             }
         )
 
-    @view.addHook 'renderCursorsDict', (cursors, info) =>
-      marking = @view.markrow? and @view.markrow.is info.row
+    @session.addHook 'renderCursorsDict', (cursors, info) =>
+      marking = @session.markrow? and @session.markrow.is info.row
       if marking
         return {} # do not render any cursors on the regular line
       return cursors
 
-    @view.addHook 'renderLineContents', (lineContents, info) =>
-      marking = @view.markrow? and @view.markrow.is info.row
+    @session.addHook 'renderLineContents', (lineContents, info) =>
+      marking = @session.markrow? and @session.markrow.is info.row
 
       if marking
-          markresults = @view.markview.virtualRenderLine @view.markview.cursor.row, {no_clicks: true}
+          markresults = @session.markview.virtualRenderLine @session.markview.cursor.row, {no_clicks: true}
           lineContents.unshift virtualDom.h 'span', {
             className: 'mark theme-bg-secondary theme-trim-accent'
           }, markresults
@@ -165,8 +165,8 @@ class MarksPlugin
             }, mark
       return lineContents
 
-    @view.addHook 'renderLineWordHook', (line, word_info) =>
-      if @view.mode == MODES.NORMAL
+    @session.addHook 'renderLineWordHook', (line, word_info) =>
+      if @session.mode == MODES.NORMAL
         if word_info.word[0] == '@'
           mark = word_info.word[1..]
           id = @getIdForMark mark
@@ -266,20 +266,20 @@ class MarksPlugin
       if @document.isAttached other_id
         return "Mark '#{mark}' was already taken!"
       else
-        @view.do new @UnsetMark other_id, mark
+        @session.do new @UnsetMark other_id, mark
 
     if oldmark
-      @view.do new @UnsetMark id, oldmark
+      @session.do new @UnsetMark id, oldmark
 
     if mark
-      @view.do new @SetMark id, mark
+      @session.do new @SetMark id, mark
 
     return null
 
   goMark: (row) =>
-    @view.rootToParent row
-    do @view.save
-    do @view.render
+    @session.rootToParent row
+    do @session.save
+    do @session.render
 
 # NOTE: because listing marks filters, disabling is okay
 

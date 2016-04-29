@@ -14,8 +14,8 @@ CMD_SEARCH = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
   description: 'Search',
 }, () ->
-  @view.setMode MODES.SEARCH
-  @view.menu = new Menu @view.menuDiv, (chars) =>
+  @session.setMode MODES.SEARCH
+  @session.menu = new Menu @session.menuDiv, (chars) =>
     find = (document, query, options = {}) ->
       nresults = options.nresults or 10
       case_sensitive = options.case_sensitive
@@ -50,16 +50,16 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
       return results
 
     return _.map(
-      (find @view.document, chars),
+      (find @session.document, chars),
       (found) =>
         row = found.row
         highlights = {}
         for i in found.matches
           highlights[i] = true
         return {
-          contents: @view.document.getLine row
+          contents: @session.document.getLine row
           renderOptions: { highlights: highlights }
-          fn: () => @view.rootInto row
+          fn: () => @session.rootInto row
         }
     )
 
@@ -71,8 +71,8 @@ CMD_MENU_SELECT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.SEARCH], CMD_MENU_SELECT, {
   description: 'Select current menu selection',
 }, () ->
-  do @view.menu.select
-  @view.setMode MODES.NORMAL
+  do @session.menu.select
+  @session.setMode MODES.NORMAL
 
 CMD_MENU_UP = keyDefinitions.registerCommand {
   name: 'MENU_UP'
@@ -82,7 +82,7 @@ CMD_MENU_UP = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.SEARCH], CMD_MENU_UP, {
   description: 'Select previous menu selection',
 }, () ->
-  do @view.menu.up
+  do @session.menu.up
 
 CMD_MENU_DOWN = keyDefinitions.registerCommand {
   name: 'MENU_DOWN'
@@ -92,4 +92,4 @@ CMD_MENU_DOWN = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.SEARCH], CMD_MENU_DOWN, {
   description: 'Select next menu selection',
 }, () ->
-  do @view.menu.down
+  do @session.menu.down

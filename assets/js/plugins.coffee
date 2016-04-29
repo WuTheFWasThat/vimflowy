@@ -8,17 +8,17 @@ mutations = require './mutations.coffee'
 
 # class for exposing plugin API
 class PluginApi
-  constructor: (@view, @metadata, @pluginManager) ->
+  constructor: (@session, @metadata, @pluginManager) ->
     @name = @metadata.name
-    @document = @view.document
-    @cursor = @view.cursor
+    @document = @session.document
+    @cursor = @session.cursor
     # TODO: Add subloggers and prefix all log messages with the plugin name
     @logger = Logger.logger
     @Modes = Modes
     @modes = Modes.modes
     @Mutation = mutations.Mutation
 
-    @bindings = @view.bindings
+    @bindings = @session.bindings
     @definitions = @bindings.definitions
     @commands = @definitions.commands
 
@@ -30,16 +30,16 @@ class PluginApi
 
   registerCommand: (metadata) ->
     cmd = @definitions.registerCommand metadata
-    do @view.bindings.init
+    do @session.bindings.init
     return cmd
 
   registerMotion: (commands, motion, definition) ->
     @definitions.registerMotion commands, motion, definition
-    do @view.bindings.init
+    do @session.bindings.init
 
   registerAction: (modes, commands, action, definition) ->
     @definitions.registerAction modes, commands, action, definition
-    do @view.bindings.init
+    do @session.bindings.init
 
   panic: _.once () =>
     alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."
@@ -85,7 +85,7 @@ class PluginsManager
 
   constructor: (options) ->
     # Default set of enabled plugins
-    # Will be overridden before plugin loading, during 'resolveView',
+    # Will be overridden before plugin loading, during 'resolveSession',
     # if any settings have been set
     @enabledPlugins = {
       "Marks": true
@@ -97,19 +97,19 @@ class PluginsManager
     utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, "plugin")
     utils.fill_tv4_defaults plugin_metadata, PLUGIN_SCHEMA
 
-  resolveView: (view) ->
-    @view = view
-    if view.settings
-      enabledPlugins = view.settings.getSetting "enabledPlugins"
+  resolveSession: (session) ->
+    @session = session
+    if session.settings
+      enabledPlugins = session.settings.getSetting "enabledPlugins"
     else
       # TODO: BAD HACK... to make unit tests work,
-      # since each testcase uses the same pluginmanager but different view
+      # since each testcase uses the same pluginmanager but different session
       for name of @plugins
         @setStatus name, STATUS.DISABLED
 
     if enabledPlugins?
       @enabledPlugins = enabledPlugins
-    @div = view.pluginsDiv
+    @div = session.pluginsDiv
     do @render
 
     for plugin_name of @enabledPlugins
@@ -204,11 +204,11 @@ class PluginsManager
       throw new errors.GenericError("Still disabling plugin #{name}")
 
     @enabledPlugins[name] = true
-    if @view.settings
-      @view.settings.setSetting "enabledPlugins", @enabledPlugins
+    if @session.settings
+      @session.settings.setSetting "enabledPlugins", @enabledPlugins
     plugin = @plugins[name]
     if (status == STATUS.DISABLED) or (status == STATUS.UNREGISTERED)
-      api = new PluginApi @view, plugin, @
+      api = new PluginApi @session, plugin, @
 
       @setStatus plugin.name, STATUS.ENABLING
       plugin.api = api
@@ -216,8 +216,8 @@ class PluginsManager
       plugin.value = plugin.enable api
 
       # refresh hotkeys, if any new ones were added
-      do @view.bindings.init
-      @view.bindings.renderModeTable @view.mode
+      do @session.bindings.init
+      @session.bindings.renderModeTable @session.mode
 
     @setStatus plugin.name, STATUS.ENABLED
 
@@ -231,8 +231,8 @@ class PluginsManager
       throw new errors.GenericError("Already disabling plugin #{name}")
 
     delete @enabledPlugins[name]
-    if @view.settings
-      @view.settings.setSetting "enabledPlugins", @enabledPlugins
+    if @session.settings
+      @session.settings.setSetting "enabledPlugins", @enabledPlugins
     plugin = @plugins[name]
 
     # TODO: require that no other plugin has this as a dependency, notify user otherwise

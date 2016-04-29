@@ -12,7 +12,7 @@ CMD_ZOOM_IN = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN, {
   description: 'Zoom in by one level',
 }, () ->
-  do @view.rootDown
+  do @session.rootDown
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -25,7 +25,7 @@ CMD_ZOOM_OUT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT, {
   description: 'Zoom out by one level',
 }, () ->
-  do @view.rootUp
+  do @session.rootUp
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -38,7 +38,7 @@ CMD_ZOOM_IN_ALL = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN_ALL, {
   description: 'Zoom in onto cursor',
 }, () ->
-  do @view.rootInto
+  do @session.rootInto
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -51,7 +51,7 @@ CMD_ZOOM_OUT_ALL = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT_ALL, {
   description: 'Zoom out to home',
 }, () ->
-  do @view.reroot
+  do @session.reroot
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -63,7 +63,7 @@ CMD_JUMP_PREVIOUS = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_JUMP_PREVIOUS, {
   description: 'Jump to previous location',
 }, () ->
-  do @view.jumpPrevious
+  do @session.jumpPrevious
   @keyStream.forget 1
 
 CMD_JUMP_NEXT = keyDefinitions.registerCommand {
@@ -74,5 +74,5 @@ CMD_JUMP_NEXT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_JUMP_NEXT, {
   description: 'Jump to next location',
 }, () ->
-  do @view.jumpNext
+  do @session.jumpNext
   @keyStream.forget 1

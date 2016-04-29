@@ -21,8 +21,8 @@ Plugins.register {
     if key == null
       do @keyStream.wait
 
-      rows = (do @view.getVisibleRows).filter (row) =>
-               return not (row.is @view.cursor.row)
+      rows = (do @session.getVisibleRows).filter (row) =>
+               return not (row.is @session.cursor.row)
       keys = [
         'Z', 'X', 'C', 'V',
         'Q', 'W', 'E', 'R', 'T',
@@ -62,7 +62,7 @@ Plugins.register {
           cursor.set row, 0
         EASY_MOTION_MAPPINGS = null
 
-  api.view.addHook 'renderBullet', (bullet, info) ->
+  api.session.addHook 'renderBullet', (bullet, info) ->
     ancestry_str = JSON.stringify do info.row.getAncestry
     if EASY_MOTION_MAPPINGS and ancestry_str of EASY_MOTION_MAPPINGS.row_to_key
       char = EASY_MOTION_MAPPINGS.row_to_key[ancestry_str]

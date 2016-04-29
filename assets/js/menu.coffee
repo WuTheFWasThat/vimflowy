@@ -1,11 +1,11 @@
-View = require './view.coffee'
+Session = require './session.coffee'
 Document = (require './document.coffee').Document
 DataStore = require './datastore.coffee'
 
 ###
 Represents the menu shown in menu mode.
 Functions for paging through and selecting results, and for rendering.
-Internally uses an entire view object (this is sorta weird..)
+Internally uses an entire session object (this is sorta weird..)
 ###
 
 class Menu
@@ -15,8 +15,8 @@ class Menu
 
     document = new Document (new DataStore.InMemory)
 
-    # a bit of a overkill-y hack, use an entire View object internally
-    @view = new View document
+    # a bit of a overkill-y hack, use an entire session object internally
+    @session = new Session document
     @selection = 0
 
     # list of results:
@@ -42,7 +42,7 @@ class Menu
       @selection = @selection + 1
 
   update: () ->
-    query = do @view.curText
+    query = do @session.curText
     if (JSON.stringify query) != (JSON.stringify @lastquery)
       @lastquery = query
       @results = @fn query
@@ -59,12 +59,12 @@ class Menu
       'margin-right': '10px'
     )
 
-    searchRow = virtualDom.create virtualDom.h 'span', {}, (@view.virtualRenderLine @view.cursor.row, {cursorBetween: true, no_clicks: true})
+    searchRow = virtualDom.create virtualDom.h 'span', {}, (@session.virtualRenderLine @session.cursor.row, {cursorBetween: true, no_clicks: true})
     searchBox.append searchRow
 
     if @results.length == 0
       message = ''
-      if do @view.curLineLength == 0
+      if do @session.curLineLength == 0
         message = 'Type something to search!'
       else
         message = 'No results!  Try typing something else'

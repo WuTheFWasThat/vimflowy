@@ -12,37 +12,37 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->
   for i in [1..@repeat]
-    motion @view.cursor, {}
+    motion @session.cursor, {}
   do @keyStream.forget
 keyDefinitions.registerAction [MODES.INSERT], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->
-  motion @view.cursor, {pastEnd: true}
+  motion @session.cursor, {pastEnd: true}
 keyDefinitions.registerAction [MODES.VISUAL], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->
   # this is necessary until we figure out multiline
-  tmp = do @view.cursor.clone
+  tmp = do @session.cursor.clone
   for i in [1..@repeat]
     motion tmp, {pastEnd: true}
 
-  if not (tmp.row.is @view.cursor.row) # only allow same-row movement
-    @view.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
+  if not (tmp.row.is @session.cursor.row) # only allow same-row movement
+    @session.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
   else
-    @view.cursor.from tmp
+    @session.cursor.from tmp
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->
   for i in [1..@repeat]
-    motion @view.cursor, {pastEnd: true}
+    motion @session.cursor, {pastEnd: true}
 keyDefinitions.registerAction [MODES.MARK], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->
-  motion @view.markview.cursor, {pastEnd: true}
+  motion @session.markview.cursor, {pastEnd: true}
 keyDefinitions.registerAction [MODES.SEARCH], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->
-  motion @view.menu.view.cursor, {pastEnd: true}
+  motion @session.menu.session.cursor, {pastEnd: true}
 
 CMD_HELP = keyDefinitions.registerCommand {
   name: 'HELP'
@@ -53,7 +53,7 @@ CMD_HELP = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE, MODES.INSERT, MODES.MARK, MODES.SEARCH], CMD_HELP, {
   description: 'Show/hide key bindings (edit in settings)',
 }, () ->
-  do @view.toggleBindingsDiv
+  do @session.toggleBindingsDiv
   @keyStream.forget 1
 
 CMD_INSERT = keyDefinitions.registerCommand {
@@ -64,7 +64,7 @@ CMD_INSERT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_INSERT, {
   description: 'Insert at character',
 }, () ->
-  @view.setMode MODES.INSERT
+  @session.setMode MODES.INSERT
 
 CMD_INSERT_AFTER = keyDefinitions.registerCommand {
   name: 'INSERT_AFTER'
@@ -74,8 +74,8 @@ CMD_INSERT_AFTER = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_INSERT_AFTER, {
   description: 'Insert after character',
 }, () ->
-  @view.setMode MODES.INSERT
-  @view.cursor.right {pastEnd: true}
+  @session.setMode MODES.INSERT
+  @session.cursor.right {pastEnd: true}
 
 CMD_INSERT_HOME = keyDefinitions.registerCommand {
   name: 'INSERT_HOME'
@@ -85,8 +85,8 @@ CMD_INSERT_HOME = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_INSERT_HOME, {
   description: 'Insert at beginning of line',
 }, () ->
-  @view.setMode MODES.INSERT
-  do @view.cursor.home
+  @session.setMode MODES.INSERT
+  do @session.cursor.home
 
 CMD_INSERT_END = keyDefinitions.registerCommand {
   name: 'INSERT_END'
@@ -96,8 +96,8 @@ CMD_INSERT_END = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_INSERT_END, {
   description: 'Insert after end of line',
 }, () ->
-  @view.setMode MODES.INSERT
-  @view.cursor.end {pastEnd: true}
+  @session.setMode MODES.INSERT
+  @session.cursor.end {pastEnd: true}
 
 CMD_INSERT_LINE_BELOW = keyDefinitions.registerCommand {
   name: 'INSERT_LINE_BELOW'
@@ -107,8 +107,8 @@ CMD_INSERT_LINE_BELOW = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_INSERT_LINE_BELOW, {
   description: 'Insert on new line after current line',
 }, () ->
-  @view.setMode MODES.INSERT
-  do @view.newLineBelow
+  @session.setMode MODES.INSERT
+  do @session.newLineBelow
 
 CMD_INSERT_LINE_ABOVE = keyDefinitions.registerCommand {
   name: 'INSERT_LINE_ABOVE'
@@ -118,8 +118,8 @@ CMD_INSERT_LINE_ABOVE = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_INSERT_LINE_ABOVE, {
   description: 'Insert on new line before current line',
 }, () ->
-  @view.setMode MODES.INSERT
-  do @view.newLineAbove
+  @session.setMode MODES.INSERT
+  do @session.newLineAbove
 
 CMD_GO = keyDefinitions.registerCommand {
   name: 'GO'
@@ -161,13 +161,13 @@ keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
   multirow: true
 }, () ->
   return (cursor, options) =>
-    if @view.mode != MODES.NORMAL
+    if @session.mode != MODES.NORMAL
       # doesn't work for visual_line mode due to rootToParent
       return
-    newRow = @view.document.nextClone cursor.row
+    newRow = @session.document.nextClone cursor.row
     cursor.setRow newRow
-    if not @view.isVisible newRow
-      @view.rootToParent newRow
+    if not @session.isVisible newRow
+      @session.rootToParent newRow
 
 ####################
 # ACTIONS
@@ -175,15 +175,15 @@ keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
 
 visual_line_mode_delete_fn = () ->
   return () ->
-    @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
-    @view.setMode MODES.NORMAL
+    @session.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
+    @session.setMode MODES.NORMAL
     do @keyStream.save
 
 visual_mode_delete_fn = () ->
   return () ->
     options = {includeEnd: true, yank: true}
-    @view.deleteBetween @view.cursor, @view.anchor, options
-    @view.setMode MODES.NORMAL
+    @session.deleteBetween @session.cursor, @session.anchor, options
+    @session.setMode MODES.NORMAL
     do @keyStream.save
 
 CMD_TOGGLE_FOLD = keyDefinitions.registerCommand {
@@ -195,7 +195,7 @@ CMD_TOGGLE_FOLD = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_TOGGLE_FOLD, {
   description: 'Toggle whether a block is folded',
 }, () ->
-  do @view.toggleCurBlock
+  do @session.toggleCurBlock
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -212,7 +212,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_REPLACE, {
   if key == null then return do @keyStream.wait
   # TODO: refactor keys so this is unnecessary
   if key == 'space' then key = ' '
-  @view.replaceCharsAfterCursor key, @repeat, {setCursor: 'end'}
+  @session.replaceCharsAfterCursor key, @repeat, {setCursor: 'end'}
   do @keyStream.save
 
 CMD_DELETE = keyDefinitions.registerCommand {
@@ -233,16 +233,16 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_DELETE, {
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_DELETE, CMD_DELETE], {
   description: 'Delete blocks'
 }, () ->
-  @view.delBlocksAtCursor @repeat, {addNew: false}
+  @session.delBlocksAtCursor @repeat, {addNew: false}
   do @keyStream.save
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
   description: 'Delete from cursor with motion'
 }, (motion) ->
-  cursor = do @view.cursor.clone
+  cursor = do @session.cursor.clone
   for i in [1..@repeat]
     motion cursor, {pastEnd: true, pastEndWord: true}
 
-  @view.deleteBetween @view.cursor, cursor, { yank: true }
+  @session.deleteBetween @session.cursor, cursor, { yank: true }
   do @keyStream.save
 
 CMD_CHANGE = keyDefinitions.registerCommand {
@@ -254,13 +254,13 @@ keyDefinitions.registerAction [MODES.VISUAL], CMD_CHANGE, {
   description: 'Change',
 }, () ->
   options = {includeEnd: true, yank: true, cursor: {pastEnd: true}}
-  @view.deleteBetween @view.cursor, @view.anchor, options
-  @view.setMode MODES.INSERT
+  @session.deleteBetween @session.cursor, @session.anchor, options
+  @session.setMode MODES.INSERT
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_CHANGE, {
   description: 'Change',
 }, () ->
-  @view.delBlocks @parent, @row_start_i, @num_rows, {addNew: true}
-  @view.setMode MODES.INSERT
+  @session.delBlocks @parent, @row_start_i, @num_rows, {addNew: true}
+  @session.setMode MODES.INSERT
 
 keyDefinitions.registerAction [MODES.NORMAL], CMD_CHANGE, {
   description: 'Change (operator)',
@@ -268,16 +268,16 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_CHANGE, {
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_CHANGE, CMD_CHANGE], {
   description: 'Delete blocks, and enter insert mode'
 }, () ->
-  @view.setMode MODES.INSERT
-  @view.delBlocksAtCursor @repeat, {addNew: true}
+  @session.setMode MODES.INSERT
+  @session.delBlocksAtCursor @repeat, {addNew: true}
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
   description: 'Delete from cursor with motion, and enter insert mode'
 }, (motion) ->
-  cursor = do @view.cursor.clone
+  cursor = do @session.cursor.clone
   for i in [1..@repeat]
     motion cursor, {pastEnd: true, pastEndWord: true}
-  @view.setMode MODES.INSERT
-  @view.deleteBetween @view.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
+  @session.setMode MODES.INSERT
+  @session.deleteBetween @session.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
 
 CMD_YANK = keyDefinitions.registerCommand {
   name: 'YANK'
@@ -288,14 +288,14 @@ keyDefinitions.registerAction [MODES.VISUAL], CMD_YANK, {
   description: 'Yank',
 }, () ->
   options = {includeEnd: true}
-  @view.yankBetween @view.cursor, @view.anchor, options
-  @view.setMode MODES.NORMAL
+  @session.yankBetween @session.cursor, @session.anchor, options
+  @session.setMode MODES.NORMAL
   do @keyStream.forget
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_YANK, {
   description: 'Yank',
 }, () ->
-  @view.yankBlocks @row_start, @num_rows
-  @view.setMode MODES.NORMAL
+  @session.yankBlocks @row_start, @num_rows
+  @session.setMode MODES.NORMAL
   do @keyStream.forget
 
 keyDefinitions.registerAction [MODES.NORMAL], CMD_YANK, {
@@ -304,30 +304,30 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_YANK, {
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_YANK, CMD_YANK], {
   description: 'Yank blocks'
 }, () ->
-  @view.yankBlocksAtCursor @repeat
+  @session.yankBlocksAtCursor @repeat
   do @keyStream.forget
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
   description: 'Yank from cursor with motion'
 }, (motion) ->
-  cursor = do @view.cursor.clone
+  cursor = do @session.cursor.clone
   for i in [1..@repeat]
     motion cursor, {pastEnd: true, pastEndWord: true}
 
-  @view.yankBetween @view.cursor, cursor, {}
+  @session.yankBetween @session.cursor, cursor, {}
   do @keyStream.forget
 
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_YANK, CMD_CLONE], {
   description: 'Yank blocks as a clone'
 }, () ->
-  @view.yankBlocksCloneAtCursor @repeat
+  @session.yankBlocksCloneAtCursor @repeat
   do @keyStream.forget
 
 #   jeff: c conflicts with change, so this doesn't work
 # keyDefinitions.registerAction [MODES.VISUAL_LINE],  CMD_CLONE, {
 #   description: 'Yank blocks as a clone',
 # }, () ->
-#   @view.yankBlocksClone @row_start, @num_rows
-#   @view.setMode MODES.NORMAL
+#   @session.yankBlocksClone @row_start, @num_rows
+#   @session.setMode MODES.NORMAL
 #   do @keyStream.forget
 
 CMD_DELETE_CHAR = keyDefinitions.registerCommand {
@@ -339,7 +339,7 @@ CMD_DELETE_CHAR = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
-  @view.delCharsAfterCursor @repeat, {yank: true}
+  @session.delCharsAfterCursor @repeat, {yank: true}
   do @keyStream.save
 # behaves like row delete, in visual line
 keyDefinitions.registerAction [MODES.VISUAL], CMD_DELETE_CHAR, {
@@ -351,15 +351,15 @@ keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_DELETE_CHAR, {
 keyDefinitions.registerAction [MODES.INSERT], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
-  @view.delCharsAfterCursor 1
+  @session.delCharsAfterCursor 1
 keyDefinitions.registerAction [MODES.MARK], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
-  @view.markview.delCharsAfterCursor 1
+  @session.sarkvession.delCharsAfterCursor 1
 keyDefinitions.registerAction [MODES.SEARCH], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
-  @view.menu.view.delCharsAfterCursor 1
+  @session.menu.session.delCharsAfterCursor 1
 
 CMD_DELETE_LAST_CHAR = keyDefinitions.registerCommand {
   name: 'DELETE_LAST_CHAR'
@@ -370,9 +370,9 @@ CMD_DELETE_LAST_CHAR = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
-  num = Math.min @view.cursor.col, @repeat
+  num = Math.min @session.cursor.col, @repeat
   if num > 0
-    @view.delCharsBeforeCursor num, {yank: true}
+    @session.delCharsBeforeCursor num, {yank: true}
   do @keyStream.save
 # behaves like row delete, in visual line
 keyDefinitions.registerAction [MODES.VISUAL], CMD_DELETE_LAST_CHAR, {
@@ -384,15 +384,15 @@ keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_DELETE_LAST_CHAR, {
 keyDefinitions.registerAction [MODES.INSERT], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
-  do @view.deleteAtCursor
+  do @session.deleteAtCursor
 keyDefinitions.registerAction [MODES.MARK], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
-  do @view.markview.deleteAtCursor
+  do @session.markview.deleteAtCursor
 keyDefinitions.registerAction [MODES.SEARCH], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
-  do @view.menu.view.deleteAtCursor
+  do @session.menu.session.deleteAtCursor
 
 CMD_CHANGE_CHAR = keyDefinitions.registerCommand {
   name: 'CHANGE_CHAR'
@@ -402,8 +402,8 @@ CMD_CHANGE_CHAR = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_CHANGE_CHAR, {
   description: 'Change character',
 }, () ->
-  @view.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
-  @view.setMode MODES.INSERT
+  @session.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
+  @session.setMode MODES.INSERT
 
 CMD_DELETE_TO_HOME = keyDefinitions.registerCommand {
   name: 'DELETE_TO_HOME'
@@ -422,7 +422,7 @@ keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_DELETE_TO_HOME, 
   }
   if @mode == MODES.INSERT
     options.cursor.pastEnd = true
-  @view.deleteBetween @view.cursor, @view.cursor.clone().home(options.cursor), options
+  @session.deleteBetween @session.cursor, @session.cursor.clone().home(options.cursor), options
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -443,7 +443,7 @@ keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_DELETE_TO_END, {
   }
   if @mode == MODES.INSERT
     options.cursor.pastEnd = true
-  @view.deleteBetween @view.cursor, @view.cursor.clone().end(options.cursor), options
+  @session.deleteBetween @session.cursor, @session.cursor.clone().end(options.cursor), options
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -464,7 +464,7 @@ keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_DELETE_LAST_WORD
   }
   if @mode == MODES.INSERT
     options.cursor.pastEnd = true
-  @view.deleteBetween @view.cursor, @view.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
+  @session.deleteBetween @session.cursor, @session.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -476,7 +476,7 @@ CMD_PASTE_AFTER = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_PASTE_AFTER, {
   description: 'Paste after cursor',
 }, () ->
-  do @view.pasteAfter
+  do @session.pasteAfter
   do @keyStream.save
 # NOTE: paste after doesn't make sense for insert mode
 
@@ -489,12 +489,12 @@ CMD_PASTE_BEFORE = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_PASTE_BEFORE, {
   description: 'Paste before cursor',
 }, () ->
-  @view.pasteBefore {}
+  @session.pasteBefore {}
   do @keyStream.save
 keyDefinitions.registerAction [MODES.INSERT], CMD_PASTE_BEFORE, {
   description: 'Paste before cursor',
 }, () ->
-  @view.pasteBefore {cursor: {pastEnd: true}}
+  @session.pasteBefore {cursor: {pastEnd: true}}
 
 CMD_JOIN_LINE = keyDefinitions.registerCommand {
   name: 'JOIN_LINE'
@@ -504,7 +504,7 @@ CMD_JOIN_LINE = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_JOIN_LINE, {
   description: 'Join current line with line below',
 }, () ->
-  do @view.joinAtCursor
+  do @session.joinAtCursor
   do @keyStream.save
 
 CMD_SPLIT_LINE = keyDefinitions.registerCommand {
@@ -516,7 +516,7 @@ CMD_SPLIT_LINE = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_SPLIT_LINE, {
   description: 'Split line at cursor (i.e. enter key)',
 }, () ->
-  do @view.newLineAtCursor
+  do @session.newLineAtCursor
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -530,7 +530,7 @@ CMD_SCROLL_DOWN = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_SCROLL_DOWN, {
   description: 'Scroll half window down',
 }, () ->
-  @view.scrollPages 0.5
+  @session.scrollPages 0.5
   @keyStream.forget 1
 
 CMD_SCROLL_UP = keyDefinitions.registerCommand {
@@ -543,7 +543,7 @@ CMD_SCROLL_UP = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_SCROLL_UP, {
   description: 'Scroll half window up',
 }, () ->
-  @view.scrollPages -0.5
+  @session.scrollPages -0.5
   @keyStream.forget 1
 
 # for everything but normal mode
@@ -555,13 +555,13 @@ CMD_EXIT_MODE = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MODES.MARK], CMD_EXIT_MODE, {
   description: 'Exit back to normal mode',
 }, () ->
-  @view.setMode MODES.NORMAL
+  @session.setMode MODES.NORMAL
   do @keyStream.forget
 keyDefinitions.registerAction [MODES.INSERT], CMD_EXIT_MODE, {
   description: 'Exit back to normal mode',
 }, () ->
-  do @view.cursor.left
-  @view.setMode MODES.NORMAL
+  do @session.cursor.left
+  @session.setMode MODES.NORMAL
   # unlike other modes, esc in insert mode keeps changes
   do @keyStream.save
 
@@ -574,7 +574,7 @@ CMD_ENTER_VISUAL = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_ENTER_VISUAL, {
   description: 'Enter visual mode',
 }, () ->
-  @view.setMode MODES.VISUAL
+  @session.setMode MODES.VISUAL
 
 CMD_ENTER_VISUAL_LINE = keyDefinitions.registerCommand {
   name: 'ENTER_VISUAL_LINE'
@@ -584,7 +584,7 @@ CMD_ENTER_VISUAL_LINE = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_ENTER_VISUAL_LINE, {
   description: 'Enter visual line mode',
 }, () ->
-  @view.setMode MODES.VISUAL_LINE
+  @session.setMode MODES.VISUAL_LINE
 
 CMD_SWAP_CURSOR = keyDefinitions.registerCommand {
   name: 'SWAP_CURSOR'
@@ -594,7 +594,7 @@ CMD_SWAP_CURSOR = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.VISUAL, MODES.VISUAL_LINE], CMD_SWAP_CURSOR, {
   description: 'Swap cursor to other end of selection, in visual and visual line mode',
 }, () ->
-  tmp = do @view.anchor.clone
-  @view.anchor.from @view.cursor
-  @view.cursor.from tmp
+  tmp = do @session.anchor.clone
+  @session.anchor.from @session.cursor
+  @session.cursor.from tmp
   do @keyStream.save

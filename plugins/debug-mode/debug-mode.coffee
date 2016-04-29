@@ -6,7 +6,7 @@ Plugins.register {
   description: "Display internal IDs for each node (for debugging for developers)"
   version: 1
 }, (api) ->
-  api.view.addHook 'renderInfoElements', (rowElements, info) ->
+  api.session.addHook 'renderInfoElements', (rowElements, info) ->
     rowElements.unshift virtualDom.h 'span', {
       style: {
         position: 'relative'

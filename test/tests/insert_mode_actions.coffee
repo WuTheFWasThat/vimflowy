@@ -19,7 +19,7 @@ describe "insert mode actions", () ->
   it "works in tricky case redoing actions in normal mode", () ->
     t = new TestCase ['bug reproduce']
     t.sendKeys 'i'
-    t.sendKey 'ctrl+e' # put cursor at end, this will be remembered by view
+    t.sendKey 'ctrl+e' # put cursor at end, this will be remembered by the cursor
     t.sendKey 'ctrl+w'
     t.expect ['bug ']
     t.sendKey 'ctrl+w'
