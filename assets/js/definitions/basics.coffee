@@ -166,7 +166,7 @@ keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
       return
     newRow = @view.document.nextClone cursor.row
     cursor.setRow newRow
-    if not @view.document.isVisible newRow
+    if not @view.isVisible newRow
       @view.rootToParent newRow
 
 ####################

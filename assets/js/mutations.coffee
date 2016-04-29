@@ -170,7 +170,7 @@ class DetachBlocks extends Mutation
       next = children[@index]
     else
       next = if @index == 0 then @parent else children[@index - 1]
-      if next.id == view.document.viewRoot.id
+      if next.id == view.viewRoot.id
         unless @options.noNew
           next = view.document.addChild @parent
           @created = next

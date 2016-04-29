@@ -11,7 +11,7 @@ class Cursor extends EventEmitter
     super
     @view = view
     @document = view.document
-    @row = row ? (@document.getChildren @document.viewRoot)[0]
+    @row = row ? (@document.getChildren @view.viewRoot)[0]
     @col = col ? 0
     @properties = {}
     do @_getPropertiesFromContext
@@ -93,7 +93,7 @@ class Cursor extends EventEmitter
     if @col < (@document.getLength @row) - 1
       return false
     else
-      nextrow = @document.nextVisible @row
+      nextrow = @view.nextVisible @row
       if nextrow != null
         return false
     return true
@@ -103,7 +103,7 @@ class Cursor extends EventEmitter
       do @_right
       return true
     else
-      nextrow = @document.nextVisible @row
+      nextrow = @view.nextVisible @row
       if nextrow != null
         @set nextrow, 0
         return true
@@ -113,7 +113,7 @@ class Cursor extends EventEmitter
     if @col > 0
       return false
     else
-      prevrow = @document.prevVisible @row
+      prevrow = @view.prevVisible @row
       if prevrow != null
         return false
     return true
@@ -123,7 +123,7 @@ class Cursor extends EventEmitter
       do @_left
       return true
     else
-      prevrow = @document.prevVisible @row
+      prevrow = @view.prevVisible @row
       if prevrow != null
         @set prevrow, -1
         return true
@@ -138,12 +138,12 @@ class Cursor extends EventEmitter
     return @
 
   visibleHome: () ->
-    row = do @document.nextVisible
+    row = do @view.nextVisible
     @set row, 0
     return @
 
   visibleEnd: () ->
-    row = do @document.lastVisible
+    row = do @view.lastVisible
     @set row, 0
     return @
 
@@ -275,12 +275,12 @@ class Cursor extends EventEmitter
       do @_right
 
   up: (cursorOptions = {}) ->
-    row = @document.prevVisible @row
+    row = @view.prevVisible @row
     if row?
       @setRow row, cursorOptions
 
   down: (cursorOptions = {}) ->
-    row = @document.nextVisible @row
+    row = @view.nextVisible @row
     if row?
       @setRow row, cursorOptions
 
@@ -288,8 +288,8 @@ class Cursor extends EventEmitter
     row = do @row.getParent
     if row.id == @document.root.id
       return
-    if row.is @document.viewRoot
-      @document.changeViewRoot (do row.getParent)
+    if row.is @view.viewRoot
+      @view.changeViewRoot (do row.getParent)
     @setRow row, cursorOptions
 
   prevSibling: (cursorOptions = {}) ->

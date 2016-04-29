@@ -89,7 +89,7 @@ class TestCase
     return @
 
   expectViewRoot: (expected) ->
-    @_expectEqual @document.viewRoot.id, expected, "Unexpected view root"
+    @_expectEqual @view.viewRoot.id, expected, "Unexpected view root"
     return @
 
   expectCursor: (row, col) ->

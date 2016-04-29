@@ -14,6 +14,9 @@ Register = require './register.coffee'
 Logger = require './logger.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
+Document = require './document.coffee'
+Row = Document.Row
+
 ###
 a View represents the actual viewport onto the vimflowy document
 It holds a Cursor, a Document object, and a Settings object
@@ -203,9 +206,11 @@ class View extends EventEmitter
 
     @register = new Register @
 
-    if not (@document.getChildren @document.viewRoot).length
+    # TODO: if we ever support multi-user case, ensure last view root is valid
+    @viewRoot = Row.loadFromAncestry (do @document.store.getLastViewRoot || [])
+    if not (@document.getChildren @viewRoot).length
       @document.load constants.empty_data
-    row = (@document.getChildren @document.viewRoot)[0]
+    row = (@document.getChildren @viewRoot)[0]
     @cursor = new Cursor @, row, 0
 
     do @reset_history
@@ -416,7 +421,9 @@ class View extends EventEmitter
     else
         throw new errors.UnexpectedValue "mimetype", mimetype
 
+  #################
   # MUTATIONS
+  #################
 
   reset_history: () ->
     @mutations = [] # full mutation history
@@ -436,7 +443,7 @@ class View extends EventEmitter
     state = @history[@historyIndex]
     state.after = {
       cursor: do @cursor.clone
-      viewRoot: @document.viewRoot
+      viewRoot: @viewRoot
     }
 
     @historyIndex += 1
@@ -497,7 +504,7 @@ class View extends EventEmitter
     if @mutations.length == state.index
       state.before = {
         cursor: do @cursor.clone
-        viewRoot: @document.viewRoot
+        viewRoot: @viewRoot
       }
 
     Logger.logger.debug "Applying mutation #{mutation.constructor.name}(#{mutation.str()})"
@@ -507,18 +514,87 @@ class View extends EventEmitter
     @mutations.push mutation
     return true
 
-  curLine: () ->
-    return @document.getLine @cursor.row
+  ##################
+  # viewability
+  ##################
 
-  curText: () ->
-    return @document.getText @cursor.row
+  # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
+  viewable: (row) ->
+    return (not @document.collapsed row) or (row.is @viewRoot)
 
-  curLineLength: () ->
-    return @document.getLength @cursor.row
+  nextVisible: (row = @viewRoot) ->
+    if @viewable row
+      children = @document.getChildren row
+      if children.length > 0
+        return children[0]
+    while true
+      nextsib = @document.getSiblingAfter row
+      if nextsib?
+        return nextsib
+      row = do row.getParent
+      if row.is @viewRoot
+        return null
+
+  # last thing visible nested within id
+  lastVisible: (row = @viewRoot) ->
+    if not @viewable row
+      return row
+    children = @document.getChildren row
+    if children.length > 0
+      return @lastVisible children[children.length - 1]
+    return row
+
+  prevVisible: (row) ->
+    prevsib = @document.getSiblingBefore row
+    if prevsib?
+      return @lastVisible prevsib
+    parent = do row.getParent
+    if parent.is @viewRoot
+      return null
+    return parent
+
+  # finds oldest ancestor that is visible (viewRoot itself not considered visible)
+  # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
+  oldestVisibleAncestor: (row) ->
+    last = row
+    while true
+      cur = do last.getParent
+      if cur.is @viewRoot
+        return last
+      if do cur.isRoot
+        return null
+      last = cur
+
+  # finds closest ancestor that is visible (viewRoot itself not considered visible)
+  # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
+  youngestVisibleAncestor: (row) ->
+    answer = row
+    cur = row
+    while true
+      cur = do cur.getParent
+      if cur.is @viewRoot
+        return answer
+      if do cur.isRoot
+        return null
+      if @document.collapsed cur
+        answer = cur
+
+  isVisible: (row) ->
+    visibleAncestor = @youngestVisibleAncestor row
+    (visibleAncestor != null) and (row.is visibleAncestor)
+
+
+  ##################
+  # View root
+  ##################
+
+  changeViewRoot: (row) ->
+    @viewRoot = row
+    @document.store.setLastViewRoot do row.getAncestry
 
   reset_jump_history: () ->
     @jumpHistory = [{
-      viewRoot: @document.viewRoot
+      viewRoot: @viewRoot
       cursor_before: do @cursor.clone
     }]
     @jumpIndex = 0 # index into jump history
@@ -532,14 +608,14 @@ class View extends EventEmitter
     do jump_fn
 
     @jumpHistory.push {
-      viewRoot: @document.viewRoot
+      viewRoot: @viewRoot
       cursor_before: do @cursor.clone
     }
     @jumpIndex += 1
 
   # try going to jump, return true if succeeds
   tryJump: (jump) ->
-    if jump.viewRoot.id == @document.viewRoot.id
+    if jump.viewRoot.id == @viewRoot.id
       return false # not moving, don't jump
 
     if not @document.isAttached jump.viewRoot.id
@@ -549,12 +625,12 @@ class View extends EventEmitter
     if not children.length
       return false # can't root, don't jump
 
-    @document.changeViewRoot jump.viewRoot
+    @changeViewRoot jump.viewRoot
     @cursor.setRow children[0]
 
     if @document.isAttached jump.cursor_after.row.id
       # if the row is attached and under the view root, switch to it
-      cursor_row = @document.youngestVisibleAncestor jump.cursor_after.row
+      cursor_row = @youngestVisibleAncestor jump.cursor_after.row
       if cursor_row != null
         @cursor.setRow cursor_row
     return true
@@ -593,18 +669,18 @@ class View extends EventEmitter
   # fails if there is no child
   # records in jump history
   _changeView: (row) ->
-    if row.id == @document.viewRoot.id
+    if row.id == @viewRoot.id
       return true # not moving, do nothing
     if @document.hasChildren row
       @addToJumpHistory () =>
-        @document.changeViewRoot row
+        @changeViewRoot row
       return true
     return false
 
   # try to root into newroot, updating the cursor
   reroot: (newroot = @document.root) ->
     if @_changeView newroot
-      newrow = @document.youngestVisibleAncestor @cursor.row
+      newrow = @youngestVisibleAncestor @cursor.row
       if newrow == null # not visible, need to reset cursor
         newrow = (@document.getChildren newroot)[0]
       @cursor.setRow newrow
@@ -627,15 +703,28 @@ class View extends EventEmitter
     throw new errors.GenericError "Failed to root into #{row}"
 
   rootUp: () ->
-    if @document.viewRoot.id != @document.root.id
-      parent = do @document.viewRoot.getParent
+    if @viewRoot.id != @document.root.id
+      parent = do @viewRoot.getParent
       @reroot parent
 
   rootDown: () ->
-    newroot = @document.oldestVisibleAncestor @cursor.row
+    newroot = @oldestVisibleAncestor @cursor.row
     if @reroot newroot
       return true
     return false
+
+  ##################
+  # Text
+  ##################
+
+  curLine: () ->
+    return @document.getLine @cursor.row
+
+  curText: () ->
+    return @document.getText @cursor.row
+
+  curLineLength: () ->
+    return @document.getLength @cursor.row
 
   addChars: (row, col, chars, options) ->
     @do new mutations.AddChars row, col, chars, options
@@ -800,7 +889,7 @@ class View extends EventEmitter
 
   joinAtCursor: () ->
     row = @cursor.row
-    sib = @document.nextVisible row
+    sib = @nextVisible row
     if sib != null
       @joinRows row, sib, {cursor: {pastEnd: true}, delimiter: ' '}
 
@@ -808,7 +897,7 @@ class View extends EventEmitter
   deleteAtCursor: () ->
     if @cursor.col == 0
       row = @cursor.row
-      sib = @document.prevVisible row
+      sib = @prevVisible row
       if sib != null
         @joinRows sib, row, {cursor: {pastEnd: true}}
     else
@@ -879,7 +968,7 @@ class View extends EventEmitter
 
   unindentBlocks: (row, numblocks = 1, options = {}) ->
     parent = do row.getParent
-    if parent.id == @document.viewRoot.id
+    if parent.id == @viewRoot.id
       @showMessage "Cannot unindent past root", {text_class: 'error'}
       return null
 
@@ -925,7 +1014,7 @@ class View extends EventEmitter
       @moveBlock child, row, -1
 
   swapDown: (row = @cursor.row) ->
-    next = @document.nextVisible (@document.lastVisible row)
+    next = @nextVisible (@lastVisible row)
     unless next?
       return
 
@@ -939,7 +1028,7 @@ class View extends EventEmitter
       @moveBlock row, parent, (p_i+1)
 
   swapUp: (row = @cursor.row) ->
-    prev = @document.prevVisible row
+    prev = @prevVisible row
     unless prev?
       return
 
@@ -1072,7 +1161,7 @@ class View extends EventEmitter
 
   virtualRender: (options = {}) ->
     crumbs = []
-    row = @document.viewRoot
+    row = @viewRoot
     until row.is @document.root
       crumbs.push row
       row = do row.getParent
@@ -1109,7 +1198,7 @@ class View extends EventEmitter
       for child in @document.getChildRange parent, index1, index2
         options.highlight_blocks[child.id] = true
 
-    contentsChildren = @virtualRenderTree @document.viewRoot, options
+    contentsChildren = @virtualRenderTree @viewRoot, options
 
     contentsNode = virtualDom.h 'div', {
       id: 'treecontents'

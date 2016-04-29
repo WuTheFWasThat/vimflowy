@@ -75,12 +75,7 @@ class Document extends EventEmitter
   constructor: (store) ->
     super
     @store = store
-    @viewRoot = Row.loadFromAncestry (do @store.getLastViewRoot || [])
     return @
-
-  changeViewRoot: (row) ->
-    @viewRoot = row
-    @store.setLastViewRoot do row.getAncestry
 
   #########
   # lines #
@@ -237,10 +232,6 @@ class Document extends EventEmitter
     visit id
     ancestors
 
-  # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
-  viewable: (row) ->
-    return (not @collapsed row) or (row.is @viewRoot)
-
   # detach a block from the graph
   detach: (row) ->
     parent = do row.getParent
@@ -393,67 +384,6 @@ class Document extends EventEmitter
         return null
     return row
 
-  nextVisible: (row = @viewRoot) ->
-    if @viewable row
-      children = @getChildren row
-      if children.length > 0
-        return children[0]
-    while true
-      nextsib = @getSiblingAfter row
-      if nextsib?
-        return nextsib
-      row = do row.getParent
-      if row.is @viewRoot
-        return null
-
-  # last thing visible nested within id
-  lastVisible: (row = @viewRoot) ->
-    if not @viewable row
-      return row
-    children = @getChildren row
-    if children.length > 0
-      return @lastVisible children[children.length - 1]
-    return row
-
-  prevVisible: (row) ->
-    prevsib = @getSiblingBefore row
-    if prevsib?
-      return @lastVisible prevsib
-    parent = do row.getParent
-    if parent.is @viewRoot
-      return null
-    return parent
-
-  # finds oldest ancestor that is visible (viewRoot itself not considered visible)
-  # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
-  oldestVisibleAncestor: (row) ->
-    last = row
-    while true
-      cur = do last.getParent
-      if cur.is @viewRoot
-        return last
-      if do cur.isRoot
-        return null
-      last = cur
-
-  # finds closest ancestor that is visible (viewRoot itself not considered visible)
-  # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
-  youngestVisibleAncestor: (row) ->
-    answer = row
-    cur = row
-    while true
-      cur = do cur.getParent
-      if cur.is @viewRoot
-        return answer
-      if do cur.isRoot
-        return null
-      if @collapsed cur
-        answer = cur
-
-  isVisible: (row) ->
-    visibleAncestor = @youngestVisibleAncestor row
-    (visibleAncestor != null) and (row.is visibleAncestor)
-
   # returns whether an id is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
   isAttached: (id) ->
@@ -527,9 +457,6 @@ class Document extends EventEmitter
       if _.some (line.map ((obj) -> obj[property]))
         struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
 
-    if (do row.isRoot) and not (do @viewRoot.isRoot)
-      struct.viewRoot = @viewRoot
-
     if @collapsed row
       struct.collapsed = true
 
@@ -587,7 +514,8 @@ class Document extends EventEmitter
     for serialized_row in serialized_rows
       @loadTo serialized_row, @root, -1, id_mapping, true
 
+# TODO fix: hacky, used only for rendering...
+Document.Row = Row
+
 # exports
 module.exports = Document
-# TODO fix: hacky, used only for rendering...
-window?.Row = Row
