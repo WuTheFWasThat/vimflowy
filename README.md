@@ -12,46 +12,40 @@ Try it out!
 ## FEATURES ##
 
 - Workflowy features
-  - bullets, sub-bullets
-  - collapsing
-  - zooming
-  - text formatting
-    - bold, italic, and underline
-    - strike through text (task completion)
+  - tree-like outlining
+  - collapsing and zooming into bullets
+  - basic text formatting, strike through task completion
 - Vim features
-  - most of the standard movement/operators
+  - (configurable) vim keybindings
   - modal editing
-    - insert and normal mode
-    - visual mode (only within a line)
-    - visual line (acts on groups of siblings)
-  - keybindings for everything
-    - configurable (via downloading/uploading a json file)
-  - undo!  Full history kept within a session
-  - ctrl+o and ctrl+i to move through jump history
+  - session history (undo, moving through jump history)
   - macros
 - Extras
-  - search
-  - cloning (bullets with multiple parents)
   - data import/export
-  - different themes
-  - multiple documents in online version (by visiting /documentname)
-  - lazy loads data, for big documents
-  - plugins system, for adding new features (see [PLUGINS.md](PLUGINS.md))
-    - marks (not quite like vim's)
-    - easy_motion for moving between bullets quickly
-    - time-tracking
+  - search (not like vim's)
+  - cloning (bullets with multiple parents)
+  - different visual themes
+  - loads data lazily (good for big documents)
+- Plugins system (see [PLUGINS.md](PLUGINS.md))
+  - marks (not like vim's)
+  - easy-motion for moving between bullets quickly
+  - time-tracking
 
 ## NOTES ##
 
 - The app is entirely local. The online version uses localStorage, so it should be used in only one browser.
   If you're going to have a large document, use a browser with large localStorage limits
-- Currently, weird things happen when you use multiple tabs simultaneously
+- Currently, there is no simultaneous editing
 - Tested mostly in Chrome and Firefox
 - There are [known inconsistencies with vim](vim_inconsistencies.md)
 
 ## CONTRIBUTE ##
 
 Please do!  See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+Don't hesitate to contact me for help.
+
+I've marked a number of github issues with the label `small_task`, which could be good places to start.
 
 ### LICENSE ###
 

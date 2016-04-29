@@ -26,6 +26,8 @@ And you can visit the app at `http://localhost:8080/`
 
 Assets will be automatically recompiled when the source changes, and tests are automatically re-ran.
 
+Note that you may make new documents simply by visiting `http://localhost:8080/somedocumentname`
+
 #### RUN TESTS: ####
 
 Tests are run automatically.  To get a more detailed report, run
