@@ -90,11 +90,12 @@ class Mode
         break
     return [key, context]
 
-  handle_bad_key: (key, keyStream) ->
+  handle_bad_key: (keyStream) ->
     # for normal mode types, single bad key -> forgotten sequence
     if @metadata.hotkey_type == NORMAL_MODE_TYPE
       do keyStream.forget
-    return false
+    else
+      keyStream.forget 1
 
 
 # an enum dictionary,

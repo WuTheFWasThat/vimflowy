@@ -136,17 +136,22 @@ class KeyHandler
     return handled
 
   # NOTE: handled tells the eventEmitter whether to preventDefault or not
+  #       returns whether the *last key* was handled
   processKeys: (keyStream) ->
-    handled = false
+    handled = true
     while not keyStream.done() and not keyStream.waiting
       do keyStream.checkpoint
-      handled = (@processOnce keyStream) or handled
+      handled = @processOnce keyStream
+      if not handled
+        mode_obj = Modes.getMode @session.mode
+        mode_obj.handle_bad_key keyStream
     do @session.render
     return handled
 
   processOnce: (keyStream) ->
     @processMode @session.mode, keyStream
 
+  # returns: whether we encountered a bad key
   processMode: (mode, keyStream, bindings = null, repeat = 1) ->
     if bindings == null
       bindings = @keyBindings.bindings[mode]
@@ -167,22 +172,20 @@ class KeyHandler
 
     [key, context] = mode_obj.transform_key key, context
     if key == null
-      if keyStream.waiting # continuing
-        return true
-      return false
+      # either key was already null, or
+      # a transform acted (which, for now, we always consider not bad.  could change)
+      return true
 
     if (key of bindings)
       info = bindings[key]
     else
       if not ('MOTION' of bindings)
-        return mode_obj.handle_bad_key key, keyStream
+        return false
 
       # note: this uses original bindings to determine what's a motion
-      [motion, context.repeat] = @getMotion keyStream, key, @keyBindings.motion_bindings[mode], context.repeat
+      [motion, context.repeat, handled] = @getMotion keyStream, key, @keyBindings.motion_bindings[mode], context.repeat
       if motion == null
-        if keyStream.waiting # motion continuing
-          return true
-        return mode_obj.handle_bad_key key, keyStream
+        return handled
 
       args.push motion
       info = bindings['MOTION']
@@ -225,11 +228,10 @@ class KeyHandler
 
     if motionKey == null
       do keyStream.wait
-      return [null, repeat]
+      return [null, repeat, true]
 
     if not (motionKey of bindings)
-      do keyStream.forget
-      return [null, repeat]
+      return [null, repeat, false]
 
     definition = bindings[motionKey].definition
     if typeof definition == 'object'
@@ -243,7 +245,7 @@ class KeyHandler
         keyHandler: @
       }
       motion = definition.apply context, []
-      return [motion, repeat]
+      return [motion, repeat, true]
     else
       throw new errors.UnexpectedValue "definition", definition
 
