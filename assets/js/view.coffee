@@ -3,6 +3,7 @@
 constants = require './constants.coffee'
 utils = require './utils.coffee'
 Logger = require './logger.coffee'
+Plugins = require './plugins.coffee'
 Modes = require './modes.coffee'
 MODES = Modes.modes
 
@@ -169,22 +170,23 @@ renderLine = (lineData, options = {}) ->
   return results
 
 
-initRenderSession = (session) ->
-  # TODO: stop attaching things to the session
-  session.vtree = virtualRender session
-  session.vnode = virtualDom.create session.vtree
-  do session.mainDiv.empty
-  session.mainDiv.append session.vnode
-
 renderSession = (session, options = {}) ->
   if session.menu
     renderMenu session.menu
     return
 
+  if not session.vnode?
+    # TODO: stop attaching things to the session
+    session.vtree = virtualRenderSession session
+    session.vnode = virtualDom.create session.vtree
+    do session.mainDiv.empty
+    session.mainDiv.append session.vnode
+    return
+
   options.cursorBetween = (Modes.getMode session.mode).metadata.hotkey_type == Modes.INSERT_MODE_TYPE
 
   t = Date.now()
-  vtree = virtualRender session, options
+  vtree = virtualRenderSession session, options
   patches = virtualDom.diff session.vtree, vtree
   session.vnode = virtualDom.patch session.vnode, patches
   session.vtree = vtree
@@ -202,7 +204,7 @@ renderSession = (session, options = {}) ->
 
   return
 
-virtualRender = (session, options = {}) ->
+virtualRenderSession = (session, options = {}) ->
   crumbs = []
   row = session.viewRoot
   until row.is session.document.root
@@ -423,8 +425,74 @@ renderMenu = (menu) ->
       resultLineDiv = virtualDom.create virtualDom.h 'span', {}, contents
       resultDiv.append resultLineDiv
 
+renderPlugins = (pluginManager) ->
+  unless pluginManager.div?
+    return
+  vtree = virtualRenderPlugins pluginManager
+  if not pluginManager.vnode?
+    pluginManager.vtree = vtree
+    pluginManager.vnode = virtualDom.create pluginManager.vtree
+    do pluginManager.div.empty
+    pluginManager.div.append pluginManager.vnode
+    return
+
+  patches = virtualDom.diff pluginManager.vtree, vtree
+  pluginManager.vtree = vtree
+  pluginManager.vnode = virtualDom.patch pluginManager.vnode, patches
+
+virtualRenderPlugins = (pluginManager) ->
+  header = virtualDom.h 'tr', {}, [
+    virtualDom.h 'th', { className: 'plugin-name' }, "Plugin"
+    virtualDom.h 'th', { className: 'plugin-description' }, "Description"
+    virtualDom.h 'th', { className: 'plugin-version' }, "Version"
+    virtualDom.h 'th', { className: 'plugin-author' }, "Author"
+    virtualDom.h 'th', { className: 'plugin-status' }, "Status"
+    virtualDom.h 'th', { className: 'plugin-actions' }, "Actions"
+  ]
+  pluginElements = (virtualRenderPlugin pluginManager, name for name in do Plugins.names)
+  virtualDom.h 'table', {}, ([header].concat pluginElements)
+
+virtualRenderPlugin = (pluginManager, name) ->
+  status = pluginManager.getStatus name
+  actions = []
+  if status == Plugins.STATUSES.ENABLED
+    # "Disable" action
+    button = virtualDom.h 'div', {
+        className: 'btn theme-trim'
+        onclick: () -> pluginManager.disable name
+    }, "Disable"
+    actions.push button
+  else if status == Plugins.STATUSES.DISABLED
+    # "Enable" action
+    button = virtualDom.h 'div', {
+        className: 'btn theme-trim'
+        onclick: () -> pluginManager.enable name
+    }, "Enable"
+    actions.push button
+
+  color = "inherit"
+  if status == Plugins.STATUSES.ENABLING or status == Plugins.STATUSES.DISABLING
+    color = "yellow"
+  if status == Plugins.STATUSES.UNREGISTERED or status == Plugins.STATUSES.DISABLED
+    color = "red"
+  else if status == Plugins.STATUSES.ENABLED
+    color = "green"
+
+  plugin = (Plugins.get name) || {}
+  virtualDom.h 'tr', {
+    className: "plugin theme-bg-secondary"
+  }, [
+    virtualDom.h 'td', { className: 'center theme-trim plugin-name' }, name
+    virtualDom.h 'td', { className: 'theme-trim plugin-description', style: {'font-size': '12px'} }, (plugin.description || '')
+    virtualDom.h 'td', { className: 'center theme-trim plugin-version' }, ((plugin.version || '') + '')
+    virtualDom.h 'td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, (plugin.author || '')
+    virtualDom.h 'td', { className: 'center theme-trim plugin-status', style: {'box-shadow': 'inset 0px 0px 0px 2px ' + color } }, status
+    virtualDom.h 'td', { className: 'center theme-trim plugin-actions' }, actions
+  ]
+
+exports.virtualRenderLine = virtualRenderLine
+
 exports.renderLine = renderLine
-exports.initRenderSession = initRenderSession
 exports.renderSession = renderSession
 exports.renderMenu = renderMenu
-exports.virtualRenderLine = virtualRenderLine
+exports.renderPlugins = renderPlugins

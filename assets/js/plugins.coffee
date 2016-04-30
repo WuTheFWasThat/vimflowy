@@ -4,6 +4,7 @@ utils = require './utils.coffee'
 Modes = require './modes.coffee'
 Logger = require './logger.coffee'
 errors = require './errors.coffee'
+EventEmitter = require './eventEmitter.coffee'
 
 PLUGIN_SCHEMA = {
   title: "Plugin metadata schema"
@@ -36,8 +37,14 @@ PLUGIN_SCHEMA = {
 # global set of registered plugins
 PLUGINS = {}
 
-getPluginNames = () ->
-  do (_.keys PLUGINS).sort
+STATUSES = {
+  UNREGISTERED: "Unregistered",
+  DISABLING: "Disabling",
+  ENABLING: "Enabling",
+  DISABLED: "Disabled",
+  ENABLED: "Enabled",
+}
+
 
 # class for exposing plugin API
 class PluginApi
@@ -79,93 +86,21 @@ class PluginApi
     alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."
     @pluginManager.disable @name
 
-class PluginsManager
-
-  STATUS = {
-    UNREGISTERED: "Unregistered",
-    DISABLING: "Disabling",
-    ENABLING: "Enabling",
-    DISABLED: "Disabled",
-    ENABLED: "Enabled",
-  }
+class PluginsManager extends EventEmitter
 
   constructor: (session, div) ->
+    super
     @session = session
     @div = div
     @plugin_infos = {}
-    do @render
-
-  render: () ->
-    unless @div?
-      return
-    vtree = do @virtualRender
-    if @vtree?
-      patches = virtualDom.diff @vtree, vtree
-      @vnode = virtualDom.patch @vnode, patches
-      @vtree = vtree
-    else
-      $(@div).find(".before-load").remove()
-      @vtree = do @virtualRender
-      @vnode = virtualDom.create @vtree
-      @div.append @vnode
-
-  virtualRender: () ->
-    header = virtualDom.h 'tr', {}, [
-      virtualDom.h 'th', { className: 'plugin-name' }, "Plugin"
-      virtualDom.h 'th', { className: 'plugin-description' }, "Description"
-      virtualDom.h 'th', { className: 'plugin-version' }, "Version"
-      virtualDom.h 'th', { className: 'plugin-author' }, "Author"
-      virtualDom.h 'th', { className: 'plugin-status' }, "Status"
-      virtualDom.h 'th', { className: 'plugin-actions' }, "Actions"
-    ]
-    pluginElements = (@virtualRenderPlugin name for name in do getPluginNames)
-    virtualDom.h 'table', {}, ([header].concat pluginElements)
-
-  virtualRenderPlugin: (name) ->
-    status = @getStatus name
-    actions = []
-    if status == STATUS.ENABLED
-      # "Disable" action
-      button = virtualDom.h 'div', {
-          className: 'btn theme-trim'
-          onclick: () => @disable name
-      }, "Disable"
-      actions.push button
-    else if status == STATUS.DISABLED
-      # "Enable" action
-      button = virtualDom.h 'div', {
-          className: 'btn theme-trim'
-          onclick: () => @enable name
-      }, "Enable"
-      actions.push button
-
-    color = "inherit"
-    if status == STATUS.ENABLING or status == STATUS.DISABLING
-      color = "yellow"
-    if status == STATUS.UNREGISTERED or status == STATUS.DISABLED
-      color = "red"
-    else if status == STATUS.ENABLED
-      color = "green"
-
-    plugin = PLUGINS[name] || {}
-    virtualDom.h 'tr', {
-      className: "plugin theme-bg-secondary"
-    }, [
-      virtualDom.h 'td', { className: 'center theme-trim plugin-name' }, name
-      virtualDom.h 'td', { className: 'theme-trim plugin-description', style: {'font-size': '12px'} }, (plugin.description || '')
-      virtualDom.h 'td', { className: 'center theme-trim plugin-version' }, ((plugin.version || '') + '')
-      virtualDom.h 'td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, (plugin.author || '')
-      virtualDom.h 'td', { className: 'center theme-trim plugin-status', style: {'box-shadow': 'inset 0px 0px 0px 2px ' + color } }, status
-      virtualDom.h 'td', { className: 'center theme-trim plugin-actions' }, actions
-    ]
 
   get: (name) ->
     return @plugin_infos[name]
 
   getStatus: (name) ->
-    if not (name of PLUGINS)
-      return STATUS.UNREGISTERED
-    @plugin_infos[name]?.status || STATUS.DISABLED
+    if not PLUGINS[name]
+      return STATUSES.UNREGISTERED
+    @plugin_infos[name]?.status || STATUSES.DISABLED
 
   setStatus: (name, status) ->
     Logger.logger.info "Plugin #{name} status: #{status}"
@@ -174,37 +109,32 @@ class PluginsManager
     plugin_info = @plugin_infos[name] || {}
     plugin_info.status = status
     @plugin_infos[name] = plugin_info
-    do @render
+    @emit 'status'
 
   updateEnabledPlugins: () ->
     enabled = []
     for name of @plugin_infos
-      if (@getStatus name) == STATUS.ENABLED
+      if (@getStatus name) == STATUSES.ENABLED
         enabled.push name
     if @session.settings
-      console.log 'updating settings'
       @session.settings.setSetting "enabledPlugins", enabled
-
-    # refresh hotkeys, if any new ones were added/removed
-    do @session.bindings.init
-    @session.bindings.renderModeTable @session.mode
-    # TODO: also re-render main session
-    # TODO: move all this logic out of the manager, anyways
+    @emit 'enabledPluginsChange'
 
   enable: (name) ->
     status = @getStatus name
-    if status == STATUS.UNREGISTERED
+    if status == STATUSES.UNREGISTERED
       Logger.logger.error "No plugin registered as #{name}"
+      PLUGINS[name] = null
       return
-    if status == STATUS.ENABLING
+    if status == STATUSES.ENABLING
       throw new errors.GenericError("Already enabling plugin #{name}")
-    if status == STATUS.DISABLING
+    if status == STATUSES.DISABLING
       throw new errors.GenericError("Still disabling plugin #{name}")
-    if status == STATUS.ENABLED
+    if status == STATUSES.ENABLED
       throw new errors.GenericError("Plugin #{name} is already enabled")
 
-    errors.assert (status == STATUS.DISABLED)
-    @setStatus name, STATUS.ENABLING
+    errors.assert (status == STATUSES.DISABLED)
+    @setStatus name, STATUSES.ENABLING
 
     plugin = PLUGINS[name]
     api = new PluginApi @session, plugin, @
@@ -214,23 +144,23 @@ class PluginsManager
       api: api,
       value: value
     }
-    @setStatus name, STATUS.ENABLED
+    @setStatus name, STATUSES.ENABLED
     do @updateEnabledPlugins
 
   disable: (name) ->
     status = @getStatus name
-    if status == STATUS.UNREGISTERED
+    if status == STATUSES.UNREGISTERED
       throw new errors.GenericError("No plugin registered as #{name}")
-    if status == STATUS.ENABLING
+    if status == STATUSES.ENABLING
       throw new errors.GenericError("Still enabling plugin #{name}")
-    if status == STATUS.DISABLING
+    if status == STATUSES.DISABLING
       throw new errors.GenericError("Already disabling plugin #{name}")
-    if status == STATUS.DISABLED
+    if status == STATUSES.DISABLED
       throw new errors.GenericError("Plugin #{name} already disabled")
 
     # TODO: require that no other plugin has this as a dependency, notify user otherwise
-    errors.assert (status == STATUS.ENABLED)
-    @setStatus name, STATUS.DISABLING
+    errors.assert (status == STATUSES.ENABLED)
+    @setStatus name, STATUSES.DISABLING
 
     plugin_info = @plugin_infos[name]
     plugin = PLUGINS[name]
@@ -256,5 +186,7 @@ registerPlugin = (plugin_metadata, enable, disable) ->
 # exports
 exports.PluginsManager = PluginsManager
 exports.register = registerPlugin
-exports.all = () ->
-  return PLUGINS
+exports.all = () -> PLUGINS
+exports.get = (name) -> PLUGINS[name]
+exports.names = () -> do (_.keys PLUGINS).sort
+exports.STATUSES = STATUSES

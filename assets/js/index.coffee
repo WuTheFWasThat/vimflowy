@@ -53,8 +53,17 @@ create_session = (document, to_load) ->
   enabledPlugins = (session.settings.getSetting "enabledPlugins") || ["Marks"]
   for plugin_name in enabledPlugins
     pluginManager.enable plugin_name
+  View.renderPlugins pluginManager
 
-  View.initRenderSession session
+  pluginManager.on 'status', () ->
+    View.renderPlugins pluginManager
+  pluginManager.on 'enabledPluginsChange', () ->
+    View.renderPlugins pluginManager
+    # re-render view
+    View.renderSession session
+    # refresh hotkeys, if any new ones were added/removed
+    do session.bindings.init
+    session.bindings.renderModeTable session.mode
 
   if to_load != null
     document.load to_load
@@ -94,9 +103,10 @@ create_session = (document, to_load) ->
       do session.save
   )
 
+  key_handler = new KeyHandler session, key_bindings
+
   key_emitter = new KeyEmitter
   do key_emitter.listen
-  key_handler = new KeyHandler session, key_bindings
   key_emitter.on 'keydown', (key) ->
     handled = key_handler.handleKey key
     if handled
@@ -132,7 +142,7 @@ create_session = (document, to_load) ->
             cb null, content, file.name
         reader.onerror = (evt) ->
             cb 'Import failed due to file-reading issue'
-            console.log 'Import Error', evt
+            Logger.logger.error 'Import Error', evt
 
     download_file = (filename, mimetype, content) ->
         exportDiv = $("#export")

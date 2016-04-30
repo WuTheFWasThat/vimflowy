@@ -213,7 +213,6 @@ class TimeTrackingPlugin
 
         if isCurRow
           curTime = new Date() - @currentRow.time
-          console.log('curTime', curTime)
           elements.push virtualDom.h 'span', {
             className: 'time curtime'
           }, (@printTime curTime)
