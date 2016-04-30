@@ -65,22 +65,30 @@ class PluginApi
   getData: (key, default_value=null) ->
     @document.store.getPluginData @name, key, default_value
 
+  # TODO: have definitions be event emitter? have this be automatic somehow
+  #       (first try combining bindings into definitions)
+  #       should also re-render mode table
+  _reapply_hotkeys: () ->
+     err = do @session.bindings.reapply_hotkey_settings
+     if err
+       throw new errors.GenericError "Error applying hotkeys: #{err}"
+
   registerMode: (metadata) ->
     Modes.registerMode metadata
-    do @session.bindings.init
+    do @_reapply_hotkeys
 
   registerCommand: (metadata) ->
     cmd = @definitions.registerCommand metadata
-    do @session.bindings.init
+    do @_reapply_hotkeys
     return cmd
 
   registerMotion: (commands, motion, definition) ->
     @definitions.registerMotion commands, motion, definition
-    do @session.bindings.init
+    do @_reapply_hotkeys
 
   registerAction: (modes, commands, action, definition) ->
     @definitions.registerAction modes, commands, action, definition
-    do @session.bindings.init
+    do @_reapply_hotkeys
 
   panic: _.once () =>
     alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."

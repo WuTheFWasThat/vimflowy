@@ -23,24 +23,29 @@ Logger.logger.setStream Logger.STREAM.QUEUE
 afterEach 'empty the queue', () ->
   do Logger.logger.empty
 
+# will have default bindings
+defaultKeyBindings = new KeyBindings (do KeyDefinitions.clone)
+
 class TestCase
-  constructor: (serialized = ['']) ->
+  constructor: (serialized = [''], options = {}) ->
     @store = new DataStore.InMemory
     @document = new Document @store
 
-    @settings =  new Settings @store
-
-    # will have default bindings
-    keyBindings = new KeyBindings (do KeyDefinitions.clone), @settings
-
+    if options.plugins?
+      # TODO: do this less hackily?
+      keyBindings = new KeyBindings (do KeyDefinitions.clone)
+    else
+      # just share keybindings, for efficiency
+      keyBindings = defaultKeyBindings
     @session = new Session @document, {bindings: keyBindings}
 
     @keyhandler = new KeyHandler @session, keyBindings
     @register = @session.register
 
     @pluginManager = new Plugins.PluginsManager @session
-    for name of do Plugins.all
-      @pluginManager.enable name
+    if options.plugins?
+      for pluginName in options.plugins
+        @pluginManager.enable pluginName
 
     # this must be *after* plugin loading because of plugins with state
     # e.g. marks needs the database to have the marks loaded

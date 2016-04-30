@@ -5,6 +5,7 @@ utils = require './utils.coffee'
 Modes = require './modes.coffee'
 errors = require './errors.coffee'
 Logger = require './logger.coffee'
+EventEmitter = require './eventEmitter.coffee'
 
 ###
 Terminology:
@@ -35,12 +36,14 @@ It also internally maintains
 
 ###
 
+# TODO: merge this into keyDefinitions
+
 MODES = Modes.modes
 NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
 INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
 MODE_TYPES = Modes.types
 
-class KeyBindings
+class KeyBindings extends EventEmitter
   # takes key definitions and keyMappings, and combines them to key bindings
   getBindings = (definitions, keyMap) ->
     bindings = {}
@@ -68,21 +71,20 @@ class KeyBindings
         bindings[key] = v
     return [null, bindings]
 
-  constructor: (@definitions, @settings, options = {}) ->
+  constructor: (@definitions, hotkey_settings, options = {}) ->
+    super
     # a mapping from commands to keys
     @_keyMaps = null
     # a recursive mapping from keys to commands
     @bindings = null
 
     @modebindingsDiv = options.modebindingsDiv
-    do @init
 
-  init: () ->
-    hotkey_settings = @settings.getSetting 'hotkeys'
+    @hotkey_settings = null
     err = @apply_hotkey_settings hotkey_settings
 
     if err
-      Logger.logger.error "Failed to apply saved hotkeys #{hotkey_settings}"
+      Logger.logger.error "Failed to apply desired hotkeys #{hotkey_settings}"
       Logger.logger.error err
       do @apply_default_hotkey_settings
 
@@ -101,7 +103,11 @@ class KeyBindings
       )
 
   # tries to apply new hotkey settings, returning an error if there was one
-  apply_hotkey_settings: (hotkey_settings) ->
+  # new bindings may result if any of the following happen:
+  #   - hotkey settings change
+  #   - mode registered/unregistered
+  #   - command, motion, or action registered/unregistered
+  apply_hotkey_settings: (hotkey_settings = {}) ->
     # merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
     hotkeys = {}
     for mode_type of MODE_TYPES
@@ -142,16 +148,18 @@ class KeyBindings
     @_keyMaps = keyMaps
 
     do @render_hotkeys
+    @hotkey_settings = hotkey_settings
+    @emit 'applied_hotkey_settings', hotkey_settings
     return null
-
-  save_settings: (hotkey_settings) ->
-    @settings.setSetting 'hotkeys', hotkey_settings
 
   # apply default hotkeys
   apply_default_hotkey_settings: () ->
       err = @apply_hotkey_settings {}
       errors.assert_equals err, null, "Failed to apply default hotkeys"
-      @save_settings {}
+
+  reapply_hotkey_settings: () ->
+      err = @apply_hotkey_settings @hotkey_settings
+      return err
 
   # build table to visualize hotkeys
   buildTable: (keyMap, actions, helpMenu) ->

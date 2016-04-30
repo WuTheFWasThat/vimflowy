@@ -33,10 +33,17 @@ KeyBindings = require './keyBindings.coffee'
 session = null
 create_session = (document, to_load) ->
 
-  settings = new Settings document.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
+  settings = new Settings document.store, {
+    mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')
+  }
   do settings.loadRenderSettings
 
-  key_bindings = new KeyBindings keyDefinitions, settings, {modebindingsDiv: $('#keybindings')}
+  hotkey_settings = settings.getSetting 'hotkeys'
+  key_bindings = new KeyBindings keyDefinitions, hotkey_settings, {
+    modebindingsDiv: $('#keybindings')
+  }
+  key_bindings.on 'applied_hotkey_settings', (hotkey_settings) ->
+    settings.setSetting 'hotkeys', hotkey_settings
 
   session = new Session document, {
     bindings: key_bindings
@@ -62,7 +69,6 @@ create_session = (document, to_load) ->
     # re-render view
     View.renderSession session
     # refresh hotkeys, if any new ones were added/removed
-    do session.bindings.init
     session.bindings.renderModeTable session.mode
 
   if to_load != null

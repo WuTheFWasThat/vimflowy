@@ -13,7 +13,7 @@ describe "marks", () ->
     t = new TestCase [
       'a line'
       'another line'
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks {}
     t.sendKeys 'mmarktest'
     t.sendKey 'enter'
@@ -107,7 +107,7 @@ describe "marks", () ->
     t = new TestCase [
       { text: 'line 1', mark: 'mark1' }
       { text: 'line 2', mark: 'mark2' }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks {'mark1': 1, 'mark2': 2}
     t.sendKeys 'dd'
     t.expect [
@@ -125,7 +125,7 @@ describe "marks", () ->
     t = new TestCase [
       { text: 'line 1', mark: 'mark1' }
       { text: 'line 2', mark: 'mark2' }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.sendKeys 'mmark2'
     t.sendKey 'enter'
     # does nothing due to mark2 being taken
@@ -168,7 +168,7 @@ describe "marks", () ->
   it "doesnt mark when the mark exists, from yank", () ->
     t = new TestCase [
       { text: 'line 1', mark: 'mark1' }
-    ]
+    ], {plugins: [Marks.pluginName]}
 
     t.sendKeys 'yy'
     t.sendKeys ['d', 'm']
@@ -217,7 +217,7 @@ describe "marks", () ->
       { text: 'stuff', mark: 'mark2', children: [
         'more stuff'
       ] }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.sendKeys 'gmx'
     t.expectViewRoot 0
     t.expect [
@@ -266,7 +266,7 @@ describe "marks", () ->
         { text: 'hooray', mark: 'yay' }
       ] }
       { text: 'awesome', mark: 'whoo' }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.sendKeys '`w'
     t.sendKey 'enter'
     t.sendKeys 'x'
@@ -331,7 +331,7 @@ describe "marks", () ->
       ] }
       'random'
       'random'
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
 
     t.sendKeys '`t'
@@ -381,7 +381,7 @@ describe "marks", () ->
         ] }
       ] }
       'random'
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
 
     t.sendKeys 'dd'
@@ -432,7 +432,7 @@ describe "marks", () ->
       { text: 'line 2', mark: 'mark2', children: [
         'line 2.1'
       ] }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks {'mark1': 1, 'mark2': 2}
     t.sendKeys 'yc'
     t.expectMarks {'mark1': 1, 'mark2': 2}
@@ -462,7 +462,7 @@ describe "marks", () ->
       { text: 'line 2', mark: 'mark2', children: [
         'line 2.1'
       ] }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks {'mark1': 1, 'mark2': 2}
     t.sendKeys 'yc'
     t.expectMarks {'mark1': 1, 'mark2': 2}
@@ -494,7 +494,7 @@ describe "marks", () ->
       { text: 'Not a clone', children: [
         'Not a clone'
       ] }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks { 'mark': 1 }
 
     t.sendKeys 'ycjjp'
@@ -533,7 +533,7 @@ describe "marks", () ->
           'blah'
         ] }
       ] }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks { 'mark': 3 }
 
     t.sendKeys 'jycGp'
@@ -615,7 +615,7 @@ describe "marks", () ->
           'blah'
         ] }
       ] }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks { 'mark': 3 }
 
     t.sendKeys 'jycGp'
@@ -650,7 +650,7 @@ describe "marks", () ->
         'stuff'
       ] },
       'third'
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.sendKeys '\'goto'
     t.sendKey 'enter'
     t.expectViewRoot 1
@@ -674,7 +674,7 @@ describe "marks", () ->
           'blah'
         ] }
       ] }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.expectMarks { 'mark': 3 }
 
     t.sendKeys 'jycGp'
@@ -707,7 +707,7 @@ describe "marks", () ->
         'blah'
       ] }
       'random'
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.sendKeys 'dd'
     t.expect [
       'random'
@@ -740,7 +740,7 @@ describe "marks", () ->
       { text: 'parent2', children: [
         'blah'
       ] }
-    ]
+    ], {plugins: [Marks.pluginName]}
     t.sendKeys 'jycjp'
     t.expect [
       { text: 'parent1', children: [
