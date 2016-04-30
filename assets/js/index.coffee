@@ -44,12 +44,15 @@ create_view = (document, to_load) ->
     settingsDiv: $('#settings')
     messageDiv: $('#message')
     keybindingsDiv: $('#keybindings')
-    pluginsDiv: $('#plugins')
     modeDiv: $('#mode')
     menuDiv: $('#menu')
   }
 
-  Plugins.resolveSession session
+  pluginManager = new Plugins.PluginsManager session, $('#plugins')
+  enabledPlugins = (session.settings.getSetting "enabledPlugins") || ["Marks"]
+  for plugin_name in enabledPlugins
+    pluginManager.enable plugin_name
+
   if to_load != null
     document.load to_load
     # otherwise, you can undo initial marks, for example
@@ -74,7 +77,7 @@ create_view = (document, to_load) ->
       e.preventDefault()
       text = (e.originalEvent || e).clipboardData.getData('text/plain')
       # TODO: deal with this better when there are multiple lines
-      # maye put in insert mode?
+      # maybe put in insert mode?
       lines = text.split '\n'
       for line, i in lines
         if i != 0

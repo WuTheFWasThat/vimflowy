@@ -5,6 +5,40 @@ Modes = require './modes.coffee'
 Logger = require './logger.coffee'
 errors = require './errors.coffee'
 
+PLUGIN_SCHEMA = {
+  title: "Plugin metadata schema"
+  type: "object"
+  required: [ 'name' ]
+  properties: {
+    name: {
+      description: "Name of the plugin"
+      pattern: "^[A-Za-z0-9_ ]{2,64}$"
+      type: "string"
+    }
+    version: {
+      description: "Version of the plugin"
+      type: "number"
+      default: 1
+      minimum: 1
+    }
+    author: {
+      description: "Author of the plugin"
+      type: "string"
+      default: "Unknown"
+    }
+    description: {
+      description: "Description of the plugin"
+      type: "string"
+    }
+  }
+}
+
+# global set of registered plugins
+PLUGINS = {}
+
+getPluginNames = () ->
+  do (_.keys PLUGINS).sort
+
 # class for exposing plugin API
 class PluginApi
   constructor: (@session, @metadata, @pluginManager) ->
@@ -45,34 +79,6 @@ class PluginApi
     alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."
     @pluginManager.disable @name
 
-PLUGIN_SCHEMA = {
-  title: "Plugin metadata schema"
-  type: "object"
-  required: [ 'name' ]
-  properties: {
-    name: {
-      description: "Name of the plugin"
-      pattern: "^[A-Za-z0-9_ ]{2,64}$"
-      type: "string"
-    }
-    version: {
-      description: "Version of the plugin"
-      type: "number"
-      default: 1
-      minimum: 1
-    }
-    author: {
-      description: "Author of the plugin"
-      type: "string"
-      default: "Unknown"
-    }
-    description: {
-      description: "Description of the plugin"
-      type: "string"
-    }
-  }
-}
-
 class PluginsManager
 
   STATUS = {
@@ -83,37 +89,11 @@ class PluginsManager
     ENABLED: "Enabled",
   }
 
-  constructor: (options) ->
-    # Default set of enabled plugins
-    # Will be overridden before plugin loading, during 'resolveSession',
-    # if any settings have been set
-    @enabledPlugins = {
-      "Marks": true
-    }
-
-    @plugins = {}
-
-  validate: (plugin_metadata) ->
-    utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, "plugin")
-    utils.fill_tv4_defaults plugin_metadata, PLUGIN_SCHEMA
-
-  resolveSession: (session) ->
+  constructor: (session, div) ->
     @session = session
-    if session.settings
-      enabledPlugins = session.settings.getSetting "enabledPlugins"
-    else
-      # TODO: BAD HACK... to make unit tests work,
-      # since each testcase uses the same pluginmanager but different session
-      for name of @plugins
-        @setStatus name, STATUS.DISABLED
-
-    if enabledPlugins?
-      @enabledPlugins = enabledPlugins
-    @div = session.pluginsDiv
+    @div = div
+    @plugin_infos = {}
     do @render
-
-    for plugin_name of @enabledPlugins
-      @enable plugin_name
 
   render: () ->
     unless @div?
@@ -138,12 +118,11 @@ class PluginsManager
       virtualDom.h 'th', { className: 'plugin-status' }, "Status"
       virtualDom.h 'th', { className: 'plugin-actions' }, "Actions"
     ]
-    pluginElements = (@virtualRenderPlugin name for name in do @getPluginNames)
+    pluginElements = (@virtualRenderPlugin name for name in do getPluginNames)
     virtualDom.h 'table', {}, ([header].concat pluginElements)
 
   virtualRenderPlugin: (name) ->
     status = @getStatus name
-    plugin = @plugins[name]
     actions = []
     if status == STATUS.ENABLED
       # "Disable" action
@@ -168,30 +147,49 @@ class PluginsManager
     else if status == STATUS.ENABLED
       color = "green"
 
+    plugin = PLUGINS[name] || {}
     virtualDom.h 'tr', {
       className: "plugin theme-bg-secondary"
     }, [
       virtualDom.h 'td', { className: 'center theme-trim plugin-name' }, name
-      virtualDom.h 'td', { className: 'theme-trim plugin-description', style: {'font-size': '12px'} }, (plugin.description)
-      virtualDom.h 'td', { className: 'center theme-trim plugin-version' }, (plugin.version + '')
-      virtualDom.h 'td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, plugin.author
+      virtualDom.h 'td', { className: 'theme-trim plugin-description', style: {'font-size': '12px'} }, (plugin.description || '')
+      virtualDom.h 'td', { className: 'center theme-trim plugin-version' }, ((plugin.version || '') + '')
+      virtualDom.h 'td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, (plugin.author || '')
       virtualDom.h 'td', { className: 'center theme-trim plugin-status', style: {'box-shadow': 'inset 0px 0px 0px 2px ' + color } }, status
       virtualDom.h 'td', { className: 'center theme-trim plugin-actions' }, actions
     ]
 
-  getPluginNames: () ->
-    do (_.keys @plugins).sort
+  get: (name) ->
+    return @plugin_infos[name]
 
   getStatus: (name) ->
-    @plugins[name]?.status || STATUS.UNREGISTERED
+    if not (name of PLUGINS)
+      return STATUS.UNREGISTERED
+    @plugin_infos[name]?.status || STATUS.DISABLED
 
   setStatus: (name, status) ->
     Logger.logger.info "Plugin #{name} status: #{status}"
-    plugin = @plugins[name]
-    if status != STATUS.UNREGISTERED and not plugin?
-      throw new Error "Plugin status set but plugin was not registered"
-    plugin.status = status
+    if not PLUGINS[name]?
+      throw new Error "Plugin #{name} was not registered"
+    plugin_info = @plugin_infos[name] || {}
+    plugin_info.status = status
+    @plugin_infos[name] = plugin_info
     do @render
+
+  updateEnabledPlugins: () ->
+    enabled = []
+    for name of @plugin_infos
+      if (@getStatus name) == STATUS.ENABLED
+        enabled.push name
+    if @session.settings
+      console.log 'updating settings'
+      @session.settings.setSetting "enabledPlugins", enabled
+
+    # refresh hotkeys, if any new ones were added/removed
+    do @session.bindings.init
+    @session.bindings.renderModeTable @session.mode
+    # TODO: also re-render main session
+    # TODO: move all this logic out of the manager, anyways
 
   enable: (name) ->
     status = @getStatus name
@@ -202,24 +200,22 @@ class PluginsManager
       throw new errors.GenericError("Already enabling plugin #{name}")
     if status == STATUS.DISABLING
       throw new errors.GenericError("Still disabling plugin #{name}")
+    if status == STATUS.ENABLED
+      throw new errors.GenericError("Plugin #{name} is already enabled")
 
-    @enabledPlugins[name] = true
-    if @session.settings
-      @session.settings.setSetting "enabledPlugins", @enabledPlugins
-    plugin = @plugins[name]
-    if (status == STATUS.DISABLED) or (status == STATUS.UNREGISTERED)
-      api = new PluginApi @session, plugin, @
+    errors.assert (status == STATUS.DISABLED)
+    @setStatus name, STATUS.ENABLING
 
-      @setStatus plugin.name, STATUS.ENABLING
-      plugin.api = api
-      # TODO: allow enable to be async?
-      plugin.value = plugin.enable api
+    plugin = PLUGINS[name]
+    api = new PluginApi @session, plugin, @
+    value = plugin.enable api
 
-      # refresh hotkeys, if any new ones were added
-      do @session.bindings.init
-      @session.bindings.renderModeTable @session.mode
-
-    @setStatus plugin.name, STATUS.ENABLED
+    @plugin_infos[name] = {
+      api: api,
+      value: value
+    }
+    @setStatus name, STATUS.ENABLED
+    do @updateEnabledPlugins
 
   disable: (name) ->
     status = @getStatus name
@@ -229,38 +225,36 @@ class PluginsManager
       throw new errors.GenericError("Still enabling plugin #{name}")
     if status == STATUS.DISABLING
       throw new errors.GenericError("Already disabling plugin #{name}")
-
-    delete @enabledPlugins[name]
-    if @session.settings
-      @session.settings.setSetting "enabledPlugins", @enabledPlugins
-    plugin = @plugins[name]
+    if status == STATUS.DISABLED
+      throw new errors.GenericError("Plugin #{name} already disabled")
 
     # TODO: require that no other plugin has this as a dependency, notify user otherwise
+    errors.assert (status == STATUS.ENABLED)
+    @setStatus name, STATUS.DISABLING
 
-    if status == STATUS.ENABLED
-        @setStatus plugin.name, STATUS.DISABLING
-        api = plugin.api
-        # TODO: allow disable to be async?
-        plugin.disable api
-        delete plugin.api
-        delete plugin.value
-    @setStatus plugin.name, STATUS.DISABLED
+    plugin_info = @plugin_infos[name]
+    plugin = PLUGINS[name]
+    plugin.disable plugin_info.api
+    delete @plugin_infos[name]
+    do @updateEnabledPlugins
 
-  register: (plugin_metadata, enable, disable) ->
-    @validate plugin_metadata
-    errors.assert enable?, "Plugin #{plugin_metadata.name} needs to register with a callback"
+registerPlugin = (plugin_metadata, enable, disable) ->
+  utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, "plugin")
+  utils.fill_tv4_defaults plugin_metadata, PLUGIN_SCHEMA
 
-    # Create the plugin object
-    # Plugin stores all data about a plugin, including metadata
-    # plugin.value contains the actual resolved value
-    plugin = _.cloneDeep plugin_metadata
-    @plugins[plugin.name] = plugin
-    plugin.enable = enable
-    plugin.disable = disable || _.once () =>
-      alert "The plugin '#{plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable."
-    @setStatus plugin.name, STATUS.DISABLED
+  errors.assert enable?, "Plugin #{plugin_metadata.name} needs to register with a callback"
 
-Plugins = new PluginsManager
+  # Create the plugin object
+  # Plugin stores all data about a plugin, including metadata
+  # plugin.value contains the actual resolved value
+  plugin = _.cloneDeep plugin_metadata
+  PLUGINS[plugin.name] = plugin
+  plugin.enable = enable
+  plugin.disable = disable || _.once () =>
+    alert "The plugin '#{plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable."
 
 # exports
-module.exports = Plugins
+exports.PluginsManager = PluginsManager
+exports.register = registerPlugin
+exports.all = () ->
+  return PLUGINS

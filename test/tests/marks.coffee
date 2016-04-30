@@ -4,7 +4,7 @@ Plugins = require '../../assets/js/plugins'
 
 # Testing
 TestCase.prototype.expectMarks = (expected) ->
-  marksApi = Plugins.plugins[Marks.pluginName].value
+  marksApi = (@pluginManager.get Marks.pluginName).value
   @_expectDeepEqual (do marksApi.listMarks), expected, "Wrong marks"
   return @
 

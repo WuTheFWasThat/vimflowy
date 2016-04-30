@@ -184,4 +184,3 @@ class LocalStorageLazy extends DataStore
 
 exports.InMemory = InMemory
 exports.LocalStorageLazy = LocalStorageLazy
-# TODO: exports.ChromeStorageLazy = ChromeStorageLazy

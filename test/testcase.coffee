@@ -39,11 +39,11 @@ class TestCase
     @keyhandler = new KeyHandler @session, keyBindings
     @register = @session.register
 
-    Plugins.resolveSession @session
-    for name of Plugins.plugins
-      Plugins.enable name
+    @pluginManager = new Plugins.PluginsManager @session
+    for name of do Plugins.all
+      @pluginManager.enable name
 
-    # NOTE: this is *after* resolveSession because of plugins with state
+    # this must be *after* plugin loading because of plugins with state
     # e.g. marks needs the database to have the marks loaded
     @document.load serialized
     do @session.reset_history
