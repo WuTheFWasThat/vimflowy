@@ -34,7 +34,6 @@ class TestCase
     keyBindings = new KeyBindings (do KeyDefinitions.clone), @settings
 
     @session = new Session @document, {bindings: keyBindings}
-    @session.render = -> return
 
     @keyhandler = new KeyHandler @session, keyBindings
     @register = @session.register

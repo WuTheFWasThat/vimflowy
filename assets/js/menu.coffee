@@ -48,54 +48,6 @@ class Menu
       @results = @fn query
       @selection = 0
 
-  render: () ->
-    if not @div
-      return
-
-    do @div.empty
-
-    searchBox = $('<div>').addClass('searchBox theme-trim').appendTo @div
-    searchBox.append $('<i>').addClass('fa fa-search').css(
-      'margin-right': '10px'
-    )
-
-    searchRow = virtualDom.create virtualDom.h 'span', {}, (@session.virtualRenderLine @session.cursor.row, {cursorBetween: true, no_clicks: true})
-    searchBox.append searchRow
-
-    if @results.length == 0
-      message = ''
-      if do @session.curLineLength == 0
-        message = 'Type something to search!'
-      else
-        message = 'No results!  Try typing something else'
-      @div.append(
-        $('<div>').html(message).css(
-          'font-size': '20px'
-          'opacity': '0.5'
-        ).addClass('center')
-      )
-    else
-      for result, i in @results
-
-        resultDiv = $('<div>').css(
-          'margin-bottom': '10px'
-        ).appendTo @div
-
-        icon = 'fa-circle'
-        if i == @selection
-          resultDiv.addClass 'theme-bg-selection'
-          icon = 'fa-arrow-circle-right'
-        resultDiv.append $('<i>').addClass('fa ' + icon + ' bullet').css(
-          'margin-right': '20px'
-        )
-
-        renderOptions = result.renderOptions || {}
-        contents = renderLine result.contents, renderOptions
-        if result.renderHook?
-          contents = result.renderHook contents
-        resultLineDiv = virtualDom.create virtualDom.h 'span', {}, contents
-        resultDiv.append resultLineDiv
-
   select: () ->
     if not @results.length
       return

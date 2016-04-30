@@ -518,7 +518,7 @@ CMD_SCROLL_DOWN = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_SCROLL_DOWN, {
   description: 'Scroll half window down',
 }, () ->
-  @session.scrollPages 0.5
+  @session.scroll 0.5
   @keyStream.forget 1
 
 CMD_SCROLL_UP = keyDefinitions.registerCommand {
@@ -531,7 +531,7 @@ CMD_SCROLL_UP = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_SCROLL_UP, {
   description: 'Scroll half window up',
 }, () ->
-  @session.scrollPages -0.5
+  @session.scroll -0.5
   @keyStream.forget 1
 
 # for everything but normal mode

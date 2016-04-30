@@ -1,9 +1,6 @@
 # imports
 _ = require 'lodash'
-# if window?
-#   virtualDom = require 'virtual-dom'
 
-Modes = require './modes.coffee'
 mutations = require './mutations.coffee'
 constants = require './constants.coffee'
 utils = require './utils.coffee'
@@ -13,6 +10,9 @@ Register = require './register.coffee'
 Logger = require './logger.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
+Modes = require './modes.coffee'
+MODES = Modes.modes
+
 DocumentLib = require './document.coffee'
 Row = DocumentLib.Row
 
@@ -21,184 +21,20 @@ a Session represents a session with a vimflowy document
 It holds a Cursor, a Document object, and a Settings object
 It exposes methods for manipulation of the document, and movement of the cursor
 
-It also handles rendering of everything, including settings.
-NOTE: rendering should move to a different class
-
 Currently, the separation between the Session and Document classes is not very good.  (see document.coffee)
 Ideally, session shouldn't do much more than handle cursors and history
 ###
-getCursorClass = (cursorBetween) ->
-  if cursorBetween
-    return 'theme-cursor-insert'
-  else
-    return 'theme-cursor'
-
-renderLine = (lineData, options = {}) ->
-  options.cursors ?= {}
-  options.highlights ?= {}
-
-  results = []
-
-  # ideally this takes up space but is unselectable (uncopyable)
-  cursorChar = ' '
-
-  line = []
-
-  # add cursor if at end
-  if lineData.length of options.cursors
-    lineData.push {char: cursorChar}
-
-  if lineData.length == 0
-    return results
-
-  for obj, i in lineData
-    info = {
-      column: i
-    }
-    renderOptions = {}
-
-    for property in constants.text_properties
-      if obj[property]
-        renderOptions[property] = true
-
-    x = obj.char
-
-    if obj.char == '\n'
-      # tricky logic for rendering new lines within a bullet
-      # (copies correctly, works when cursor is on the newline itself)
-      x = ''
-      info.break = true
-      if i of options.cursors
-        x = cursorChar + x
-
-    if i of options.cursors
-      renderOptions.cursor = true
-    else if i of options.highlights
-      renderOptions.highlight = true
-
-    info.char = x
-    info.renderOptions = renderOptions
-
-    line.push info
-
-  # collect set of words, { word: word, start: start, end: end }
-  word_chars = []
-  word_start = 0
-
-  urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
-
-  for obj, i in lineData.concat [{char: ' '}] # to make end condition easier
-    # TODO  or (utils.isPunctuation obj.char)
-    # problem is URLs have dots in them...
-    if (utils.isWhitespace obj.char)
-      if i != word_start
-        word_info = {
-          word: word_chars.join('')
-          start: word_start
-          end: i - 1
-        }
-        if options.wordHook?
-          line = options.wordHook line, word_info
-        if urlRegex.test word_info.word
-          for j in [word_info.start..word_info.end]
-            line[j].renderOptions.type = 'a'
-            line[j].renderOptions.href = word_info.word
-      word_start = i + 1
-      word_chars = []
-    else
-      word_chars.push(obj.char)
-
-  if options.lineHook?
-    line = options.lineHook line
-
-  renderSpec = []
-  # Normally, we collect things of the same type and render them in one div
-  # If there are column-specific handlers, however, we must break up the div to handle
-  # separate click events
-  if options.charclick
-    for x in line
-      x.renderOptions.text = x.char
-      if not x.renderOptions.href
-        x.renderOptions.onclick = options.charclick.bind @, x.column
-      renderSpec.push x.renderOptions
-      if x.break
-        renderSpec.push {type: 'div'}
-  else
-    acc = []
-    renderOptions = {}
-
-    flush = () ->
-      if acc.length
-        renderOptions.text = acc.join('')
-        renderSpec.push renderOptions
-        acc = []
-      renderOptions = {}
-
-    # collect line into groups to render
-    for x in line
-      if JSON.stringify(x.renderOptions) == JSON.stringify(renderOptions)
-        acc.push(x.char)
-      else
-        do flush
-        acc.push(x.char)
-        renderOptions = x.renderOptions
-
-      if x.break
-        do flush
-        renderSpec.push {type: 'div'}
-    do flush
-
-  for spec in renderSpec
-    classes = spec.classes or []
-    type = spec.type or 'span'
-    if type == 'a'
-      classes.push 'theme-text-link'
-
-    # make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
-    for property in constants.text_properties
-      if spec[property]
-        classes.push property
-
-    if spec.cursor
-      classes.push getCursorClass options.cursorBetween
-    if spec.highlight
-      classes.push 'theme-bg-highlight'
-
-    divoptions = {}
-    if classes.length
-      divoptions.className = (classes.join ' ')
-    if spec.href
-      divoptions.href = spec.href
-    if spec.onclick
-      divoptions.onclick = spec.onclick
-    if options.linemouseover
-      divoptions.onmouseover = options.linemouseover
-
-    results.push virtualDom.h type, divoptions, spec.text
-
-  return results
-
-MODES = Modes.modes
 
 class Session extends EventEmitter
-  containerDivID = (id) ->
-    return 'node-' + id
-
-  rowDivID = (id) ->
-    return 'node-' + id + '-row'
-
-  childrenDivID = (id) ->
-    return 'node-' + id + '-children'
-
   constructor: (doc, options = {}) ->
     super
 
     @document = doc
 
     @bindings = options.bindings
-
-    @mainDiv = options.mainDiv
     @settings = options.settings
+    # session needs to know div for page scrolling, getting visible rows
+    @mainDiv = options.mainDiv
     @keybindingsDiv = options.keybindingsDiv
     @messageDiv = options.messageDiv
     @menuDiv = options.menuDiv
@@ -218,11 +54,6 @@ class Session extends EventEmitter
     do @reset_jump_history
 
     @setMode MODES.NORMAL
-
-    if @mainDiv?
-      @vtree = do @virtualRender
-      @vnode = virtualDom.create @vtree
-      @mainDiv.append @vnode
     return @
 
   exit: () ->
@@ -395,7 +226,7 @@ class Session extends EventEmitter
     else
       @addBlocks row, 0, [root]
     do @save
-    do @render
+    @emit 'importFinished'
     return true
 
   exportContent: (mimetype) ->
@@ -1051,7 +882,33 @@ class Session extends EventEmitter
   pasteAfter: (options = {}) ->
     @register.paste options
 
-  scrollPages: (npages) ->
+  # given an anchor and cursor, figures out the right blocks to be deleting
+  # returns a parent, minindex, and maxindex
+  getVisualLineSelections: () ->
+    [common, ancestors1, ancestors2] = @document.getCommonAncestor @cursor.row, @anchor.row
+    if ancestors1.length == 0
+      # anchor is underneath cursor
+      parent = do common.getParent
+      index = @document.indexOf @cursor.row
+      return [parent, index, index]
+    else if ancestors2.length == 0
+      # cursor is underneath anchor
+      parent = do common.getParent
+      index = @document.indexOf @anchor.row
+      return [parent, index, index]
+    else
+      index1 = @document.indexOf (ancestors1[0] ? @cursor.row)
+      index2 = @document.indexOf (ancestors2[0] ? @anchor.row)
+      if index2 < index1
+        [index1, index2] = [index2, index1]
+      return [common, index1, index2]
+
+  ###################
+  # scrolling
+  ###################
+
+  scroll: (npages) ->
+    @emit 'scroll', npages
     # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
     line_height = do $('.node-text').height
     if line_height == 0
@@ -1109,230 +966,5 @@ class Session extends EventEmitter
         rows.push row
     return rows
 
-  # given an anchor and cursor, figures out the right blocks to be deleting
-  # returns a parent, minindex, and maxindex
-  getVisualLineSelections: () ->
-    [common, ancestors1, ancestors2] = @document.getCommonAncestor @cursor.row, @anchor.row
-    if ancestors1.length == 0
-      # anchor is underneath cursor
-      parent = do common.getParent
-      index = @document.indexOf @cursor.row
-      return [parent, index, index]
-    else if ancestors2.length == 0
-      # cursor is underneath anchor
-      parent = do common.getParent
-      index = @document.indexOf @anchor.row
-      return [parent, index, index]
-    else
-      index1 = @document.indexOf (ancestors1[0] ? @cursor.row)
-      index2 = @document.indexOf (ancestors2[0] ? @anchor.row)
-      if index2 < index1
-        [index1, index2] = [index2, index1]
-      return [common, index1, index2]
-
-  ##################
-  # RENDERING
-  ##################
-
-  render: (options = {}) ->
-    if @menu
-      do @menu.render
-      return
-
-    options.cursorBetween = (Modes.getMode @mode).metadata.hotkey_type == Modes.INSERT_MODE_TYPE
-
-    t = Date.now()
-    vtree = @virtualRender options
-    patches = virtualDom.diff @vtree, vtree
-    @vnode = virtualDom.patch @vnode, patches
-    @vtree = vtree
-    Logger.logger.debug 'Rendering: ', !!options.handle_clicks, (Date.now()-t)
-
-    cursorDiv = $(".#{getCursorClass options.cursorBetween}", @mainDiv)[0]
-    if cursorDiv
-      @scrollIntoView cursorDiv
-
-    clearTimeout @cursorBlinkTimeout
-    $("#view").removeClass("animate-blink-cursor")
-    @cursorBlinkTimeout = setTimeout (() =>
-      $("#view").addClass("animate-blink-cursor")
-    ), 500
-
-    return
-
-  virtualRender: (options = {}) ->
-    crumbs = []
-    row = @viewRoot
-    until row.is @document.root
-      crumbs.push row
-      row = do row.getParent
-
-    makeCrumb = (row, text, isLast) =>
-      m_options = {}
-      if @mode == MODES.NORMAL and not isLast
-        m_options.className = 'theme-text-link'
-        m_options.onclick = () =>
-          @reroot row
-          do @save
-          do @render
-      return virtualDom.h 'span', { className: 'crumb' }, [
-               virtualDom.h 'span', m_options, [ text ]
-             ]
-
-    crumbNodes = []
-    crumbNodes.push(makeCrumb @document.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
-    for i in [crumbs.length-1..0] by -1
-      row = crumbs[i]
-      text = (@document.getText row).join('')
-      crumbNodes.push(makeCrumb row, text, i==0)
-
-    breadcrumbsNode = virtualDom.h 'div', {
-      id: 'breadcrumbs'
-    }, crumbNodes
-
-    options.ignoreCollapse = true # since we're the root, even if we're collapsed, we should render
-
-    options.highlight_blocks = {}
-    if @lineSelect
-      # mirrors logic of finishes_visual_line in keyHandler.coffee
-      [parent, index1, index2] = do @getVisualLineSelections
-      for child in @document.getChildRange parent, index1, index2
-        options.highlight_blocks[child.id] = true
-
-    contentsChildren = @virtualRenderTree @viewRoot, options
-
-    contentsNode = virtualDom.h 'div', {
-      id: 'treecontents'
-    }, contentsChildren
-
-    return virtualDom.h 'div', {
-    }, [breadcrumbsNode, contentsNode]
-
-  virtualRenderTree: (parent, options = {}) ->
-    if (not options.ignoreCollapse) and (@document.collapsed parent)
-      return
-
-    childrenNodes = []
-
-    for row in @document.getChildren parent
-      rowElements = []
-
-      if @document.isClone row.id
-        cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon', title: 'Cloned' }
-        rowElements.push cloneIcon
-
-      ancestry_str = JSON.stringify do row.getAncestry
-
-      icon = 'fa-circle'
-      if @document.hasChildren row
-        icon = if @document.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
-
-      bulletOpts = {
-        className: 'fa ' + icon + ' bullet'
-        attributes: {'data-id': row.id, 'data-ancestry': ancestry_str}
-      }
-      if @document.hasChildren row
-        bulletOpts.style = {cursor: 'pointer'}
-        bulletOpts.onclick = ((row) =>
-          @toggleBlock row
-          do @save
-          do @render
-        ).bind(@, row)
-
-      bullet = virtualDom.h 'i', bulletOpts
-      bullet = @applyHook 'renderBullet', bullet, { row: row }
-
-      rowElements.push bullet
-
-      elLine = virtualDom.h 'div', {
-        id: rowDivID row.id
-        className: 'node-text'
-        # if clicking outside of text, but on the row, move cursor to the end of the row
-        onclick:  ((row) =>
-          col = if options.cursorBetween then -1 else -2
-          @cursor.set row, col
-          do @render
-        ).bind(@, row)
-      }, (@virtualRenderLine row, options)
-      rowElements.push elLine
-
-      options.ignoreCollapse = false
-      children = virtualDom.h 'div', {
-        id: childrenDivID row.id
-        className: 'node-children'
-      }, (@virtualRenderTree row, options)
-      rowElements.push children
-
-      className = 'node'
-      if row.id of options.highlight_blocks
-        className += ' theme-bg-highlight'
-
-      rowElements = @applyHook 'renderRowElements', rowElements, { row: row }
-
-      childNode = virtualDom.h 'div', {
-        id: containerDivID row.id
-        className: className
-      }, rowElements
-
-      childrenNodes.push childNode
-    return childrenNodes
-
-  virtualRenderLine: (row, options = {}) ->
-    lineData = @document.getLine row
-    cursors = {}
-    highlights = {}
-
-    if row.is @cursor.row
-      cursors[@cursor.col] = true
-
-      if @anchor and not @lineSelect
-        if @anchor.row? and row.is @anchor.row
-          for i in [@cursor.col..@anchor.col]
-            highlights[i] = true
-        else
-          Logger.logger.warn "Multiline not yet implemented"
-
-      cursors = @applyHook 'renderCursorsDict', cursors, { row: row }
-
-    results = []
-
-    lineoptions = {
-      cursors: cursors
-      highlights: highlights
-      cursorBetween: options.cursorBetween
-    }
-
-    if options.handle_clicks
-      if @mode == MODES.NORMAL or @mode == MODES.INSERT
-        lineoptions.charclick = (column, e) =>
-          @cursor.set row, column
-          # assume they might click again
-          @render {handle_clicks: true}
-          # prevent overall row click
-          do e.stopPropagation
-          return false
-    else if not options.no_clicks
-      lineoptions.linemouseover = () =>
-        @render {handle_clicks: true}
-
-    lineoptions.wordHook = @applyHook.bind @, 'renderLineWordHook'
-    lineoptions.lineHook = @applyHook.bind @, 'renderLineTextOptions'
-
-    lineContents = renderLine lineData, lineoptions
-    lineContents = @applyHook 'renderLineContents', lineContents, { row: row }
-    [].push.apply results, lineContents
-
-    infoChildren = @applyHook 'renderInfoElements', [], { row: row }
-    info = virtualDom.h 'div', {
-      className: 'node-info'
-    }, infoChildren
-    results.push info
-
-    results = @applyHook 'renderLineElements', results, { row: row }
-
-    return results
-
 # exports
-# TODO, fix
-window?.renderLine = renderLine
 module.exports = Session

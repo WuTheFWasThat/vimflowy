@@ -124,6 +124,7 @@ class KeyDefinitions
     # for each mode, nested mapping with command names indexing, leaves are definitions
     @actions = {}
 
+  # currently used only for testing
   clone: () ->
     other = new KeyDefinitions
     for k in ['WITHIN_ROW_MOTIONS', 'ALL_MOTIONS', 'commands_by_mode', 'defaultHotkeys', 'commands', 'motions', 'actions']

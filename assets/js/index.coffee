@@ -20,6 +20,7 @@ Document = (require './document.coffee').Document
 Settings = require './settings.coffee'
 Plugins = require './plugins.coffee'
 Session = require './session.coffee'
+View = require './view.coffee'
 
 keyDefinitions = require './keyDefinitions.coffee'
 # load all definitions
@@ -30,7 +31,7 @@ require '../../plugins/**/*.coffee', {mode: 'expand'}
 KeyBindings = require './keyBindings.coffee'
 
 session = null
-create_view = (document, to_load) ->
+create_session = (document, to_load) ->
 
   settings = new Settings document.store, {mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')}
   do settings.loadRenderSettings
@@ -53,6 +54,8 @@ create_view = (document, to_load) ->
   for plugin_name in enabledPlugins
     pluginManager.enable plugin_name
 
+  View.initRenderSession session
+
   if to_load != null
     document.load to_load
     # otherwise, you can undo initial marks, for example
@@ -61,7 +64,7 @@ create_view = (document, to_load) ->
 
   $(document).ready ->
     do session.hideSettings
-    do session.render
+    View.renderSession session
 
   # needed for safari
   $('#paste-hack').focus()
@@ -87,14 +90,21 @@ create_view = (document, to_load) ->
         if session.mode == Modes.modes.INSERT
           options.cursor = {pastEnd: true}
         session.addCharsAtCursor chars, options
-      do session.render
+      View.renderSession session
       do session.save
   )
 
   key_emitter = new KeyEmitter
   do key_emitter.listen
   key_handler = new KeyHandler session, key_bindings
-  key_emitter.on 'keydown', key_handler.handleKey.bind(key_handler)
+  key_emitter.on 'keydown', (key) ->
+    handled = key_handler.handleKey key
+    if handled
+      View.renderSession session
+    return handled
+
+  session.on 'importFinished', () ->
+    View.renderSession session
 
   # expose globals, for debugging
   window.Modes = Modes
@@ -191,7 +201,7 @@ if chrome?.storage?.sync
   datastore = new DataStore.InMemory
   document = new Document datastore
   chrome.storage.sync.get 'save', (results) ->
-    create_view document, (results.save or constants.default_data)
+    create_session document, (results.save or constants.default_data)
 
     # save every 5 seconds
     setInterval (() ->
@@ -211,12 +221,12 @@ else if localStorage?
   if (do datastore.getLastSave) == 0
     to_load = constants.default_data
 
-  create_view document, to_load
+  create_session document, to_load
 else
   alert('You need local storage support for data to be persisted!')
   datastore = new DataStore.InMemory
   document = new Document datastore
-  create_view document, constants.default_data
+  create_session document, constants.default_data
 
 window.onerror = (msg, url, line, col, err) ->
     Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"

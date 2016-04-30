@@ -82,7 +82,7 @@ class KeyStream extends EventEmitter
     @index = @index - n
     return dropped
 
-class KeyHandler
+class KeyHandler extends EventEmitter
 
   constructor: (session, keyBindings) ->
     @session = session
@@ -145,7 +145,6 @@ class KeyHandler
       if not handled
         mode_obj = Modes.getMode @session.mode
         mode_obj.handle_bad_key keyStream
-    do @session.render
     return handled
 
   processOnce: (keyStream) ->

@@ -6,6 +6,7 @@ Modes = require '../../assets/js/modes.coffee'
 DataStore = require '../../assets/js/datastore.coffee'
 Document = (require '../../assets/js/document.coffee').Document
 Session = require '../../assets/js/session.coffee'
+View = require '../../assets/js/view.coffee'
 mutations = require '../../assets/js/mutations.coffee'
 errors = require '../../assets/js/errors.coffee'
 
@@ -62,28 +63,30 @@ class MarksPlugin
 
     MODES = Modes.modes
 
+    @marksession = null
+    @marksessionrow = null
+
     @api.registerMode {
       name: 'MARK'
       hotkey_type: Modes.INSERT_MODE_TYPE
       within_row: true
-      enter: (session) ->
+      enter: (session) =>
         # initialize marks stuff
         document = new Document (new DataStore.InMemory)
-        session.markview = new Session document
-        session.markrow = session.cursor.row
-      exit: (session) ->
-        session.markview = null
-        session.markrow = null
+        @marksession = new Session document
+        @marksessionrow = session.cursor.row
+      exit: (session) =>
+        @marksession = null
+        @marksessionrow = null
       key_transforms: [
-        (key, context) ->
+        (key, context) =>
           # must be non-whitespace
           if key.length == 1
             if /^\S*$/.test(key)
-              context.session.markview.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+              @marksession.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
               return [null, context]
           return [key, context]
       ]
-
     }
 
     CMD_MARK = @api.registerCommand {
@@ -104,8 +107,8 @@ class MarksPlugin
     @api.registerAction [MODES.MARK], CMD_FINISH_MARK, {
       description: 'Finish typing mark',
     }, () ->
-      mark = (do @session.markview.curText).join ''
-      err = that.updateMark @session.markrow.id, mark
+      mark = (do that.marksession.curText).join ''
+      err = that.updateMark that.marksessionrow.id, mark
       if err then @session.showMessage err, {text_class: 'error'}
       @session.setMode MODES.NORMAL
       do @keyStream.save
@@ -175,13 +178,13 @@ class MarksPlugin
 
     @api.registerAction [MODES.MARK], basic_defs.CMD_MOTION, {
       description: 'Move the cursor',
-    }, (motion) ->
-      motion @session.markview.cursor, {pastEnd: true}
+    }, (motion) =>
+      motion that.marksession.cursor, {pastEnd: true}
 
     @api.registerAction [MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
       description: 'Delete last character (i.e. backspace key)',
     }, () ->
-      do @session.markview.deleteAtCursor
+      do that.marksession.deleteAtCursor
 
     @api.registerAction [MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
       description: 'Delete character at the cursor (i.e. del key)',
@@ -201,16 +204,15 @@ class MarksPlugin
       do @keyStream.forget
 
     @session.addHook 'renderCursorsDict', (cursors, info) =>
-      marking = @session.markrow? and @session.markrow.is info.row
+      marking = @marksessionrow? and @marksessionrow.is info.row
       if marking
         return {} # do not render any cursors on the regular line
       return cursors
 
     @session.addHook 'renderLineContents', (lineContents, info) =>
-      marking = @session.markrow? and @session.markrow.is info.row
-
+      marking = @marksessionrow? and @marksessionrow.is info.row
       if marking
-          markresults = @session.markview.virtualRenderLine @session.markview.cursor.row, {no_clicks: true}
+          markresults = View.virtualRenderLine @marksession, @marksession.cursor.row, {no_clicks: true}
           lineContents.unshift virtualDom.h 'span', {
             className: 'mark theme-bg-secondary theme-trim-accent'
           }, markresults
