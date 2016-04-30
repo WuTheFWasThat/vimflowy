@@ -39,7 +39,7 @@ class DataStore
 
   # get and set values for a given row
   getLine: (row) ->
-    _.cloneDeep (@get (@_lineKey_ row), [])
+    @get (@_lineKey_ row), []
   setLine: (row, line) ->
     @set (@_lineKey_ row), line
 
@@ -52,7 +52,7 @@ class DataStore
     @set (@_parentsKey_ row), parents
 
   getChildren: (row) ->
-    _.cloneDeep (@get (@_childrenKey_ row), [])
+    @get (@_childrenKey_ row), []
   setChildren: (row, children) ->
     @set (@_childrenKey_ row), children
 
@@ -62,7 +62,7 @@ class DataStore
     @set (@_detachedParentKey_ row), parent
 
   getDetachedChildren: (row) ->
-    _.cloneDeep (@get (@_detachedChildrenKey_ row), [])
+    @get (@_detachedChildrenKey_ row), []
   setDetachedChildren: (row, children) ->
     @set (@_detachedChildrenKey_ row), children
 
@@ -94,7 +94,7 @@ class DataStore
   setPluginData: (plugin, key, data) ->
     @set (@_pluginDataKey_ plugin, key), data
   getPluginData: (plugin, key, default_value=null) ->
-    _.cloneDeep (@get (@_pluginDataKey_ plugin, key), default_value)
+    @get (@_pluginDataKey_ plugin, key), default_value
 
   # get next row ID
   getId: () -> # Suggest to override this for efficiency
@@ -116,7 +116,7 @@ class InMemory extends DataStore
 
   get: (key, default_value = null) ->
     if key of @cache
-      @cache[key]
+      _.cloneDeep @cache[key]
     else
       default_value
 
