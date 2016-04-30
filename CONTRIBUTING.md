@@ -2,7 +2,9 @@
 
 Just send a pull request.  Remember to write tests when appropriate!
 
-For any questions, you may contact me at [githubusername]@gmail.com.
+For any questions, don't hesitate to contact me at [githubusername]@gmail.com.
+
+I've marked a number of github issues with the label `small_task`, which could be good places to start.
 
 ## DEV SETUP: ##
 
@@ -39,3 +41,9 @@ And for a test coverage report, run
     npm run coverage
 
 and visit `localhost:8080/coverage.html`
+
+For profiling, you can use the browser, or run something like
+
+    mocha --prof test/tests
+    node-tick-processor *-v8.log > processed_log
+    less processed_log

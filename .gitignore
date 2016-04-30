@@ -5,3 +5,4 @@ npm-debug.log
 dist/
 .sass-cache
 .bitballoon
+*-v8.log

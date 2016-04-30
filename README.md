@@ -38,14 +38,7 @@ Try it out!
 - Currently, there is no simultaneous editing
 - Tested mostly in Chrome and Firefox
 - There are [known inconsistencies with vim](vim_inconsistencies.md)
-
-## CONTRIBUTE ##
-
-Please do!  See [CONTRIBUTING.md](CONTRIBUTING.md)
-
-Don't hesitate to contact me for help.
-
-I've marked a number of github issues with the label `small_task`, which could be good places to start.
+- Contributions are very welcome!  See [CONTRIBUTING.md](CONTRIBUTING.md) if you're interested
 
 ### LICENSE ###
 
