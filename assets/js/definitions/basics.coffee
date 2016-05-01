@@ -1,5 +1,5 @@
 Modes = require '../modes.coffee'
-keyDefinitions= require '../keyDefinitions.coffee'
+keyDefinitions = require '../keyDefinitions.coffee'
 
 MODES = Modes.modes
 

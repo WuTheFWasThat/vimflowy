@@ -124,9 +124,7 @@ class PluginsManager extends EventEmitter
     for name of @plugin_infos
       if (@getStatus name) == STATUSES.ENABLED
         enabled.push name
-    if @session.settings
-      @session.settings.setSetting "enabledPlugins", enabled
-    @emit 'enabledPluginsChange'
+    @emit 'enabledPluginsChange', enabled
 
   enable: (name) ->
     status = @getStatus name

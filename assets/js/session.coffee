@@ -907,8 +907,7 @@ class Session extends EventEmitter
     @emit 'scroll', npages
     # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
     line_height = do $('.node-text').height
-    if line_height == 0
-      line_height = 21 # ugly hack... 0 happens when first line is empty, currently
+    errors.assert (line_height > 0)
     page_height = do $(document).height
     height = npages * page_height
 

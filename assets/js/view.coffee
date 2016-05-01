@@ -548,9 +548,9 @@ buildTable = (key_bindings, keyMap, actions, helpMenu) ->
 
   return tables
 
-renderModeTable = (key_bindings, mode) ->
+renderModeTable = (key_bindings, mode, onto) ->
   table = buildTable key_bindings, key_bindings._keyMaps[mode], (key_bindings.definitions.actions_for_mode mode), true
-  $('#keybindings').empty().append(table)
+  onto.empty().append(table)
 
 exports.virtualRenderLine = virtualRenderLine
 

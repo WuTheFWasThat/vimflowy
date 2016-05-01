@@ -30,11 +30,14 @@ require '../../plugins/**/*.js', {mode: 'expand'}
 require '../../plugins/**/*.coffee', {mode: 'expand'}
 KeyBindings = require './keyBindings.coffee'
 
-session = null
+
+$keybindingsDiv = $('#keybindings')
+$settingsDiv = $('#settings')
+
 create_session = (document, to_load) ->
 
   settings = new Settings document.store, {
-    mainDiv: $('#settings'), keybindingsDiv: $('#keybindings')
+    mainDiv: $settingsDiv, keybindingsDiv: $keybindingsDiv
   }
   do settings.loadRenderSettings
 
@@ -44,29 +47,28 @@ create_session = (document, to_load) ->
   key_bindings.on 'applied_hotkey_settings', (hotkey_settings) ->
     settings.setSetting 'hotkeys', hotkey_settings
     View.renderHotkeysTable key_bindings
-    View.renderModeTable key_bindings, session.mode
+    View.renderModeTable key_bindings, session.mode, $keybindingsDiv
 
   session = new Session document, {
     bindings: key_bindings
     settings: settings
     mainDiv: $('#view'),
-    settingsDiv: $('#settings')
     messageDiv: $('#message')
-    keybindingsDiv: $('#keybindings')
+    keybindingsDiv: $keybindingsDiv
     modeDiv: $('#mode')
     menuDiv: $('#menu')
   }
 
   session.on 'modeChange', (mode) ->
-    View.renderModeTable key_bindings, mode
+    View.renderModeTable key_bindings, mode, $keybindingsDiv
 
   session.on 'toggleBindingsDiv', () ->
-    $('#keybindings').toggleClass 'active'
-    document.store.setSetting 'showKeyBindings', $('#keybindings').hasClass 'active'
-    View.renderModeTable key_bindings, session.mode
+    $keybindingsDiv.toggleClass 'active'
+    document.store.setSetting 'showKeyBindings', $keybindingsDiv.hasClass 'active'
+    View.renderModeTable key_bindings, session.mode, $keybindingsDiv
 
   pluginManager = new Plugins.PluginsManager session, $('#plugins')
-  enabledPlugins = (session.settings.getSetting "enabledPlugins") || ["Marks"]
+  enabledPlugins = (settings.getSetting "enabledPlugins") || ["Marks"]
   for plugin_name in enabledPlugins
     pluginManager.enable plugin_name
   View.renderPlugins pluginManager
@@ -74,13 +76,14 @@ create_session = (document, to_load) ->
   pluginManager.on 'status', () ->
     View.renderPlugins pluginManager
 
-  pluginManager.on 'enabledPluginsChange', () ->
+  pluginManager.on 'enabledPluginsChange', (enabled) ->
+    settings.setSetting "enabledPlugins", enabled
     View.renderPlugins pluginManager
     # re-render view
     View.renderSession session
     # refresh hotkeys, if any new ones were added/removed
     View.renderHotkeysTable session.bindings
-    View.renderModeTable session.bindings, session.mode
+    View.renderModeTable session.bindings, session.mode, $keybindingsDiv
 
   if to_load != null
     document.load to_load
@@ -93,13 +96,14 @@ create_session = (document, to_load) ->
     View.renderSession session
 
   # needed for safari
-  $('#paste-hack').focus()
+  $pasteHack = $('#paste-hack')
+  $pasteHack.focus()
   $(document).on 'click', () ->
     # if settings menu is up, we don't want to blur (the dropdowns need focus)
-    if $('#settings').hasClass 'hidden'
-      # if user is tryign to copy, we don't want to blur
+    if $settingsDiv.hasClass 'hidden'
+      # if user is trying to copy, we don't want to blur
       if not window.getSelection().toString()
-        $('#paste-hack').focus()
+        $pasteHack.focus()
 
   $(document).on 'paste', (e) ->
     e.preventDefault()
