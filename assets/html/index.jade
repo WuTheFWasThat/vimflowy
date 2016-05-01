@@ -67,8 +67,12 @@ block content
 
     #bottom-bar.theme-bg-primary.theme-trim
         a#settings-link.center.theme-bg-secondary
-          span#settings-icon.fa(style='margin-right:10px')
-          span#settings-text
+          #settings-open
+            span.fa.fa-cog(style='margin-right:10px')
+            span Settings
+          #settings-close.hidden
+            span.fa.fa-arrow-left(style='margin-right:10px')
+            span Back
 
         #message
         #mode.center.theme-bg-secondary

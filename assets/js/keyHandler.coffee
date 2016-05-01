@@ -124,10 +124,6 @@ class KeyHandler extends EventEmitter
   ###################
 
   handleKey: (key) ->
-    # TODO: make settings actually a mode, and have hotkeys for everything?
-    if do @session.showingSettings
-        # allow stuff like page refresh while on settings
-        return @session.handleSettings key
     Logger.logger.debug 'Handling key:', key
     @keyStream.enqueue key
     if @recording.stream

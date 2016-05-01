@@ -52,6 +52,17 @@ keyDefinitions.registerAction [MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE, MO
   do @session.toggleBindingsDiv
   @keyStream.forget 1
 
+# TODO: flesh out settings menu commands (in separate file)
+# CMD_SETTINGS = keyDefinitions.registerCommand {
+#   name: 'SETTINGS'
+#   default_hotkeys:
+#     normal_like: [':']
+# }
+# keyDefinitions.registerAction [MODES.NORMAL], CMD_SETTINGS, {
+#   description: 'Open settings menu',
+# }, () ->
+#   @session.setMode MODES.SETTINGS
+
 CMD_INSERT = keyDefinitions.registerCommand {
   name: 'INSERT'
   default_hotkeys:
@@ -540,7 +551,7 @@ CMD_EXIT_MODE = keyDefinitions.registerCommand {
   default_hotkeys:
     all: ['esc', 'ctrl+c']
 }
-keyDefinitions.registerAction [MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH], CMD_EXIT_MODE, {
+keyDefinitions.registerAction [MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MODES.SETTINGS], CMD_EXIT_MODE, {
   description: 'Exit back to normal mode',
 }, () ->
   @session.setMode MODES.NORMAL

@@ -37,8 +37,6 @@ class Session extends EventEmitter
     @mainDiv = options.mainDiv
     @messageDiv = options.messageDiv
     @menuDiv = options.menuDiv
-    @modeDiv = options.modeDiv
-    @pluginsDiv = options.pluginsDiv
 
     @register = new Register @
 
@@ -58,57 +56,22 @@ class Session extends EventEmitter
   exit: () ->
     @emit "exit"
 
-  ###################
-  # settings related
-  ###################
-
-  showingSettings: () ->
-    return @settings and (not @settings.mainDiv.hasClass('hidden'))
-
-  hideSettings: () ->
-    $('#settings-icon').addClass('fa-cog').removeClass('fa-arrow-left')
-    $('#settings-text').text 'Settings'
-    @modeDiv.removeClass 'hidden'
-    @settings.mainDiv.addClass 'hidden'
-
-  showSettings: () ->
-    $('#settings-icon').addClass('fa-arrow-left').removeClass('fa-cog')
-    $('#settings-text').text 'Back'
-    @modeDiv.addClass 'hidden'
-    @settings.mainDiv.removeClass 'hidden'
-
-  settingsToggle: () ->
-    if do @showingSettings
-      do @hideSettings
-    else
-      do @showSettings
-
-  handleSettings: (key) ->
-    if key == 'esc'
-      do @hideSettings
-      return true
-    if key.length > 1
-      return false
-    do @hideSettings
-    return true
-
   #################
   # modes related
   #################
 
-  setMode: (mode) ->
-    if mode == @mode
+  setMode: (newmode) ->
+    if newmode == @mode
       return
 
-    if @mode
-      (Modes.getMode @mode).exit @
+    oldmode = @mode
+    if oldmode
+      (Modes.getMode oldmode).exit @, newmode
 
-    @mode = mode
-    (Modes.getMode @mode).enter @
+    @mode = newmode
+    (Modes.getMode @mode).enter @, oldmode
 
-    if @modeDiv
-      @modeDiv.text (Modes.getMode @mode).name
-    @emit 'modeChange', mode
+    @emit 'modeChange', oldmode, newmode
 
   toggleBindingsDiv: () ->
     @emit 'toggleBindingsDiv'

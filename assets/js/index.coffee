@@ -33,6 +33,7 @@ KeyBindings = require './keyBindings.coffee'
 
 $keybindingsDiv = $('#keybindings')
 $settingsDiv = $('#settings')
+$modeDiv = $('#mode')
 
 changeStyle = (theme) ->
   $('body').attr('id', theme)
@@ -75,12 +76,16 @@ create_session = (document, to_load) ->
     settings: settings
     mainDiv: $('#view'),
     messageDiv: $('#message')
-    modeDiv: $('#mode')
     menuDiv: $('#menu')
   }
 
-  session.on 'modeChange', (mode) ->
+  render_mode_info = (mode) ->
     View.renderModeTable key_bindings, mode, $keybindingsDiv
+    $modeDiv.text (Modes.getMode mode).name
+
+  render_mode_info session.mode
+  session.on 'modeChange', (oldmode, newmode) ->
+    render_mode_info newmode
 
   session.on 'toggleBindingsDiv', () ->
     $keybindingsDiv.toggleClass 'active'
@@ -125,7 +130,6 @@ create_session = (document, to_load) ->
 
   # render when ready
   $(document).ready ->
-    do session.hideSettings
     View.renderSession session
 
   # needed for safari
@@ -177,7 +181,10 @@ create_session = (document, to_load) ->
 
   $(document).ready ->
     $("#settings-link").click () =>
-      do session.settingsToggle
+      if session.mode == Modes.modes.SETTINGS
+        session.setMode Modes.modes.NORMAL
+      else
+        session.setMode Modes.modes.SETTINGS
 
     $("#settings-nav li").click (e) ->
       tab = ($(e.target).data "tab")
@@ -237,7 +244,7 @@ create_session = (document, to_load) ->
         mimetype = utils.mimetypeLookup filename
         if session.importContent content, mimetype
           session.showMessage 'Imported!', {text_class: 'success'}
-          do session.hideSettings
+          session.setMode Modes.modes.NORMAL
         else
           session.showMessage 'Import failed due to parsing issue', {text_class: 'error'}
 

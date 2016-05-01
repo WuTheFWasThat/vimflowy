@@ -164,6 +164,7 @@ registerMode {
       return [key, context]
   ]
 }
+
 registerMode {
   name: 'VISUAL'
   hotkey_type: NORMAL_MODE_TYPE
@@ -172,6 +173,7 @@ registerMode {
   exit: (session) ->
     session.anchor = null
 }
+
 registerMode {
   name: 'VISUAL_LINE'
   hotkey_type: NORMAL_MODE_TYPE
@@ -192,6 +194,23 @@ registerMode {
     context.num_rows = index2 - index1 + 1
     return context
 }
+
+registerMode {
+  name: 'SETTINGS'
+  hotkey_type: NORMAL_MODE_TYPE
+  enter: (session, oldmode) ->
+    if session.settings.mainDiv
+      session.settings.mainDiv.removeClass 'hidden'
+      $('#settings-open').addClass 'hidden'
+      $('#settings-close').removeClass 'hidden'
+  exit: (session) ->
+    if session.settings.mainDiv
+      session.settings.mainDiv.addClass 'hidden'
+      $('#settings-open').removeClass 'hidden'
+      $('#settings-close').addClass 'hidden'
+  # TODO: exit settings on any bad key press?
+}
+
 registerMode {
   name: 'SEARCH'
   hotkey_type: INSERT_MODE_TYPE
@@ -218,7 +237,6 @@ registerMode {
         return [null, context]
       return [key, context]
   ]
-
 }
 
 module.exports = {
