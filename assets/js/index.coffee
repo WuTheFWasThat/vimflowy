@@ -38,13 +38,13 @@ $modeDiv = $('#mode')
 changeStyle = (theme) ->
   $('body').attr('id', theme)
 
-create_session = (document, to_load) ->
+create_session = (doc, to_load) ->
 
   ####################
   # Settings
   ####################
 
-  settings = new Settings document.store, {mainDiv: $settingsDiv}
+  settings = new Settings doc.store, {mainDiv: $settingsDiv}
 
   changeStyle (settings.getSetting 'theme')
   $settingsDiv.find(".theme-selection").val (settings.getSetting 'theme')
@@ -71,7 +71,7 @@ create_session = (document, to_load) ->
   # session
   ####################
 
-  session = new Session document, {
+  session = new Session doc, {
     bindings: key_bindings
     settings: settings
     mainDiv: $('#view'),
@@ -89,7 +89,7 @@ create_session = (document, to_load) ->
 
   session.on 'toggleBindingsDiv', () ->
     $keybindingsDiv.toggleClass 'active'
-    document.store.setSetting 'showKeyBindings', $keybindingsDiv.hasClass 'active'
+    doc.store.setSetting 'showKeyBindings', $keybindingsDiv.hasClass 'active'
     View.renderModeTable key_bindings, session.mode, $keybindingsDiv
 
   ####################
@@ -118,7 +118,7 @@ create_session = (document, to_load) ->
   ####################
 
   if to_load != null
-    document.load to_load
+    doc.load to_load
     # a bit hack.  without this, you can undo initial marks, for example
     do session.reset_history
     do session.reset_jump_history
@@ -130,33 +130,6 @@ create_session = (document, to_load) ->
   # render when ready
   $(document).ready ->
     View.renderSession session
-
-  # needed for safari
-  $pasteHack = $('#paste-hack')
-  $pasteHack.focus()
-  $(document).on 'click', () ->
-    # if settings menu is up, we don't want to blur (the dropdowns need focus)
-    if $settingsDiv.hasClass 'hidden'
-      # if user is trying to copy, we don't want to blur
-      if not window.getSelection().toString()
-        $pasteHack.focus()
-
-  $(document).on 'paste', (e) ->
-    e.preventDefault()
-    text = (e.originalEvent || e).clipboardData.getData('text/plain')
-    # TODO: deal with this better when there are multiple lines
-    # maybe put in insert mode?
-    lines = text.split '\n'
-    for line, i in lines
-      if i != 0
-        do session.newLineAtCursor
-      chars = line.split ''
-      options = {}
-      if session.mode == Modes.modes.INSERT
-        options.cursor = {pastEnd: true}
-      session.addCharsAtCursor chars, options
-    View.renderSession session
-    do session.save
 
   key_handler = new KeyHandler session, key_bindings
 
@@ -179,6 +152,33 @@ create_session = (document, to_load) ->
   window.key_bindings = key_bindings
 
   $(document).ready ->
+    # needed for safari
+    $pasteHack = $('#paste-hack')
+    $pasteHack.focus()
+    $(document).on 'click', () ->
+      # if settings menu is up, we don't want to blur (the dropdowns need focus)
+      if $settingsDiv.hasClass 'hidden'
+        # if user is trying to copy, we don't want to blur
+        if not window.getSelection().toString()
+          $pasteHack.focus()
+
+    $(document).on 'paste', (e) ->
+      e.preventDefault()
+      text = (e.originalEvent || e).clipboardData.getData('text/plain')
+      # TODO: deal with this better when there are multiple lines
+      # maybe put in insert mode?
+      lines = text.split '\n'
+      for line, i in lines
+        if i != 0
+          do session.newLineAtCursor
+        chars = line.split ''
+        options = {}
+        if session.mode == Modes.modes.INSERT
+          options.cursor = {pastEnd: true}
+        session.addCharsAtCursor chars, options
+      View.renderSession session
+      do session.save
+
     $("#settings-link").click () =>
       if session.mode == Modes.modes.SETTINGS
         session.setMode Modes.modes.NORMAL
@@ -270,14 +270,14 @@ if chrome?.storage?.sync
   # datastore = new DataStore.ChromeStorageLazy
 
   datastore = new DataStore.InMemory
-  document = new Document datastore
+  doc = new Document datastore
   chrome.storage.sync.get 'save', (results) ->
-    create_session document, (results.save or constants.default_data)
+    create_session doc, (results.save or constants.default_data)
 
     # save every 5 seconds
     setInterval (() ->
       chrome.storage.sync.set {
-        'save': document.serialize()
+        'save': doc.serialize()
       }, () ->
         # TODO have whether saved visualized
         Logger.logger.info 'Saved'
@@ -286,18 +286,18 @@ if chrome?.storage?.sync
 else if localStorage?
   docname = window.location.pathname.split('/')[1]
   datastore = new DataStore.LocalStorageLazy docname
-  document = new Document datastore
+  doc = new Document datastore
 
   to_load = null
   if (do datastore.getLastSave) == 0
     to_load = constants.default_data
 
-  create_session document, to_load
+  create_session doc, to_load
 else
   alert('You need local storage support for data to be persisted!')
   datastore = new DataStore.InMemory
-  document = new Document datastore
-  create_session document, constants.default_data
+  doc = new Document datastore
+  create_session doc, constants.default_data
 
 window.onerror = (msg, url, line, col, err) ->
   Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"
