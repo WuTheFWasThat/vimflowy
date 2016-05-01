@@ -115,17 +115,29 @@ MODE_TYPES[INSERT_MODE_TYPE] = {
 }
 
 modeCounter = 1
-registerMode = (metadata, options = {}) ->
+registerMode = (metadata) ->
   utils.tv4_validate(metadata, MODE_SCHEMA, "mode")
   utils.fill_tv4_defaults metadata, MODE_SCHEMA
 
   name = metadata.name
+  # if name of MODES_ENUM
+  #   # NOTE: re-registration of the mode currently happens in unit tests
+  #   #       not sure why, but marks tests fail when not letting it re-register
+  #   # TODO figure this out better.  also tests shouldn't keep registering new modes anyways
+  #   return MODES[MODES_ENUM[name]]
   mode = new Mode metadata
   MODES_ENUM[name] = modeCounter
   MODES[modeCounter] = mode
   MODE_TYPES[metadata.hotkey_type].modes.push modeCounter
   modeCounter += 1
   return mode
+
+deregisterMode = (mode) ->
+  modeCounter = MODES_ENUM[mode.name]
+  delete MODES_ENUM[mode.name]
+  delete MODES[modeCounter]
+  index = MODE_TYPES[mode.metadata.hotkey_type].modes.indexOf modeCounter
+  MODE_TYPES[mode.metadata.hotkey_type].modes.splice index, 1
 
 transform_insert_key = (key) ->
   if key == 'shift+enter'
@@ -241,6 +253,7 @@ registerMode {
 
 module.exports = {
   registerMode: registerMode
+  deregisterMode: deregisterMode
   modes: MODES_ENUM
   types: MODE_TYPES
   getMode: (mode) -> MODES[mode]

@@ -59,6 +59,8 @@ class PluginApi
     @definitions = @bindings.definitions
     @commands = @definitions.commands
 
+    @registrations = []
+
   setData: (key, value) ->
     @document.store.setPluginData @name, key, value
 
@@ -74,21 +76,55 @@ class PluginApi
        throw new errors.GenericError "Error applying hotkeys: #{err}"
 
   registerMode: (metadata) ->
-    Modes.registerMode metadata
+    mode = Modes.registerMode metadata
+    @registrations.push {type: 'mode', args: [mode]}
     do @_reapply_hotkeys
 
   registerCommand: (metadata) ->
     cmd = @definitions.registerCommand metadata
+    @registrations.push {type: 'command', args: [cmd]}
     do @_reapply_hotkeys
     return cmd
 
   registerMotion: (commands, motion, definition) ->
     @definitions.registerMotion commands, motion, definition
+    @registrations.push {type: 'motion', args: [commands]}
     do @_reapply_hotkeys
 
   registerAction: (modes, commands, action, definition) ->
     @definitions.registerAction modes, commands, action, definition
+    @registrations.push {type: 'action', args: [modes, commands]}
     do @_reapply_hotkeys
+
+  deregisterMode: (mode) ->
+    Modes.deregisterMode mode
+    do @_reapply_hotkeys
+
+  deregisterCommand: (command) ->
+    @definitions.deregisterCommand command
+    do @_reapply_hotkeys
+
+  deregisterMotion: (commands) ->
+    @definitions.deregisterMotion commands
+    do @_reapply_hotkeys
+
+  deregisterAction: (modes, commands) ->
+    @definitions.deregisterAction modes, commands
+    do @_reapply_hotkeys
+
+  deregisterAll: () ->
+    for registration in @registrations.reverse()
+      if registration.type == 'mode'
+        @deregisterMode.apply @, registration.args
+      else if registration.type == 'command'
+        @deregisterCommand.apply @, registration.args
+      else if registration.type == 'motion'
+        @deregisterMotion.apply @, registration.args
+      else if registration.type == 'action'
+        @deregisterAction.apply @, registration.args
+      else
+        throw new errors.GenericError "Unknown registration type #{registration.type}"
+    @registrations = []
 
   panic: _.once () =>
     alert "Plugin '#{@name}' has encountered a major problem. Please report this problem to the plugin author."
@@ -170,7 +206,7 @@ class PluginsManager extends EventEmitter
 
     plugin_info = @plugin_infos[name]
     plugin = PLUGINS[name]
-    plugin.disable plugin_info.api
+    plugin.disable plugin_info.api, plugin_info.value
     delete @plugin_infos[name]
     do @updateEnabledPlugins
 

@@ -87,8 +87,8 @@ class KeyBindings extends EventEmitter
   # tries to apply new hotkey settings, returning an error if there was one
   # new bindings may result if any of the following happen:
   #   - hotkey settings change
-  #   - mode registered/unregistered
-  #   - command, motion, or action registered/unregistered
+  #   - mode registered/deregistered
+  #   - command, motion, or action registered/deregistered
   apply_hotkey_settings: (hotkey_settings = {}) ->
     # merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
     hotkeys = {}
@@ -103,10 +103,7 @@ class KeyBindings extends EventEmitter
         for command in @definitions.commands_for_mode mode
           modeKeyMap[command] = hotkeys[mode_type][command].slice()
 
-        if Modes.getMode(mode).within_row
-          motions = Object.keys @definitions.WITHIN_ROW_MOTIONS
-        else
-          motions = Object.keys @definitions.ALL_MOTIONS
+        motions = @definitions.get_motions (not Modes.getMode(mode).within_row)
         for command in motions
           modeKeyMap[command] = hotkeys[mode_type][command].slice()
 

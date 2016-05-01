@@ -106,11 +106,10 @@ ACTION_SCHEMA = {
 
 class KeyDefinitions
   constructor: () ->
-    @WITHIN_ROW_MOTIONS = {}
-    @ALL_MOTIONS = {}
-
-    # list of possible commands for each mode
-    @commands_by_mode = {}
+    # set of possible motions
+    @motion_command_counts = {}
+    # set of possible commands for each mode
+    @action_command_counts_by_mode = {}
 
     @defaultHotkeys = {}
     # key mappings for normal-like modes (normal, visual, visual-line)
@@ -127,19 +126,66 @@ class KeyDefinitions
   # currently used only for testing
   clone: () ->
     other = new KeyDefinitions
-    for k in ['WITHIN_ROW_MOTIONS', 'ALL_MOTIONS', 'commands_by_mode', 'defaultHotkeys', 'commands', 'motions', 'actions']
+    for k in ['motion_command_counts', 'action_command_counts_by_mode', 'defaultHotkeys', 'commands', 'motions', 'actions']
       other[k] = _.cloneDeep @[k]
     return other
 
   _add_command: (mode, command) ->
     # for now, don't list the motion command
     if command.name != motionCommandName
-      if not @commands_by_mode[mode]
-        @commands_by_mode[mode] = []
-      @commands_by_mode[mode].push command.name
+      if not @action_command_counts_by_mode[mode]
+        @action_command_counts_by_mode[mode] = {}
+      count = @action_command_counts_by_mode[mode][command.name] || 0
+      @action_command_counts_by_mode[mode][command.name] = count + 1
+
+  _remove_command: (mode, command) ->
+    # for now, don't list the motion command
+    if command.name != motionCommandName
+      if not @action_command_counts_by_mode[mode]
+        @action_command_counts_by_mode[mode] = {}
+      count = @action_command_counts_by_mode[mode][command.name] || 0
+      if count == 0
+        throw new GenericError "Cannot remove command #{command}"
+      else if count == 1
+        delete @action_command_counts_by_mode[mode][command.name]
+      else
+        @action_command_counts_by_mode[mode][command.name] = count - 1
+
+  _add_motion: (command, multirow) ->
+    counts = @motion_command_counts[command.name] || {}
+    if multirow
+      counts.multirow = (counts.multirow || 0) + 1
+    counts.all = (counts.all || 0) + 1
+    @motion_command_counts[command.name] = counts
+
+  _remove_motion: (command, multirow) ->
+    counts = @motion_command_counts[command.name] || {}
+    if multirow
+      if counts.multirow == 0
+        throw new GenericError "Cannot remove multirow motion #{command}"
+      counts.multirow = (counts.multirow || 0) - 1
+    if counts.all == 0
+      throw new GenericError "Cannot remove motion #{command}"
+    else if counts.all == 1
+      delete @motion_command_counts[command.name]
+    else
+      counts.all = (counts.all || 0) - 1
+      @motion_command_counts[command.name] = counts
+
+  get_motions: (multirow) ->
+    result = []
+    for name, counts of @motion_command_counts
+      if multirow
+        result.push name
+      else
+        if counts.multirow == 0
+          result.push name
+    return result
 
   commands_for_mode: (mode) ->
-    return @commands_by_mode[mode] || []
+    if not (mode of @action_command_counts_by_mode)
+      return []
+    return Object.keys @action_command_counts_by_mode[mode]
 
   actions_for_mode: (mode) ->
     return @actions[mode] || {}
@@ -149,6 +195,10 @@ class KeyDefinitions
     utils.fill_tv4_defaults(metadata, COMMAND_SCHEMA)
     name = metadata.name
     command = new Command metadata
+
+    if command.name of @commands
+      throw new errors.GenericError "Command #{command.name} has already been defined"
+
     @commands[name] = command
     @defaultHotkeys[Modes.NORMAL_MODE_TYPE][name] =
       (_.cloneDeep metadata.default_hotkeys.all).concat(
@@ -159,6 +209,13 @@ class KeyDefinitions
        _.cloneDeep metadata.default_hotkeys.insert_like
       )
     return command
+
+  deregisterCommand: (command) ->
+    if not (command.name of @commands)
+      throw new errors.GenericError "Command #{command.name} not found"
+    delete @commands[command.name]
+    delete @defaultHotkeys[Modes.NORMAL_MODE_TYPE][command.name]
+    delete @defaultHotkeys[Modes.INSERT_MODE_TYPE][command.name]
 
   registerMotion: (commands, motion, definition) ->
     utils.tv4_validate(motion, MOTION_SCHEMA, "motion")
@@ -173,25 +230,44 @@ class KeyDefinitions
     for i in [0...commands.length-1]
       command = commands[i]
 
-      if not motion.multirow
-          @WITHIN_ROW_MOTIONS[command.name] = true
-      @ALL_MOTIONS[command.name] = true
-
       if command.name not of obj
         throw new errors.GenericError "Motion #{command.name} doesn't exist"
       else if typeof obj[command.name] != 'object'
-        throw new errors.GenericError "Motion #{command.name} has already been defined"
+        throw new errors.GenericError "Motion #{command.name} allows no subcommands"
       obj = obj[command.name].definition
 
     command = commands[commands.length-1]
-    if not motion.multirow
-        @WITHIN_ROW_MOTIONS[command.name] = true
-    @ALL_MOTIONS[command.name] = true
 
     # motion.name = command.name
     if command.name of obj
       throw new errors.GenericError "Motion #{command.name} has already been defined"
     obj[command.name] = motion
+    for cmd in commands
+      @_add_motion cmd, motion.multirow
+
+  deregisterMotion: (commands) ->
+    if not commands.slice?
+      # commands isn't an array
+      commands = [commands]
+
+    obj = @motions
+    for i in [0...commands.length-1]
+      command = commands[i]
+
+      if command.name not of obj
+        throw new errors.GenericError "Motion #{command.name} doesn't exist"
+      else if typeof obj[command.name] != 'object'
+        throw new errors.GenericError "Motion #{command.name} allows no subcommands"
+      obj = obj[command.name].definition
+
+    command = commands[commands.length-1]
+    # motion.name = command.name
+    if not (command.name of obj)
+      throw new errors.GenericError "Motion #{command.name} not found"
+    motion = obj[command.name]
+    delete obj[command.name]
+    for cmd in commands
+      @_remove_motion cmd, motion.multirow
 
   registerAction: (modes, commands, action, definition) ->
     utils.tv4_validate(action, ACTION_SCHEMA, "action")
@@ -209,19 +285,48 @@ class KeyDefinitions
 
       for i in [0...commands.length-1]
         command = commands[i]
-        @_add_command mode, command
 
         if command.name not of obj
           throw new errors.GenericError "Action #{command.name} doesn't exist"
         else if typeof obj[command.name] != 'object'
-          throw new errors.GenericError "Action #{command.name} has already been defined"
+          throw new errors.GenericError "Action #{command.name} allows no subcommands"
         obj = obj[command.name].definition
 
       command = commands[commands.length-1]
-      @_add_command mode, command
-      # motion.name = command.name
+      # action.name = command.name
       if command.name of obj
         throw new errors.GenericError "Action #{command.name} has already been defined"
+
       obj[command.name] = action
+      for cmd in commands
+        @_add_command mode, cmd
+
+  deregisterAction: (modes, commands) ->
+    if not commands.slice?
+      # commands isn't an array
+      commands = [commands]
+
+    for mode in modes
+      if not @actions[mode]
+        @actions[mode] = {}
+      obj = @actions[mode]
+
+      for i in [0...commands.length-1]
+        command = commands[i]
+
+        if command.name not of obj
+          throw new errors.GenericError "Action #{command.name} doesn't exist"
+        else if typeof obj[command.name] != 'object'
+          throw new errors.GenericError "Action #{command.name} allows no subcommands"
+        obj = obj[command.name].definition
+
+      command = commands[commands.length-1]
+      # action.name = command.name
+      if not (command.name of obj)
+        throw new errors.GenericError "Action #{command.name} not found"
+
+      delete obj[command.name]
+      for cmd in commands
+        @_remove_command mode, cmd
 
 module.exports = new KeyDefinitions

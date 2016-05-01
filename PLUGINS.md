@@ -47,12 +47,19 @@ You can enable your plugin from the plugins section of the settings menu within 
 The API object (passed to the callbacks) includes the following:
 
 ####  metadata
+
 ```
     api.metadata:  The entire of metadata object of your plugin
     api.name:  Purely for convenience.  Equivalent to api.metadata.name
 ```
+
 #### keybindings
-We introduce three notions, a **command**, **motion**, and **action**.
+
+First, some terminology:
+
+A **mode** is an editing mode, ala modal editing.
+Commands are always executed in the context of a mode.
+The function `session.setMode(mode)` changes what mode you're in.
 
 A **command** is a building block for defining an action and/or motion.
 It can be used combinatorially in different motions/action definitions.
@@ -69,13 +76,25 @@ See the definitions of yank and delete, in [`assets/js/definitions/basics.coffee
 For other example usages, see the folder [`assets/js/definitions`](assets/js/definitions), and the easy-motion plugin.
 
 ```
-    api.registerCommand(metadata)
-    api.registerAction(modes, commands, metadata, fn)
+    api.registerMode(metadata) -> mode
+    api.registerCommand(metadata) -> command
     api.registerMotion(commands, metadata, fn)
+    api.registerAction(modes, commands, metadata, fn)
 ```
-See [`keyDefinitions.coffee`](assets/js/keyDefinitions.coffee) for detailed schema for each of these.
 
-We plan on adding ways to unregister commands/actions/motions.
+In your plugin's disable function, you'll want to deregister everything, in reverse order of registration:
+```
+    api.deregisterAll
+```
+You can also manually call each deregister, but this is not recomended
+```
+    api.deregisterMode(mode)
+    api.deregisterCommand(command)
+    api.deregisterMotion(commands)
+    api.deregisterAction(modes, commands)
+```
+
+See [`keyDefinitions.coffee`](assets/js/keyDefinitions.coffee) for detailed schema for the metadata of each of these.
 
 #### vimflowy internals
 
