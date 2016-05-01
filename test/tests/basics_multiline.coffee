@@ -395,10 +395,45 @@ describe "basic multiline tests", () ->
     t.sendKeys 'cc'
     t.sendKeys 'a row'
     t.sendKey 'esc'
+    t.expect [
+      { text: 'a row', children: [
+        { text: 'middle row', children : [
+          'bottom row'
+          'bottomest row'
+        ] },
+      ] },
+      'another row'
+    ]
+    # should paste properly
+    t.sendKeys 'p'
+    t.expect [
+      { text: 'a row', children: [
+        'top row'
+        { text: 'middle row', children : [
+          'bottom row'
+          'bottomest row'
+        ] },
+      ] },
+      'another row'
+    ]
+
+  it "basic recursive change row works", () ->
+    t = new TestCase [
+      { text: 'top row', children: [
+        { text: 'middle row', children : [
+          'bottom row'
+          'bottomest row'
+        ] },
+      ] },
+      'another row'
+    ]
+    t.sendKeys 'cr'
+    t.sendKeys 'a row'
+    t.sendKey 'esc'
     t.expect [ 'a row', 'another row' ]
     t.sendKeys 'u'
 
-  it "change works on row with children", () ->
+  it "change recursive works on row with children", () ->
     t = new TestCase [
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -407,7 +442,7 @@ describe "basic multiline tests", () ->
         ] },
       ] },
     ]
-    t.sendKeys 'cc'
+    t.sendKeys 'cr'
     t.sendKeys 'a row'
     t.sendKey 'esc'
     t.expect [ 'a row' ]
@@ -421,14 +456,14 @@ describe "basic multiline tests", () ->
       ] },
     ]
 
-  it "tests change on children", () ->
+  it "tests recursive change on children", () ->
     t = new TestCase [
       { text: 'top row', children: [
         'middle row'
         'bottom row'
       ] },
     ]
-    t.sendKeys 'jcc'
+    t.sendKeys 'jcr'
     t.sendKeys 'a row'
     t.sendKey 'esc'
     t.expect [
@@ -438,7 +473,7 @@ describe "basic multiline tests", () ->
       ] },
     ]
     t.sendKey 'u'
-    t.sendKeys 'jcc'
+    t.sendKeys 'jcr'
     t.sendKeys 'a row'
     t.sendKey 'esc'
     t.expect [
@@ -484,7 +519,7 @@ describe "basic multiline tests", () ->
 
   it "tests redo in tricky case removing last row", () ->
     t = new TestCase [ 'a row' ]
-    t.sendKeys 'cc'
+    t.sendKeys 'cr'
     t.sendKeys 'new row'
     t.sendKey 'esc'
     t.expect [ 'new row' ]
@@ -507,7 +542,7 @@ describe "basic multiline tests", () ->
         ] }
       ] },
     ]
-    t.sendKeys 'jjcc'
+    t.sendKeys 'jjcr'
     t.sendKeys 'a row'
     t.sendKey 'esc'
     t.expect [
@@ -526,7 +561,7 @@ describe "basic multiline tests", () ->
         ] },
       ] },
     ]
-    t.sendKeys 'jj2cc'
+    t.sendKeys 'jj2cr'
     t.sendKeys 'a row'
     t.sendKey 'esc'
     t.expect [
@@ -565,7 +600,7 @@ describe "basic multiline tests", () ->
         ] },
       ] },
     ]
-    t.sendKeys '2j2cc' # despite the 2cc, deletes only one, but deletes all the children
+    t.sendKeys '2j2cr' # despite the 2cr, deletes only one, but deletes all the children
     t.sendKeys 'deleted'
     t.sendKey 'esc'
     t.expect [
@@ -588,7 +623,7 @@ describe "basic multiline tests", () ->
 
   it "tests redo in tricky case making sure redo re-creates the same row", () ->
     t = new TestCase [ 'a row' ]
-    t.sendKeys 'cc'
+    t.sendKeys 'cr'
     t.sendKeys 'new row'
     t.sendKey 'esc'
     t.expect [ 'new row' ]

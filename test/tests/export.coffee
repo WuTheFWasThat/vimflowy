@@ -56,15 +56,15 @@ describe "import", () ->
       (JSON.stringify {
         text: '', children: [
             { text: 'Line 1' },
-            { text: 'Line 2', children: [
+            { text: 'Line 2', collapsed: true, children: [
                 { text: "Line 2.1" },
-                { text: "Line 2.2", children: [
+                { text: "Line 2.2", collapsed: true, children: [
                     { text: "Line 2.2.1" }
-                ], collapsed: true },
-                { text: "Line 2.3", children: [
+                ] },
+                { text: "Line 2.3", collapsed: true, children: [
                     { text: "Line 2.3.1" }
-                ], collapsed: true }
-            ], collapsed: true },
+                ] }
+            ] },
             { text: 'Line 3' }
         ] }, null, 2)
 
@@ -145,11 +145,11 @@ describe "import", () ->
     t.expectExport 'application/json',
       (JSON.stringify {
         text: '', children: [
-            { text: 'Line 1', children: [
-                { text: "Subpart 1", children: [
+            { text: 'Line 1', collapsed: true, children: [
+                { text: "Subpart 1", collapsed: true, children: [
                     { text: "Title line for subpart 1" }
-                ], collapsed: true }
-            ], collapsed: true },
+                ] }
+            ] },
             { text: 'Line 2' },
             { text: 'Line 3' }
         ] }, null, 2)

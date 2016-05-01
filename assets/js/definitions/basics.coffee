@@ -252,17 +252,29 @@ keyDefinitions.registerAction [MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
   @session.deleteBetween @session.cursor, cursor, { yank: true }
   do @keyStream.save
 
+CMD_RECURSIVE = keyDefinitions.registerCommand {
+  name: 'RECURSIVE'
+  default_hotkeys:
+    normal_like: ['r']
+}
+
+#################
+# change
+#################
+
 CMD_CHANGE = keyDefinitions.registerCommand {
   name: 'CHANGE'
   default_hotkeys:
     normal_like: ['c']
 }
+
 keyDefinitions.registerAction [MODES.VISUAL], CMD_CHANGE, {
   description: 'Change',
 }, () ->
   options = {includeEnd: true, yank: true, cursor: {pastEnd: true}}
   @session.deleteBetween @session.cursor, @session.anchor, options
   @session.setMode MODES.INSERT
+
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_CHANGE, {
   description: 'Change',
 }, () ->
@@ -272,11 +284,20 @@ keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_CHANGE, {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_CHANGE, {
   description: 'Change (operator)',
 }, {}
+
+# TODO: support repeat?
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_CHANGE, CMD_CHANGE], {
+  description: 'Delete row, and enter insert mode'
+}, () ->
+  @session.setMode MODES.INSERT
+  @session.clearRowAtCursor {yank: true}
+
+keyDefinitions.registerAction [MODES.NORMAL], [CMD_CHANGE, CMD_RECURSIVE], {
   description: 'Delete blocks, and enter insert mode'
 }, () ->
   @session.setMode MODES.INSERT
   @session.delBlocksAtCursor @repeat, {addNew: true}
+
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
   description: 'Delete from cursor with motion, and enter insert mode'
 }, (motion) ->
@@ -286,11 +307,16 @@ keyDefinitions.registerAction [MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
   @session.setMode MODES.INSERT
   @session.deleteBetween @session.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
 
+#################
+# yank
+#################
+
 CMD_YANK = keyDefinitions.registerCommand {
   name: 'YANK'
   default_hotkeys:
     normal_like: ['y']
 }
+
 keyDefinitions.registerAction [MODES.VISUAL], CMD_YANK, {
   description: 'Yank',
 }, () ->
@@ -298,6 +324,7 @@ keyDefinitions.registerAction [MODES.VISUAL], CMD_YANK, {
   @session.yankBetween @session.cursor, @session.anchor, options
   @session.setMode MODES.NORMAL
   do @keyStream.forget
+
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_YANK, {
   description: 'Yank',
 }, () ->
@@ -308,11 +335,20 @@ keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_YANK, {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_YANK, {
   description: 'Yank (operator)',
 }, {}
+
+# TODO: support repeat?
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_YANK, CMD_YANK], {
+  description: 'Yank row'
+}, () ->
+  do @session.yankRowAtCursor
+  do @keyStream.forget
+
+keyDefinitions.registerAction [MODES.NORMAL], [CMD_YANK, CMD_RECURSIVE], {
   description: 'Yank blocks'
 }, () ->
   @session.yankBlocksAtCursor @repeat
   do @keyStream.forget
+
 keyDefinitions.registerAction [MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
   description: 'Yank from cursor with motion'
 }, (motion) ->
@@ -337,28 +373,36 @@ keyDefinitions.registerAction [MODES.NORMAL], [CMD_YANK, CMD_CLONE], {
 #   @session.setMode MODES.NORMAL
 #   do @keyStream.forget
 
+#################
+# delete
+#################
+
 CMD_DELETE_CHAR = keyDefinitions.registerCommand {
   name: 'DELETE_CHAR'
   default_hotkeys:
     normal_like: ['x']
     insert_like: ['delete']
 }
+
 keyDefinitions.registerAction [MODES.NORMAL], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
   @session.delCharsAfterCursor @repeat, {yank: true}
   do @keyStream.save
-# behaves like row delete, in visual line
+
 keyDefinitions.registerAction [MODES.VISUAL], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, (do visual_mode_delete_fn)
+
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, (do visual_line_mode_delete_fn)
+
 keyDefinitions.registerAction [MODES.INSERT], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
   @session.delCharsAfterCursor 1
+
 keyDefinitions.registerAction [MODES.SEARCH], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, () ->
@@ -370,6 +414,7 @@ CMD_DELETE_LAST_CHAR = keyDefinitions.registerCommand {
     normal_like: ['X']
     insert_like: ['backspace', 'shift+backspace']
 }
+
 keyDefinitions.registerAction [MODES.NORMAL], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
@@ -378,16 +423,20 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_DELETE_LAST_CHAR, {
     @session.delCharsBeforeCursor num, {yank: true}
   do @keyStream.save
 # behaves like row delete, in visual line
+
 keyDefinitions.registerAction [MODES.VISUAL], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, (do visual_mode_delete_fn)
+
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, (do visual_line_mode_delete_fn)
+
 keyDefinitions.registerAction [MODES.INSERT], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
   do @session.deleteAtCursor
+
 keyDefinitions.registerAction [MODES.SEARCH], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, () ->
@@ -398,6 +447,7 @@ CMD_CHANGE_CHAR = keyDefinitions.registerCommand {
   default_hotkeys:
     normal_like: ['s']
 }
+
 keyDefinitions.registerAction [MODES.NORMAL], CMD_CHANGE_CHAR, {
   description: 'Change character',
 }, () ->

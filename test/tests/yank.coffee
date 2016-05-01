@@ -204,13 +204,27 @@ describe "yank", () ->
       t.sendKeys 'jjjjjp'
       t.expect ['hey', 'yo', 'yo', 'yo', 'yo', 'yo', 'hey']
 
-    it "works recursively", () ->
+    it "works in basic case", () ->
       t = new TestCase [
         { text: 'hey', children: [
           'yo'
         ] }
       ]
       t.sendKeys 'yyp'
+      t.expect [
+        { text: 'hey', children: [
+          'hey'
+          'yo'
+        ] }
+      ]
+
+    it "works recursively", () ->
+      t = new TestCase [
+        { text: 'hey', children: [
+          'yo'
+        ] }
+      ]
+      t.sendKeys 'yrp'
       t.expect [
         { text: 'hey', children: [
           { text: 'hey', children: [
@@ -259,7 +273,7 @@ describe "yank", () ->
           'yo'
         ] }
       ]
-      t.sendKeys 'yyp'
+      t.sendKeys 'yrp'
       t.expect [
         { text: 'hey', collapsed: true, children: [
           'yo'
@@ -275,7 +289,7 @@ describe "yank", () ->
           'yo'
         ] }
       ]
-      t.sendKeys 'yyzp'
+      t.sendKeys 'yrzp'
       t.expect [
         { text: 'hey', children: [
           { text: 'hey', collapsed: true, children: [

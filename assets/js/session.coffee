@@ -549,6 +549,10 @@ class Session extends EventEmitter
       chars.push newobj
     @addCharsAtCursor chars, options
 
+  clearRowAtCursor: () ->
+    do @yankRowAtCursor
+    @delChars @cursor.row, 0, (do @curLineLength)
+
   yankChars: (row, col, nchars) ->
     line = @document.getLine row
     if line.length > 0
@@ -566,6 +570,29 @@ class Session extends EventEmitter
 
     offset = if options.includeEnd then 1 else 0
     @yankChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
+
+  yankRowAtCursor: () ->
+    serialized_row = @document.serializeRow @cursor.row
+    @register.saveSerializedRows [serialized_row]
+
+  yankChars: (row, col, nchars) ->
+    line = @document.getLine row
+    if line.length > 0
+      @register.saveChars line.slice(col, col + nchars)
+
+  # options:
+  #   - includeEnd says whether to also delete cursor2 location
+  yankBetween: (cursor1, cursor2, options = {}) ->
+    if not (cursor2.row.is cursor1.row)
+      Logger.logger.warn "Not yet implemented"
+      return
+
+    if cursor2.col < cursor1.col
+      [cursor1, cursor2] = [cursor2, cursor1]
+
+    offset = if options.includeEnd then 1 else 0
+    @yankChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
+
 
   # options:
   #   - includeEnd says whether to also delete cursor2 location

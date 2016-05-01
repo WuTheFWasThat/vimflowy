@@ -402,7 +402,7 @@ describe "marks", () ->
     ]
     t.expectMarks {'row': 1, 'too': 4, 'deep': 5}
 
-    t.sendKeys 'yyu'
+    t.sendKeys 'yru'
     t.expect [ 'random' ]
     t.expectMarks {}
 

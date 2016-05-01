@@ -436,37 +436,40 @@ class Document extends EventEmitter
   #################
 
   # important: serialized automatically garbage collects
-  serialize: (row = @root, options={}, serialized={}) ->
+  serializeRow: (row = @root) ->
     line = @getLine row
     text = (@getText row).join('')
+    struct = {
+      text: text
+    }
 
+    for property in constants.text_properties
+      if _.some (line.map ((obj) -> obj[property]))
+        struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
+    if @collapsed row
+      struct.collapsed = true
+
+    struct = @applyHook 'serializeRow', struct, {row: row}
+    return struct
+
+  serialize: (row = @root, options={}, serialized={}) ->
     if row.id of serialized
       struct = serialized[row.id]
       struct.id = row.id
       return { clone: row.id }
 
-    struct = {
-      text: text
-    }
+    struct = @serializeRow row
     children = (@serialize childrow, options, serialized for childrow in @getChildren row)
     if children.length
       struct.children = children
 
-    for property in constants.text_properties
-      if _.some (line.map ((obj) -> obj[property]))
-        struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
-
-    if @collapsed row
-      struct.collapsed = true
-
-    struct = @applyHook 'serializeRow', struct, {row: row}
     serialized[row.id] = struct
 
     if options.pretty
       if children.length == 0 and (not @isClone row.id) and \
           (_.every Object.keys(struct), (key) ->
             return key in ['children', 'text', 'collapsed'])
-        return text
+        return struct.text
     return struct
 
   loadTo: (serialized, parent = @root, index = -1, id_mapping = {}, replace_empty = false) ->
