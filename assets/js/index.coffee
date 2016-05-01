@@ -108,7 +108,6 @@ create_session = (document, to_load) ->
   pluginManager.on 'enabledPluginsChange', (enabled) ->
     settings.setSetting "enabledPlugins", enabled
     View.renderPlugins pluginManager
-    # re-render view
     View.renderSession session
     # refresh hotkeys, if any new ones were added/removed
     View.renderHotkeysTable session.bindings
@@ -120,7 +119,7 @@ create_session = (document, to_load) ->
 
   if to_load != null
     document.load to_load
-    # otherwise, you can undo initial marks, for example
+    # a bit hack.  without this, you can undo initial marks, for example
     do session.reset_history
     do session.reset_jump_history
 

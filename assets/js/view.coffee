@@ -549,7 +549,7 @@ buildTable = (key_bindings, keyMap, actions, helpMenu) ->
   return tables
 
 renderModeTable = (key_bindings, mode, onto) ->
-  table = buildTable key_bindings, key_bindings._keyMaps[mode], (key_bindings.definitions.actions_for_mode mode), true
+  table = buildTable key_bindings, key_bindings.keyMaps[mode], (key_bindings.definitions.actions_for_mode mode), true
   onto.empty().append(table)
 
 exports.virtualRenderLine = virtualRenderLine

@@ -1,5 +1,4 @@
 gulp = require 'gulp'
-fs = require 'fs'
 
 browserify = require 'browserify'
 del = require 'del'
@@ -37,11 +36,15 @@ plugin_css_dst = "#{out_folder}/#{plugin_css_dst_path}"
 gulp.task 'clean', (cb) ->
   del ["#{out_folder}"], cb
 
+
 gulp.task 'js', ->
+  # TODO get watchify to work..
   browserify({
     entries: 'assets/js/index.coffee'
     transform: ['coffeeify', 'require-globify']
     debug: true
+    insertGlobals: true
+    detectGlobals: false
   }).bundle()
     .pipe source 'index.js'
     .pipe rename 'bundle.js'
@@ -68,7 +71,9 @@ gulp.task 'html', () ->
     new Promise (resolve, reject) ->
       stream.on 'finish', resolve
 
-gulp.task 'css', ->
+gulp.task 'css', ['main_css', 'plugins_sass', 'plugins_css']
+
+gulp.task 'main_css', ->
   gulp.src sass_glob, { base: 'assets/css' }
     .pipe sourcemaps.init()
     .pipe sass().on 'error', sass.logError
@@ -93,43 +98,30 @@ gulp.task 'images', ->
 gulp.task 'vendor', ->
   gulp.src 'vendor/**/*'
     .pipe gulp.dest "#{out_folder}/"
-  gulp.src 'node_modules/lodash/lodash.js'
-    .pipe gulp.dest "#{out_folder}/"
-  gulp.src 'node_modules/tv4/tv4.js'
-    .pipe rename "tv4.js"
-    .pipe gulp.dest "#{out_folder}/"
 
-gulp.task 'plugins', [
-  'plugins_sass',
-  'plugins_css',
-]
-
-gulp.task 'assets', [
-  'plugins',
-  'js', 'css', 'html',
-  'vendor',
-  'images',
-]
+gulp.task 'assets', ['clean'], () ->
+  gulp.start 'js', 'css', 'html', 'vendor', 'images',
 
 gulp.task 'test', () ->
   gulp.src test_glob, {read: false}
-    .pipe mocha {reporter: 'dot', bail: true, compilers: 'coffee:coffee-script/register'}
+    .pipe mocha {
+      reporter: 'dot',
+      bail: true,
+      compilers: 'coffee:coffee-script/register'
+    }
 
 # Rerun tasks when files changes
 gulp.task 'watch', ->
+  # technically, adding css plugin files could cause need to redo html..
   gulp.watch 'assets/html/**/*', ['html']
+
   gulp.watch 'vendor/**/*', ['vendor']
-  gulp.watch sass_glob, ['css']
-  gulp.watch coffee_glob, ['js', 'test']
+
+  gulp.watch [sass_glob, plugin_sass_glob, plugin_css_glob], ['css']
+
+  gulp.watch [coffee_glob, plugin_coffee_glob, plugin_js_glob], ['js', 'test']
+
   gulp.watch test_glob, ['test']
-
-  gulp.watch plugin_coffee_glob, ['js', 'test']
-  gulp.watch plugin_js_glob, ['js', 'test']
-  gulp.watch plugin_sass_glob, ['plugins_sass']
-  gulp.watch plugin_css_glob, ['plugins_css']
-  # only needs to happen when set of files change
-  gulp.watch plugins_folder, ['html']
-
 
 # serves an express app
 gulp.task 'serve', ->
@@ -140,5 +132,5 @@ gulp.task 'serve', ->
   app.listen port
   console.log 'Started server on port ' + port
 
-gulp.task 'default', ['clean'], () ->
+gulp.task 'default', () ->
   gulp.start 'assets', 'watch', 'serve', 'test'

@@ -47,8 +47,7 @@ mkdir -p $OUTPUT_FOLDER
 rm -rf $OUTPUT_FOLDER/vimflowy
 
 # builds everything into public/
-npm run gulp clean
-npm run gulp assets
+npm run build
 # copy entire public folder
 cp -r public $OUTPUT_FOLDER/vimflowy
 

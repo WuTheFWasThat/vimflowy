@@ -28,7 +28,7 @@ Concretely, it exposes 2 main objects:
           another 2-layer mapping.  For each mode and relevant key, maps to the corresponding command's function
           this is the object used internally for handling keys (i.e. translating them to commands)
 It also internally maintains
-      _keyMaps:
+      keyMaps:
           a 2-layer mapping similar to hotkeys.  For each mode and command name, a list of keys.
           Used for rendering the hotkeys table
           besides translating the mode types into each mode, keyMaps differs from hotkeys by handles some quirky behavior,
@@ -39,8 +39,6 @@ It also internally maintains
 # TODO: merge this into keyDefinitions
 
 MODES = Modes.modes
-NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
-INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
 MODE_TYPES = Modes.types
 
 class KeyBindings extends EventEmitter
@@ -74,7 +72,7 @@ class KeyBindings extends EventEmitter
   constructor: (@definitions, hotkey_settings) ->
     super
     # a mapping from commands to keys
-    @_keyMaps = null
+    @keyMaps = null
     # a recursive mapping from keys to commands
     @bindings = null
 
@@ -129,7 +127,7 @@ class KeyBindings extends EventEmitter
     @hotkeys = hotkeys
     @bindings = bindings
     @motion_bindings = motion_bindings
-    @_keyMaps = keyMaps
+    @keyMaps = keyMaps
 
     @hotkey_settings = hotkey_settings
     @emit 'applied_hotkey_settings', hotkey_settings
