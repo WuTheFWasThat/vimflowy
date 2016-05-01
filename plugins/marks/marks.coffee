@@ -48,13 +48,13 @@ class MarksPlugin
 
     # Serialization #
 
-    @document.addHook 'serializeRow', (struct, info) =>
+    @api.registerHook 'document', 'serializeRow', (struct, info) =>
       mark = @_getMark info.row.id
       if mark
         struct.mark = mark
       return struct
 
-    @document.on 'loadRow', (row, serialized) =>
+    @api.registerListener 'document', 'loadRow', (row, serialized) =>
       if serialized.mark
         err = @updateMark row.id, serialized.mark
         if err then @session.showMessage err, {text_class: 'error'}
@@ -203,13 +203,13 @@ class MarksPlugin
       @session.setMode MODES.NORMAL
       do @keyStream.forget
 
-    @session.addHook 'renderCursorsDict', (cursors, info) =>
+    @api.registerHook 'session', 'renderCursorsDict', (cursors, info) =>
       marking = @marksessionrow? and @marksessionrow.is info.row
       if marking
         return {} # do not render any cursors on the regular line
       return cursors
 
-    @session.addHook 'renderLineContents', (lineContents, info) =>
+    @api.registerHook 'session', 'renderLineContents', (lineContents, info) =>
       marking = @marksessionrow? and @marksessionrow.is info.row
       if marking
           markresults = View.virtualRenderLine @marksession, @marksession.cursor.row, {no_clicks: true}
@@ -224,7 +224,7 @@ class MarksPlugin
             }, mark
       return lineContents
 
-    @session.addHook 'renderLineWordHook', (line, word_info) =>
+    @api.registerHook 'session', 'renderLineWordHook', (line, word_info) =>
       if @session.mode == MODES.NORMAL
         if word_info.word[0] == '@'
           mark = word_info.word[1..]
@@ -237,6 +237,11 @@ class MarksPlugin
               line[i].renderOptions.onclick = @goMark.bind @, markrow
       return line
 
+  disableAPI: () ->
+
+    MODES = Modes.modes
+
+    do @api.deregisterAll
 
   # maintain global marks data structures
   #   a map: id -> mark
@@ -352,7 +357,9 @@ Plugins.register {
     Lets you tag a row with a string, and then reference that row with @markname.
     Fast search for marked rows, using '.
     """
-}, (api) ->
+}, ((api) -> 
   new MarksPlugin api
-
+), ((api, myplugin) ->
+  do myplugin.disableAPI
+)
 exports.pluginName = pluginName

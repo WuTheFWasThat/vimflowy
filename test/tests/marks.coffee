@@ -764,3 +764,69 @@ describe "marks", () ->
     t.sendKeys '`'
     t.sendKey 'enter'
     t.expectCursor 2, 0
+
+  # NOTE: THIS SHOULD BE THE LAST TEST!
+  it "can be disabled", () ->
+    t = new TestCase [
+      { text: '@mark2 @mark3', children: [
+        'line'
+        { text: 'line', mark: 'mark3' }
+      ] }
+      { text: 'stuff', mark: 'mark2', children: [
+        'more stuff'
+      ] }
+    ], {plugins: [Marks.pluginName]}
+
+    t.pluginManager.disable Marks.pluginName
+    t.expect [
+      { text: '@mark2 @mark3', children: [
+        'line'
+        'line'
+      ] }
+      { text: 'stuff', children: [
+        'more stuff'
+      ] }
+    ]
+
+    t.sendKeys 'gmx'
+    t.expect [
+      { text: 'mark2 @mark3', children: [
+        'line'
+        'line'
+      ] }
+      { text: 'stuff', children: [
+        'more stuff'
+      ] }
+    ]
+    # goes nowhere
+
+    # trying to mark should do nothing
+    t.sendKeys 'mdd'
+    t.sendKey 'enter'
+    t.expect [
+      { text: 'stuff', children: [
+        'more stuff'
+      ] }
+    ]
+
+    # RE-ENABLE WORKS
+    t.pluginManager.enable Marks.pluginName
+    t.expect [
+      { text: 'stuff', mark: 'mark2', children: [
+        'more stuff'
+      ] }
+    ]
+    t.sendKeys 'mdd'
+    t.sendKey 'enter'
+    t.expect [
+      { text: 'stuff', mark: 'dd', children: [
+        'more stuff'
+      ] }
+    ]
+
+    t.pluginManager.disable Marks.pluginName
+    t.expect [
+      { text: 'stuff', children: [
+        'more stuff'
+      ] }
+    ]

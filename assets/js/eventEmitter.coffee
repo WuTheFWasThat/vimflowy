@@ -1,4 +1,4 @@
-# From: https://gist.github.com/contra/2759355
+# based on https://gist.github.com/contra/2759355
 
 class EventEmitter
   constructor: ->
@@ -16,11 +16,7 @@ class EventEmitter
     (@listeners[event]?=[]).push listener
     return @
 
-  addListenerForAll: (listener) ->
-    @addListener 'all', listener
-
   on: @::addListener
-  onAll: @::addListenerForAll
 
   once: (event, listener) ->
     fn = =>
@@ -38,11 +34,18 @@ class EventEmitter
     delete @listeners[event]
     return @
 
-  # hooks for mutating
+  off: @::removeListener
+
+  # ordered set of hooks for mutating
   # NOTE: a little weird for eventEmitter to be in charge of this
 
   addHook: (event, transform) ->
     (@hooks[event]?=[]).push transform
+
+  removeHook: (event, transform) ->
+    return @ unless @hooks[event]
+    @hooks[event] = (t for t in @hooks[event] when t isnt transform)
+    return @
 
   applyHook: (event, obj, info) ->
     for transform in (@hooks[event] or [])
@@ -50,5 +53,4 @@ class EventEmitter
     return obj
 
 # exports
-module?.exports = EventEmitter
-window?.EventEmitter = EventEmitter
+module.exports = EventEmitter

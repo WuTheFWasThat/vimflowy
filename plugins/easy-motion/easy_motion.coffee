@@ -68,4 +68,7 @@ Plugins.register {
       char = EASY_MOTION_MAPPINGS.row_to_key[ancestry_str]
       bullet = virtualDom.h 'span', {className: 'bullet theme-text-accent easy-motion'}, [char]
     return bullet
+), ((api) ->
+  do api.deregisterAll
+  # TODO: undo render hook
 )

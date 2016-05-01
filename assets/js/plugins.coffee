@@ -80,15 +80,27 @@ class PluginApi
     @registrations.push {type: 'mode', args: [mode]}
     do @_reapply_hotkeys
 
+  deregisterMode: (mode) ->
+    Modes.deregisterMode mode
+    do @_reapply_hotkeys
+
   registerCommand: (metadata) ->
     cmd = @definitions.registerCommand metadata
     @registrations.push {type: 'command', args: [cmd]}
     do @_reapply_hotkeys
     return cmd
 
+  deregisterCommand: (command) ->
+    @definitions.deregisterCommand command
+    do @_reapply_hotkeys
+
   registerMotion: (commands, motion, definition) ->
     @definitions.registerMotion commands, motion, definition
     @registrations.push {type: 'motion', args: [commands]}
+    do @_reapply_hotkeys
+
+  deregisterMotion: (commands) ->
+    @definitions.deregisterMotion commands
     do @_reapply_hotkeys
 
   registerAction: (modes, commands, action, definition) ->
@@ -96,21 +108,35 @@ class PluginApi
     @registrations.push {type: 'action', args: [modes, commands]}
     do @_reapply_hotkeys
 
-  deregisterMode: (mode) ->
-    Modes.deregisterMode mode
-    do @_reapply_hotkeys
-
-  deregisterCommand: (command) ->
-    @definitions.deregisterCommand command
-    do @_reapply_hotkeys
-
-  deregisterMotion: (commands) ->
-    @definitions.deregisterMotion commands
-    do @_reapply_hotkeys
-
   deregisterAction: (modes, commands) ->
     @definitions.deregisterAction modes, commands
     do @_reapply_hotkeys
+
+  _getEmitter: (who) ->
+    if who == 'document'
+      emitter = @document
+    else if who == 'session'
+      emitter = @session
+    else
+      throw new errors.GenericError "Unknown hook listener #{who}"
+
+  registerListener: (who, event, listener) ->
+    emitter = @_getEmitter who
+    emitter.on event, listener
+    @registrations.push {type: 'listener', args: [who, event, listener]}
+
+  deregisterListener: (who, event, listener) ->
+    emitter = @_getEmitter who
+    emitter.off event, listener
+
+  registerHook: (who, event, transform) ->
+    emitter = @_getEmitter who
+    emitter.addHook event, transform
+    @registrations.push {type: 'hook', args: [who, event, transform]}
+
+  deregisterHook: (who, event, transform) ->
+    emitter = @_getEmitter who
+    emitter.removeHook event, transform
 
   deregisterAll: () ->
     for registration in @registrations.reverse()
@@ -122,6 +148,10 @@ class PluginApi
         @deregisterMotion.apply @, registration.args
       else if registration.type == 'action'
         @deregisterAction.apply @, registration.args
+      else if registration.type == 'listener'
+        @deregisterListener.apply @, registration.args
+      else if registration.type == 'hook'
+        @deregisterHook.apply @, registration.args
       else
         throw new errors.GenericError "Unknown registration type #{registration.type}"
     @registrations = []

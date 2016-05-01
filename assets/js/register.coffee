@@ -95,5 +95,4 @@ class Register
         @session.attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}
 
 # exports
-module?.exports = Register
-window?.Register = Register
+module.exports = Register

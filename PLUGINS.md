@@ -116,18 +116,30 @@ This section will be documented better in the future, when the API is better and
       The default output is to the javascript console.
 ```
 
-#### rendering
+#### Listeners and hooks
 
-We expose an API for rendering via a family of hooks
+We expose an API for both event listeners and data-mutating hooks
 ```
-    api.session.addHook(hookname, fn),
+    api.registerListener(object, eventname, fn),
+    api.deregisterListener(object, eventname, fn),
+
+    api.registerHook(object, hookname, fn),
+    api.deregisterHook(object, hookname, fn),
 ```
-where `fn(v, info)` is a callback taking a virtualDom element (or array of them) and any additional information the hook provides.
-This hook function should return a new virtualDom element (or array of them).
+where:
 
-Typically, rendering hooks will have `hookname` beginning with `render`.
+`object` is the object to register the listener or hook with (currently either "session" or "document")
 
-More detailed info on these hooks will be added later.
+For listeners:
+- `eventname` is the name of the event being registered
+- `fn(arguments...)` is a callback receiving whatever values were emitted by the event
+
+For hooks:
+- `hookname` is the name of the hook being registered
+- `fn(value, info)` is a callback taking some value and some additional information the hook provides, and which should return a new value.
+  In the case of rendering hooks, for example, the value is a virtualDom element (or array of them), and thus the hook function should return a new virtualDom element (or array of them).
+
+*More detailed info will be added in the future.*
 
 #### data persistence
 
