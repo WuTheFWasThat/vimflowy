@@ -71,14 +71,12 @@ class KeyBindings extends EventEmitter
         bindings[key] = v
     return [null, bindings]
 
-  constructor: (@definitions, hotkey_settings, options = {}) ->
+  constructor: (@definitions, hotkey_settings) ->
     super
     # a mapping from commands to keys
     @_keyMaps = null
     # a recursive mapping from keys to commands
     @bindings = null
-
-    @modebindingsDiv = options.modebindingsDiv
 
     @hotkey_settings = null
     err = @apply_hotkey_settings hotkey_settings
@@ -87,20 +85,6 @@ class KeyBindings extends EventEmitter
       Logger.logger.error "Failed to apply desired hotkeys #{hotkey_settings}"
       Logger.logger.error err
       do @apply_default_hotkey_settings
-
-  render_hotkeys: () ->
-    if $? # TODO: pass this in as an argument
-      $('#hotkey-edit-normal').empty().append(
-        $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
-      ).append(
-        @buildTable @hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep (@definitions.actions_for_mode mode) for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
-      )
-
-      $('#hotkey-edit-insert').empty().append(
-        $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
-      ).append(
-        @buildTable @hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep (@definitions.actions_for_mode mode) for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
-      )
 
   # tries to apply new hotkey settings, returning an error if there was one
   # new bindings may result if any of the following happen:
@@ -147,7 +131,6 @@ class KeyBindings extends EventEmitter
     @motion_bindings = motion_bindings
     @_keyMaps = keyMaps
 
-    do @render_hotkeys
     @hotkey_settings = hotkey_settings
     @emit 'applied_hotkey_settings', hotkey_settings
     return null
@@ -160,54 +143,6 @@ class KeyBindings extends EventEmitter
   reapply_hotkey_settings: () ->
       err = @apply_hotkey_settings @hotkey_settings
       return err
-
-  # build table to visualize hotkeys
-  buildTable: (keyMap, actions, helpMenu) ->
-    buildTableContents = (bindings, onto, recursed=false) ->
-      for k,v of bindings
-        if k == 'MOTION'
-          if recursed
-            keys = ['<MOTION>']
-          else
-            continue
-        else
-          keys = keyMap[k]
-          if not keys
-            continue
-
-        if keys.length == 0 and helpMenu
-          continue
-
-        row = $('<tr>')
-
-        # row.append $('<td>').text keys[0]
-        row.append $('<td>').text keys.join(' OR ')
-
-        display_cell = $('<td>').css('width', '100%').html v.description
-        if typeof v.definition == 'object'
-          buildTableContents v.definition, display_cell, true
-        row.append display_cell
-
-        onto.append row
-
-    tables = $('<div>')
-
-    for [label, definitions] in [['Actions', actions], ['Motions', @definitions.motions]]
-      tables.append($('<h5>').text(label).css('margin', '5px 10px'))
-      table = $('<table>').addClass('keybindings-table theme-bg-secondary')
-      buildTableContents definitions, table
-      tables.append(table)
-
-    return tables
-
-  renderModeTable: (mode) ->
-    if not @modebindingsDiv
-      return
-    if not (@settings.getSetting 'showKeyBindings')
-      return
-
-    table = @buildTable @_keyMaps[mode], (@definitions.actions_for_mode mode), true
-    @modebindingsDiv.empty().append(table)
 
   # TODO getBindings: (mode) -> return @bindings[mode]
 

@@ -39,11 +39,12 @@ create_session = (document, to_load) ->
   do settings.loadRenderSettings
 
   hotkey_settings = settings.getSetting 'hotkeys'
-  key_bindings = new KeyBindings keyDefinitions, hotkey_settings, {
-    modebindingsDiv: $('#keybindings')
-  }
+  key_bindings = new KeyBindings keyDefinitions, hotkey_settings
+
   key_bindings.on 'applied_hotkey_settings', (hotkey_settings) ->
     settings.setSetting 'hotkeys', hotkey_settings
+    View.renderHotkeysTable key_bindings
+    View.renderModeTable key_bindings, session.mode
 
   session = new Session document, {
     bindings: key_bindings
@@ -56,6 +57,14 @@ create_session = (document, to_load) ->
     menuDiv: $('#menu')
   }
 
+  session.on 'modeChange', (mode) ->
+    View.renderModeTable key_bindings, mode
+
+  session.on 'toggleBindingsDiv', () ->
+    $('#keybindings').toggleClass 'active'
+    document.store.setSetting 'showKeyBindings', $('#keybindings').hasClass 'active'
+    View.renderModeTable key_bindings, session.mode
+
   pluginManager = new Plugins.PluginsManager session, $('#plugins')
   enabledPlugins = (session.settings.getSetting "enabledPlugins") || ["Marks"]
   for plugin_name in enabledPlugins
@@ -64,12 +73,14 @@ create_session = (document, to_load) ->
 
   pluginManager.on 'status', () ->
     View.renderPlugins pluginManager
+
   pluginManager.on 'enabledPluginsChange', () ->
     View.renderPlugins pluginManager
     # re-render view
     View.renderSession session
     # refresh hotkeys, if any new ones were added/removed
-    session.bindings.renderModeTable session.mode
+    View.renderHotkeysTable session.bindings
+    View.renderModeTable session.bindings, session.mode
 
   if to_load != null
     document.load to_load
@@ -83,31 +94,29 @@ create_session = (document, to_load) ->
 
   # needed for safari
   $('#paste-hack').focus()
-  $(document).on('click', () ->
+  $(document).on 'click', () ->
     # if settings menu is up, we don't want to blur (the dropdowns need focus)
     if $('#settings').hasClass 'hidden'
       # if user is tryign to copy, we don't want to blur
       if not window.getSelection().toString()
         $('#paste-hack').focus()
-  )
 
-  $(document).on('paste', (e) ->
-      e.preventDefault()
-      text = (e.originalEvent || e).clipboardData.getData('text/plain')
-      # TODO: deal with this better when there are multiple lines
-      # maybe put in insert mode?
-      lines = text.split '\n'
-      for line, i in lines
-        if i != 0
-          do session.newLineAtCursor
-        chars = line.split ''
-        options = {}
-        if session.mode == Modes.modes.INSERT
-          options.cursor = {pastEnd: true}
-        session.addCharsAtCursor chars, options
-      View.renderSession session
-      do session.save
-  )
+  $(document).on 'paste', (e) ->
+    e.preventDefault()
+    text = (e.originalEvent || e).clipboardData.getData('text/plain')
+    # TODO: deal with this better when there are multiple lines
+    # maybe put in insert mode?
+    lines = text.split '\n'
+    for line, i in lines
+      if i != 0
+        do session.newLineAtCursor
+      chars = line.split ''
+      options = {}
+      if session.mode == Modes.modes.INSERT
+        options.cursor = {pastEnd: true}
+      session.addCharsAtCursor chars, options
+    View.renderSession session
+    do session.save
 
   key_handler = new KeyHandler session, key_bindings
 
@@ -137,60 +146,59 @@ create_session = (document, to_load) ->
       session.selectSettingsTab ($(e.target).data "tab")
 
     load_file = (filesDiv, cb) ->
-        file = filesDiv.files[0]
-        if not file?
-            return cb 'No file selected for import!'
-        session.showMessage 'Reading in file...'
-        reader = new FileReader()
-        reader.readAsText file, "UTF-8"
-        reader.onload = (evt) ->
-            content = evt.target.result
-            cb null, content, file.name
-        reader.onerror = (evt) ->
-            cb 'Import failed due to file-reading issue'
-            Logger.logger.error 'Import Error', evt
+      file = filesDiv.files[0]
+      if not file?
+        return cb 'No file selected for import!'
+      session.showMessage 'Reading in file...'
+      reader = new FileReader()
+      reader.readAsText file, "UTF-8"
+      reader.onload = (evt) ->
+        content = evt.target.result
+        cb null, content, file.name
+      reader.onerror = (evt) ->
+        cb 'Import failed due to file-reading issue'
+        Logger.logger.error 'Import Error', evt
 
     download_file = (filename, mimetype, content) ->
-        exportDiv = $("#export")
-        exportDiv.attr "download", filename
-        exportDiv.attr "href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}"
-        do exportDiv[0].click
-        exportDiv.attr "download", null
-        exportDiv.attr "href", null
+      exportDiv = $("#export")
+      exportDiv.attr "download", filename
+      exportDiv.attr "href", "data: #{mimetype};charset=utf-8,#{encodeURIComponent(content)}"
+      do exportDiv[0].click
+      exportDiv.attr "download", null
+      exportDiv.attr "href", null
 
     $("#hotkeys_import").click () =>
-        load_file $('#hotkeys_file_input')[0], (err, content) ->
-            if err then return session.showMessage err, {text_class: 'error'}
-            try
-                hotkey_settings = JSON.parse content
-            catch e
-                return session.showMessage "Failed to parse JSON: #{e}", {text_class: 'error'}
-            err = key_bindings.apply_hotkey_settings hotkey_settings
-            if err then return session.showMessage err, {text_class: 'error'}
-            key_bindings.save_settings hotkey_settings
-            key_bindings.renderModeTable session.mode # TODO: do this elsewhere?
-            session.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
+      load_file $('#hotkeys_file_input')[0], (err, content) ->
+        if err then return session.showMessage err, {text_class: 'error'}
+        try
+          hotkey_settings = JSON.parse content
+        catch e
+          return session.showMessage "Failed to parse JSON: #{e}", {text_class: 'error'}
+        err = key_bindings.apply_hotkey_settings hotkey_settings
+        if err
+          session.showMessage err, {text_class: 'error'}
+        else
+          session.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
 
     $("#hotkeys_export").click () =>
-        filename = 'vimflowy_hotkeys.json'
-        content = JSON.stringify(key_bindings.hotkeys, null, 2)
-        download_file filename, 'application/json', content
-        session.showMessage "Downloaded hotkeys to #{filename}!", {text_class: 'success'}
+      filename = 'vimflowy_hotkeys.json'
+      content = JSON.stringify(key_bindings.hotkeys, null, 2)
+      download_file filename, 'application/json', content
+      session.showMessage "Downloaded hotkeys to #{filename}!", {text_class: 'success'}
 
     $("#hotkeys_default").click () =>
-        do key_bindings.apply_default_hotkey_settings
-        key_bindings.renderModeTable session.mode # TODO: do this elsewhere?
-        session.showMessage "Loaded defaults!", {text_class: 'success'}
+      do key_bindings.apply_default_hotkey_settings
+      session.showMessage "Loaded defaults!", {text_class: 'success'}
 
     $("#data_import").click () =>
-        load_file $('#import-file :file')[0], (err, content, filename) ->
-            if err then return session.showMessage err, {text_class: 'error'}
-            mimetype = utils.mimetypeLookup filename
-            if session.importContent content, mimetype
-                session.showMessage 'Imported!', {text_class: 'success'}
-                do session.hideSettings
-            else
-                session.showMessage 'Import failed due to parsing issue', {text_class: 'error'}
+      load_file $('#import-file :file')[0], (err, content, filename) ->
+        if err then return session.showMessage err, {text_class: 'error'}
+        mimetype = utils.mimetypeLookup filename
+        if session.importContent content, mimetype
+          session.showMessage 'Imported!', {text_class: 'success'}
+          do session.hideSettings
+        else
+          session.showMessage 'Import failed due to parsing issue', {text_class: 'error'}
 
     export_type = (type) ->
       session.showMessage 'Exporting...'
@@ -245,22 +253,22 @@ else
   create_session document, constants.default_data
 
 window.onerror = (msg, url, line, col, err) ->
-    Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"
-    if err != undefined
-        Logger.logger.error "Error: ", err, err.stack
+  Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"
+  if err != undefined
+    Logger.logger.error "Error: ", err, err.stack
 
-    if err instanceof errors.DataPoisoned
-        # no need to alert, already alerted
-        return
+  if err instanceof errors.DataPoisoned
+    # no need to alert, already alerted
+    return
 
-    alert "
-      An error was caught.  Please refresh the page to avoid weird state. \n\n
-      Please help out vimflowy and report the bug!
-      Simply open the javascript console, save the log as debug information,
-      and send it to wuthefwasthat@gmail.com with a brief description of what happened.
-      \n\n
-      ERROR:\n\n
-      #{msg}\n\n
-      #{err}\n\n
-      #{err.stack}
-    "
+  alert "
+    An error was caught.  Please refresh the page to avoid weird state. \n\n
+    Please help out vimflowy and report the bug!
+    Simply open the javascript console, save the log as debug information,
+    and send it to wuthefwasthat@gmail.com with a brief description of what happened.
+    \n\n
+    ERROR:\n\n
+    #{msg}\n\n
+    #{err}\n\n
+    #{err.stack}
+  "

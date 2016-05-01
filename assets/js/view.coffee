@@ -6,6 +6,9 @@ Logger = require './logger.coffee'
 Plugins = require './plugins.coffee'
 Modes = require './modes.coffee'
 MODES = Modes.modes
+NORMAL_MODE_TYPE = Modes.NORMAL_MODE_TYPE
+INSERT_MODE_TYPE = Modes.INSERT_MODE_TYPE
+MODE_TYPES = Modes.types
 
 # TODO: move mode-specific logic into mode render functions
 
@@ -490,9 +493,70 @@ virtualRenderPlugin = (pluginManager, name) ->
     virtualDom.h 'td', { className: 'center theme-trim plugin-actions' }, actions
   ]
 
+######
+# hotkeys
+######
+renderHotkeysTable = (key_bindings) ->
+  $('#hotkey-edit-normal').empty().append(
+    $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
+  ).append(
+    buildTable key_bindings, key_bindings.hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep (key_bindings.definitions.actions_for_mode mode) for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
+  )
+
+  $('#hotkey-edit-insert').empty().append(
+    $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
+  ).append(
+    buildTable key_bindings, key_bindings.hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep (key_bindings.definitions.actions_for_mode mode) for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
+  )
+
+# build table to visualize hotkeys
+buildTable = (key_bindings, keyMap, actions, helpMenu) ->
+  buildTableContents = (bindings, onto, recursed=false) ->
+    for k,v of bindings
+      if k == 'MOTION'
+        if recursed
+          keys = ['<MOTION>']
+        else
+          continue
+      else
+        keys = keyMap[k]
+        if not keys
+          continue
+
+      if keys.length == 0 and helpMenu
+        continue
+
+      row = $('<tr>')
+
+      # row.append $('<td>').text keys[0]
+      row.append $('<td>').text keys.join(' OR ')
+
+      display_cell = $('<td>').css('width', '100%').html v.description
+      if typeof v.definition == 'object'
+        buildTableContents v.definition, display_cell, true
+      row.append display_cell
+
+      onto.append row
+
+  tables = $('<div>')
+
+  for [label, definitions] in [['Actions', actions], ['Motions', key_bindings.definitions.motions]]
+    tables.append($('<h5>').text(label).css('margin', '5px 10px'))
+    table = $('<table>').addClass('keybindings-table theme-bg-secondary')
+    buildTableContents definitions, table
+    tables.append(table)
+
+  return tables
+
+renderModeTable = (key_bindings, mode) ->
+  table = buildTable key_bindings, key_bindings._keyMaps[mode], (key_bindings.definitions.actions_for_mode mode), true
+  $('#keybindings').empty().append(table)
+
 exports.virtualRenderLine = virtualRenderLine
 
 exports.renderLine = renderLine
 exports.renderSession = renderSession
 exports.renderMenu = renderMenu
 exports.renderPlugins = renderPlugins
+exports.renderHotkeysTable = renderHotkeysTable
+exports.renderModeTable = renderModeTable

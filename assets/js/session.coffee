@@ -115,14 +115,10 @@ class Session extends EventEmitter
 
     if @modeDiv
       @modeDiv.text (Modes.getMode @mode).name
-    if @bindings
-      @bindings.renderModeTable mode
+    @emit 'modeChange', mode
 
   toggleBindingsDiv: () ->
-    @keybindingsDiv.toggleClass 'active'
-    @document.store.setSetting 'showKeyBindings', @keybindingsDiv.hasClass 'active'
-    if @bindings
-      @bindings.renderModeTable @mode
+    @emit 'toggleBindingsDiv'
 
   #################
   # show message
