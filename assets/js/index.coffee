@@ -34,12 +34,29 @@ KeyBindings = require './keyBindings.coffee'
 $keybindingsDiv = $('#keybindings')
 $settingsDiv = $('#settings')
 
+changeStyle = (theme) ->
+  $('body').attr('id', theme)
+
 create_session = (document, to_load) ->
 
-  settings = new Settings document.store, {
-    mainDiv: $settingsDiv, keybindingsDiv: $keybindingsDiv
-  }
-  do settings.loadRenderSettings
+  ####################
+  # Settings
+  ####################
+
+  settings = new Settings document.store, {mainDiv: $settingsDiv}
+
+  changeStyle (settings.getSetting 'theme')
+  $settingsDiv.find(".theme-selection").val (settings.getSetting 'theme')
+  $settingsDiv.find(".theme-selection").on 'input', (e) ->
+    theme = @value
+    settings.setSetting 'theme', theme
+    changeStyle theme
+
+  $keybindingsDiv.toggleClass 'active', (settings.getSetting 'showKeyBindings')
+
+  ####################
+  # hotkeys and key bindings
+  ####################
 
   hotkey_settings = settings.getSetting 'hotkeys'
   key_bindings = new KeyBindings keyDefinitions, hotkey_settings
@@ -49,12 +66,15 @@ create_session = (document, to_load) ->
     View.renderHotkeysTable key_bindings
     View.renderModeTable key_bindings, session.mode, $keybindingsDiv
 
+  ####################
+  # session
+  ####################
+
   session = new Session document, {
     bindings: key_bindings
     settings: settings
     mainDiv: $('#view'),
     messageDiv: $('#message')
-    keybindingsDiv: $keybindingsDiv
     modeDiv: $('#mode')
     menuDiv: $('#menu')
   }
@@ -66,6 +86,10 @@ create_session = (document, to_load) ->
     $keybindingsDiv.toggleClass 'active'
     document.store.setSetting 'showKeyBindings', $keybindingsDiv.hasClass 'active'
     View.renderModeTable key_bindings, session.mode, $keybindingsDiv
+
+  ####################
+  # plugins
+  ####################
 
   pluginManager = new Plugins.PluginsManager session, $('#plugins')
   enabledPlugins = (settings.getSetting "enabledPlugins") || ["Marks"]
@@ -85,12 +109,21 @@ create_session = (document, to_load) ->
     View.renderHotkeysTable session.bindings
     View.renderModeTable session.bindings, session.mode, $keybindingsDiv
 
+  ####################
+  # load data
+  ####################
+
   if to_load != null
     document.load to_load
     # otherwise, you can undo initial marks, for example
     do session.reset_history
     do session.reset_jump_history
 
+  ####################
+  # prepare dom
+  ####################
+
+  # render when ready
   $(document).ready ->
     do session.hideSettings
     View.renderSession session
@@ -147,7 +180,11 @@ create_session = (document, to_load) ->
       do session.settingsToggle
 
     $("#settings-nav li").click (e) ->
-      session.selectSettingsTab ($(e.target).data "tab")
+      tab = ($(e.target).data "tab")
+      $settingsDiv.find('.tabs > li').removeClass('active')
+      $settingsDiv.find('.tab-pane').removeClass('active')
+      $settingsDiv.find(".tabs > li[data-tab=#{tab}]").addClass('active')
+      $settingsDiv.find(".tab-pane##{tab}").addClass('active')
 
     load_file = (filesDiv, cb) ->
       file = filesDiv.files[0]

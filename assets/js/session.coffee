@@ -35,7 +35,6 @@ class Session extends EventEmitter
     @settings = options.settings
     # session needs to know div for page scrolling, getting visible rows
     @mainDiv = options.mainDiv
-    @keybindingsDiv = options.keybindingsDiv
     @messageDiv = options.messageDiv
     @menuDiv = options.menuDiv
     @modeDiv = options.modeDiv
@@ -77,12 +76,6 @@ class Session extends EventEmitter
     $('#settings-text').text 'Back'
     @modeDiv.addClass 'hidden'
     @settings.mainDiv.removeClass 'hidden'
-
-  selectSettingsTab: (tab) ->
-    @settings.mainDiv.find('.tabs > li').removeClass('active')
-    @settings.mainDiv.find('.tab-pane').removeClass('active')
-    @settings.mainDiv.find(".tabs > li[data-tab=#{tab}]").addClass('active')
-    @settings.mainDiv.find(".tab-pane##{tab}").addClass('active')
 
   settingsToggle: () ->
     if do @showingSettings
