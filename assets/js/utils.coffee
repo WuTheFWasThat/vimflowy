@@ -1,6 +1,8 @@
 _ = require 'lodash'
 tv4 = require 'tv4'
 
+errors = require './errors.coffee'
+
 # TODO: is quite silly to consider undefined as whitespace
 exports.isWhitespace = (char) ->
   return (char == ' ') or (char == '\n') or (char == undefined)
@@ -8,6 +10,10 @@ exports.isWhitespace = (char) ->
 # NOTE: currently unused
 exports.isPunctuation = (char) ->
   return char == '.' or char == ',' or char == '!' or char == '?'
+
+urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
+exports.isLink = (word) ->
+  return urlRegex.test word
 
 exports.mimetypeLookup = (filename) ->
   parts = filename.split '.'

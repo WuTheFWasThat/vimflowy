@@ -1,4 +1,5 @@
 Modes = require '../modes.coffee'
+utils = require '../utils.coffee'
 keyDefinitions = require '../keyDefinitions.coffee'
 
 MODES = Modes.modes
@@ -133,23 +134,26 @@ CMD_GO = keyDefinitions.registerCommand {
   default_hotkeys:
     normal_like: ['g']
 }
-CMD_PARENT = keyDefinitions.registerCommand {
-  name: 'PARENT'
-  default_hotkeys:
-    normal_like: ['p']
-}
 
 # TODO: change this
 keyDefinitions.registerMotion CMD_GO, {
   description: 'Various commands for navigation (operator)',
   multirow: true
 }, {}
+
 keyDefinitions.registerMotion [CMD_GO, CMD_GO], {
   description: 'Go to the beginning of visible document',
   multirow: true
 }, () ->
   return (cursor, options) ->
     cursor.visibleHome options
+
+CMD_PARENT = keyDefinitions.registerCommand {
+  name: 'PARENT'
+  default_hotkeys:
+    normal_like: ['p']
+}
+
 keyDefinitions.registerMotion [CMD_GO, CMD_PARENT], {
   description: 'Go to the parent of current line',
   multirow: true
@@ -162,7 +166,6 @@ CMD_CLONE = keyDefinitions.registerCommand {
   default_hotkeys:
     normal_like: ['c']
 }
-
 keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
   description: 'Go to next copy of this clone'
   multirow: true
@@ -175,6 +178,20 @@ keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
     cursor.setRow newRow
     if not @session.isVisible newRow
       @session.rootToParent newRow
+
+CMD_LINK = keyDefinitions.registerCommand {
+  name: 'LINK'
+  default_hotkeys:
+    normal_like: ['x']
+}
+# TODO: this isn't actually a motion, but that's okay for now...
+keyDefinitions.registerMotion [CMD_GO, CMD_LINK], {
+  description: 'Visit to the link indicated by the cursor, in a new tab',
+},  () ->
+  return (cursor) =>
+    word = @session.document.getWord cursor.row, cursor.col
+    if utils.isLink word
+      window.open word
 
 ####################
 # ACTIONS

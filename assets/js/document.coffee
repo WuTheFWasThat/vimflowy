@@ -124,7 +124,11 @@ class Document extends EventEmitter
       start -= 1
     while (end < text.length - 1) and not (utils.isWhitespace text[end+1])
       end += 1
-    return text[start..end].join('')
+    word = text[start..end].join('')
+    # remove leading and trailing punctuation
+    word = word.replace /^[-.,()&$#!\[\]{}"']+/g, ""
+    word = word.replace /[-.,()&$#!\[\]{}"']+$/g, ""
+    word
 
   writeChars: (row, col, chars) ->
     args = [col, 0].concat chars

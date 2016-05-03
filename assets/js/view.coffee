@@ -79,7 +79,6 @@ renderLine = (lineData, options = {}) ->
   word_chars = []
   word_start = 0
 
-  urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
 
   for obj, i in lineData.concat [{char: ' '}] # to make end condition easier
     # TODO  or (utils.isPunctuation obj.char)
@@ -93,7 +92,7 @@ renderLine = (lineData, options = {}) ->
         }
         if options.wordHook?
           line = options.wordHook line, word_info
-        if urlRegex.test word_info.word
+        if utils.isLink word_info.word
           for j in [word_info.start..word_info.end]
             line[j].renderOptions.type = 'a'
             line[j].renderOptions.href = word_info.word
