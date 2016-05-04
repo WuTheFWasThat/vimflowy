@@ -21,13 +21,13 @@ Try it out!
   - (configurable) vim keybindings
   - modal editing
   - session history (undo, moving through jump history)
-  - macros
+  - repeats, macros
 - Extras
   - data import/export
+  - loads data lazily (good for big documents)
   - search (not like vim's)
   - cloning (bullets with multiple parents)
   - different visual themes
-  - loads data lazily (good for big documents)
 - Plugins system (see [PLUGINS.md](PLUGINS.md))
   - marks (not like vim's)
   - easy-motion for moving between bullets quickly

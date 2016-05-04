@@ -12,7 +12,7 @@ CMD_ZOOM_IN = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN, {
   description: 'Zoom in by one level',
 }, () ->
-  do @session.rootDown
+  do @session.zoomIn
   if @mode == MODES.NORMAL
     do @keyStream.save
 
@@ -25,33 +25,33 @@ CMD_ZOOM_OUT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT, {
   description: 'Zoom out by one level',
 }, () ->
-  do @session.rootUp
+  do @session.zoomOut
   if @mode == MODES.NORMAL
     do @keyStream.save
 
 CMD_ZOOM_IN_ALL = keyDefinitions.registerCommand {
   name: 'ZOOM_IN_ALL'
   default_hotkeys:
-    normal_like: ['enter', '}']
+    normal_like: ['enter', 'ctrl+shift+right']
     insert_like: ['ctrl+shift+right']
 }
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN_ALL, {
   description: 'Zoom in onto cursor',
 }, () ->
-  do @session.rootInto
+  do @session.zoomTo
   if @mode == MODES.NORMAL
     do @keyStream.save
 
 CMD_ZOOM_OUT_ALL = keyDefinitions.registerCommand {
   name: 'ZOOM_OUT_ALL'
   default_hotkeys:
-    normal_like: ['shift+enter', '{']
+    normal_like: ['shift+enter', 'ctrl+shift+left']
     insert_like: ['ctrl+shift+left']
 }
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT_ALL, {
   description: 'Zoom out to home',
 }, () ->
-  do @session.reroot
+  @session.zoomInto @session.document.root
   if @mode == MODES.NORMAL
     do @keyStream.save
 

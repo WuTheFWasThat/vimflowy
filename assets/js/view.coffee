@@ -218,9 +218,9 @@ virtualRenderSession = (session, options = {}) ->
     if session.mode == MODES.NORMAL and not isLast
       m_options.className = 'theme-text-link'
       m_options.onclick = () =>
-        session.reroot row
+        session.zoomInto row
         do session.save
-        do session.render
+        renderSession session
     return virtualDom.h 'span', { className: 'crumb' }, [
              virtualDom.h 'span', m_options, [ text ]
            ]

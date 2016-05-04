@@ -126,7 +126,7 @@ class MarksPlugin
         if mark of allMarks
           id = allMarks[mark]
           row = @session.document.canonicalInstance id
-          @session.rootToParent row
+          @session.zoomToParent row
           return true
         else
           return false
@@ -172,7 +172,7 @@ class MarksPlugin
                   className: 'mark theme-bg-secondary theme-trim'
                 }, found.mark
                 return contents
-              fn: () => @session.rootInto row
+              fn: () => @session.zoomTo row
             }
         )
 
@@ -336,7 +336,7 @@ class MarksPlugin
     return null
 
   goMark: (row) =>
-    @session.rootToParent row
+    @session.zoomToParent row
     do @session.save
     do @session.render
 

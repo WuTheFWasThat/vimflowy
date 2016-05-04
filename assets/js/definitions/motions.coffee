@@ -221,7 +221,7 @@ keyDefinitions.registerMotion CMD_GO_END, {
 CMD_NEXT_SIBLING = keyDefinitions.registerCommand {
   name: 'NEXT_SIBLING'
   default_hotkeys:
-    normal_like: ['alt+j']
+    normal_like: ['}']
 }
 keyDefinitions.registerMotion CMD_NEXT_SIBLING, {
   description: 'Move cursor to the next sibling of the current line',
@@ -233,7 +233,7 @@ keyDefinitions.registerMotion CMD_NEXT_SIBLING, {
 CMD_PREV_SIBLING = keyDefinitions.registerCommand {
   name: 'PREV_SIBLING'
   default_hotkeys:
-    normal_like: ['alt+k']
+    normal_like: ['{']
 }
 keyDefinitions.registerMotion CMD_PREV_SIBLING, {
   description: 'Move cursor to the previous sibling of the current line',

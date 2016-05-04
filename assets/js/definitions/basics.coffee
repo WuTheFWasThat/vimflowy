@@ -172,12 +172,12 @@ keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
 }, () ->
   return (cursor, options) =>
     if @session.mode != MODES.NORMAL
-      # doesn't work for visual_line mode due to rootToParent
+      # doesn't work for visual_line mode due to zoomToParent
       return
     newRow = @session.document.nextClone cursor.row
     cursor.setRow newRow
     if not @session.isVisible newRow
-      @session.rootToParent newRow
+      @session.zoomToParent newRow
 
 CMD_LINK = keyDefinitions.registerCommand {
   name: 'LINK'

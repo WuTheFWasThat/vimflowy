@@ -1,7 +1,7 @@
 TestCase = require '../testcase.coffee'
 
-nextSiblingKey = 'alt+j'
-prevSiblingKey = 'alt+k'
+nextSiblingKey = '}'
+prevSiblingKey = '{'
 
 describe "move siblings", () ->
   it "works", () ->

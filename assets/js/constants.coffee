@@ -8,12 +8,12 @@ exports.default_data = [
   { text: 'Features', children: [
     { text: 'Workflowy features', children: [
       { text: 'Nested bullets', children: [
-        { text: 'Use enter to zoom in to a bullet', children: [
-          'And shift+enter to go all the way back out'
-          'Use ] and [ to zoom in and out just one level'
-        ] }
         { text: 'Collapsed bullets.  z to toggle collapsedness', collapsed: true, children: [
           'You found me! :)'
+        ] }
+        { text: 'Use enter to zoom in to a bullet', collapsed: true, children: [
+          'And shift+enter to go all the way back out'
+          'Use ] and [ to zoom in and out just one level'
         ] }
         'Use tab and shift+tab to indent and unindent blocks'
         'Use < and > to indent and unindent just a single line'
@@ -40,7 +40,10 @@ exports.default_data = [
         '$ and 0'
         'b, e, w, B, E, W'
         'f, t, F, T'
-        'Can you figure out what alt+j and alt+k do?'
+        { text: 'Some extras', children: [
+          '{ and } navigate between siblings'
+          'gp navigates to the parent bullet'
+        ] }
       ] }
       { text: 'Many of vim\'s operators', collapsed: true, children: [
         'd to delete, c to change'
@@ -79,24 +82,6 @@ exports.default_data = [
         'ctrl+o and ctrl+i will cycle through your zoom/jump history'
       ] }
     ] }
-    { text: 'Customizability', collapsed: true, children: [
-      'Different color themes (see Settings)'
-      'Customizable hotkeys (via downloading/uploading a json file)'
-      { text: 'Plugins system', collapsed: true, children: [
-        'Write your own plugins, or use plugins others have written!'
-        { text: 'See the settings menu to turn on some plugins!', children: [
-          { text: 'Easy motion', collapsed: true, children: [
-            'Hit space to jump to a row quickly'
-            'Based on https://github.com/easymotion/vim-easymotion'
-          ] }
-          { text: 'Timing', collapsed: true, children: [
-            'Keep track of how long you\'ve spent on various bullets'
-          ] }
-          'Marks is actually written as a plugin, too!  It\'s on by default, but you can turn it off from the settings menu.'
-        ] }
-        'See here for documentation on writing plugins: https://github.com/WuTheFWasThat/vimflowy/blob/master/PLUGINS.md'
-      ] }
-    ] }
     { text: 'Import and export data', collapsed: true, children: [
       'Supports both JSON and Workflowy-compatible plaintext formats'
     ] }
@@ -123,12 +108,29 @@ exports.default_data = [
       'And clones can\'t be descendants of each other'
       'Make new clones with yc'
     ] }
+    { text: 'Customizability', collapsed: true, children: [
+      { text: 'Plugins system', collapsed: true, children: [
+        { text: 'See the settings menu to turn on some plugins!', children: [
+          { text: 'Easy motion', collapsed: true, children: [
+            'Hit space to jump to a row quickly'
+            'Based on https://github.com/easymotion/vim-easymotion'
+          ] }
+          { text: 'Timing', collapsed: true, children: [
+            'Keep track of how long you\'ve spent on various bullets'
+          ] }
+          'Marks is actually written as a plugin, too!  It\'s on by default, but you can turn it off from the settings menu.'
+        ] }
+        'You can write your own plugins too!  See here for documentation: https://github.com/WuTheFWasThat/vimflowy/blob/master/PLUGINS.md (visit links with gx)'
+      ] }
+      'Customizable hotkeys (via downloading/uploading a json file)'
+      'Different color themes (see Settings)'
+    ] }
   ] }
   { text: 'Tips', collapsed: true, children: [
     'Collapse things often to avoid clutter.  Zoom into collapsed bullets'
     'Use ctrl+[hjkl] to move blocks of content around easily'
     'Use ? to hide the keybindings menu, once you become an expert'
-    'For local version only: Multiple documents.  Just visit /documentname'
+    'For local version only: Multiple documents.  Just visit /<documentname>'
   ] }
   'Press i to enter insert mode and start adding your own content!'
   'For more info, visit https://github.com/WuTheFWasThat/vimflowy'

@@ -4,8 +4,8 @@ boldKey = 'ctrl+B'
 italicizeKey = 'ctrl+I'
 underlineKey = 'ctrl+U'
 strikethroughKey = 'ctrl+enter'
-siblingDownKey = 'alt+j'
-siblingUpKey = 'alt+k'
+siblingDownKey = '}'
+siblingUpKey = '{'
 
 describe "text formatting", () ->
   it "works in insert mode", () ->

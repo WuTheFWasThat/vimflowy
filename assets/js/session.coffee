@@ -461,8 +461,8 @@ class Session extends EventEmitter
       return true
     return false
 
-  # try to root into newroot, updating the cursor
-  reroot: (newroot = @document.root) ->
+  # try to zoom into newroot, updating the cursor
+  zoomInto: (newroot) ->
     if @_changeView newroot
       newrow = @youngestVisibleAncestor @cursor.row
       if newrow == null # not visible, need to reset cursor
@@ -471,29 +471,29 @@ class Session extends EventEmitter
       return true
     return false
 
-  # try rerooting to row, otherwise reroot to its parent
-  rootInto: (row = @cursor.row) ->
-    if @reroot row
+  # try zooming into row, otherwise zoom into its parent
+  zoomTo: (row = @cursor.row) ->
+    if @zoomInto row
       return true
     else
-      return @rootToParent row
+      return @zoomToParent row
 
   # set cursor to row, changing view to its parent
-  rootToParent: (row = @cursor.row) ->
+  zoomToParent: (row = @cursor.row) ->
     parent = do row.getParent
-    if @reroot parent
+    if @zoomInto parent
       @cursor.setRow row
       return true
     throw new errors.GenericError "Failed to root into #{row}"
 
-  rootUp: () ->
+  zoomOut: () ->
     if @viewRoot.id != @document.root.id
       parent = do @viewRoot.getParent
-      @reroot parent
+      @zoomInto parent
 
-  rootDown: () ->
+  zoomIn: () ->
     newroot = @oldestVisibleAncestor @cursor.row
-    if @reroot newroot
+    if @zoomInto newroot
       return true
     return false
 

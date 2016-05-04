@@ -1,6 +1,11 @@
 require 'coffee-script/register'
 TestCase = require '../testcase.coffee'
 
+zoomInKey = ']'
+zoomOutKey = '['
+zoomInAllKey = 'enter'
+zoomOutAllKey = 'shift+enter'
+
 describe "zoom", () ->
   it "works in basic cases", () ->
     t = new TestCase [
@@ -9,7 +14,7 @@ describe "zoom", () ->
       ] },
       'third'
     ]
-    t.sendKey ']'
+    t.sendKey zoomInKey
     t.expect [
       { text: 'first', children: [
         'second'
@@ -24,7 +29,7 @@ describe "zoom", () ->
       'third'
     ]
     # zoom out stays on same line
-    t.sendKey '['
+    t.sendKey zoomOutKey
     t.sendKeys 'x'
     t.expect [
       { text: 'first', children: [
@@ -56,7 +61,8 @@ describe "zoom", () ->
         ] },
       ] },
     ]
-    t.sendKeys ']x'
+    t.sendKey zoomInKey
+    t.sendKeys 'x'
     t.expect [
       { text: 'irst', collapsed: true, children: [
         { text: 'econd', children: [
@@ -65,7 +71,8 @@ describe "zoom", () ->
       ] },
     ]
     # but now zoom out moves the cursor, since otherwise it's hidden
-    t.sendKeys '[x'
+    t.sendKey zoomOutKey
+    t.sendKeys 'x'
     t.expect [
       { text: 'rst', collapsed: true, children: [
         { text: 'econd', children: [
@@ -84,7 +91,9 @@ describe "zoom", () ->
         ] },
       ] },
     ]
-    t.sendKeys 'jjj}x'
+    t.sendKeys 'jjj'
+    t.sendKey zoomInAllKey
+    t.sendKeys 'x'
     t.expect [
       { text: 'first', children: [
         { text: 'second', children: [
@@ -115,7 +124,10 @@ describe "zoom", () ->
         ] },
       ] },
     ]
-    t.sendKeys 'jj}x' # keeps the fact that column is last line!
+    # keeps the fact that column is last line!
+    t.sendKeys 'jj'
+    t.sendKey zoomInAllKey
+    t.sendKeys 'x'
     t.expect [
       { text: 'firs', children: [
         { text: 'second', children: [
@@ -125,7 +137,9 @@ describe "zoom", () ->
         ] },
       ] },
     ]
-    t.sendKeys '{x' # keeps cursor on fourth row
+    # keeps cursor on fourth row
+    t.sendKey zoomOutAllKey
+    t.sendKeys 'x'
     t.expect [
       { text: 'firs', children: [
         { text: 'second', children: [
@@ -170,7 +184,7 @@ describe "zoom", () ->
         ] },
       ] },
     ]
-    t.sendKey '}'
+    t.sendKey zoomInAllKey
     t.sendKey 'shift+tab'
     t.expect [
       { text: 'first', children: [
