@@ -219,7 +219,7 @@ describe "marks", () ->
       ] }
     ], {plugins: [Marks.pluginName]}
     t.sendKeys 'gmx'
-    t.expectViewRoot 0
+    t.expectViewRoot 4
     t.expect [
       { text: '@mark2 @mark3', children: [
         'line'
@@ -241,11 +241,12 @@ describe "marks", () ->
       ] }
     ]
     # back to top
+    t.sendKey 'shift+enter'
     t.sendKeys 'gg'
     t.expectViewRoot 0
     t.expectCursor 1, 0
     t.sendKeys '$gmx'
-    t.expectViewRoot 1
+    t.expectViewRoot 3
     t.expectCursor 3, 2
     t.expect [
       { text: '@mark2 @mark3', children: [
@@ -299,8 +300,8 @@ describe "marks", () ->
     t.sendKeys 'x'
     t.expect [
       { text: 'whoo', mark: 'hip' }
-      { text: 'yay', mark: 'hooray', children: [
-        'ip'
+      { text: 'ay', mark: 'hooray', children: [
+        'hip'
         'hip'
         { text: 'hooray', mark: 'yay' }
       ] }
@@ -311,8 +312,8 @@ describe "marks", () ->
     t.sendKeys 'x'
     t.expect [
       { text: 'hoo', mark: 'hip' }
-      { text: 'yay', mark: 'hooray', children: [
-        'ip'
+      { text: 'ay', mark: 'hooray', children: [
+        'hip'
         'hip'
         { text: 'hooray', mark: 'yay' }
       ] }
@@ -654,14 +655,14 @@ describe "marks", () ->
     t.sendKeys '\'goto'
     t.sendKey 'enter'
     t.expectViewRoot 1
-    t.expectCursor 2, 0
+    t.expectCursor 1, 0
     t.expectJumpIndex 1, 2
 
     # does nothing due to being the same spot
     t.sendKeys '\'goto'
     t.sendKey 'enter'
     t.expectViewRoot 1
-    t.expectCursor 2, 0
+    t.expectCursor 1, 0
     t.expectJumpIndex 1, 2
 
   it "node deletion doesnt always mean mark deletion", () ->

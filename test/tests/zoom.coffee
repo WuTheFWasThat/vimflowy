@@ -62,7 +62,7 @@ describe "zoom", () ->
       ] },
     ]
     t.sendKey zoomInKey
-    t.sendKeys 'x'
+    t.sendKeys 'jx'
     t.expect [
       { text: 'irst', collapsed: true, children: [
         { text: 'econd', children: [
@@ -125,7 +125,7 @@ describe "zoom", () ->
       ] },
     ]
     # keeps the fact that column is last line!
-    t.sendKeys 'jj'
+    t.sendKeys 'jjj'
     t.sendKey zoomInAllKey
     t.sendKeys 'x'
     t.expect [
@@ -162,6 +162,15 @@ describe "zoom", () ->
 
   it "doesnt allow unindenting out", () ->
     t = new TestCase [
+      { text: 'first', children: [
+        { text: 'second', children: [
+          'third'
+        ] },
+      ] },
+    ]
+    t.sendKey 'shift+tab'
+    # no change
+    t.expect [
       { text: 'first', children: [
         { text: 'second', children: [
           'third'

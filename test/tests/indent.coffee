@@ -380,3 +380,60 @@ describe "row indent/unindent", () ->
       ] },
     ]
 
+
+  it "can't indent the viewroot", () ->
+    t = new TestCase [
+      'blah'
+      { text: 'first', children: [
+        { text: 'second', children: [
+          'third'
+        ] },
+      ] },
+    ]
+    t.expectViewRoot 0
+    t.sendKeys 'j]'
+    t.expectViewRoot 2
+    t.sendKey indentRowKey
+    t.expect [
+      'blah'
+      { text: 'first', children: [
+        { text: 'second', children: [
+          'third'
+        ] },
+      ] },
+    ]
+    t.expectViewRoot 2
+    t.sendKey indentBlockKey
+    t.expect [
+      'blah'
+      { text: 'first', children: [
+        { text: 'second', children: [
+          'third'
+        ] },
+      ] },
+    ]
+    t.expectViewRoot 2
+
+  it "can't unindent the viewroot", () ->
+    t = new TestCase [
+      { text: 'first', children: [
+        'second'
+      ] },
+    ]
+    t.expectViewRoot 0
+    t.sendKey ']'
+    t.expectViewRoot 1
+    t.sendKey unindentRowKey
+    t.expect [
+      { text: 'first', children: [
+        'second'
+      ] },
+    ]
+    t.expectViewRoot 1
+    t.sendKey indentBlockKey
+    t.expect [
+      { text: 'first', children: [
+        'second'
+      ] },
+    ]
+    t.expectViewRoot 1

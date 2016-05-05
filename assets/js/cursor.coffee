@@ -138,7 +138,10 @@ class Cursor extends EventEmitter
     return @
 
   visibleHome: () ->
-    row = do @session.nextVisible
+    if @session.viewRoot.is @session.document.root
+      row = @session.nextVisible @session.viewRoot
+    else
+      row = @session.viewRoot
     @set row, 0
     return @
 
@@ -288,8 +291,8 @@ class Cursor extends EventEmitter
     row = do @row.getParent
     if row.id == @document.root.id
       return
-    if row.is @session.viewRoot
-      @session.changeViewRoot (do row.getParent)
+    if @row.is @session.viewRoot
+      @session._changeViewRoot (do @row.getParent)
     @setRow row, cursorOptions
 
   prevSibling: (cursorOptions = {}) ->

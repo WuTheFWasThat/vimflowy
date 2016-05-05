@@ -78,8 +78,8 @@ describe "go visible end/beginning", () ->
     t.sendKeys 'ggx'
     t.expect [
       'ab'
-      { text: 'bc', children: [
-        'c'
+      { text: 'c', children: [
+        'dc'
         'd'
       ] },
       'de'
@@ -106,8 +106,26 @@ describe "go visible end/beginning", () ->
     t.sendKeys 'ggx'
     t.expect [
       'ab'
-      { text: 'bc', collapsed: true, children: [
+      { text: 'c', collapsed: true, children: [
+        'dc'
+        'd'
+      ] },
+      'de'
+    ]
+    t.sendKeys 'j]Gx'
+    t.expect [
+      'ab'
+      { text: 'c', collapsed: true, children: [
         'c'
+        'd'
+      ] },
+      'de'
+    ]
+    t.sendKeys 'ggx'
+    t.expect [
+      'ab'
+      { text: 'c', collapsed: true, children: [
+        ''
         'd'
       ] },
       'de'

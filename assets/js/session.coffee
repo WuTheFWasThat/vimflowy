@@ -42,9 +42,13 @@ class Session extends EventEmitter
 
     # TODO: if we ever support multi-user case, ensure last view root is valid
     @viewRoot = Row.loadFromAncestry (do @document.store.getLastViewRoot || [])
-    if not (@document.getChildren @viewRoot).length
+    if not (@document.hasChildren @document.root)
       @document.load constants.empty_data
-    row = (@document.getChildren @viewRoot)[0]
+
+    if @viewRoot.is @document.root
+      row = (@document.getChildren @viewRoot)[0]
+    else
+      row = @viewRoot
     @cursor = new Cursor @, row, 0
 
     do @reset_history
@@ -239,7 +243,7 @@ class Session extends EventEmitter
     @cursor.from state.cursor
     if @mode != MODES.INSERT
       do @cursor.backIfNeeded
-    @_changeView state.viewRoot
+    @changeView state.viewRoot
 
   undo: () ->
     if @historyIndex > 0
@@ -306,11 +310,13 @@ class Session extends EventEmitter
   viewable: (row) ->
     return (not @document.collapsed row) or (row.is @viewRoot)
 
-  nextVisible: (row = @viewRoot) ->
+  nextVisible: (row) ->
     if @viewable row
       children = @document.getChildren row
       if children.length > 0
         return children[0]
+    if row.is @viewRoot
+      return null
     while true
       nextsib = @document.getSiblingAfter row
       if nextsib?
@@ -329,15 +335,20 @@ class Session extends EventEmitter
     return row
 
   prevVisible: (row) ->
+    if row.is @viewRoot
+      return null
     prevsib = @document.getSiblingBefore row
     if prevsib?
       return @lastVisible prevsib
     parent = do row.getParent
     if parent.is @viewRoot
-      return null
+      if parent.is @document.root
+        return null
+      else
+        return @viewRoot
     return parent
 
-  # finds oldest ancestor that is visible (viewRoot itself not considered visible)
+  # finds oldest ancestor that is visible *besides viewRoot*
   # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
   oldestVisibleAncestor: (row) ->
     last = row
@@ -349,19 +360,19 @@ class Session extends EventEmitter
         return null
       last = cur
 
-  # finds closest ancestor that is visible (viewRoot itself not considered visible)
+  # finds closest ancestor that is visible
   # returns null if there is no visible ancestor (i.e. viewroot doesn't contain row)
   youngestVisibleAncestor: (row) ->
     answer = row
     cur = row
     while true
-      cur = do cur.getParent
       if cur.is @viewRoot
         return answer
       if do cur.isRoot
         return null
       if @document.collapsed cur
         answer = cur
+      cur = do cur.getParent
 
   isVisible: (row) ->
     visibleAncestor = @youngestVisibleAncestor row
@@ -372,7 +383,7 @@ class Session extends EventEmitter
   # View root
   ##################
 
-  changeViewRoot: (row) ->
+  _changeViewRoot: (row) ->
     @viewRoot = row
     @document.store.setLastViewRoot do row.getAncestry
 
@@ -406,11 +417,12 @@ class Session extends EventEmitter
       return false # invalid location
 
     children = @document.getChildren jump.viewRoot
-    if not children.length
-      return false # can't root, don't jump
 
-    @changeViewRoot jump.viewRoot
-    @cursor.setRow children[0]
+    @_changeViewRoot jump.viewRoot
+    if children.length
+      @cursor.setRow children[0]
+    else
+      @cursor.setRow jump.viewRoot
 
     if @document.isAttached jump.cursor_after.row.id
       # if the row is attached and under the view root, switch to it
@@ -452,39 +464,19 @@ class Session extends EventEmitter
   # try to change the view root to row
   # fails if there is no child
   # records in jump history
-  _changeView: (row) ->
+  changeView: (row) ->
     if row.id == @viewRoot.id
-      return true # not moving, do nothing
-    if @document.hasChildren row
-      @addToJumpHistory () =>
-        @changeViewRoot row
-      return true
-    return false
+      return # not moving, do nothing
+    @addToJumpHistory () =>
+      @_changeViewRoot row
 
   # try to zoom into newroot, updating the cursor
   zoomInto: (newroot) ->
-    if @_changeView newroot
-      newrow = @youngestVisibleAncestor @cursor.row
-      if newrow == null # not visible, need to reset cursor
-        newrow = (@document.getChildren newroot)[0]
-      @cursor.setRow newrow
-      return true
-    return false
-
-  # try zooming into row, otherwise zoom into its parent
-  zoomTo: (row = @cursor.row) ->
-    if @zoomInto row
-      return true
-    else
-      return @zoomToParent row
-
-  # set cursor to row, changing view to its parent
-  zoomToParent: (row = @cursor.row) ->
-    parent = do row.getParent
-    if @zoomInto parent
-      @cursor.setRow row
-      return true
-    throw new errors.GenericError "Failed to root into #{row}"
+    @changeView newroot
+    newrow = @youngestVisibleAncestor @cursor.row
+    if newrow == null # not visible, need to reset cursor
+      newrow = newroot
+    @cursor.setRow newrow
 
   zoomOut: () ->
     if @viewRoot.id != @document.root.id
@@ -492,6 +484,8 @@ class Session extends EventEmitter
       @zoomInto parent
 
   zoomIn: () ->
+    if @cursor.row.is @viewRoot
+      return false
     newroot = @oldestVisibleAncestor @cursor.row
     if @zoomInto newroot
       return true
@@ -647,8 +641,13 @@ class Session extends EventEmitter
   newLineBelow: (options = {}) ->
     options.setCursor = 'first'
 
-    children = @document.getChildren @cursor.row
-    if (not @document.collapsed @cursor.row) and children.length > 0
+    if @cursor.row.is @viewRoot
+      if not (@document.hasChildren @cursor.row)
+        if not @document.collapsed @cursor.row
+          @toggleBlockCollapsed @cursor.row
+
+      @addBlocks @cursor.row, 0, [''], options
+    else if (not @document.collapsed @cursor.row) and @document.hasChildren @cursor.row
       @addBlocks @cursor.row, 0, [''], options
     else
       parent = do @cursor.row.getParent
@@ -722,6 +721,9 @@ class Session extends EventEmitter
     @do mutation
     unless options.noSave
       @register.saveClonedRows mutation.deleted
+    if not (@isVisible @cursor.row)
+      # view root got deleted
+      do @zoomOut
 
   delBlocksAtCursor: (nrows, options = {}) ->
     parent = do @cursor.row.getParent
@@ -764,13 +766,16 @@ class Session extends EventEmitter
     return row
 
   indentBlocks: (row, numblocks = 1) ->
+    if row.is @viewRoot
+      @showMessage "Cannot indent view root", {text_class: 'error'}
+      return
     newparent = @document.getSiblingBefore row
     unless newparent?
       @showMessage "Cannot indent without higher sibling", {text_class: 'error'}
       return null # cannot indent
 
     if @document.collapsed newparent
-      @toggleBlock newparent
+      @toggleBlockCollapsed newparent
 
     siblings = @document.getSiblingRange row, 0, (numblocks-1)
     for sib in siblings
@@ -778,6 +783,9 @@ class Session extends EventEmitter
     return newparent
 
   unindentBlocks: (row, numblocks = 1, options = {}) ->
+    if row.is @viewRoot
+      @showMessage "Cannot unindent view root", {text_class: 'error'}
+      return
     parent = do row.getParent
     if parent.id == @viewRoot.id
       @showMessage "Cannot unindent past root", {text_class: 'error'}
@@ -794,6 +802,9 @@ class Session extends EventEmitter
     return newparent
 
   indent: (row = @cursor.row) ->
+    if row.is @viewRoot
+      @showMessage "Cannot indent view root", {text_class: 'error'}
+      return
     if @document.collapsed row
       return @indentBlocks row
 
@@ -806,6 +817,9 @@ class Session extends EventEmitter
       @moveBlock child, sib, -1
 
   unindent: (row = @cursor.row) ->
+    if row.is @viewRoot
+      @showMessage "Cannot unindent view root", {text_class: 'error'}
+      return
     if @document.collapsed row
       return @unindentBlocks row
 
@@ -848,10 +862,10 @@ class Session extends EventEmitter
     p_i = @document.indexOf prev
     @moveBlock row, parent, p_i
 
-  toggleCurBlock: () ->
-    @toggleBlock @cursor.row
+  toggleCurBlockCollapsed: () ->
+    @toggleBlockCollapsed @cursor.row
 
-  toggleBlock: (row) ->
+  toggleBlockCollapsed: (row) ->
     @do new mutations.ToggleBlock row
 
   pasteBefore: (options = {}) ->
@@ -889,7 +903,7 @@ class Session extends EventEmitter
   scroll: (npages) ->
     @emit 'scroll', npages
     # TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
-    line_height = do $('.node-text').height
+    line_height = $('.node-text').height() or 21
     errors.assert (line_height > 0)
     page_height = do $(document).height
     height = npages * page_height

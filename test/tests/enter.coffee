@@ -135,7 +135,7 @@ describe "enter", () ->
     t = new TestCase [
       { text: 'hey', id: 1, children: [
         'like'
-      ]}
+      ] }
       'you'
       { clone: 1 }
     ]
@@ -146,7 +146,7 @@ describe "enter", () ->
       { text: 'hey', id: 1, children: [
         'i'
         'like'
-      ]}
+      ] }
       'you'
       { clone: 1 }
     ]
@@ -155,7 +155,7 @@ describe "enter", () ->
     t = new TestCase [
       { text: 'hey', id: 1, collapsed: true, children: [
         'like'
-      ]}
+      ] }
       'you'
       { clone: 1 }
     ]
@@ -165,8 +165,32 @@ describe "enter", () ->
     t.expect [
       { text: 'hey', id: 1, collapsed: true, children: [
         'like'
-      ]}
+      ] }
       'i'
       'you'
       { clone: 1 }
+    ]
+
+  it "when using o on a blank bullet, collapses parent", () ->
+    t = new TestCase [
+      { text: 'hey', children: [
+        'you'
+      ] }
+    ]
+    t.sendKey 'j'
+    t.sendKey 'enter'
+    t.sendKeys 'ook'
+    t.sendKey 'esc'
+    t.expect [
+      { text: 'hey', children: [
+        { text: 'you', collapsed: true, children: [
+          'ok'
+        ] }
+      ] }
+    ]
+    t.sendKey 'u'
+    t.expect [
+      { text: 'hey', children: [
+        'you'
+      ] }
     ]

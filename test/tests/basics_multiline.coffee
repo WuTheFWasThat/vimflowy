@@ -677,3 +677,27 @@ describe "basic multiline tests", () ->
       ' row'
     ]
 
+  it "tests deleting viewroot", () ->
+    t = new TestCase [
+      { text: 'here', children: [
+        'there'
+      ] },
+    ]
+    t.sendKeys 'j'
+    t.sendKey 'enter'
+    t.expectViewRoot 2
+    t.sendKeys 'dd'
+    t.expectViewRoot 1
+
+  it "tests editing viewroot", () ->
+    t = new TestCase [
+      { text: 'here', children: [
+        'there'
+      ] },
+    ]
+    t.sendKeys 'j'
+    t.sendKey 'enter'
+    t.expectViewRoot 2
+    t.sendKeys 'dd'
+    t.expectViewRoot 1
+

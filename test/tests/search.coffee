@@ -160,10 +160,7 @@ describe "search", () ->
       { text: 'blahsearch', children: [
         'blah',
       ] }
-      { text: 'blah', children: [
-        # NOTE: a new line is created since it got changed to be the view root
-        '',
-      ] }
+      'blah'
     ]
     t.sendKeys '/search'
     t.expectNumMenuResults 4
@@ -226,3 +223,17 @@ describe "search", () ->
       'broomball',
       'basketball',
     ]
+
+  it "moves the cursor to the searched for row", () ->
+    t = new TestCase [
+      { text: 'first', children: [
+        { text: 'second', children: [
+          'third'
+        ] },
+      ] },
+    ]
+    t.sendKeys 'jj]]]'
+    t.expectViewRoot 3
+    t.sendKeys '/fir'
+    t.sendKey 'enter'
+    t.expectViewRoot 1

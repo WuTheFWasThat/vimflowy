@@ -59,7 +59,9 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
         return {
           contents: @session.document.getLine row
           renderOptions: { highlights: highlights }
-          fn: () => @session.zoomTo row
+          fn: () =>
+            @session.zoomInto row
+            @session.cursor.setRow row
         }
     )
 

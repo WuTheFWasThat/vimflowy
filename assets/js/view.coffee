@@ -213,7 +213,7 @@ virtualRenderSession = (session, options = {}) ->
     crumbs.push row
     row = do row.getParent
 
-  makeCrumb = (row, text, isLast) =>
+  makeCrumb = (row, isLast) =>
     m_options = {}
     if session.mode == MODES.NORMAL and not isLast
       m_options.className = 'theme-text-link'
@@ -221,16 +221,21 @@ virtualRenderSession = (session, options = {}) ->
         session.zoomInto row
         do session.save
         renderSession session
+    if isLast
+      text = virtualRenderLine session, row, options
+    else if row.is session.document.root
+      text = virtualDom.h 'icon', {className: 'fa fa-home'}
+    else
+      text = (session.document.getText row).join('')
     return virtualDom.h 'span', { className: 'crumb' }, [
              virtualDom.h 'span', m_options, [ text ]
            ]
 
   crumbNodes = []
-  crumbNodes.push(makeCrumb session.document.root, (virtualDom.h 'icon', {className: 'fa fa-home'}))
+  crumbNodes.push(makeCrumb session.document.root)
   for i in [crumbs.length-1..0] by -1
     row = crumbs[i]
-    text = (session.document.getText row).join('')
-    crumbNodes.push(makeCrumb row, text, i==0)
+    crumbNodes.push(makeCrumb row, i==0)
 
   breadcrumbsNode = virtualDom.h 'div', {
     id: 'breadcrumbs'
@@ -245,14 +250,21 @@ virtualRenderSession = (session, options = {}) ->
     for child in session.document.getChildRange parent, index1, index2
       options.highlight_blocks[child.id] = true
 
-  contentsChildren = virtualRenderTree session, session.viewRoot, options
+  if session.document.hasChildren session.viewRoot
+    contentsChildren = virtualRenderTree session, session.viewRoot, options
+    contentsNode = virtualDom.h 'div', {}, contentsChildren
+  else
+    message = 'Nothing here yet.'
+    if session.mode == MODES.NORMAL
+      message += ' Press o to start adding content!'
+    contentsNode = virtualDom.h 'div', {
+      class: 'center',
+      style: {
+        'padding': '20px', 'font-size': '20px', 'opacity': '0.5'
+      }
+    }, message
 
-  contentsNode = virtualDom.h 'div', {
-    id: 'treecontents'
-  }, contentsChildren
-
-  return virtualDom.h 'div', {
-  }, [breadcrumbsNode, contentsNode]
+  return virtualDom.h 'div', {}, [breadcrumbsNode, contentsNode]
 
 virtualRenderTree = (session, parent, options = {}) ->
   if (not options.ignoreCollapse) and (session.document.collapsed parent)
@@ -280,7 +292,7 @@ virtualRenderTree = (session, parent, options = {}) ->
     if session.document.hasChildren row
       bulletOpts.style = {cursor: 'pointer'}
       bulletOpts.onclick = ((row) =>
-        session.toggleBlock row
+        session.toggleBlockCollapsed row
         do session.save
         renderSession session
       ).bind(@, row)
@@ -369,7 +381,7 @@ virtualRenderLine = (session, row, options = {}) ->
   [].push.apply results, lineContents
 
   infoChildren = session.applyHook 'renderInfoElements', [], { row: row }
-  info = virtualDom.h 'div', {
+  info = virtualDom.h 'span', {
     className: 'node-info'
   }, infoChildren
   results.push info

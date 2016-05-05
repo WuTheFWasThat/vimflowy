@@ -15,7 +15,7 @@ describe "jumps", () ->
     t.expectCursor 1, 0
     t.sendKeys ']'
     t.expectViewRoot 1
-    t.expectCursor 2, 0
+    t.expectCursor 1, 0
 
     t.sendKey jumpPreviousKey
     t.expectJumpIndex 0
@@ -50,7 +50,7 @@ describe "jumps", () ->
     ]
     t.sendKey jumpNextKey # succeeds
     t.expectViewRoot 1
-    t.sendKeys 'x'
+    t.sendKeys 'jx'
     t.expect [
       'third'
       { text: 'first', children: [
@@ -91,14 +91,13 @@ describe "jumps", () ->
 
     t.sendKeys 'dd'
     t.expect [
-      'first'
       { text: 'third', children: [
         'fourth'
       ] },
     ]
 
     t.sendKey jumpPreviousKey
-    # skips both thing with no parent, and thing which is same
+    # skips both which is gone, and thing which is same
     t.expectViewRoot 3
     t.expectJumpIndex 1, 5
 
@@ -125,22 +124,22 @@ describe "jumps", () ->
 
     t.sendKeys ']'
     t.expectViewRoot 1
-    t.expectCursor 2, 0
+    t.expectCursor 1, 0
 
     t.sendKey jumpPreviousKey
     t.expectViewRoot 0
     t.sendKey jumpNextKey
     t.sendKeys 'j'
-    t.expectCursor 3, 0
+    t.expectCursor 2, 0
 
     t.sendKey jumpPreviousKey
     t.expectViewRoot 0
     t.sendKey jumpNextKey
     t.expectViewRoot 1
-    t.expectCursor 3, 0
+    t.expectCursor 2, 0
 
     # still goes to cursor despite reordering
-    t.sendKeys 'ddP'
+    t.sendKeys 'jddP'
     t.expect [
       { text: 'first', children: [
         'cursor'
@@ -207,7 +206,10 @@ describe "jumps", () ->
       'third'
     ]
 
-    t.sendKey jumpNextKey # fails due to 1 not having children anymore
+    # succeeds despite no children
+    t.sendKey jumpNextKey
+    t.expectViewRoot 1
+    t.sendKey jumpPreviousKey
     t.expectViewRoot 0
     t.expectCursor 1, 0
 
@@ -221,9 +223,9 @@ describe "jumps", () ->
       'third'
     ]
 
-    t.sendKey jumpNextKey # fails due to 1 not having children anymore
+    t.sendKey jumpNextKey
     t.expectViewRoot 1
-    t.expectCursor 5, 1
+    t.expectCursor 1, 1
 
     t.expectJumpIndex 3
     t.sendKeys 'u'
@@ -235,10 +237,9 @@ describe "jumps", () ->
     t.expectViewRoot 0
     t.expectCursor 1, 0
 
-    # no valid jumps - either has no child or is not moving
     t.expectJumpIndex 4
     t.sendKey jumpPreviousKey
-    t.expectJumpIndex 4
+    t.expectJumpIndex 3
 
   it "considers clones the same", () ->
     t = new TestCase [
@@ -253,13 +254,13 @@ describe "jumps", () ->
 
     t.sendKeys ']'
     t.expectViewRoot 1
-    t.expectCursor 2, 0
+    t.expectCursor 1, 0
 
     t.sendKey jumpPreviousKey
     t.expectViewRoot 0
     t.expectJumpIndex 0
     t.sendKey jumpNextKey
-    t.expectCursor 2, 0
+    t.expectCursor 1, 0
     t.expectJumpIndex 1
 
     t.sendKey jumpPreviousKey
@@ -284,9 +285,42 @@ describe "jumps", () ->
     ]
     # now able to jump to clone
     t.sendKey jumpNextKey
-    t.expectCursor 2, 0
+    t.expectCursor 1, 0
     t.expectJumpIndex 1
 
     t.sendKey jumpPreviousKey
+    t.expectCursor 1, 0
+    t.expectJumpIndex 0
+
+  it "skips deleted rows", () ->
+    t = new TestCase [
+      'cursor'
+      { text: 'first', children: [
+        { text: 'second', children: [
+          'third'
+        ] }
+      ] },
+    ]
+    t.expectViewRoot 0
+    t.expectCursor 1, 0
+    t.expectJumpIndex 0
+
+    t.sendKeys 'jjj'
+    t.sendKey 'enter'
+    t.expectViewRoot 4
+    t.expectCursor 4, 0
+    t.expectJumpIndex 1
+
+    t.sendKey '['
+    t.expectJumpIndex 2
+    t.expectViewRoot 3
+    t.expectCursor 4, 0
+    t.sendKeys 'kdd'
+    t.expectJumpIndex 3
+    t.expectViewRoot 2
+    t.expectCursor 2, 0
+
+    t.sendKey jumpPreviousKey
+    t.expectViewRoot 0
     t.expectCursor 1, 0
     t.expectJumpIndex 0

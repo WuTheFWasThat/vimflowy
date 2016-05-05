@@ -38,7 +38,7 @@ CMD_ZOOM_IN_ALL = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN_ALL, {
   description: 'Zoom in onto cursor',
 }, () ->
-  do @session.zoomTo
+  @session.zoomInto @session.cursor.row
   if @mode == MODES.NORMAL
     do @keyStream.save
 

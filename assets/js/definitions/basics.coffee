@@ -172,12 +172,12 @@ keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
 }, () ->
   return (cursor, options) =>
     if @session.mode != MODES.NORMAL
-      # doesn't work for visual_line mode due to zoomToParent
+      # doesn't work for visual_line mode due to zoomInto
       return
     newRow = @session.document.nextClone cursor.row
     cursor.setRow newRow
     if not @session.isVisible newRow
-      @session.zoomToParent newRow
+      @session.zoomInto newRow
 
 CMD_LINK = keyDefinitions.registerCommand {
   name: 'LINK'
@@ -219,7 +219,7 @@ CMD_TOGGLE_FOLD = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_TOGGLE_FOLD, {
   description: 'Toggle whether a block is folded',
 }, () ->
-  do @session.toggleCurBlock
+  do @session.toggleCurBlockCollapsed
   if @mode == MODES.NORMAL
     do @keyStream.save
 
