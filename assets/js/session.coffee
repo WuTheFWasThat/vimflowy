@@ -491,6 +491,20 @@ class Session extends EventEmitter
       return true
     return false
 
+  zoomDown: () ->
+    sib = @document.getSiblingAfter @viewRoot
+    if sib == null
+      @showMessage "No next sibling to zoom down to", {text_class: 'error'}
+      return
+    @zoomInto sib
+
+  zoomUp: () ->
+    sib = @document.getSiblingBefore @viewRoot
+    if sib == null
+      @showMessage "No previous sibling to zoom up to", {text_class: 'error'}
+      return
+    @zoomInto sib
+
   ##################
   # Text
   ##################

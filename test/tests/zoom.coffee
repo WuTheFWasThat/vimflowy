@@ -5,6 +5,8 @@ zoomInKey = ']'
 zoomOutKey = '['
 zoomInAllKey = 'enter'
 zoomOutAllKey = 'shift+enter'
+zoomUpKey = 'alt+k'
+zoomDownKey = 'alt+j'
 
 describe "zoom", () ->
   it "works in basic cases", () ->
@@ -203,3 +205,55 @@ describe "zoom", () ->
       ] },
     ]
 
+
+  it "can zoom up and down", () ->
+    t = new TestCase [
+      { text: 'first', children: [
+        { text: 'second', collapsed: true, children: [
+          'third'
+        ] },
+        { text: 'four', children: [
+          'five'
+        ] },
+        'six'
+        { text: 'seven', children: [
+          'eight, appreciate'
+        ] },
+      ] },
+    ]
+    t.sendKeys 'j'
+    t.sendKey 'enter'
+    t.expectViewRoot 2
+    t.expectJumpIndex 1
+    t.expectCursor 2, 0
+
+    # fails because of no prev sibling
+    t.sendKey zoomUpKey
+    t.expectViewRoot 2
+    t.expectJumpIndex 1
+
+    t.sendKey zoomDownKey
+    t.expectViewRoot 4
+    t.expectJumpIndex 2
+    t.expectCursor 4, 0
+
+    t.sendKey zoomDownKey
+    t.expectViewRoot 6
+    t.expectJumpIndex 3
+    t.expectCursor 6, 0
+
+    t.sendKey zoomDownKey
+    t.expectViewRoot 7
+    t.expectJumpIndex 4
+    t.expectCursor 7, 0
+
+    # fails because of no next sibling
+    t.sendKey zoomDownKey
+    t.expectViewRoot 7
+    t.expectJumpIndex 4
+
+    # fails because of no next sibling
+    t.sendKey zoomUpKey
+    t.expectViewRoot 6
+    t.expectJumpIndex 5
+    t.expectCursor 6, 0

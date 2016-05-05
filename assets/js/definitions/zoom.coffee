@@ -3,6 +3,32 @@ keyDefinitions = require '../keyDefinitions.coffee'
 
 MODES = Modes.modes
 
+CMD_ZOOM_UP = keyDefinitions.registerCommand {
+  name: 'ZOOM_UP'
+  default_hotkeys:
+    normal_like: ['alt+k']
+    insert_like: ['alt+k']
+}
+keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_UP, {
+  description: 'Zoom to view root\'s previous sibling',
+}, () ->
+  do @session.zoomUp
+  if @mode == MODES.NORMAL
+    do @keyStream.save
+
+CMD_ZOOM_DOWN = keyDefinitions.registerCommand {
+  name: 'ZOOM_DOWN'
+  default_hotkeys:
+    normal_like: ['alt+j']
+    insert_like: ['alt+j']
+}
+keyDefinitions.registerAction [MODES.NORMAL, MODES.INSERT], CMD_ZOOM_DOWN, {
+  description: 'Zoom to view root\'s next sibling',
+}, () ->
+  do @session.zoomDown
+  if @mode == MODES.NORMAL
+    do @keyStream.save
+
 CMD_ZOOM_IN = keyDefinitions.registerCommand {
   name: 'ZOOM_IN'
   default_hotkeys:
