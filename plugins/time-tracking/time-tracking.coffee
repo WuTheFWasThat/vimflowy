@@ -27,8 +27,6 @@ class TimeTrackingPlugin
     @onRowChange null, @api.cursor.row # Initial setup
 
     @api.registerHook 'session', 'renderInfoElements', (elements, renderData) =>
-      if not (do @shouldDisplayTime)
-        return elements
       time = @rowTime renderData.row
 
       isCurRow = renderData.row.id == @currentRow?.id
@@ -65,11 +63,6 @@ class TimeTrackingPlugin
       default_hotkeys:
         normal_like: ['Z']
     }
-    CMD_TOGGLE_DISPLAY = @api.registerCommand {
-      name: 'TOGGLE_DISPLAY'
-      default_hotkeys:
-        normal_like: ['d']
-    }
     CMD_TOGGLE_LOGGING = @api.registerCommand {
       name: 'TOGGLE_LOGGING'
       default_hotkeys:
@@ -93,10 +86,6 @@ class TimeTrackingPlugin
     @api.registerAction [Modes.modes.NORMAL], CMD_TOGGLE, {
       description: 'Toggle a setting',
     }, {}
-    @api.registerAction [Modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_DISPLAY], {
-      description: 'Toggle whether time spent on each row is displayed',
-    }, () =>
-      do @toggleDisplay
     @api.registerAction [Modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
       description: 'Toggle whether time is being logged',
     }, () =>
@@ -150,19 +139,10 @@ class TimeTrackingPlugin
     @logger.info "Turning logging #{if isLogging then "off" else "on"}"
     if isLogging
       @onRowChange @api.cursor.row, null # Final close
+      @api.setData "isLogging", false
     else
+      @api.setData "isLogging", true
       @onRowChange null, @api.cursor.row # Initial setup
-    @api.setData "isLogging", (not isLogging)
-    do @api.session.render
-
-  shouldDisplayTime: () ->
-    @api.getData "display", true
-
-  toggleDisplay: () ->
-    shouldDisplay = do @shouldDisplayTime
-    @logger.info "Turning display #{if shouldDisplay then "off" else "on"}"
-    @api.setData "display", (not shouldDisplay)
-    do @api.session.render
 
   onRowChange: (from, to) ->
     @logger.debug "Switching from row #{from?.id} to row #{to?.id}"
