@@ -58,7 +58,7 @@ CMD_HOME = keyDefinitions.registerCommand {
   default_hotkeys:
     all: ['home']
     normal_like: ['0', '^']
-    insert_like: ['ctrl+a']
+    insert_like: ['ctrl+a', 'meta+left']
 }
 keyDefinitions.registerMotion CMD_HOME, {
   description: 'Move cursor to beginning of line',
@@ -71,7 +71,7 @@ CMD_END = keyDefinitions.registerCommand {
   default_hotkeys:
     all: ['end']
     normal_like : ['$']
-    insert_like: ['ctrl+e']
+    insert_like: ['ctrl+e', 'meta+right']
 }
 keyDefinitions.registerMotion CMD_END, {
   description: 'Move cursor to end of line',
@@ -83,7 +83,7 @@ CMD_BEGINNING_WORD = keyDefinitions.registerCommand {
   name: 'BEGINNING_WORD'
   default_hotkeys:
     normal_like: ['b']
-    insert_like: ['alt+b']
+    insert_like: ['alt+b', 'alt+left']
 }
 keyDefinitions.registerMotion CMD_BEGINNING_WORD, {
   description: 'Move cursor to the first word-beginning before it',
@@ -95,7 +95,6 @@ CMD_END_WORD = keyDefinitions.registerCommand {
   name: 'END_WORD'
   default_hotkeys:
     normal_like: ['e']
-    insert_like: ['alt+f']
 }
 keyDefinitions.registerMotion CMD_END_WORD, {
   description: 'Move cursor to the first word-ending after it',
@@ -107,6 +106,7 @@ CMD_NEXT_WORD = keyDefinitions.registerCommand {
   name: 'NEXT_WORD'
   default_hotkeys:
     normal_like: ['w']
+    insert_like: ['alt+f', 'alt+right']
 }
 keyDefinitions.registerMotion CMD_NEXT_WORD, {
   description: 'Move cursor to the beginning of the next word',
@@ -207,10 +207,23 @@ keyDefinitions.registerMotion CMD_TO_PREV_CHAR, {
   return (cursor, options) ->
     cursor.findPrevChar key, {cursor: options, beforeFound: true}
 
+# NOTE: for normal mode, this is done within the CMD_GO tree
+CMD_GO_HOME = keyDefinitions.registerCommand {
+  name: 'GO_HOME'
+  default_hotkeys:
+    insert_like: ['meta+up']
+}
+keyDefinitions.registerMotion CMD_GO_HOME, {
+  description: 'Go to beginning of visible document',
+}, () ->
+  return (cursor, options) ->
+    cursor.visibleHome options
+
 CMD_GO_END = keyDefinitions.registerCommand {
   name: 'GO_END'
   default_hotkeys:
     normal_like: ['G']
+    insert_like: ['meta+down']
 }
 keyDefinitions.registerMotion CMD_GO_END, {
   description: 'Go to end of visible document',
@@ -222,6 +235,7 @@ CMD_NEXT_SIBLING = keyDefinitions.registerCommand {
   name: 'NEXT_SIBLING'
   default_hotkeys:
     normal_like: ['}']
+    insert_like: ['alt+down']
 }
 keyDefinitions.registerMotion CMD_NEXT_SIBLING, {
   description: 'Move cursor to the next sibling of the current line',
@@ -234,6 +248,7 @@ CMD_PREV_SIBLING = keyDefinitions.registerCommand {
   name: 'PREV_SIBLING'
   default_hotkeys:
     normal_like: ['{']
+    insert_like: ['alt+up']
 }
 keyDefinitions.registerMotion CMD_PREV_SIBLING, {
   description: 'Move cursor to the previous sibling of the current line',

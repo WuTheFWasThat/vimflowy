@@ -8,8 +8,6 @@ describe "delete to end", () ->
     t = new TestCase ['happy ending']
     t.sendKeys 'i'
     t.sendKey 'alt+f'
-    t.sendKey 'right'
-    t.sendKey 'right'
     t.sendKey 'ctrl+k'
     t.sendKeys 'feet'
     t.sendKey 'esc'
