@@ -266,6 +266,33 @@ describe "basic multiline tests", () ->
       ' third row'
     ]
 
+  it "tests deletion moves cursor properly", () ->
+    t = new TestCase [
+      { text: 'here', children: [
+        { text: 'and', children: [
+          'there'
+        ] },
+      ] },
+      'down here'
+    ]
+    t.sendKeys 'G'
+    t.expectCursor 4, 0
+    t.sendKeys 'dd'
+    t.expectCursor 3, 0
+
+    t = new TestCase [
+      { text: 'here', children: [
+        { text: 'and', collapsed: true, children: [
+          'there'
+        ] },
+      ] },
+      'down here'
+    ]
+    t.sendKeys 'G'
+    t.expectCursor 4, 0
+    t.sendKeys 'dd'
+    t.expectCursor 2, 0
+
   it "cursor moves correctly when last sibling is deleted", () ->
     t = new TestCase [
       { text: 'top row', children: [

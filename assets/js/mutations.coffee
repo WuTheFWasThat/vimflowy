@@ -169,7 +169,11 @@ class DetachBlocks extends Mutation
     if @index < children.length
       next = children[@index]
     else
-      next = if @index == 0 then @parent else children[@index - 1]
+      if @index == 0
+        next = @parent
+      else
+        next = session.lastVisible children[@index - 1]
+
       if next.id == session.document.root.id
         unless @options.noNew
           next = session.document.addChild @parent
