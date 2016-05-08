@@ -252,7 +252,8 @@ registerPlugin = (plugin_metadata, enable, disable) ->
   plugin = _.cloneDeep plugin_metadata
   PLUGINS[plugin.name] = plugin
   plugin.enable = enable
-  plugin.disable = disable || _.once () =>
+  plugin.disable = disable || _.once (api) =>
+    do api.deregisterAll
     alert "The plugin '#{plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable."
 
 # exports

@@ -62,7 +62,7 @@ Plugins.register {
           cursor.set row, 0
         EASY_MOTION_MAPPINGS = null
 
-  api.session.addHook 'renderBullet', (bullet, info) ->
+  api.registerHook 'session', 'renderBullet', (bullet, info) ->
     ancestry_str = JSON.stringify do info.row.getAncestry
     if EASY_MOTION_MAPPINGS and ancestry_str of EASY_MOTION_MAPPINGS.row_to_key
       char = EASY_MOTION_MAPPINGS.row_to_key[ancestry_str]
@@ -70,5 +70,4 @@ Plugins.register {
     return bullet
 ), ((api) ->
   do api.deregisterAll
-  # TODO: undo render hook
 )

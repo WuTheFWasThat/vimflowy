@@ -9,8 +9,11 @@ Plugins.register {
   author: "Zachary Vance"
   description: "Keeps track of how much time has been spent in each row (including its descendants)"
   version: 3
-}, (api) ->
+}, ((api) ->
   time_tracker = new TimeTrackingPlugin api
+), ((api) ->
+  do api.deregisterAll
+)
 
 class TimeTrackingPlugin
   constructor: (@api) ->
@@ -22,20 +25,41 @@ class TimeTrackingPlugin
     @api.cursor.on 'rowChange', (@onRowChange.bind @)
     @currentRow = null
     @onRowChange null, @api.cursor.row # Initial setup
-    @api.session.addHook 'renderInfoElements', (@renderTime.bind @)
-    @api.session.document.on 'afterMove', (info) =>
+
+    @api.registerHook 'session', 'renderInfoElements', (elements, renderData) =>
+      if not (do @shouldDisplayTime)
+        return elements
+      time = @rowTime renderData.row
+
+      isCurRow = renderData.row.id == @currentRow?.id
+
+      if isCurRow or time > 1000
+        timeStr = " "
+        timeStr += (@printTime time)
+        if isCurRow
+          timeStr += " + "
+        elements.push virtualDom.h 'span', { className: 'time' }, timeStr
+
+        if isCurRow
+          curTime = new Date() - @currentRow.time
+          elements.push virtualDom.h 'span', { className: 'time curtime' }, (@printTime curTime)
+      elements
+
+    @api.registerListener 'document', 'afterMove', (info) =>
       @_rebuildTreeTime info.id
       @_rebuildTreeTime info.old_parent, true
-    @api.session.document.on 'afterAttach', (info) =>
+
+    @api.registerListener 'document', 'afterAttach', (info) =>
       @_rebuildTreeTime info.id
       if info.old_detached_parent
         @_rebuildTreeTime info.old_detached_parent, true
-    @api.session.document.on 'afterDetach', (info) =>
+
+    @api.registerListener 'document', 'afterDetach', (info) =>
       @_rebuildTreeTime info.id
 
-    @rowChanges = []
-    @api.session.on 'exit', () =>
+    @api.registerListener 'session', 'exit', () =>
       @onRowChange @currentRow, null
+
     CMD_TOGGLE = @api.registerCommand {
       name: 'TOGGLE'
       default_hotkeys:
@@ -196,24 +220,3 @@ class TimeTrackingPlugin
     else
       "#{sign}#{seconds}s"
 
-  renderTime: (elements, renderData) ->
-    if do @shouldDisplayTime
-      time = @rowTime renderData.row
-
-      isCurRow = renderData.row.id == @currentRow?.id
-
-      if isCurRow or time > 1000
-        timeStr = " "
-        timeStr += (@printTime time)
-        if isCurRow
-          timeStr += " + "
-        elements.push virtualDom.h 'span', {
-          className: 'time'
-        }, timeStr
-
-        if isCurRow
-          curTime = new Date() - @currentRow.time
-          elements.push virtualDom.h 'span', {
-            className: 'time curtime'
-          }, (@printTime curTime)
-    elements

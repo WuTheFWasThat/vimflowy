@@ -5,8 +5,8 @@ Plugins.register {
   author: "Zachary Vance"
   description: "Display internal IDs for each node (for debugging for developers)"
   version: 1
-}, (api) ->
-  api.session.addHook 'renderInfoElements', (rowElements, info) ->
+}, ((api) ->
+  api.registerHook 'session', 'renderInfoElements', (rowElements, info) ->
     rowElements.unshift virtualDom.h 'span', {
       style: {
         position: 'relative'
@@ -14,3 +14,6 @@ Plugins.register {
       }
     }, " " + (do info.row.debug)
     return rowElements
+), ((api) ->
+  do api.deregisterAll
+)

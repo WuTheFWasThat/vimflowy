@@ -237,12 +237,6 @@ class MarksPlugin
               line[i].renderOptions.onclick = @goMark.bind @, markrow
       return line
 
-  disableAPI: () ->
-
-    MODES = Modes.modes
-
-    do @api.deregisterAll
-
   # maintain global marks data structures
   #   a map: id -> mark
   #   and a second map: mark -> id
@@ -357,9 +351,9 @@ Plugins.register {
     Lets you tag a row with a string, and then reference that row with @markname.
     Fast search for marked rows, using '.
     """
-}, ((api) -> 
+}, ((api) ->
   new MarksPlugin api
-), ((api, myplugin) ->
-  do myplugin.disableAPI
+), ((api) ->
+  do api.deregisterAll
 )
 exports.pluginName = pluginName
