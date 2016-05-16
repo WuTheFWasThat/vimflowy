@@ -15,7 +15,11 @@ html
     link(rel="stylesheet" href="css/themes/solarized_dark.css")
     link(rel="stylesheet" href="css/themes/solarized_light.css")
 
-    link(rel="stylesheet" href="css/font-awesome.min.css")
+    if use_cdn
+      link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css")
+    else
+      link(rel="stylesheet" href="css/font-awesome.min.css")
+
     link(rel="icon" type="image/png" href="images/vimflowy-32.png")
 
     each plugin_css_file in plugin_css_files

@@ -4,15 +4,10 @@ set -e
 
 OUTPUT_FOLDER="dist"
 HELP=false
-DEPLOY=false
 ZIP=false
 
 while getopts "dho:z" opt; do
   case $opt in
-    d)
-      echo "Deploying!"
-      DEPLOY=true
-      ;;
     h)
       HELP=true
       ;;
@@ -36,8 +31,7 @@ if [ "$HELP" = true ] ; then
   echo "Usage: $0 [-h] [-o <output_folder>] [-d]"
   echo "Flags: "
   echo "-h                 : help"
-  echo "-o <output_folder> : folder to compile static site to"
-  echo "-d                 : deploy"
+  echo "-o <output_folder> : folder to compile static site to, e.g. ~/Dropbox/Apps/Pancake.io"
   echo "-z                 : zip"
   echo
   exit 2
@@ -59,9 +53,4 @@ echo "Success!  Result at $OUTPUT_FOLDER/vimflowy"
 if [ "$ZIP" = true ] ; then
     zip -r $OUTPUT_FOLDER/vimflowy.zip $OUTPUT_FOLDER/vimflowy
     echo "Zipfile at $OUTPUT_FOLDER/vimflowy.zip"
-fi
-
-if [ "$DEPLOY" = true ] ; then
-    bitballoon && bitballoon deploy $OUTPUT_FOLDER/vimflowy
-    echo "Successfully deployed to bitballoon!"
 fi
