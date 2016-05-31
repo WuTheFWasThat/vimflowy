@@ -11,7 +11,7 @@ exports.isWhitespace = (char) ->
 exports.isPunctuation = (char) ->
   return char == '.' or char == ',' or char == '!' or char == '?'
 
-urlRegex = /^https?:\/\/[^\s]+\.[^\s]+$/
+urlRegex = /^https?:\/\/([^\s]+\.[^\s]+$|localhost)/
 exports.isLink = (word) ->
   return urlRegex.test word
 
