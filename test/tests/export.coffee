@@ -70,7 +70,7 @@ describe "import", () ->
 
   it "works from json format", () ->
     t = new TestCase ['']
-    t.import """{
+    t.import (JSON.stringify {
       "text": "",
       "children": [
         {
@@ -104,7 +104,7 @@ describe "import", () ->
           "text": "Line 3"
         }
       ]
-    }""", 'application/json'
+    }), 'application/json'
 
     # move the imported text out to the root
     t.sendKey 'down'
@@ -153,3 +153,66 @@ describe "import", () ->
             { text: 'Line 2' },
             { text: 'Line 3' }
         ] }, null, 2)
+
+  it "works with clones", () ->
+    t = new TestCase ['']
+    t.import (JSON.stringify {
+      "text": "",
+      "children": [
+        {
+          "text": "item",
+          "children": [
+            {
+              "text": "clone",
+              "id": 94
+            }
+          ]
+        },
+        {
+          "clone": 94
+        }
+      ]
+    }), "application/json"
+
+    t.expect [
+      {
+        "text": "",
+        "children": [
+          {
+            "text": "item",
+            "children": [
+              {
+                "text": "clone",
+                "id": 3
+              }
+            ]
+          },
+          {
+            "clone": 3
+          }
+        ]
+      }
+    ]
+
+    t.expectExport 'application/json', (JSON.stringify {
+      "text": "",
+      "children": [
+        {
+          "text": "",
+          "children": [
+            {
+              "text": "item",
+              "children": [
+                {
+                  "text": "clone",
+                  "id": 3
+                }
+              ]
+            },
+            {
+              "clone": 3
+            }
+          ]
+        }
+      ]
+    }, null, 2)

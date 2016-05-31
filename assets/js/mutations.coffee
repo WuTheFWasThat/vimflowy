@@ -209,8 +209,9 @@ class AddBlocks extends Mutation
     index = @index
 
     first = true
+    id_mapping = {}
     for serialized_row in @serialized_rows
-      row = session.document.loadTo serialized_row, @parent, index
+      row = session.document.loadTo serialized_row, @parent, index, id_mapping
       index += 1
 
       if @options.setCursor == 'first' and first
