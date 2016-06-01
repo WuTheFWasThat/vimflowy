@@ -131,7 +131,7 @@ gulp.task 'test', () ->
 # Rerun tasks when files changes
 gulp.task 'watch', ->
   # technically, adding css plugin files could cause need to redo html..
-  gulp.watch 'assets/html/**/*', ['html']
+  gulp.watch 'assets/html/**/*', ['html:dev']
 
   gulp.watch 'vendor/**/*', ['vendor']
 
