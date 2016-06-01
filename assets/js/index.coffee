@@ -35,6 +35,8 @@ $keybindingsDiv = $('#keybindings')
 $settingsDiv = $('#settings')
 $modeDiv = $('#mode')
 
+docname = window.location.pathname.split('/')[1]
+
 changeStyle = (theme) ->
   $('body').attr('id', theme)
 
@@ -129,6 +131,7 @@ create_session = (doc, to_load) ->
 
   # render when ready
   $(document).ready ->
+    document.title = "#{docname} - Vimflowy" unless docname is ''
     View.renderSession session
 
   key_handler = new KeyHandler session, key_bindings
@@ -284,7 +287,6 @@ if chrome?.storage?.sync
     ), 5000
 
 else if localStorage?
-  docname = window.location.pathname.split('/')[1]
   datastore = new DataStore.LocalStorageLazy docname
   doc = new Document datastore
 
