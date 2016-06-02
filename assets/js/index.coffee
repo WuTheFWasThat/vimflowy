@@ -252,7 +252,7 @@ create_session = (doc, to_load) ->
 
     export_type = (type) ->
       session.showMessage 'Exporting...'
-      filename = 'vimflowy.' + type
+      filename = if docname is '' then "vimflowy.#{type}" else "#{docname}.#{type}"
       # Infer mimetype from file extension
       mimetype = utils.mimetypeLookup filename
       content = session.exportContent mimetype
