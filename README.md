@@ -6,7 +6,7 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 
 Try it out!
 - [online] (https://vimflowy.pancakeapps.com)
-- [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei): This version will be sparsely updated
+- [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei)
 - [local/dev](CONTRIBUTING.md)
 
 (Video coming eventually...)
@@ -44,4 +44,4 @@ Try it out!
 
 ### LICENSE ###
 
-MIT: http://wuthefwasthat.mit-license.org/
+MIT: https://wuthefwasthat.mit-license.org/
