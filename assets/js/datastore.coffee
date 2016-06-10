@@ -32,10 +32,10 @@ class DataStore
     @_IDKey_ = "#{@prefix}:lastID"
 
   get: (key, default_value=null) ->
-      throw new errors.NotImplemented
+    throw new errors.NotImplemented
 
   set: (key, value) ->
-      throw new errors.NotImplemented
+    throw new errors.NotImplemented
 
   # get and set values for a given row
   getLine: (row) ->

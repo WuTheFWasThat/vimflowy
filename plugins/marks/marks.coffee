@@ -166,7 +166,7 @@ class MarksPlugin
           (found) =>
             row = found.row
             return {
-              contents: @session.document.getLine row
+              contents: @session.document.getLine row.id
               renderHook: (contents) ->
                 contents.unshift virtualDom.h 'span', {
                   className: 'mark theme-bg-secondary theme-trim'
@@ -178,7 +178,7 @@ class MarksPlugin
 
     @api.registerAction [MODES.MARK], basic_defs.CMD_MOTION, {
       description: 'Move the cursor',
-    }, (motion) =>
+    }, (motion) ->
       motion that.marksession.cursor, {pastEnd: true}
 
     @api.registerAction [MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
@@ -212,16 +212,16 @@ class MarksPlugin
     @api.registerHook 'session', 'renderLineContents', (lineContents, info) =>
       marking = @marksessionrow? and @marksessionrow.is info.row
       if marking
-          markresults = View.virtualRenderLine @marksession, @marksession.cursor.row, {no_clicks: true}
-          lineContents.unshift virtualDom.h 'span', {
-            className: 'mark theme-bg-secondary theme-trim-accent'
-          }, markresults
+        markresults = View.virtualRenderLine @marksession, @marksession.cursor.row, {no_clicks: true}
+        lineContents.unshift virtualDom.h 'span', {
+          className: 'mark theme-bg-secondary theme-trim-accent'
+        }, markresults
       else
-          mark = @_getMark info.row.id
-          if mark
-            lineContents.unshift virtualDom.h 'span', {
-              className: 'mark theme-bg-secondary theme-trim'
-            }, mark
+        mark = @_getMark info.row.id
+        if mark
+          lineContents.unshift virtualDom.h 'span', {
+            className: 'mark theme-bg-secondary theme-trim'
+          }, mark
       return lineContents
 
     @api.registerHook 'session', 'renderLineWordHook', (line, word_info) =>

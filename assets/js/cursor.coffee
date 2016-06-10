@@ -319,7 +319,7 @@ class Cursor extends EventEmitter
   # get whether the cursor should be bold/italic based on surroundings
   # NOTE: only relevant for insert mode.
   _getPropertiesFromContext: () ->
-    line = @document.getLine @row
+    line = @document.getLine @row.id
     if line.length == 0
       obj = {}
     else if @col == 0

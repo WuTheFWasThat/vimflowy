@@ -1,4 +1,3 @@
-# imports
 _ = require 'lodash'
 utils = require './utils.coffee'
 errors = require './errors.coffee'
@@ -6,7 +5,7 @@ constants = require './constants.coffee'
 Logger = require './logger.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
-class Row
+class Path
   constructor: (@parent, @id) ->
 
   getParent: () ->
@@ -26,7 +25,7 @@ class Row
     @id == constants.root_id
 
   clone: () ->
-    new Row (@parent?.clone?()), @id
+    new Path (@parent?.clone?()), @id
 
   # gets a list of IDs
   getAncestry: () ->
@@ -42,22 +41,22 @@ class Row
     if do other.isRoot then return false
     return (do @getParent).is (do other.getParent)
 
-Row.getRoot = () ->
-  new Row null, constants.root_id
+Path.getRoot = () ->
+  new Path null, constants.root_id
 
-Row.loadFrom = (parent, serialized) ->
+Path.loadFrom = (parent, serialized) ->
   id = if typeof serialized == 'number'
     serialized
   else
     serialized.id
-  new Row parent, id
+  new Path parent, id
 
-Row.loadFromAncestry = (ancestry) ->
+Path.loadFromAncestry = (ancestry) ->
   if ancestry.length == 0
-    return do Row.getRoot
+    return do Path.getRoot
   id = do ancestry.pop
-  parent = Row.loadFromAncestry ancestry
-  new Row parent, id
+  parent = Path.loadFromAncestry ancestry
+  new Path parent, id
 
 ###
 Document is a wrapper class around the actual datastore, providing methods to manipulate the document
@@ -69,7 +68,7 @@ also deals with loading the initial document from the datastore, and serializing
 Currently, the separation between the Session and Document classes is not very good.  (see session.coffee)
 ###
 class Document extends EventEmitter
-  root: do Row.getRoot
+  root: do Path.getRoot
 
   constructor: (store) ->
     super
@@ -88,7 +87,7 @@ class Document extends EventEmitter
   # }
   # in the case where all properties are false, it may be simply the character (to save space)
   getLine: (row) ->
-    return (@store.getLine row.id).map (obj) ->
+    return (@store.getLine row).map (obj) ->
       if typeof obj == 'string'
         obj = {
           char: obj
@@ -96,15 +95,15 @@ class Document extends EventEmitter
       return obj
 
   getText: (row, col) ->
-    return @getLine(row).map ((obj) -> obj.char)
+    return @getLine(row.id).map ((obj) -> obj.char)
 
   getChar: (row, col) ->
-    return @getLine(row)[col]?.char
+    return @getLine(row.id)[col]?.char
 
   setLine: (row, line) ->
     return (@store.setLine row.id, (line.map (obj) ->
       # if no properties are true, serialize just the character to save space
-      if _.every constants.text_properties.map ((property) => (not obj[property]))
+      if _.every constants.text_properties.map ((property) -> (not obj[property]))
         return obj.char
       else
         return obj
@@ -132,18 +131,19 @@ class Document extends EventEmitter
 
   writeChars: (row, col, chars) ->
     args = [col, 0].concat chars
-    line = @getLine row
+    line = @getLine row.id
     [].splice.apply line, args
     @setLine row, line
 
   deleteChars: (row, col, num) ->
-    line = @getLine row
+    line = @getLine row.id
     deleted = line.splice col, num
     @setLine row, line
     return deleted
 
   getLength: (row) ->
-    return @getLine(row).length
+    return @getLine(row.id).length
+
   #############
   # structure #
   #############
@@ -161,7 +161,7 @@ class Document extends EventEmitter
     @store.setParents id, children_id
 
   getChildren: (parent) ->
-    (Row.loadFrom parent, serialized) for serialized in @_getChildren parent.id
+    (Path.loadFrom parent, serialized) for serialized in @_getChildren parent.id
 
   findChild: (row, id) ->
     _.find (@getChildren row), (x) -> x.id == id
@@ -183,18 +183,18 @@ class Document extends EventEmitter
       # this happens if the parent got detached
       if new_parent_row != null
         break
-    return Row.loadFrom new_parent_row, row.id
+    return Path.loadFrom new_parent_row, row.id
 
   indexOf: (child) ->
     children = @getSiblings child
     return _.findIndex children, (sib) ->
-        sib.id == child.id
+      sib.id == child.id
 
   collapsed: (row) ->
-    return @store.getCollapsed row.id
+    return @store.getCollapsed row
 
   toggleCollapsed: (row) ->
-    @store.setCollapsed row.id, (not @collapsed row)
+    @store.setCollapsed row, (not @collapsed row)
 
   # a node is cloned only if it has multiple parents.
   # note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
@@ -420,7 +420,7 @@ class Document extends EventEmitter
 
   addChild: (row, index = -1) ->
     id = do @store.getNew
-    child = new Row row, id
+    child = new Path row, id
     @attachChild row, child, index
     return child
 
@@ -441,7 +441,7 @@ class Document extends EventEmitter
 
   # important: serialized automatically garbage collects
   serializeRow: (row = @root) ->
-    line = @getLine row
+    line = @getLine row.id
     text = (@getText row).join('')
     struct = {
       text: text
@@ -450,7 +450,7 @@ class Document extends EventEmitter
     for property in constants.text_properties
       if _.some (line.map ((obj) -> obj[property]))
         struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
-    if @collapsed row
+    if @collapsed row.id
       struct.collapsed = true
 
     struct = @applyHook 'serializeRow', struct, {row: row}
@@ -481,13 +481,13 @@ class Document extends EventEmitter
       # NOTE: this assumes we load in the same order we serialize
       errors.assert (serialized.clone of id_mapping)
       id = id_mapping[serialized.clone]
-      row = new Row parent, id
+      row = new Path parent, id
       @attachChild parent, row, index
       return row
 
     children = @getChildren parent
     # if parent has only one child and it's empty, delete it
-    if replace_empty and children.length == 1 and ((@getLine children[0]).length == 0)
+    if replace_empty and children.length == 1 and ((@getLine children[0].id).length == 0)
       row = children[0]
     else
       row = @addChild parent, index
@@ -521,5 +521,5 @@ class Document extends EventEmitter
       @loadTo serialized_row, @root, -1, id_mapping, true
 
 # exports
-exports.Row = Row
+exports.Path = Path
 exports.Document = Document

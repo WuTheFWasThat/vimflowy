@@ -39,11 +39,11 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
         line = canonicalize (document.getText row).join ''
         matches = []
         if _.every(query_words.map ((word) ->
-                  i = line.indexOf word
-                  if i == -1 then return false
-                  matches = matches.concat [i...i+word.length]
-                  return true
-                ))
+          i = line.indexOf word
+          if i == -1 then return false
+          matches = matches.concat [i...i+word.length]
+          return true
+        ))
           results.push { row: row, matches: matches }
         if nresults > 0 and results.length == nresults
           break
@@ -57,7 +57,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
         for i in found.matches
           highlights[i] = true
         return {
-          contents: @session.document.getLine row
+          contents: @session.document.getLine row.id
           renderOptions: { highlights: highlights }
           fn: () =>
             @session.zoomInto row

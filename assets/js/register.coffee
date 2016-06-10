@@ -75,7 +75,7 @@ class Register
       @session.addBlocks parent, index, @serialized_rows, {setCursor: 'first'}
     else
       children = @session.document.getChildren row
-      if (not @session.document.collapsed row) and (children.length > 0)
+      if (not @session.document.collapsed row.id) and (children.length > 0)
         @session.addBlocks row, 0, @serialized_rows, {setCursor: 'first'}
       else
         @session.addBlocks parent, (index + 1), @serialized_rows, {setCursor: 'first'}
@@ -89,7 +89,7 @@ class Register
       @session.attachBlocks parent, @cloned_rows, index, {setCursor: 'first'}
     else
       children = @session.document.getChildren row
-      if (not @session.document.collapsed row) and (children.length > 0)
+      if (not @session.document.collapsed row.id) and (children.length > 0)
         @session.attachBlocks row, @cloned_rows, 0, {setCursor: 'first'}
       else
         @session.attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}

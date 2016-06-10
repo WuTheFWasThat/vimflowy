@@ -200,7 +200,7 @@ renderSession = (session, options = {}) ->
 
   clearTimeout session.cursorBlinkTimeout
   session.mainDiv.removeClass("animate-blink-cursor")
-  session.cursorBlinkTimeout = setTimeout (() =>
+  session.cursorBlinkTimeout = setTimeout (() ->
     session.mainDiv.addClass("animate-blink-cursor")
   ), 500
 
@@ -213,11 +213,11 @@ virtualRenderSession = (session, options = {}) ->
     crumbs.push row
     row = do row.getParent
 
-  makeCrumb = (row, isLast) =>
+  makeCrumb = (row, isLast) ->
     m_options = {}
     if session.mode == MODES.NORMAL and not isLast
       m_options.className = 'theme-text-link'
-      m_options.onclick = () =>
+      m_options.onclick = () ->
         session.zoomInto row
         do session.save
         renderSession session
@@ -291,8 +291,8 @@ virtualRenderTree = (session, parent, options = {}) ->
     }
     if session.document.hasChildren row
       bulletOpts.style = {cursor: 'pointer'}
-      bulletOpts.onclick = ((row) =>
-        session.toggleBlockCollapsed row
+      bulletOpts.onclick = ((row) ->
+        session.toggleBlockCollapsed row.id
         do session.save
         renderSession session
       ).bind(@, row)
@@ -306,7 +306,7 @@ virtualRenderTree = (session, parent, options = {}) ->
       id: rowDivID row.id
       className: 'node-text'
       # if clicking outside of text, but on the row, move cursor to the end of the row
-      onclick:  ((row) =>
+      onclick:  ((row) ->
         col = if options.cursorBetween then -1 else -2
         session.cursor.set row, col
         renderSession session
@@ -336,7 +336,7 @@ virtualRenderTree = (session, parent, options = {}) ->
   return childrenNodes
 
 virtualRenderLine = (session, row, options = {}) ->
-  lineData = session.document.getLine row
+  lineData = session.document.getLine row.id
   cursors = {}
   highlights = {}
 
@@ -362,7 +362,7 @@ virtualRenderLine = (session, row, options = {}) ->
 
   if options.handle_clicks
     if session.mode == MODES.NORMAL or session.mode == MODES.INSERT
-      lineoptions.charclick = (column, e) =>
+      lineoptions.charclick = (column, e) ->
         session.cursor.set row, column
         # assume they might click again
         renderSession session, {handle_clicks: true}
@@ -370,7 +370,7 @@ virtualRenderLine = (session, row, options = {}) ->
         do e.stopPropagation
         return false
   else if not options.no_clicks
-    lineoptions.linemouseover = () =>
+    lineoptions.linemouseover = () ->
       renderSession session, {handle_clicks: true}
 
   lineoptions.wordHook = session.applyHook.bind session, 'renderLineWordHook'
@@ -472,15 +472,15 @@ virtualRenderPlugin = (pluginManager, name) ->
   if status == Plugins.STATUSES.ENABLED
     # "Disable" action
     button = virtualDom.h 'div', {
-        className: 'btn theme-trim'
-        onclick: () -> pluginManager.disable name
+      className: 'btn theme-trim'
+      onclick: () -> pluginManager.disable name
     }, "Disable"
     actions.push button
   else if status == Plugins.STATUSES.DISABLED
     # "Enable" action
     button = virtualDom.h 'div', {
-        className: 'btn theme-trim'
-        onclick: () -> pluginManager.enable name
+      className: 'btn theme-trim'
+      onclick: () -> pluginManager.enable name
     }, "Enable"
     actions.push button
 

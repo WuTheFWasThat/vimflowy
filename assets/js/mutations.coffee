@@ -235,7 +235,7 @@ class AddBlocks extends Mutation
 class ToggleBlock extends Mutation
   constructor: (@row) ->
   str: () ->
-    return "row #{@row.id}"
+    return "row #{@row}"
   mutate: (session) ->
     session.document.toggleCollapsed @row
   rewind: (session) ->

@@ -1,4 +1,3 @@
-# imports
 _ = require 'lodash'
 
 mutations = require './mutations.coffee'
@@ -14,7 +13,7 @@ Modes = require './modes.coffee'
 MODES = Modes.modes
 
 DocumentLib = require './document.coffee'
-Row = DocumentLib.Row
+Path = DocumentLib.Path
 
 ###
 a Session represents a session with a vimflowy document
@@ -41,7 +40,7 @@ class Session extends EventEmitter
     @register = new Register @
 
     # TODO: if we ever support multi-user case, ensure last view root is valid
-    @viewRoot = Row.loadFromAncestry (do @document.store.getLastViewRoot || [])
+    @viewRoot = Path.loadFromAncestry (do @document.store.getLastViewRoot || [])
     if not (@document.hasChildren @document.root)
       @document.load constants.empty_data
 
@@ -135,8 +134,8 @@ class Session extends EventEmitter
       whitespace = /^\s*/
       # TODO: record whether COMPLETE and strikethrough line if so?
       lines.push
-          indent: (line.match whitespace)[0].length
-          line: (line.replace whitespace, "").replace /^(?:-\s*)?(?:\[COMPLETE\] )?/, ""
+        indent: (line.match whitespace)[0].length
+        line: (line.replace whitespace, "").replace /^(?:-\s*)?(?:\[COMPLETE\] )?/, ""
     while lines[lines.length-1].line == '' # Strip trailing blank line(s)
       lines = lines.splice(0, lines.length-1)
 
@@ -188,26 +187,26 @@ class Session extends EventEmitter
   exportContent: (mimetype) ->
     jsonContent = do @document.serialize
     if mimetype == 'application/json'
-        delete jsonContent.viewRoot
-        return JSON.stringify(jsonContent, undefined, 2)
+      delete jsonContent.viewRoot
+      return JSON.stringify(jsonContent, undefined, 2)
     else if mimetype == 'text/plain'
-        # Workflowy compatible plaintext export
-        #   Ignores 'collapsed' and viewRoot
-        indent = "  "
-        exportLines = (node) ->
-            if typeof(node) == 'string'
-              return ["- #{node}"]
-            lines = []
-            lines.push "- #{node.text}"
-            for child in node.children ? []
-                if child.clone
-                    continue
-                for line in exportLines child
-                    lines.push "#{indent}#{line}"
-            return lines
-        return (exportLines jsonContent).join "\n"
+      # Workflowy compatible plaintext export
+      #   Ignores 'collapsed' and viewRoot
+      indent = "  "
+      exportLines = (node) ->
+        if typeof(node) == 'string'
+          return ["- #{node}"]
+        lines = []
+        lines.push "- #{node.text}"
+        for child in node.children ? []
+          if child.clone
+            continue
+          for line in exportLines child
+            lines.push "#{indent}#{line}"
+        return lines
+      return (exportLines jsonContent).join "\n"
     else
-        throw new errors.UnexpectedValue "mimetype", mimetype
+      throw new errors.UnexpectedValue "mimetype", mimetype
 
   #################
   # MUTATIONS
@@ -222,11 +221,11 @@ class Session extends EventEmitter
 
   save: () ->
     if @historyIndex != @history.length - 1
-        # haven't acted, otherwise would've sliced
-        return
+      # haven't acted, otherwise would've sliced
+      return
     if @history[@historyIndex].index == @mutations.length
-        # haven't acted, otherwise there would be more mutations
-        return
+      # haven't acted, otherwise there would be more mutations
+      return
 
     state = @history[@historyIndex]
     state.after = {
@@ -253,9 +252,9 @@ class Session extends EventEmitter
 
       Logger.logger.debug "UNDOING ("
       for i in [(oldState.index-1)...(newState.index-1)]
-          mutation = @mutations[i]
-          Logger.logger.debug "  Undoing mutation #{mutation.constructor.name}(#{mutation.str()})"
-          mutation.rewind @
+        mutation = @mutations[i]
+        Logger.logger.debug "  Undoing mutation #{mutation.constructor.name}(#{mutation.str()})"
+        mutation.rewind @
       Logger.logger.debug ") END UNDO"
       @restoreViewState newState.before
 
@@ -267,12 +266,12 @@ class Session extends EventEmitter
 
       Logger.logger.debug "REDOING ("
       for i in [oldState.index...newState.index]
-          mutation = @mutations[i]
-          Logger.logger.debug "  Redoing mutation #{mutation.constructor.name}(#{mutation.str()})"
-          if not mutation.validate @
-              # this should not happen, since the state should be the same as before
-              throw new errors.GenericError "Failed to redo mutation: #{mutation.str()}"
-          mutation.remutate @
+        mutation = @mutations[i]
+        Logger.logger.debug "  Redoing mutation #{mutation.constructor.name}(#{mutation.str()})"
+        if not mutation.validate @
+          # this should not happen, since the state should be the same as before
+          throw new errors.GenericError "Failed to redo mutation: #{mutation.str()}"
+        mutation.remutate @
       Logger.logger.debug ") END REDO"
       @restoreViewState oldState.after
 
@@ -285,8 +284,8 @@ class Session extends EventEmitter
       return true
 
     if @historyIndex != @history.length - 1
-        @history = @history.slice 0, (@historyIndex + 1)
-        @mutations = @mutations.slice 0, @history[@historyIndex].index
+      @history = @history.slice 0, (@historyIndex + 1)
+      @mutations = @mutations.slice 0, @history[@historyIndex].index
 
     state = @history[@historyIndex]
     if @mutations.length == state.index
@@ -297,7 +296,7 @@ class Session extends EventEmitter
 
     Logger.logger.debug "Applying mutation #{mutation.constructor.name}(#{mutation.str()})"
     if not mutation.validate @
-        return false
+      return false
     mutation.mutate @
     @mutations.push mutation
     return true
@@ -308,7 +307,7 @@ class Session extends EventEmitter
 
   # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (row) ->
-    return (not @document.collapsed row) or (row.is @viewRoot)
+    return (not @document.collapsed row.id) or (row.is @viewRoot)
 
   nextVisible: (row) ->
     if @viewable row
@@ -370,7 +369,7 @@ class Session extends EventEmitter
         return answer
       if do cur.isRoot
         return null
-      if @document.collapsed cur
+      if @document.collapsed cur.id
         answer = cur
       cur = do cur.getParent
 
@@ -510,7 +509,7 @@ class Session extends EventEmitter
   ##################
 
   curLine: () ->
-    return @document.getLine @cursor.row
+    return @document.getLine @cursor.row.id
 
   curText: () ->
     return @document.getText @cursor.row
@@ -562,7 +561,7 @@ class Session extends EventEmitter
     @delChars @cursor.row, 0, (do @curLineLength)
 
   yankChars: (row, col, nchars) ->
-    line = @document.getLine row
+    line = @document.getLine row.id
     if line.length > 0
       @register.saveChars line.slice(col, col + nchars)
 
@@ -583,25 +582,6 @@ class Session extends EventEmitter
     serialized_row = @document.serializeRow @cursor.row
     @register.saveSerializedRows [serialized_row]
 
-  yankChars: (row, col, nchars) ->
-    line = @document.getLine row
-    if line.length > 0
-      @register.saveChars line.slice(col, col + nchars)
-
-  # options:
-  #   - includeEnd says whether to also delete cursor2 location
-  yankBetween: (cursor1, cursor2, options = {}) ->
-    if not (cursor2.row.is cursor1.row)
-      Logger.logger.warn "Not yet implemented"
-      return
-
-    if cursor2.col < cursor1.col
-      [cursor1, cursor2] = [cursor2, cursor1]
-
-    offset = if options.includeEnd then 1 else 0
-    @yankChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
-
-
   # options:
   #   - includeEnd says whether to also delete cursor2 location
   deleteBetween: (cursor1, cursor2, options = {}) ->
@@ -620,7 +600,7 @@ class Session extends EventEmitter
     deleted = @delChars row, col, n, {setCursor: 'stay'}
 
     if new_value == null
-      all_were_true = _.every deleted.map ((obj) => return obj[property])
+      all_were_true = _.every deleted.map ((obj) -> return obj[property])
       new_value = not all_were_true
 
     chars = []
@@ -632,7 +612,7 @@ class Session extends EventEmitter
 
   toggleRowsProperty: (property, rows) ->
     all_were_true = _.every rows.map ((row) =>
-      _.every (@document.getLine row).map ((obj) => return obj[property])
+      _.every (@document.getLine row.id).map ((obj) -> return obj[property])
     )
     new_value = not all_were_true
     for row in rows
@@ -657,11 +637,11 @@ class Session extends EventEmitter
 
     if @cursor.row.is @viewRoot
       if not (@document.hasChildren @cursor.row)
-        if not @document.collapsed @cursor.row
-          @toggleBlockCollapsed @cursor.row
+        if not @document.collapsed @cursor.row.id
+          @toggleBlockCollapsed @cursor.row.id
 
       @addBlocks @cursor.row, 0, [''], options
-    else if (not @document.collapsed @cursor.row) and @document.hasChildren @cursor.row
+    else if (not @document.collapsed @cursor.row.id) and @document.hasChildren @cursor.row
       @addBlocks @cursor.row, 0, [''], options
     else
       parent = do @cursor.row.getParent
@@ -699,7 +679,7 @@ class Session extends EventEmitter
       # NOTE: if first is collapsed, should we uncollapse?
       @moveBlock child, first, 0
 
-    line = @document.getLine second
+    line = @document.getLine second.id
     if line.length and options.delimiter
       if line[0].char != options.delimiter
         line = [{char: options.delimiter}].concat line
@@ -728,7 +708,7 @@ class Session extends EventEmitter
       @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
   delBlock: (row, options) ->
-     @delBlocks row.parent, (@document.indexOf row), 1, options
+    @delBlocks row.parent, (@document.indexOf row), 1, options
 
   delBlocks: (parent, index, nrows, options = {}) ->
     mutation = new mutations.DetachBlocks parent, index, nrows, options
@@ -788,8 +768,8 @@ class Session extends EventEmitter
       @showMessage "Cannot indent without higher sibling", {text_class: 'error'}
       return null # cannot indent
 
-    if @document.collapsed newparent
-      @toggleBlockCollapsed newparent
+    if @document.collapsed newparent.id
+      @toggleBlockCollapsed newparent.id
 
     siblings = (@document.getSiblingRange row, 0, (numblocks-1)).filter ((sib) -> sib != null)
     for sib in siblings
@@ -819,7 +799,7 @@ class Session extends EventEmitter
     if row.is @viewRoot
       @showMessage "Cannot indent view root", {text_class: 'error'}
       return
-    if @document.collapsed row
+    if @document.collapsed row.id
       return @indentBlocks row
 
     sib = @document.getSiblingBefore row
@@ -834,7 +814,7 @@ class Session extends EventEmitter
     if row.is @viewRoot
       @showMessage "Cannot unindent view root", {text_class: 'error'}
       return
-    if @document.collapsed row
+    if @document.collapsed row.id
       return @unindentBlocks row
 
     if @document.hasChildren row
@@ -857,7 +837,7 @@ class Session extends EventEmitter
     unless next?
       return
 
-    if (@document.hasChildren next) and (not @document.collapsed next)
+    if (@document.hasChildren next) and (not @document.collapsed next.id)
       # make it the first child
       @moveBlock row, next, 0
     else
@@ -877,7 +857,7 @@ class Session extends EventEmitter
     @moveBlock row, parent, p_i
 
   toggleCurBlockCollapsed: () ->
-    @toggleBlockCollapsed @cursor.row
+    @toggleBlockCollapsed @cursor.row.id
 
   toggleBlockCollapsed: (row) ->
     @do new mutations.ToggleBlock row
@@ -935,11 +915,11 @@ class Session extends EventEmitter
     @scrollMain (line_height * numlines)
 
   scrollMain: (amount) ->
-     # # animate.  seems to not actually be great though
-     # @mainDiv.stop().animate({
-     #     scrollTop: @mainDiv[0].scrollTop + amount
-     #  }, 50)
-     @mainDiv.scrollTop(@mainDiv.scrollTop() + amount)
+    # # animate.  seems to not actually be great though
+    # @mainDiv.stop().animate({
+    #     scrollTop: @mainDiv[0].scrollTop + amount
+    #  }, 50)
+    @mainDiv.scrollTop(@mainDiv.scrollTop() + amount)
 
   scrollIntoView: (el) ->
     elemTop = el.getBoundingClientRect().top
@@ -950,26 +930,26 @@ class Session extends EventEmitter
     bottom_margin = margin + $('#bottom-bar').height()
 
     if elemTop < top_margin
-       # scroll up
-       @scrollMain (elemTop - top_margin)
+      # scroll up
+      @scrollMain (elemTop - top_margin)
     else if elemBottom > window.innerHeight - bottom_margin
-       # scroll down
-       @scrollMain (elemBottom - window.innerHeight + bottom_margin)
+      # scroll down
+      @scrollMain (elemBottom - window.innerHeight + bottom_margin)
 
   getVisibleRows: () ->
     rows = []
     for bullet in $.makeArray($('.bullet'))
-        if not (utils.isScrolledIntoView $(bullet), @mainDiv)
-            continue
-        if $(bullet).hasClass 'fa-clone'
-            continue
-        # NOTE: can't use $(x).data
-        # http://stackoverflow.com/questions/25876274/jquery-data-not-working
-        ancestry = $(bullet).attr('data-ancestry')
-        if not ancestry # as far as i know, this only happens because of menu mode
-            continue
-        row = Row.loadFromAncestry JSON.parse ancestry
-        rows.push row
+      if not (utils.isScrolledIntoView $(bullet), @mainDiv)
+        continue
+      if $(bullet).hasClass 'fa-clone'
+        continue
+      # NOTE: can't use $(x).data
+      # http://stackoverflow.com/questions/25876274/jquery-data-not-working
+      ancestry = $(bullet).attr('data-ancestry')
+      if not ancestry # as far as i know, this only happens because of menu mode
+        continue
+      row = Path.loadFromAncestry JSON.parse ancestry
+      rows.push row
     return rows
 
 # exports
