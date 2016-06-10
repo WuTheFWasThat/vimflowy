@@ -41,7 +41,7 @@ class Session extends EventEmitter
 
     # TODO: if we ever support multi-user case, ensure last view root is valid
     @viewRoot = Path.loadFromAncestry (do @document.store.getLastViewRoot || [])
-    if not (@document.hasChildren @document.root)
+    if not (@document.hasChildren @document.root.id)
       @document.load constants.empty_data
 
     if @viewRoot.is @document.root
@@ -579,7 +579,7 @@ class Session extends EventEmitter
     @yankChars cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
 
   yankRowAtCursor: () ->
-    serialized_row = @document.serializeRow @cursor.row
+    serialized_row = @document.serializeRow @cursor.row.id
     @register.saveSerializedRows [serialized_row]
 
   # options:
@@ -636,12 +636,12 @@ class Session extends EventEmitter
     options.setCursor = 'first'
 
     if @cursor.row.is @viewRoot
-      if not (@document.hasChildren @cursor.row)
+      if not (@document.hasChildren @cursor.row.id)
         if not @document.collapsed @cursor.row.id
           @toggleBlockCollapsed @cursor.row.id
 
       @addBlocks @cursor.row, 0, [''], options
-    else if (not @document.collapsed @cursor.row.id) and @document.hasChildren @cursor.row
+    else if (not @document.collapsed @cursor.row.id) and @document.hasChildren @cursor.row.id
       @addBlocks @cursor.row, 0, [''], options
     else
       parent = do @cursor.row.getParent
@@ -731,7 +731,7 @@ class Session extends EventEmitter
   yankBlocks: (row, nrows) ->
     siblings = @document.getSiblingRange row, 0, (nrows-1)
     siblings = siblings.filter ((x) -> return x != null)
-    serialized = siblings.map ((x) => return @document.serialize x)
+    serialized = siblings.map ((x) => return @document.serialize x.id)
     @register.saveSerializedRows serialized
 
   yankBlocksAtCursor: (nrows) ->
@@ -817,7 +817,7 @@ class Session extends EventEmitter
     if @document.collapsed row.id
       return @unindentBlocks row
 
-    if @document.hasChildren row
+    if @document.hasChildren row.id
       @showMessage "Cannot unindent line with children", {text_class: 'error'}
       return
 
@@ -837,7 +837,7 @@ class Session extends EventEmitter
     unless next?
       return
 
-    if (@document.hasChildren next) and (not @document.collapsed next.id)
+    if (@document.hasChildren next.id) and (not @document.collapsed next.id)
       # make it the first child
       @moveBlock row, next, 0
     else

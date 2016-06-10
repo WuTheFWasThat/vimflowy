@@ -88,7 +88,7 @@ class TestCase
     @session.importContent content, mimetype
 
   expect: (expected) ->
-    serialized = @document.serialize @document.root, {pretty: true}
+    serialized = @document.serialize @document.root.id, {pretty: true}
     @_expectDeepEqual serialized.children, expected, "Unexpected serialized content"
     return @
 

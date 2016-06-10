@@ -148,42 +148,42 @@ class Document extends EventEmitter
   # structure #
   #############
 
-  _getChildren: (id) ->
-    return @store.getChildren id
+  _getChildren: (row) ->
+    return @store.getChildren row
 
-  _setChildren: (id, children) ->
-    return @store.setChildren id, children
+  _setChildren: (row, children) ->
+    return @store.setChildren row, children
 
-  _getParents: (id) ->
-    return @store.getParents id
+  _getParents: (row) ->
+    return @store.getParents row
 
-  _setParents: (id, children_id) ->
-    @store.setParents id, children_id
+  _setParents: (row, children_rows) ->
+    @store.setParents row, children_rows
 
-  getChildren: (parent) ->
-    (Path.loadFrom parent, serialized) for serialized in @_getChildren parent.id
+  getChildren: (parent_path) ->
+    (Path.loadFrom parent_path, serialized) for serialized in @_getChildren parent_path.id
 
-  findChild: (row, id) ->
-    _.find (@getChildren row), (x) -> x.id == id
+  findChild: (parent_path, row) ->
+    _.find (@getChildren parent_path), (x) -> x.id == row
 
   hasChildren: (row) ->
-    return ((@getChildren row).length > 0)
+    return ((@_getChildren row).length > 0)
 
   getSiblings: (row) ->
     return @getChildren (do row.getParent)
 
-  nextClone: (row) ->
-    parents = @_getParents row.id
-    i = parents.indexOf row.parent.id
+  nextClone: (path) ->
+    parents = @_getParents path.id
+    i = parents.indexOf path.parent.id
     errors.assert i > -1
     while true
       i = (i + 1) % parents.length
       new_parent = parents[i]
-      new_parent_row = @canonicalInstance new_parent
+      new_parent_path = @canonicalInstance new_parent
       # this happens if the parent got detached
-      if new_parent_row != null
+      if new_parent_path != null
         break
-    return Path.loadFrom new_parent_row, row.id
+    return Path.loadFrom new_parent_path, path.id
 
   indexOf: (child) ->
     children = @getSiblings child
@@ -198,8 +198,8 @@ class Document extends EventEmitter
 
   # a node is cloned only if it has multiple parents.
   # note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
-  isClone: (id) ->
-    parents = @_getParents id
+  isClone: (row) ->
+    parents = @_getParents row
     if parents.length < 2 # for efficiency reasons
       return false
     numAttachedParents = (parents.filter (parent) => @isAttached parent).length
@@ -207,129 +207,129 @@ class Document extends EventEmitter
 
   # Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   # NOTE: this is not very efficient, in the worst case, but probably doesn't matter
-  canonicalInstance: (id) -> # Given an id, return a row with that id
-    errors.assert id?, "Empty id passed to canonicalInstance"
-    if id == constants.root_id
+  canonicalInstance: (row) -> # Given an row, return a path with that row
+    errors.assert row?, "Empty row passed to canonicalInstance"
+    if row == constants.root_id
       return @root
-    for parentId in @_getParents id
-      canonicalParent = @canonicalInstance parentId
+    for parentRow in @_getParents row
+      canonicalParent = @canonicalInstance parentRow
       if canonicalParent != null
-        return @findChild canonicalParent, id
+        return @findChild canonicalParent, row
     return null
 
-  # Return all ancestor ids, topologically sorted (root is *last*).
-  # Excludes 'id' itself unless options.inclusive is specified
+  # Return all ancestor rows, topologically sorted (root is *last*).
+  # Excludes 'row' itself unless options.inclusive is specified
   # NOTE: includes possibly detached nodes
-  allAncestors: (id, options) ->
+  allAncestors: (row, options) ->
     options = _.defaults {}, options, { inclusive: false }
     visited = {}
     ancestors = [] # 'visited' with preserved insert order
     if options.inclusive
-      ancestors.push id
+      ancestors.push row
     visit = (n) => # DFS
       visited[n] = true
       for parent in @_getParents n
         if parent not of visited
           ancestors.push parent
           visit parent
-    visit id
+    visit row
     ancestors
 
   # detach a block from the graph
-  detach: (row) ->
-    parent = do row.getParent
-    index = @indexOf row
-    @_detach row.id, parent.id
+  detach: (path) ->
+    parent = do path.getParent
+    index = @indexOf path
+    @_detach path.id, parent.id
     return {
       parent: parent
       index: index
     }
 
-  _hasChild: (parent_id, id) ->
-    children = @_getChildren parent_id
-    ci = _.findIndex children, (sib) -> (sib == id)
+  _hasChild: (parent_row, row) ->
+    children = @_getChildren parent_row
+    ci = _.findIndex children, (sib) -> (sib == row)
     return ci != -1
 
-  _removeChild: (parent_id, id) ->
-    children = @_getChildren parent_id
-    ci = _.findIndex children, (sib) -> (sib == id)
+  _removeChild: (parent_row, row) ->
+    children = @_getChildren parent_row
+    ci = _.findIndex children, (sib) -> (sib == row)
     errors.assert (ci != -1)
     children.splice ci, 1
-    @_setChildren parent_id, children
+    @_setChildren parent_row, children
 
-    parents = @_getParents id
-    pi = _.findIndex parents, (par) -> (par == parent_id)
+    parents = @_getParents row
+    pi = _.findIndex parents, (par) -> (par == parent_row)
     parents.splice pi, 1
-    @_setParents id, parents
+    @_setParents row, parents
 
     info = {
-      parentId: parent_id,
+      parentId: parent_row,
       parentIndex: pi,
-      childId: id,
+      childId: row,
       childIndex: ci,
     }
     @emit "childRemoved", info
     return info
 
-  _addChild: (parent_id, id, index) ->
-    children = @_getChildren parent_id
+  _addChild: (parent_row, row, index) ->
+    children = @_getChildren parent_row
     errors.assert (index <= children.length)
     if index == -1
-      children.push id
+      children.push row
     else
-      children.splice index, 0, id
-    @_setChildren parent_id, children
+      children.splice index, 0, row
+    @_setChildren parent_row, children
 
-    parents = @_getParents id
-    parents.push parent_id
-    @_setParents id, parents
+    parents = @_getParents row
+    parents.push parent_row
+    @_setParents row, parents
     info = {
-      parentId: parent_id,
+      parentId: parent_row,
       parentIndex: parents.length - 1,
-      childId: id,
+      childId: row,
       childIndex: index,
     }
     @emit "childAdded", info
     return info
 
-  _detach: (id, parent_id) ->
-    wasLast = (@_getParents id).length == 1
+  _detach: (row, parent_row) ->
+    wasLast = (@_getParents row).length == 1
 
-    @emit "beforeDetach", { id: id, parent_id: parent_id, last: wasLast }
-    info = @_removeChild parent_id, id
+    @emit "beforeDetach", { id: row, parent_id: parent_row, last: wasLast }
+    info = @_removeChild parent_row, row
     if wasLast
-      @store.setDetachedParent id, parent_id
-      detached_children = @store.getDetachedChildren parent_id
-      detached_children.push id
-      @store.setDetachedChildren parent_id, detached_children
-    @emit "afterDetach", { id: id, parent_id: parent_id, last: wasLast }
+      @store.setDetachedParent row, parent_row
+      detached_children = @store.getDetachedChildren parent_row
+      detached_children.push row
+      @store.setDetachedChildren parent_row, detached_children
+    @emit "afterDetach", { id: row, parent_id: parent_row, last: wasLast }
     return info
 
-  _attach: (child_id, parent_id, index = -1) ->
-    isFirst = (@_getParents child_id).length == 0
-    @emit "beforeAttach", { id: child_id, parent_id: parent_id, first: isFirst}
-    info = @_addChild parent_id, child_id, index
-    old_detached_parent = @store.getDetachedParent child_id
+  _attach: (child_row, parent_row, index = -1) ->
+    isFirst = (@_getParents child_row).length == 0
+    @emit "beforeAttach", { id: child_row, parent_id: parent_row, first: isFirst}
+    info = @_addChild parent_row, child_row, index
+    old_detached_parent = @store.getDetachedParent child_row
     if old_detached_parent != null
       errors.assert isFirst
-      @store.setDetachedParent child_id, null
+      @store.setDetachedParent child_row, null
       detached_children = @store.getDetachedChildren old_detached_parent
-      ci = _.findIndex detached_children, (sib) -> (sib == child_id)
+      ci = _.findIndex detached_children, (sib) -> (sib == child_row)
       errors.assert (ci != -1)
       detached_children.splice ci, 1
       @store.setDetachedChildren old_detached_parent, detached_children
-    @emit "afterAttach", { id: child_id, parent_id: parent_id, first: isFirst, old_detached_parent: old_detached_parent}
+    @emit "afterAttach", { id: child_row, parent_id: parent_row, first: isFirst, old_detached_parent: old_detached_parent}
     return info
 
-  _move: (child_id, old_parent_id, new_parent_id, index = -1) ->
-    @emit "beforeMove", { id: child_id, old_parent: old_parent_id, new_parent: new_parent_id }
+  _move: (child_row, old_parent_row, new_parent_row, index = -1) ->
+    @emit "beforeMove", { id: child_row, old_parent: old_parent_row, new_parent: new_parent_row }
 
-    remove_info = @_removeChild old_parent_id, child_id
-    if (old_parent_id == new_parent_id) and (index > remove_info.childIndex)
+    remove_info = @_removeChild old_parent_row, child_row
+    if (old_parent_row == new_parent_row) and (index > remove_info.childIndex)
       index = index - 1
-    add_info = @_addChild new_parent_id, child_id, index
+    add_info = @_addChild new_parent_row, child_row, index
 
-    @emit "afterMove", { id: child_id, old_parent: old_parent_id, new_parent: new_parent_id }
+    @emit "afterMove", { id: child_row, old_parent: old_parent_row, new_parent: new_parent_row }
 
     return {
       old: remove_info
@@ -389,25 +389,25 @@ class Document extends EventEmitter
 
   # returns whether an id is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
-  isAttached: (id) ->
-    return (@root.id in @allAncestors id, {inclusive: true})
+  isAttached: (row) ->
+    return (@root.id in @allAncestors row, {inclusive: true})
 
-  getSiblingBefore: (row) ->
-    return @getSiblingOffset row, -1
+  getSiblingBefore: (path) ->
+    return @getSiblingOffset path, -1
 
-  getSiblingAfter: (row) ->
-    return @getSiblingOffset row, 1
+  getSiblingAfter: (path) ->
+    return @getSiblingOffset path, 1
 
-  getSiblingOffset: (row, offset) ->
-    return (@getSiblingRange row, offset, offset)[0]
+  getSiblingOffset: (path, offset) ->
+    return (@getSiblingRange path, offset, offset)[0]
 
-  getSiblingRange: (row, min_offset, max_offset) ->
-    children = @getSiblings row
-    index = @indexOf row
-    return @getChildRange (do row.getParent), (min_offset + index), (max_offset + index)
+  getSiblingRange: (path, min_offset, max_offset) ->
+    children = @getSiblings path
+    index = @indexOf path
+    return @getChildRange (do path.getParent), (min_offset + index), (max_offset + index)
 
-  getChildRange: (row, min, max) ->
-    children = @getChildren row
+  getChildRange: (path, min, max) ->
+    children = @getChildren path
     indices = [min..max]
 
     return indices.map (index) ->
@@ -418,31 +418,31 @@ class Document extends EventEmitter
       else
         return children[index]
 
-  addChild: (row, index = -1) ->
-    id = do @store.getNew
-    child = new Path row, id
-    @attachChild row, child, index
+  addChild: (path, index = -1) ->
+    row = do @store.getNew
+    child = new Path path, row
+    @attachChild path, child, index
     return child
 
   orderedLines: () ->
     # TODO: deal with clones
-    rows = []
+    paths = []
 
-    helper = (row) =>
-      rows.push row
-      for child in @getChildren row
+    helper = (path) =>
+      paths.push path
+      for child in @getChildren path
         helper child
     helper @root
-    return rows
+    return paths
 
   #################
   # serialization #
   #################
 
   # important: serialized automatically garbage collects
-  serializeRow: (row = @root) ->
-    line = @getLine row.id
-    text = (@getText row.id).join('')
+  serializeRow: (row = @root.id) ->
+    line = @getLine row
+    text = (@getText row).join('')
     struct = {
       text: text
     }
@@ -450,53 +450,53 @@ class Document extends EventEmitter
     for property in constants.text_properties
       if _.some (line.map ((obj) -> obj[property]))
         struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
-    if @collapsed row.id
+    if @collapsed row
       struct.collapsed = true
 
     struct = @applyHook 'serializeRow', struct, {row: row}
     return struct
 
-  serialize: (row = @root, options={}, serialized={}) ->
-    if row.id of serialized
-      struct = serialized[row.id]
-      struct.id = row.id
-      return { clone: row.id }
+  serialize: (row = @root.id, options={}, serialized={}) ->
+    if row of serialized
+      struct = serialized[row]
+      struct.id = row
+      return { clone: row }
 
     struct = @serializeRow row
-    children = (@serialize childrow, options, serialized for childrow in @getChildren row)
+    children = (@serialize childrow, options, serialized for childrow in @_getChildren row)
     if children.length
       struct.children = children
 
-    serialized[row.id] = struct
+    serialized[row] = struct
 
     if options.pretty
-      if children.length == 0 and (not @isClone row.id) and \
+      if children.length == 0 and (not @isClone row) and \
           (_.every Object.keys(struct), (key) ->
             return key in ['children', 'text', 'collapsed'])
         return struct.text
     return struct
 
-  loadTo: (serialized, parent = @root, index = -1, id_mapping = {}, replace_empty = false) ->
+  loadTo: (serialized, parent_path = @root, index = -1, id_mapping = {}, replace_empty = false) ->
     if serialized.clone
       # NOTE: this assumes we load in the same order we serialize
       errors.assert (serialized.clone of id_mapping)
       id = id_mapping[serialized.clone]
-      row = new Path parent, id
-      @attachChild parent, row, index
-      return row
+      path = new Path parent_path, id
+      @attachChild parent_path, path, index
+      return path
 
-    children = @getChildren parent
-    # if parent has only one child and it's empty, delete it
+    children = @getChildren parent_path
+    # if parent_path has only one child and it's empty, delete it
     if replace_empty and children.length == 1 and ((@getLine children[0].id).length == 0)
-      row = children[0]
+      path = children[0]
     else
-      row = @addChild parent, index
+      path = @addChild parent_path, index
 
     if typeof serialized == 'string'
-      @setLine row.id, (serialized.split '')
+      @setLine path.id, (serialized.split '')
     else
       if serialized.id
-        id_mapping[serialized.id] = row.id
+        id_mapping[serialized.id] = path.id
       line = (serialized.text.split '').map((char) -> {char: char})
       for property in constants.text_properties
         if serialized[property]
@@ -504,16 +504,16 @@ class Document extends EventEmitter
             if val == '.'
               line[i][property] = true
 
-      @setLine row.id, line
-      @store.setCollapsed row.id, serialized.collapsed
+      @setLine path.id, line
+      @store.setCollapsed path.id, serialized.collapsed
 
       if serialized.children
         for serialized_child in serialized.children
-          @loadTo serialized_child, row, -1, id_mapping
+          @loadTo serialized_child, path, -1, id_mapping
 
-    @emit 'loadRow', row, serialized
+    @emit 'loadRow', path, serialized
 
-    return row
+    return path
 
   load: (serialized_rows) ->
     id_mapping = {}

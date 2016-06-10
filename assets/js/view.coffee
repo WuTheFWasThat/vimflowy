@@ -250,7 +250,7 @@ virtualRenderSession = (session, options = {}) ->
     for child in session.document.getChildRange parent, index1, index2
       options.highlight_blocks[child.id] = true
 
-  if session.document.hasChildren session.viewRoot
+  if session.document.hasChildren session.viewRoot.id
     contentsChildren = virtualRenderTree session, session.viewRoot, options
     contentsNode = virtualDom.h 'div', {}, contentsChildren
   else
@@ -282,14 +282,14 @@ virtualRenderTree = (session, parent, options = {}) ->
     ancestry_str = JSON.stringify do row.getAncestry
 
     icon = 'fa-circle'
-    if session.document.hasChildren row
+    if session.document.hasChildren row.id
       icon = if session.document.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
 
     bulletOpts = {
       className: 'fa ' + icon + ' bullet'
       attributes: {'data-id': row.id, 'data-ancestry': ancestry_str}
     }
-    if session.document.hasChildren row
+    if session.document.hasChildren row.id
       bulletOpts.style = {cursor: 'pointer'}
       bulletOpts.onclick = ((row) ->
         session.toggleBlockCollapsed row.id

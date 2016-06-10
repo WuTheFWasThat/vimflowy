@@ -262,33 +262,33 @@ describe "cloning", () ->
     ]
 
   it "does not add to history when constraints are violated", () ->
-     t = new TestCase [
-       'blah'
-       { text: 'Will be cloned', children: [
-         'not a clone'
-       ] }
-     ]
-     t.sendKeys 'x'
-     t.expect [
-       'lah'
-       { text: 'Will be cloned', children: [
-         'not a clone'
-       ] }
-     ]
-     t.sendKeys 'jycp'
-     t.expect [
-       'lah'
-       { text: 'Will be cloned', children: [
-         'not a clone'
-       ] }
-     ]
-     t.sendKeys 'u'
-     t.expect [
-       'blah'
-       { text: 'Will be cloned', children: [
-         'not a clone'
-       ] }
-     ]
+    t = new TestCase [
+      'blah'
+      { text: 'Will be cloned', children: [
+        'not a clone'
+      ] }
+    ]
+    t.sendKeys 'x'
+    t.expect [
+      'lah'
+      { text: 'Will be cloned', children: [
+        'not a clone'
+      ] }
+    ]
+    t.sendKeys 'jycp'
+    t.expect [
+      'lah'
+      { text: 'Will be cloned', children: [
+        'not a clone'
+      ] }
+    ]
+    t.sendKeys 'u'
+    t.expect [
+      'blah'
+      { text: 'Will be cloned', children: [
+        'not a clone'
+      ] }
+    ]
 
   it "enforces constraints upon movement", () ->
     t = new TestCase [

@@ -49,7 +49,7 @@ class MarksPlugin
     # Serialization #
 
     @api.registerHook 'document', 'serializeRow', (struct, info) =>
-      mark = @_getMark info.row.id
+      mark = @_getMark info.row
       if mark
         struct.mark = mark
       return struct
