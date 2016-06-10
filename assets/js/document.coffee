@@ -34,6 +34,9 @@ class Path
     ancestors.push @id
     ancestors
 
+  child: (row) ->
+    new Path @, row
+
   # Represents the exact same row
   is: (other) ->
     if @id != other.id then return false
@@ -44,19 +47,12 @@ class Path
 Path.getRoot = () ->
   new Path null, constants.root_id
 
-Path.loadFrom = (parent, serialized) ->
-  id = if typeof serialized == 'number'
-    serialized
-  else
-    serialized.id
-  new Path parent, id
-
 Path.loadFromAncestry = (ancestry) ->
   if ancestry.length == 0
     return do Path.getRoot
   id = do ancestry.pop
   parent = Path.loadFromAncestry ancestry
-  new Path parent, id
+  parent.child id
 
 ###
 Document is a wrapper class around the actual datastore, providing methods to manipulate the document
@@ -161,7 +157,7 @@ class Document extends EventEmitter
     @store.setParents row, children_rows
 
   getChildren: (parent_path) ->
-    (Path.loadFrom parent_path, serialized) for serialized in @_getChildren parent_path.id
+    (parent_path.child row) for row in @_getChildren parent_path.id
 
   findChild: (parent_path, row) ->
     _.find (@getChildren parent_path), (x) -> x.id == row
@@ -183,7 +179,7 @@ class Document extends EventEmitter
       # this happens if the parent got detached
       if new_parent_path != null
         break
-    return Path.loadFrom new_parent_path, path.id
+    return new_parent_path.child path.id
 
   indexOf: (child) ->
     children = @getSiblings child
@@ -420,9 +416,9 @@ class Document extends EventEmitter
 
   addChild: (path, index = -1) ->
     row = do @store.getNew
-    child = new Path path, row
-    @attachChild path, child, index
-    return child
+    child_path = path.child row
+    @attachChild path, child_path, index
+    return child_path
 
   orderedLines: () ->
     # TODO: deal with clones
@@ -481,7 +477,7 @@ class Document extends EventEmitter
       # NOTE: this assumes we load in the same order we serialize
       errors.assert (serialized.clone of id_mapping)
       id = id_mapping[serialized.clone]
-      path = new Path parent_path, id
+      path = parent_path.child id
       @attachChild parent_path, path, index
       return path
 
