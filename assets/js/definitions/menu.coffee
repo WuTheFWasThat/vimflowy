@@ -36,7 +36,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
         return results
 
       for row in do document.orderedLines
-        line = canonicalize (document.getText row).join ''
+        line = canonicalize (document.getText row.id).join ''
         matches = []
         if _.every(query_words.map ((word) ->
           i = line.indexOf word

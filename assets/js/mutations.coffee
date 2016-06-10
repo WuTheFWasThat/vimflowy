@@ -65,7 +65,7 @@ class AddChars extends Mutation
     return "row #{@row.id}, col #{@col}, nchars #{@chars.length}"
 
   mutate: (session) ->
-    session.document.writeChars @row, @col, @chars
+    session.document.writeChars @row.id, @col, @chars
 
     shift = if @options.cursor.pastEnd then 1 else 0
     if @options.setCursor == 'beginning'
@@ -74,7 +74,7 @@ class AddChars extends Mutation
       session.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
 
   rewind: (session) ->
-    session.document.deleteChars @row, @col, @chars.length
+    session.document.deleteChars @row.id, @col, @chars.length
 
 class DelChars extends Mutation
   constructor: (@row, @col, @nchars, @options = {}) ->
@@ -85,14 +85,14 @@ class DelChars extends Mutation
     return "row #{@row.id}, col #{@col}, nchars #{@nchars}"
 
   mutate: (session) ->
-    @deletedChars = session.document.deleteChars @row, @col, @nchars
+    @deletedChars = session.document.deleteChars @row.id, @col, @nchars
     if @options.setCursor == 'before'
       session.cursor.set @row, @col, @options.cursor
     else if @options.setCursor == 'after'
       session.cursor.set @row, (@col + 1), @options.cursor
 
   rewind: (session) ->
-    session.document.writeChars @row, @col, @deletedChars
+    session.document.writeChars @row.id, @col, @deletedChars
 
 class MoveBlock extends Mutation
   constructor: (@row, @parent, @index = -1, @options = {}) ->

@@ -512,10 +512,10 @@ class Session extends EventEmitter
     return @document.getLine @cursor.row.id
 
   curText: () ->
-    return @document.getText @cursor.row
+    return @document.getText @cursor.row.id
 
   curLineLength: () ->
-    return @document.getLength @cursor.row
+    return @document.getLength @cursor.row.id
 
   addChars: (row, col, chars, options) ->
     @do new mutations.AddChars row, col, chars, options
@@ -525,12 +525,12 @@ class Session extends EventEmitter
 
   addCharsAfterCursor: (chars, options) ->
     col = @cursor.col
-    if col < (@document.getLength @cursor.row)
+    if col < (@document.getLength @cursor.row.id)
       col += 1
     @addChars @cursor.row, col, chars, options
 
   delChars: (row, col, nchars, options = {}) ->
-    n = @document.getLength row
+    n = @document.getLength row.id
     deleted = []
     if (n > 0) and (nchars > 0) and (col < n)
       mutation = new mutations.DelChars row, col, nchars, options
@@ -616,10 +616,10 @@ class Session extends EventEmitter
     )
     new_value = not all_were_true
     for row in rows
-      @toggleProperty property, new_value, row, 0, (@document.getLength row)
+      @toggleProperty property, new_value, row, 0, (@document.getLength row.id)
 
   toggleRowProperty: (property, row = @cursor.row) ->
-    @toggleProperty property, null, row, 0, (@document.getLength row)
+    @toggleProperty property, null, row, 0, (@document.getLength row.id)
 
   toggleRowPropertyBetween: (property, cursor1, cursor2, options) ->
     if not (cursor2.row.is cursor1.row)
@@ -661,7 +661,7 @@ class Session extends EventEmitter
   #     insert a new node after
   #     if the node has children, this is the new first child
   newLineAtCursor: () ->
-    if @cursor.col == @document.getLength @cursor.row
+    if @cursor.col == @document.getLength @cursor.row.id
       @newLineBelow {cursorOptions: {keepProperties: true}}
     else
       mutation = new mutations.DelChars @cursor.row, 0, @cursor.col
@@ -685,7 +685,7 @@ class Session extends EventEmitter
         line = [{char: options.delimiter}].concat line
     @delBlock second, {noNew: true, noSave: true}
 
-    newCol = @document.getLength first
+    newCol = @document.getLength first.id
     mutation = new mutations.AddChars first, newCol, line
     @do mutation
 

@@ -118,7 +118,7 @@ class MarksPlugin
       description: 'Go to the mark indicated by the cursor, if it exists',
     },  () ->
       return (cursor) =>
-        word = @session.document.getWord cursor.row, cursor.col
+        word = @session.document.getWord cursor.row.id, cursor.col
         if word.length < 1 or word[0] != '@'
           return false
         mark = word[1..]

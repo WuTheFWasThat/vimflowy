@@ -226,7 +226,7 @@ virtualRenderSession = (session, options = {}) ->
     else if row.is session.document.root
       text = virtualDom.h 'icon', {className: 'fa fa-home'}
     else
-      text = (session.document.getText row).join('')
+      text = (session.document.getText row.id).join('')
     return virtualDom.h 'span', { className: 'crumb' }, [
              virtualDom.h 'span', m_options, [ text ]
            ]

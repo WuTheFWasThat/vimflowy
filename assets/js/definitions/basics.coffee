@@ -189,7 +189,7 @@ keyDefinitions.registerMotion [CMD_GO, CMD_LINK], {
   description: 'Visit to the link indicated by the cursor, in a new tab',
 },  () ->
   return (cursor) =>
-    word = @session.document.getWord cursor.row, cursor.col
+    word = @session.document.getWord cursor.row.id, cursor.col
     if utils.isLink word
       window.open word
 

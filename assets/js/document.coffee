@@ -95,13 +95,13 @@ class Document extends EventEmitter
       return obj
 
   getText: (row, col) ->
-    return @getLine(row.id).map ((obj) -> obj.char)
+    return @getLine(row).map ((obj) -> obj.char)
 
   getChar: (row, col) ->
-    return @getLine(row.id)[col]?.char
+    return @getLine(row)[col]?.char
 
   setLine: (row, line) ->
-    return (@store.setLine row.id, (line.map (obj) ->
+    return (@store.setLine row, (line.map (obj) ->
       # if no properties are true, serialize just the character to save space
       if _.every constants.text_properties.map ((property) -> (not obj[property]))
         return obj.char
@@ -131,18 +131,18 @@ class Document extends EventEmitter
 
   writeChars: (row, col, chars) ->
     args = [col, 0].concat chars
-    line = @getLine row.id
+    line = @getLine row
     [].splice.apply line, args
     @setLine row, line
 
   deleteChars: (row, col, num) ->
-    line = @getLine row.id
+    line = @getLine row
     deleted = line.splice col, num
     @setLine row, line
     return deleted
 
   getLength: (row) ->
-    return @getLine(row.id).length
+    return @getLine(row).length
 
   #############
   # structure #
@@ -442,7 +442,7 @@ class Document extends EventEmitter
   # important: serialized automatically garbage collects
   serializeRow: (row = @root) ->
     line = @getLine row.id
-    text = (@getText row).join('')
+    text = (@getText row.id).join('')
     struct = {
       text: text
     }
@@ -493,7 +493,7 @@ class Document extends EventEmitter
       row = @addChild parent, index
 
     if typeof serialized == 'string'
-      @setLine row, (serialized.split '')
+      @setLine row.id, (serialized.split '')
     else
       if serialized.id
         id_mapping[serialized.id] = row.id
@@ -504,7 +504,7 @@ class Document extends EventEmitter
             if val == '.'
               line[i][property] = true
 
-      @setLine row, line
+      @setLine row.id, line
       @store.setCollapsed row.id, serialized.collapsed
 
       if serialized.children

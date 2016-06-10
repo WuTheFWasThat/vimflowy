@@ -60,7 +60,7 @@ class Cursor extends EventEmitter
       @moveCol = @col
 
   _fromMoveCol: (cursorOptions = {}) ->
-    len = @document.getLength @row
+    len = @document.getLength @row.id
     maxcol = len - (if cursorOptions.pastEnd then 0 else 1)
     if @moveCol < 0
       col = Math.max(0, len + @moveCol + 1)
@@ -82,15 +82,15 @@ class Cursor extends EventEmitter
 
   right: (cursorOptions = {}) ->
     shift = if cursorOptions.pastEnd then 0 else 1
-    if @col < (@document.getLength @row) - shift
+    if @col < (@document.getLength @row.id) - shift
       do @_right
 
   backIfNeeded: () ->
-    if @col > (@document.getLength @row) - 1
+    if @col > (@document.getLength @row.id) - 1
       do @left
 
   atVisibleEnd: () ->
-    if @col < (@document.getLength @row) - 1
+    if @col < (@document.getLength @row.id) - 1
       return false
     else
       nextrow = @session.nextVisible @row
@@ -99,7 +99,7 @@ class Cursor extends EventEmitter
     return true
 
   nextChar: () ->
-    if @col < (@document.getLength @row) - 1
+    if @col < (@document.getLength @row.id) - 1
       do @_right
       return true
     else
@@ -153,14 +153,14 @@ class Cursor extends EventEmitter
   wordRegex = /^[a-z0-9_]+$/i
 
   isInWhitespace: (row, col) ->
-    char = @document.getChar row, col
+    char = @document.getChar row.id, col
     return utils.isWhitespace char
 
   isInWord: (row, col, matchChar) ->
     if utils.isWhitespace matchChar
       return false
 
-    char = @document.getChar row, col
+    char = @document.getChar row.id, col
     if utils.isWhitespace char
       return false
 
@@ -182,7 +182,7 @@ class Cursor extends EventEmitter
     while (not do @atVisibleStart) and @isInWhitespace @row, @col
       do @prevChar
 
-    wordcheck = @getWordCheck options, (@document.getChar @row, @col)
+    wordcheck = @getWordCheck options, (@document.getChar @row.id, @col)
     while (@col > 0) and wordcheck @row, (@col-1)
       do @_left
     return @
@@ -197,15 +197,15 @@ class Cursor extends EventEmitter
     while (not do @atVisibleEnd) and @isInWhitespace @row, @col
       do @nextChar
 
-    end = (@document.getLength @row) - 1
-    wordcheck = @getWordCheck options, (@document.getChar @row, @col)
+    end = (@document.getLength @row.id) - 1
+    wordcheck = @getWordCheck options, (@document.getChar @row.id, @col)
     while @col < end and wordcheck @row, (@col+1)
       do @_right
 
     if options.cursor.pastEndWord
       do @_right
 
-    end = (@document.getLength @row) - 1
+    end = (@document.getLength @row.id) - 1
     if @col == end and options.cursor.pastEnd
       do @_right
     return @
@@ -216,8 +216,8 @@ class Cursor extends EventEmitter
         do @_right
       return @
 
-    end = (@document.getLength @row) - 1
-    wordcheck = @getWordCheck options, (@document.getChar @row, @col)
+    end = (@document.getLength @row.id) - 1
+    wordcheck = @getWordCheck options, (@document.getChar @row.id, @col)
     while @col < end and wordcheck @row, (@col+1)
       do @_right
 
@@ -225,13 +225,13 @@ class Cursor extends EventEmitter
     while (not do @atVisibleEnd) and @isInWhitespace @row, @col
       do @nextChar
 
-    end = (@document.getLength @row) - 1
+    end = (@document.getLength @row.id) - 1
     if @col == end and options.cursor.pastEnd
       do @_right
     return @
 
   findNextChar: (char, options = {}) ->
-    end = (@document.getLength @row) - 1
+    end = (@document.getLength @row.id) - 1
     if @col == end
       return
 
@@ -242,7 +242,7 @@ class Cursor extends EventEmitter
     found = null
     while col < end
       col += 1
-      if (@document.getChar @row, col) == char
+      if (@document.getChar @row.id, col) == char
         found = col
         break
 
@@ -266,7 +266,7 @@ class Cursor extends EventEmitter
     found = null
     while col > 0
       col -= 1
-      if (@document.getChar @row, col) == char
+      if (@document.getChar @row.id, col) == char
         found = col
         break
 
