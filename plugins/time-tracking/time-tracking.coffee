@@ -24,12 +24,12 @@ class TimeTrackingPlugin
     @logger.info "Loading time tracking"
     @api.cursor.on 'rowChange', (@onRowChange.bind @)
     @currentRow = null
-    @onRowChange null, @api.cursor.row # Initial setup
+    @onRowChange null, @api.cursor.path # Initial setup
 
     @api.registerHook 'session', 'renderInfoElements', (elements, renderData) =>
-      time = @rowTime renderData.row
+      time = @rowTime renderData.path
 
-      isCurRow = renderData.row.id == @currentRow?.id
+      isCurRow = renderData.path.row == @currentRow?.row
 
       if isCurRow or time > 1000
         timeStr = " "
@@ -116,7 +116,7 @@ class TimeTrackingPlugin
       curTime += delta_minutes * 60 * 1000
       if curTime < 0
         @currentRow.time = new Date()
-        @modifyTimeForId @currentRow.id, curTime
+        @modifyTimeForId @currentRow.row, curTime
       else
         @currentRow.time = new Date() - curTime
 
@@ -145,15 +145,15 @@ class TimeTrackingPlugin
       @onRowChange null, @api.cursor.row # Initial setup
 
   onRowChange: (from, to) ->
-    @logger.debug "Switching from row #{from?.id} to row #{to?.id}"
+    @logger.debug "Switching from row #{from?.row} to row #{to?.row}"
     if not do @isLogging
       return
     time = new Date()
-    if @currentRow and @currentRow.id != to?.id
-      @modifyTimeForId from.id, (time - @currentRow.time)
+    if @currentRow and @currentRow.row != to?.row
+      @modifyTimeForId from.row, (time - @currentRow.time)
       @currentRow = null
     if to?
-      @currentRow ?= { id: to.id, time: time }
+      @currentRow ?= { id: to.row, time: time }
 
   resetCurrentRow: () ->
     if @currentRow
@@ -178,7 +178,7 @@ class TimeTrackingPlugin
       @_rebuildTotalTime ancestor_id
 
   rowTime: (row) ->
-    @getRowData row.id, "treeTotalTime", 0
+    @getRowData row.row, "treeTotalTime", 0
 
   pad = (val, length, padChar = '0') ->
     val += ''

@@ -662,10 +662,10 @@ describe "basic multiline tests", () ->
     t.expect [ 'a row' ]
     # to demonstrate we're not relying on getId behavior
     t.document.getId = () ->
-        id = 0
-        while @lines[id]
-          id++
-        return id+1
+      id = 100
+      while @lines[id]
+        id++
+      return id+1
     t.sendKey 'ctrl+r'
     t.expect [ 'new row' ]
     t.sendKey 'ctrl+r'
@@ -689,10 +689,10 @@ describe "basic multiline tests", () ->
     t.expect [ 'a row' ]
     # to demonstrate we're not relying on getId behavior
     t.document.getId = () ->
-        id = 0
-        while @lines[id]
-          id++
-        return id+1
+      id = 100
+      while @lines[id]
+        id++
+      return id+1
     t.sendKey 'ctrl+r'
     t.expect [
       'a row'

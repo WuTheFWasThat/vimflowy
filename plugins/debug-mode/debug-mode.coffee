@@ -6,14 +6,14 @@ Plugins.register {
   description: "Display internal IDs for each node (for debugging for developers)"
   version: 1
 }, ((api) ->
-  api.registerHook 'session', 'renderInfoElements', (rowElements, info) ->
-    rowElements.unshift virtualDom.h 'span', {
+  api.registerHook 'session', 'renderInfoElements', (pathElements, info) ->
+    pathElements.unshift virtualDom.h 'span', {
       style: {
         position: 'relative'
         'font-weight': 'bold'
       }
-    }, " " + (do info.row.debug)
-    return rowElements
+    }, " " + (do info.path.debug)
+    return pathElements
 ), ((api) ->
   do api.deregisterAll
 )

@@ -27,7 +27,7 @@ keyDefinitions.registerAction [MODES.VISUAL], CMD_MOTION, {
   for i in [1..@repeat]
     motion tmp, {pastEnd: true}
 
-  if not (tmp.row.is @session.cursor.row) # only allow same-row movement
+  if not (tmp.path.is @session.cursor.path) # only allow same-row movement
     @session.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
   else
     @session.cursor.from tmp
@@ -174,10 +174,10 @@ keyDefinitions.registerMotion [CMD_GO, CMD_CLONE], {
     if @session.mode != MODES.NORMAL
       # doesn't work for visual_line mode due to zoomInto
       return
-    newRow = @session.document.nextClone cursor.row
-    cursor.setRow newRow
-    if not @session.isVisible newRow
-      @session.zoomInto newRow
+    newPath = @session.document.nextClone cursor.path
+    cursor.setPath newPath
+    if not @session.isVisible newPath
+      @session.zoomInto newPath
 
 CMD_LINK = keyDefinitions.registerCommand {
   name: 'LINK'
@@ -189,7 +189,7 @@ keyDefinitions.registerMotion [CMD_GO, CMD_LINK], {
   description: 'Visit to the link indicated by the cursor, in a new tab',
 },  () ->
   return (cursor) =>
-    word = @session.document.getWord cursor.row.id, cursor.col
+    word = @session.document.getWord cursor.row, cursor.col
     if utils.isLink word
       window.open word
 

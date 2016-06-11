@@ -23,7 +23,7 @@ handle = (stream) ->
 
 out_folder = 'public'
 
-test_glob = 'test/tests/*.coffee'
+test_glob = 'test/**/*.coffee'
 coffee_glob = 'assets/**/*.coffee'
 sass_glob = 'assets/css/**/*.sass'
 

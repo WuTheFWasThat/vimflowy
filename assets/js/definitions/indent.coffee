@@ -62,12 +62,12 @@ CMD_MOVE_BLOCK_RIGHT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
 }, () ->
-  @session.indentBlocks @session.cursor.row, @repeat
+  @session.indentBlocks @session.cursor.path, @repeat
   do @keyStream.save
 keyDefinitions.registerAction [MODES.INSERT], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
 }, () ->
-  @session.indentBlocks @session.cursor.row, 1
+  @session.indentBlocks @session.cursor.path, 1
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
 }, (do visual_line_indent)
@@ -81,12 +81,12 @@ CMD_MOVE_BLOCK_LEFT = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
 }, () ->
-  @session.unindentBlocks @session.cursor.row, @repeat
+  @session.unindentBlocks @session.cursor.path, @repeat
   do @keyStream.save
 keyDefinitions.registerAction [MODES.INSERT], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
 }, () ->
-  @session.unindentBlocks @session.cursor.row, 1
+  @session.unindentBlocks @session.cursor.path, 1
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
 }, (do visual_line_unindent)

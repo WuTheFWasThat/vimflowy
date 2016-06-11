@@ -5,15 +5,17 @@ constants = require './constants.coffee'
 Logger = require './logger.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
+# represents a tree-traversal starting from the root going down
+# should be immutable
 class Path
-  constructor: (@parent, @id) ->
+  constructor: (@parent, @row) ->
 
   getParent: () ->
     @parent
 
   # NOTE: in the future, this may contain other info
   serialize: () ->
-    return @id
+    return @row
 
   setParent: (parent) ->
     @parent = parent
@@ -22,16 +24,13 @@ class Path
     (do @getAncestry).join ", "
 
   isRoot: () ->
-    @id == constants.root_id
-
-  clone: () ->
-    new Path (@parent?.clone?()), @id
+    @row == constants.root_id
 
   # gets a list of IDs
   getAncestry: () ->
     if do @isRoot then return []
     ancestors = do @parent.getAncestry
-    ancestors.push @id
+    ancestors.push @row
     ancestors
 
   child: (row) ->
@@ -39,7 +38,7 @@ class Path
 
   # Represents the exact same row
   is: (other) ->
-    if @id != other.id then return false
+    if @row != other.row then return false
     if do @isRoot then return do other.isRoot
     if do other.isRoot then return false
     return (do @getParent).is (do other.getParent)
@@ -50,9 +49,9 @@ Path.getRoot = () ->
 Path.loadFromAncestry = (ancestry) ->
   if ancestry.length == 0
     return do Path.getRoot
-  id = do ancestry.pop
+  row = do ancestry.pop
   parent = Path.loadFromAncestry ancestry
-  parent.child id
+  parent.child row
 
 ###
 Document is a wrapper class around the actual datastore, providing methods to manipulate the document
@@ -157,10 +156,10 @@ class Document extends EventEmitter
     @store.setParents row, children_rows
 
   getChildren: (parent_path) ->
-    (parent_path.child row) for row in @_getChildren parent_path.id
+    (parent_path.child row) for row in @_getChildren parent_path.row
 
   findChild: (parent_path, row) ->
-    _.find (@getChildren parent_path), (x) -> x.id == row
+    _.find (@getChildren parent_path), (x) -> x.row == row
 
   hasChildren: (row) ->
     return ((@_getChildren row).length > 0)
@@ -169,8 +168,8 @@ class Document extends EventEmitter
     return @getChildren (do row.getParent)
 
   nextClone: (path) ->
-    parents = @_getParents path.id
-    i = parents.indexOf path.parent.id
+    parents = @_getParents path.row
+    i = parents.indexOf path.parent.row
     errors.assert i > -1
     while true
       i = (i + 1) % parents.length
@@ -179,12 +178,12 @@ class Document extends EventEmitter
       # this happens if the parent got detached
       if new_parent_path != null
         break
-    return new_parent_path.child path.id
+    return new_parent_path.child path.row
 
   indexOf: (child) ->
     children = @getSiblings child
     return _.findIndex children, (sib) ->
-      sib.id == child.id
+      sib.row == child.row
 
   collapsed: (row) ->
     return @store.getCollapsed row
@@ -235,7 +234,7 @@ class Document extends EventEmitter
   detach: (path) ->
     parent = do path.getParent
     index = @indexOf path
-    @_detach path.id, parent.id
+    @_detach path.row, parent.row
     return {
       parent: parent
       index: index
@@ -338,7 +337,7 @@ class Document extends EventEmitter
     (@attachChildren parent, [child], index)[0]
 
   attachChildren: (parent, new_children, index = -1) ->
-    @_attachChildren parent.id, (x.id for x in new_children), index
+    @_attachChildren parent.row, (x.row for x in new_children), index
     for child in new_children
       child.setParent parent
     return new_children
@@ -375,18 +374,18 @@ class Document extends EventEmitter
     firstDifference = commonAncestry.length
     return [common, ancestors1[firstDifference..], ancestors2[firstDifference..]]
 
-  # extends a row's path by a path of ids going downwards (used when moving blocks around)
-  combineAncestry: (row, id_path) ->
-    for id in id_path
-      row = @findChild row, id
-      unless row?
+  # extends a path by a list of rows going downwards (used when moving blocks around)
+  combineAncestry: (path, row_path) ->
+    for row in row_path
+      path = @findChild path, row
+      unless path?
         return null
-    return row
+    return path
 
-  # returns whether an id is actually reachable from the root node
+  # returns whether an row is actually reachable from the root node
   # if something is not detached, it will have a parent, but the parent wont mention it as a child
   isAttached: (row) ->
-    return (@root.id in @allAncestors row, {inclusive: true})
+    return (@root.row in @allAncestors row, {inclusive: true})
 
   getSiblingBefore: (path) ->
     return @getSiblingOffset path, -1
@@ -436,7 +435,7 @@ class Document extends EventEmitter
   #################
 
   # important: serialized automatically garbage collects
-  serializeRow: (row = @root.id) ->
+  serializeRow: (row = @root.row) ->
     line = @getLine row
     text = (@getText row).join('')
     struct = {
@@ -452,7 +451,7 @@ class Document extends EventEmitter
     struct = @applyHook 'serializeRow', struct, {row: row}
     return struct
 
-  serialize: (row = @root.id, options={}, serialized={}) ->
+  serialize: (row = @root.row, options={}, serialized={}) ->
     if row of serialized
       struct = serialized[row]
       struct.id = row
@@ -476,23 +475,23 @@ class Document extends EventEmitter
     if serialized.clone
       # NOTE: this assumes we load in the same order we serialize
       errors.assert (serialized.clone of id_mapping)
-      id = id_mapping[serialized.clone]
-      path = parent_path.child id
+      row = id_mapping[serialized.clone]
+      path = parent_path.child row
       @attachChild parent_path, path, index
       return path
 
     children = @getChildren parent_path
     # if parent_path has only one child and it's empty, delete it
-    if replace_empty and children.length == 1 and ((@getLine children[0].id).length == 0)
+    if replace_empty and children.length == 1 and ((@getLine children[0].row).length == 0)
       path = children[0]
     else
       path = @addChild parent_path, index
 
     if typeof serialized == 'string'
-      @setLine path.id, (serialized.split '')
+      @setLine path.row, (serialized.split '')
     else
       if serialized.id
-        id_mapping[serialized.id] = path.id
+        id_mapping[serialized.id] = path.row
       line = (serialized.text.split '').map((char) -> {char: char})
       for property in constants.text_properties
         if serialized[property]
@@ -500,8 +499,8 @@ class Document extends EventEmitter
             if val == '.'
               line[i][property] = true
 
-      @setLine path.id, line
-      @store.setCollapsed path.id, serialized.collapsed
+      @setLine path.row, line
+      @store.setCollapsed path.row, serialized.collapsed
 
       if serialized.children
         for serialized_child in serialized.children

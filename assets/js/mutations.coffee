@@ -62,10 +62,10 @@ class AddChars extends Mutation
     @options.cursor ?= {}
 
   str: () ->
-    return "row #{@row.id}, col #{@col}, nchars #{@chars.length}"
+    return "row #{@row.row}, col #{@col}, nchars #{@chars.length}"
 
   mutate: (session) ->
-    session.document.writeChars @row.id, @col, @chars
+    session.document.writeChars @row.row, @col, @chars
 
     shift = if @options.cursor.pastEnd then 1 else 0
     if @options.setCursor == 'beginning'
@@ -74,47 +74,47 @@ class AddChars extends Mutation
       session.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
 
   rewind: (session) ->
-    session.document.deleteChars @row.id, @col, @chars.length
+    session.document.deleteChars @row.row, @col, @chars.length
 
 class DelChars extends Mutation
-  constructor: (@row, @col, @nchars, @options = {}) ->
+  constructor: (@path, @col, @nchars, @options = {}) ->
     @options.setCursor ?= 'before'
     @options.cursor ?= {}
 
   str: () ->
-    return "row #{@row.id}, col #{@col}, nchars #{@nchars}"
+    return "path #{@path.row}, col #{@col}, nchars #{@nchars}"
 
   mutate: (session) ->
-    @deletedChars = session.document.deleteChars @row.id, @col, @nchars
+    @deletedChars = session.document.deleteChars @path.row, @col, @nchars
     if @options.setCursor == 'before'
-      session.cursor.set @row, @col, @options.cursor
+      session.cursor.set @path, @col, @options.cursor
     else if @options.setCursor == 'after'
-      session.cursor.set @row, (@col + 1), @options.cursor
+      session.cursor.set @path, (@col + 1), @options.cursor
 
   rewind: (session) ->
-    session.document.writeChars @row.id, @col, @deletedChars
+    session.document.writeChars @path.row, @col, @deletedChars
 
 class MoveBlock extends Mutation
-  constructor: (@row, @parent, @index = -1, @options = {}) ->
-    @old_parent = do @row.getParent
+  constructor: (@path, @parent, @index = -1, @options = {}) ->
+    @old_parent = do @path.getParent
 
   str: () ->
-    return "row #{@row.id} from #{@row.parent.id} to #{@parent.id}"
+    return "path #{@path.row} from #{@path.parent.row} to #{@parent.row}"
 
   validate: (session) ->
     # if parent is the same, don't do sibling clone validation
-    sameParent = @parent.id == @old_parent.id
-    return (validateRowInsertion session, @parent.id, @row.id, {noSiblingCheck: sameParent})
+    sameParent = @parent.row == @old_parent.row
+    return (validateRowInsertion session, @parent.row, @path.row, {noSiblingCheck: sameParent})
 
   mutate: (session) ->
-    errors.assert (not do @row.isRoot), "Cannot detach root"
-    info = session.document._move @row.id, @old_parent.id, @parent.id, @index
+    errors.assert (not do @path.isRoot), "Cannot detach root"
+    info = session.document._move @path.row, @old_parent.row, @parent.row, @index
     @old_index = info.old.childIndex
-    @row.setParent @parent
+    @path.setParent @parent
 
   rewind: (session) ->
-    session.document._move @row.id, @parent.id, @old_parent.id, @old_index
-    @row.setParent @old_parent
+    session.document._move @path.row, @parent.row, @old_parent.row, @old_index
+    @path.setParent @old_parent
 
 class AttachBlocks extends Mutation
   # options:
@@ -125,16 +125,16 @@ class AttachBlocks extends Mutation
     @nrows = @cloned_rows.length
 
   str: () ->
-    return "parent #{@parent.id}, index #{@index}"
+    return "parent #{@parent.row}, index #{@index}"
 
   validate: (session) ->
     for id in @cloned_rows
-      if not (validateRowInsertion session, @parent.id, id)
+      if not (validateRowInsertion session, @parent.row, id)
         return false
     return true
 
   mutate: (session) ->
-    session.document._attachChildren @parent.id, @cloned_rows, @index
+    session.document._attachChildren @parent.row, @cloned_rows, @index
 
     if @options.setCursor == 'first'
       session.cursor.set (session.document.findChild @parent, @cloned_rows[0]), 0
@@ -150,7 +150,7 @@ class DetachBlocks extends Mutation
   constructor: (@parent, @index, @nrows = 1, @options = {}) ->
 
   str: () ->
-    return "parent #{@parent.id}, index #{@index}, nrows #{@nrows}"
+    return "parent #{@parent.row}, index #{@index}, nrows #{@nrows}"
 
   mutate: (session) ->
     @deleted = []
@@ -158,7 +158,7 @@ class DetachBlocks extends Mutation
     for sib in delete_rows
       if sib == null then break
       session.document.detach sib
-      @deleted.push sib.id
+      @deleted.push sib.row
 
     @created = null
     if @options.addNew
@@ -174,7 +174,7 @@ class DetachBlocks extends Mutation
       else
         next = session.lastVisible children[@index - 1]
 
-      if next.id == session.document.root.id
+      if next.row == session.document.root.row
         unless @options.noNew
           next = session.document.addChild @parent
           @created = next
@@ -185,11 +185,11 @@ class DetachBlocks extends Mutation
     if @created != null
       @created_rewinded = session.document.detach @created
     index = @index
-    session.document._attachChildren @parent.id, @deleted, index
+    session.document._attachChildren @parent.row, @deleted, index
 
   remutate: (session) ->
     for id in @deleted
-      session.document._detach id, @parent.id
+      session.document._detach id, @parent.row
     if @created != null
       session.document.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 
@@ -203,7 +203,7 @@ class AddBlocks extends Mutation
     @nrows = @serialized_rows.length
 
   str: () ->
-    return "parent #{@parent.id}, index #{@index}"
+    return "parent #{@parent.row}, index #{@index}"
 
   mutate: (session) ->
     index = @index

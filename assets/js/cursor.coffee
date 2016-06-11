@@ -2,16 +2,19 @@ utils = require './utils.coffee'
 constants = require './constants.coffee'
 EventEmitter = require './eventEmitter.coffee'
 
+Function::property = (prop, desc) ->
+  Object.defineProperty @prototype, prop, desc
+
 ###
 Cursor represents a cursor within a session
 it handles movement logic, insert mode line properties (e.g. bold/italic)
 ###
 class Cursor extends EventEmitter
-  constructor: (session, row = null, col = null, moveCol = null) ->
+  constructor: (session, path = null, col = null, moveCol = null) ->
     super
     @session = session
     @document = session.document
-    @row = row ? (@document.getChildren @session.viewRoot)[0]
+    @path = path ? (@document.getChildren @session.viewRoot)[0]
     @col = col ? 0
     @properties = {}
     do @_getPropertiesFromContext
@@ -19,19 +22,24 @@ class Cursor extends EventEmitter
     # -1 means last col
     @moveCol = moveCol ? col
 
-  clone: () ->
-    return new Cursor @session, (do @row.clone), @col, @moveCol
+  # virtual getter for row
+  @property 'row',
+    'get': () -> @path.row
 
-  _setRow: (row) ->
-    @emit 'rowChange', @row, row
-    @row = row
+  clone: () ->
+    # paths are immutable so this is okay
+    return new Cursor @session, @path, @col, @moveCol
+
+  _setPath: (path) ->
+    @emit 'rowChange', @path, path
+    @path = path
 
   _setCol: (col) ->
     @emit 'colChange', @col, col
     @col = col
 
   from: (other) ->
-    @_setRow other.row
+    @_setPath other.path
     @_setCol other.col
     @moveCol = other.moveCol
 
@@ -43,24 +51,24 @@ class Cursor extends EventEmitter
   #                      is true in normal mode (for de), false in visual (for vex)
   #   - keepProperties:  for movement, whether we should keep italic/bold state
 
-  set: (row, col, cursorOptions) ->
-    @_setRow row
+  set: (path, col, cursorOptions) ->
+    @_setPath path
     @setCol col, cursorOptions
 
-  setRow: (row, cursorOptions) ->
-    @_setRow row
+  setPath: (path, cursorOptions) ->
+    @_setPath path
     @_fromMoveCol cursorOptions
 
   setCol: (moveCol, cursorOptions = {pastEnd: true}) ->
     @moveCol = moveCol
     @_fromMoveCol cursorOptions
     # if moveCol was too far, fix it
-    # NOTE: this should happen for setting column, but not row
+    # NOTE: this should happen for setting column, but not path
     if @moveCol >= 0
       @moveCol = @col
 
   _fromMoveCol: (cursorOptions = {}) ->
-    len = @document.getLength @row.id
+    len = @document.getLength @path.row
     maxcol = len - (if cursorOptions.pastEnd then 0 else 1)
     if @moveCol < 0
       col = Math.max(0, len + @moveCol + 1)
@@ -82,30 +90,30 @@ class Cursor extends EventEmitter
 
   right: (cursorOptions = {}) ->
     shift = if cursorOptions.pastEnd then 0 else 1
-    if @col < (@document.getLength @row.id) - shift
+    if @col < (@document.getLength @path.row) - shift
       do @_right
 
   backIfNeeded: () ->
-    if @col > (@document.getLength @row.id) - 1
+    if @col > (@document.getLength @path.row) - 1
       do @left
 
   atVisibleEnd: () ->
-    if @col < (@document.getLength @row.id) - 1
+    if @col < (@document.getLength @path.row) - 1
       return false
     else
-      nextrow = @session.nextVisible @row
-      if nextrow != null
+      nextpath = @session.nextVisible @path
+      if nextpath != null
         return false
     return true
 
   nextChar: () ->
-    if @col < (@document.getLength @row.id) - 1
+    if @col < (@document.getLength @path.row) - 1
       do @_right
       return true
     else
-      nextrow = @session.nextVisible @row
-      if nextrow != null
-        @set nextrow, 0
+      nextpath = @session.nextVisible @path
+      if nextpath != null
+        @set nextpath, 0
         return true
     return false
 
@@ -113,8 +121,8 @@ class Cursor extends EventEmitter
     if @col > 0
       return false
     else
-      prevrow = @session.prevVisible @row
-      if prevrow != null
+      prevpath = @session.prevVisible @path
+      if prevpath != null
         return false
     return true
 
@@ -123,9 +131,9 @@ class Cursor extends EventEmitter
       do @_left
       return true
     else
-      prevrow = @session.prevVisible @row
-      if prevrow != null
-        @set prevrow, -1
+      prevpath = @session.prevVisible @path
+      if prevpath != null
+        @set prevpath, -1
         return true
     return false
 
@@ -139,28 +147,28 @@ class Cursor extends EventEmitter
 
   visibleHome: () ->
     if @session.viewRoot.is @session.document.root
-      row = @session.nextVisible @session.viewRoot
+      path = @session.nextVisible @session.viewRoot
     else
-      row = @session.viewRoot
-    @set row, 0
+      path = @session.viewRoot
+    @set path, 0
     return @
 
   visibleEnd: () ->
-    row = do @session.lastVisible
-    @set row, 0
+    path = do @session.lastVisible
+    @set path, 0
     return @
 
   wordRegex = /^[a-z0-9_]+$/i
 
-  isInWhitespace: (row, col) ->
-    char = @document.getChar row.id, col
+  isInWhitespace: (path, col) ->
+    char = @document.getChar path.row, col
     return utils.isWhitespace char
 
-  isInWord: (row, col, matchChar) ->
+  isInWord: (path, col, matchChar) ->
     if utils.isWhitespace matchChar
       return false
 
-    char = @document.getChar row.id, col
+    char = @document.getChar path.row, col
     if utils.isWhitespace char
       return false
 
@@ -171,19 +179,19 @@ class Cursor extends EventEmitter
 
   getWordCheck: (options, matchChar) ->
     if options.whitespaceWord
-      return ((row, col) => not @isInWhitespace row, col)
+      return ((path, col) => not @isInWhitespace path, col)
     else
-      return ((row, col) => @isInWord row, col, matchChar)
+      return ((path, col) => @isInWord path, col, matchChar)
 
   beginningWord: (options = {}) ->
     if do @atVisibleStart
       return @
     do @prevChar
-    while (not do @atVisibleStart) and @isInWhitespace @row, @col
+    while (not do @atVisibleStart) and @isInWhitespace @path, @col
       do @prevChar
 
-    wordcheck = @getWordCheck options, (@document.getChar @row.id, @col)
-    while (@col > 0) and wordcheck @row, (@col-1)
+    wordcheck = @getWordCheck options, (@document.getChar @path.row, @col)
+    while (@col > 0) and wordcheck @path, (@col-1)
       do @_left
     return @
 
@@ -194,18 +202,18 @@ class Cursor extends EventEmitter
       return @
 
     do @nextChar
-    while (not do @atVisibleEnd) and @isInWhitespace @row, @col
+    while (not do @atVisibleEnd) and @isInWhitespace @path, @col
       do @nextChar
 
-    end = (@document.getLength @row.id) - 1
-    wordcheck = @getWordCheck options, (@document.getChar @row.id, @col)
-    while @col < end and wordcheck @row, (@col+1)
+    end = (@document.getLength @path.row) - 1
+    wordcheck = @getWordCheck options, (@document.getChar @path.row, @col)
+    while @col < end and wordcheck @path, (@col+1)
       do @_right
 
     if options.cursor.pastEndWord
       do @_right
 
-    end = (@document.getLength @row.id) - 1
+    end = (@document.getLength @path.row) - 1
     if @col == end and options.cursor.pastEnd
       do @_right
     return @
@@ -216,22 +224,22 @@ class Cursor extends EventEmitter
         do @_right
       return @
 
-    end = (@document.getLength @row.id) - 1
-    wordcheck = @getWordCheck options, (@document.getChar @row.id, @col)
-    while @col < end and wordcheck @row, (@col+1)
+    end = (@document.getLength @path.row) - 1
+    wordcheck = @getWordCheck options, (@document.getChar @path.row, @col)
+    while @col < end and wordcheck @path, (@col+1)
       do @_right
 
     do @nextChar
-    while (not do @atVisibleEnd) and @isInWhitespace @row, @col
+    while (not do @atVisibleEnd) and @isInWhitespace @path, @col
       do @nextChar
 
-    end = (@document.getLength @row.id) - 1
+    end = (@document.getLength @path.row) - 1
     if @col == end and options.cursor.pastEnd
       do @_right
     return @
 
   findNextChar: (char, options = {}) ->
-    end = (@document.getLength @row.id) - 1
+    end = (@document.getLength @path.row) - 1
     if @col == end
       return
 
@@ -242,7 +250,7 @@ class Cursor extends EventEmitter
     found = null
     while col < end
       col += 1
-      if (@document.getChar @row.id, col) == char
+      if (@document.getChar @path.row, col) == char
         found = col
         break
 
@@ -266,7 +274,7 @@ class Cursor extends EventEmitter
     found = null
     while col > 0
       col -= 1
-      if (@document.getChar @row.id, col) == char
+      if (@document.getChar @path.row, col) == char
         found = col
         break
 
@@ -278,32 +286,32 @@ class Cursor extends EventEmitter
       do @_right
 
   up: (cursorOptions = {}) ->
-    row = @session.prevVisible @row
-    if row?
-      @setRow row, cursorOptions
+    path = @session.prevVisible @path
+    if path?
+      @setPath path, cursorOptions
 
   down: (cursorOptions = {}) ->
-    row = @session.nextVisible @row
-    if row?
-      @setRow row, cursorOptions
+    path = @session.nextVisible @path
+    if path?
+      @setPath path, cursorOptions
 
   parent: (cursorOptions = {}) ->
-    row = do @row.getParent
-    if row.id == @document.root.id
+    path = do @path.getParent
+    if path.row == @document.root.row
       return
-    if @row.is @session.viewRoot
-      @session._changeViewRoot (do @row.getParent)
-    @setRow row, cursorOptions
+    if @path.is @session.viewRoot
+      @session._changeViewRoot (do @path.getParent)
+    @setPath path, cursorOptions
 
   prevSibling: (cursorOptions = {}) ->
-    prevsib = @document.getSiblingBefore @row
+    prevsib = @document.getSiblingBefore @path
     if prevsib?
-      @setRow prevsib, cursorOptions
+      @setPath prevsib, cursorOptions
 
   nextSibling: (cursorOptions = {}) ->
-    nextsib = @document.getSiblingAfter @row
+    nextsib = @document.getSiblingAfter @path
     if nextsib?
-      @setRow nextsib, cursorOptions
+      @setPath nextsib, cursorOptions
 
   # cursor properties
 
@@ -319,7 +327,7 @@ class Cursor extends EventEmitter
   # get whether the cursor should be bold/italic based on surroundings
   # NOTE: only relevant for insert mode.
   _getPropertiesFromContext: () ->
-    line = @document.getLine @row.id
+    line = @document.getLine @path.row
     if line.length == 0
       obj = {}
     else if @col == 0

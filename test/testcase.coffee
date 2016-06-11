@@ -88,16 +88,16 @@ class TestCase
     @session.importContent content, mimetype
 
   expect: (expected) ->
-    serialized = @document.serialize @document.root.id, {pretty: true}
+    serialized = @document.serialize @document.root.row, {pretty: true}
     @_expectDeepEqual serialized.children, expected, "Unexpected serialized content"
     return @
 
   expectViewRoot: (expected) ->
-    @_expectEqual @session.viewRoot.id, expected, "Unexpected view root"
+    @_expectEqual @session.viewRoot.row, expected, "Unexpected view root"
     return @
 
   expectCursor: (row, col) ->
-    @_expectEqual @session.cursor.row.id, row, "Unexpected cursor row"
+    @_expectEqual @session.cursor.row, row, "Unexpected cursor row"
     @_expectEqual @session.cursor.col, col, "Unexpected cursor col"
     return @
 

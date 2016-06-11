@@ -26,24 +26,24 @@ class MarksPlugin
     that = @
 
     class SetMark extends mutations.Mutation
-      constructor: (@id, @mark) ->
+      constructor: (@row, @mark) ->
       str: () ->
-        return "row #{@id}, mark #{@mark}"
+        return "row #{@row}, mark #{@mark}"
       mutate: (session) ->
-        that._setMark @id, @mark
+        that._setMark @row, @mark
       rewind: (session) ->
-        that._unsetMark @id, @mark
+        that._unsetMark @row, @mark
     @.SetMark = SetMark
 
     class UnsetMark extends mutations.Mutation
-      constructor: (@id) ->
+      constructor: (@row) ->
       str: () ->
-        return "row #{@id}"
+        return "row #{@row}"
       mutate: (session) ->
-        @mark = that._getMark @id
-        that._unsetMark @id, @mark
+        @mark = that._getMark @row
+        that._unsetMark @row, @mark
       rewind: (session) ->
-        that._setMark @id, @mark
+        that._setMark @row, @mark
     @.UnsetMark = UnsetMark
 
     # Serialization #
@@ -54,9 +54,9 @@ class MarksPlugin
         struct.mark = mark
       return struct
 
-    @api.registerListener 'document', 'loadRow', (row, serialized) =>
+    @api.registerListener 'document', 'loadRow', (path, serialized) =>
       if serialized.mark
-        err = @updateMark row.id, serialized.mark
+        err = @updateMark path.row, serialized.mark
         if err then @session.showMessage err, {text_class: 'error'}
 
     # Commands #
@@ -64,7 +64,7 @@ class MarksPlugin
     MODES = Modes.modes
 
     @marksession = null
-    @marksessionrow = null
+    @marksessionpath = null
 
     @api.registerMode {
       name: 'MARK'
@@ -74,10 +74,10 @@ class MarksPlugin
         # initialize marks stuff
         document = new Document (new DataStore.InMemory)
         @marksession = new Session document
-        @marksessionrow = session.cursor.row
+        @marksessionpath = session.cursor.path
       exit: (session) =>
         @marksession = null
-        @marksessionrow = null
+        @marksessionpath = null
       key_transforms: [
         (key, context) =>
           # must be non-whitespace
@@ -108,7 +108,7 @@ class MarksPlugin
       description: 'Finish typing mark',
     }, () ->
       mark = (do that.marksession.curText).join ''
-      err = that.updateMark that.marksessionrow.id, mark
+      err = that.updateMark that.marksessionpath.row, mark
       if err then @session.showMessage err, {text_class: 'error'}
       @session.setMode MODES.NORMAL
       do @keyStream.save
@@ -118,15 +118,15 @@ class MarksPlugin
       description: 'Go to the mark indicated by the cursor, if it exists',
     },  () ->
       return (cursor) =>
-        word = @session.document.getWord cursor.row.id, cursor.col
+        word = @session.document.getWord cursor.row, cursor.col
         if word.length < 1 or word[0] != '@'
           return false
         mark = word[1..]
         allMarks = do that.listMarks
         if mark of allMarks
-          id = allMarks[mark]
-          row = @session.document.canonicalInstance id
-          @session.zoomInto row
+          row = allMarks[mark]
+          path = @session.document.canonicalInstance row
+          @session.zoomInto path
           return true
         else
           return false
@@ -135,7 +135,7 @@ class MarksPlugin
     @api.registerAction [MODES.NORMAL], [CMD_DELETE, CMD_MARK], {
       description: 'Delete mark at cursor'
     }, () ->
-      err = (that.updateMark @session.cursor.row.id, '')
+      err = (that.updateMark @session.cursor.row, '')
       if err then @session.showMessage err, {text_class: 'error'}
       do @keyStream.save
 
@@ -151,11 +151,11 @@ class MarksPlugin
       @session.menu = new Menu @session.menuDiv, (chars) =>
         # find marks that start with the prefix
         findMarks = (document, prefix, nresults = 10) =>
-          results = [] # list of rows
-          for mark, id of (do that.listMarks)
+          results = [] # list of paths
+          for mark, row of (do that.listMarks)
             if (mark.indexOf prefix) == 0
-              row = @session.document.canonicalInstance id
-              results.push { row: row, mark: mark }
+              path = @session.document.canonicalInstance row
+              results.push { path: path, mark: mark }
               if nresults > 0 and results.length == nresults
                 break
           return results
@@ -164,15 +164,15 @@ class MarksPlugin
         return _.map(
           (findMarks @session.document, text),
           (found) =>
-            row = found.row
+            path = found.path
             return {
-              contents: @session.document.getLine row.id
+              contents: @session.document.getLine path.row
               renderHook: (contents) ->
                 contents.unshift virtualDom.h 'span', {
                   className: 'mark theme-bg-secondary theme-trim'
                 }, found.mark
                 return contents
-              fn: () => @session.zoomInto row
+              fn: () => @session.zoomInto path
             }
         )
 
@@ -204,20 +204,20 @@ class MarksPlugin
       do @keyStream.forget
 
     @api.registerHook 'session', 'renderCursorsDict', (cursors, info) =>
-      marking = @marksessionrow? and @marksessionrow.is info.row
+      marking = @marksessionpath? and @marksessionpath.is info.path
       if marking
         return {} # do not render any cursors on the regular line
       return cursors
 
     @api.registerHook 'session', 'renderLineContents', (lineContents, info) =>
-      marking = @marksessionrow? and @marksessionrow.is info.row
+      marking = @marksessionpath? and @marksessionpath.is info.path
       if marking
-        markresults = View.virtualRenderLine @marksession, @marksession.cursor.row, {no_clicks: true}
+        markresults = View.virtualRenderLine @marksession, @marksession.cursor.path, {no_clicks: true}
         lineContents.unshift virtualDom.h 'span', {
           className: 'mark theme-bg-secondary theme-trim-accent'
         }, markresults
       else
-        mark = @_getMark info.row.id
+        mark = @_getMark info.path.row
         if mark
           lineContents.unshift virtualDom.h 'span', {
             className: 'mark theme-bg-secondary theme-trim'
@@ -228,114 +228,114 @@ class MarksPlugin
       if @session.mode == MODES.NORMAL
         if word_info.word[0] == '@'
           mark = word_info.word[1..]
-          id = @getIdForMark mark
-          if id != null
-            markrow = @document.canonicalInstance id
-            errors.assert (markrow != null)
+          row = @getRowForMark mark
+          if row != null
+            markpath = @document.canonicalInstance row
+            errors.assert (markpath != null)
             for i in [word_info.start..word_info.end]
               line[i].renderOptions.type = 'a'
-              line[i].renderOptions.onclick = @goMark.bind @, markrow
+              line[i].renderOptions.onclick = @goMark.bind @, markpath
       return line
 
   # maintain global marks data structures
-  #   a map: id -> mark
-  #   and a second map: mark -> id
-  _getIdsToMarks: () ->
+  #   a map: row -> mark
+  #   and a second map: mark -> row
+  _getRowsToMarks: () ->
     @api.getData 'ids_to_marks', {}
-  _setIdsToMarks: (ids_to_marks) ->
-    @api.setData 'ids_to_marks', ids_to_marks
-  _getMarksToIds: () ->
+  _setRowsToMarks: (rows_to_marks) ->
+    @api.setData 'ids_to_marks', rows_to_marks
+  _getMarksToRows: () ->
     @api.getData 'marks_to_ids', {}
-  _setMarksToIds: (mark_to_ids) ->
-    @api.setData 'marks_to_ids', mark_to_ids
+  _setMarksToRows: (mark_to_rows) ->
+    @api.setData 'marks_to_ids', mark_to_rows
 
   _sanityCheckMarks: () ->
-    marks_to_ids = @_getMarksToIds()
-    ids_to_marks = @_getIdsToMarks()
-    marks_to_ids2 = {}
-    for id, mark of ids_to_marks
-      marks_to_ids2[mark] = parseInt id
-    errors.assert_deep_equals marks_to_ids, marks_to_ids2, "Inconsistent ids_to_marks"
+    marks_to_rows = @_getMarksToRows()
+    rows_to_marks = @_getRowsToMarks()
+    marks_to_rows2 = {}
+    for row, mark of rows_to_marks
+      marks_to_rows2[mark] = parseInt row
+    errors.assert_deep_equals marks_to_rows, marks_to_rows2, "Inconsistent rows_to_marks"
 
-  # get mark for an id, '' if it doesn't exist
-  _getMark: (id) ->
-    marks = @_getIdsToMarks()
-    return marks[id] or ''
+  # get mark for an row, '' if it doesn't exist
+  _getMark: (row) ->
+    marks = @_getRowsToMarks()
+    return marks[row] or ''
 
-  _setMark: (id, mark) ->
+  _setMark: (row, mark) ->
     do @_sanityCheckMarks
-    marks_to_ids = @_getMarksToIds()
-    ids_to_marks = @_getIdsToMarks()
-    errors.assert not (mark in marks_to_ids)
-    errors.assert not (id in ids_to_marks)
-    marks_to_ids[mark] = id
-    ids_to_marks[id] = mark
-    @_setMarksToIds marks_to_ids
-    @_setIdsToMarks ids_to_marks
-    do @_sanityCheckMarks
-
-  _unsetMark: (id, mark) ->
-    do @_sanityCheckMarks
-    marks_to_ids = @_getMarksToIds()
-    ids_to_marks = @_getIdsToMarks()
-    errors.assert_equals marks_to_ids[mark], id
-    errors.assert_equals ids_to_marks[id], mark
-    delete marks_to_ids[mark]
-    delete ids_to_marks[id]
-    @_setMarksToIds marks_to_ids
-    @_setIdsToMarks ids_to_marks
+    marks_to_rows = @_getMarksToRows()
+    rows_to_marks = @_getRowsToMarks()
+    errors.assert not (mark in marks_to_rows)
+    errors.assert not (row in rows_to_marks)
+    marks_to_rows[mark] = row
+    rows_to_marks[row] = mark
+    @_setMarksToRows marks_to_rows
+    @_setRowsToMarks rows_to_marks
     do @_sanityCheckMarks
 
-  getIdForMark: (mark) ->
+  _unsetMark: (row, mark) ->
     do @_sanityCheckMarks
-    marks_to_ids = @_getMarksToIds()
-    if not (mark of marks_to_ids)
+    marks_to_rows = @_getMarksToRows()
+    rows_to_marks = @_getRowsToMarks()
+    errors.assert_equals marks_to_rows[mark], row
+    errors.assert_equals rows_to_marks[row], mark
+    delete marks_to_rows[mark]
+    delete rows_to_marks[row]
+    @_setMarksToRows marks_to_rows
+    @_setRowsToMarks rows_to_marks
+    do @_sanityCheckMarks
+
+  getRowForMark: (mark) ->
+    do @_sanityCheckMarks
+    marks_to_rows = @_getMarksToRows()
+    if not (mark of marks_to_rows)
       return null
-    id = marks_to_ids[mark]
-    if @document.isAttached id
-      return id
+    row = marks_to_rows[mark]
+    if @document.isAttached row
+      return row
     return null
 
   listMarks: () ->
     do @_sanityCheckMarks
-    marks_to_ids = @_getMarksToIds()
+    marks_to_rows = @_getMarksToRows()
 
     all_marks = {}
-    for mark,id of marks_to_ids
-      if @document.isAttached id
-        all_marks[mark] = id
+    for mark, row of marks_to_rows
+      if @document.isAttached row
+        all_marks[mark] = row
     return all_marks
 
-  # Set the mark for id
+  # Set the mark for row
   # Returns whether setting mark succeeded
-  updateMark: (id, mark = '') ->
-    marks_to_ids = @_getMarksToIds()
-    ids_to_marks = @_getIdsToMarks()
-    oldmark = ids_to_marks[id]
+  updateMark: (row, mark = '') ->
+    marks_to_rows = @_getMarksToRows()
+    rows_to_marks = @_getRowsToMarks()
+    oldmark = rows_to_marks[row]
 
     if not (oldmark or mark)
       return "No mark to delete!"
 
-    if mark of marks_to_ids
-      if marks_to_ids[mark] == id
+    if mark of marks_to_rows
+      if marks_to_rows[mark] == row
         return "Already marked, nothing to do!"
 
-      other_id = marks_to_ids[mark]
-      if @document.isAttached other_id
+      other_row = marks_to_rows[mark]
+      if @document.isAttached other_row
         return "Mark '#{mark}' was already taken!"
       else
-        @session.do new @UnsetMark other_id, mark
+        @session.do new @UnsetMark other_row, mark
 
     if oldmark
-      @session.do new @UnsetMark id, oldmark
+      @session.do new @UnsetMark row, oldmark
 
     if mark
-      @session.do new @SetMark id, mark
+      @session.do new @SetMark row, mark
 
     return null
 
-  goMark: (row) =>
-    @session.zoomInto row
+  goMark: (path) =>
+    @session.zoomInto path
     do @session.save
     do @session.render
 

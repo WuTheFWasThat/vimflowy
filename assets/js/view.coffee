@@ -208,25 +208,25 @@ renderSession = (session, options = {}) ->
 
 virtualRenderSession = (session, options = {}) ->
   crumbs = []
-  row = session.viewRoot
-  until row.is session.document.root
-    crumbs.push row
-    row = do row.getParent
+  path = session.viewRoot
+  until path.is session.document.root
+    crumbs.push path
+    path = do path.getParent
 
-  makeCrumb = (row, isLast) ->
+  makeCrumb = (path, isLast) ->
     m_options = {}
     if session.mode == MODES.NORMAL and not isLast
       m_options.className = 'theme-text-link'
       m_options.onclick = () ->
-        session.zoomInto row
+        session.zoomInto path
         do session.save
         renderSession session
     if isLast
-      text = virtualRenderLine session, row, options
-    else if row.is session.document.root
+      text = virtualRenderLine session, path, options
+    else if path.is session.document.root
       text = virtualDom.h 'icon', {className: 'fa fa-home'}
     else
-      text = (session.document.getText row.id).join('')
+      text = (session.document.getText path.row).join('')
     return virtualDom.h 'span', { className: 'crumb' }, [
              virtualDom.h 'span', m_options, [ text ]
            ]
@@ -234,8 +234,8 @@ virtualRenderSession = (session, options = {}) ->
   crumbNodes = []
   crumbNodes.push(makeCrumb session.document.root)
   for i in [crumbs.length-1..0] by -1
-    row = crumbs[i]
-    crumbNodes.push(makeCrumb row, i==0)
+    path = crumbs[i]
+    crumbNodes.push(makeCrumb path, i==0)
 
   breadcrumbsNode = virtualDom.h 'div', {
     id: 'breadcrumbs'
@@ -248,9 +248,9 @@ virtualRenderSession = (session, options = {}) ->
     # mirrors logic of finishes_visual_line in keyHandler.coffee
     [parent, index1, index2] = do session.getVisualLineSelections
     for child in session.document.getChildRange parent, index1, index2
-      options.highlight_blocks[child.id] = true
+      options.highlight_blocks[child.row] = true
 
-  if session.document.hasChildren session.viewRoot.id
+  if session.document.hasChildren session.viewRoot.row
     contentsChildren = virtualRenderTree session, session.viewRoot, options
     contentsNode = virtualDom.h 'div', {}, contentsChildren
   else
@@ -267,90 +267,90 @@ virtualRenderSession = (session, options = {}) ->
   return virtualDom.h 'div', {}, [breadcrumbsNode, contentsNode]
 
 virtualRenderTree = (session, parent, options = {}) ->
-  if (not options.ignoreCollapse) and (session.document.collapsed parent)
+  if (not options.ignoreCollapse) and (session.document.collapsed parent.row)
     return
 
   childrenNodes = []
 
-  for row in session.document.getChildren parent
-    rowElements = []
+  for path in session.document.getChildren parent
+    pathElements = []
 
-    if session.document.isClone row.id
+    if session.document.isClone path.row
       cloneIcon = virtualDom.h 'i', { className: 'fa fa-clone bullet clone-icon', title: 'Cloned' }
-      rowElements.push cloneIcon
+      pathElements.push cloneIcon
 
-    ancestry_str = JSON.stringify do row.getAncestry
+    ancestry_str = JSON.stringify do path.getAncestry
 
     icon = 'fa-circle'
-    if session.document.hasChildren row.id
-      icon = if session.document.collapsed row then 'fa-plus-circle' else 'fa-minus-circle'
+    if session.document.hasChildren path.row
+      icon = if session.document.collapsed path.row then 'fa-plus-circle' else 'fa-minus-circle'
 
     bulletOpts = {
       className: 'fa ' + icon + ' bullet'
-      attributes: {'data-id': row.id, 'data-ancestry': ancestry_str}
+      attributes: {'data-id': path.row, 'data-ancestry': ancestry_str}
     }
-    if session.document.hasChildren row.id
+    if session.document.hasChildren path.row
       bulletOpts.style = {cursor: 'pointer'}
-      bulletOpts.onclick = ((row) ->
-        session.toggleBlockCollapsed row.id
+      bulletOpts.onclick = ((path) ->
+        session.toggleBlockCollapsed path.row
         do session.save
         renderSession session
-      ).bind(@, row)
+      ).bind(@, path)
 
     bullet = virtualDom.h 'i', bulletOpts
-    bullet = session.applyHook 'renderBullet', bullet, { row: row }
+    bullet = session.applyHook 'renderBullet', bullet, { path: path }
 
-    rowElements.push bullet
+    pathElements.push bullet
 
     elLine = virtualDom.h 'div', {
-      id: rowDivID row.id
+      id: rowDivID path.row
       className: 'node-text'
       # if clicking outside of text, but on the row, move cursor to the end of the row
-      onclick:  ((row) ->
+      onclick:  ((path) ->
         col = if options.cursorBetween then -1 else -2
-        session.cursor.set row, col
+        session.cursor.set path, col
         renderSession session
-      ).bind(@, row)
-    }, (virtualRenderLine session, row, options)
-    rowElements.push elLine
+      ).bind(@, path)
+    }, (virtualRenderLine session, path, options)
+    pathElements.push elLine
 
     options.ignoreCollapse = false
     children = virtualDom.h 'div', {
-      id: childrenDivID row.id
+      id: childrenDivID path.row
       className: 'node-children'
-    }, (virtualRenderTree session, row, options)
-    rowElements.push children
+    }, (virtualRenderTree session, path, options)
+    pathElements.push children
 
     className = 'node'
-    if row.id of options.highlight_blocks
+    if path.row of options.highlight_blocks
       className += ' theme-bg-highlight'
 
-    rowElements = session.applyHook 'renderRowElements', rowElements, { row: row }
+    pathElements = session.applyHook 'renderPathElements', pathElements, { path: path }
 
     childNode = virtualDom.h 'div', {
-      id: containerDivID row.id
+      id: containerDivID path.row
       className: className
-    }, rowElements
+    }, pathElements
 
     childrenNodes.push childNode
   return childrenNodes
 
-virtualRenderLine = (session, row, options = {}) ->
-  lineData = session.document.getLine row.id
+virtualRenderLine = (session, path, options = {}) ->
+  lineData = session.document.getLine path.row
   cursors = {}
   highlights = {}
 
-  if row.is session.cursor.row
+  if path.is session.cursor.path
     cursors[session.cursor.col] = true
 
     if session.anchor and not session.lineSelect
-      if session.anchor.row? and row.is session.anchor.row
+      if session.anchor.path? and path.is session.anchor.path
         for i in [session.cursor.col..session.anchor.col]
           highlights[i] = true
       else
         Logger.logger.warn "Multiline not yet implemented"
 
-    cursors = session.applyHook 'renderCursorsDict', cursors, { row: row }
+    cursors = session.applyHook 'renderCursorsDict', cursors, { path: path }
 
   results = []
 
@@ -363,10 +363,10 @@ virtualRenderLine = (session, row, options = {}) ->
   if options.handle_clicks
     if session.mode == MODES.NORMAL or session.mode == MODES.INSERT
       lineoptions.charclick = (column, e) ->
-        session.cursor.set row, column
+        session.cursor.set path, column
         # assume they might click again
         renderSession session, {handle_clicks: true}
-        # prevent overall row click
+        # prevent overall path click
         do e.stopPropagation
         return false
   else if not options.no_clicks
@@ -377,16 +377,16 @@ virtualRenderLine = (session, row, options = {}) ->
   lineoptions.lineHook = session.applyHook.bind session, 'renderLineTextOptions'
 
   lineContents = renderLine lineData, lineoptions
-  lineContents = session.applyHook 'renderLineContents', lineContents, { row: row }
+  lineContents = session.applyHook 'renderLineContents', lineContents, { path: path }
   [].push.apply results, lineContents
 
-  infoChildren = session.applyHook 'renderInfoElements', [], { row: row }
+  infoChildren = session.applyHook 'renderInfoElements', [], { path: path }
   info = virtualDom.h 'span', {
     className: 'node-info'
   }, infoChildren
   results.push info
 
-  results = session.applyHook 'renderLineElements', results, { row: row }
+  results = session.applyHook 'renderLineElements', results, { path: path }
 
   return results
 
@@ -402,7 +402,7 @@ renderMenu = (menu) ->
     'margin-right': '10px'
   )
 
-  searchRow = virtualDom.create virtualDom.h 'span', {}, (virtualRenderLine menu.session, menu.session.cursor.row, {cursorBetween: true, no_clicks: true})
+  searchRow = virtualDom.create virtualDom.h 'span', {}, (virtualRenderLine menu.session, menu.session.cursor.path, {cursorBetween: true, no_clicks: true})
   searchBox.append searchRow
 
   if menu.results.length == 0

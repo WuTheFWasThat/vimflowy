@@ -67,30 +67,30 @@ class Register
       @session.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
 
   pasteSerializedRows: (options = {}) ->
-    row = @session.cursor.row
-    parent = do row.getParent
-    index = @session.document.indexOf row
+    path = @session.cursor.path
+    parent = do path.getParent
+    index = @session.document.indexOf path
 
     if options.before
       @session.addBlocks parent, index, @serialized_rows, {setCursor: 'first'}
     else
-      children = @session.document.getChildren row
-      if (not @session.document.collapsed row.id) and (children.length > 0)
-        @session.addBlocks row, 0, @serialized_rows, {setCursor: 'first'}
+      children = @session.document.getChildren path
+      if (not @session.document.collapsed path.row) and (children.length > 0)
+        @session.addBlocks path, 0, @serialized_rows, {setCursor: 'first'}
       else
         @session.addBlocks parent, (index + 1), @serialized_rows, {setCursor: 'first'}
 
   pasteClonedRows: (options = {}) ->
-    row = @session.cursor.row
-    parent = do row.getParent
-    index = @session.document.indexOf row
+    path = @session.cursor.path
+    parent = do path.getParent
+    index = @session.document.indexOf path
 
     if options.before
       @session.attachBlocks parent, @cloned_rows, index, {setCursor: 'first'}
     else
-      children = @session.document.getChildren row
-      if (not @session.document.collapsed row.id) and (children.length > 0)
-        @session.attachBlocks row, @cloned_rows, 0, {setCursor: 'first'}
+      children = @session.document.getChildren path
+      if (not @session.document.collapsed path.row) and (children.length > 0)
+        @session.attachBlocks path, @cloned_rows, 0, {setCursor: 'first'}
       else
         @session.attachBlocks parent, @cloned_rows, (index + 1), {setCursor: 'first'}
 

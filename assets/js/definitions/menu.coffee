@@ -20,7 +20,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
       nresults = options.nresults or 10
       case_sensitive = options.case_sensitive
 
-      results = [] # list of (row_id, index) pairs
+      results = [] # list of (path, index) pairs
 
       canonicalize = (x) ->
         return if options.case_sensitive then x else x.toLowerCase()
@@ -35,8 +35,8 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
       if query.length == 0
         return results
 
-      for row in do document.orderedLines
-        line = canonicalize (document.getText row.id).join ''
+      for path in do document.orderedLines
+        line = canonicalize (document.getText path.row).join ''
         matches = []
         if _.every(query_words.map ((word) ->
           i = line.indexOf word
@@ -44,7 +44,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
           matches = matches.concat [i...i+word.length]
           return true
         ))
-          results.push { row: row, matches: matches }
+          results.push { path: path, matches: matches }
         if nresults > 0 and results.length == nresults
           break
       return results
@@ -52,16 +52,16 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
     return _.map(
       (find @session.document, chars),
       (found) =>
-        row = found.row
+        path = found.path
         highlights = {}
         for i in found.matches
           highlights[i] = true
         return {
-          contents: @session.document.getLine row.id
+          contents: @session.document.getLine path.row
           renderOptions: { highlights: highlights }
           fn: () =>
-            @session.zoomInto row
-            @session.cursor.setRow row
+            @session.zoomInto path
+            @session.cursor.setPath path
         }
     )
 
