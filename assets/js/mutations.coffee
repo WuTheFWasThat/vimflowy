@@ -17,6 +17,8 @@ the mutation may also optionally implement
         takes a session, and acts on it.  assumes that mutate has been called once already
         by default, remutate is the same as mutate.
         it should be implemented only if it is more efficient than the mutate implementation
+    moveCursor: (cursor) -> void
+        takes a cursor, and moves it according to how the cursor should move
 ###
 
 _ = require 'lodash'
@@ -51,6 +53,8 @@ class Mutation
     return
   remutate: (session) ->
     return @mutate session
+  moveCursor: (cursor) ->
+    return
 
 class AddChars extends Mutation
   # options:
@@ -96,7 +100,7 @@ class DelChars extends Mutation
 
 class MoveBlock extends Mutation
   constructor: (@path, @parent, @index = -1, @options = {}) ->
-    @old_parent = do @path.getParent
+    @old_parent = @path.parent
 
   str: () ->
     return "path #{@path.row} from #{@path.parent.row} to #{@parent.row}"
@@ -110,11 +114,15 @@ class MoveBlock extends Mutation
     errors.assert (not do @path.isRoot), "Cannot detach root"
     info = session.document._move @path.row, @old_parent.row, @parent.row, @index
     @old_index = info.old.childIndex
-    @path.setParent @parent
 
   rewind: (session) ->
     session.document._move @path.row, @parent.row, @old_parent.row, @old_index
-    @path.setParent @old_parent
+
+  moveCursor: (cursor) ->
+    walk = cursor.path.walkFrom @path
+    if walk == null
+      return
+    cursor._setPath (@parent.extend [@path.row]).extend walk
 
 class AttachBlocks extends Mutation
   constructor: (@parent, @cloned_rows, @index = -1, @options = {}) ->

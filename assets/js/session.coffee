@@ -298,6 +298,7 @@ class Session extends EventEmitter
     if not mutation.validate @
       return false
     mutation.mutate @
+    mutation.moveCursor @cursor
     @mutations.push mutation
     return true
 
@@ -320,7 +321,7 @@ class Session extends EventEmitter
       nextsib = @document.getSiblingAfter path
       if nextsib?
         return nextsib
-      path = do path.getParent
+      path = path.parent
       if path.is @viewRoot
         return null
 
@@ -339,7 +340,7 @@ class Session extends EventEmitter
     prevsib = @document.getSiblingBefore path
     if prevsib?
       return @lastVisible prevsib
-    parent = do path.getParent
+    parent = path.parent
     if parent.is @viewRoot
       if parent.is @document.root
         return null
@@ -352,7 +353,7 @@ class Session extends EventEmitter
   oldestVisibleAncestor: (path) ->
     last = path
     while true
-      cur = do last.getParent
+      cur = last.parent
       if cur.is @viewRoot
         return last
       if do cur.isRoot
@@ -371,7 +372,7 @@ class Session extends EventEmitter
         return null
       if @document.collapsed cur.row
         answer = cur
-      cur = do cur.getParent
+      cur = cur.parent
 
   isVisible: (path) ->
     visibleAncestor = @youngestVisibleAncestor path
@@ -479,7 +480,7 @@ class Session extends EventEmitter
 
   zoomOut: () ->
     if @viewRoot.row != @document.root.row
-      parent = do @viewRoot.getParent
+      parent = @viewRoot.parent
       @zoomInto parent
 
   zoomIn: () ->
@@ -646,12 +647,12 @@ class Session extends EventEmitter
     else if (not @document.collapsed @cursor.row) and @document.hasChildren @cursor.row
       @addBlocks @cursor.path, 0, [''], options
     else
-      parent = do @cursor.path.getParent
+      parent = @cursor.path.parent
       index = @document.indexOf @cursor.path
       @addBlocks parent, (index+1), [''], options
 
   newLineAbove: () ->
-    parent = do @cursor.path.getParent
+    parent = @cursor.path.parent
     index = @document.indexOf @cursor.path
     @addBlocks parent, index, [''], {setCursor: 'first'}
 
@@ -722,7 +723,7 @@ class Session extends EventEmitter
       do @zoomOut
 
   delBlocksAtCursor: (nrows, options = {}) ->
-    parent = do @cursor.path.getParent
+    parent = @cursor.path.parent
     index = @document.indexOf @cursor.path
     @delBlocks parent, index, nrows, options
 
@@ -761,12 +762,7 @@ class Session extends EventEmitter
 
   moveBlock: (row, parent, index = -1) ->
     [commonAncestor, rowAncestors, cursorAncestors] = @document.getCommonAncestor row, @cursor.path
-    moved = @do new mutations.MoveBlock row, parent, index
-    if moved
-      # Move the cursor also, if it is in the moved block
-      if commonAncestor.is row
-        newCursorRow = @document.combineAncestry row, (x.row for x in cursorAncestors)
-        @cursor._setPath newCursorRow
+    @do new mutations.MoveBlock row, parent, index
     return row
 
   indentBlocks: (row, numblocks = 1) ->
@@ -790,14 +786,14 @@ class Session extends EventEmitter
     if row.is @viewRoot
       @showMessage "Cannot unindent view root", {text_class: 'error'}
       return
-    parent = do row.getParent
+    parent = row.parent
     if parent.row == @viewRoot.row
       @showMessage "Cannot unindent past root", {text_class: 'error'}
       return null
 
     siblings = (@document.getSiblingRange row, 0, (numblocks-1)).filter ((sib) -> sib != null)
 
-    newparent = do parent.getParent
+    newparent = parent.parent
     pp_i = @document.indexOf parent
 
     for sib in siblings
@@ -831,7 +827,7 @@ class Session extends EventEmitter
       @showMessage "Cannot unindent line with children", {text_class: 'error'}
       return
 
-    parent = do path.getParent
+    parent = path.parent
     p_i = @document.indexOf path
 
     newparent = @unindentBlocks path
@@ -852,7 +848,7 @@ class Session extends EventEmitter
       @moveBlock path, next, 0
     else
       # make it the next sibling
-      parent = do next.getParent
+      parent = next.parent
       p_i = @document.indexOf next
       @moveBlock path, parent, (p_i+1)
 
@@ -862,7 +858,7 @@ class Session extends EventEmitter
       return
 
     # make it the previous sibling
-    parent = do prev.getParent
+    parent = prev.parent
     p_i = @document.indexOf prev
     @moveBlock path, parent, p_i
 
@@ -885,12 +881,12 @@ class Session extends EventEmitter
     [common, ancestors1, ancestors2] = @document.getCommonAncestor @cursor.path, @anchor.path
     if ancestors1.length == 0
       # anchor is underneath cursor
-      parent = do common.getParent
+      parent = common.parent
       index = @document.indexOf @cursor.path
       return [parent, index, index]
     else if ancestors2.length == 0
       # cursor is underneath anchor
-      parent = do common.getParent
+      parent = common.parent
       index = @document.indexOf @anchor.path
       return [parent, index, index]
     else

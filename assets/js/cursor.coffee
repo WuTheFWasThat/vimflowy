@@ -296,11 +296,11 @@ class Cursor extends EventEmitter
       @setPath path, cursorOptions
 
   parent: (cursorOptions = {}) ->
-    path = do @path.getParent
+    path = @path.parent
     if path.row == @document.root.row
       return
     if @path.is @session.viewRoot
-      @session._changeViewRoot (do @path.getParent)
+      @session._changeViewRoot path
     @setPath path, cursorOptions
 
   prevSibling: (cursorOptions = {}) ->

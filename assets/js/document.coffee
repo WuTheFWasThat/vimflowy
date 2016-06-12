@@ -10,15 +10,6 @@ EventEmitter = require './eventEmitter.coffee'
 class Path
   constructor: (@parent, @row) ->
 
-  getParent: () ->
-    @parent
-
-  setParent: (parent) ->
-    @parent = parent
-
-  debug: () ->
-    (do @getAncestry).join ", "
-
   isRoot: () ->
     @row == constants.root_row
 
@@ -32,12 +23,31 @@ class Path
   child: (row) ->
     new Path @, row
 
+  isDescendant: (other_path) ->
+    return (@walkFrom other_path) != null
+
+  walkFrom: (ancestor) ->
+    my_ancestry = do @getAncestry
+    their_ancestry = do ancestor.getAncestry
+    if my_ancestry.length < their_ancestry.length
+      return null
+    for i in [0...their_ancestry.length]
+      if my_ancestry[i] != their_ancestry[i]
+        return null
+    return my_ancestry.slice their_ancestry.length
+
+  extend: (walk) ->
+    descendent = @
+    for row in walk
+      descendent = descendent.child row
+    return descendent
+
   # Represents the exact same row
   is: (other) ->
     if @row != other.row then return false
     if do @isRoot then return do other.isRoot
     if do other.isRoot then return false
-    return (do @getParent).is (do other.getParent)
+    return @parent.is other.parent
 
 Path.getRoot = () ->
   new Path null, constants.root_row
@@ -172,7 +182,7 @@ class Document extends EventEmitter
     return ((@_getChildren row).length > 0)
 
   getSiblings: (row) ->
-    return @getChildren (do row.getParent)
+    return @getChildren row.parent
 
   nextClone: (path) ->
     parents = @_getParents path.row
@@ -239,7 +249,7 @@ class Document extends EventEmitter
 
   # detach a block from the graph
   detach: (path) ->
-    parent = do path.getParent
+    parent = path.parent
     index = @indexOf path
     @_detach path.row, parent.row
     return {
@@ -345,8 +355,8 @@ class Document extends EventEmitter
 
   attachChildren: (parent, new_children, index = -1) ->
     @_attachChildren parent.row, (x.row for x in new_children), index
-    for child in new_children
-      child.setParent parent
+    # for child in new_children
+    #   child.setParent parent
     return new_children
 
   _attachChildren: (parent, new_children, index = -1) ->
@@ -363,7 +373,7 @@ class Document extends EventEmitter
     until row.is stop
       errors.assert (not do row.isRoot), "Failed to get ancestry for #{row} going up until #{stop}"
       ancestors.push row
-      row = do row.getParent
+      row = row.parent
     ancestors.push stop
     do ancestors.reverse
     return ancestors
@@ -406,7 +416,7 @@ class Document extends EventEmitter
   getSiblingRange: (path, min_offset, max_offset) ->
     children = @getSiblings path
     index = @indexOf path
-    return @getChildRange (do path.getParent), (min_offset + index), (max_offset + index)
+    return @getChildRange path.parent, (min_offset + index), (max_offset + index)
 
   getChildRange: (path, min, max) ->
     (@_getChildRange path.row, min, max).map ((child_row) ->

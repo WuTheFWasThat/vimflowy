@@ -68,7 +68,7 @@ class Register
 
   pasteSerializedRows: (options = {}) ->
     path = @session.cursor.path
-    parent = do path.getParent
+    parent = path.parent
     index = @session.document.indexOf path
 
     if options.before
@@ -82,7 +82,7 @@ class Register
 
   pasteClonedRows: (options = {}) ->
     path = @session.cursor.path
-    parent = do path.getParent
+    parent = path.parent
     index = @session.document.indexOf path
 
     if options.before

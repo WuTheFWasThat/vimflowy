@@ -12,7 +12,8 @@ Plugins.register {
         position: 'relative'
         'font-weight': 'bold'
       }
-    }, " " + (do info.path.debug)
+    }, " " + (do info.path.getAncestry).join ", "
+
     return pathElements
 ), ((api) ->
   do api.deregisterAll
