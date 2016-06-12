@@ -62,9 +62,10 @@ class Register
 
   pasteChars: (options = {}) ->
     if options.before
-      @session.addCharsAtCursor @chars, {cursor: options.cursor}
+      @session.addCharsAtCursor @chars
     else
-      @session.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
+      @session.addCharsAfterCursor @chars
+      @session.cursor.setCol (@session.cursor.col + @chars.length)
 
   pasteSerializedRows: (options = {}) ->
     path = @session.cursor.path

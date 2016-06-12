@@ -1,3 +1,5 @@
+errors = require './errors.coffee'
+
 ###
 mutations mutate a document within a session, and are undoable
 each mutation should implement a constructor, as well as the following methods:
@@ -57,13 +59,7 @@ class Mutation
     return
 
 class AddChars extends Mutation
-  # options:
-  #   setCursor: if you wish to set the cursor, set to 'beginning' or 'end'
-  #              indicating where the cursor should go to
-
-  constructor: (@row, @col, @chars, @options = {}) ->
-    @options.setCursor ?= 'end'
-    @options.cursor ?= {}
+  constructor: (@row, @col, @chars) ->
 
   str: () ->
     return "row #{@row.row}, col #{@col}, nchars #{@chars.length}"
@@ -71,32 +67,57 @@ class AddChars extends Mutation
   mutate: (session) ->
     session.document.writeChars @row.row, @col, @chars
 
-    shift = if @options.cursor.pastEnd then 1 else 0
-    if @options.setCursor == 'beginning'
-      session.cursor.set @row, (@col + shift), @options.cursor
-    else if @options.setCursor == 'end'
-      session.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
-
   rewind: (session) ->
     session.document.deleteChars @row.row, @col, @chars.length
 
+  moveCursor: (cursor) ->
+    if not (cursor.path.is @row)
+      return
+    if cursor.col >= @col
+      cursor.setCol (cursor.col + @chars.length)
+
 class DelChars extends Mutation
-  constructor: (@path, @col, @nchars, @options = {}) ->
-    @options.setCursor ?= 'before'
-    @options.cursor ?= {}
+  constructor: (@row, @col, @nchars) ->
 
   str: () ->
-    return "path #{@path.row}, col #{@col}, nchars #{@nchars}"
+    return "row #{@row}, col #{@col}, nchars #{@nchars}"
 
   mutate: (session) ->
-    @deletedChars = session.document.deleteChars @path.row, @col, @nchars
-    if @options.setCursor == 'before'
-      session.cursor.set @path, @col, @options.cursor
-    else if @options.setCursor == 'after'
-      session.cursor.set @path, (@col + 1), @options.cursor
+    @deletedChars = session.document.deleteChars @row, @col, @nchars
 
   rewind: (session) ->
-    session.document.writeChars @path.row, @col, @deletedChars
+    session.document.writeChars @row, @col, @deletedChars
+
+  moveCursor: (cursor) ->
+    if cursor.row != @row
+      return
+    if cursor.col < @col
+      return
+    else if cursor.col < @col + @nchars
+      cursor.setCol @col
+    else
+      cursor.setCol (cursor.col - @nchars)
+
+class ChangeChars extends Mutation
+  constructor: (@row, @col, @nchars, @transform) ->
+
+  str: () ->
+    return "change row #{@row}, col #{@col}, nchars #{@nchars}"
+
+  mutate: (session) ->
+    @deletedChars = session.document.deleteChars @row, @col, @nchars
+    @ncharsDeleted = @deletedChars.length
+    @addedChars = @transform @deletedChars
+    errors.assert (@addedChars.length == @ncharsDeleted)
+    session.document.writeChars @row, @col, @addedChars
+
+  rewind: (session) ->
+    session.document.deleteChars @row, @col, @ncharsDeleted
+    session.document.writeChars @row, @col, @deletedChars
+
+  remutate: (session) ->
+    session.document.deleteChars @row, @col, @ncharsDeleted
+    session.document.writeChars @row, @col, @addedChars
 
 class MoveBlock extends Mutation
   constructor: (@path, @parent, @index = -1, @options = {}) ->
@@ -252,6 +273,7 @@ exports.Mutation = Mutation
 
 exports.AddChars = AddChars
 exports.DelChars = DelChars
+exports.ChangeChars = ChangeChars
 exports.AddBlocks = AddBlocks
 exports.DetachBlocks = DetachBlocks
 exports.AttachBlocks = AttachBlocks

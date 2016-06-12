@@ -240,8 +240,7 @@ class Session extends EventEmitter
 
   restoreViewState: (state) ->
     @cursor.from state.cursor
-    if @mode != MODES.INSERT
-      do @cursor.backIfNeeded
+    do @fixCursorForMode
     @changeView state.viewRoot
 
   undo: () ->
@@ -299,8 +298,15 @@ class Session extends EventEmitter
       return false
     mutation.mutate @
     mutation.moveCursor @cursor
+    # TODO: do this elsewhere
+    do @fixCursorForMode
+
     @mutations.push mutation
     return true
+
+  fixCursorForMode: () ->
+    if (Modes.getMode @mode).metadata.hotkey_type != Modes.INSERT_MODE_TYPE
+      do @cursor.backIfNeeded
 
   ##################
   # viewability
@@ -518,23 +524,23 @@ class Session extends EventEmitter
   curLineLength: () ->
     return @document.getLength @cursor.row
 
-  addChars: (row, col, chars, options) ->
-    @do new mutations.AddChars row, col, chars, options
+  addChars: (row, col, chars) ->
+    @do new mutations.AddChars row, col, chars
 
-  addCharsAtCursor: (chars, options) ->
-    @addChars @cursor.path, @cursor.col, chars, options
+  addCharsAtCursor: (chars) ->
+    @addChars @cursor.path, @cursor.col, chars
 
-  addCharsAfterCursor: (chars, options) ->
+  addCharsAfterCursor: (chars) ->
     col = @cursor.col
     if col < (@document.getLength @cursor.row)
       col += 1
-    @addChars @cursor.path, col, chars, options
+    @addChars @cursor.path, col, chars
 
   delChars: (path, col, nchars, options = {}) ->
     n = @document.getLength path.row
     deleted = []
     if (n > 0) and (nchars > 0) and (col < n)
-      mutation = new mutations.DelChars path, col, nchars, options
+      mutation = new mutations.DelChars path.row, col, nchars
       @do mutation
       deleted = mutation.deletedChars
       if options.yank
@@ -548,17 +554,25 @@ class Session extends EventEmitter
   delCharsAfterCursor: (nchars, options) ->
     return @delChars @cursor.path, @cursor.col, nchars, options
 
-  replaceCharsAfterCursor: (char, nchars, options) ->
-    deleted = @delCharsAfterCursor nchars, {cursor: {pastEnd: true}}
-    chars = []
-    for obj in deleted
-      newobj = _.clone obj
-      newobj.char = char
-      chars.push newobj
-    @addCharsAtCursor chars, options
+  changeChars: (row, col, nchars, change_fn) ->
+    mutation = new mutations.ChangeChars row, col, nchars, change_fn
+    @do mutation
+    return mutation.ncharsDeleted
 
-  clearRowAtCursor: () ->
-    do @yankRowAtCursor
+  replaceCharsAfterCursor: (char, nchars) ->
+    ndeleted = @changeChars @cursor.row, @cursor.col, nchars, ((chars) ->
+      return chars.map ((char_obj) ->
+        new_obj = _.clone char_obj
+        new_obj.char = char
+        return new_obj
+      )
+    )
+    @cursor.setCol (@cursor.col + ndeleted - 1)
+
+  clearRowAtCursor: (options) ->
+    if options.yank
+      # yank as a row, not chars
+      do @yankRowAtCursor
     @delChars @cursor.path, 0, (do @curLineLength)
 
   yankChars: (path, col, nchars) ->
@@ -599,30 +613,29 @@ class Session extends EventEmitter
 
   # toggling text properties
   # if new_value is null, should be inferred based on old values
-  toggleProperty: (property, new_value, path, col, n) ->
-    deleted = @delChars path, col, n, {setCursor: 'stay'}
+  toggleProperty: (property, new_value, row, col, n) ->
+    @changeChars row, col, n, ((deleted) ->
+      if new_value == null
+        all_were_true = _.every deleted.map ((obj) -> return obj[property])
+        new_value = not all_were_true
 
-    if new_value == null
-      all_were_true = _.every deleted.map ((obj) -> return obj[property])
-      new_value = not all_were_true
+      return deleted.map ((char_obj) ->
+        new_obj = _.clone char_obj
+        new_obj[property] = new_value
+        return new_obj
+      )
+    )
 
-    chars = []
-    for obj in deleted
-      newobj = _.clone obj
-      newobj[property] = new_value
-      chars.push newobj
-    @addChars path, col, chars, {setCursor: 'stay'}
-
-  toggleRowsProperty: (property, paths) ->
-    all_were_true = _.every paths.map ((path) =>
-      _.every (@document.getLine path.row).map ((obj) -> return obj[property])
+  toggleRowsProperty: (property, rows) ->
+    all_were_true = _.every rows.map ((row) =>
+      _.every (@document.getLine row).map ((obj) -> return obj[property])
     )
     new_value = not all_were_true
-    for path in paths
-      @toggleProperty property, new_value, path, 0, (@document.getLength path.row)
+    for row in rows
+      @toggleProperty property, new_value, row, 0, (@document.getLength row)
 
-  toggleRowProperty: (property, path = @cursor.path) ->
-    @toggleProperty property, null, path, 0, (@document.getLength path.row)
+  toggleRowProperty: (property, row = @cursor.row) ->
+    @toggleProperty property, null, row, 0, (@document.getLength row)
 
   toggleRowPropertyBetween: (property, cursor1, cursor2, options) ->
     if not (cursor2.path.is cursor1.path)
@@ -633,7 +646,7 @@ class Session extends EventEmitter
       [cursor1, cursor2] = [cursor2, cursor1]
 
     offset = if options.includeEnd then 1 else 0
-    @toggleProperty property, null, cursor1.path, cursor1.col, (cursor2.col - cursor1.col + offset)
+    @toggleProperty property, null, cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
 
   newLineBelow: (options = {}) ->
     options.setCursor = 'first'
@@ -667,7 +680,7 @@ class Session extends EventEmitter
     if @cursor.col == @document.getLength @cursor.row
       @newLineBelow {cursorOptions: {keepProperties: true}}
     else
-      mutation = new mutations.DelChars @cursor.path, 0, @cursor.col
+      mutation = new mutations.DelChars @cursor.row, 0, @cursor.col
       @do mutation
       path = @cursor.path
 
@@ -868,12 +881,11 @@ class Session extends EventEmitter
   toggleBlockCollapsed: (row) ->
     @do new mutations.ToggleBlock row
 
-  pasteBefore: (options = {}) ->
-    options.before = true
-    @register.paste options
+  pasteBefore: () ->
+    @register.paste {before: true}
 
-  pasteAfter: (options = {}) ->
-    @register.paste options
+  pasteAfter: () ->
+    @register.paste {}
 
   # given an anchor and cursor, figures out the right blocks to be deleting
   # returns a parent, minindex, and maxindex

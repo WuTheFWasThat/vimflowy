@@ -26,7 +26,8 @@ CMD_STRIKETHROUGH = keyDefinitions.registerCommand {
 
 text_format_normal = (property) ->
   return () ->
-    @session.toggleRowProperty property
+    ndeleted = @session.toggleRowProperty property
+    @session.cursor.setCol (@session.cursor.col + ndeleted - 1)
     do @keyStream.save
 
 text_format_insert = (property) ->
@@ -35,7 +36,9 @@ text_format_insert = (property) ->
 
 text_format_visual_line = (property) ->
   return () ->
-    rows = @session.document.getChildRange @parent, @row_start_i, @row_end_i
+    paths = @session.document.getChildRange @parent, @row_start_i, @row_end_i
+    rows = paths.map((path) -> path.row)
+    # TODO: dedup rows to avoid double toggle
     @session.toggleRowsProperty property, rows
     @session.setMode MODES.NORMAL
     do @keyStream.save

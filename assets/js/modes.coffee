@@ -171,7 +171,7 @@ registerMode {
         obj = {char: key}
         for property in constants.text_properties
           if context.session.cursor.getProperty property then obj[property] = true
-        context.session.addCharsAtCursor [obj], {cursor: {pastEnd: true}}
+        context.session.addCharsAtCursor [obj]
         return [null, context]
       return [key, context]
   ]
@@ -243,7 +243,7 @@ registerMode {
     (key, context) ->
       key = transform_insert_key key
       if key.length == 1
-        context.session.menu.session.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+        context.session.menu.session.addCharsAtCursor [{char: key}]
         do context.session.menu.update
         do context.keyStream.forget
         return [null, context]

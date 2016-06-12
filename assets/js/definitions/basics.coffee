@@ -236,7 +236,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_REPLACE, {
   if key == null then return do @keyStream.wait
   # TODO: refactor keys so this is unnecessary
   if key == 'space' then key = ' '
-  @session.replaceCharsAfterCursor key, @repeat, {setCursor: 'end'}
+  @session.replaceCharsAfterCursor key, @repeat
   do @keyStream.save
 
 CMD_DELETE = keyDefinitions.registerCommand {
@@ -288,7 +288,7 @@ CMD_CHANGE = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.VISUAL], CMD_CHANGE, {
   description: 'Change',
 }, () ->
-  options = {includeEnd: true, yank: true, cursor: {pastEnd: true}}
+  options = {includeEnd: true, yank: true}
   @session.deleteBetween @session.cursor, @session.anchor, options
   @session.setMode MODES.INSERT
 
@@ -322,7 +322,7 @@ keyDefinitions.registerAction [MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
   for i in [1..@repeat]
     motion cursor, {pastEnd: true, pastEndWord: true}
   @session.setMode MODES.INSERT
-  @session.deleteBetween @session.cursor, cursor, {yank: true, cursor: { pastEnd: true }}
+  @session.deleteBetween @session.cursor, cursor, {yank: true}
 
 #################
 # yank
@@ -468,8 +468,8 @@ CMD_CHANGE_CHAR = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_CHANGE_CHAR, {
   description: 'Change character',
 }, () ->
-  @session.delCharsAfterCursor 1, {cursor: {pastEnd: true}}, {yank: true}
   @session.setMode MODES.INSERT
+  @session.delCharsAfterCursor 1, {yank: true}
 
 CMD_DELETE_TO_HOME = keyDefinitions.registerCommand {
   name: 'DELETE_TO_HOME'
@@ -555,12 +555,12 @@ CMD_PASTE_BEFORE = keyDefinitions.registerCommand {
 keyDefinitions.registerAction [MODES.NORMAL], CMD_PASTE_BEFORE, {
   description: 'Paste before cursor',
 }, () ->
-  @session.pasteBefore {}
+  do @session.pasteBefore
   do @keyStream.save
 keyDefinitions.registerAction [MODES.INSERT], CMD_PASTE_BEFORE, {
   description: 'Paste before cursor',
 }, () ->
-  @session.pasteBefore {cursor: {pastEnd: true}}
+  do @session.pasteBefore
 
 CMD_JOIN_LINE = keyDefinitions.registerCommand {
   name: 'JOIN_LINE'

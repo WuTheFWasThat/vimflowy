@@ -175,10 +175,7 @@ create_session = (doc, to_load) ->
         if i != 0
           do session.newLineAtCursor
         chars = line.split ''
-        options = {}
-        if session.mode == Modes.modes.INSERT
-          options.cursor = {pastEnd: true}
-        session.addCharsAtCursor chars, options
+        session.addCharsAtCursor chars
       View.renderSession session
       do session.save
 

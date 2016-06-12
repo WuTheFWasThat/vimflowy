@@ -183,3 +183,10 @@ describe "numbers (repeat next action)", () ->
     t.sendKeys '6u'
     t.expect ['1234123412341234 is my credit card']
 
+  it "replace character yanks", () ->
+    t = new TestCase ['yank']
+    t.sendKeys 'st'
+    t.sendKey 'esc'
+    t.expect ['tank']
+    t.sendKey 'p'
+    t.expect ['tyank']

@@ -74,6 +74,7 @@ class MarksPlugin
         # initialize marks stuff
         document = new Document (new DataStore.InMemory)
         @marksession = new Session document
+        @marksession.setMode MODES.INSERT
         @marksessionpath = session.cursor.path
       exit: (session) =>
         @marksession = null
@@ -83,7 +84,7 @@ class MarksPlugin
           # must be non-whitespace
           if key.length == 1
             if /^\S*$/.test(key)
-              @marksession.addCharsAtCursor [{char: key}], {cursor: {pastEnd: true}}
+              @marksession.addCharsAtCursor [{char: key}]
               return [null, context]
           return [key, context]
       ]
