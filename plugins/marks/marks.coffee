@@ -125,7 +125,7 @@ class MarksPlugin
         allMarks = do that.listMarks
         if mark of allMarks
           row = allMarks[mark]
-          path = @session.document.canonicalInstance row
+          path = @session.document.canonicalPath row
           @session.zoomInto path
           return true
         else
@@ -154,7 +154,7 @@ class MarksPlugin
           results = [] # list of paths
           for mark, row of (do that.listMarks)
             if (mark.indexOf prefix) == 0
-              path = @session.document.canonicalInstance row
+              path = @session.document.canonicalPath row
               results.push { path: path, mark: mark }
               if nresults > 0 and results.length == nresults
                 break
@@ -230,7 +230,7 @@ class MarksPlugin
           mark = word_info.word[1..]
           row = @getRowForMark mark
           if row != null
-            markpath = @document.canonicalInstance row
+            markpath = @document.canonicalPath row
             errors.assert (markpath != null)
             for i in [word_info.start..word_info.end]
               line[i].renderOptions.type = 'a'

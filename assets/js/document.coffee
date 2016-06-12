@@ -13,10 +13,6 @@ class Path
   getParent: () ->
     @parent
 
-  # NOTE: in the future, this may contain other info
-  serialize: () ->
-    return @row
-
   setParent: (parent) ->
     @parent = parent
 
@@ -24,7 +20,7 @@ class Path
     (do @getAncestry).join ", "
 
   isRoot: () ->
-    @row == constants.root_id
+    @row == constants.root_row
 
   # gets a list of IDs
   getAncestry: () ->
@@ -44,7 +40,7 @@ class Path
     return (do @getParent).is (do other.getParent)
 
 Path.getRoot = () ->
-  new Path null, constants.root_id
+  new Path null, constants.root_row
 
 Path.loadFromAncestry = (ancestry) ->
   if ancestry.length == 0
@@ -174,7 +170,7 @@ class Document extends EventEmitter
     while true
       i = (i + 1) % parents.length
       new_parent = parents[i]
-      new_parent_path = @canonicalInstance new_parent
+      new_parent_path = @canonicalPath new_parent
       # this happens if the parent got detached
       if new_parent_path != null
         break
@@ -202,12 +198,12 @@ class Document extends EventEmitter
 
   # Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   # NOTE: this is not very efficient, in the worst case, but probably doesn't matter
-  canonicalInstance: (row) -> # Given an row, return a path with that row
-    errors.assert row?, "Empty row passed to canonicalInstance"
-    if row == constants.root_id
+  canonicalPath: (row) -> # Given an row, return a path with that row
+    errors.assert row?, "Empty row passed to canonicalPath"
+    if row == constants.root_row
       return @root
     for parentRow in @_getParents row
-      canonicalParent = @canonicalInstance parentRow
+      canonicalParent = @canonicalPath parentRow
       if canonicalParent != null
         return @findChild canonicalParent, row
     return null

@@ -1,6 +1,6 @@
 exports.text_properties = ['bold', 'italic', 'underline', 'strikethrough']
 
-exports.root_id = 0
+exports.root_row = 0
 exports.empty_data = ['']
 exports.default_data = [
   'Welcome to vimflowy!'
