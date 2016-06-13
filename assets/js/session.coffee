@@ -748,12 +748,20 @@ class Session extends EventEmitter
     @yankBlocksClone @cursor.path, nrows
 
   attachBlocks: (parent, ids, index = -1, options = {}) ->
-    mutation = new mutations.AttachBlocks parent, ids, index, options
+    mutation = new mutations.AttachBlocks parent.row, ids, index, options
+    will_work = mutation.validate @
     @do mutation
 
-  moveBlock: (row, parent, index = -1, options = {}) ->
+    # TODO: do this more elegantly
+    if will_work
+      if options.setCursor == 'first'
+        @cursor.set (@document.findChild parent, ids[0]), 0
+      else if @options.setCursor == 'last'
+        @cursor.set (@document.findChild parent, ids[ids.length-1]), 0
+
+  moveBlock: (row, parent, index = -1) ->
     [commonAncestor, rowAncestors, cursorAncestors] = @document.getCommonAncestor row, @cursor.path
-    moved = @do new mutations.MoveBlock row, parent, index, options
+    moved = @do new mutations.MoveBlock row, parent, index
     if moved
       # Move the cursor also, if it is in the moved block
       if commonAncestor.is row
@@ -778,7 +786,7 @@ class Session extends EventEmitter
       @moveBlock sib, newparent, -1
     return newparent
 
-  unindentBlocks: (row, numblocks = 1, options = {}) ->
+  unindentBlocks: (row, numblocks = 1) ->
     if row.is @viewRoot
       @showMessage "Cannot unindent view root", {text_class: 'error'}
       return

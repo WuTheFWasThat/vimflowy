@@ -117,34 +117,25 @@ class MoveBlock extends Mutation
     @path.setParent @old_parent
 
 class AttachBlocks extends Mutation
-  # options:
-  #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
-  #              indicating which block the cursor should go to
-
   constructor: (@parent, @cloned_rows, @index = -1, @options = {}) ->
     @nrows = @cloned_rows.length
 
   str: () ->
-    return "parent #{@parent.row}, index #{@index}"
+    return "parent #{@parent}, index #{@index}"
 
   validate: (session) ->
-    for id in @cloned_rows
-      if not (validateRowInsertion session, @parent.row, id)
+    for row in @cloned_rows
+      if not (validateRowInsertion session, @parent, row)
         return false
     return true
 
   mutate: (session) ->
-    session.document._attachChildren @parent.row, @cloned_rows, @index
-
-    if @options.setCursor == 'first'
-      session.cursor.set (session.document.findChild @parent, @cloned_rows[0]), 0
-    else if @options.setCursor == 'last'
-      session.cursor.set (session.document.findChild @parent, @cloned_rows[@cloned_rows.length-1]), 0
+    session.document._attachChildren @parent, @cloned_rows, @index
 
   rewind: (session) ->
-    delete_siblings = session.document.getChildRange @parent, @index, (@index + @nrows - 1)
+    delete_siblings = session.document._getChildRange @parent, @index, (@index + @nrows - 1)
     for sib in delete_siblings
-      session.document.detach sib
+      session.document._detach sib, @parent
 
 class DetachBlocks extends Mutation
   constructor: (@parent, @index, @nrows = 1, @options = {}) ->
@@ -192,6 +183,14 @@ class DetachBlocks extends Mutation
       session.document._detach id, @parent.row
     if @created != null
       session.document.attachChild @created_rewinded.parent, @created, @created_rewinded.index
+
+  moveCursor: (cursor) ->
+    walk = cursor.path.walkFrom @parent
+    if walk == null
+      return
+    if (@deleted.indexOf walk[0]) == -1
+      return
+    cursor.set @next, 0
 
 # creates new blocks (as opposed to attaching ones that already exist)
 class AddBlocks extends Mutation

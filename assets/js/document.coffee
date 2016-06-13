@@ -145,6 +145,17 @@ class Document extends EventEmitter
   _setChildren: (row, children) ->
     return @store.setChildren row, children
 
+  _getChildRange: (row, min, max) ->
+    children = @_getChildren row
+    indices = [min..max]
+    return indices.map (index) ->
+      if index >= children.length
+        return null
+      else if index < 0
+        return null
+      else
+        return children[index]
+
   _getParents: (row) ->
     return @store.getParents row
 
@@ -398,22 +409,20 @@ class Document extends EventEmitter
     return @getChildRange (do path.getParent), (min_offset + index), (max_offset + index)
 
   getChildRange: (path, min, max) ->
-    children = @getChildren path
-    indices = [min..max]
+    (@_getChildRange path.row, min, max).map ((child_row) ->
+      if child_row == null
+        return null
+      return path.child child_row
+    )
 
-    return indices.map (index) ->
-      if index >= children.length
-        return null
-      else if index < 0
-        return null
-      else
-        return children[index]
+  _newChild: (parent, index = 1) ->
+    row = do @store.getNew
+    @_attach row, parent, index
+    return row
 
   addChild: (path, index = -1) ->
-    row = do @store.getNew
-    child_path = path.child row
-    @attachChild path, child_path, index
-    return child_path
+    row = @_newChild path.row, index
+    return (path.child row)
 
   orderedLines: () ->
     # TODO: deal with clones
