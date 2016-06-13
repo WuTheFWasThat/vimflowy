@@ -271,6 +271,7 @@ class Session extends EventEmitter
           # this should not happen, since the state should be the same as before
           throw new errors.GenericError "Failed to redo mutation: #{mutation.str()}"
         mutation.remutate @
+        mutation.moveCursor @cursor
       Logger.logger.debug ") END REDO"
       @restoreViewState oldState.after
 

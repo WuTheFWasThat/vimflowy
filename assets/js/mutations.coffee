@@ -119,8 +119,10 @@ class ChangeChars extends Mutation
     session.document.deleteChars @row, @col, @ncharsDeleted
     session.document.writeChars @row, @col, @addedChars
 
+  # doesn't move cursors
+
 class MoveBlock extends Mutation
-  constructor: (@path, @parent, @index = -1, @options = {}) ->
+  constructor: (@path, @parent, @index = -1) ->
     @old_parent = @path.parent
 
   str: () ->
@@ -199,7 +201,7 @@ class DetachBlocks extends Mutation
           next = session.document.addChild @parent
           @created = next
 
-    session.cursor.set next, 0
+    @next = next
 
   rewind: (session) ->
     if @created != null
@@ -208,8 +210,8 @@ class DetachBlocks extends Mutation
     session.document._attachChildren @parent.row, @deleted, index
 
   remutate: (session) ->
-    for id in @deleted
-      session.document._detach id, @parent.row
+    for row in @deleted
+      session.document._detach row, @parent.row
     if @created != null
       session.document.attachChild @created_rewinded.parent, @created, @created_rewinded.index
 
@@ -219,6 +221,7 @@ class DetachBlocks extends Mutation
       return
     if (@deleted.indexOf walk[0]) == -1
       return
+
     cursor.set @next, 0
 
 # creates new blocks (as opposed to attaching ones that already exist)
