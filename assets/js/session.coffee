@@ -791,7 +791,7 @@ class Session extends EventEmitter
     if @document.collapsed newparent
       @toggleBlockCollapsed newparent
 
-    siblings = @document.getSiblingRange row, 0, (numblocks-1)
+    siblings = (@document.getSiblingRange row, 0, (numblocks-1)).filter ((sib) -> sib != null)
     for sib in siblings
       @moveBlock sib, newparent, -1
     return newparent
@@ -805,7 +805,7 @@ class Session extends EventEmitter
       @showMessage "Cannot unindent past root", {text_class: 'error'}
       return null
 
-    siblings = @document.getSiblingRange row, 0, (numblocks-1)
+    siblings = (@document.getSiblingRange row, 0, (numblocks-1)).filter ((sib) -> sib != null)
 
     newparent = do parent.getParent
     pp_i = @document.indexOf parent

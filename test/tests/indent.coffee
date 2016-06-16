@@ -437,3 +437,26 @@ describe "row indent/unindent", () ->
       ] },
     ]
     t.expectViewRoot 1
+
+  it "multi indent does as many as it can", () ->
+    t = new TestCase [
+      'first'
+      'second'
+      'third'
+    ]
+    t.sendKey 'j'
+    t.sendKey '3'
+    t.sendKey indentBlockKey
+    t.expect [
+      { text: 'first', children: [
+        'second'
+        'third'
+      ] },
+    ]
+    t.sendKey '3'
+    t.sendKey unindentBlockKey
+    t.expect [
+      'first'
+      'second'
+      'third'
+    ]
