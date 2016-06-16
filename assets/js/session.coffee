@@ -690,38 +690,72 @@ class Session extends EventEmitter
       # restore cursor
       @cursor.set path, 0, {keepProperties: true}
 
+  # can only join if either:
+  # - first is previous sibling of second, AND has no children
+  # - second is first child of first, AND has no children
   joinRows: (first, second, options = {}) ->
-    for child in @document.getChildren second by -1
-      # NOTE: if first is collapsed, should we uncollapse?
-      @moveBlock child, first, 0
+    addDelimiter = false
+    firstLine = @document.getLine first.row
+    secondLine = @document.getLine second.row
+    if options.delimiter
+      if firstLine.length and secondLine.length
+        if firstLine[firstLine.length - 1].char != options.delimiter
+          if secondLine[0].char != options.delimiter
+            addDelimiter = true
 
-    line = @document.getLine second.row
-    if line.length and options.delimiter
-      if line[0].char != options.delimiter
-        line = [{char: options.delimiter}].concat line
-    @delBlock second, {noNew: true, noSave: true}
+    if not (@document.hasChildren second.row)
+      @cursor.set first, -1
+      @delBlock second, {noNew: true, noSave: true}
+      if addDelimiter
+        mutation = new mutations.AddChars first, firstLine.length, [{ char: options.delimiter }]
+        @do mutation
+      mutation = new mutations.AddChars first, (firstLine.length + addDelimiter), secondLine
+      @do mutation
+      @cursor.set first, firstLine.length
+      return true
 
-    newCol = @document.getLength first.row
-    mutation = new mutations.AddChars first, newCol, line
+    if @document.hasChildren first.row
+      @showMessage "Cannot join when both rows have children", {text_class: 'error'}
+      return false
+
+    if second.parent.row != first.parent.row
+      @showMessage "Cannot join with non sibling/child", {text_class: 'error'}
+      return false
+
+    @cursor.set second, 0
+    @delBlock first, {noNew: true, noSave: true}
+    if addDelimiter
+      mutation = new mutations.AddChars second, 0, [{ char: options.delimiter }]
+      @do mutation
+    mutation = new mutations.AddChars second, 0, firstLine
     @do mutation
 
-    @cursor.set first, newCol, options.cursor
+    if addDelimiter
+      do @cursor.left
+
+    return true
 
   joinAtCursor: () ->
     path = @cursor.path
     sib = @nextVisible path
     if sib != null
-      @joinRows path, sib, {cursor: {pastEnd: true}, delimiter: ' '}
+      @joinRows path, sib, {delimiter: ' '}
 
   # implements proper "backspace" behavior
   deleteAtCursor: () ->
-    if @cursor.col == 0
-      path = @cursor.path
-      sib = @prevVisible path
-      if sib != null
-        @joinRows sib, path, {cursor: {pastEnd: true}}
-    else
+    if @cursor.col > 0
       @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
+      return true
+
+    path = @cursor.path
+    sib = @prevVisible path
+    if sib == null
+      return false
+
+    if @joinRows sib, path
+      return true
+
+    return false
 
   delBlock: (path, options) ->
     @delBlocks path.parent.row, (@document.indexOf path), 1, options

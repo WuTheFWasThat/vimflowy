@@ -225,7 +225,6 @@ class DetachBlocks extends Mutation
     child = walk[0]
     if (@deleted.indexOf child) == -1
       return
-
     cursor.set (ancestor.extend @next), 0
 
 # creates new blocks (as opposed to attaching ones that already exist)
