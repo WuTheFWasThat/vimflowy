@@ -199,7 +199,7 @@ keyDefinitions.registerMotion [CMD_GO, CMD_LINK], {
 
 visual_line_mode_delete_fn = () ->
   return () ->
-    @session.delBlocks @parent, @row_start_i, @num_rows, {addNew: false}
+    @session.delBlocks @parent.row, @row_start_i, @num_rows, {addNew: false}
     @session.setMode MODES.NORMAL
     do @keyStream.save
 
@@ -295,7 +295,7 @@ keyDefinitions.registerAction [MODES.VISUAL], CMD_CHANGE, {
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_CHANGE, {
   description: 'Change',
 }, () ->
-  @session.delBlocks @parent, @row_start_i, @num_rows, {addNew: true}
+  @session.delBlocks @parent.row, @row_start_i, @num_rows, {addNew: true}
   @session.setMode MODES.INSERT
 
 keyDefinitions.registerAction [MODES.NORMAL], CMD_CHANGE, {

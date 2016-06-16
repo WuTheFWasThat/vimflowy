@@ -172,57 +172,61 @@ class DetachBlocks extends Mutation
   constructor: (@parent, @index, @nrows = 1, @options = {}) ->
 
   str: () ->
-    return "parent #{@parent.row}, index #{@index}, nrows #{@nrows}"
+    return "parent #{@parent}, index #{@index}, nrows #{@nrows}"
 
   mutate: (session) ->
-    @deleted = []
-    delete_rows = session.document.getChildRange @parent, @index, (@index+@nrows-1)
-    for sib in delete_rows
-      if sib == null then break
-      session.document.detach sib
-      @deleted.push sib.row
+    @deleted = (session.document._getChildRange @parent, @index, (@index+@nrows-1)).filter ((sib) -> sib != null)
+
+    for row in @deleted
+      session.document._detach row, @parent
 
     @created = null
     if @options.addNew
-      @created = session.document.addChild @parent, @index
+      @created = session.document._newChild @parent, @index
 
-    children = session.document.getChildren @parent
+    children = session.document._getChildren @parent
+
+    # note: next is a path, relative to the parent
 
     if @index < children.length
-      next = children[@index]
+      next = [children[@index]]
     else
       if @index == 0
-        next = @parent
+        next = []
+        if @parent == session.document.root.row
+          unless @options.noNew
+            @created = session.document._newChild @parent
+            next = [@created]
       else
-        next = session.lastVisible children[@index - 1]
-
-      if next.row == session.document.root.row
-        unless @options.noNew
-          next = session.document.addChild @parent
-          @created = next
+        child = children[@index - 1]
+        walk = session.document.walkToLastVisible child
+        next = [child].concat walk
 
     @next = next
 
   rewind: (session) ->
     if @created != null
-      @created_rewinded = session.document.detach @created
+      @created_info = session.document._detach @created, @parent
     index = @index
-    session.document._attachChildren @parent.row, @deleted, index
+    session.document._attachChildren @parent, @deleted, index
 
   remutate: (session) ->
     for row in @deleted
-      session.document._detach row, @parent.row
+      session.document._detach row, @parent
     if @created != null
-      session.document.attachChild @created_rewinded.parent, @created, @created_rewinded.index
+      session.document._attach @created, @parent, @created_info.childIndex
 
   moveCursor: (cursor) ->
-    walk = cursor.path.walkFrom @parent
+    [walk, ancestor] = cursor.path.shedUntil @parent
     if walk == null
       return
-    if (@deleted.indexOf walk[0]) == -1
+    if walk.length == 0
+      return
+    child = walk[0]
+    if (@deleted.indexOf child) == -1
       return
 
-    cursor.set @next, 0
+    cursor.set (ancestor.extend @next), 0
 
 # creates new blocks (as opposed to attaching ones that already exist)
 class AddBlocks extends Mutation

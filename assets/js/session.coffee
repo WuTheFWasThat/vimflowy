@@ -313,7 +313,7 @@ class Session extends EventEmitter
   # viewability
   ##################
 
-  # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
+  # whether contents are currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (path) ->
     return (not @document.collapsed path.row) or (path.is @viewRoot)
 
@@ -384,7 +384,6 @@ class Session extends EventEmitter
   isVisible: (path) ->
     visibleAncestor = @youngestVisibleAncestor path
     (visibleAncestor != null) and (path.is visibleAncestor)
-
 
   ##################
   # View root
@@ -724,8 +723,8 @@ class Session extends EventEmitter
     else
       @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
 
-  delBlock: (row, options) ->
-    @delBlocks row.parent, (@document.indexOf row), 1, options
+  delBlock: (path, options) ->
+    @delBlocks path.parent.row, (@document.indexOf path), 1, options
 
   delBlocks: (parent, index, nrows, options = {}) ->
     mutation = new mutations.DetachBlocks parent, index, nrows, options
@@ -739,7 +738,7 @@ class Session extends EventEmitter
   delBlocksAtCursor: (nrows, options = {}) ->
     parent = @cursor.path.parent
     index = @document.indexOf @cursor.path
-    @delBlocks parent, index, nrows, options
+    @delBlocks parent.row, index, nrows, options
 
   addBlocks: (parent, index = -1, serialized_rows, options = {}) ->
     mutation = new mutations.AddBlocks parent, index, serialized_rows, options

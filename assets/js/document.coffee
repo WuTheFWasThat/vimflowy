@@ -36,6 +36,16 @@ class Path
         return null
     return my_ancestry.slice their_ancestry.length
 
+  shedUntil: (row) ->
+    ancestor = @
+    path = []
+    while ancestor.row != row
+      if !ancestor.parent
+        return [null, null]
+      path.push ancestor.row
+      ancestor = ancestor.parent
+    return [path.reverse(), ancestor]
+
   extend: (walk) ->
     descendent = @
     for row in walk
@@ -207,6 +217,16 @@ class Document extends EventEmitter
 
   toggleCollapsed: (row) ->
     @store.setCollapsed row, (not @collapsed row)
+
+  # last thing visible nested within row
+  walkToLastVisible: (row, pathsofar=[]) ->
+    if @collapsed row
+      return pathsofar
+    children = @_getChildren row
+    if children.length == 0
+      return pathsofar
+    child = children[children.length - 1]
+    return [child].concat @walkToLastVisible child
 
   # a node is cloned only if it has multiple parents.
   # note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
@@ -425,7 +445,7 @@ class Document extends EventEmitter
       return path.child child_row
     )
 
-  _newChild: (parent, index = 1) ->
+  _newChild: (parent, index = -1) ->
     row = do @store.getNew
     @_attach row, parent, index
     return row
