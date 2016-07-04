@@ -528,13 +528,13 @@ class Session extends EventEmitter
     @do new mutations.AddChars row, col, chars
 
   addCharsAtCursor: (chars) ->
-    @addChars @cursor.path, @cursor.col, chars
+    @addChars @cursor.row, @cursor.col, chars
 
   addCharsAfterCursor: (chars) ->
     col = @cursor.col
     if col < (@document.getLength @cursor.row)
       col += 1
-    @addChars @cursor.path, col, chars
+    @addChars @cursor.row, col, chars
 
   delChars: (path, col, nchars, options = {}) ->
     n = @document.getLength path.row
@@ -707,9 +707,9 @@ class Session extends EventEmitter
       @cursor.set first, -1
       @delBlock second, {noNew: true, noSave: true}
       if addDelimiter
-        mutation = new mutations.AddChars first, firstLine.length, [{ char: options.delimiter }]
+        mutation = new mutations.AddChars first.row, firstLine.length, [{ char: options.delimiter }]
         @do mutation
-      mutation = new mutations.AddChars first, (firstLine.length + addDelimiter), secondLine
+      mutation = new mutations.AddChars first.row, (firstLine.length + addDelimiter), secondLine
       @do mutation
       @cursor.set first, firstLine.length
       return true
@@ -725,9 +725,9 @@ class Session extends EventEmitter
     @cursor.set second, 0
     @delBlock first, {noNew: true, noSave: true}
     if addDelimiter
-      mutation = new mutations.AddChars second, 0, [{ char: options.delimiter }]
+      mutation = new mutations.AddChars second.row, 0, [{ char: options.delimiter }]
       @do mutation
-    mutation = new mutations.AddChars second, 0, firstLine
+    mutation = new mutations.AddChars second.row, 0, firstLine
     @do mutation
 
     if addDelimiter

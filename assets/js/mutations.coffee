@@ -62,16 +62,16 @@ class AddChars extends Mutation
   constructor: (@row, @col, @chars) ->
 
   str: () ->
-    return "row #{@row.row}, col #{@col}, nchars #{@chars.length}"
+    return "row #{@row}, col #{@col}, nchars #{@chars.length}"
 
   mutate: (session) ->
-    session.document.writeChars @row.row, @col, @chars
+    session.document.writeChars @row, @col, @chars
 
   rewind: (session) ->
-    session.document.deleteChars @row.row, @col, @chars.length
+    session.document.deleteChars @row, @col, @chars.length
 
   moveCursor: (cursor) ->
-    if not (cursor.path.is @row)
+    if not (cursor.path.row == @row)
       return
     if cursor.col >= @col
       cursor.setCol (cursor.col + @chars.length)
