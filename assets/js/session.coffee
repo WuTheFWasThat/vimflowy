@@ -253,7 +253,12 @@ class Session extends EventEmitter
       for i in [(oldState.index-1)...(newState.index-1)]
         mutation = @mutations[i]
         Logger.logger.debug "  Undoing mutation #{mutation.constructor.name}(#{mutation.str()})"
-        mutation.rewind @
+        undo_mutations = mutation.rewind @
+        for undo_mutation in undo_mutations
+          Logger.logger.debug "  Undo mutation #{undo_mutation.constructor.name}(#{undo_mutation.str()})"
+          undo_mutation.mutate @
+          undo_mutation.moveCursor @cursor
+
       Logger.logger.debug ") END UNDO"
       @restoreViewState newState.before
 

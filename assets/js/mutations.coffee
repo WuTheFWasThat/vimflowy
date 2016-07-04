@@ -9,7 +9,8 @@ each mutation should implement a constructor, as well as the following methods:
     mutate: (session) -> void
         takes a session and acts on it (mutates the session)
     rewind: (session) -> void
-        takes a session, assumed be in the state right after the mutation was applied, and undoes the mutation
+        takes a session, assumed be in the state right after the mutation was applied,
+        and returns a list of mutations for undoing it
 
 the mutation may also optionally implement
 
@@ -52,7 +53,7 @@ class Mutation
   mutate: (session) ->
     return
   rewind: (session) ->
-    return
+    return []
   remutate: (session) ->
     return @mutate session
   moveCursor: (cursor) ->
@@ -68,7 +69,9 @@ class AddChars extends Mutation
     session.document.writeChars @row, @col, @chars
 
   rewind: (session) ->
-    session.document.deleteChars @row, @col, @chars.length
+    return [
+      new DelChars @row, @col, @chars.length
+    ]
 
   moveCursor: (cursor) ->
     if not (cursor.path.row == @row)
@@ -86,7 +89,9 @@ class DelChars extends Mutation
     @deletedChars = session.document.deleteChars @row, @col, @nchars
 
   rewind: (session) ->
-    session.document.writeChars @row, @col, @deletedChars
+    return [
+      new AddChars @row, @col, @deletedChars
+    ]
 
   moveCursor: (cursor) ->
     if cursor.row != @row
@@ -99,7 +104,7 @@ class DelChars extends Mutation
       cursor.setCol (cursor.col - @nchars)
 
 class ChangeChars extends Mutation
-  constructor: (@row, @col, @nchars, @transform) ->
+  constructor: (@row, @col, @nchars, @transform, @newChars) ->
 
   str: () ->
     return "change row #{@row}, col #{@col}, nchars #{@nchars}"
@@ -107,17 +112,19 @@ class ChangeChars extends Mutation
   mutate: (session) ->
     @deletedChars = session.document.deleteChars @row, @col, @nchars
     @ncharsDeleted = @deletedChars.length
-    @addedChars = @transform @deletedChars
-    errors.assert (@addedChars.length == @ncharsDeleted)
-    session.document.writeChars @row, @col, @addedChars
+    if @transform
+      @newChars = @transform @deletedChars
+      errors.assert (@newChars.length == @ncharsDeleted)
+    session.document.writeChars @row, @col, @newChars
 
   rewind: (session) ->
-    session.document.deleteChars @row, @col, @ncharsDeleted
-    session.document.writeChars @row, @col, @deletedChars
+    return [
+      new ChangeChars @row, @col, @newChars.length, null, @deletedChars
+    ]
 
   remutate: (session) ->
     session.document.deleteChars @row, @col, @ncharsDeleted
-    session.document.writeChars @row, @col, @addedChars
+    session.document.writeChars @row, @col, @newChars
 
   # doesn't move cursors
 
@@ -139,7 +146,9 @@ class MoveBlock extends Mutation
     @old_index = info.old.childIndex
 
   rewind: (session) ->
-    session.document._move @path.row, @parent.row, @old_parent.row, @old_index
+    return [
+      new MoveBlock (@parent.extend [@path.row]), @old_parent, @old_index
+    ]
 
   moveCursor: (cursor) ->
     walk = cursor.path.walkFrom @path
@@ -164,6 +173,10 @@ class AttachBlocks extends Mutation
     session.document._attachChildren @parent, @cloned_rows, @index
 
   rewind: (session) ->
+    return [
+      new DetachBlocks @parent, @index, @nrows
+    ]
+
     delete_siblings = session.document._getChildRange @parent, @index, (@index + @nrows - 1)
     for sib in delete_siblings
       session.document._detach sib, @parent
@@ -183,6 +196,7 @@ class DetachBlocks extends Mutation
     @created = null
     if @options.addNew
       @created = session.document._newChild @parent, @index
+      @created_index = session.document._childIndex @parent, @created
 
     children = session.document._getChildren @parent
 
@@ -196,6 +210,7 @@ class DetachBlocks extends Mutation
         if @parent == session.document.root.row
           unless @options.noNew
             @created = session.document._newChild @parent
+            @created_index = session.document._childIndex @parent, @created
             next = [@created]
       else
         child = children[@index - 1]
@@ -205,16 +220,17 @@ class DetachBlocks extends Mutation
     @next = next
 
   rewind: (session) ->
+    mutations = []
     if @created != null
-      @created_info = session.document._detach @created, @parent
-    index = @index
-    session.document._attachChildren @parent, @deleted, index
+      mutations.push new DetachBlocks @parent, @created_index, 1, {noNew: true}
+    mutations.push new AttachBlocks @parent, @deleted, @index
+    return mutations
 
   remutate: (session) ->
     for row in @deleted
       session.document._detach row, @parent
     if @created != null
-      session.document._attach @created, @parent, @created_info.childIndex
+      session.document._attach @created, @parent, @created_index
 
   moveCursor: (cursor) ->
     [walk, ancestor] = cursor.path.shedUntil @parent
@@ -244,8 +260,10 @@ class AddBlocks extends Mutation
 
     first = true
     id_mapping = {}
+    @added_rows = []
     for serialized_row in @serialized_rows
       row = session.document.loadTo serialized_row, @parent, index, id_mapping
+      @added_rows.push row
       index += 1
 
       if @options.setCursor == 'first' and first
@@ -256,13 +274,13 @@ class AddBlocks extends Mutation
       session.cursor.set row, 0, @options.cursorOptions
 
   rewind: (session) ->
-    @delete_siblings = session.document.getChildRange @parent, @index, (@index + @nrows - 1)
-    for sib in @delete_siblings
-      session.document.detach sib
+    return [
+      new DetachBlocks @parent.row, @index, @nrows
+    ]
 
   remutate: (session) ->
     index = @index
-    for sib in @delete_siblings
+    for sib in @added_rows
       session.document.attachChild @parent, sib, index
       index += 1
 
@@ -273,7 +291,12 @@ class ToggleBlock extends Mutation
   mutate: (session) ->
     session.document.toggleCollapsed @row
   rewind: (session) ->
-    session.document.toggleCollapsed @row
+    return [
+      @
+    ]
+
+  # TODO: if a cursor is within the toggle block and their
+  # viewRoot isn't, do a moveCursor?
 
 exports.Mutation = Mutation
 

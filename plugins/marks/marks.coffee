@@ -32,7 +32,9 @@ class MarksPlugin
       mutate: (session) ->
         that._setMark @row, @mark
       rewind: (session) ->
-        that._unsetMark @row, @mark
+        return [
+          new UnsetMark @row
+        ]
     @.SetMark = SetMark
 
     class UnsetMark extends mutations.Mutation
@@ -43,7 +45,9 @@ class MarksPlugin
         @mark = that._getMark @row
         that._unsetMark @row, @mark
       rewind: (session) ->
-        that._setMark @row, @mark
+        return [
+          new SetMark @row, @mark
+        ]
     @.UnsetMark = UnsetMark
 
     # Serialization #

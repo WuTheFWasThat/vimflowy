@@ -182,6 +182,11 @@ class Document extends EventEmitter
       else
         return children[index]
 
+  _childIndex: (parent, child) ->
+    children = @_getChildren parent
+    return _.findIndex children, (row) ->
+      row == child
+
   _getParents: (row) ->
     return @store.getParents row
 
