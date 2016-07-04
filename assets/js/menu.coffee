@@ -1,6 +1,7 @@
 Session = require './session.coffee'
 Document = (require './document.coffee').Document
 DataStore = require './datastore.coffee'
+Modes = require './modes.coffee'
 
 ###
 Represents the menu shown in menu mode.
@@ -17,6 +18,7 @@ class Menu
 
     # a bit of a overkill-y hack, use an entire session object internally
     @session = new Session document
+    @session.setMode Modes.modes.INSERT
     @selection = 0
 
     # list of results:

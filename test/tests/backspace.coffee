@@ -49,15 +49,24 @@ describe 'backspace', () ->
     ]
     t.sendKeys 'jji'
     t.sendKey 'backspace'
+    # did nothing due to child of 'ab'
     t.expect [
       { text: 'ab', children: [
-        { text: 'bccd', children: [
-          'de'
-        ] },
+        'bc'
       ] },
+      { text: 'cd', children: [
+        'de'
+      ] }
     ]
-    t.sendKey 'backspace'
-    t.sendKey 'backspace'
+    t.sendKey 'esc'
+    t.sendKeys 'kddj'
+    t.expect [
+      'ab',
+      { text: 'cd', children: [
+        'de'
+      ] }
+    ]
+    t.sendKeys 'i'
     t.sendKey 'backspace'
     t.expect [
       { text: 'abcd', children: [
@@ -66,6 +75,12 @@ describe 'backspace', () ->
     ]
     t.sendKey 'backspace'
     t.sendKey 'backspace'
+    t.sendKey 'backspace'
+    t.expect [
+      { text: 'cd', children: [
+        'de'
+      ] },
+    ]
     t.sendKey 'backspace'
     t.expect [
       { text: 'cd', children: [
@@ -84,6 +99,10 @@ describe 'backspace', () ->
     t.expect [
       'abcd'
     ]
+    # t.sendKey 'backspace'
+    # t.expect [
+    #   'acd'
+    # ]
     t.sendKey 'esc'
     t.sendKeys 'u'
     t.expect [
@@ -99,6 +118,56 @@ describe 'backspace', () ->
     t.expect [
       'acd'
     ]
+
+  it "fails when both rows have children", () ->
+    t = new TestCase [
+      { text: 'ab', children: [
+        'cd'
+      ] }
+      { text: 'ab', children: [
+        'cd'
+      ] }
+    ]
+    t.sendKeys 'jji'
+    t.sendKey 'backspace'
+    t.expect [
+      { text: 'ab', children: [
+        'cd'
+      ] }
+      { text: 'ab', children: [
+        'cd'
+      ] }
+    ]
+    t.sendKey 'esc'
+    t.sendKeys 'kdd'
+    t.expect [
+      'ab'
+      { text: 'ab', children: [
+        'cd'
+      ] }
+    ]
+    t.sendKeys 'ji'
+    t.sendKey 'backspace'
+    t.expect [
+      { text: 'abab', children: [
+        'cd'
+      ] }
+    ]
+    t.sendKey 'backspace'
+    t.expect [
+      { text: 'aab', children: [
+        'cd'
+      ] }
+    ]
+    t.sendKey 'esc'
+    t.sendKeys 'u'
+    t.expect [
+      'ab'
+      { text: 'ab', children: [
+        'cd'
+      ] }
+    ]
+
 
 describe 'delete', () ->
   it "works in basic case", () ->

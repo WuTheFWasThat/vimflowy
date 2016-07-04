@@ -1,3 +1,5 @@
+errors = require './errors.coffee'
+
 ###
 mutations mutate a document within a session, and are undoable
 each mutation should implement a constructor, as well as the following methods:
@@ -17,6 +19,8 @@ the mutation may also optionally implement
         takes a session, and acts on it.  assumes that mutate has been called once already
         by default, remutate is the same as mutate.
         it should be implemented only if it is more efficient than the mutate implementation
+    moveCursor: (cursor) -> void
+        takes a cursor, and moves it according to how the cursor should move
 ###
 
 _ = require 'lodash'
@@ -51,15 +55,11 @@ class Mutation
     return
   remutate: (session) ->
     return @mutate session
+  moveCursor: (cursor) ->
+    return
 
 class AddChars extends Mutation
-  # options:
-  #   setCursor: if you wish to set the cursor, set to 'beginning' or 'end'
-  #              indicating where the cursor should go to
-
-  constructor: (@row, @col, @chars, @options = {}) ->
-    @options.setCursor ?= 'end'
-    @options.cursor ?= {}
+  constructor: (@row, @col, @chars) ->
 
   str: () ->
     return "row #{@row.row}, col #{@col}, nchars #{@chars.length}"
@@ -67,36 +67,63 @@ class AddChars extends Mutation
   mutate: (session) ->
     session.document.writeChars @row.row, @col, @chars
 
-    shift = if @options.cursor.pastEnd then 1 else 0
-    if @options.setCursor == 'beginning'
-      session.cursor.set @row, (@col + shift), @options.cursor
-    else if @options.setCursor == 'end'
-      session.cursor.set @row, (@col + shift + @chars.length - 1), @options.cursor
-
   rewind: (session) ->
     session.document.deleteChars @row.row, @col, @chars.length
 
+  moveCursor: (cursor) ->
+    if not (cursor.path.is @row)
+      return
+    if cursor.col >= @col
+      cursor.setCol (cursor.col + @chars.length)
+
 class DelChars extends Mutation
-  constructor: (@path, @col, @nchars, @options = {}) ->
-    @options.setCursor ?= 'before'
-    @options.cursor ?= {}
+  constructor: (@row, @col, @nchars) ->
 
   str: () ->
-    return "path #{@path.row}, col #{@col}, nchars #{@nchars}"
+    return "row #{@row}, col #{@col}, nchars #{@nchars}"
 
   mutate: (session) ->
-    @deletedChars = session.document.deleteChars @path.row, @col, @nchars
-    if @options.setCursor == 'before'
-      session.cursor.set @path, @col, @options.cursor
-    else if @options.setCursor == 'after'
-      session.cursor.set @path, (@col + 1), @options.cursor
+    @deletedChars = session.document.deleteChars @row, @col, @nchars
 
   rewind: (session) ->
-    session.document.writeChars @path.row, @col, @deletedChars
+    session.document.writeChars @row, @col, @deletedChars
+
+  moveCursor: (cursor) ->
+    if cursor.row != @row
+      return
+    if cursor.col < @col
+      return
+    else if cursor.col < @col + @nchars
+      cursor.setCol @col
+    else
+      cursor.setCol (cursor.col - @nchars)
+
+class ChangeChars extends Mutation
+  constructor: (@row, @col, @nchars, @transform) ->
+
+  str: () ->
+    return "change row #{@row}, col #{@col}, nchars #{@nchars}"
+
+  mutate: (session) ->
+    @deletedChars = session.document.deleteChars @row, @col, @nchars
+    @ncharsDeleted = @deletedChars.length
+    @addedChars = @transform @deletedChars
+    errors.assert (@addedChars.length == @ncharsDeleted)
+    session.document.writeChars @row, @col, @addedChars
+
+  rewind: (session) ->
+    session.document.deleteChars @row, @col, @ncharsDeleted
+    session.document.writeChars @row, @col, @deletedChars
+
+  remutate: (session) ->
+    session.document.deleteChars @row, @col, @ncharsDeleted
+    session.document.writeChars @row, @col, @addedChars
+
+  # doesn't move cursors
 
 class MoveBlock extends Mutation
-  constructor: (@path, @parent, @index = -1, @options = {}) ->
-    @old_parent = do @path.getParent
+  constructor: (@path, @parent, @index = -1) ->
+    @old_parent = @path.parent
 
   str: () ->
     return "path #{@path.row} from #{@path.parent.row} to #{@parent.row}"
@@ -110,11 +137,15 @@ class MoveBlock extends Mutation
     errors.assert (not do @path.isRoot), "Cannot detach root"
     info = session.document._move @path.row, @old_parent.row, @parent.row, @index
     @old_index = info.old.childIndex
-    @path.setParent @parent
 
   rewind: (session) ->
     session.document._move @path.row, @parent.row, @old_parent.row, @old_index
-    @path.setParent @old_parent
+
+  moveCursor: (cursor) ->
+    walk = cursor.path.walkFrom @path
+    if walk == null
+      return
+    cursor._setPath (@parent.extend [@path.row]).extend walk
 
 class AttachBlocks extends Mutation
   constructor: (@parent, @cloned_rows, @index = -1, @options = {}) ->
@@ -141,56 +172,60 @@ class DetachBlocks extends Mutation
   constructor: (@parent, @index, @nrows = 1, @options = {}) ->
 
   str: () ->
-    return "parent #{@parent.row}, index #{@index}, nrows #{@nrows}"
+    return "parent #{@parent}, index #{@index}, nrows #{@nrows}"
 
   mutate: (session) ->
-    @deleted = []
-    delete_rows = session.document.getChildRange @parent, @index, (@index+@nrows-1)
-    for sib in delete_rows
-      if sib == null then break
-      session.document.detach sib
-      @deleted.push sib.row
+    @deleted = (session.document._getChildRange @parent, @index, (@index+@nrows-1)).filter ((sib) -> sib != null)
+
+    for row in @deleted
+      session.document._detach row, @parent
 
     @created = null
     if @options.addNew
-      @created = session.document.addChild @parent, @index
+      @created = session.document._newChild @parent, @index
 
-    children = session.document.getChildren @parent
+    children = session.document._getChildren @parent
+
+    # note: next is a path, relative to the parent
 
     if @index < children.length
-      next = children[@index]
+      next = [children[@index]]
     else
       if @index == 0
-        next = @parent
+        next = []
+        if @parent == session.document.root.row
+          unless @options.noNew
+            @created = session.document._newChild @parent
+            next = [@created]
       else
-        next = session.lastVisible children[@index - 1]
+        child = children[@index - 1]
+        walk = session.document.walkToLastVisible child
+        next = [child].concat walk
 
-      if next.row == session.document.root.row
-        unless @options.noNew
-          next = session.document.addChild @parent
-          @created = next
-
-    session.cursor.set next, 0
+    @next = next
 
   rewind: (session) ->
     if @created != null
-      @created_rewinded = session.document.detach @created
+      @created_info = session.document._detach @created, @parent
     index = @index
-    session.document._attachChildren @parent.row, @deleted, index
+    session.document._attachChildren @parent, @deleted, index
 
   remutate: (session) ->
-    for id in @deleted
-      session.document._detach id, @parent.row
+    for row in @deleted
+      session.document._detach row, @parent
     if @created != null
-      session.document.attachChild @created_rewinded.parent, @created, @created_rewinded.index
+      session.document._attach @created, @parent, @created_info.childIndex
 
   moveCursor: (cursor) ->
-    walk = cursor.path.walkFrom @parent
+    [walk, ancestor] = cursor.path.shedUntil @parent
     if walk == null
       return
-    if (@deleted.indexOf walk[0]) == -1
+    if walk.length == 0
       return
-    cursor.set @next, 0
+    child = walk[0]
+    if (@deleted.indexOf child) == -1
+      return
+    cursor.set (ancestor.extend @next), 0
 
 # creates new blocks (as opposed to attaching ones that already exist)
 class AddBlocks extends Mutation
@@ -244,6 +279,7 @@ exports.Mutation = Mutation
 
 exports.AddChars = AddChars
 exports.DelChars = DelChars
+exports.ChangeChars = ChangeChars
 exports.AddBlocks = AddBlocks
 exports.DetachBlocks = DetachBlocks
 exports.AttachBlocks = AttachBlocks

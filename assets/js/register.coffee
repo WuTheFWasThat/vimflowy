@@ -62,13 +62,14 @@ class Register
 
   pasteChars: (options = {}) ->
     if options.before
-      @session.addCharsAtCursor @chars, {cursor: options.cursor}
+      @session.addCharsAtCursor @chars
     else
-      @session.addCharsAfterCursor @chars, {setCursor: 'end', cursor: options.cursor}
+      @session.addCharsAfterCursor @chars
+      @session.cursor.setCol (@session.cursor.col + @chars.length)
 
   pasteSerializedRows: (options = {}) ->
     path = @session.cursor.path
-    parent = do path.getParent
+    parent = path.parent
     index = @session.document.indexOf path
 
     if options.before
@@ -82,7 +83,7 @@ class Register
 
   pasteClonedRows: (options = {}) ->
     path = @session.cursor.path
-    parent = do path.getParent
+    parent = path.parent
     index = @session.document.indexOf path
 
     if options.before

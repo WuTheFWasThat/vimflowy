@@ -175,14 +175,11 @@ create_session = (doc, to_load) ->
         if i != 0
           do session.newLineAtCursor
         chars = line.split ''
-        options = {}
-        if session.mode == Modes.modes.INSERT
-          options.cursor = {pastEnd: true}
-        session.addCharsAtCursor chars, options
+        session.addCharsAtCursor chars
       View.renderSession session
       do session.save
 
-    $("#settings-link").click () =>
+    $("#settings-link").click () ->
       if session.mode == Modes.modes.SETTINGS
         session.setMode Modes.modes.NORMAL
       else
@@ -217,7 +214,7 @@ create_session = (doc, to_load) ->
       exportDiv.attr "download", null
       exportDiv.attr "href", null
 
-    $("#hotkeys_import").click () =>
+    $("#hotkeys_import").click () ->
       load_file $('#hotkeys_file_input')[0], (err, content) ->
         if err then return session.showMessage err, {text_class: 'error'}
         try
@@ -230,17 +227,17 @@ create_session = (doc, to_load) ->
         else
           session.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
 
-    $("#hotkeys_export").click () =>
+    $("#hotkeys_export").click () ->
       filename = 'vimflowy_hotkeys.json'
       content = JSON.stringify(key_bindings.hotkeys, null, 2)
       download_file filename, 'application/json', content
       session.showMessage "Downloaded hotkeys to #{filename}!", {text_class: 'success'}
 
-    $("#hotkeys_default").click () =>
+    $("#hotkeys_default").click () ->
       do key_bindings.apply_default_hotkey_settings
       session.showMessage "Loaded defaults!", {text_class: 'success'}
 
-    $("#data_import").click () =>
+    $("#data_import").click () ->
       load_file $('#import-file :file')[0], (err, content, filename) ->
         if err then return session.showMessage err, {text_class: 'error'}
         mimetype = utils.mimetypeLookup filename
@@ -262,7 +259,7 @@ create_session = (doc, to_load) ->
     $("#data_export_json").click (export_type.bind @, 'json')
     $("#data_export_plain").click (export_type.bind @, 'txt')
 
-  $(window).unload () =>
+  $(window).unload () ->
     do session.exit
 
 

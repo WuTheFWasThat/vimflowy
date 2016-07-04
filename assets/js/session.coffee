@@ -240,8 +240,7 @@ class Session extends EventEmitter
 
   restoreViewState: (state) ->
     @cursor.from state.cursor
-    if @mode != MODES.INSERT
-      do @cursor.backIfNeeded
+    do @fixCursorForMode
     @changeView state.viewRoot
 
   undo: () ->
@@ -272,6 +271,7 @@ class Session extends EventEmitter
           # this should not happen, since the state should be the same as before
           throw new errors.GenericError "Failed to redo mutation: #{mutation.str()}"
         mutation.remutate @
+        mutation.moveCursor @cursor
       Logger.logger.debug ") END REDO"
       @restoreViewState oldState.after
 
@@ -298,14 +298,22 @@ class Session extends EventEmitter
     if not mutation.validate @
       return false
     mutation.mutate @
+    mutation.moveCursor @cursor
+    # TODO: do this elsewhere
+    do @fixCursorForMode
+
     @mutations.push mutation
     return true
+
+  fixCursorForMode: () ->
+    if (Modes.getMode @mode).metadata.hotkey_type != Modes.INSERT_MODE_TYPE
+      do @cursor.backIfNeeded
 
   ##################
   # viewability
   ##################
 
-  # whether currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
+  # whether contents are currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable: (path) ->
     return (not @document.collapsed path.row) or (path.is @viewRoot)
 
@@ -320,7 +328,7 @@ class Session extends EventEmitter
       nextsib = @document.getSiblingAfter path
       if nextsib?
         return nextsib
-      path = do path.getParent
+      path = path.parent
       if path.is @viewRoot
         return null
 
@@ -339,7 +347,7 @@ class Session extends EventEmitter
     prevsib = @document.getSiblingBefore path
     if prevsib?
       return @lastVisible prevsib
-    parent = do path.getParent
+    parent = path.parent
     if parent.is @viewRoot
       if parent.is @document.root
         return null
@@ -352,7 +360,7 @@ class Session extends EventEmitter
   oldestVisibleAncestor: (path) ->
     last = path
     while true
-      cur = do last.getParent
+      cur = last.parent
       if cur.is @viewRoot
         return last
       if do cur.isRoot
@@ -371,12 +379,11 @@ class Session extends EventEmitter
         return null
       if @document.collapsed cur.row
         answer = cur
-      cur = do cur.getParent
+      cur = cur.parent
 
   isVisible: (path) ->
     visibleAncestor = @youngestVisibleAncestor path
     (visibleAncestor != null) and (path.is visibleAncestor)
-
 
   ##################
   # View root
@@ -479,7 +486,7 @@ class Session extends EventEmitter
 
   zoomOut: () ->
     if @viewRoot.row != @document.root.row
-      parent = do @viewRoot.getParent
+      parent = @viewRoot.parent
       @zoomInto parent
 
   zoomIn: () ->
@@ -517,23 +524,23 @@ class Session extends EventEmitter
   curLineLength: () ->
     return @document.getLength @cursor.row
 
-  addChars: (row, col, chars, options) ->
-    @do new mutations.AddChars row, col, chars, options
+  addChars: (row, col, chars) ->
+    @do new mutations.AddChars row, col, chars
 
-  addCharsAtCursor: (chars, options) ->
-    @addChars @cursor.path, @cursor.col, chars, options
+  addCharsAtCursor: (chars) ->
+    @addChars @cursor.path, @cursor.col, chars
 
-  addCharsAfterCursor: (chars, options) ->
+  addCharsAfterCursor: (chars) ->
     col = @cursor.col
     if col < (@document.getLength @cursor.row)
       col += 1
-    @addChars @cursor.path, col, chars, options
+    @addChars @cursor.path, col, chars
 
   delChars: (path, col, nchars, options = {}) ->
     n = @document.getLength path.row
     deleted = []
     if (n > 0) and (nchars > 0) and (col < n)
-      mutation = new mutations.DelChars path, col, nchars, options
+      mutation = new mutations.DelChars path.row, col, nchars
       @do mutation
       deleted = mutation.deletedChars
       if options.yank
@@ -547,17 +554,25 @@ class Session extends EventEmitter
   delCharsAfterCursor: (nchars, options) ->
     return @delChars @cursor.path, @cursor.col, nchars, options
 
-  replaceCharsAfterCursor: (char, nchars, options) ->
-    deleted = @delCharsAfterCursor nchars, {cursor: {pastEnd: true}}
-    chars = []
-    for obj in deleted
-      newobj = _.clone obj
-      newobj.char = char
-      chars.push newobj
-    @addCharsAtCursor chars, options
+  changeChars: (row, col, nchars, change_fn) ->
+    mutation = new mutations.ChangeChars row, col, nchars, change_fn
+    @do mutation
+    return mutation.ncharsDeleted
 
-  clearRowAtCursor: () ->
-    do @yankRowAtCursor
+  replaceCharsAfterCursor: (char, nchars) ->
+    ndeleted = @changeChars @cursor.row, @cursor.col, nchars, ((chars) ->
+      return chars.map ((char_obj) ->
+        new_obj = _.clone char_obj
+        new_obj.char = char
+        return new_obj
+      )
+    )
+    @cursor.setCol (@cursor.col + ndeleted - 1)
+
+  clearRowAtCursor: (options) ->
+    if options.yank
+      # yank as a row, not chars
+      do @yankRowAtCursor
     @delChars @cursor.path, 0, (do @curLineLength)
 
   yankChars: (path, col, nchars) ->
@@ -598,30 +613,29 @@ class Session extends EventEmitter
 
   # toggling text properties
   # if new_value is null, should be inferred based on old values
-  toggleProperty: (property, new_value, path, col, n) ->
-    deleted = @delChars path, col, n, {setCursor: 'stay'}
+  toggleProperty: (property, new_value, row, col, n) ->
+    @changeChars row, col, n, ((deleted) ->
+      if new_value == null
+        all_were_true = _.every deleted.map ((obj) -> return obj[property])
+        new_value = not all_were_true
 
-    if new_value == null
-      all_were_true = _.every deleted.map ((obj) -> return obj[property])
-      new_value = not all_were_true
+      return deleted.map ((char_obj) ->
+        new_obj = _.clone char_obj
+        new_obj[property] = new_value
+        return new_obj
+      )
+    )
 
-    chars = []
-    for obj in deleted
-      newobj = _.clone obj
-      newobj[property] = new_value
-      chars.push newobj
-    @addChars path, col, chars, {setCursor: 'stay'}
-
-  toggleRowsProperty: (property, paths) ->
-    all_were_true = _.every paths.map ((path) =>
-      _.every (@document.getLine path.row).map ((obj) -> return obj[property])
+  toggleRowsProperty: (property, rows) ->
+    all_were_true = _.every rows.map ((row) =>
+      _.every (@document.getLine row).map ((obj) -> return obj[property])
     )
     new_value = not all_were_true
-    for path in paths
-      @toggleProperty property, new_value, path, 0, (@document.getLength path.row)
+    for row in rows
+      @toggleProperty property, new_value, row, 0, (@document.getLength row)
 
-  toggleRowProperty: (property, path = @cursor.path) ->
-    @toggleProperty property, null, path, 0, (@document.getLength path.row)
+  toggleRowProperty: (property, row = @cursor.row) ->
+    @toggleProperty property, null, row, 0, (@document.getLength row)
 
   toggleRowPropertyBetween: (property, cursor1, cursor2, options) ->
     if not (cursor2.path.is cursor1.path)
@@ -632,7 +646,7 @@ class Session extends EventEmitter
       [cursor1, cursor2] = [cursor2, cursor1]
 
     offset = if options.includeEnd then 1 else 0
-    @toggleProperty property, null, cursor1.path, cursor1.col, (cursor2.col - cursor1.col + offset)
+    @toggleProperty property, null, cursor1.row, cursor1.col, (cursor2.col - cursor1.col + offset)
 
   newLineBelow: (options = {}) ->
     options.setCursor = 'first'
@@ -646,12 +660,12 @@ class Session extends EventEmitter
     else if (not @document.collapsed @cursor.row) and @document.hasChildren @cursor.row
       @addBlocks @cursor.path, 0, [''], options
     else
-      parent = do @cursor.path.getParent
+      parent = @cursor.path.parent
       index = @document.indexOf @cursor.path
       @addBlocks parent, (index+1), [''], options
 
   newLineAbove: () ->
-    parent = do @cursor.path.getParent
+    parent = @cursor.path.parent
     index = @document.indexOf @cursor.path
     @addBlocks parent, index, [''], {setCursor: 'first'}
 
@@ -666,7 +680,7 @@ class Session extends EventEmitter
     if @cursor.col == @document.getLength @cursor.row
       @newLineBelow {cursorOptions: {keepProperties: true}}
     else
-      mutation = new mutations.DelChars @cursor.path, 0, @cursor.col
+      mutation = new mutations.DelChars @cursor.row, 0, @cursor.col
       @do mutation
       path = @cursor.path
 
@@ -676,41 +690,75 @@ class Session extends EventEmitter
       # restore cursor
       @cursor.set path, 0, {keepProperties: true}
 
+  # can only join if either:
+  # - first is previous sibling of second, AND has no children
+  # - second is first child of first, AND has no children
   joinRows: (first, second, options = {}) ->
-    for child in @document.getChildren second by -1
-      # NOTE: if first is collapsed, should we uncollapse?
-      @moveBlock child, first, 0
+    addDelimiter = false
+    firstLine = @document.getLine first.row
+    secondLine = @document.getLine second.row
+    if options.delimiter
+      if firstLine.length and secondLine.length
+        if firstLine[firstLine.length - 1].char != options.delimiter
+          if secondLine[0].char != options.delimiter
+            addDelimiter = true
 
-    line = @document.getLine second.row
-    if line.length and options.delimiter
-      if line[0].char != options.delimiter
-        line = [{char: options.delimiter}].concat line
-    @delBlock second, {noNew: true, noSave: true}
+    if not (@document.hasChildren second.row)
+      @cursor.set first, -1
+      @delBlock second, {noNew: true, noSave: true}
+      if addDelimiter
+        mutation = new mutations.AddChars first, firstLine.length, [{ char: options.delimiter }]
+        @do mutation
+      mutation = new mutations.AddChars first, (firstLine.length + addDelimiter), secondLine
+      @do mutation
+      @cursor.set first, firstLine.length
+      return true
 
-    newCol = @document.getLength first.row
-    mutation = new mutations.AddChars first, newCol, line
+    if @document.hasChildren first.row
+      @showMessage "Cannot join when both rows have children", {text_class: 'error'}
+      return false
+
+    if second.parent.row != first.parent.row
+      @showMessage "Cannot join with non sibling/child", {text_class: 'error'}
+      return false
+
+    @cursor.set second, 0
+    @delBlock first, {noNew: true, noSave: true}
+    if addDelimiter
+      mutation = new mutations.AddChars second, 0, [{ char: options.delimiter }]
+      @do mutation
+    mutation = new mutations.AddChars second, 0, firstLine
     @do mutation
 
-    @cursor.set first, newCol, options.cursor
+    if addDelimiter
+      do @cursor.left
+
+    return true
 
   joinAtCursor: () ->
     path = @cursor.path
     sib = @nextVisible path
     if sib != null
-      @joinRows path, sib, {cursor: {pastEnd: true}, delimiter: ' '}
+      @joinRows path, sib, {delimiter: ' '}
 
   # implements proper "backspace" behavior
   deleteAtCursor: () ->
-    if @cursor.col == 0
-      path = @cursor.path
-      sib = @prevVisible path
-      if sib != null
-        @joinRows sib, path, {cursor: {pastEnd: true}}
-    else
+    if @cursor.col > 0
       @delCharsBeforeCursor 1, {cursor: {pastEnd: true}}
+      return true
 
-  delBlock: (row, options) ->
-    @delBlocks row.parent, (@document.indexOf row), 1, options
+    path = @cursor.path
+    sib = @prevVisible path
+    if sib == null
+      return false
+
+    if @joinRows sib, path
+      return true
+
+    return false
+
+  delBlock: (path, options) ->
+    @delBlocks path.parent.row, (@document.indexOf path), 1, options
 
   delBlocks: (parent, index, nrows, options = {}) ->
     mutation = new mutations.DetachBlocks parent, index, nrows, options
@@ -722,9 +770,9 @@ class Session extends EventEmitter
       do @zoomOut
 
   delBlocksAtCursor: (nrows, options = {}) ->
-    parent = do @cursor.path.getParent
+    parent = @cursor.path.parent
     index = @document.indexOf @cursor.path
-    @delBlocks parent, index, nrows, options
+    @delBlocks parent.row, index, nrows, options
 
   addBlocks: (parent, index = -1, serialized_rows, options = {}) ->
     mutation = new mutations.AddBlocks parent, index, serialized_rows, options
@@ -761,12 +809,7 @@ class Session extends EventEmitter
 
   moveBlock: (row, parent, index = -1) ->
     [commonAncestor, rowAncestors, cursorAncestors] = @document.getCommonAncestor row, @cursor.path
-    moved = @do new mutations.MoveBlock row, parent, index
-    if moved
-      # Move the cursor also, if it is in the moved block
-      if commonAncestor.is row
-        newCursorRow = @document.combineAncestry row, (x.row for x in cursorAncestors)
-        @cursor._setPath newCursorRow
+    @do new mutations.MoveBlock row, parent, index
     return row
 
   indentBlocks: (row, numblocks = 1) ->
@@ -790,14 +833,14 @@ class Session extends EventEmitter
     if row.is @viewRoot
       @showMessage "Cannot unindent view root", {text_class: 'error'}
       return
-    parent = do row.getParent
+    parent = row.parent
     if parent.row == @viewRoot.row
       @showMessage "Cannot unindent past root", {text_class: 'error'}
       return null
 
     siblings = (@document.getSiblingRange row, 0, (numblocks-1)).filter ((sib) -> sib != null)
 
-    newparent = do parent.getParent
+    newparent = parent.parent
     pp_i = @document.indexOf parent
 
     for sib in siblings
@@ -831,7 +874,7 @@ class Session extends EventEmitter
       @showMessage "Cannot unindent line with children", {text_class: 'error'}
       return
 
-    parent = do path.getParent
+    parent = path.parent
     p_i = @document.indexOf path
 
     newparent = @unindentBlocks path
@@ -852,7 +895,7 @@ class Session extends EventEmitter
       @moveBlock path, next, 0
     else
       # make it the next sibling
-      parent = do next.getParent
+      parent = next.parent
       p_i = @document.indexOf next
       @moveBlock path, parent, (p_i+1)
 
@@ -862,7 +905,7 @@ class Session extends EventEmitter
       return
 
     # make it the previous sibling
-    parent = do prev.getParent
+    parent = prev.parent
     p_i = @document.indexOf prev
     @moveBlock path, parent, p_i
 
@@ -872,12 +915,11 @@ class Session extends EventEmitter
   toggleBlockCollapsed: (row) ->
     @do new mutations.ToggleBlock row
 
-  pasteBefore: (options = {}) ->
-    options.before = true
-    @register.paste options
+  pasteBefore: () ->
+    @register.paste {before: true}
 
-  pasteAfter: (options = {}) ->
-    @register.paste options
+  pasteAfter: () ->
+    @register.paste {}
 
   # given an anchor and cursor, figures out the right blocks to be deleting
   # returns a parent, minindex, and maxindex
@@ -885,12 +927,12 @@ class Session extends EventEmitter
     [common, ancestors1, ancestors2] = @document.getCommonAncestor @cursor.path, @anchor.path
     if ancestors1.length == 0
       # anchor is underneath cursor
-      parent = do common.getParent
+      parent = common.parent
       index = @document.indexOf @cursor.path
       return [parent, index, index]
     else if ancestors2.length == 0
       # cursor is underneath anchor
-      parent = do common.getParent
+      parent = common.parent
       index = @document.indexOf @anchor.path
       return [parent, index, index]
     else

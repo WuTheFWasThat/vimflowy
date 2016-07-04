@@ -211,7 +211,7 @@ virtualRenderSession = (session, options = {}) ->
   path = session.viewRoot
   until path.is session.document.root
     crumbs.push path
-    path = do path.getParent
+    path = path.parent
 
   makeCrumb = (path, isLast) ->
     m_options = {}
