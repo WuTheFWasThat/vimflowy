@@ -165,14 +165,12 @@ class Document extends EventEmitter
   # structure #
   #############
 
-  _getChildren: (row) ->
-    return @store.getChildren row
-
-  _setChildren: (row, children) ->
-    return @store.setChildren row, children
-
-  _getChildRange: (row, min, max) ->
-    children = @_getChildren row
+  _getChildren: (row, min=0, max=-1) ->
+    children = @store.getChildren row
+    if children.length == 0
+      return []
+    if max == -1
+      max = children.length - 1
     indices = [min..max]
     return indices.map (index) ->
       if index >= children.length
@@ -181,6 +179,9 @@ class Document extends EventEmitter
         return null
       else
         return children[index]
+
+  _setChildren: (row, children) ->
+    return @store.setChildren row, children
 
   _childIndex: (parent, child) ->
     children = @_getChildren parent
@@ -450,7 +451,7 @@ class Document extends EventEmitter
     return @getChildRange path.parent, (min_offset + index), (max_offset + index)
 
   getChildRange: (path, min, max) ->
-    (@_getChildRange path.row, min, max).map ((child_row) ->
+    (@_getChildren path.row, min, max).map ((child_row) ->
       if child_row == null
         return null
       return path.child child_row

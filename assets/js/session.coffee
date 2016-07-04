@@ -782,6 +782,10 @@ class Session extends EventEmitter
   addBlocks: (parent, index = -1, serialized_rows, options = {}) ->
     mutation = new mutations.AddBlocks parent, index, serialized_rows, options
     @do mutation
+    if options.setCursor == 'first'
+      @cursor.set mutation.added_rows[0], 0, options.cursorOptions
+    else if options.setCursor == 'last'
+      @cursor.set mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions
 
   yankBlocks: (path, nrows) ->
     siblings = @document.getSiblingRange path, 0, (nrows-1)

@@ -177,7 +177,7 @@ class AttachBlocks extends Mutation
       new DetachBlocks @parent, @index, @nrows
     ]
 
-    delete_siblings = session.document._getChildRange @parent, @index, (@index + @nrows - 1)
+    delete_siblings = session.document._getChildren @parent, @index, (@index + @nrows - 1)
     for sib in delete_siblings
       session.document._detach sib, @parent
 
@@ -188,7 +188,7 @@ class DetachBlocks extends Mutation
     return "parent #{@parent}, index #{@index}, nrows #{@nrows}"
 
   mutate: (session) ->
-    @deleted = (session.document._getChildRange @parent, @index, (@index+@nrows-1)).filter ((sib) -> sib != null)
+    @deleted = (session.document._getChildren @parent, @index, (@index+@nrows-1)).filter ((sib) -> sib != null)
 
     for row in @deleted
       session.document._detach row, @parent
@@ -245,11 +245,7 @@ class DetachBlocks extends Mutation
 
 # creates new blocks (as opposed to attaching ones that already exist)
 class AddBlocks extends Mutation
-  # options:
-  #   setCursor: if you wish to set the cursor, set to 'first' or 'last',
-  #              indicating which block the cursor should go to
-
-  constructor: (@parent, @index = -1, @serialized_rows, @options = {}) ->
+  constructor: (@parent, @index = -1, @serialized_rows) ->
     @nrows = @serialized_rows.length
 
   str: () ->
@@ -265,13 +261,6 @@ class AddBlocks extends Mutation
       row = session.document.loadTo serialized_row, @parent, index, id_mapping
       @added_rows.push row
       index += 1
-
-      if @options.setCursor == 'first' and first
-        session.cursor.set row, 0, @options.cursorOptions
-        first = false
-
-    if @options.setCursor == 'last'
-      session.cursor.set row, 0, @options.cursorOptions
 
   rewind: (session) ->
     return [
