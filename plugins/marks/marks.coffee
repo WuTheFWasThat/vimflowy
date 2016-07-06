@@ -6,7 +6,7 @@ Modes = require '../../assets/js/modes.coffee'
 DataStore = require '../../assets/js/datastore.coffee'
 Document = require '../../assets/js/document.coffee'
 Session = require '../../assets/js/session.coffee'
-View = require '../../assets/js/view.coffee'
+Render = require '../../assets/js/render.coffee'
 mutations = require '../../assets/js/mutations.coffee'
 errors = require '../../assets/js/errors.coffee'
 
@@ -217,7 +217,7 @@ class MarksPlugin
     @api.registerHook 'session', 'renderLineContents', (lineContents, info) =>
       marking = @marksessionpath? and @marksessionpath.is info.path
       if marking
-        markresults = View.virtualRenderLine @marksession, @marksession.cursor.path, {no_clicks: true}
+        markresults = Render.virtualRenderLine @marksession, @marksession.cursor.path, {no_clicks: true}
         lineContents.unshift virtualDom.h 'span', {
           className: 'mark theme-bg-secondary theme-trim-accent'
         }, markresults

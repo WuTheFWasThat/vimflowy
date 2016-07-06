@@ -20,7 +20,7 @@ Document = require './document.coffee'
 Settings = require './settings.coffee'
 Plugins = require './plugins.coffee'
 Session = require './session.coffee'
-View = require './view.coffee'
+Render = require './render.coffee'
 
 keyDefinitions = require './keyDefinitions.coffee'
 # load all definitions
@@ -66,8 +66,8 @@ create_session = (doc, to_load) ->
 
   key_bindings.on 'applied_hotkey_settings', (hotkey_settings) ->
     settings.setSetting 'hotkeys', hotkey_settings
-    View.renderHotkeysTable key_bindings
-    View.renderModeTable key_bindings, session.mode, $keybindingsDiv
+    Render.renderHotkeysTable key_bindings
+    Render.renderModeTable key_bindings, session.mode, $keybindingsDiv
 
   ####################
   # session
@@ -82,7 +82,7 @@ create_session = (doc, to_load) ->
   }
 
   render_mode_info = (mode) ->
-    View.renderModeTable key_bindings, mode, $keybindingsDiv
+    Render.renderModeTable key_bindings, mode, $keybindingsDiv
     $modeDiv.text (Modes.getMode mode).name
 
   render_mode_info session.mode
@@ -92,7 +92,7 @@ create_session = (doc, to_load) ->
   session.on 'toggleBindingsDiv', () ->
     $keybindingsDiv.toggleClass 'active'
     doc.store.setSetting 'showKeyBindings', $keybindingsDiv.hasClass 'active'
-    View.renderModeTable key_bindings, session.mode, $keybindingsDiv
+    Render.renderModeTable key_bindings, session.mode, $keybindingsDiv
 
   ####################
   # plugins
@@ -102,18 +102,18 @@ create_session = (doc, to_load) ->
   enabledPlugins = (settings.getSetting "enabledPlugins") || ["Marks"]
   for plugin_name in enabledPlugins
     pluginManager.enable plugin_name
-  View.renderPlugins pluginManager
+  Render.renderPlugins pluginManager
 
   pluginManager.on 'status', () ->
-    View.renderPlugins pluginManager
+    Render.renderPlugins pluginManager
 
   pluginManager.on 'enabledPluginsChange', (enabled) ->
     settings.setSetting "enabledPlugins", enabled
-    View.renderPlugins pluginManager
-    View.renderSession session
+    Render.renderPlugins pluginManager
+    Render.renderSession session
     # refresh hotkeys, if any new ones were added/removed
-    View.renderHotkeysTable session.bindings
-    View.renderModeTable session.bindings, session.mode, $keybindingsDiv
+    Render.renderHotkeysTable session.bindings
+    Render.renderModeTable session.bindings, session.mode, $keybindingsDiv
 
   ####################
   # load data
@@ -132,7 +132,7 @@ create_session = (doc, to_load) ->
   # render when ready
   $(document).ready ->
     document.title = "#{docname} - Vimflowy" unless docname is ''
-    View.renderSession session
+    Render.renderSession session
 
   key_handler = new KeyHandler session, key_bindings
 
@@ -141,11 +141,11 @@ create_session = (doc, to_load) ->
   key_emitter.on 'keydown', (key) ->
     handled = key_handler.handleKey key
     if handled
-      View.renderSession session
+      Render.renderSession session
     return handled
 
   session.on 'importFinished', () ->
-    View.renderSession session
+    Render.renderSession session
 
   # expose globals, for debugging
   window.Modes = Modes
@@ -176,7 +176,7 @@ create_session = (doc, to_load) ->
           do session.newLineAtCursor
         chars = line.split ''
         session.addCharsAtCursor chars
-      View.renderSession session
+      Render.renderSession session
       do session.save
 
     $("#settings-link").click () ->
