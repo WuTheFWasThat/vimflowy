@@ -1,5 +1,5 @@
 Session = require './session.coffee'
-Document = (require './document.coffee').Document
+Document = require './document.coffee'
 DataStore = require './datastore.coffee'
 Modes = require './modes.coffee'
 

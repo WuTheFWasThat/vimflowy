@@ -12,8 +12,7 @@ EventEmitter = require './eventEmitter.coffee'
 Modes = require './modes.coffee'
 MODES = Modes.modes
 
-DocumentLib = require './document.coffee'
-Path = DocumentLib.Path
+Path = require './path.coffee'
 
 ###
 a Session represents a session with a vimflowy document
