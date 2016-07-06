@@ -8,11 +8,10 @@ Cursor = require './cursor.coffee'
 Register = require './register.coffee'
 Logger = require './logger.coffee'
 EventEmitter = require './eventEmitter.coffee'
+Path = require './path.coffee'
 
 Modes = require './modes.coffee'
 MODES = Modes.modes
-
-Path = require './path.coffee'
 
 ###
 a Session represents a session with a vimflowy document
@@ -669,6 +668,8 @@ class Session extends EventEmitter
       @addBlocks parent, (index+1), [''], options
 
   newLineAbove: () ->
+    if @cursor.path.is @viewRoot
+      return
     parent = @cursor.path.parent
     index = @document.indexOf @cursor.path
     @addBlocks parent, index, [''], {setCursor: 'first'}
@@ -815,10 +816,8 @@ class Session extends EventEmitter
       else if @options.setCursor == 'last'
         @cursor.set (@document.findChild parent, ids[ids.length-1]), 0
 
-  moveBlock: (row, parent, index = -1) ->
-    [commonAncestor, rowAncestors, cursorAncestors] = @document.getCommonAncestor row, @cursor.path
-    @do new mutations.MoveBlock row, parent, index
-    return row
+  moveBlock: (path, parent_path, index = -1) ->
+    @do new mutations.MoveBlock path, parent_path, index
 
   indentBlocks: (row, numblocks = 1) ->
     if row.is @viewRoot

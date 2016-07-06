@@ -133,7 +133,7 @@ class MoveBlock extends Mutation
     @old_parent = @path.parent
 
   str: () ->
-    return "path #{@path.row} from #{@path.parent.row} to #{@parent.row}"
+    return "move #{@path.row} from #{@path.parent.row} to #{@parent.row}"
 
   validate: (session) ->
     # if parent is the same, don't do sibling clone validation
@@ -154,6 +154,8 @@ class MoveBlock extends Mutation
     walk = cursor.path.walkFrom @path
     if walk == null
       return
+    # TODO: other cursors could also
+    # be on a relevant path..
     cursor._setPath (@parent.extend [@path.row]).extend walk
 
 class AttachBlocks extends Mutation

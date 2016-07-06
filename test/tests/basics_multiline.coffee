@@ -728,3 +728,17 @@ describe "basic multiline tests", () ->
     t.sendKeys 'dd'
     t.expectViewRoot 1
 
+  it "cannot do new line above at view root", () ->
+    t = new TestCase [
+      { text: 'here', children: [
+        'there'
+      ] },
+    ]
+    t.sendKeys 'j'
+    t.sendKey 'enter'
+    t.sendKeys 'O'
+    t.expect [
+      { text: 'here', children: [
+        'there'
+      ] },
+    ]
