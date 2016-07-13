@@ -7,9 +7,10 @@ class EventEmitter
     @hooks = {}
 
   # emit an event and return all responses from the listeners
-  emit: (event, args...) ->
-    ((listener event, args...) for listener in (@listeners['all'] or []))
-    return ((listener args...) for listener in (@listeners[event] or []))
+  # TODO
+  # emit: (event, args...) ->
+  #   ((listener event, args...) for listener in (@listeners['all'] or []))
+  #   return ((listener args...) for listener in (@listeners[event] or []))
 
   addListener: (event, listener) ->
     @emit 'newListener', event, listener
@@ -27,7 +28,8 @@ class EventEmitter
 
   removeListener: (event, listener) ->
     return @ unless @listeners[event]
-    @listeners[event] = (l for l in @listeners[event] when l isnt listener)
+    # TODO
+    #   @listeners[event] = (l for l in @listeners[event] when l isnt listener)
     return @
 
   removeAllListeners: (event) ->
@@ -44,7 +46,8 @@ class EventEmitter
 
   removeHook: (event, transform) ->
     return @ unless @hooks[event]
-    @hooks[event] = (t for t in @hooks[event] when t isnt transform)
+    # TODO
+    # @hooks[event] = (t for t in @hooks[event] when t isnt transform)
     return @
 
   applyHook: (event, obj, info) ->

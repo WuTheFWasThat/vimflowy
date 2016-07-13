@@ -26,13 +26,15 @@
     "tv4": "latest"
   },
   "devDependencies": {
-    "babel-core": "^6.10.4",
-    "babel-preset-es2015": "^6.9.0",
+    "babel-core": "latest",
+    "babel-preset-es2015": "latest",
     "blanket": "latest",
     "browserify": "latest",
     "coffeeify": "latest",
     "del": "latest",
     "gulp": "latest",
+    "gulp-babel": "latest",
+    "gulp-coffee": "latest",
     "gulp-jade": "latest",
     "gulp-mocha": "latest",
     "gulp-rename": "latest",

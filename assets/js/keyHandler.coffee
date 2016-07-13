@@ -13,7 +13,7 @@ It maintains custom logic for this, for each mode.
 the KeyStream class is a helper class which deals with queuing and checkpointing a stream of key events
 ###
 
-EventEmitter = require './eventEmitter.coffee'
+EventEmitter = require './eventEmitter.js'
 errors = require './errors.coffee'
 Menu = require './menu.coffee'
 Modes = require './modes.coffee'

@@ -1,5 +1,5 @@
 Logger = require './logger.coffee'
-EventEmitter = require './eventEmitter.coffee'
+EventEmitter = require './eventEmitter.js'
 
 ###
 KeyEmitter is an EventEmitter that emits keys

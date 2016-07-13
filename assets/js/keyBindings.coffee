@@ -5,7 +5,7 @@ utils = require './utils.coffee'
 Modes = require './modes.coffee'
 errors = require './errors.coffee'
 Logger = require './logger.coffee'
-EventEmitter = require './eventEmitter.coffee'
+EventEmitter = require './eventEmitter.js'
 
 ###
 Terminology:

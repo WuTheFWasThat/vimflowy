@@ -4,7 +4,7 @@ utils = require './utils.coffee'
 Modes = require './modes.coffee'
 Logger = require './logger.coffee'
 errors = require './errors.coffee'
-EventEmitter = require './eventEmitter.coffee'
+EventEmitter = require './eventEmitter.js'
 
 PLUGIN_SCHEMA = {
   title: "Plugin metadata schema"

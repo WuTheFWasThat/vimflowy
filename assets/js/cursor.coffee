@@ -1,6 +1,6 @@
 utils = require './utils.coffee'
 constants = require './constants.coffee'
-EventEmitter = require './eventEmitter.coffee'
+EventEmitter = require './eventEmitter.js'
 
 Function::property = (prop, desc) ->
   Object.defineProperty @prototype, prop, desc
