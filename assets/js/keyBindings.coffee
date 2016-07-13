@@ -132,12 +132,12 @@ class KeyBindings extends EventEmitter
 
   # apply default hotkeys
   apply_default_hotkey_settings: () ->
-      err = @apply_hotkey_settings {}
-      errors.assert_equals err, null, "Failed to apply default hotkeys"
+    err = @apply_hotkey_settings {}
+    errors.assert_equals err, null, "Failed to apply default hotkeys"
 
   reapply_hotkey_settings: () ->
-      err = @apply_hotkey_settings @hotkey_settings
-      return err
+    err = @apply_hotkey_settings @hotkey_settings
+    return err
 
   # TODO getBindings: (mode) -> return @bindings[mode]
 
