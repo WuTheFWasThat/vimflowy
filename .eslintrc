@@ -1,0 +1,30 @@
+{
+  "parserOptions": {
+    "sourceType": "module",
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "rules": {
+    "semi": [2, "always"],
+    "valid-jsdoc": [2],
+    "block-scoped-var": [2],
+    "no-fallthrough": [0],
+    "no-self-compare": [2],
+    "indent": [2, 2, { "SwitchCase": 1 }],
+    "brace-style": [2, "1tbs", { "allowSingleLine": true }],
+    "eol-last": [0],
+    "max-nested-callbacks": [2, 3],
+    "no-underscore-dangle": [0],
+    "no-nested-ternary": [2],
+    "quotes": [2, "single", "avoid-escape"],
+    "strict": [0],
+    "new-cap": [0],
+    "no-unused-vars": [2],
+    "no-undef": [2],
+    "no-use-before-define": [2, "nofunc"],
+    "no-shadow": [0],
+    "max-len": [2, 120, 4]
+  }
+}

@@ -1,31 +1,35 @@
-TestCase = require '../testcase.coffee'
+/* globals describe, it */
+import TestCase from '../testcase';
 
-describe "collapse", () ->
-  it "works in basic case", () ->
-    t = new TestCase [
+describe('collapse', () =>
+  it('works in basic case', function() {
+    let t = new TestCase([
       { text: 'first', children: [
         'second'
       ] },
       'third'
-    ]
-    t.sendKeys 'z'
-    t.expect [
+    ]);
+    t.sendKeys('z');
+    t.expect([
       { text: 'first', collapsed: true, children: [
         'second'
       ] },
       'third'
-    ]
-    t.sendKeys 'jx'
-    t.expect [
+    ]);
+    t.sendKeys('jx');
+    t.expect([
       { text: 'first', collapsed: true, children: [
         'second'
       ] },
       'hird'
-    ]
-    t.sendKeys 'uu'
-    t.expect [
+    ]);
+    t.sendKeys('uu');
+    return t.expect([
       { text: 'first', children: [
         'second'
       ] },
       'third'
-    ]
+    ]);
+  })
+
+);

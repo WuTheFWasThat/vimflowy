@@ -15,6 +15,8 @@ toArray = require 'stream-to-array'
 source = require 'vinyl-source-stream'
 buffer = require 'vinyl-buffer'
 
+require 'babel-core/register'
+
 # handles errors of a stream by ending it
 handle = (stream) ->
   stream.on 'error', ->
@@ -23,7 +25,7 @@ handle = (stream) ->
 
 out_folder = 'public'
 
-test_glob = 'test/**/*.coffee'
+test_glob = 'test/tests/*.js'
 coffee_glob = 'assets/**/*.coffee'
 sass_glob = 'assets/css/**/*.sass'
 
@@ -125,7 +127,7 @@ gulp.task 'test', () ->
     .pipe mocha {
       reporter: 'dot',
       bail: true,
-      compilers: 'coffee:coffee-script/register'
+      compilers: 'js:babel-core/register'
     }
 
 # Rerun tasks when files changes

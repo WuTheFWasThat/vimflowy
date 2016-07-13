@@ -1,739 +1,760 @@
-TestCase = require '../testcase.coffee'
+/* globals describe, it */
+import TestCase from '../testcase';
 
-swapDownKey = 'ctrl+j'
-swapUpKey = 'ctrl+k'
+let swapDownKey = 'ctrl+j';
+// let swapUpKey = 'ctrl+k';
 
-describe "cloning", () ->
-  it "works in basic case", () ->
-    t = new TestCase [
+describe('cloning', function() {
+  it('works in basic case', function() {
+    let t = new TestCase([
       { text: 'one', children: [
         'uno',
-      ] }
+      ] },
       { text: 'two', children: [
         'dos',
-      ] }
+      ] },
       { text: 'tacos', children: [
         'tacos',
       ] }
-    ]
-    t.sendKeys 'yc'
-    t.sendKeys 'jjj'
-    t.sendKeys 'p'
-    t.expect [
+    ]);
+    t.sendKeys('yc');
+    t.sendKeys('jjj');
+    t.sendKeys('p');
+    return t.expect([
       { text: 'one', id: 1, children: [
         'uno',
-      ] }
+      ] },
       { text: 'two', children: [
         'dos',
         { clone: 1 }
-      ] }
+      ] },
       { text: 'tacos', children: [
         'tacos',
       ] }
-    ]
+    ]);
+  });
 
-  it "works editing both clone and original; works with basic movement", () ->
-    t = new TestCase [
+  it('works editing both clone and original; works with basic movement', function() {
+    let t = new TestCase([
       { text: 'one', children: [
         'uno',
-      ] }
+      ] },
       { text: 'two', children: [
         'dos',
-      ] }
+      ] },
       { text: 'tacos', children: [
         'tacos',
       ] }
-    ]
-    t.sendKeys 'yc'
-    t.sendKeys 'jjj'
-    t.sendKeys 'p'
-    t.sendKeys 'gg'
-    t.sendKeys 'x'
-    t.sendKeys 'jjjj'
-    t.sendKeys 'x'
-    t.expect [
+    ]);
+    t.sendKeys('yc');
+    t.sendKeys('jjj');
+    t.sendKeys('p');
+    t.sendKeys('gg');
+    t.sendKeys('x');
+    t.sendKeys('jjjj');
+    t.sendKeys('x');
+    t.expect([
       { text: 'e', id: 1, children: [
         'uno',
-      ] }
+      ] },
       { text: 'two', children: [
         'dos',
         { clone: 1 }
-      ] }
+      ] },
       { text: 'tacos', children: [
         'tacos',
       ] }
-    ]
+    ]);
 
-    # test movement from the clone
-    t.sendKeys 'jj'
-    t.sendKeys 'x'
-    t.expect [
+    // test movement from the clone
+    t.sendKeys('jj');
+    t.sendKeys('x');
+    return t.expect([
       { text: 'e', id: 1, children: [
         'uno',
-      ] }
+      ] },
       { text: 'two', children: [
         'dos',
         { clone: 1 }
-      ] }
+      ] },
       { text: 'acos', children: [
         'tacos',
       ] }
-    ]
+    ]);
+  });
 
-  it "works with movement in complex case", () ->
-    t = new TestCase [
+  it('works with movement in complex case', function() {
+    let t = new TestCase([
       { text: 'Clone', children: [
-          'Clone child'
-      ] }
+        'Clone child'
+      ] },
       { text: 'Not a clone', children: [
         'Also not a clone and going to be deleted'
       ] }
-    ]
-    t.sendKeys 'yc'
-    t.sendKeys 'jjjj'
-    t.sendKeys 'p'
-    t.expect [
+    ]);
+    t.sendKeys('yc');
+    t.sendKeys('jjjj');
+    t.sendKeys('p');
+    t.expect([
       { text: 'Clone', id: 1, children: [
         'Clone child',
-      ] }
+      ] },
       { text: 'Not a clone', children: [
-        'Also not a clone and going to be deleted'
+        'Also not a clone and going to be deleted',
         { clone: 1 }
       ] }
-    ]
-    t.sendKeys 'kddk'
-    t.expect [
+    ]);
+    t.sendKeys('kddk');
+    t.expect([
       { text: 'Clone', id: 1, children: [
         'Clone child',
-      ] }
+      ] },
       { text: 'Not a clone', children: [
         { clone: 1 }
       ] }
-    ]
-    t.expectCursor 3, 0
-    # test movement
-    t.sendKeys 'k'
-    t.expectCursor 2, 0
-    t.sendKeys 'k'
-    t.expectCursor 1, 0
-    t.sendKeys 'k'
-    t.expectCursor 1, 0
+    ]);
+    t.expectCursor(3, 0);
+    // test movement
+    t.sendKeys('k');
+    t.expectCursor(2, 0);
+    t.sendKeys('k');
+    t.expectCursor(1, 0);
+    t.sendKeys('k');
+    return t.expectCursor(1, 0);
+  });
 
-  it "prevents cloning to a sibling", () ->
-    t = new TestCase [
+  it('prevents cloning to a sibling', function() {
+    let t = new TestCase([
       'one',
       'two',
       'three'
-    ]
-    t.sendKeys 'yc'
-    t.sendKeys 'j'
-    t.sendKeys 'p'
-    t.expect [
+    ]);
+    t.sendKeys('yc');
+    t.sendKeys('j');
+    t.sendKeys('p');
+    return t.expect([
       'one',
       'two',
       'three'
-    ]
+    ]);
+  });
 
-  it "prevents cycles", () ->
-    t = new TestCase [
+  it('prevents cycles', function() {
+    let t = new TestCase([
       { text: 'one', children: [
         'uno',
       ] }
-    ]
-    t.sendKeys 'yc'
-    t.sendKeys 'j'
-    t.sendKeys 'p'
-    t.expect [
+    ]);
+    t.sendKeys('yc');
+    t.sendKeys('j');
+    t.sendKeys('p');
+    return t.expect([
       { text: 'one', children: [
         'uno',
       ] }
-    ]
+    ]);
+  });
 
-  it "prevents cycles part 2", () ->
-    t = new TestCase [
+  it('prevents cycles part 2', function() {
+    let t = new TestCase([
       { text: 'blah', children: [
         'blah'
-      ] }
+      ] },
       { text: 'eventually cloned', children: [
         { text: 'Will be cloned', children: [
           'Will be cloned'
         ] }
       ] }
-    ]
-    t.sendKeys 'jdd'
-    t.expect [
-      'blah'
+    ]);
+    t.sendKeys('jdd');
+    t.expect([
+      'blah',
       { text: 'eventually cloned', children: [
         { text: 'Will be cloned', children: [
           'Will be cloned'
         ] }
       ] }
-    ]
-    t.sendKeys 'jjyckP'
-    t.expect [
-      'blah'
+    ]);
+    t.sendKeys('jjyckP');
+    t.expect([
+      'blah',
       { text: 'Will be cloned', id: 4, children: [
         'Will be cloned'
-      ] }
+      ] },
       { text: 'eventually cloned', children: [
         { clone: 4 }
       ] }
-    ]
-    t.sendKeys 'jjyckp'
-    t.expect [
-      'blah'
+    ]);
+    t.sendKeys('jjyckp');
+    t.expect([
+      'blah',
       { text: 'Will be cloned', id: 4, children: [
         'Will be cloned'
-      ] }
+      ] },
       { text: 'eventually cloned', children: [
         { clone: 4 }
       ] }
-    ]
-    t.sendKeys 'kp'
-    t.expect [
-      'blah'
+    ]);
+    t.sendKeys('kp');
+    t.expect([
+      'blah',
       { text: 'Will be cloned', id: 4, children: [
         'Will be cloned'
-      ] }
+      ] },
       { text: 'eventually cloned', children: [
         { clone: 4 }
       ] }
-    ]
-    t.sendKeys 'u'
-    t.expect [
-      'blah'
+    ]);
+    t.sendKeys('u');
+    t.expect([
+      'blah',
       { text: 'eventually cloned', children: [
         { text: 'Will be cloned', children: [
           'Will be cloned'
         ] }
       ] }
-    ]
-    t.sendKeys 'u'
-    t.expect [
+    ]);
+    t.sendKeys('u');
+    t.expect([
       { text: 'blah', children: [
         'blah'
-      ] }
+      ] },
       { text: 'eventually cloned', children: [
         { text: 'Will be cloned', children: [
           'Will be cloned'
         ] }
       ] }
-    ]
-    t.sendKeys 'p'
-    t.expect [
+    ]);
+    t.sendKeys('p');
+    return t.expect([
       { text: 'blah', children: [
-        'blah'
+        'blah',
         { text: 'eventually cloned', id: 3, children: [
           { text: 'Will be cloned', children: [
             'Will be cloned'
           ] }
         ] }
-      ] }
+      ] },
       { clone: 3 }
-    ]
+    ]);
+  });
 
 
-  it "works with repeat", () ->
-    t = new TestCase [
-      'one'
-      'two'
+  it('works with repeat', function() {
+    let t = new TestCase([
+      'one',
+      'two',
       { text: 'three', children: [
         'child',
       ] }
-    ]
-    t.sendKeys '2yc'
-    t.sendKeys 'p'
-    t.expect [
-      'one'
-      'two'
+    ]);
+    t.sendKeys('2yc');
+    t.sendKeys('p');
+    t.expect([
+      'one',
+      'two',
       { text: 'three', children: [
         'child',
       ] }
-    ]
-    t.sendKeys 'jjp'
-    t.expect [
-      { text: 'one', id: 1 }
-      { text: 'two', id: 2 }
+    ]);
+    t.sendKeys('jjp');
+    return t.expect([
+      { text: 'one', id: 1 },
+      { text: 'two', id: 2 },
       { text: 'three', children: [
-        { clone: 1 }
-        { clone: 2 }
+        { clone: 1 },
+        { clone: 2 },
         'child',
       ] }
-    ]
+    ]);
+  });
 
-  it "does not add to history when constraints are violated", () ->
-    t = new TestCase [
-      'blah'
+  it('does not add to history when constraints are violated', function() {
+    let t = new TestCase([
+      'blah',
       { text: 'Will be cloned', children: [
         'not a clone'
       ] }
-    ]
-    t.sendKeys 'x'
-    t.expect [
-      'lah'
+    ]);
+    t.sendKeys('x');
+    t.expect([
+      'lah',
       { text: 'Will be cloned', children: [
         'not a clone'
       ] }
-    ]
-    t.sendKeys 'jycp'
-    t.expect [
-      'lah'
+    ]);
+    t.sendKeys('jycp');
+    t.expect([
+      'lah',
       { text: 'Will be cloned', children: [
         'not a clone'
       ] }
-    ]
-    t.sendKeys 'u'
-    t.expect [
-      'blah'
+    ]);
+    t.sendKeys('u');
+    return t.expect([
+      'blah',
       { text: 'Will be cloned', children: [
         'not a clone'
       ] }
-    ]
+    ]);
+  });
 
-  it "enforces constraints upon movement", () ->
-    t = new TestCase [
+  it('enforces constraints upon movement', function() {
+    let t = new TestCase([
       { text: 'Clone', children: [
         'Clone child'
-      ] }
+      ] },
       { text: 'Not a clone', children: [
         'Not a clone'
       ] }
-    ]
+    ]);
 
-    t.sendKeys 'ycjjp'
-    t.expect [
+    t.sendKeys('ycjjp');
+    t.expect([
       { text: 'Clone', id: 1, children: [
         'Clone child'
-      ] }
+      ] },
       { text: 'Not a clone', children: [
-        { clone: 1 }
+        { clone: 1 },
         'Not a clone'
       ] }
-    ]
+    ]);
 
-    t.sendKeys 'gg'
-    t.sendKey swapDownKey
-    t.expect [
+    t.sendKeys('gg');
+    t.sendKey(swapDownKey);
+    t.expect([
       { text: 'Clone', id: 1, children: [
         'Clone child'
-      ] }
+      ] },
       { text: 'Not a clone', children: [
-        { clone: 1 }
+        { clone: 1 },
         'Not a clone'
       ] }
-    ]
+    ]);
 
-    t.sendKeys 'u'
-    t.expect [
+    t.sendKeys('u');
+    t.expect([
       { text: 'Clone', children: [
         'Clone child'
-      ] }
+      ] },
       { text: 'Not a clone', children: [
         'Not a clone'
       ] }
-    ]
+    ]);
 
-    t.sendKeys 'gg'
-    t.sendKey swapDownKey
-    t.expect [
+    t.sendKeys('gg');
+    t.sendKey(swapDownKey);
+    return t.expect([
       { text: 'Not a clone', children: [
         { text: 'Clone', children: [
           'Clone child'
-        ] }
+        ] },
         'Not a clone'
       ] }
-    ]
+    ]);
+  });
 
 
-  it "creates clone on regular paste", () ->
-    t = new TestCase [
+  it('creates clone on regular paste', function() {
+    let t = new TestCase([
       'Will be cloned via delete',
       { text: 'parent', children: [
         'hm...'
       ] }
-    ]
-    t.sendKeys 'x'
-    t.expect [
+    ]);
+    t.sendKeys('x');
+    t.expect([
       'ill be cloned via delete',
       { text: 'parent', children: [
         'hm...'
       ] }
-    ]
-    t.sendKeys 'dd'
-    t.expect [
+    ]);
+    t.sendKeys('dd');
+    t.expect([
       { text: 'parent', children: [
         'hm...'
       ] }
-    ]
-    t.sendKeys 'uu'
-    t.expect [
+    ]);
+    t.sendKeys('uu');
+    t.expect([
       'Will be cloned via delete',
       { text: 'parent', children: [
         'hm...'
       ] }
-    ]
-    t.sendKeys 'jp'
-    # pastes with the W even though it was deleted while cloned
-    t.expect [
-      { text: 'Will be cloned via delete', id: 1 }
+    ]);
+    t.sendKeys('jp');
+    // pastes with the W even though it was deleted while cloned
+    return t.expect([
+      { text: 'Will be cloned via delete', id: 1 },
       { text: 'parent', children: [
-        { clone: 1 }
+        { clone: 1 },
         'hm...'
       ] }
-    ]
+    ]);
+  });
 
-  it "prevents constraint violation on regular paste", () ->
-    t = new TestCase [
+  it('prevents constraint violation on regular paste', function() {
+    let t = new TestCase([
       'Will be deleted',
       'hm...'
-    ]
-    t.sendKeys 'dd'
-    t.sendKeys 'u'
-    t.expect [
+    ]);
+    t.sendKeys('dd');
+    t.sendKeys('u');
+    t.expect([
       'Will be deleted',
       'hm...'
-    ]
-    t.sendKeys 'p'
-    t.expect [
+    ]);
+    t.sendKeys('p');
+    return t.expect([
       'Will be deleted',
       'hm...'
-    ]
+    ]);
+  });
 
-  it "prevents constraint violation on paste", () ->
-    t = new TestCase [
+  it('prevents constraint violation on paste', function() {
+    let t = new TestCase([
       'Will be cloned',
       { text: 'parent', children: [
         { text: 'blah', children: [
           'blah'
         ] }
       ] }
-    ]
-    t.sendKeys 'ycjp'
+    ]);
+    t.sendKeys('ycjp');
 
-    t.expect [
+    t.expect([
       { text: 'Will be cloned', id: 1 },
       { text: 'parent', children: [
-        { clone: 1 }
+        { clone: 1 },
         { text: 'blah', children: [
           'blah'
         ] }
       ] }
-    ]
+    ]);
 
-    t.sendKeys 'ddkkp'
-    t.expect [
+    t.sendKeys('ddkkp');
+    return t.expect([
       'Will be cloned',
       { text: 'parent', children: [
         { text: 'blah', children: [
           'blah'
         ] }
       ] }
-    ]
+    ]);
+  });
 
-  it "prevents constraint violation on indent", () ->
-    t = new TestCase [
+  it('prevents constraint violation on indent', function() {
+    let t = new TestCase([
       { text: 'parent', children: [
         'blah'
-      ] }
+      ] },
       'Will be cloned',
-    ]
-    t.sendKeys 'Gyckp'
+    ]);
+    t.sendKeys('Gyckp');
 
-    t.expect [
+    t.expect([
       { text: 'parent', children: [
-        'blah'
+        'blah',
         { text: 'Will be cloned', id: 3 }
-      ] }
+      ] },
       { clone: 3 }
-    ]
+    ]);
 
-    t.sendKeys 'G'
-    t.sendKeys '>'
-    t.expect [
+    t.sendKeys('G');
+    t.sendKeys('>');
+    return t.expect([
       { text: 'parent', children: [
-        'blah'
+        'blah',
         { text: 'Will be cloned', id: 3 }
-      ] }
+      ] },
       { clone: 3 }
-    ]
+    ]);
+  });
 
-  it "can paste clones of removed items", () ->
-    t = new TestCase [
+  it('can paste clones of removed items', function() {
+    let t = new TestCase([
       'test',
       'hi',
-    ]
-    t.sendKeys 'jddu'
-    t.sendKeys 'yc'
-    t.sendKey 'ctrl+r'
+    ]);
+    t.sendKeys('jddu');
+    t.sendKeys('yc');
+    t.sendKey('ctrl+r');
 
-    t.expect [
+    t.expect([
       'test'
-    ]
+    ]);
 
-    t.sendKeys 'p'
-    t.expect [
-      'test'
-      'hi'
-    ]
-
-  it "can paste clones of removed items, part 2", () ->
-    t = new TestCase [
+    t.sendKeys('p');
+    return t.expect([
       'test',
-    ]
-    t.sendKeys 'ohi'
-    t.sendKey 'esc'
-
-    t.expect [
-      'test'
       'hi'
-    ]
+    ]);
+  });
 
-    t.sendKeys 'ycu'
-    t.expect [
-      'test'
-    ]
+  it('can paste clones of removed items, part 2', function() {
+    let t = new TestCase([
+      'test',
+    ]);
+    t.sendKeys('ohi');
+    t.sendKey('esc');
 
-    t.sendKeys 'p'
-    # the pasted row is empty, since the typing got undone!
-    t.expect [
+    t.expect([
+      'test',
+      'hi'
+    ]);
+
+    t.sendKeys('ycu');
+    t.expect([
       'test'
+    ]);
+
+    t.sendKeys('p');
+    // the pasted row is empty, since the typing got undone!
+    return t.expect([
+      'test',
       ''
-    ]
+    ]);
+  });
 
-  it "works nested, basic test", () ->
-    t = new TestCase [
+  it('works nested, basic test', function() {
+    let t = new TestCase([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
-          { text: 'subclone', id: 3 }
+          { text: 'subclone', id: 3 },
           { text: 'fett', children: [
             { clone: 3 }
           ] }
         ] }
-      ] }
+      ] },
       { clone: 2 }
-    ]
+    ]);
 
-    t.sendKeys 'Gdd'
-    t.expect [
+    t.sendKeys('Gdd');
+    t.expect([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
-          'subclone'
+          'subclone',
           'fett'
         ] }
-      ] }
+      ] },
       { clone: 2 }
-    ]
-    t.sendKeys 'ggjdd'
-    t.expect [
-      'jango'
+    ]);
+    t.sendKeys('ggjdd');
+    t.expect([
+      'jango',
       { text: 'clone', children: [
-        'subclone'
+        'subclone',
         'fett'
       ] }
-    ]
-    t.sendKeys 'u'
-    t.expect [
+    ]);
+    t.sendKeys('u');
+    t.expect([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
-          'subclone'
+          'subclone',
           'fett'
         ] }
-      ] }
+      ] },
       { clone: 2 }
-    ]
-    t.sendKeys 'u'
-    t.expect [
+    ]);
+    t.sendKeys('u');
+    return t.expect([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
-          { text: 'subclone', id: 3 }
+          { text: 'subclone', id: 3 },
           { text: 'fett', children: [
             { clone: 3 }
           ] }
         ] }
-      ] }
+      ] },
       { clone: 2 }
-    ]
+    ]);
+  });
 
-  it "works nested, second basic test", () ->
-    t = new TestCase [
+  it('works nested, second basic test', function() {
+    let t = new TestCase([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
-          { text: 'subclone', id: 3 }
+          { text: 'subclone', id: 3 },
           { text: 'fett', children: [
             { clone: 3 }
           ] }
         ] }
-      ] }
+      ] },
       { clone: 2 }
-    ]
+    ]);
 
-    t.sendKeys 'jdd'
-    t.expect [
-      'jango'
+    t.sendKeys('jdd');
+    t.expect([
+      'jango',
       { text: 'clone', children: [
-        { text: 'subclone', id: 3 }
+        { text: 'subclone', id: 3 },
         { text: 'fett', children: [
           { clone: 3 }
         ] }
       ] }
-    ]
-    t.sendKeys 'jjdd'
-    t.expect [
-      'jango'
+    ]);
+    t.sendKeys('jjdd');
+    t.expect([
+      'jango',
       { text: 'clone', children: [
         { text: 'fett', children: [
           'subclone'
         ] }
       ] }
-    ]
+    ]);
 
-    t.sendKeys 'u'
-    t.expect [
-      'jango'
+    t.sendKeys('u');
+    t.expect([
+      'jango',
       { text: 'clone', children: [
-        { text: 'subclone', id: 3 }
+        { text: 'subclone', id: 3 },
         { text: 'fett', children: [
           { clone: 3 }
         ] }
       ] }
-    ]
+    ]);
 
-    t.sendKeys 'u'
-    t.expect [
+    t.sendKeys('u');
+    return t.expect([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
-          { text: 'subclone', id: 3 }
+          { text: 'subclone', id: 3 },
           { text: 'fett', children: [
             { clone: 3 }
           ] }
         ] }
-      ] }
+      ] },
       { clone: 2 }
-    ]
+    ]);
+  });
 
-  it "can cycle between clones", () ->
-    t = new TestCase [
+  it('can cycle between clones', function() {
+    let t = new TestCase([
       { text: 'blah', children: [
         { text: 'clone', id: 2, children: [
-          'child'
+          'child',
           'child'
         ] }
-      ] }
+      ] },
+      'sibling',
+      { clone: 2 },
       'sibling'
-      { clone: 2 }
-      'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'jx'
-    t.expect [
+    t.sendKeys('jx');
+    t.expect([
       { text: 'blah', children: [
         { text: 'lone', id: 2, children: [
-          'child'
+          'child',
           'child'
         ] }
-      ] }
+      ] },
+      'sibling',
+      { clone: 2 },
       'sibling'
-      { clone: 2 }
-      'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'gckx'
-    t.expect [
+    t.sendKeys('gckx');
+    t.expect([
       { text: 'blah', children: [
         { text: 'lone', id: 2, children: [
-          'child'
+          'child',
           'child'
         ] }
-      ] }
-      'ibling'
-      { clone: 2 }
+      ] },
+      'ibling',
+      { clone: 2 },
       'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'jgckx'
-    t.expect [
+    t.sendKeys('jgckx');
+    t.expect([
       { text: 'lah', children: [
         { text: 'lone', id: 2, children: [
-          'child'
+          'child',
           'child'
         ] }
-      ] }
-      'ibling'
-      { clone: 2 }
+      ] },
+      'ibling',
+      { clone: 2 },
       'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'jddjjx'
-    t.expect [
-      'lah'
-      'ibling'
+    t.sendKeys('jddjjx');
+    t.expect([
+      'lah',
+      'ibling',
       { text: 'one', children: [
+        'child',
         'child'
-        'child'
-      ] }
+      ] },
       'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'gcx'
-    t.expect [
-      'lah'
-      'ibling'
+    t.sendKeys('gcx');
+    return t.expect([
+      'lah',
+      'ibling',
       { text: 'ne', children: [
+        'child',
         'child'
-        'child'
-      ] }
+      ] },
       'sibling'
-    ]
+    ]);
+  });
 
-  it "can cycle between clones with stranded parents", () ->
-    t = new TestCase [
+  return it('can cycle between clones with stranded parents', function() {
+    let t = new TestCase([
       { text: 'blah', children: [
         { text: 'clone', id: 2 }
-      ] }
+      ] },
       { text: 'blah2', children: [
         { clone: 2 }
-      ] }
+      ] },
+      'sibling',
+      { clone: 2 },
       'sibling'
-      { clone: 2 }
-      'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'dd'
-    t.expect [
+    t.sendKeys('dd');
+    t.expect([
       { text: 'blah2', children: [
         { text: 'clone', id: 2 }
-      ] }
+      ] },
+      'sibling',
+      { clone: 2 },
       'sibling'
-      { clone: 2 }
-      'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'jgckx'
-    t.expect [
+    t.sendKeys('jgckx');
+    t.expect([
       { text: 'blah2', children: [
         { text: 'clone', id: 2 }
-      ] }
-      'ibling'
-      { clone: 2 }
+      ] },
+      'ibling',
+      { clone: 2 },
       'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'jgcjx'
-    t.expect [
+    t.sendKeys('jgcjx');
+    t.expect([
       { text: 'blah2', children: [
         { text: 'clone', id: 2 }
-      ] }
-      'bling'
-      { clone: 2 }
+      ] },
+      'bling',
+      { clone: 2 },
       'sibling'
-    ]
+    ]);
 
-    t.sendKeys 'kgckx'
-    t.expect [
+    t.sendKeys('kgckx');
+    return t.expect([
       { text: 'blah2', children: [
         { text: 'clone', id: 2 }
-      ] }
-      'ling'
-      { clone: 2 }
+      ] },
+      'ling',
+      { clone: 2 },
       'sibling'
-    ]
+    ]);
+  });
+});
