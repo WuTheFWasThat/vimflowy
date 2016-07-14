@@ -71,9 +71,9 @@ class PluginApi
   #       (first try combining bindings into definitions)
   #       should also re-render mode table
   _reapply_hotkeys: () ->
-     err = do @session.bindings.reapply_hotkey_settings
-     if err
-       throw new errors.GenericError "Error applying hotkeys: #{err}"
+    err = do @session.bindings.reapply_hotkey_settings
+    if err
+      throw new errors.GenericError "Error applying hotkeys: #{err}"
 
   registerMode: (metadata) ->
     mode = Modes.registerMode metadata
@@ -143,15 +143,15 @@ class PluginApi
       if registration.type == 'mode'
         @deregisterMode.apply @, registration.args
       else if registration.type == 'command'
-        @deregisterCommand.apply @, registration.args
+        @deregisterCommand.apply(@, registration.args)
       else if registration.type == 'motion'
-        @deregisterMotion.apply @, registration.args
+        @deregisterMotion.apply(@, registration.args)
       else if registration.type == 'action'
-        @deregisterAction.apply @, registration.args
+        @deregisterAction.apply(@, registration.args)
       else if registration.type == 'listener'
-        @deregisterListener.apply @, registration.args
+        @deregisterListener.apply(@, registration.args)
       else if registration.type == 'hook'
-        @deregisterHook.apply @, registration.args
+        @deregisterHook.apply(@, registration.args)
       else
         throw new errors.GenericError "Unknown registration type #{registration.type}"
     @registrations = []
@@ -174,7 +174,7 @@ class PluginsManager extends EventEmitter
   getStatus: (name) ->
     if not PLUGINS[name]
       return STATUSES.UNREGISTERED
-    @plugin_infos[name]?.status || STATUSES.DISABLED
+    (@plugin_infos[name] && @plugin_infos[name].status) || STATUSES.DISABLED
 
   setStatus: (name, status) ->
     Logger.logger.info "Plugin #{name} status: #{status}"
@@ -252,7 +252,7 @@ registerPlugin = (plugin_metadata, enable, disable) ->
   plugin = _.cloneDeep plugin_metadata
   PLUGINS[plugin.name] = plugin
   plugin.enable = enable
-  plugin.disable = disable || _.once (api) =>
+  plugin.disable = disable || _.once (api) ->
     do api.deregisterAll
     alert "The plugin '#{plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable."
 

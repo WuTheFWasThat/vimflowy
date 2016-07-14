@@ -112,9 +112,9 @@ class Session extends EventEmitter
       unless node.text || node.text == '' then return false
       if node.children
         for child in node.children
-          unless verify child then return false
+          unless verify(child) then return false
       return true
-    unless verify root
+    unless verify(root)
       @showMessage "The uploaded file is not in a valid vimflowy format", {text_class: 'error'}
       return false
     return root
@@ -165,7 +165,7 @@ class Session extends EventEmitter
     if mimetype in ['application/json']
       return @parseJson content
     else if mimetype in ['text/plain', 'Text']
-      return @parsePlaintext content
+      return @parsePlaintext(content)
     else
       return null
 
@@ -177,7 +177,7 @@ class Session extends EventEmitter
     if root.text == '' && root.children # Complete export, not one node
       @addBlocks path, 0, root.children
     else
-      @addBlocks path, 0, [root]
+      @addBlocks(path, 0, [root])
     do @save
     @emit 'importFinished'
     return true
@@ -199,12 +199,12 @@ class Session extends EventEmitter
         for child in node.children ? []
           if child.clone
             continue
-          for line in exportLines child
-            lines.push "#{indent}#{line}"
+          for line in exportLines(child)
+            lines.push("#{indent}#{line}")
         return lines
-      return (exportLines jsonContent).join "\n"
+      return (exportLines(jsonContent)).join("\n")
     else
-      throw new errors.UnexpectedValue "mimetype", mimetype
+      throw new errors.UnexpectedValue("mimetype", mimetype)
 
   #################
   # MUTATIONS
@@ -247,7 +247,7 @@ class Session extends EventEmitter
       @historyIndex -= 1
       newState = @history[@historyIndex]
 
-      Logger.logger.debug "UNDOING ("
+      Logger.logger.debug "UNDOING <"
       for i in [(oldState.index-1)...(newState.index-1)]
         mutation = @mutations[i]
         Logger.logger.debug "  Undoing mutation #{mutation.constructor.name}(#{mutation.str()})"
@@ -257,7 +257,7 @@ class Session extends EventEmitter
           undo_mutation.mutate @
           undo_mutation.moveCursor @cursor
 
-      Logger.logger.debug ") END UNDO"
+      Logger.logger.debug "> END UNDO"
       @restoreViewState newState.before
 
   redo: () ->
@@ -266,7 +266,7 @@ class Session extends EventEmitter
       @historyIndex += 1
       newState = @history[@historyIndex]
 
-      Logger.logger.debug "REDOING ("
+      Logger.logger.debug "REDOING <"
       for i in [oldState.index...newState.index]
         mutation = @mutations[i]
         Logger.logger.debug "  Redoing mutation #{mutation.constructor.name}(#{mutation.str()})"
@@ -275,7 +275,7 @@ class Session extends EventEmitter
           throw new errors.GenericError "Failed to redo mutation: #{mutation.str()}"
         mutation.remutate @
         mutation.moveCursor @cursor
-      Logger.logger.debug ") END REDO"
+      Logger.logger.debug "> END REDO"
       @restoreViewState oldState.after
 
   do: (mutation) ->
@@ -431,7 +431,7 @@ class Session extends EventEmitter
     if children.length
       @cursor.setPath children[0]
     else
-      @cursor.setPath jump.viewRoot
+      @cursor.setPath(jump.viewRoot)
 
     if @document.isAttached jump.cursor_after.row
       # if the row is attached and under the view root, switch to it
@@ -636,6 +636,7 @@ class Session extends EventEmitter
     new_value = not all_were_true
     for row in rows
       @toggleProperty property, new_value, row, 0, (@document.getLength row)
+    return null
 
   toggleRowProperty: (property, row = @cursor.row) ->
     @toggleProperty property, null, row, 0, (@document.getLength row)
@@ -659,13 +660,13 @@ class Session extends EventEmitter
         if not @document.collapsed @cursor.row
           @toggleBlockCollapsed @cursor.row
 
-      @addBlocks @cursor.path, 0, [''], options
-    else if (not @document.collapsed @cursor.row) and @document.hasChildren @cursor.row
-      @addBlocks @cursor.path, 0, [''], options
+      @addBlocks(@cursor.path, 0, [''], options)
+    else if (not @document.collapsed(@cursor.row)) and @document.hasChildren(@cursor.row)
+      @addBlocks(@cursor.path, 0, [''], options)
     else
       parent = @cursor.path.parent
-      index = @document.indexOf @cursor.path
-      @addBlocks parent, (index+1), [''], options
+      index = @document.indexOf(@cursor.path)
+      @addBlocks(parent, (index+1), [''], options)
 
   newLineAbove: () ->
     if @cursor.path.is @viewRoot
@@ -685,15 +686,15 @@ class Session extends EventEmitter
     if @cursor.col == @document.getLength @cursor.row
       @newLineBelow {cursorOptions: {keepProperties: true}}
     else
-      mutation = new mutations.DelChars @cursor.row, 0, @cursor.col
-      @do mutation
+      mutation = new mutations.DelChars(@cursor.row, 0, @cursor.col)
+      @do(mutation)
       path = @cursor.path
 
       do @newLineAbove
       # cursor now is at inserted path, add the characters
-      @addCharsAfterCursor mutation.deletedChars
+      @addCharsAfterCursor(mutation.deletedChars)
       # restore cursor
-      @cursor.set path, 0, {keepProperties: true}
+      @cursor.set(path, 0, {keepProperties: true})
 
   # can only join if either:
   # - first is previous sibling of second, AND has no children
@@ -785,7 +786,7 @@ class Session extends EventEmitter
     if options.setCursor == 'first'
       @cursor.set mutation.added_rows[0], 0, options.cursorOptions
     else if options.setCursor == 'last'
-      @cursor.set mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions
+      @cursor.set(mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions)
 
   yankBlocks: (path, nrows) ->
     siblings = @document.getSiblingRange path, 0, (nrows-1)
@@ -814,7 +815,7 @@ class Session extends EventEmitter
       if options.setCursor == 'first'
         @cursor.set (@document.findChild parent, ids[0]), 0
       else if @options.setCursor == 'last'
-        @cursor.set (@document.findChild parent, ids[ids.length-1]), 0
+        @cursor.set((@document.findChild(parent, ids[ids.length-1])), 0)
 
   moveBlock: (path, parent_path, index = -1) ->
     @do new mutations.MoveBlock path, parent_path, index
@@ -825,7 +826,7 @@ class Session extends EventEmitter
       return
     newparent = @document.getSiblingBefore row
     unless newparent?
-      @showMessage "Cannot indent without higher sibling", {text_class: 'error'}
+      @showMessage("Cannot indent without higher sibling", {text_class: 'error'})
       return null # cannot indent
 
     if @document.collapsed newparent.row
@@ -869,6 +870,7 @@ class Session extends EventEmitter
       return
     for child in (@document.getChildren path).slice()
       @moveBlock child, sib, -1
+    return
 
   unindent: (path = @cursor.path) ->
     if path.is @viewRoot
@@ -891,20 +893,21 @@ class Session extends EventEmitter
     p_children = @document.getChildren parent
     for child in p_children.slice(p_i)
       @moveBlock child, path, -1
+    return
 
   swapDown: (path = @cursor.path) ->
-    next = @nextVisible (@lastVisible path)
+    next = @nextVisible(@lastVisible(path))
     unless next?
       return
 
     if (@document.hasChildren next.row) and (not @document.collapsed next.row)
       # make it the first child
-      @moveBlock path, next, 0
+      @moveBlock(path, next, 0)
     else
       # make it the next sibling
       parent = next.parent
-      p_i = @document.indexOf next
-      @moveBlock path, parent, (p_i+1)
+      p_i = @document.indexOf(next)
+      @moveBlock(path, parent, (p_i+1))
 
   swapUp: (path = @cursor.path) ->
     prev = @prevVisible path
@@ -940,11 +943,11 @@ class Session extends EventEmitter
     else if ancestors2.length == 0
       # cursor is underneath anchor
       parent = common.parent
-      index = @document.indexOf @anchor.path
+      index = @document.indexOf(@anchor.path)
       return [parent, index, index]
     else
-      index1 = @document.indexOf (ancestors1[0] ? @cursor.path)
-      index2 = @document.indexOf (ancestors2[0] ? @anchor.path)
+      index1 = @document.indexOf((ancestors1[0] ? @cursor.path))
+      index2 = @document.indexOf((ancestors2[0] ? @anchor.path))
       if index2 < index1
         [index1, index2] = [index2, index1]
       return [common, index1, index2]

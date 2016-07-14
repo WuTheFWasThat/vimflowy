@@ -112,10 +112,10 @@ renderLine = (lineData, options = {}) ->
     for x in line
       x.renderOptions.text = x.char
       if not x.renderOptions.href
-        x.renderOptions.onclick = options.charclick.bind @, x.column
-      renderSpec.push x.renderOptions
+        x.renderOptions.onclick = options.charclick.bind(@, x.column)
+      renderSpec.push(x.renderOptions)
       if x.break
-        renderSpec.push {type: 'div'}
+        renderSpec.push({type: 'div'})
   else
     acc = []
     renderOptions = {}
@@ -123,7 +123,7 @@ renderLine = (lineData, options = {}) ->
     flush = () ->
       if acc.length
         renderOptions.text = acc.join('')
-        renderSpec.push renderOptions
+        renderSpec.push(renderOptions)
         acc = []
       renderOptions = {}
 
@@ -138,7 +138,7 @@ renderLine = (lineData, options = {}) ->
 
       if x.break
         do flush
-        renderSpec.push {type: 'div'}
+        renderSpec.push({type: 'div'})
     do flush
 
   for spec in renderSpec
@@ -209,7 +209,7 @@ renderSession = (session, options = {}) ->
 virtualRenderSession = (session, options = {}) ->
   crumbs = []
   path = session.viewRoot
-  until path.is session.document.root
+  until path.is(session.document.root)
     crumbs.push path
     path = path.parent
 
@@ -223,13 +223,13 @@ virtualRenderSession = (session, options = {}) ->
         renderSession session
     if isLast
       text = virtualRenderLine session, path, options
-    else if path.is session.document.root
-      text = virtualDom.h 'icon', {className: 'fa fa-home'}
+    else if path.is(session.document.root)
+      text = virtualDom.h('icon', {className: 'fa fa-home'})
     else
-      text = (session.document.getText path.row).join('')
-    return virtualDom.h 'span', { className: 'crumb' }, [
-             virtualDom.h 'span', m_options, [ text ]
-           ]
+      text = session.document.getText(path.row).join('')
+    return virtualDom.h('span', { className: 'crumb' }, [
+             virtualDom.h('span', m_options, [ text ])
+           ])
 
   crumbNodes = []
   crumbNodes.push(makeCrumb session.document.root)
@@ -237,9 +237,9 @@ virtualRenderSession = (session, options = {}) ->
     path = crumbs[i]
     crumbNodes.push(makeCrumb path, i==0)
 
-  breadcrumbsNode = virtualDom.h 'div', {
+  breadcrumbsNode = virtualDom.h('div', {
     id: 'breadcrumbs'
-  }, crumbNodes
+  }, crumbNodes)
 
   options.ignoreCollapse = true # since we're the root, even if we're collapsed, we should render
 
@@ -257,12 +257,12 @@ virtualRenderSession = (session, options = {}) ->
     message = 'Nothing here yet.'
     if session.mode == MODES.NORMAL
       message += ' Press o to start adding content!'
-    contentsNode = virtualDom.h 'div', {
+    contentsNode = virtualDom.h('div', {
       class: 'center',
       style: {
         'padding': '20px', 'font-size': '20px', 'opacity': '0.5'
       }
-    }, message
+    }, message)
 
   return virtualDom.h 'div', {}, [breadcrumbsNode, contentsNode]
 
@@ -348,7 +348,7 @@ virtualRenderLine = (session, path, options = {}) ->
         for i in [session.cursor.col..session.anchor.col]
           highlights[i] = true
       else
-        Logger.logger.warn "Multiline not yet implemented"
+        Logger.logger.warn("Multiline not yet implemented")
 
     cursors = session.applyHook 'renderCursorsDict', cursors, { path: path }
 
@@ -371,7 +371,7 @@ virtualRenderLine = (session, path, options = {}) ->
         return false
   else if not options.no_clicks
     lineoptions.linemouseover = () ->
-      renderSession session, {handle_clicks: true}
+      renderSession(session, {handle_clicks: true})
 
   lineoptions.wordHook = session.applyHook.bind session, 'renderLineWordHook'
   lineoptions.lineHook = session.applyHook.bind session, 'renderLineTextOptions'
@@ -397,7 +397,7 @@ renderMenu = (menu) ->
 
   do menu.div.empty
 
-  searchBox = $('<div>').addClass('searchBox theme-trim').appendTo menu.div
+  searchBox = $('<div>').addClass('searchBox theme-trim').appendTo(menu.div)
   searchBox.append $('<i>').addClass('fa fa-search').css(
     'margin-right': '10px'
   )
@@ -422,22 +422,23 @@ renderMenu = (menu) ->
 
       resultDiv = $('<div>').css(
         'margin-bottom': '10px'
-      ).appendTo menu.div
+      ).appendTo(menu.div)
 
       icon = 'fa-circle'
       if i == menu.selection
-        resultDiv.addClass 'theme-bg-selection'
+        resultDiv.addClass('theme-bg-selection')
         icon = 'fa-arrow-circle-right'
-      resultDiv.append $('<i>').addClass('fa ' + icon + ' bullet').css(
+      resultDiv.append($('<i>').addClass('fa ' + icon + ' bullet').css(
         'margin-right': '20px'
-      )
+      ))
 
       renderOptions = result.renderOptions || {}
-      contents = renderLine result.contents, renderOptions
+      contents = renderLine(result.contents, renderOptions)
       if result.renderHook?
-        contents = result.renderHook contents
-      resultLineDiv = virtualDom.create virtualDom.h 'span', {}, contents
-      resultDiv.append resultLineDiv
+        contents = result.renderHook(contents)
+      resultLineDiv = virtualDom.create(virtualDom.h('span', {}, contents))
+      resultDiv.append(resultLineDiv)
+  return null
 
 renderPlugins = (pluginManager) ->
   unless pluginManager.div?
@@ -463,7 +464,9 @@ virtualRenderPlugins = (pluginManager) ->
     virtualDom.h 'th', { className: 'plugin-status' }, "Status"
     virtualDom.h 'th', { className: 'plugin-actions' }, "Actions"
   ]
-  pluginElements = (virtualRenderPlugin pluginManager, name for name in do Plugins.names)
+  pluginElements = (do Plugins.names).map((name) ->
+    return virtualRenderPlugin pluginManager, name
+  )
   virtualDom.h 'table', {}, ([header].concat pluginElements)
 
 virtualRenderPlugin = (pluginManager, name) ->
@@ -471,18 +474,18 @@ virtualRenderPlugin = (pluginManager, name) ->
   actions = []
   if status == Plugins.STATUSES.ENABLED
     # "Disable" action
-    button = virtualDom.h 'div', {
+    button = virtualDom.h('div', {
       className: 'btn theme-trim'
       onclick: () -> pluginManager.disable name
-    }, "Disable"
-    actions.push button
+    }, "Disable")
+    actions.push(button)
   else if status == Plugins.STATUSES.DISABLED
     # "Enable" action
-    button = virtualDom.h 'div', {
+    button = virtualDom.h('div', {
       className: 'btn theme-trim'
-      onclick: () -> pluginManager.enable name
-    }, "Enable"
-    actions.push button
+      onclick: () -> pluginManager.enable(name)
+    }, "Enable")
+    actions.push(button)
 
   color = "inherit"
   if status == Plugins.STATUSES.ENABLING or status == Plugins.STATUSES.DISABLING
@@ -508,16 +511,18 @@ virtualRenderPlugin = (pluginManager, name) ->
 # hotkeys
 ######
 renderHotkeysTable = (key_bindings) ->
+  mode_defs = MODE_TYPES[NORMAL_MODE_TYPE].modes.map((mode) -> (_.cloneDeep (key_bindings.definitions.actions_for_mode mode)))
   $('#hotkey-edit-normal').empty().append(
     $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
   ).append(
-    buildTable key_bindings, key_bindings.hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, (_.cloneDeep (key_bindings.definitions.actions_for_mode mode) for mode in MODE_TYPES[NORMAL_MODE_TYPE].modes))
+    buildTable(key_bindings, key_bindings.hotkeys[NORMAL_MODE_TYPE], (_.extend.apply @, mode_defs))
   )
 
+  mode_defs = MODE_TYPES[INSERT_MODE_TYPE].modes.map((mode) -> (_.cloneDeep (key_bindings.definitions.actions_for_mode mode)))
   $('#hotkey-edit-insert').empty().append(
     $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
   ).append(
-    buildTable key_bindings, key_bindings.hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, (_.cloneDeep (key_bindings.definitions.actions_for_mode mode) for mode in MODE_TYPES[INSERT_MODE_TYPE].modes))
+    buildTable(key_bindings, key_bindings.hotkeys[INSERT_MODE_TYPE], (_.extend.apply @, mode_defs))
   )
 
 # build table to visualize hotkeys
@@ -548,6 +553,7 @@ buildTable = (key_bindings, keyMap, actions, helpMenu) ->
       row.append display_cell
 
       onto.append row
+    return null
 
   tables = $('<div>')
 

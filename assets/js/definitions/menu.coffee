@@ -35,7 +35,7 @@ keyDefinitions.registerAction [MODES.NORMAL], CMD_SEARCH, {
       if query.length == 0
         return results
 
-      for path in do document.orderedLines
+      for path in document.orderedLines()
         line = canonicalize (document.getText path.row).join ''
         matches = []
         if _.every(query_words.map ((word) ->

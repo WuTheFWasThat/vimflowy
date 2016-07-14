@@ -60,7 +60,7 @@ MODE_SCHEMA = {
       (this is called right before execution)
       """
       type: "function"
-      default: ((context) -> return context)
+      default: (context) -> context
     }
   }
 }
@@ -95,8 +95,7 @@ class Mode
     if @metadata.hotkey_type == NORMAL_MODE_TYPE
       do keyStream.forget
     else
-      keyStream.forget 1
-
+      keyStream.forget(1)
 
 # an enum dictionary,
 MODES_ENUM = {}
@@ -251,12 +250,14 @@ registerMode {
   ]
 }
 
+getMode = (mode) -> MODES[mode]
+
 module.exports = {
   registerMode: registerMode
   deregisterMode: deregisterMode
   modes: MODES_ENUM
   types: MODE_TYPES
-  getMode: (mode) -> MODES[mode]
+  getMode: getMode
   NORMAL_MODE_TYPE: NORMAL_MODE_TYPE
   INSERT_MODE_TYPE: INSERT_MODE_TYPE
 }

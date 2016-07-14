@@ -8,14 +8,10 @@ class EventEmitter {
   }
 
   // emit an event and return all responses from the listeners
-  emit(event, ...args) {
-    (this.listeners['all'] || []).map((listener) => {
-      listener.apply(listener, arguments);
-    });
-    return (this.listeners[event] || []).map((listener) => {
-      listener.apply(listener, args);
-    });
-  }
+  // TODO
+  // emit: (event, args...) ->
+  //   ((listener event, args...) for listener in (@listeners['all'] or []))
+  //   return ((listener args...) for listener in (@listeners[event] or []))
 
   addListener(event, listener) {
     this.emit('newListener', event, listener);
@@ -23,9 +19,7 @@ class EventEmitter {
     return this;
   }
 
-  on() {
-    return this.prototype.addListener.apply(this, arguments);
-  }
+  on = this.prototype.addListener;
 
   once(event, listener) {
     let fn = function() {
@@ -38,7 +32,8 @@ class EventEmitter {
 
   removeListener(event, listener) {
     if (!this.listeners[event]) { return this; }
-    this.listeners[event] = this.listeners[event].filter((l) => l != listener);
+    // TODO
+    //   @listeners[event] = (l for l in @listeners[event] when l isnt listener)
     return this;
   }
 
@@ -47,9 +42,7 @@ class EventEmitter {
     return this;
   }
 
-  off() {
-    return this.prototype.removeListener.apply(this, arguments);
-  }
+  off = this.prototype.removeListener;
 
   // ordered set of hooks for mutating
   // NOTE: a little weird for eventEmitter to be in charge of this
@@ -60,7 +53,8 @@ class EventEmitter {
 
   removeHook(event, transform) {
     if (!this.hooks[event]) { return this; }
-    this.hooks[event] = this.hooks[event].filter((t) => t != transform);
+    // TODO
+    // @hooks[event] = (t for t in @hooks[event] when t isnt transform)
     return this;
   }
 

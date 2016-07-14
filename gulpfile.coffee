@@ -1,7 +1,7 @@
 gulp = require 'gulp'
 
-babel = require 'gulp-babel'
 browserify = require 'browserify'
+babelify = require 'babelify'
 coffee = require 'gulp-coffee'
 del = require 'del'
 express = require 'express'
@@ -49,7 +49,13 @@ jsTask = (isDev) ->
   return () ->
     stream = browserify({
       entries: 'assets/js/index.coffee'
-      transform: ['coffeeify', 'require-globify']
+      transform: [
+        'coffeeify',
+        babelify.configure({
+          presets: ['es2015']
+        }),
+        'require-globify'
+      ]
       debug: isDev
       insertGlobals: true
       detectGlobals: false

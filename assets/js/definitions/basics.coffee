@@ -30,12 +30,13 @@ keyDefinitions.registerAction [MODES.VISUAL], CMD_MOTION, {
   if not (tmp.path.is @session.cursor.path) # only allow same-row movement
     @session.showMessage "Visual mode currently only works on one line", {text_class: 'error'}
   else
-    @session.cursor.from tmp
+    @session.cursor.from(tmp)
 keyDefinitions.registerAction [MODES.VISUAL_LINE], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->
   for i in [1..@repeat]
     motion @session.cursor, {pastEnd: true}
+  return null
 keyDefinitions.registerAction [MODES.SEARCH], CMD_MOTION, {
   description: 'Move the cursor',
 }, (motion) ->

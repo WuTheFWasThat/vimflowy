@@ -35,9 +35,9 @@ class Logger
     if @stream == STREAM.STDOUT
       console.log.apply console, arguments
     else if @stream == STREAM.STDERR
-      console.error.apply console, arguments
+      console.error.apply(console, arguments)
     else if @stream == STREAM.QUEUE
-      @queue.push arguments
+      @queue.push(arguments)
 
   setLevel: (level) ->
     @level = level

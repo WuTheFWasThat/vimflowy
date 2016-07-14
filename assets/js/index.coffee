@@ -183,7 +183,7 @@ create_session = (doc, to_load) ->
       if session.mode == Modes.modes.SETTINGS
         session.setMode Modes.modes.NORMAL
       else
-        session.setMode Modes.modes.SETTINGS
+        session.setMode(Modes.modes.SETTINGS)
 
     $("#settings-nav li").click (e) ->
       tab = ($(e.target).data "tab")
@@ -225,7 +225,7 @@ create_session = (doc, to_load) ->
         if err
           session.showMessage err, {text_class: 'error'}
         else
-          session.showMessage 'Loaded new hotkey settings!', {text_class: 'success'}
+          session.showMessage('Loaded new hotkey settings!', {text_class: 'success'})
 
     $("#hotkeys_export").click () ->
       filename = 'vimflowy_hotkeys.json'
@@ -245,7 +245,7 @@ create_session = (doc, to_load) ->
           session.showMessage 'Imported!', {text_class: 'success'}
           session.setMode Modes.modes.NORMAL
         else
-          session.showMessage 'Import failed due to parsing issue', {text_class: 'error'}
+          session.showMessage('Import failed due to parsing issue', {text_class: 'error'})
 
     export_type = (type) ->
       session.showMessage 'Exporting...'
@@ -263,7 +263,7 @@ create_session = (doc, to_load) ->
     do session.exit
 
 
-if chrome?.storage?.sync
+if (typeof chrome != 'undefined') && chrome.storage && chrome.storage.sync
   Logger.logger.info 'using chrome storage'
 
   # TODO
@@ -284,19 +284,19 @@ if chrome?.storage?.sync
     ), 5000
 
 else if localStorage?
-  datastore = new DataStore.LocalStorageLazy docname
-  doc = new Document datastore
+  datastore = new DataStore.LocalStorageLazy(docname)
+  doc = new Document(datastore)
 
   to_load = null
   if (do datastore.getLastSave) == 0
     to_load = constants.default_data
 
-  create_session doc, to_load
+  create_session(doc, to_load)
 else
   alert('You need local storage support for data to be persisted!')
   datastore = new DataStore.InMemory
-  doc = new Document datastore
-  create_session doc, constants.default_data
+  doc = new Document(datastore)
+  create_session(doc, constants.default_data)
 
 window.onerror = (msg, url, line, col, err) ->
   Logger.logger.error "Caught error: '#{msg}' from  #{url}:#{line}"

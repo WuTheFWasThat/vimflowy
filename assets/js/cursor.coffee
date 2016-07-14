@@ -5,6 +5,8 @@ EventEmitter = require './eventEmitter.js'
 Function::property = (prop, desc) ->
   Object.defineProperty @prototype, prop, desc
 
+wordRegex = /^[a-z0-9_]+$/i
+
 ###
 Cursor represents a cursor within a session
 it handles movement logic, insert mode line properties (e.g. bold/italic)
@@ -23,8 +25,9 @@ class Cursor extends EventEmitter
     @moveCol = moveCol ? col
 
   # virtual getter for row
-  @property 'row',
-    'get': () -> @path.row
+  # TODO
+  # @property 'row',
+  #   'get': () -> @path.row
 
   clone: () ->
     # paths are immutable so this is okay
@@ -101,7 +104,7 @@ class Cursor extends EventEmitter
     if @col < (@document.getLength @path.row) - 1
       return false
     else
-      nextpath = @session.nextVisible @path
+      nextpath = @session.nextVisible(@path)
       if nextpath != null
         return false
     return true
@@ -111,9 +114,9 @@ class Cursor extends EventEmitter
       do @_right
       return true
     else
-      nextpath = @session.nextVisible @path
+      nextpath = @session.nextVisible(@path)
       if nextpath != null
-        @set nextpath, 0
+        @set(nextpath, 0)
         return true
     return false
 
@@ -121,7 +124,7 @@ class Cursor extends EventEmitter
     if @col > 0
       return false
     else
-      prevpath = @session.prevVisible @path
+      prevpath = @session.prevVisible(@path)
       if prevpath != null
         return false
     return true
@@ -131,9 +134,9 @@ class Cursor extends EventEmitter
       do @_left
       return true
     else
-      prevpath = @session.prevVisible @path
+      prevpath = @session.prevVisible(@path)
       if prevpath != null
-        @set prevpath, -1
+        @set(prevpath, -1)
         return true
     return false
 
@@ -147,7 +150,7 @@ class Cursor extends EventEmitter
 
   visibleHome: () ->
     if @session.viewRoot.is @session.document.root
-      path = @session.nextVisible @session.viewRoot
+      path = @session.nextVisible(@session.viewRoot)
     else
       path = @session.viewRoot
     @set path, 0
@@ -158,10 +161,8 @@ class Cursor extends EventEmitter
     @set path, 0
     return @
 
-  wordRegex = /^[a-z0-9_]+$/i
-
   isInWhitespace: (path, col) ->
-    char = @document.getChar path.row, col
+    char = @document.getChar(path.row, col)
     return utils.isWhitespace char
 
   isInWord: (path, col, matchChar) ->
@@ -175,13 +176,13 @@ class Cursor extends EventEmitter
     if wordRegex.test char
       return wordRegex.test matchChar
     else
-      return not wordRegex.test matchChar
+      return not(wordRegex.test(matchChar))
 
   getWordCheck: (options, matchChar) ->
     if options.whitespaceWord
       return ((path, col) => not @isInWhitespace path, col)
     else
-      return ((path, col) => @isInWord path, col, matchChar)
+      return ((path, col) => @isInWord(path, col, matchChar))
 
   beginningWord: (options = {}) ->
     if do @atVisibleStart
@@ -336,6 +337,7 @@ class Cursor extends EventEmitter
       obj = line[@col-1]
     for property in constants.text_properties
       @setProperty property, obj[property]
+    return
 
 # exports
 module.exports = Cursor

@@ -41,7 +41,7 @@ It also internally maintains
 MODES = Modes.modes
 MODE_TYPES = Modes.types
 
-class KeyBindings extends EventEmitter
+class KeyBindings
   # takes key definitions and keyMappings, and combines them to key bindings
   getBindings = (definitions, keyMap) ->
     bindings = {}

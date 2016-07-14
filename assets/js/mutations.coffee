@@ -99,9 +99,9 @@ class DelChars extends Mutation
     if cursor.col < @col
       return
     else if cursor.col < @col + @nchars
-      cursor.setCol @col
+      cursor.setCol(@col)
     else
-      cursor.setCol (cursor.col - @nchars)
+      cursor.setCol((cursor.col - @nchars))
 
 class ChangeChars extends Mutation
   constructor: (@row, @col, @nchars, @transform, @newChars) ->
@@ -129,8 +129,12 @@ class ChangeChars extends Mutation
   # doesn't move cursors
 
 class MoveBlock extends Mutation
-  constructor: (@path, @parent, @index = -1) ->
+  constructor: (@path, @parent, index) ->
     @old_parent = @path.parent
+    if index == undefined
+      @index = -1
+    else
+      @index = index
 
   str: () ->
     return "move #{@path.row} from #{@path.parent.row} to #{@parent.row}"
@@ -159,8 +163,13 @@ class MoveBlock extends Mutation
     cursor._setPath (@parent.extend [@path.row]).extend walk
 
 class AttachBlocks extends Mutation
-  constructor: (@parent, @cloned_rows, @index = -1, @options = {}) ->
+  constructor: (@parent, @cloned_rows, index, options) ->
     @nrows = @cloned_rows.length
+    if index == undefined
+      @index = -1
+    else
+      @index = index
+    @options = options || {}
 
   str: () ->
     return "parent #{@parent}, index #{@index}"
@@ -179,12 +188,10 @@ class AttachBlocks extends Mutation
       new DetachBlocks @parent, @index, @nrows
     ]
 
-    delete_siblings = session.document._getChildren @parent, @index, (@index + @nrows - 1)
-    for sib in delete_siblings
-      session.document._detach sib, @parent
-
 class DetachBlocks extends Mutation
-  constructor: (@parent, @index, @nrows = 1, @options = {}) ->
+  constructor: (@parent, @index, nrows, options) ->
+    @nrows = nrows or 1
+    @options = options || {}
 
   str: () ->
     return "parent #{@parent}, index #{@index}, nrows #{@nrows}"
@@ -197,8 +204,8 @@ class DetachBlocks extends Mutation
 
     @created = null
     if @options.addNew
-      @created = session.document._newChild @parent, @index
-      @created_index = session.document._childIndex @parent, @created
+      @created = session.document._newChild(@parent, @index)
+      @created_index = session.document._childIndex(@parent, @created)
 
     children = session.document._getChildren @parent
 
@@ -211,13 +218,13 @@ class DetachBlocks extends Mutation
         next = []
         if @parent == session.document.root.row
           unless @options.noNew
-            @created = session.document._newChild @parent
-            @created_index = session.document._childIndex @parent, @created
+            @created = session.document._newChild(@parent)
+            @created_index = session.document._childIndex(@parent, @created)
             next = [@created]
       else
         child = children[@index - 1]
-        walk = session.document.walkToLastVisible child
-        next = [child].concat walk
+        walk = session.document.walkToLastVisible(child)
+        next = [child].concat(walk)
 
     @next = next
 
@@ -247,7 +254,11 @@ class DetachBlocks extends Mutation
 
 # creates new blocks (as opposed to attaching ones that already exist)
 class AddBlocks extends Mutation
-  constructor: (@parent, @index = -1, @serialized_rows) ->
+  constructor: (@parent, index, @serialized_rows) ->
+    if index == undefined
+      @index = -1
+    else
+      @index = index
     @nrows = @serialized_rows.length
 
   str: () ->
@@ -263,6 +274,7 @@ class AddBlocks extends Mutation
       row = session.document.loadTo serialized_row, @parent, index, id_mapping
       @added_rows.push row
       index += 1
+    return null
 
   rewind: (session) ->
     return [
@@ -274,6 +286,7 @@ class AddBlocks extends Mutation
     for sib in @added_rows
       session.document.attachChild @parent, sib, index
       index += 1
+    return null
 
 class ToggleBlock extends Mutation
   constructor: (@row) ->

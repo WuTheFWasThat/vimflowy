@@ -178,11 +178,12 @@ class KeyHandler extends EventEmitter
         return false
 
       # note: this uses original bindings to determine what's a motion
-      [motion, context.repeat, handled] = @getMotion keyStream, key, @keyBindings.motion_bindings[mode], context.repeat
+      [motion, motionrepeat, handled] = @getMotion(keyStream, key, @keyBindings.motion_bindings[mode], context.repeat)
+      context.repeat = motionrepeat
       if motion == null
         return handled
 
-      args.push motion
+      args.push(motion)
       info = bindings['MOTION']
 
     definition = info.definition
@@ -190,12 +191,12 @@ class KeyHandler extends EventEmitter
       # recursive definition
       return @processMode mode, keyStream, info.definition, context.repeat
     else if typeof definition == 'function'
-      context = mode_obj.transform_context context
-      info.definition.apply context, args
-      (Modes.getMode @session.mode).every @session, keyStream
+      context = mode_obj.transform_context(context)
+      info.definition.apply(context, args)
+      (Modes.getMode(@session.mode)).every(@session, keyStream)
       return true
     else
-      throw new errors.UnexpectedValue "definition", definition
+      throw new errors.UnexpectedValue("definition", definition)
 
   # NOTE: this should maybe be normal-mode specific
   #       but it would also need to be done for the motions
@@ -239,10 +240,10 @@ class KeyHandler extends EventEmitter
         keyStream: keyStream
         keyHandler: @
       }
-      motion = definition.apply context, []
+      motion = definition.apply(context, [])
       return [motion, repeat, true]
     else
-      throw new errors.UnexpectedValue "definition", definition
+      throw new errors.UnexpectedValue("definition", definition)
 
 
 module.exports = KeyHandler

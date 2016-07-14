@@ -37,12 +37,12 @@ exports.isScrolledIntoView = (elem, container) ->
   return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop))
 
 exports.tv4_validate = (data, schema, object="data") ->
-    # 3rd argument: checks recursive
-    # 4th argument: bans unknown properties
-    if not tv4.validate(data, schema, true, true)
-      throw new errors.GenericError(
-        "Error validating #{object} schema #{JSON.stringify(data, null, 2)}: #{JSON.stringify(tv4.error)}"
-      )
+  # 3rd argument: checks recursive
+  # 4th argument: bans unknown properties
+  if not tv4.validate(data, schema, true, true)
+    throw new errors.GenericError(
+      "Error validating #{object} schema #{JSON.stringify(data, null, 2)}: #{JSON.stringify(tv4.error)}"
+    )
 
 # shim for filling in default values, with tv4
 exports.fill_tv4_defaults = (data, schema) ->
@@ -58,3 +58,4 @@ exports.fill_tv4_defaults = (data, schema) ->
       if prop not of data
         data[prop] = {}
       exports.fill_tv4_defaults data[prop], prop_info
+  return null

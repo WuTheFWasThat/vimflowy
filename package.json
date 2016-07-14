@@ -28,6 +28,7 @@
   "devDependencies": {
     "babel-core": "latest",
     "babel-preset-es2015": "latest",
+    "babelify": "latest",
     "blanket": "latest",
     "browserify": "latest",
     "coffeeify": "latest",

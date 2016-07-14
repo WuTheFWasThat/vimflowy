@@ -18,8 +18,10 @@ class Settings
     @mainDiv = options.mainDiv
     @keybindingsDiv = options.keybindingsDiv
 
-    for setting of default_settings when not (@getSetting setting)?
-      @setSetting setting, default_settings[setting]
+    for setting of default_settings
+      if not (@getSetting setting)?
+        @setSetting setting, default_settings[setting]
+    return null
 
   getSetting: (setting) ->
     @datastore.getSetting setting

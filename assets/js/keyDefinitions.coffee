@@ -179,7 +179,7 @@ class KeyDefinitions
         result.push name
       else
         if counts.multirow == 0
-          result.push name
+          result.push(name)
     return result
 
   commands_for_mode: (mode) ->
@@ -200,13 +200,13 @@ class KeyDefinitions
       throw new errors.GenericError "Command #{command.name} has already been defined"
 
     @commands[name] = command
-    @defaultHotkeys[Modes.NORMAL_MODE_TYPE][name] =
+    @defaultHotkeys[Modes.NORMAL_MODE_TYPE][name] = \
       (_.cloneDeep metadata.default_hotkeys.all).concat(
-       _.cloneDeep metadata.default_hotkeys.normal_like
+        _.cloneDeep(metadata.default_hotkeys.normal_like)
       )
-    @defaultHotkeys[Modes.INSERT_MODE_TYPE][name] =
+    @defaultHotkeys[Modes.INSERT_MODE_TYPE][name] = \
       (_.cloneDeep metadata.default_hotkeys.all).concat(
-       _.cloneDeep metadata.default_hotkeys.insert_like
+        _.cloneDeep(metadata.default_hotkeys.insert_like)
       )
     return command
 
@@ -244,6 +244,7 @@ class KeyDefinitions
     obj[command.name] = motion
     for cmd in commands
       @_add_motion cmd, motion.multirow
+    return null
 
   deregisterMotion: (commands) ->
     if not commands.slice?
@@ -268,6 +269,7 @@ class KeyDefinitions
     delete obj[command.name]
     for cmd in commands
       @_remove_motion cmd, motion.multirow
+    return null
 
   registerAction: (modes, commands, action, definition) ->
     utils.tv4_validate(action, ACTION_SCHEMA, "action")
@@ -300,6 +302,7 @@ class KeyDefinitions
       obj[command.name] = action
       for cmd in commands
         @_add_command mode, cmd
+    return null
 
   deregisterAction: (modes, commands) ->
     if not commands.slice?
@@ -328,5 +331,6 @@ class KeyDefinitions
       delete obj[command.name]
       for cmd in commands
         @_remove_command mode, cmd
+    return null
 
 module.exports = new KeyDefinitions

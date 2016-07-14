@@ -46,7 +46,8 @@ class Document extends EventEmitter
     return @getLine(row).map ((obj) -> obj.char)
 
   getChar: (row, col) ->
-    return @getLine(row)[col]?.char
+    charInfo = @getLine(row)[col]
+    return charInfo && charInfo.char
 
   setLine: (row, line) ->
     return (@store.setLine row, (line.map (obj) ->
@@ -123,13 +124,13 @@ class Document extends EventEmitter
     return @store.getParents row
 
   _setParents: (row, children_rows) ->
-    @store.setParents row, children_rows
+    @store.setParents(row, children_rows)
 
   getChildren: (parent_path) ->
-    (parent_path.child row) for row in @_getChildren parent_path.row
+    (@_getChildren parent_path.row).map((row) -> (parent_path.child row))
 
   findChild: (parent_path, row) ->
-    _.find (@getChildren parent_path), (x) -> x.row == row
+    _.find((@getChildren parent_path), ((x) -> x.row == row))
 
   hasChildren: (row) ->
     return ((@_getChildren row).length > 0)
@@ -207,6 +208,7 @@ class Document extends EventEmitter
         if parent not of visited
           ancestors.push parent
           visit parent
+      return null
     visit row
     ancestors
 
@@ -229,12 +231,12 @@ class Document extends EventEmitter
     children = @_getChildren parent_row
     ci = _.findIndex children, (sib) -> (sib == row)
     errors.assert (ci != -1)
-    children.splice ci, 1
+    children.splice(ci, 1)
     @_setChildren parent_row, children
 
     parents = @_getParents row
     pi = _.findIndex parents, (par) -> (par == parent_row)
-    parents.splice pi, 1
+    parents.splice(pi, 1)
     @_setParents row, parents
 
     info = {
@@ -252,7 +254,7 @@ class Document extends EventEmitter
     if index == -1
       children.push row
     else
-      children.splice index, 0, row
+      children.splice(index, 0, row)
     @_setChildren parent_row, children
 
     parents = @_getParents row
@@ -317,7 +319,7 @@ class Document extends EventEmitter
     (@attachChildren parent, [child], index)[0]
 
   attachChildren: (parent, new_children, index = -1) ->
-    @_attachChildren parent.row, (x.row for x in new_children), index
+    @_attachChildren parent.row, new_children.map((row) -> (x.row)), index
     # for child in new_children
     #   child.setParent parent
     return new_children
@@ -327,6 +329,7 @@ class Document extends EventEmitter
       @_attach child, parent, index
       if index >= 0
         index += 1
+    return null
 
   # returns an array representing the ancestry of a row,
   # up until the ancestor specified by the `stop` parameter
@@ -405,6 +408,7 @@ class Document extends EventEmitter
       paths.push path
       for child in @getChildren path
         helper child
+      return null
     helper @root
     return paths
 
@@ -422,7 +426,7 @@ class Document extends EventEmitter
 
     for property in constants.text_properties
       if _.some (line.map ((obj) -> obj[property]))
-        struct[property] = ((if obj[property] then '.' else ' ') for obj in line).join ''
+        struct[property] = line.map((obj) -> (if obj[property] then '.' else ' ')).join ''
     if @collapsed row
       struct.collapsed = true
 
@@ -436,7 +440,7 @@ class Document extends EventEmitter
       return { clone: row }
 
     struct = @serializeRow row
-    children = (@serialize childrow, options, serialized for childrow in @_getChildren row)
+    children = (@_getChildren row).map((childrow) -> (@serialize childrow, options, serialized))
     if children.length
       struct.children = children
 
@@ -463,26 +467,26 @@ class Document extends EventEmitter
     if replace_empty and children.length == 1 and ((@getLine children[0].row).length == 0)
       path = children[0]
     else
-      path = @addChild parent_path, index
+      path = @addChild(parent_path, index)
 
     if typeof serialized == 'string'
       @setLine path.row, (serialized.split '')
     else
       if serialized.id
         id_mapping[serialized.id] = path.row
-      line = (serialized.text.split '').map((char) -> {char: char})
+      line = (serialized.text.split('')).map((char) -> {char: char})
       for property in constants.text_properties
         if serialized[property]
           for i, val of serialized[property]
             if val == '.'
               line[i][property] = true
 
-      @setLine path.row, line
-      @store.setCollapsed path.row, serialized.collapsed
+      @setLine(path.row, line)
+      @store.setCollapsed(path.row, serialized.collapsed)
 
       if serialized.children
         for serialized_child in serialized.children
-          @loadTo serialized_child, path, -1, id_mapping
+          @loadTo(serialized_child, path, -1, id_mapping)
 
     @emit 'loadRow', path, serialized
 
@@ -492,6 +496,7 @@ class Document extends EventEmitter
     id_mapping = {}
     for serialized_row in serialized_rows
       @loadTo serialized_row, @root, -1, id_mapping, true
+    return null
 
 # exports
 module.exports = Document
