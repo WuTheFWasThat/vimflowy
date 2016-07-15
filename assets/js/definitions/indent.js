@@ -1,5 +1,5 @@
-import Modes from '../modes.coffee';
-import keyDefinitions from '../keyDefinitions.coffee';
+import Modes from '../modes';
+import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 

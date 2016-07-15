@@ -4,7 +4,8 @@ Takes in keys, and, based on the keybindings (see keyBindings.coffee), manipulat
 The KeyHandler class manages the state of what keys have been input, dealing with the logic for
 - handling multi-key sequences, i.e. a key that semantically needs another key (e.g. the GO command, `g` in vim)
 - handling motions and commands that take motions
-- combining together and saving sequences of commands (important for the REPEAT command, `.` in vim, for macros, and for number prefixes, e.g. 3j)
+- combining together and saving sequences of commands
+  (important for the REPEAT command, `.` in vim, for macros, and for number prefixes, e.g. 3j)
 - dropping sequences of commands that are invalid
 - telling the session when to save (i.e. the proper checkpoints for undo and redo)
 It maintains custom logic for this, for each mode.
@@ -14,15 +15,15 @@ the KeyStream class is a helper class which deals with queuing and checkpointing
 */
 
 let motionRepeat;
-import EventEmitter from './eventEmitter.js';
-import errors from './errors.coffee';
-import Menu from './menu.coffee';
-import Modes from './modes.coffee';
-import constants from './constants.coffee';
+import EventEmitter from './eventEmitter';
+import errors from './errors';
+// import Menu from './menu';
+import Modes from './modes';
+// import constants from './constants';
 
-import Logger from './logger.coffee';
+import Logger from './logger';
 
-const MODES = Modes.modes;
+// const MODES = Modes.modes;
 
 // manages a stream of keys, with the ability to
 // - queue keys
@@ -201,22 +202,24 @@ class KeyHandler extends EventEmitter {
       return true;
     }
 
+    let info;
     if (key in bindings) {
-      var info = bindings[key];
+      info = bindings[key];
     } else {
       if (!('MOTION' in bindings)) {
         return false;
       }
 
       // note: this uses original bindings to determine what's a motion
-      let [motion, motionrepeat, handled] = this.getMotion(keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat);
+      let [motion, motionrepeat, handled] =
+        this.getMotion(keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat);
       context.repeat = motionrepeat;
       if (motion === null) {
         return handled;
       }
 
       args.push(motion);
-      var info = bindings['MOTION'];
+      info = bindings['MOTION'];
     }
 
     let { definition } = info;
@@ -229,7 +232,7 @@ class KeyHandler extends EventEmitter {
       (Modes.getMode(this.session.mode)).every(this.session, keyStream);
       return true;
     } else {
-      throw new errors.UnexpectedValue("definition", definition);
+      throw new errors.UnexpectedValue('definition', definition);
     }
   }
 
@@ -242,13 +245,13 @@ class KeyHandler extends EventEmitter {
     }
     let begins = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
     let continues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
-    if (!__in__(key, begins)) {
+    if (begins.indexOf(key) === -1) {
       return [1, key];
     }
     let numStr = key;
     key = keyStream.dequeue();
     if (key === null) { return [null, null]; }
-    while (__in__(key, continues)) {
+    while (continues.indexOf(key) !== -1) {
       numStr += key;
       key = keyStream.dequeue();
       if (key === null) { return [null, null]; }
@@ -284,14 +287,10 @@ class KeyHandler extends EventEmitter {
       let motion = definition.apply(context, []);
       return [motion, repeat, true];
     } else {
-      throw new errors.UnexpectedValue("definition", definition);
+      throw new errors.UnexpectedValue('definition', definition);
     }
   }
 }
 
 
 export default KeyHandler;
-
-function __in__(needle, haystack) {
-  return haystack.indexOf(needle) >= 0;
-}

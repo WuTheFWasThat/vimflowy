@@ -1,8 +1,8 @@
 import _ from 'lodash';
 
-import Menu from '../menu.coffee';
-import Modes from '../modes.coffee';
-import keyDefinitions from '../keyDefinitions.coffee';
+import Menu from '../menu';
+import Modes from '../modes';
+import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
@@ -20,7 +20,6 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
   return this.session.menu = new Menu(this.session.menuDiv, chars => {
     let find = function(document, query, options = {}) {
       let nresults = options.nresults || 10;
-      let { case_sensitive } = options;
 
       let results = []; // list of (path, index) pairs
 
@@ -38,15 +37,17 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
         return results;
       }
 
-      let iterable = document.orderedLines();
-      for (let i = 0; i < iterable.length; i++) {
-        let path = iterable[i];
+      let paths = document.orderedLines();
+      for (let i = 0; i < paths.length; i++) {
+        let path = paths[i];
         let line = canonicalize((document.getText(path.row)).join(''));
         let matches = [];
         if (_.every(query_words.map((function(word) {
-          i = line.indexOf(word);
-          if (i === -1) { return false; }
-          matches = matches.concat(__range__(i, i+word.length, false));
+          let index = line.indexOf(word);
+          if (index === -1) { return false; }
+          for (let j = index; j < index + word.length; j++) {
+            matches.push(j);
+          }
           return true;
         })
         ))) {
@@ -126,12 +127,3 @@ keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_DOWN, {
 }
 );
 
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}

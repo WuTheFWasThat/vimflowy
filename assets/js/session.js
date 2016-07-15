@@ -1,16 +1,17 @@
+/* globals $, document, window */
 import _ from 'lodash';
 
-import mutations from './mutations.coffee';
-import constants from './constants.coffee';
-import utils from './utils.coffee';
-import errors from './errors.coffee';
-import Cursor from './cursor.coffee';
-import Register from './register.coffee';
-import Logger from './logger.coffee';
-import EventEmitter from './eventEmitter.js';
-import Path from './path.coffee';
+import mutations from './mutations';
+import constants from './constants';
+import utils from './utils';
+import errors from './errors';
+import Cursor from './cursor';
+import Register from './register';
+import Logger from './logger';
+import EventEmitter from './eventEmitter';
+import Path from './path';
 
-import Modes from './modes.coffee';
+import Modes from './modes';
 const MODES = Modes.modes;
 
 /*
@@ -43,10 +44,11 @@ class Session extends EventEmitter {
       this.document.load(constants.empty_data);
     }
 
+    let path;
     if (this.viewRoot.is(this.document.root)) {
-      var path = (this.document.getChildren(this.viewRoot))[0];
+      path = (this.document.getChildren(this.viewRoot))[0];
     } else {
-      var path = this.viewRoot;
+      path = this.viewRoot;
     }
     this.cursor = new Cursor(this, path, 0);
 
@@ -58,7 +60,7 @@ class Session extends EventEmitter {
   }
 
   exit() {
-    return this.emit("exit");
+    return this.emit('exit');
   }
 
   //################
@@ -113,10 +115,11 @@ class Session extends EventEmitter {
   //################
 
   parseJson(content) {
+    let root;
     try {
-      var root = JSON.parse(content);
+      root = JSON.parse(content);
     } catch (error) {
-      this.showMessage("The uploaded file is not valid JSON", {text_class: 'error'});
+      this.showMessage('The uploaded file is not valid JSON', {text_class: 'error'});
       return false;
     }
     let verify = function(node) {
@@ -133,7 +136,7 @@ class Session extends EventEmitter {
       return true;
     };
     if (!verify(root)) {
-      this.showMessage("The uploaded file is not in a valid vimflowy format", {text_class: 'error'});
+      this.showMessage('The uploaded file is not in a valid vimflowy format', {text_class: 'error'});
       return false;
     }
     return root;
@@ -142,22 +145,22 @@ class Session extends EventEmitter {
   parsePlaintext(content) {
     // Step 1: parse into (int, string) pairs of indentation amounts.
     let lines = [];
-    let iterable = content.split("\n");
+    let iterable = content.split('\n');
+    let whitespace = /^\s*/;
     for (let i = 0; i < iterable.length; i++) {
       let line = iterable[i];
       if (line.match(/^\s*".*"$/)) { // Flag workflowy annotations as special cases
         lines.push({
           indent: (line.match(whitespace))[0].length,
-          line: line.replace(/^\s*"(.*)"$/, "$1"),
+          line: line.replace(/^\s*"(.*)"$/, '$1'),
           annotation: true
         });
         continue;
       }
-      var whitespace = /^\s*/;
       // TODO: record whether COMPLETE and strikethrough line if so?
       lines.push({
         indent: (line.match(whitespace))[0].length,
-        line: (line.replace(whitespace, "")).replace(/^(?:-\s*)?(?:\[COMPLETE\] )?/, "")
+        line: (line.replace(whitespace, '')).replace(/^(?:-\s*)?(?:\[COMPLETE\] )?/, '')
       });
     }
     while (lines[lines.length-1].line === '') { // Strip trailing blank line(s)
@@ -167,12 +170,14 @@ class Session extends EventEmitter {
     // Step 2: convert a list of (int, string, annotation?) into a forest format
     let parseAllChildren = function(parentIndentation, lineNumber) {
       let children = [];
-      if (lineNumber < lines.length && lines[lineNumber].annotation) { // Each node can have an annotation immediately follow it
+      if (lineNumber < lines.length && lines[lineNumber].annotation) {
+        // Each node can have an annotation immediately follow it
         children.push({
           text: lines[lineNumber].line});
         lineNumber = lineNumber + 1;
       }
-      while (lineNumber < lines.length && lines[lineNumber].indent > parentIndentation) { // For [the first line of] each child
+      while (lineNumber < lines.length && lines[lineNumber].indent > parentIndentation) {
+        // For [the first line of] each child
         let child =
           {text: lines[lineNumber].line};
         let result = parseAllChildren(lines[lineNumber].indent, lineNumber + 1);
@@ -187,7 +192,7 @@ class Session extends EventEmitter {
     };
     let forest = (parseAllChildren(-1, 0)).children;
     let root = {
-      text: "",
+      text: '',
       children: forest,
       collapsed: (forest.length > 0)
     };
@@ -227,7 +232,7 @@ class Session extends EventEmitter {
     } else if (mimetype === 'text/plain') {
       // Workflowy compatible plaintext export
       //   Ignores 'collapsed' and viewRoot
-      let indent = "  ";
+      let indent = '  ';
       let exportLines = function(node) {
         if (typeof(node) === 'string') {
           return [`- ${node}`];
@@ -248,9 +253,9 @@ class Session extends EventEmitter {
         }
         return lines;
       };
-      return (exportLines(jsonContent)).join("\n");
+      return (exportLines(jsonContent)).join('\n');
     } else {
-      throw new errors.UnexpectedValue("mimetype", mimetype);
+      throw new errors.UnexpectedValue('mimetype', mimetype);
     }
   }
 
@@ -301,11 +306,9 @@ class Session extends EventEmitter {
       this.historyIndex -= 1;
       let newState = this.history[this.historyIndex];
 
-      Logger.logger.debug("UNDOING <");
-      let iterable = __range__((oldState.index-1), (newState.index-1), false);
-      for (let j = 0; j < iterable.length; j++) {
-        let i = iterable[j];
-        let mutation = this.mutations[i];
+      Logger.logger.debug('UNDOING <');
+      for (let j = oldState.index - 1; j < newState.index - 1; j++) {
+        let mutation = this.mutations[j];
         Logger.logger.debug(`  Undoing mutation ${mutation.constructor.name}(${mutation.str()})`);
         let undo_mutations = mutation.rewind(this);
         for (let k = 0; k < undo_mutations.length; k++) {
@@ -316,7 +319,7 @@ class Session extends EventEmitter {
         }
       }
 
-      Logger.logger.debug("> END UNDO");
+      Logger.logger.debug('> END UNDO');
       return this.restoreViewState(newState.before);
     }
   }
@@ -327,11 +330,9 @@ class Session extends EventEmitter {
       this.historyIndex += 1;
       let newState = this.history[this.historyIndex];
 
-      Logger.logger.debug("REDOING <");
-      let iterable = __range__(oldState.index, newState.index, false);
-      for (let j = 0; j < iterable.length; j++) {
-        let i = iterable[j];
-        let mutation = this.mutations[i];
+      Logger.logger.debug('REDOING <');
+      for (let j = oldState.index; j < newState.index; j++) {
+        let mutation = this.mutations[j];
         Logger.logger.debug(`  Redoing mutation ${mutation.constructor.name}(${mutation.str()})`);
         if (!mutation.validate(this)) {
           // this should not happen, since the state should be the same as before
@@ -340,7 +341,7 @@ class Session extends EventEmitter {
         mutation.remutate(this);
         mutation.moveCursor(this.cursor);
       }
-      Logger.logger.debug("> END REDO");
+      Logger.logger.debug('> END REDO');
       return this.restoreViewState(oldState.after);
     }
   }
@@ -632,7 +633,7 @@ class Session extends EventEmitter {
   zoomDown() {
     let sib = this.document.getSiblingAfter(this.viewRoot);
     if (sib === null) {
-      this.showMessage("No next sibling to zoom down to", {text_class: 'error'});
+      this.showMessage('No next sibling to zoom down to', {text_class: 'error'});
       return;
     }
     return this.zoomInto(sib);
@@ -641,7 +642,7 @@ class Session extends EventEmitter {
   zoomUp() {
     let sib = this.document.getSiblingBefore(this.viewRoot);
     if (sib === null) {
-      this.showMessage("No previous sibling to zoom up to", {text_class: 'error'});
+      this.showMessage('No previous sibling to zoom up to', {text_class: 'error'});
       return;
     }
     return this.zoomInto(sib);
@@ -740,7 +741,7 @@ class Session extends EventEmitter {
   //   - includeEnd says whether to also delete cursor2 location
   yankBetween(cursor1, cursor2, options = {}) {
     if (!(cursor2.path.is(cursor1.path))) {
-      Logger.logger.warn("Not yet implemented");
+      Logger.logger.warn('Not yet implemented');
       return;
     }
 
@@ -761,7 +762,7 @@ class Session extends EventEmitter {
   //   - includeEnd says whether to also delete cursor2 location
   deleteBetween(cursor1, cursor2, options = {}) {
     if (!(cursor2.path.is(cursor1.path))) {
-      Logger.logger.warn("Not yet implemented");
+      Logger.logger.warn('Not yet implemented');
       return;
     }
 
@@ -814,7 +815,7 @@ class Session extends EventEmitter {
 
   toggleRowPropertyBetween(property, cursor1, cursor2, options) {
     if (!(cursor2.path.is(cursor1.path))) {
-      Logger.logger.warn("Not yet implemented");
+      Logger.logger.warn('Not yet implemented');
       return;
     }
 
@@ -899,32 +900,32 @@ class Session extends EventEmitter {
       this.cursor.set(first, -1);
       this.delBlock(second, {noNew: true, noSave: true});
       if (addDelimiter) {
-        var mutation = new mutations.AddChars(first.row, firstLine.length, [{ char: options.delimiter }]);
+        let mutation = new mutations.AddChars(first.row, firstLine.length, [{ char: options.delimiter }]);
         this.do(mutation);
       }
-      var mutation = new mutations.AddChars(first.row, (firstLine.length + addDelimiter), secondLine);
+      let mutation = new mutations.AddChars(first.row, (firstLine.length + addDelimiter), secondLine);
       this.do(mutation);
       this.cursor.set(first, firstLine.length);
       return true;
     }
 
     if (this.document.hasChildren(first.row)) {
-      this.showMessage("Cannot join when both rows have children", {text_class: 'error'});
+      this.showMessage('Cannot join when both rows have children', {text_class: 'error'});
       return false;
     }
 
     if (second.parent.row !== first.parent.row) {
-      this.showMessage("Cannot join with non sibling/child", {text_class: 'error'});
+      this.showMessage('Cannot join with non sibling/child', {text_class: 'error'});
       return false;
     }
 
     this.cursor.set(second, 0);
     this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter) {
-      var mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
+      let mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
       this.do(mutation);
     }
-    var mutation = new mutations.AddChars(second.row, 0, firstLine);
+    let mutation = new mutations.AddChars(second.row, 0, firstLine);
     this.do(mutation);
 
     if (addDelimiter) {
@@ -1036,12 +1037,12 @@ class Session extends EventEmitter {
 
   indentBlocks(row, numblocks = 1) {
     if (row.is(this.viewRoot)) {
-      this.showMessage("Cannot indent view root", {text_class: 'error'});
+      this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
     }
     let newparent = this.document.getSiblingBefore(row);
     if (newparent == null) {
-      this.showMessage("Cannot indent without higher sibling", {text_class: 'error'});
+      this.showMessage('Cannot indent without higher sibling', {text_class: 'error'});
       return null; // cannot indent
     }
 
@@ -1059,12 +1060,12 @@ class Session extends EventEmitter {
 
   unindentBlocks(row, numblocks = 1) {
     if (row.is(this.viewRoot)) {
-      this.showMessage("Cannot unindent view root", {text_class: 'error'});
+      this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
     }
     let { parent } = row;
     if (parent.row === this.viewRoot.row) {
-      this.showMessage("Cannot unindent past root", {text_class: 'error'});
+      this.showMessage('Cannot unindent past root', {text_class: 'error'});
       return null;
     }
 
@@ -1083,7 +1084,7 @@ class Session extends EventEmitter {
 
   indent(path = this.cursor.path) {
     if (path.is(this.viewRoot)) {
-      this.showMessage("Cannot indent view root", {text_class: 'error'});
+      this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
     }
     if (this.document.collapsed(path.row)) {
@@ -1105,7 +1106,7 @@ class Session extends EventEmitter {
 
   unindent(path = this.cursor.path) {
     if (path.is(this.viewRoot)) {
-      this.showMessage("Cannot unindent view root", {text_class: 'error'});
+      this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
     }
     if (this.document.collapsed(path.row)) {
@@ -1113,7 +1114,7 @@ class Session extends EventEmitter {
     }
 
     if (this.document.hasChildren(path.row)) {
-      this.showMessage("Cannot unindent line with children", {text_class: 'error'});
+      this.showMessage('Cannot unindent line with children', {text_class: 'error'});
       return;
     }
 
@@ -1184,13 +1185,13 @@ class Session extends EventEmitter {
     let [common, ancestors1, ancestors2] = this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
     if (ancestors1.length === 0) {
       // anchor is underneath cursor
-      var { parent } = common;
-      var index = this.document.indexOf(this.cursor.path);
+      let { parent } = common;
+      let index = this.document.indexOf(this.cursor.path);
       return [parent, index, index];
     } else if (ancestors2.length === 0) {
       // cursor is underneath anchor
-      var { parent } = common;
-      var index = this.document.indexOf(this.anchor.path);
+      let { parent } = common;
+      let index = this.document.indexOf(this.anchor.path);
       return [parent, index, index];
     } else {
       let index1 = this.document.indexOf((ancestors1[0] != null ? ancestors1[0] : this.cursor.path));
@@ -1218,15 +1219,11 @@ class Session extends EventEmitter {
     numlines = Math.max(Math.min(numlines, 1000), -1000); // guard against craziness
 
     if (numlines > 0) {
-      let iterable = __range__(1, numlines, true);
-      for (let j = 0; j < iterable.length; j++) {
-        var i = iterable[j];
+      for (let j = 0; j < numlines; j++) {
         this.cursor.down();
       }
     } else {
-      let iterable1 = __range__(-1, numlines, true);
-      for (let k = 0; k < iterable1.length; k++) {
-        var i = iterable1[k];
+      for (let j = 0; j < -numlines; j++) {
         this.cursor.up();
       }
     }
@@ -1285,13 +1282,3 @@ class Session extends EventEmitter {
 
 // exports
 export default Session;
-
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}

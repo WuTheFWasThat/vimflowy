@@ -1,6 +1,6 @@
-Modes = require '../modes.coffee'
-utils = require '../utils.coffee'
-keyDefinitions = require '../keyDefinitions.coffee'
+Modes = require '../modes'
+utils = require '../utils'
+keyDefinitions = require '../keyDefinitions'
 
 MODES = Modes.modes
 

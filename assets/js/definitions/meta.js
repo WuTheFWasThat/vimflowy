@@ -1,5 +1,5 @@
-import Modes from '../modes.coffee';
-import keyDefinitions from '../keyDefinitions.coffee';
+import Modes from '../modes';
+import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
@@ -13,9 +13,7 @@ let CMD_UNDO = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_UNDO, {
   description: 'Undo',
 }, function() {
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     this.session.undo();
   }
   return this.keyStream.forget();
@@ -32,9 +30,7 @@ let CMD_REDO = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REDO, {
   description: 'Redo',
 }, function() {
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     this.session.redo();
   }
   return this.keyStream.forget();
@@ -51,9 +47,7 @@ let CMD_REPLAY = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLAY, {
   description: 'Replay last command',
 }, function() {
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     this.keyHandler.playRecording(this.keyStream.lastSequence);
     this.session.save();
   }
@@ -98,22 +92,9 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_PLAY_MACRO, {
   if (key === null) { return this.keyStream.wait(); }
   let recording = this.keyHandler.macros[key];
   if (recording === undefined) { return this.keyStream.forget(); }
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     this.keyHandler.playRecording(recording);
   }
   // save the macro-playing sequence itself
   return this.keyStream.save();
-}
-);
-
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}
+});

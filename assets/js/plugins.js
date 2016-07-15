@@ -1,35 +1,37 @@
+/* globals alert */
+
 import _ from 'lodash';
 
-import utils from './utils.coffee';
-import Modes from './modes.coffee';
-import Logger from './logger.coffee';
-import errors from './errors.coffee';
-import EventEmitter from './eventEmitter.js';
+import utils from './utils';
+import Modes from './modes';
+import Logger from './logger';
+import errors from './errors';
+import EventEmitter from './eventEmitter';
 
 let PLUGIN_SCHEMA = {
-  title: "Plugin metadata schema",
-  type: "object",
+  title: 'Plugin metadata schema',
+  type: 'object',
   required: [ 'name' ],
   properties: {
     name: {
-      description: "Name of the plugin",
-      pattern: "^[A-Za-z0-9_ ]{2,64}$",
-      type: "string"
+      description: 'Name of the plugin',
+      pattern: '^[A-Za-z0-9_ ]{2,64}$',
+      type: 'string'
     },
     version: {
-      description: "Version of the plugin",
-      type: "number",
+      description: 'Version of the plugin',
+      type: 'number',
       default: 1,
       minimum: 1
     },
     author: {
-      description: "Author of the plugin",
-      type: "string",
-      default: "Unknown"
+      description: 'Author of the plugin',
+      type: 'string',
+      default: 'Unknown'
     },
     description: {
-      description: "Description of the plugin",
-      type: "string"
+      description: 'Description of the plugin',
+      type: 'string'
     }
   }
 };
@@ -38,11 +40,11 @@ let PLUGIN_SCHEMA = {
 const PLUGINS = {};
 
 const STATUSES = {
-  UNREGISTERED: "Unregistered",
-  DISABLING: "Disabling",
-  ENABLING: "Enabling",
-  DISABLED: "Disabled",
-  ENABLED: "Enabled",
+  UNREGISTERED: 'Unregistered',
+  DISABLING: 'Disabling',
+  ENABLING: 'Enabling',
+  DISABLED: 'Disabled',
+  ENABLED: 'Enabled',
 };
 
 
@@ -130,11 +132,9 @@ class PluginApi {
 
   _getEmitter(who) {
     if (who === 'document') {
-      var emitter;
-      return emitter = this.document;
+      return this.document;
     } else if (who === 'session') {
-      var emitter;
-      return emitter = this.session;
+      return this.session;
     } else {
       throw new errors.GenericError `Unknown hook listener ${who}`;
     }
@@ -185,11 +185,10 @@ class PluginApi {
     return this.registrations = [];
   }
 
-  panic = _.once(() => {
+  panic() {
     alert(`Plugin '${this.name}' has encountered a major problem. Please report this problem to the plugin author.`);
     return this.pluginManager.disable(this.name);
   }
-  );
 }
 
 class PluginsManager extends EventEmitter {
@@ -293,7 +292,7 @@ class PluginsManager extends EventEmitter {
 }
 
 let registerPlugin = function(plugin_metadata, enable, disable) {
-  utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, "plugin");
+  utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, 'plugin');
   utils.fill_tv4_defaults(plugin_metadata, PLUGIN_SCHEMA);
 
   errors.assert((enable != null), `Plugin ${plugin_metadata.name} needs to register with a callback`);
@@ -306,7 +305,9 @@ let registerPlugin = function(plugin_metadata, enable, disable) {
   plugin.enable = enable;
   return plugin.disable = disable || _.once(function(api) {
     api.deregisterAll();
-    return alert(`The plugin '${plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable.`);
+    return alert(
+      `The plugin '${plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable.`
+    );
   });
 };
 

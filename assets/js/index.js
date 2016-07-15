@@ -1,3 +1,5 @@
+/* globals $, window, document, FileReader, chrome, localStorage, alert */
+
 /*
 initialize the main page
 - handle button clicks (import/export/hotkey stuff)
@@ -7,28 +9,28 @@ initialize the main page
 - initialize objects (session, settings, etc.) with relevant divs
 */
 
-import constants from './constants.coffee';
-import errors from './errors.coffee';
-import utils from './utils.coffee';
-import Logger from './logger.coffee';
+import constants from './constants';
+import errors from './errors';
+import utils from './utils';
+import Logger from './logger';
 
-import Modes from './modes.coffee';
-import KeyEmitter from './keyEmitter.coffee';
-import KeyHandler from './keyHandler.coffee';
-import DataStore from './datastore.coffee';
-import Document from './document.coffee';
-import Settings from './settings.coffee';
-import Plugins from './plugins.coffee';
-import Session from './session.coffee';
-import Render from './render.coffee';
+import Modes from './modes';
+import KeyEmitter from './keyEmitter';
+import KeyHandler from './keyHandler';
+import DataStore from './datastore';
+import Document from './document';
+import Settings from './settings';
+import Plugins from './plugins';
+import Session from './session';
+import Render from './render';
 
-import keyDefinitions from './keyDefinitions.coffee';
+import keyDefinitions from './keyDefinitions';
 // load all definitions
-require('./definitions/*.coffee', {mode: 'expand'});
+require('./definitions/*.js', {mode: 'expand'});
 // load all plugins
 require('../../plugins/**/*.js', {mode: 'expand'});
 require('../../plugins/**/*.coffee', {mode: 'expand'});
-import KeyBindings from './keyBindings.coffee';
+import KeyBindings from './keyBindings';
 
 
 let $keybindingsDiv = $('#keybindings');
@@ -48,8 +50,8 @@ let create_session = function(doc, to_load) {
   let settings = new Settings(doc.store, {mainDiv: $settingsDiv});
 
   changeStyle((settings.getSetting('theme')));
-  $settingsDiv.find(".theme-selection").val((settings.getSetting('theme')));
-  $settingsDiv.find(".theme-selection").on('input', function(e) {
+  $settingsDiv.find('.theme-selection').val((settings.getSetting('theme')));
+  $settingsDiv.find('.theme-selection').on('input', function(/*e*/) {
     let theme = this.value;
     settings.setSetting('theme', theme);
     return changeStyle(theme);
@@ -65,25 +67,23 @@ let create_session = function(doc, to_load) {
   let hotkey_settings = settings.getSetting('hotkeys');
   let key_bindings = new KeyBindings(keyDefinitions, hotkey_settings);
 
-  key_bindings.on('applied_hotkey_settings', function(hotkey_settings) {
-    settings.setSetting('hotkeys', hotkey_settings);
-    Render.renderHotkeysTable(key_bindings);
-    return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
-  }
-  );
-
   //###################
   // session
   //###################
 
-  var session = new Session(doc, {
+  let session = new Session(doc, {
     bindings: key_bindings,
     settings,
     mainDiv: $('#view'),
     messageDiv: $('#message'),
     menuDiv: $('#menu')
-  }
-  );
+  });
+
+  key_bindings.on('applied_hotkey_settings', function(hotkey_settings) {
+    settings.setSetting('hotkeys', hotkey_settings);
+    Render.renderHotkeysTable(key_bindings);
+    return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
+  });
 
   let render_mode_info = function(mode) {
     Render.renderModeTable(key_bindings, mode, $keybindingsDiv);
@@ -106,7 +106,7 @@ let create_session = function(doc, to_load) {
   //###################
 
   let pluginManager = new Plugins.PluginsManager(session, $('#plugins'));
-  let enabledPlugins = (settings.getSetting("enabledPlugins")) || ["Marks"];
+  let enabledPlugins = (settings.getSetting('enabledPlugins')) || ['Marks'];
   for (let i = 0; i < enabledPlugins.length; i++) {
     let plugin_name = enabledPlugins[i];
     pluginManager.enable(plugin_name);
@@ -117,7 +117,7 @@ let create_session = function(doc, to_load) {
   );
 
   pluginManager.on('enabledPluginsChange', function(enabled) {
-    settings.setSetting("enabledPlugins", enabled);
+    settings.setSetting('enabledPlugins', enabled);
     Render.renderPlugins(pluginManager);
     Render.renderSession(session);
     // refresh hotkeys, if any new ones were added/removed
@@ -204,7 +204,7 @@ let create_session = function(doc, to_load) {
     }
     );
 
-    $("#settings-link").click(function() {
+    $('#settings-link').click(function() {
       if (session.mode === Modes.modes.SETTINGS) {
         return session.setMode(Modes.modes.NORMAL);
       } else {
@@ -212,8 +212,8 @@ let create_session = function(doc, to_load) {
       }
     });
 
-    $("#settings-nav li").click(function(e) {
-      let tab = ($(e.target).data("tab"));
+    $('#settings-nav li').click(function(e) {
+      let tab = ($(e.target).data('tab'));
       $settingsDiv.find('.tabs > li').removeClass('active');
       $settingsDiv.find('.tab-pane').removeClass('active');
       $settingsDiv.find(`.tabs > li[data-tab=${tab}]`).addClass('active');
@@ -227,7 +227,7 @@ let create_session = function(doc, to_load) {
       }
       session.showMessage('Reading in file...');
       let reader = new FileReader();
-      reader.readAsText(file, "UTF-8");
+      reader.readAsText(file, 'UTF-8');
       reader.onload = function(evt) {
         let content = evt.target.result;
         return cb(null, content, file.name);
@@ -239,15 +239,15 @@ let create_session = function(doc, to_load) {
     };
 
     let download_file = function(filename, mimetype, content) {
-      let exportDiv = $("#export");
-      exportDiv.attr("download", filename);
-      exportDiv.attr("href", `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
+      let exportDiv = $('#export');
+      exportDiv.attr('download', filename);
+      exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
       exportDiv[0].click();
-      exportDiv.attr("download", null);
-      return exportDiv.attr("href", null);
+      exportDiv.attr('download', null);
+      return exportDiv.attr('href', null);
     };
 
-    $("#hotkeys_import").click(() =>
+    $('#hotkeys_import').click(() =>
       load_file($('#hotkeys_file_input')[0], function(err, content) {
         if (err) { return session.showMessage(err, {text_class: 'error'}); }
         try {
@@ -265,19 +265,19 @@ let create_session = function(doc, to_load) {
       )
     );
 
-    $("#hotkeys_export").click(function() {
+    $('#hotkeys_export').click(function() {
       let filename = 'vimflowy_hotkeys.json';
       let content = JSON.stringify(key_bindings.hotkeys, null, 2);
       download_file(filename, 'application/json', content);
       return session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
     });
 
-    $("#hotkeys_default").click(function() {
+    $('#hotkeys_default').click(function() {
       key_bindings.apply_default_hotkey_settings();
-      return session.showMessage("Loaded defaults!", {text_class: 'success'});
+      return session.showMessage('Loaded defaults!', {text_class: 'success'});
     });
 
-    $("#data_import").click(() =>
+    $('#data_import').click(() =>
       load_file($('#import-file :file')[0], function(err, content, filename) {
         if (err) { return session.showMessage(err, {text_class: 'error'}); }
         let mimetype = utils.mimetypeLookup(filename);
@@ -301,13 +301,16 @@ let create_session = function(doc, to_load) {
       return session.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
     };
 
-    $("#data_export_json").click((export_type.bind(this, 'json')));
-    return $("#data_export_plain").click((export_type.bind(this, 'txt')));
+    $('#data_export_json').click((export_type.bind(this, 'json')));
+    return $('#data_export_plain').click((export_type.bind(this, 'txt')));
   });
 
   return $(window).unload(() => session.exit());
 };
 
+
+let datastore;
+let doc;
 
 if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
   Logger.logger.info('using chrome storage');
@@ -315,8 +318,8 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
   // TODO
   // datastore = new DataStore.ChromeStorageLazy
 
-  var datastore = new DataStore.InMemory();
-  var doc = new Document(datastore);
+  datastore = new DataStore.InMemory();
+  doc = new Document(datastore);
   chrome.storage.sync.get('save', function(results) {
     create_session(doc, (results.save || constants.default_data));
 
@@ -327,15 +330,15 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
       }, () =>
         // TODO have whether saved visualized
         Logger.logger.info('Saved')
-      
+
       )
     ), 5000);
   }
   );
 
 } else if (typeof localStorage !== 'undefined' && localStorage !== null) {
-  var datastore = new DataStore.LocalStorageLazy(docname);
-  var doc = new Document(datastore);
+  datastore = new DataStore.LocalStorageLazy(docname);
+  doc = new Document(datastore);
 
   let to_load = null;
   if ((datastore.getLastSave()) === 0) {
@@ -345,15 +348,15 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
   create_session(doc, to_load);
 } else {
   alert('You need local storage support for data to be persisted!');
-  var datastore = new DataStore.InMemory;
-  var doc = new Document(datastore);
+  datastore = new DataStore.InMemory;
+  doc = new Document(datastore);
   create_session(doc, constants.default_data);
 }
 
 window.onerror = function(msg, url, line, col, err) {
   Logger.logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
   if (err !== undefined) {
-    Logger.logger.error("Error: ", err, err.stack);
+    Logger.logger.error('Error: ', err, err.stack);
   }
 
   if (err instanceof errors.DataPoisoned) {

@@ -1,8 +1,8 @@
 import _ from 'lodash';
 
-import utils from './utils.coffee';
-import errors from './errors.coffee';
-import Modes from './modes.coffee';
+import utils from './utils';
+import errors from './errors';
+import Modes from './modes';
 
 class Command {
   constructor(metadata) {
@@ -12,40 +12,40 @@ class Command {
 }
 
 let COMMAND_SCHEMA = {
-  title: "Command metadata schema",
-  type: "object",
+  title: 'Command metadata schema',
+  type: 'object',
   required: [ 'name' ],
   properties: {
     name: {
-      description: "Name of the command",
-      type: "string",
-      pattern: "^[A-Z_]{2,32}$"
+      description: 'Name of the command',
+      type: 'string',
+      pattern: '^[A-Z_]{2,32}$'
     },
     description: {
-      description: "Description of the command",
-      type: "string"
+      description: 'Description of the command',
+      type: 'string'
     },
     default_hotkeys: {
-      description: "Default hotkeys for the command",
-      type: "object",
+      description: 'Default hotkeys for the command',
+      type: 'object',
       properties: {
         all: {
-          description: "Default hotkeys for all modes",
-          type: "array",
+          description: 'Default hotkeys for all modes',
+          type: 'array',
           default: [],
-          items: { type: "string" }
+          items: { type: 'string' }
         },
         normal_like: {
-          description: "Default hotkey for normal-like modes",
-          type: "array",
+          description: 'Default hotkey for normal-like modes',
+          type: 'array',
           default: [],
-          items: { type: "string" }
+          items: { type: 'string' }
         },
         insert_like: {
-          description: "Default hotkey for insert-like modes",
-          type: "array",
+          description: 'Default hotkey for insert-like modes',
+          type: 'array',
           default: [],
-          items: { type: "string" }
+          items: { type: 'string' }
         }
       }
     }
@@ -67,17 +67,17 @@ let motionCommandName = 'MOTION';
 //     pastEndWord: whether we consider the end of a word to be after the last letter
 
 let MOTION_SCHEMA = {
-  title: "Motion metadata schema",
-  type: "object",
+  title: 'Motion metadata schema',
+  type: 'object',
   required: [ 'description' ],
   properties: {
     description: {
-      description: "Description of the motion, shows in HELP menu",
-      type: "string"
+      description: 'Description of the motion, shows in HELP menu',
+      type: 'string'
     },
     multirow: {
-      description: "Whether the motion is only for multi-row movements",
-      type: "boolean",
+      description: 'Whether the motion is only for multi-row movements',
+      type: 'boolean',
       default: false
     }
   }
@@ -95,13 +95,13 @@ It may also have, bindings:
 */
 
 let ACTION_SCHEMA = {
-  title: "Action metadata schema",
-  type: "object",
+  title: 'Action metadata schema',
+  type: 'object',
   required: [ 'description' ],
   properties: {
     description: {
-      description: "Description of the action, shows in HELP menu",
-      type: "string"
+      description: 'Description of the action, shows in HELP menu',
+      type: 'string'
     }
   }
 };
@@ -129,7 +129,11 @@ class KeyDefinitions {
   // currently used only for testing
   clone() {
     let other = new KeyDefinitions();
-    let iterable = ['motion_command_counts', 'action_command_counts_by_mode', 'defaultHotkeys', 'commands', 'motions', 'actions'];
+    let iterable = [
+      'motion_command_counts', 'action_command_counts_by_mode',
+      'defaultHotkeys',
+      'commands', 'motions', 'actions'
+    ];
     for (let i = 0; i < iterable.length; i++) {
       let k = iterable[i];
       other[k] = _.cloneDeep(this[k]);
@@ -156,7 +160,7 @@ class KeyDefinitions {
       }
       let count = this.action_command_counts_by_mode[mode][command.name] || 0;
       if (count === 0) {
-        throw new GenericError(`Cannot remove command ${command}`);
+        throw new errors.GenericError(`Cannot remove command ${command}`);
       } else if (count === 1) {
         return delete this.action_command_counts_by_mode[mode][command.name];
       } else {
@@ -178,12 +182,12 @@ class KeyDefinitions {
     let counts = this.motion_command_counts[command.name] || {};
     if (multirow) {
       if (counts.multirow === 0) {
-        throw new GenericError(`Cannot remove multirow motion ${command}`);
+        throw new errors.GenericError(`Cannot remove multirow motion ${command}`);
       }
       counts.multirow = (counts.multirow || 0) - 1;
     }
     if (counts.all === 0) {
-      throw new GenericError(`Cannot remove motion ${command}`);
+      throw new errors.GenericError(`Cannot remove motion ${command}`);
     } else if (counts.all === 1) {
       return delete this.motion_command_counts[command.name];
     } else {
@@ -219,7 +223,7 @@ class KeyDefinitions {
   }
 
   registerCommand(metadata) {
-    utils.tv4_validate(metadata, COMMAND_SCHEMA, "command");
+    utils.tv4_validate(metadata, COMMAND_SCHEMA, 'command');
     utils.fill_tv4_defaults(metadata, COMMAND_SCHEMA);
     let { name } = metadata;
     let command = new Command(metadata);
@@ -229,11 +233,11 @@ class KeyDefinitions {
     }
 
     this.commands[name] = command;
-    this.defaultHotkeys[Modes.NORMAL_MODE_TYPE][name] = 
+    this.defaultHotkeys[Modes.NORMAL_MODE_TYPE][name] =
       (_.cloneDeep(metadata.default_hotkeys.all)).concat(
         _.cloneDeep(metadata.default_hotkeys.normal_like)
       );
-    this.defaultHotkeys[Modes.INSERT_MODE_TYPE][name] = 
+    this.defaultHotkeys[Modes.INSERT_MODE_TYPE][name] =
       (_.cloneDeep(metadata.default_hotkeys.all)).concat(
         _.cloneDeep(metadata.default_hotkeys.insert_like)
       );
@@ -250,7 +254,7 @@ class KeyDefinitions {
   }
 
   registerMotion(commands, motion, definition) {
-    utils.tv4_validate(motion, MOTION_SCHEMA, "motion");
+    utils.tv4_validate(motion, MOTION_SCHEMA, 'motion');
     utils.fill_tv4_defaults(motion, MOTION_SCHEMA);
     motion.definition = definition;
 
@@ -260,10 +264,9 @@ class KeyDefinitions {
     }
 
     let obj = this.motions;
-    let iterable = __range__(0, commands.length-1, false);
-    for (let j = 0; j < iterable.length; j++) {
-      let i = iterable[j];
-      var command = commands[i];
+    let command;
+    for (let j = 0; j < commands.length - 1; j++) {
+      command = commands[j];
 
       if (!(command.name in obj)) {
         throw new errors.GenericError(`Motion ${command.name} doesn't exist`);
@@ -273,7 +276,7 @@ class KeyDefinitions {
       obj = obj[command.name].definition;
     }
 
-    var command = commands[commands.length-1];
+    command = commands[commands.length-1];
 
     // motion.name = command.name
     if (command.name in obj) {
@@ -294,10 +297,9 @@ class KeyDefinitions {
     }
 
     let obj = this.motions;
-    let iterable = __range__(0, commands.length-1, false);
-    for (let j = 0; j < iterable.length; j++) {
-      let i = iterable[j];
-      var command = commands[i];
+    let command;
+    for (let j = 0; j < commands.length - 1; j++) {
+      command = commands[j];
 
       if (!(command.name in obj)) {
         throw new errors.GenericError(`Motion ${command.name} doesn't exist`);
@@ -307,7 +309,7 @@ class KeyDefinitions {
       obj = obj[command.name].definition;
     }
 
-    var command = commands[commands.length-1];
+    command = commands[commands.length-1];
     // motion.name = command.name
     if (!(command.name in obj)) {
       throw new errors.GenericError(`Motion ${command.name} not found`);
@@ -322,7 +324,7 @@ class KeyDefinitions {
   }
 
   registerAction(modes, commands, action, definition) {
-    utils.tv4_validate(action, ACTION_SCHEMA, "action");
+    utils.tv4_validate(action, ACTION_SCHEMA, 'action');
     action = _.cloneDeep(action);
     action.definition = definition;
 
@@ -338,10 +340,9 @@ class KeyDefinitions {
       }
       let obj = this.actions[mode];
 
-      let iterable = __range__(0, commands.length-1, false);
-      for (let k = 0; k < iterable.length; k++) {
-        let i = iterable[k];
-        var command = commands[i];
+      let command;
+      for (let k = 0; k < commands.length - 1; k++) {
+        command = commands[j];
 
         if (!(command.name in obj)) {
           throw new errors.GenericError(`Action ${command.name} doesn't exist`);
@@ -351,7 +352,7 @@ class KeyDefinitions {
         obj = obj[command.name].definition;
       }
 
-      var command = commands[commands.length-1];
+      command = commands[commands.length-1];
       // action.name = command.name
       if (command.name in obj) {
         throw new errors.GenericError(`Action ${command.name} has already been defined`);
@@ -379,10 +380,9 @@ class KeyDefinitions {
       }
       let obj = this.actions[mode];
 
-      let iterable = __range__(0, commands.length-1, false);
-      for (let k = 0; k < iterable.length; k++) {
-        let i = iterable[k];
-        var command = commands[i];
+      let command;
+      for (let k = 0; k < commands.length - 1; k++) {
+        command = commands[k];
 
         if (!(command.name in obj)) {
           throw new errors.GenericError(`Action ${command.name} doesn't exist`);
@@ -392,7 +392,7 @@ class KeyDefinitions {
         obj = obj[command.name].definition;
       }
 
-      var command = commands[commands.length-1];
+      command = commands[commands.length-1];
       // action.name = command.name
       if (!(command.name in obj)) {
         throw new errors.GenericError(`Action ${command.name} not found`);
@@ -409,13 +409,3 @@ class KeyDefinitions {
 }
 
 export default new KeyDefinitions();
-
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}

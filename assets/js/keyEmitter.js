@@ -1,3 +1,5 @@
+/* globals document, window, navigator, alert, $ */
+import _ from 'lodash';
 import Logger from './logger.coffee';
 import EventEmitter from './eventEmitter.js';
 
@@ -96,10 +98,8 @@ let keyCodeMap = {
   222: '\''
 };
 
-let iterable = __range__(1, 26, true);
-for (let j = 0; j < iterable.length; j++) {
-  let i = iterable[j];
-  let keyCode = i + 64;
+for (let j = 1; j <= 26; j++) {
+  let keyCode = j + 64;
   let letter = String.fromCharCode(keyCode);
   let lower = letter.toLowerCase();
   keyCodeMap[keyCode] = lower;
@@ -121,31 +121,32 @@ class KeyEmitter extends EventEmitter {
       if (e.keyCode in ignoreMap) {
         return true;
       }
+      let key;
       if (e.keyCode in keyCodeMap) {
-        var key = keyCodeMap[e.keyCode];
+        key = keyCodeMap[e.keyCode];
       } else {
         // this is necessary for typing stuff..
-        var key = String.fromCharCode(e.keyCode);
+        key = String.fromCharCode(e.keyCode);
       }
 
       if (e.shiftKey) {
         if (key in shiftMap) {
-          var key = shiftMap[key];
+          key = shiftMap[key];
         } else {
-          var key = `shift+${key}`;
+          key = `shift+${key}`;
         }
       }
 
       if (e.altKey) {
-        var key = `alt+${key}`;
+        key = `alt+${key}`;
       }
 
       if (e.ctrlKey) {
-        var key = `ctrl+${key}`;
+        key = `ctrl+${key}`;
       }
 
       if (e.metaKey) {
-        var key = `meta+${key}`;
+        key = `meta+${key}`;
       }
 
       Logger.logger.debug('keycode', e.keyCode, 'key', key);
@@ -158,13 +159,3 @@ class KeyEmitter extends EventEmitter {
 }
 
 export default KeyEmitter;
-
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}

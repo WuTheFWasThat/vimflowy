@@ -1,5 +1,5 @@
-import constants from './constants.coffee';
-import errors from './errors.coffee';
+import constants from './constants';
+import errors from './errors';
 
 // represents a tree-traversal starting from the root going down
 // should be immutable
@@ -41,9 +41,7 @@ class Path {
     if (my_ancestry.length < their_ancestry.length) {
       return null;
     }
-    let iterable = __range__(0, their_ancestry.length, false);
-    for (let j = 0; j < iterable.length; j++) {
-      let i = iterable[j];
+    for (let i = 0; i < their_ancestry.length; i++) {
       if (my_ancestry[i] !== their_ancestry[i]) {
         return null;
       }
@@ -94,13 +92,3 @@ Path.loadFromAncestry = function(ancestry) {
 };
 
 export default Path;
-
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}

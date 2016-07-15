@@ -1,6 +1,8 @@
-import Modes from '../modes.coffee';
-import utils from '../utils.coffee';
-import keyDefinitions from '../keyDefinitions.coffee';
+/* globals window */
+
+import Modes from '../modes';
+import utils from '../utils';
+import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
@@ -12,9 +14,7 @@ let CMD_MOTION = {name: 'MOTION'};
 keyDefinitions.registerAction([MODES.NORMAL], CMD_MOTION, {
   description: 'Move the cursor',
 }, function(motion) {
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     motion(this.session.cursor, {});
   }
   return this.keyStream.forget();
@@ -31,14 +31,12 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
 }, function(motion) {
   // this is necessary until we figure out multiline
   let tmp = this.session.cursor.clone();
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     motion(tmp, {pastEnd: true});
   }
 
   if (!(tmp.path.is(this.session.cursor.path))) { // only allow same-row movement
-    return this.session.showMessage("Visual mode currently only works on one line", {text_class: 'error'});
+    return this.session.showMessage('Visual mode currently only works on one line', {text_class: 'error'});
   } else {
     return this.session.cursor.from(tmp);
   }
@@ -47,9 +45,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOTION, {
   description: 'Move the cursor',
 }, function(motion) {
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     motion(this.session.cursor, {pastEnd: true});
   }
   return null;
@@ -227,7 +223,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_CLONE], {
   description: 'Go to next copy of this clone',
   multirow: true
 }, () =>
-  (cursor, options) => {
+  (cursor /*, options */) => {
     if (this.session.mode !== MODES.NORMAL) {
       // doesn't work for visual_line mode due to zoomInto
       return;
@@ -288,8 +284,8 @@ let CMD_TOGGLE_FOLD = keyDefinitions.registerCommand({
     normal_like: ['z'],
     insert_like: ['ctrl+z']
   }
-}
-);
+});
+
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_TOGGLE_FOLD, {
   description: 'Toggle whether a block is folded',
 }, function() {
@@ -297,16 +293,14 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_TOGGLE_FOLD, {
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
-}
-);
+});
 
 let CMD_REPLACE = keyDefinitions.registerCommand({
   name: 'REPLACE',
   default_hotkeys: {
     normal_like: ['r']
   }
-}
-);
+});
 // TODO: visual and visual_line mode
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLACE, {
   description: 'Replace character',
@@ -348,9 +342,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
   description: 'Delete from cursor with motion'
 }, function(motion) {
   let cursor = this.session.cursor.clone();
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     motion(cursor, {pastEnd: true, pastEndWord: true});
   }
 
@@ -421,9 +413,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
   description: 'Delete from cursor with motion, and enter insert mode'
 }, function(motion) {
   let cursor = this.session.cursor.clone();
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     motion(cursor, {pastEnd: true, pastEndWord: true});
   }
   this.session.setMode(MODES.INSERT);
@@ -487,9 +477,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
   description: 'Yank from cursor with motion'
 }, function(motion) {
   let cursor = this.session.cursor.clone();
-  let iterable = __range__(1, this.repeat, true);
-  for (let j = 0; j < iterable.length; j++) {
-    let i = iterable[j];
+  for (let j = 0; j < this.repeat; j++) {
     motion(cursor, {pastEnd: true, pastEndWord: true});
   }
 
@@ -690,7 +678,11 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_LAST_WORD
   if (this.mode === MODES.INSERT) {
     options.cursor.pastEnd = true;
   }
-  this.session.deleteBetween(this.session.cursor, this.session.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}), options);
+  this.session.deleteBetween(
+    this.session.cursor,
+    this.session.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}),
+    options
+  );
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
@@ -878,13 +870,3 @@ export { CMD_DELETE_LAST_CHAR };
 export { CMD_DELETE_CHAR };
 export { CMD_HELP };
 export { CMD_EXIT_MODE };
-
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}

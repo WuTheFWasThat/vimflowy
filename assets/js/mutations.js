@@ -1,4 +1,4 @@
-import errors from './errors.coffee';
+import errors from './errors';
 
 /*
 mutations mutate a document within a session, and are undoable
@@ -32,7 +32,7 @@ let validateRowInsertion = function(session, parent_id, id, options={}) {
   // check that there won't be doubled siblings
   if (!options.noSiblingCheck) {
     if (session.document._hasChild(parent_id, id)) {
-      session.showMessage("Cloned rows cannot be inserted as siblings", {text_class: 'error'});
+      session.showMessage('Cloned rows cannot be inserted as siblings', {text_class: 'error'});
       return false;
     }
   }
@@ -43,7 +43,7 @@ let validateRowInsertion = function(session, parent_id, id, options={}) {
   // because if there was a clone underneath the row which was an ancestor of 'parent',
   // then 'row' would also be an ancestor of 'parent'.
   if (_.includes((session.document.allAncestors(parent_id, { inclusive: true })), id)) {
-    session.showMessage("Cloned rows cannot be nested under themselves", {text_class: 'error'});
+    session.showMessage('Cloned rows cannot be nested under themselves', {text_class: 'error'});
     return false;
   }
   return true;
@@ -53,20 +53,20 @@ class Mutation {
   str() {
     return '';
   }
-  validate(session) {
+  validate(/* session */) {
     return true;
   }
-  mutate(session) {
-    
+  mutate(/* session */) {
+
   }
-  rewind(session) {
+  rewind(/* session */) {
     return [];
   }
   remutate(session) {
     return this.mutate(session);
   }
-  moveCursor(cursor) {
-    
+  moveCursor(/* cursor */) {
+
   }
 }
 
@@ -85,9 +85,11 @@ class AddChars extends Mutation {
     return session.document.writeChars(this.row, this.col, this.chars);
   }
 
-  rewind(session) {
+  rewind(/* session */) {
     return [
+      /* eslint-disable no-use-before-define */
       new DelChars(this.row, this.col, this.chars.length)
+      /* eslint-enable no-use-before-define */
     ];
   }
 
@@ -116,7 +118,7 @@ class DelChars extends Mutation {
     return this.deletedChars = session.document.deleteChars(this.row, this.col, this.nchars);
   }
 
-  rewind(session) {
+  rewind(/* session */) {
     return [
       new AddChars(this.row, this.col, this.deletedChars)
     ];
@@ -159,7 +161,7 @@ class ChangeChars extends Mutation {
     return session.document.writeChars(this.row, this.col, this.newChars);
   }
 
-  rewind(session) {
+  rewind(/* session */) {
     return [
       new ChangeChars(this.row, this.col, this.newChars.length, null, this.deletedChars)
     ];
@@ -196,12 +198,12 @@ class MoveBlock extends Mutation {
   }
 
   mutate(session) {
-    errors.assert((!this.path.isRoot()), "Cannot detach root");
+    errors.assert((!this.path.isRoot()), 'Cannot detach root');
     let info = session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
     return this.old_index = info.old.childIndex;
   }
 
-  rewind(session) {
+  rewind(/* session */) {
     return [
       new MoveBlock((this.parent.extend([this.path.row])), this.old_parent, this.old_index)
     ];
@@ -249,9 +251,11 @@ class AttachBlocks extends Mutation {
     return session.document._attachChildren(this.parent, this.cloned_rows, this.index);
   }
 
-  rewind(session) {
+  rewind(/* session */) {
     return [
+      /* eslint-disable no-use-before-define */
       new DetachBlocks(this.parent, this.index, this.nrows)
+      /* eslint-enable no-use-before-define */
     ];
   }
 }
@@ -269,7 +273,8 @@ class DetachBlocks extends Mutation {
   }
 
   mutate(session) {
-    this.deleted = (session.document._getChildren(this.parent, this.index, ((this.index+this.nrows)-1))).filter((sib => sib !== null));
+    this.deleted = session.document._getChildren(this.parent, this.index, ((this.index+this.nrows)-1))
+      .filter((sib => sib !== null));
 
     for (let i = 0; i < this.deleted.length; i++) {
       let row = this.deleted[i];
@@ -286,11 +291,12 @@ class DetachBlocks extends Mutation {
 
     // note: next is a path, relative to the parent
 
+    let next;
     if (this.index < children.length) {
-      var next = [children[this.index]];
+      next = [children[this.index]];
     } else {
       if (this.index === 0) {
-        var next = [];
+        next = [];
         if (this.parent === session.document.root.row) {
           if (!this.options.noNew) {
             this.created = session.document._newChild(this.parent);
@@ -301,14 +307,14 @@ class DetachBlocks extends Mutation {
       } else {
         let child = children[this.index - 1];
         let walk = session.document.walkToLastVisible(child);
-        var next = [child].concat(walk);
+        next = [child].concat(walk);
       }
     }
 
     return this.next = next;
   }
 
-  rewind(session) {
+  rewind(/* session */) {
     let mutations = [];
     if (this.created !== null) {
       mutations.push(new DetachBlocks(this.parent, this.created_index, 1, {noNew: true}));
@@ -363,7 +369,6 @@ class AddBlocks extends Mutation {
   mutate(session) {
     let { index } = this;
 
-    let first = true;
     let id_mapping = {};
     this.added_rows = [];
     for (let i = 0; i < this.serialized_rows.length; i++) {
@@ -375,7 +380,7 @@ class AddBlocks extends Mutation {
     return null;
   }
 
-  rewind(session) {
+  rewind(/* session */) {
     return [
       new DetachBlocks(this.parent.row, this.index, this.nrows)
     ];
@@ -402,7 +407,7 @@ class ToggleBlock extends Mutation {
   mutate(session) {
     return session.document.toggleCollapsed(this.row);
   }
-  rewind(session) {
+  rewind(/* session */) {
     return [
       this
     ];

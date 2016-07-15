@@ -1,4 +1,7 @@
+/* globals virtualDom, $ */
+/* eslint-disable no-use-before-define */
 // virtualDom = require 'virtual-dom'
+import _ from 'lodash';
 
 import constants from './constants.coffee';
 import utils from './utils.coffee';
@@ -46,21 +49,21 @@ let renderLine = function(lineData, options = {}) {
     return results;
   }
 
-  for (var i = 0; i < lineData.length; i++) {
-    var obj = lineData[i];
+  for (let i = 0; i < lineData.length; i++) {
+    let obj = lineData[i];
     let info = {
       column: i
     };
-    var renderOptions = {};
+    let renderOptions = {};
 
     for (let k = 0; k < constants.text_properties.length; k++) {
-      var property = constants.text_properties[k];
+      let property = constants.text_properties[k];
       if (obj[property]) {
         renderOptions[property] = true;
       }
     }
 
-    var x = obj.char;
+    let x = obj.char;
 
     if (obj.char === '\n') {
       // tricky logic for rendering new lines within a bullet
@@ -93,7 +96,7 @@ let renderLine = function(lineData, options = {}) {
   for (var i = 0; i < iterable.length; i++) { // to make end condition easier
     // TODO  or (utils.isPunctuation obj.char)
     // problem is URLs have dots in them...
-    var obj = iterable[i];
+    let obj = iterable[i];
     if (utils.isWhitespace(obj.char)) {
       if (i !== word_start) {
         let word_info = {
@@ -105,9 +108,7 @@ let renderLine = function(lineData, options = {}) {
           line = options.wordHook(line, word_info);
         }
         if (utils.isLink(word_info.word)) {
-          let iterable1 = __range__(word_info.start, word_info.end, true);
-          for (let i1 = 0; i1 < iterable1.length; i1++) {
-            let j = iterable1[i1];
+          for (let j = word_info.start; j <= word_info.end; j++) {
             line[j].renderOptions.type = 'a';
             line[j].renderOptions.href = word_info.word;
           }
@@ -130,7 +131,7 @@ let renderLine = function(lineData, options = {}) {
   // separate click events
   if (options.charclick) {
     for (let j1 = 0; j1 < line.length; j1++) {
-      var x = line[j1];
+      let x = line[j1];
       x.renderOptions.text = x.char;
       if (!x.renderOptions.href) {
         x.renderOptions.onclick = options.charclick.bind(this, x.column);
@@ -142,7 +143,7 @@ let renderLine = function(lineData, options = {}) {
     }
   } else {
     let acc = [];
-    var renderOptions = {};
+    let renderOptions = {};
 
     let flush = function() {
       if (acc.length) {
@@ -246,8 +247,8 @@ let renderSession = function(session, options = {}) {
   }
 
   clearTimeout(session.cursorBlinkTimeout);
-  session.mainDiv.removeClass("animate-blink-cursor");
-  session.cursorBlinkTimeout = setTimeout((() => session.mainDiv.addClass("animate-blink-cursor")), 500);
+  session.mainDiv.removeClass('animate-blink-cursor');
+  session.cursorBlinkTimeout = setTimeout((() => session.mainDiv.addClass('animate-blink-cursor')), 500);
 
 };
 
@@ -269,23 +270,22 @@ var virtualRenderSession = function(session, options = {}) {
         return renderSession(session);
       };
     }
+    let text;
     if (isLast) {
-      var text = virtualRenderLine(session, path, options);
+      text = virtualRenderLine(session, path, options);
     } else if (path.is(session.document.root)) {
-      var text = virtualDom.h('icon', {className: 'fa fa-home'});
+      text = virtualDom.h('icon', {className: 'fa fa-home'});
     } else {
-      var text = session.document.getText(path.row).join('');
+      text = session.document.getText(path.row).join('');
     }
     return virtualDom.h('span', { className: 'crumb' }, [
-             virtualDom.h('span', m_options, [ text ])
-           ]);
+      virtualDom.h('span', m_options, [ text ])
+    ]);
   };
 
   let crumbNodes = [];
   crumbNodes.push(makeCrumb(session.document.root));
-  let iterable = __range__(crumbs.length-1, 0, true);
-  for (let j = iterable.length - 1; j >= 0; j--) {
-    let i = iterable[j];
+  for (let i = crumbs.length - 1; i >= 0; i--) {
     path = crumbs[i];
     crumbNodes.push(makeCrumb(path, i===0));
   }
@@ -307,15 +307,16 @@ var virtualRenderSession = function(session, options = {}) {
     }
   }
 
+  let contentsNode;
   if (session.document.hasChildren(session.viewRoot.row)) {
     let contentsChildren = virtualRenderTree(session, session.viewRoot, options);
-    var contentsNode = virtualDom.h('div', {}, contentsChildren);
+    contentsNode = virtualDom.h('div', {}, contentsChildren);
   } else {
     let message = 'Nothing here yet.';
     if (session.mode === MODES.NORMAL) {
       message += ' Press o to start adding content!';
     }
-    var contentsNode = virtualDom.h('div', {
+    contentsNode = virtualDom.h('div', {
       class: 'center',
       style: {
         'padding': '20px', 'font-size': '20px', 'opacity': '0.5'
@@ -414,13 +415,11 @@ var virtualRenderLine = function(session, path, options = {}) {
 
     if (session.anchor && !session.lineSelect) {
       if ((session.anchor.path != null) && path.is(session.anchor.path)) {
-        let iterable = __range__(session.cursor.col, session.anchor.col, true);
-        for (let j = 0; j < iterable.length; j++) {
-          let i = iterable[j];
-          highlights[i] = true;
+        for (let j = session.cursor.col; j <= session.anchor.col; j++) {
+          highlights[j] = true;
         }
       } else {
-        Logger.logger.warn("Multiline not yet implemented");
+        Logger.logger.warn('Multiline not yet implemented');
       }
     }
 
@@ -482,7 +481,11 @@ var renderMenu = function(menu) {
   })
   );
 
-  let searchRow = virtualDom.create(virtualDom.h('span', {}, (virtualRenderLine(menu.session, menu.session.cursor.path, {cursorBetween: true, no_clicks: true}))));
+  let searchRow = virtualDom.create(
+    virtualDom.h('span', {},
+      virtualRenderLine(menu.session, menu.session.cursor.path, {cursorBetween: true, no_clicks: true})
+    )
+  );
   searchBox.append(searchRow);
 
   if (menu.results.length === 0) {
@@ -547,12 +550,12 @@ let renderPlugins = function(pluginManager) {
 
 var virtualRenderPlugins = function(pluginManager) {
   let header = virtualDom.h('tr', {}, [
-    virtualDom.h('th', { className: 'plugin-name' }, "Plugin"),
-    virtualDom.h('th', { className: 'plugin-description' }, "Description"),
-    virtualDom.h('th', { className: 'plugin-version' }, "Version"),
-    virtualDom.h('th', { className: 'plugin-author' }, "Author"),
-    virtualDom.h('th', { className: 'plugin-status' }, "Status"),
-    virtualDom.h('th', { className: 'plugin-actions' }, "Actions")
+    virtualDom.h('th', { className: 'plugin-name' }, 'Plugin'),
+    virtualDom.h('th', { className: 'plugin-description' }, 'Description'),
+    virtualDom.h('th', { className: 'plugin-version' }, 'Version'),
+    virtualDom.h('th', { className: 'plugin-author' }, 'Author'),
+    virtualDom.h('th', { className: 'plugin-status' }, 'Status'),
+    virtualDom.h('th', { className: 'plugin-actions' }, 'Actions')
   ]
   );
   let pluginElements = (Plugins.names()).map(name => virtualRenderPlugin(pluginManager, name));
@@ -562,42 +565,45 @@ var virtualRenderPlugins = function(pluginManager) {
 var virtualRenderPlugin = function(pluginManager, name) {
   let status = pluginManager.getStatus(name);
   let actions = [];
+  let button;
   if (status === Plugins.STATUSES.ENABLED) {
     // "Disable" action
-    var button = virtualDom.h('div', {
+    button = virtualDom.h('div', {
       className: 'btn theme-trim',
       onclick() { return pluginManager.disable(name); }
-    }, "Disable");
+    }, 'Disable');
     actions.push(button);
   } else if (status === Plugins.STATUSES.DISABLED) {
     // "Enable" action
-    var button = virtualDom.h('div', {
+    button = virtualDom.h('div', {
       className: 'btn theme-trim',
       onclick() { return pluginManager.enable(name); }
-    }, "Enable");
+    }, 'Enable');
     actions.push(button);
   }
 
-  let color = "inherit";
+  let color = 'inherit';
   if (status === Plugins.STATUSES.ENABLING || status === Plugins.STATUSES.DISABLING) {
-    color = "yellow";
+    color = 'yellow';
   }
   if (status === Plugins.STATUSES.UNREGISTERED || status === Plugins.STATUSES.DISABLED) {
-    color = "red";
+    color = 'red';
   } else if (status === Plugins.STATUSES.ENABLED) {
-    color = "green";
+    color = 'green';
   }
 
   let plugin = (Plugins.get(name)) || {};
   return virtualDom.h('tr', {
-    className: "plugin theme-bg-secondary"
+    className: 'plugin theme-bg-secondary'
   }, [
-    virtualDom.h('td', { className: 'center theme-trim plugin-name' }, name),
+    /* eslint-disable max-len */
+    virtualDom.h('td', { className: 'center theme-trim plugin-name' },name),
     virtualDom.h('td', { className: 'theme-trim plugin-description', style: {'font-size': '12px'} }, (plugin.description || '')),
     virtualDom.h('td', { className: 'center theme-trim plugin-version' }, ((plugin.version || '') + '')),
     virtualDom.h('td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, (plugin.author || '')),
     virtualDom.h('td', { className: 'center theme-trim plugin-status', style: {'box-shadow': `inset 0px 0px 0px 2px ${color}` } }, status),
     virtualDom.h('td', { className: 'center theme-trim plugin-actions' }, actions)
+    /* eslint-enable max-len */
   ]
   );
 };
@@ -606,14 +612,18 @@ var virtualRenderPlugin = function(pluginManager, name) {
 // hotkeys
 //#####
 let renderHotkeysTable = function(key_bindings) {
-  let mode_defs = MODE_TYPES[NORMAL_MODE_TYPE].modes.map(mode => _.cloneDeep((key_bindings.definitions.actions_for_mode(mode))));
+  let mode_defs = MODE_TYPES[NORMAL_MODE_TYPE].modes.map(
+    mode => _.cloneDeep((key_bindings.definitions.actions_for_mode(mode)))
+  );
   $('#hotkey-edit-normal').empty().append(
     $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
   ).append(
     buildTable(key_bindings, key_bindings.hotkeys[NORMAL_MODE_TYPE], (_.extend.apply(this, mode_defs)))
   );
 
-  mode_defs = MODE_TYPES[INSERT_MODE_TYPE].modes.map(mode => _.cloneDeep((key_bindings.definitions.actions_for_mode(mode))));
+  mode_defs = MODE_TYPES[INSERT_MODE_TYPE].modes.map(
+    mode => _.cloneDeep((key_bindings.definitions.actions_for_mode(mode)))
+  );
   return $('#hotkey-edit-insert').empty().append(
     $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)
   ).append(
@@ -626,14 +636,15 @@ var buildTable = function(key_bindings, keyMap, actions, helpMenu) {
   let buildTableContents = function(bindings, onto, recursed=false) {
     for (let k in bindings) {
       let v = bindings[k];
+      let keys;
       if (k === 'MOTION') {
         if (recursed) {
-          var keys = ['<MOTION>'];
+          keys = ['<MOTION>'];
         } else {
           continue;
         }
       } else {
-        var keys = keyMap[k];
+        keys = keyMap[k];
         if (!keys) {
           continue;
         }
@@ -674,7 +685,8 @@ var buildTable = function(key_bindings, keyMap, actions, helpMenu) {
 };
 
 let renderModeTable = function(key_bindings, mode, onto) {
-  let table = buildTable(key_bindings, key_bindings.keyMaps[mode], (key_bindings.definitions.actions_for_mode(mode)), true);
+  let table =
+    buildTable(key_bindings, key_bindings.keyMaps[mode], (key_bindings.definitions.actions_for_mode(mode)), true);
   return onto.empty().append(table);
 };
 
@@ -686,13 +698,3 @@ export { renderMenu };
 export { renderPlugins };
 export { renderHotkeysTable };
 export { renderModeTable };
-
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}

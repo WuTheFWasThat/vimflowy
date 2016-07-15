@@ -10,8 +10,10 @@ let errorFactory = function(f) {
   return g;
 };
 
-export let NotImplemented = errorFactory(function(message) { return this.message = "Not implemented!"; });
-export let UnexpectedValue = errorFactory(function(name, value) { return this.message = `Unexpected value for \`${name}\`: ${value}`; });
+export let NotImplemented = errorFactory(function() { return this.message = 'Not implemented!'; });
+export let UnexpectedValue = errorFactory(function(name, value) {
+  return this.message = `Unexpected value for \`${name}\`: ${value}`;
+});
 export let GenericError = errorFactory(function(message) { this.message = message; });
 export let SchemaVersion = errorFactory(function(message) { this.message = message; });
 
@@ -25,20 +27,20 @@ export let DataPoisoned = errorFactory(function(message) { this.message = messag
 let AssertionError = errorFactory(function(message) { return this.message = `Assertion error: ${message}`; });
 export { AssertionError };
 
-export function assert(a, message="assert error") {
+export function assert(a, message='assert error') {
   if (!a) { throw new AssertionError(`${message}\nExpected ${a} to be true`); }
 }
 
-export function assert_equals(a, b, message="assert_equals error") {
+export function assert_equals(a, b, message='assert_equals error') {
   if (a !== b) { throw new AssertionError(`${message}\nExpected ${a} == ${b}`); }
 }
 
-export function assert_not_equals(a, b, message="assert_not_equals error") {
+export function assert_not_equals(a, b, message='assert_not_equals error') {
   if (a === b) { throw new AssertionError(`${message}\nExpected ${a} != ${b}`); }
 }
 
 // for asserting object equality
-export function assert_deep_equals(a, b, message="assert_deep_equals error") {
+export function assert_deep_equals(a, b, message='assert_deep_equals error') {
   if (!_.isEqual(a, b)) {
     throw new AssertionError(`${message}
       \nExpected:

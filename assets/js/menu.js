@@ -1,7 +1,7 @@
-import Session from './session.coffee';
-import Document from './document.coffee';
-import DataStore from './datastore.coffee';
-import Modes from './modes.coffee';
+import Session from './session';
+import Document from './document';
+import DataStore from './datastore';
+import Modes from './modes';
 
 /*
 Represents the menu shown in menu mode.

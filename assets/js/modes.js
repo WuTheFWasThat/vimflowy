@@ -1,41 +1,46 @@
-import utils from './utils.coffee';
-import constants from './constants.coffee';
-import { Document } from './document.coffee';
-import DataStore from './datastore.coffee';
+/* globals $ */
+
+import utils from './utils';
+import constants from './constants';
+// import { Document } from './document';
+// import DataStore from './datastore';
+
+let NORMAL_MODE_TYPE = 'Normal-like modes';
+let INSERT_MODE_TYPE = 'Insert-like modes';
 
 let MODE_SCHEMA = {
-  title: "Mode metadata schema",
-  type: "object",
+  title: 'Mode metadata schema',
+  type: 'object',
   required: [ 'name' ],
   properties: {
     name: {
-      description: "Name of the mode",
-      pattern: "^[A-Z_]{2,32}$",
-      type: "string"
+      description: 'Name of the mode',
+      pattern: '^[A-Z_]{2,32}$',
+      type: 'string'
     },
     description: {
-      description: "Description of the mode",
-      type: "string"
+      description: 'Description of the mode',
+      type: 'string'
     },
     hotkey_type: { // TODO: get rid of this?
-      description: "Either normal-like or insert-like",
-      type: "string"
+      description: 'Either normal-like or insert-like',
+      type: 'string'
     },
     within_row: {
-      description: "Only within-row motions are supported",
-      type: "boolean"
+      description: 'Only within-row motions are supported',
+      type: 'boolean'
     },
     enter: {
-      description: "Function taking session, upon entering mode",
-      type: "function"
+      description: 'Function taking session, upon entering mode',
+      type: 'function'
     },
     every: {
-      description: "Function executed on every action, while in the mode.  Takes session and keystream",
-      type: "function"
+      description: 'Function executed on every action, while in the mode.  Takes session and keystream',
+      type: 'function'
     },
     exit: {
-      description: "Function taking session, upon entering mode",
-      type: "function"
+      description: 'Function taking session, upon entering mode',
+      type: 'function'
     },
 
     key_transforms: {
@@ -45,17 +50,17 @@ if the key should be ignored, return it as null (in which case
 other functions won't receive the key)
 
 the functions are called in the order they're registered`,
-      type: "array",
+      type: 'array',
       default: [],
       items: {
-        type: "function"
+        type: 'function'
       }
     },
     transform_context: {
       description: `a functions taking a context and returning a new context
 in which definition functions will be executed
 (this is called right before execution)`,
-      type: "function",
+      type: 'function',
       default(context) { return context; }
     }
   }
@@ -111,21 +116,23 @@ class Mode {
 let MODES_ENUM = {};
 // mapping from mode name to the actual mode object
 const MODES = {};
-var NORMAL_MODE_TYPE = 'Normal-like modes';
-let INSERT_MODE_TYPE = 'Insert-like modes';
 let MODE_TYPES = {};
 MODE_TYPES[NORMAL_MODE_TYPE] = {
-  description: 'Modes in which text is not being inserted, and all keys are configurable as commands.  NORMAL, VISUAL, and VISUAL_LINE modes fall under this category.',
+  description:
+    'Modes in which text is not being inserted, and all keys are configurable as commands.  ' +
+    'NORMAL, VISUAL, and VISUAL_LINE modes fall under this category.',
   modes: []
 };
 MODE_TYPES[INSERT_MODE_TYPE] = {
-  description: 'Modes in which most text is inserted, and available hotkeys are restricted to those with modifiers.  INSERT, SEARCH, and MARK modes fall under this category.',
+  description:
+    'Modes in which most text is inserted, and available hotkeys are restricted to those with modifiers.  ' +
+    'INSERT, SEARCH, and MARK modes fall under this category.',
   modes: []
 };
 
 let modeCounter = 1;
 let registerMode = function(metadata) {
-  utils.tv4_validate(metadata, MODE_SCHEMA, "mode");
+  utils.tv4_validate(metadata, MODE_SCHEMA, 'mode');
   utils.fill_tv4_defaults(metadata, MODE_SCHEMA);
 
   let { name } = metadata;
@@ -240,7 +247,7 @@ registerMode({
 registerMode({
   name: 'SETTINGS',
   hotkey_type: NORMAL_MODE_TYPE,
-  enter(session, oldmode) {
+  enter(session /*, oldmode */) {
     if (session.settings.mainDiv) {
       session.settings.mainDiv.removeClass('hidden');
       $('#settings-open').addClass('hidden');
@@ -296,4 +303,12 @@ registerMode({
 
 let getMode = mode => MODES[mode];
 
-export { registerMode, deregisterMode, MODES_ENUM as modes, MODE_TYPES as types, getMode, NORMAL_MODE_TYPE, INSERT_MODE_TYPE };
+export {
+  registerMode,
+  deregisterMode,
+  MODES_ENUM as modes,
+  MODE_TYPES as types,
+  getMode,
+  NORMAL_MODE_TYPE,
+  INSERT_MODE_TYPE
+};

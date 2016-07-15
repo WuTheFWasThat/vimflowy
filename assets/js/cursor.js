@@ -1,6 +1,6 @@
-import utils from './utils.coffee';
-import constants from './constants.coffee';
-import EventEmitter from './eventEmitter.js';
+import utils from './utils';
+import constants from './constants';
+import EventEmitter from './eventEmitter';
 
 Function.prototype.property = function(prop, desc) {
   return Object.defineProperty(this.prototype, prop, desc);
@@ -83,10 +83,11 @@ class Cursor extends EventEmitter {
   _fromMoveCol(cursorOptions = {}) {
     let len = this.document.getLength(this.path.row);
     let maxcol = len - (cursorOptions.pastEnd ? 0 : 1);
+    let col;
     if (this.moveCol < 0) {
-      var col = Math.max(0, len + this.moveCol + 1);
+      col = Math.max(0, len + this.moveCol + 1);
     } else {
-      var col = Math.max(0, Math.min(maxcol, this.moveCol));
+      col = Math.max(0, Math.min(maxcol, this.moveCol));
     }
     this._setCol(col);
     if (!cursorOptions.keepProperties) {
@@ -184,10 +185,11 @@ class Cursor extends EventEmitter {
   }
 
   visibleHome() {
+    let path;
     if (this.session.viewRoot.is(this.session.document.root)) {
-      var path = this.session.nextVisible(this.session.viewRoot);
+      path = this.session.nextVisible(this.session.viewRoot);
     } else {
-      var path = this.session.viewRoot;
+      path = this.session.viewRoot;
     }
     this.set(path, 0);
     return this;
@@ -420,12 +422,13 @@ class Cursor extends EventEmitter {
   // NOTE: only relevant for insert mode.
   _getPropertiesFromContext() {
     let line = this.document.getLine(this.path.row);
+    let obj;
     if (line.length === 0) {
-      var obj = {};
+      obj = {};
     } else if (this.col === 0) {
-      var obj = line[this.col];
+      obj = line[this.col];
     } else {
-      var obj = line[this.col-1];
+      obj = line[this.col-1];
     }
     for (let i = 0; i < constants.text_properties.length; i++) {
       let property = constants.text_properties[i];

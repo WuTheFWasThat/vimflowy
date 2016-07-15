@@ -1,8 +1,8 @@
 _ = require 'lodash'
 
-Menu = require '../menu.coffee'
-Modes = require '../modes.coffee'
-keyDefinitions = require '../keyDefinitions.coffee'
+Menu = require '../menu'
+Modes = require '../modes'
+keyDefinitions = require '../keyDefinitions'
 
 MODES = Modes.modes
 

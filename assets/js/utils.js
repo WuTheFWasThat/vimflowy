@@ -1,7 +1,8 @@
+/* globals $ */
 import _ from 'lodash';
 import tv4 from 'tv4';
 
-import errors from './errors.coffee';
+import errors from './errors';
 
 // TODO: is quite silly to consider undefined as whitespace
 export function isWhitespace(char) {
@@ -42,7 +43,7 @@ export function isScrolledIntoView(elem, container) {
   return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
 
-export function tv4_validate(data, schema, object="data") {
+export function tv4_validate(data, schema, object='data') {
   // 3rd argument: checks recursive
   // 4th argument: bans unknown properties
   if (!tv4.validate(data, schema, true, true)) {
@@ -59,7 +60,7 @@ export function fill_tv4_defaults(data, schema) {
     if (!(prop in data)) {
       if ('default' in prop_info) {
         let def_val = prop_info['default'];
-        if (typeof def_val !== "function") {
+        if (typeof def_val !== 'function') {
           def_val = _.cloneDeep(def_val);
         }
         data[prop] = def_val;

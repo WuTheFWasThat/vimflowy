@@ -1,7 +1,4 @@
-import Modes from '../modes.coffee';
-import keyDefinitions from '../keyDefinitions.coffee';
-
-const MODES = Modes.modes;
+import keyDefinitions from '../keyDefinitions';
 
 let CMD_LEFT = keyDefinitions.registerCommand({
   name: 'LEFT',

@@ -1,7 +1,9 @@
+/* globals alert, localStorage */
+
 import _ from 'lodash';
 
-import errors from './errors.coffee';
-import Logger from './logger.coffee';
+import errors from './errors';
+import Logger from './logger';
 
 /*
 DataStore abstracts the data layer, so that it can be swapped out.
@@ -32,11 +34,13 @@ class DataStore {
     this._IDKey_ = `${this.prefix}:lastID`;
   }
 
-  get(key, default_value=null) {
+  get(key, default_value) {
+    console.log('GET key', key, 'default value', default_value);
     throw new errors.NotImplemented();
   }
 
   set(key, value) {
+    console.log('SET key', key, 'value', value);
     throw new errors.NotImplemented();
   }
 
