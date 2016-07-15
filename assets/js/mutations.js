@@ -1,5 +1,3 @@
-import errors from './errors';
-
 /*
 mutations mutate a document within a session, and are undoable
 each mutation should implement a constructor, as well as the following methods:
@@ -25,7 +23,7 @@ the mutation may also optionally implement
 */
 
 import _ from 'lodash';
-errors = require('./errors.coffee');
+import errors from './errors';
 
 // validate inserting id as a child of parent_id
 let validateRowInsertion = function(session, parent_id, id, options={}) {
@@ -72,6 +70,7 @@ class Mutation {
 
 class AddChars extends Mutation {
   constructor(row, col, chars) {
+    super();
     this.row = row;
     this.col = col;
     this.chars = chars;
@@ -105,6 +104,7 @@ class AddChars extends Mutation {
 
 class DelChars extends Mutation {
   constructor(row, col, nchars) {
+    super();
     this.row = row;
     this.col = col;
     this.nchars = nchars;
@@ -140,6 +140,7 @@ class DelChars extends Mutation {
 
 class ChangeChars extends Mutation {
   constructor(row, col, nchars, transform, newChars) {
+    super();
     this.row = row;
     this.col = col;
     this.nchars = nchars;
@@ -177,6 +178,7 @@ class ChangeChars extends Mutation {
 
 class MoveBlock extends Mutation {
   constructor(path, parent, index) {
+    super();
     this.path = path;
     this.parent = parent;
     this.old_parent = this.path.parent;
@@ -222,6 +224,7 @@ class MoveBlock extends Mutation {
 
 class AttachBlocks extends Mutation {
   constructor(parent, cloned_rows, index, options) {
+    super();
     this.parent = parent;
     this.cloned_rows = cloned_rows;
     this.nrows = this.cloned_rows.length;
@@ -262,6 +265,7 @@ class AttachBlocks extends Mutation {
 
 class DetachBlocks extends Mutation {
   constructor(parent, index, nrows, options) {
+    super();
     this.parent = parent;
     this.index = index;
     this.nrows = nrows || 1;
@@ -352,6 +356,7 @@ class DetachBlocks extends Mutation {
 // creates new blocks (as opposed to attaching ones that already exist)
 class AddBlocks extends Mutation {
   constructor(parent, index, serialized_rows) {
+    super();
     this.parent = parent;
     this.serialized_rows = serialized_rows;
     if (index === undefined) {
@@ -399,6 +404,7 @@ class AddBlocks extends Mutation {
 
 class ToggleBlock extends Mutation {
   constructor(row) {
+    super();
     this.row = row;
   }
   str() {

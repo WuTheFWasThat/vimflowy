@@ -4,7 +4,7 @@ either nothing, a set of characters, a set of row ids, or a set of serialized ro
 Implements pasting for each of the types
 */
 
-let REGISTER_TYPES_= {
+let REGISTER_TYPES = {
   NONE: 0,
   CHARS: 1,
   SERIALIZED_ROWS: 2,

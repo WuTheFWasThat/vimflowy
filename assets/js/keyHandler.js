@@ -14,7 +14,6 @@ It maintains custom logic for this, for each mode.
 the KeyStream class is a helper class which deals with queuing and checkpointing a stream of key events
 */
 
-let motionRepeat;
 import EventEmitter from './eventEmitter';
 import errors from './errors';
 // import Menu from './menu';
@@ -101,6 +100,7 @@ class KeyStream extends EventEmitter {
 class KeyHandler extends EventEmitter {
 
   constructor(session, keyBindings) {
+    super();
     this.getMotion = this.getMotion.bind(this);
     this.session = session;
 
@@ -115,8 +115,7 @@ class KeyHandler extends EventEmitter {
     this.keyStream = new KeyStream();
     this.keyStream.on('save', () => {
       return this.session.save();
-    }
-    );
+    });
   }
 
   //###########
@@ -261,6 +260,7 @@ class KeyHandler extends EventEmitter {
 
   // useful when you expect a motion
   getMotion(keyStream, motionKey, bindings, repeat) {
+    let motionRepeat;
     [motionRepeat, motionKey] = this.getRepeat(keyStream, motionKey);
     repeat = repeat * motionRepeat;
 
@@ -291,6 +291,5 @@ class KeyHandler extends EventEmitter {
     }
   }
 }
-
 
 export default KeyHandler;

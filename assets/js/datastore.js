@@ -143,8 +143,8 @@ class DataStore {
 
 class InMemory extends DataStore {
   constructor() {
-    this.cache = {};
     super('');
+    this.cache = {};
   }
 
   get(key, default_value = null) {
@@ -162,8 +162,8 @@ class InMemory extends DataStore {
 
 class LocalStorageLazy extends DataStore {
   constructor(prefix='') {
-    this.cache = {};
     super(prefix);
+    this.cache = {};
     this.lastSave = Date.now();
   }
 

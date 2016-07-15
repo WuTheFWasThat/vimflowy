@@ -48,7 +48,7 @@ jsTask = (isDev) ->
   # TODO get watchify to work..
   return () ->
     stream = browserify({
-      entries: 'assets/js/index.coffee'
+      entries: 'assets/js/index'
       transform: [
         'coffeeify',
         babelify.configure({
