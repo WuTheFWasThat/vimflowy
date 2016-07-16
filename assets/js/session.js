@@ -238,7 +238,7 @@ class Session extends EventEmitter {
           return [`- ${node}`];
         }
         let lines = [];
-        lines.push `- ${node.text}`;
+        lines.push(`- ${node.text}`);
         let iterable = node.children != null ? node.children : [];
         for (let i = 0; i < iterable.length; i++) {
           let child = iterable[i];
@@ -307,7 +307,7 @@ class Session extends EventEmitter {
       let newState = this.history[this.historyIndex];
 
       Logger.logger.debug('UNDOING <');
-      for (let j = oldState.index - 1; j < newState.index - 1; j++) {
+      for (let j = oldState.index - 1; j > newState.index - 1; j--) {
         let mutation = this.mutations[j];
         Logger.logger.debug(`  Undoing mutation ${mutation.constructor.name}(${mutation.str()})`);
         let undo_mutations = mutation.rewind(this);

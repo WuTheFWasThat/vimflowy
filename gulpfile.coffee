@@ -148,7 +148,7 @@ gulp.task 'watch', ->
 
   gulp.watch [sass_glob, plugin_sass_glob, plugin_css_glob], ['css']
 
-  gulp.watch [coffee_glob, plugin_coffee_glob, plugin_js_glob], ['js:dev', 'test']
+  gulp.watch [js_glob, coffee_glob, plugin_coffee_glob, plugin_js_glob], ['js:dev', 'test']
 
   gulp.watch test_glob, ['test']
 

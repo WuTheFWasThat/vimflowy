@@ -222,11 +222,11 @@ class MarksPlugin
           className: 'mark theme-bg-secondary theme-trim-accent'
         }, markresults
       else
-        mark = @_getMark info.path.row
+        mark = @_getMark(info.path.row)
         if mark
-          lineContents.unshift virtualDom.h 'span', {
+          lineContents.unshift(virtualDom.h('span', {
             className: 'mark theme-bg-secondary theme-trim'
-          }, mark
+          }, mark))
       return lineContents
 
     @api.registerHook 'session', 'renderLineWordHook', (line, word_info) =>
@@ -329,7 +329,7 @@ class MarksPlugin
       if @document.isAttached other_row
         return "Mark '#{mark}' was already taken!"
       else
-        @session.do new @UnsetMark other_row, mark
+        @session.do(new @UnsetMark(other_row, mark))
 
     if oldmark
       @session.do new @UnsetMark row, oldmark

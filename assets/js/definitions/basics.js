@@ -191,10 +191,9 @@ keyDefinitions.registerMotion(CMD_GO, {
 keyDefinitions.registerMotion([CMD_GO, CMD_GO], {
   description: 'Go to the beginning of visible document',
   multirow: true
-}, () =>
-  (cursor, options) => cursor.visibleHome(options)
-
-);
+}, function() {
+  return (cursor, options) => cursor.visibleHome(options);
+});
 
 let CMD_PARENT = keyDefinitions.registerCommand({
   name: 'PARENT',
@@ -207,10 +206,9 @@ let CMD_PARENT = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion([CMD_GO, CMD_PARENT], {
   description: 'Go to the parent of current line',
   multirow: true
-}, () =>
-  (cursor, options) => cursor.parent(options)
-
-);
+}, function() {
+  return (cursor, options) => cursor.parent(options);
+});
 
 let CMD_CLONE = keyDefinitions.registerCommand({
   name: 'CLONE',
@@ -222,8 +220,8 @@ let CMD_CLONE = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion([CMD_GO, CMD_CLONE], {
   description: 'Go to next copy of this clone',
   multirow: true
-}, () =>
-  (cursor /*, options */) => {
+}, function() {
+  return (cursor /*, options */) => {
     if (this.session.mode !== MODES.NORMAL) {
       // doesn't work for visual_line mode due to zoomInto
       return;
@@ -233,9 +231,8 @@ keyDefinitions.registerMotion([CMD_GO, CMD_CLONE], {
     if (!this.session.isVisible(newPath)) {
       return this.session.zoomInto(newPath);
     }
-  }
-
-);
+  };
+});
 
 let CMD_LINK = keyDefinitions.registerCommand({
   name: 'LINK',
@@ -247,15 +244,14 @@ let CMD_LINK = keyDefinitions.registerCommand({
 // TODO: this isn't actually a motion, but that's okay for now...
 keyDefinitions.registerMotion([CMD_GO, CMD_LINK], {
   description: 'Visit to the link indicated by the cursor, in a new tab',
-},  () =>
-  cursor => {
+}, function() {
+  return cursor => {
     let word = this.session.document.getWord(cursor.row, cursor.col);
     if (utils.isLink(word)) {
       return window.open(word);
     }
-  }
-
-);
+  };
+});
 
 //###################
 // ACTIONS

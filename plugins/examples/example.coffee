@@ -1,4 +1,4 @@
-Plugins = require '../../assets/js/plugins.coffee'
+Plugins = require '../../assets/js/plugins'
 
 Plugins.register {
   name: "Hello World coffee example"
