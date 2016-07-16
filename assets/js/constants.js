@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 export let text_properties = ['bold', 'italic', 'underline', 'strikethrough'];
 
 export let root_row = 0;
@@ -9,7 +10,7 @@ export let default_data = [
     { text: 'Workflowy features', children: [
       { text: 'Nested bullets', children: [
         { text: 'Collapsed bullets.  z to toggle collapsedness', collapsed: true, children: [
-          'You found me! :'
+          'You found me! :)'
         ] },
         { text: 'Use enter to zoom in to a bullet', collapsed: true, children: [
           'And shift+enter to go all the way back out',

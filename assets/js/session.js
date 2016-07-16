@@ -1,17 +1,17 @@
 /* globals $, document, window */
 import _ from 'lodash';
 
-import mutations from './mutations';
-import constants from './constants';
-import utils from './utils';
-import errors from './errors';
+import * as mutations from './mutations';
+import * as constants from './constants';
+import * as utils from './utils';
+import * as errors from './errors';
 import Cursor from './cursor';
 import Register from './register';
-import Logger from './logger';
+import * as Logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 
-import Modes from './modes';
+import * as Modes from './modes';
 const MODES = Modes.modes;
 
 /*

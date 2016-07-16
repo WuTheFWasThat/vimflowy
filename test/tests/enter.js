@@ -1,6 +1,6 @@
 /* globals describe, it */
 import TestCase from '../testcase';
-import Register from '../../assets/js/register.coffee';
+import Register from '../../assets/js/register';
 
 describe('enter', function() {
   it('works in basic case', function() {

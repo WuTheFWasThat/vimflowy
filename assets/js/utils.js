@@ -2,7 +2,7 @@
 import _ from 'lodash';
 import tv4 from 'tv4';
 
-import errors from './errors';
+import * as errors from './errors';
 
 // TODO: is quite silly to consider undefined as whitespace
 export function isWhitespace(char) {

@@ -1,8 +1,8 @@
 import _ from 'lodash';
-import utils from './utils';
-import errors from './errors';
-import constants from './constants';
-// import Logger from './logger';
+import * as utils from './utils';
+import * as errors from './errors';
+import * as constants from './constants';
+// import * as Logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 
@@ -408,7 +408,10 @@ class Document extends EventEmitter {
   // returns an array representing the ancestry of a row,
   // up until the ancestor specified by the `stop` parameter
   // i.e. [stop, stop's child, ... , row's parent , row]
-  getAncestry(row, stop = this.root) {
+  getAncestry(row, stop) {
+    if (stop === undefined) {
+      stop = this.root;
+    }
     let ancestors = [];
     while (!row.is(stop)) {
       errors.assert((!row.isRoot()), `Failed to get ancestry for ${row} going up until ${stop}`);

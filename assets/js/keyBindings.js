@@ -1,11 +1,11 @@
 // imports
 import _ from 'lodash';
 
-// import utils from './utils';
-import Modes from './modes';
-import errors from './errors';
-import Logger from './logger';
-// import EventEmitter from './eventEmitter';
+// import * as utils from './utils';
+import * as Modes from './modes';
+import * as errors from './errors';
+import * as Logger from './logger';
+import EventEmitter from './eventEmitter';
 
 /*
 Terminology:
@@ -44,7 +44,7 @@ It also internally maintains
 const MODES = Modes.modes;
 let MODE_TYPES = Modes.types;
 
-class KeyBindings {
+class KeyBindings extends EventEmitter {
   // takes key definitions and keyMappings, and combines them to key bindings
   getBindings(definitions, keyMap) {
     let bindings = {};
@@ -83,8 +83,9 @@ class KeyBindings {
   }
 
   constructor(definitions, hotkey_settings) {
-    this.definitions = definitions;
     super();
+
+    this.definitions = definitions;
     // a mapping from commands to keys
     this.keyMaps = null;
     // a recursive mapping from keys to commands

@@ -9,18 +9,18 @@ initialize the main page
 - initialize objects (session, settings, etc.) with relevant divs
 */
 
-import constants from './constants';
-import errors from './errors';
-import utils from './utils';
-import Logger from './logger';
+import * as constants from './constants';
+import * as errors from './errors';
+import * as utils from './utils';
+import * as Logger from './logger';
 
-import Modes from './modes';
+import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';
 import KeyHandler from './keyHandler';
-import DataStore from './datastore';
+import * as DataStore from './datastore';
 import Document from './document';
 import Settings from './settings';
-import Plugins from './plugins';
+import { PluginsManager } from './plugins';
 import Session from './session';
 import Render from './render';
 
@@ -105,7 +105,7 @@ let create_session = function(doc, to_load) {
   // plugins
   //###################
 
-  let pluginManager = new Plugins.PluginsManager(session, $('#plugins'));
+  let pluginManager = new PluginsManager(session, $('#plugins'));
   let enabledPlugins = (settings.getSetting('enabledPlugins')) || ['Marks'];
   for (let i = 0; i < enabledPlugins.length; i++) {
     let plugin_name = enabledPlugins[i];

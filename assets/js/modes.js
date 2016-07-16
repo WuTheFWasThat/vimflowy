@@ -1,9 +1,9 @@
 /* globals $ */
 
-import utils from './utils';
-import constants from './constants';
+import * as utils from './utils';
+import * as constants from './constants';
 // import { Document } from './document';
-// import DataStore from './datastore';
+// import * as DataStore from './datastore';
 
 let NORMAL_MODE_TYPE = 'Normal-like modes';
 let INSERT_MODE_TYPE = 'Insert-like modes';

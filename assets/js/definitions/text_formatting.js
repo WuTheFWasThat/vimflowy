@@ -1,4 +1,4 @@
-import Modes from '../modes';
+import * as Modes from '../modes';
 import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;

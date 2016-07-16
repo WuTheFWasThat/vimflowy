@@ -1,7 +1,7 @@
 import Session from './session';
 import Document from './document';
-import DataStore from './datastore';
-import Modes from './modes';
+import * as DataStore from './datastore';
+import * as Modes from './modes';
 
 /*
 Represents the menu shown in menu mode.

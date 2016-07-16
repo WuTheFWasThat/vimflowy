@@ -6,7 +6,7 @@ import _ from 'lodash';
 import fs from 'fs';
 import path from 'path';
 
-import DataStore from '../assets/js/datastore';
+import * as DataStore from '../assets/js/datastore';
 import Document from '../assets/js/document';
 import Session from '../assets/js/session';
 let iterable = fs.readdirSync(path.resolve(__dirname, '../assets/js/definitions'));
@@ -19,8 +19,8 @@ for (let i = 0; i < iterable.length; i++) {
 import KeyDefinitions from '../assets/js/keyDefinitions';
 import KeyBindings from '../assets/js/keyBindings';
 import KeyHandler from '../assets/js/keyHandler';
-import Logger from '../assets/js/logger';
-import Plugins from '../assets/js/plugins';
+import * as Logger from '../assets/js/logger';
+import { PluginsManager } from '../assets/js/plugins';
 
 Logger.logger.setStream(Logger.STREAM.QUEUE);
 afterEach('empty the queue', () => Logger.logger.empty());
@@ -46,7 +46,7 @@ class TestCase {
     this.keyhandler = new KeyHandler(this.session, keyBindings);
     this.register = this.session.register;
 
-    this.pluginManager = new Plugins.PluginsManager(this.session);
+    this.pluginManager = new PluginsManager(this.session);
     if (options.plugins != null) {
       for (let j = 0; j < options.plugins.length; j++) {
         let pluginName = options.plugins[j];

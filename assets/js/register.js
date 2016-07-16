@@ -4,22 +4,13 @@ either nothing, a set of characters, a set of row ids, or a set of serialized ro
 Implements pasting for each of the types
 */
 
-let REGISTER_TYPES = {
+
+const TYPES = {
   NONE: 0,
   CHARS: 1,
   SERIALIZED_ROWS: 2,
   CLONED_ROWS: 3
 };
-
-// Register is a union type. @saved holds one of several kinds of values
-// They can be referenced as @chars, @rows etc.
-for (let type in REGISTER_TYPES) {
-  Object.defineProperty(this.prototype, type.toLowerCase(), {
-    get() { return this.saved; },
-    set(save) { return this.saved = save; }
-  }
-  );
-}
 
 class Register {
 
@@ -30,22 +21,22 @@ class Register {
   }
 
   saveNone() {
-    this.type = REGISTER_TYPES.NONE;
+    this.type = TYPES.NONE;
     return this.saved = null;
   }
 
   saveChars(save) {
-    this.type = REGISTER_TYPES.CHARS;
+    this.type = TYPES.CHARS;
     return this.saved = save;
   }
 
   saveSerializedRows(save) {
-    this.type = REGISTER_TYPES.SERIALIZED_ROWS;
+    this.type = TYPES.SERIALIZED_ROWS;
     return this.saved = save;
   }
 
   saveClonedRows(save) {
-    this.type = REGISTER_TYPES.CLONED_ROWS;
+    this.type = TYPES.CLONED_ROWS;
     return this.saved = save;
   }
 
@@ -63,21 +54,22 @@ class Register {
   //##########
 
   paste(options = {}) {
-    if (this.type === REGISTER_TYPES.CHARS) {
+    if (this.type === TYPES.CHARS) {
       return this.pasteChars(options);
-    } else if (this.type === REGISTER_TYPES.SERIALIZED_ROWS) {
+    } else if (this.type === TYPES.SERIALIZED_ROWS) {
       return this.pasteSerializedRows(options);
-    } else if (this.type === REGISTER_TYPES.CLONED_ROWS) {
+    } else if (this.type === TYPES.CLONED_ROWS) {
       return this.pasteClonedRows(options);
     }
   }
 
   pasteChars(options = {}) {
+    let chars = this.saved;
     if (options.before) {
-      return this.session.addCharsAtCursor(this.chars);
+      return this.session.addCharsAtCursor(chars);
     } else {
-      this.session.addCharsAfterCursor(this.chars);
-      return this.session.cursor.setCol(this.session.cursor.col + this.chars.length);
+      this.session.addCharsAfterCursor(chars);
+      return this.session.cursor.setCol(this.session.cursor.col + chars.length);
     }
   }
 
@@ -86,14 +78,16 @@ class Register {
     let { parent } = path;
     let index = this.session.document.indexOf(path);
 
+    let serialized_rows = this.saved;
+
     if (options.before) {
-      return this.session.addBlocks(parent, index, this.serialized_rows, {setCursor: 'first'});
+      return this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
     } else {
       let children = this.session.document.getChildren(path);
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
-        return this.session.addBlocks(path, 0, this.serialized_rows, {setCursor: 'first'});
+        return this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
       } else {
-        return this.session.addBlocks(parent, (index + 1), this.serialized_rows, {setCursor: 'first'});
+        return this.session.addBlocks(parent, (index + 1), serialized_rows, {setCursor: 'first'});
       }
     }
   }
@@ -103,18 +97,22 @@ class Register {
     let { parent } = path;
     let index = this.session.document.indexOf(path);
 
+    let cloned_rows = this.saved;
+
     if (options.before) {
-      return this.session.attachBlocks(parent, this.cloned_rows, index, {setCursor: 'first'});
+      return this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});
     } else {
       let children = this.session.document.getChildren(path);
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
-        return this.session.attachBlocks(path, this.cloned_rows, 0, {setCursor: 'first'});
+        return this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
       } else {
-        return this.session.attachBlocks(parent, this.cloned_rows, (index + 1), {setCursor: 'first'});
+        return this.session.attachBlocks(parent, cloned_rows, (index + 1), {setCursor: 'first'});
       }
     }
   }
 }
+
+Register.TYPES = TYPES;
 
 // exports
 export default Register;

@@ -1,5 +1,5 @@
-import constants from './constants';
-import errors from './errors';
+import * as constants from './constants';
+import * as errors from './errors';
 
 // represents a tree-traversal starting from the root going down
 // should be immutable
@@ -78,17 +78,19 @@ class Path {
     if (other.isRoot()) { return false; }
     return this.parent.is(other.parent);
   }
-}
 
-Path.getRoot = () => new Path(null, constants.root_row);
-
-Path.loadFromAncestry = function(ancestry) {
-  if (ancestry.length === 0) {
-    return Path.getRoot();
+  static getRoot() {
+    return new Path(null, constants.root_row);
   }
-  let row = ancestry.pop();
-  let parent = Path.loadFromAncestry(ancestry);
-  return parent.child(row);
-};
+
+  static loadFromAncestry(ancestry) {
+    if (ancestry.length === 0) {
+      return Path.getRoot();
+    }
+    let row = ancestry.pop();
+    let parent = Path.loadFromAncestry(ancestry);
+    return parent.child(row);
+  }
+}
 
 export default Path;

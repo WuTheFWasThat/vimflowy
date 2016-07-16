@@ -2,10 +2,10 @@
 
 import _ from 'lodash';
 
-import utils from './utils';
-import Modes from './modes';
-import Logger from './logger';
-import errors from './errors';
+import * as utils from './utils';
+import * as Modes from './modes';
+import * as Logger from './logger';
+import * as errors from './errors';
 import EventEmitter from './eventEmitter';
 
 let PLUGIN_SCHEMA = {

@@ -1,6 +1,6 @@
 /* globals document, window, navigator, alert, $ */
 import _ from 'lodash';
-import Logger from './logger.coffee';
+import * as Logger from './logger.coffee';
 import EventEmitter from './eventEmitter.js';
 
 /*

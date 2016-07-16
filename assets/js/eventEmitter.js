@@ -24,7 +24,7 @@ class EventEmitter {
   }
 
   on() {
-    return this.prototype.addListener.apply(this, arguments);
+    return this.addListener.apply(this, arguments);
   }
 
   once(event, listener) {
@@ -48,7 +48,7 @@ class EventEmitter {
   }
 
   off() {
-    return this.prototype.removeListener.apply(this, arguments);
+    return this.removeListener.apply(this, arguments);
   }
 
   // ordered set of hooks for mutating

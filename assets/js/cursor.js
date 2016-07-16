@@ -1,10 +1,6 @@
-import utils from './utils';
-import constants from './constants';
+import * as utils from './utils';
+import * as constants from './constants';
 import EventEmitter from './eventEmitter';
-
-Function.prototype.property = function(prop, desc) {
-  return Object.defineProperty(this.prototype, prop, desc);
-};
 
 let wordRegex = /^[a-z0-9_]+$/i;
 
@@ -26,10 +22,9 @@ class Cursor extends EventEmitter {
     this.moveCol = moveCol != null ? moveCol : col;
   }
 
-  // virtual getter for row
-  // TODO
-  // @property 'row',
-  //   'get': () -> @path.row
+  get row() {
+    return this.path.row;
+  }
 
   clone() {
     // paths are immutable so this is okay

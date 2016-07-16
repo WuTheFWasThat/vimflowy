@@ -2,8 +2,8 @@
 
 import _ from 'lodash';
 
-import errors from './errors';
-import Logger from './logger';
+import * as errors from './errors';
+import * as Logger from './logger';
 
 /*
 DataStore abstracts the data layer, so that it can be swapped out.

@@ -15,12 +15,12 @@ the KeyStream class is a helper class which deals with queuing and checkpointing
 */
 
 import EventEmitter from './eventEmitter';
-import errors from './errors';
+import * as errors from './errors';
 // import Menu from './menu';
-import Modes from './modes';
-// import constants from './constants';
+import * as Modes from './modes';
+// import * as constants from './constants';
 
-import Logger from './logger';
+import * as Logger from './logger';
 
 // const MODES = Modes.modes;
 

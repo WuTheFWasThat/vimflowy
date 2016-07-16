@@ -3,11 +3,11 @@
 // virtualDom = require 'virtual-dom'
 import _ from 'lodash';
 
-import constants from './constants.coffee';
-import utils from './utils.coffee';
-import Logger from './logger.coffee';
-import Plugins from './plugins.coffee';
-import Modes from './modes.coffee';
+import * as constants from './constants';
+import * as utils from './utils';
+import * as Logger from './logger';
+import * as Plugins from './plugins';
+import * as Modes from './modes';
 const MODES = Modes.modes;
 let { NORMAL_MODE_TYPE } = Modes;
 let { INSERT_MODE_TYPE } = Modes;

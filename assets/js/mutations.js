@@ -23,7 +23,7 @@ the mutation may also optionally implement
 */
 
 import _ from 'lodash';
-import errors from './errors';
+import * as errors from './errors';
 
 // validate inserting id as a child of parent_id
 let validateRowInsertion = function(session, parent_id, id, options={}) {
@@ -418,10 +418,9 @@ class ToggleBlock extends Mutation {
       this
     ];
   }
-}
-
   // TODO: if a cursor is within the toggle block and their
   // viewRoot isn't, do a moveCursor?
+}
 
 export { Mutation };
 

@@ -1,16 +1,16 @@
 _ = require 'lodash'
 
-Plugins = require '../../assets/js/plugins.coffee'
-Menu = require '../../assets/js/menu.coffee'
-Modes = require '../../assets/js/modes.coffee'
-DataStore = require '../../assets/js/datastore.coffee'
-Document = require '../../assets/js/document.coffee'
-Session = require '../../assets/js/session.coffee'
-Render = require '../../assets/js/render.coffee'
-mutations = require '../../assets/js/mutations.coffee'
-errors = require '../../assets/js/errors.coffee'
+Plugins = require '../../assets/js/plugins'
+Menu = require '../../assets/js/menu'
+Modes = require '../../assets/js/modes'
+DataStore = require '../../assets/js/datastore'
+Document = require '../../assets/js/document'
+Session = require '../../assets/js/session'
+Render = require '../../assets/js/render'
+mutations = require '../../assets/js/mutations'
+errors = require '../../assets/js/errors'
 
-basic_defs = require '../../assets/js/definitions/basics.coffee'
+basic_defs = require '../../assets/js/definitions/basics'
 
 # NOTE: mark mode is still in the core code
 # TODO: separate that out too?

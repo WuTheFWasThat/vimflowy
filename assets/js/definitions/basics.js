@@ -1,7 +1,7 @@
 /* globals window */
 
-import Modes from '../modes';
-import utils from '../utils';
+import * as Modes from '../modes';
+import * as utils from '../utils';
 import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;

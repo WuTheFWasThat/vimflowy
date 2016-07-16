@@ -1,8 +1,8 @@
 import _ from 'lodash';
 
-import utils from './utils';
-import errors from './errors';
-import Modes from './modes';
+import * as utils from './utils';
+import * as errors from './errors';
+import * as Modes from './modes';
 
 class Command {
   constructor(metadata) {
