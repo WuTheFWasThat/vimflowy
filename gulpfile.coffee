@@ -84,13 +84,13 @@ htmlTask = (isDev) ->
         x.relative.replace /\.sass$/, '.css'
 
       stream = gulp.src 'assets/html/index.jade'
-        .pipe handle jade({
+        .pipe(handle(jade({
           locals: {
             plugin_css_path: plugin_css_dst_path
             plugin_css_files: plugin_css_filenames
             use_cdn: not isDev
           }
-        })
+        })))
         .pipe gulp.dest "#{out_folder}/"
       new Promise (resolve, reject) ->
         stream.on 'finish', resolve
@@ -126,18 +126,18 @@ gulp.task 'vendor', ->
     .pipe gulp.dest "#{out_folder}/"
 
 gulp.task 'assets:dev', ['clean'], () ->
-  gulp.start 'js:dev', 'css', 'html:dev', 'vendor', 'images',
+  gulp.start 'js:dev', 'css', 'html:dev', 'vendor', 'images'
 
 gulp.task 'assets:prod', ['clean'], () ->
-  gulp.start 'js:prod', 'css', 'html:prod', 'vendor', 'images',
+  gulp.start 'js:prod', 'css', 'html:prod', 'vendor', 'images'
 
 gulp.task 'test', () ->
   gulp.src test_glob, {read: false}
-    .pipe mocha {
+    .pipe(mocha({
       reporter: 'dot',
       bail: true,
       compilers: 'js:babel-core/register'
-    }
+    }))
 
 # Rerun tasks when files changes
 gulp.task 'watch', ->

@@ -1,19 +1,18 @@
+/* globals virtualDom, $ */
 // Time-tracking keeps track of the amount of time spent in each subtree.
 // Clones are double-counted. This is a known bug and will not be fixed.
 //
+import _ from 'lodash';
+
 import Plugins from '../../assets/js/plugins';
 import Modes from '../../assets/js/modes';
 
-Plugins.register({
-  name: "Time Tracking",
-  author: "Zachary Vance",
-  description: "Keeps track of how much time has been spent in each row (including its descendants)",
-  version: 3
-}, (function(api) {
-  let time_tracker;
-  return time_tracker = new TimeTrackingPlugin(api);
-}), (api => api.deregisterAll())
-);
+function pad(val, length, padChar = '0') {
+  val += '';
+  let numPads = length - val.length;
+  if (numPads === 0) { return val; }
+  return new Array(numPads + 1).join(padChar) + val;
+}
 
 class TimeTrackingPlugin {
   constructor(api) {
@@ -23,7 +22,7 @@ class TimeTrackingPlugin {
 
   enableAPI() {
     this.logger = this.api.logger;
-    this.logger.info("Loading time tracking");
+    this.logger.info('Loading time tracking');
     this.api.cursor.on('rowChange', (this.onRowChange.bind(this)));
     this.currentRow = null;
     this.onRowChange(null, this.api.cursor.path); // Initial setup
@@ -34,10 +33,10 @@ class TimeTrackingPlugin {
       let isCurRow = renderData.path.row === (this.currentRow && this.currentRow.row);
 
       if (isCurRow || time > 1000) {
-        let timeStr = " ";
+        let timeStr = ' ';
         timeStr += (this.printTime(time));
         if (isCurRow) {
-          timeStr += " + ";
+          timeStr += ' + ';
         }
         elements.push(virtualDom.h('span', { className: 'time' }, timeStr));
 
@@ -175,7 +174,7 @@ class TimeTrackingPlugin {
   }
 
   isLogging() {
-    return this.api.getData("isLogging", true);
+    return this.api.getData('isLogging', true);
   }
 
   toggleLogging() {
@@ -213,7 +212,7 @@ class TimeTrackingPlugin {
   }
 
   modifyTimeForId(id, delta) {
-    this.transformRowData(id, "rowTotalTime", current => (current || 0) + delta
+    this.transformRowData(id, 'rowTotalTime', current => (current || 0) + delta
     );
     return this._rebuildTreeTime(id, true);
   }
@@ -222,10 +221,13 @@ class TimeTrackingPlugin {
     let children = this.api.session.document._getChildren(id);
     let detached_children = this.api.session.document.store.getDetachedChildren(id);
 
-    let childTotalTimes = _.map(children.concat(detached_children), child_id => this.getRowData(child_id, "treeTotalTime", 0));
-    let rowTime = this.getRowData(id, "rowTotalTime", 0);
+    let childTotalTimes = _.map(
+      children.concat(detached_children),
+      child_id => this.getRowData(child_id, 'treeTotalTime', 0)
+    );
+    let rowTime = this.getRowData(id, 'rowTotalTime', 0);
     let totalTime = childTotalTimes.reduce(((a,b) => a+b), rowTime);
-    return this.setRowData(id, "treeTotalTime", totalTime);
+    return this.setRowData(id, 'treeTotalTime', totalTime);
   }
 
   _rebuildTreeTime(id, inclusive = false) {
@@ -238,19 +240,13 @@ class TimeTrackingPlugin {
   }
 
   rowTime(row) {
-    return this.getRowData(row.row, "treeTotalTime", 0);
-  }
-
-  pad(val, length, padChar = '0') {
-    val += '';
-    let numPads = length - val.length;
-    if (numPads > 0) { return new Array(numPads + 1).join(padChar) + val; } else { return val; }
+    return this.getRowData(row.row, 'treeTotalTime', 0);
   }
 
   printTime(ms) {
-    let sign = "";
+    let sign = '';
     if (ms < 0) {
-      sign = "-";
+      sign = '-';
       ms = - ms;
     }
     let seconds = Math.floor(((ms /     1000) % 60));
@@ -265,4 +261,14 @@ class TimeTrackingPlugin {
     }
   }
 }
+
+Plugins.register({
+  name: 'Time Tracking',
+  author: 'Zachary Vance',
+  description: 'Keeps track of how much time has been spent in each row (including its descendants)',
+  version: 3
+}, (function(api) {
+  return new TimeTrackingPlugin(api);
+}), (api => api.deregisterAll())
+);
 

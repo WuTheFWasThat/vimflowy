@@ -1,9 +1,12 @@
+/* globals virtualDom */
+
+import _ from 'lodash';
 import Plugins from '../../assets/js/plugins';
 
 Plugins.register({
-  name: "Easy motion",
-  author: "Jeff Wu",
-  description: "Lets you easily jump between rows.  Based on https://github.com/easymotion/vim-easymotion"
+  name: 'Easy motion',
+  author: 'Jeff Wu',
+  description: 'Lets you easily jump between rows.  Based on https://github.com/easymotion/vim-easymotion'
 }, (function(api) {
   let EASY_MOTION_MAPPINGS = null;
 
@@ -23,7 +26,7 @@ Plugins.register({
     if (key === null) {
       this.keyStream.wait();
 
-      let paths = (this.session.getVisiblePaths()).filter( 
+      let paths = (this.session.getVisiblePaths()).filter(
         path => !(path.is(this.session.cursor.path)));
 
       let keys = [
@@ -41,11 +44,12 @@ Plugins.register({
         'B', 'N', 'M',
       ];
 
+      let start;
       if (keys.length > paths.length) {
-        var start = (keys.length - paths.length) / 2;
+        start = (keys.length - paths.length) / 2;
         keys = keys.slice(start, start + paths.length);
       } else {
-        var start = (paths.length - keys.length) / 2;
+        start = (paths.length - keys.length) / 2;
         paths = paths.slice(start, start + paths.length);
       }
 
@@ -64,7 +68,7 @@ Plugins.register({
 
       return null;
     } else {
-      return function(cursor, options) {
+      return function(cursor /*, options */) {
         if (key in EASY_MOTION_MAPPINGS.key_to_path) {
           let path = EASY_MOTION_MAPPINGS.key_to_path[key];
           cursor.set(path, 0);
@@ -72,8 +76,7 @@ Plugins.register({
         return EASY_MOTION_MAPPINGS = null;
       };
     }
-  }
-  );
+  });
 
   return api.registerHook('session', 'renderBullet', function(bullet, info) {
     let ancestry_str = JSON.stringify(info.path.getAncestry());
@@ -82,7 +85,6 @@ Plugins.register({
       bullet = virtualDom.h('span', {className: 'bullet theme-text-accent easy-motion'}, [char]);
     }
     return bullet;
-  }
-  );
+  });
 }), (api => api.deregisterAll())
 );
