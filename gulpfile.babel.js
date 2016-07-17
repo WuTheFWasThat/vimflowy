@@ -49,7 +49,8 @@ let jsTask = (isDev) => {
       entries: 'assets/js/index',
       transform: [
         babelify.configure({
-          presets: ['es2015']
+          presets: ['es2015', 'stage-3'],
+          plugins: ['transform-runtime'],
         }),
         'require-globify'
       ],

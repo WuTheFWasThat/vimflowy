@@ -25,7 +25,11 @@
   },
   "devDependencies": {
     "babel-core": "latest",
+    "babel-eslint": "latest",
     "babel-preset-es2015": "latest",
+    "babel-preset-stage-3": "latest",
+    "babel-runtime": "latest",
+    "babel-plugin-transform-runtime": "latest",
     "babelify": "latest",
     "blanket": "latest",
     "browserify": "latest",
