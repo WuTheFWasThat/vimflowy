@@ -73,6 +73,7 @@ class Path {
 
   // Represents the exact same row
   is(other) {
+    if (other === undefined) { return false; }
     if (this.row !== other.row) { return false; }
     if (this.isRoot()) { return other.isRoot(); }
     if (other.isRoot()) { return false; }

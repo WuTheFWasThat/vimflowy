@@ -431,9 +431,9 @@ class Document extends EventEmitter {
     let ancestors1 = this.getAncestry(row1);
     let ancestors2 = this.getAncestry(row2);
     let commonAncestry = _.takeWhile(
-      (_.zip(ancestors1, ancestors2)),
+      _.zip(ancestors1, ancestors2),
       pair =>
-        (pair[0] !== null) && (pair[1] !== null) && pair[0].is(pair[1])
+        (pair[0] !== undefined) && (pair[1] !== undefined) && pair[0].is(pair[1])
     );
     let common = (_.last(commonAncestry))[0];
     let firstDifference = commonAncestry.length;
@@ -527,8 +527,8 @@ class Document extends EventEmitter {
 
     for (let i = 0; i < constants.text_properties.length; i++) {
       let property = constants.text_properties[i];
-      if (_.some((line.map((obj => obj[property]))))) {
-        struct[property] = line.map(function(obj) { (obj[property] ? '.' : ' '); }).join('');
+      if (_.some(line.map((obj => obj[property])))) {
+        struct[property] = line.map((obj) => obj[property] ? '.' : ' ').join('');
       }
     }
     if (this.collapsed(row)) {

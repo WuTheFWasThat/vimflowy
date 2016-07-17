@@ -1,8 +1,8 @@
 # Time-tracking keeps track of the amount of time spent in each subtree.
 # Clones are double-counted. This is a known bug and will not be fixed.
 #
-Plugins = require '../../assets/js/plugins.coffee'
-Modes = require '../../assets/js/modes.coffee'
+Plugins = require '../../assets/js/plugins'
+Modes = require '../../assets/js/modes'
 
 Plugins.register {
   name: "Time Tracking"
