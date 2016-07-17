@@ -60,7 +60,7 @@ Plugins.register {
       return (cursor, options) ->
         if key of EASY_MOTION_MAPPINGS.key_to_path
           path = EASY_MOTION_MAPPINGS.key_to_path[key]
-          cursor.set path, 0
+          cursor.set(path, 0)
         EASY_MOTION_MAPPINGS = null
 
   api.registerHook 'session', 'renderBullet', (bullet, info) ->

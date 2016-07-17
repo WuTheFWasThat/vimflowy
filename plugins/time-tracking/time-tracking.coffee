@@ -29,7 +29,7 @@ class TimeTrackingPlugin
     @api.registerHook 'session', 'renderInfoElements', (elements, renderData) =>
       time = @rowTime renderData.path
 
-      isCurRow = renderData.path.row == @currentRow?.row
+      isCurRow = renderData.path.row == (@currentRow && @currentRow.row)
 
       if isCurRow or time > 1000
         timeStr = " "
@@ -136,20 +136,21 @@ class TimeTrackingPlugin
 
   toggleLogging: () ->
     isLogging = do @isLogging
-    @logger.info "Turning logging #{if isLogging then "off" else "on"}"
     if isLogging
+      @logger.info 'Turning logging off'
       @onRowChange @api.cursor.row, null # Final close
-      @api.setData "isLogging", false
+      @api.setData 'isLogging', false
     else
-      @api.setData "isLogging", true
-      @onRowChange null, @api.cursor.row # Initial setup
+      @logger.info('Turning logging on')
+      @api.setData('isLogging', true)
+      @onRowChange(null, @api.cursor.row) # Initial setup
 
   onRowChange: (from, to) ->
-    @logger.debug "Switching from row #{from?.row} to row #{to?.row}"
+    @logger.debug "Switching from row #{from && from.row} to row #{to && to.row}"
     if not do @isLogging
       return
     time = new Date()
-    if @currentRow and @currentRow.row != to?.row
+    if @currentRow and @currentRow.row != (to && to.row)
       @modifyTimeForId from.row, (time - @currentRow.time)
       @currentRow = null
     if to?
@@ -161,7 +162,7 @@ class TimeTrackingPlugin
 
   modifyTimeForId: (id, delta) ->
     @transformRowData id, "rowTotalTime", (current) ->
-      (current ? 0) + delta
+      (current or 0) + delta
     @_rebuildTreeTime id, true
 
   _rebuildTotalTime: (id) ->
@@ -176,6 +177,7 @@ class TimeTrackingPlugin
   _rebuildTreeTime: (id, inclusive = false) ->
     for ancestor_id in @api.session.document.allAncestors id, { inclusive: inclusive }
       @_rebuildTotalTime ancestor_id
+    return null
 
   rowTime: (row) ->
     @getRowData row.row, "treeTotalTime", 0
