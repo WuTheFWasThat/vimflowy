@@ -1,5 +1,5 @@
 /* globals virtualDom */
-import Plugins from '../../assets/js/plugins';
+import * as Plugins from '../../assets/js/plugins';
 
 Plugins.register({
   name: 'ID Debug Mode',

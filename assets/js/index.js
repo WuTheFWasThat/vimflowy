@@ -22,7 +22,7 @@ import Document from './document';
 import Settings from './settings';
 import { PluginsManager } from './plugins';
 import Session from './session';
-import Render from './render';
+import * as Render from './render';
 
 import keyDefinitions from './keyDefinitions';
 // load all definitions

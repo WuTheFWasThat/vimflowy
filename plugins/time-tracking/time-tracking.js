@@ -4,8 +4,8 @@
 //
 import _ from 'lodash';
 
-import Plugins from '../../assets/js/plugins';
-import Modes from '../../assets/js/modes';
+import * as Plugins from '../../assets/js/plugins';
+import * as Modes from '../../assets/js/modes';
 
 function pad(val, length, padChar = '0') {
   val += '';

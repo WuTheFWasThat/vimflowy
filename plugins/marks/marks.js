@@ -7,7 +7,7 @@ import * as Modes from '../../assets/js/modes';
 import * as DataStore from '../../assets/js/datastore';
 import Document from '../../assets/js/document';
 import Session from '../../assets/js/session';
-import Render from '../../assets/js/render';
+import * as Render from '../../assets/js/render';
 import * as mutations from '../../assets/js/mutations';
 import * as errors from '../../assets/js/errors';
 
