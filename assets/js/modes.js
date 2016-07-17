@@ -183,8 +183,7 @@ registerMode({
       return [key, context];
     }
   ]
-}
-);
+});
 registerMode({
   name: 'INSERT',
   hotkey_type: INSERT_MODE_TYPE,
@@ -204,8 +203,7 @@ registerMode({
       return [key, context];
     }
   ]
-}
-);
+});
 
 registerMode({
   name: 'VISUAL',
@@ -216,8 +214,7 @@ registerMode({
   exit(session) {
     return session.anchor = null;
   }
-}
-);
+});
 
 registerMode({
   name: 'VISUAL_LINE',
@@ -241,8 +238,7 @@ registerMode({
     context.num_rows = (index2 - index1) + 1;
     return context;
   }
-}
-);
+});
 
 registerMode({
   name: 'SETTINGS',
@@ -262,8 +258,7 @@ registerMode({
     }
   }
   // TODO: exit settings on any bad key press?
-}
-);
+});
 
 registerMode({
   name: 'SEARCH',
@@ -298,8 +293,7 @@ registerMode({
       return [key, context];
     }
   ]
-}
-);
+});
 
 let getMode = mode => MODES[mode];
 

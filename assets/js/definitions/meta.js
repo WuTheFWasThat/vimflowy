@@ -8,8 +8,7 @@ let CMD_UNDO = keyDefinitions.registerCommand({
   default_hotkeys: {
     normal_like: ['u']
   }
-}
-);
+});
 keyDefinitions.registerAction([MODES.NORMAL], CMD_UNDO, {
   description: 'Undo',
 }, function() {
@@ -17,16 +16,14 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_UNDO, {
     this.session.undo();
   }
   return this.keyStream.forget();
-}
-);
+});
 
 let CMD_REDO = keyDefinitions.registerCommand({
   name: 'REDO',
   default_hotkeys: {
     normal_like: ['ctrl+r']
   }
-}
-);
+});
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REDO, {
   description: 'Redo',
 }, function() {
@@ -34,16 +31,14 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_REDO, {
     this.session.redo();
   }
   return this.keyStream.forget();
-}
-);
+});
 
 let CMD_REPLAY = keyDefinitions.registerCommand({
   name: 'REPLAY',
   default_hotkeys: {
     normal_like: ['.']
   }
-}
-);
+});
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLAY, {
   description: 'Replay last command',
 }, function() {
@@ -52,16 +47,14 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLAY, {
     this.session.save();
   }
   return this.keyStream.forget();
-}
-);
+});
 
 let CMD_RECORD_MACRO = keyDefinitions.registerCommand({
   name: 'RECORD_MACRO',
   default_hotkeys: {
     normal_like: ['q']
   }
-}
-);
+});
 keyDefinitions.registerAction([MODES.NORMAL], CMD_RECORD_MACRO, {
   description: 'Begin/stop recording a macro',
 }, function() {
@@ -75,16 +68,14 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_RECORD_MACRO, {
     this.keyHandler.finishRecording();
   }
   return this.keyStream.forget();
-}
-);
+});
 
 let CMD_PLAY_MACRO = keyDefinitions.registerCommand({
   name: 'PLAY_MACRO',
   default_hotkeys: {
     normal_like: ['@']
   }
-}
-);
+});
 keyDefinitions.registerAction([MODES.NORMAL], CMD_PLAY_MACRO, {
   description: 'Play a macro',
 }, function() {

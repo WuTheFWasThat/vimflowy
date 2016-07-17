@@ -79,16 +79,14 @@ class MarksPlugin {
         struct.mark = mark;
       }
       return struct;
-    }
-    );
+    });
 
     this.api.registerListener('document', 'loadRow', (path, serialized) => {
       if (serialized.mark) {
         let err = this.updateMark(path.row, serialized.mark);
         if (err) { return this.session.showMessage(err, {text_class: 'error'}); }
       }
-    }
-    );
+    });
 
     // Commands #
 
@@ -124,16 +122,14 @@ class MarksPlugin {
           return [key, context];
         }
       ]
-    }
-    );
+    });
 
     let CMD_MARK = this.api.registerCommand({
       name: 'MARK',
       default_hotkeys: {
         normal_like: ['m']
       }
-    }
-    );
+    });
     this.api.registerAction([MODES.NORMAL], CMD_MARK, {
       description: 'Mark a line',
     }, function() {
@@ -185,16 +181,14 @@ class MarksPlugin {
       let err = (that.updateMark(this.session.cursor.row, ''));
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       return this.keyStream.save();
-    }
-    );
+    });
 
     let CMD_MARK_SEARCH = this.api.registerCommand({
       name: 'MARK_SEARCH',
       default_hotkeys: {
         normal_like: ['\'', '`']
       }
-    }
-    );
+    });
     this.api.registerAction([MODES.NORMAL], CMD_MARK_SEARCH, {
       description: 'Go to (search for) a mark',
     }, function() {
@@ -202,10 +196,10 @@ class MarksPlugin {
       return this.session.menu = new Menu(this.session.menuDiv, chars => {
         // find marks that start with the prefix
         let findMarks = (document, prefix, nresults = 10) => {
-          let iterable;
+          let marks = that.listMarks();
           let results = []; // list of paths
-          for (let mark in ((iterable = that.listMarks()))) {
-            let row = iterable[mark];
+          for (let mark in marks) {
+            let row = marks[mark];
             if ((mark.indexOf(prefix)) === 0) {
               let path = this.session.document.canonicalPath(row);
               results.push({ path, mark });
@@ -235,10 +229,8 @@ class MarksPlugin {
             };
           }
         );
-      }
-      );
-    }
-    );
+      });
+    });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_MOTION, {
       description: 'Move the cursor',
@@ -271,7 +263,7 @@ class MarksPlugin {
     });
 
     this.api.registerHook('session', 'renderCursorsDict', (cursors, info) => {
-      let marking = (this.marksessionpath != null) && this.marksessionpath.is(info.path);
+      let marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
       if (marking) {
         return {}; // do not render any cursors on the regular line
       }
@@ -279,7 +271,7 @@ class MarksPlugin {
     });
 
     this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
-      let marking = (this.marksessionpath != null) && this.marksessionpath.is(info.path);
+      let marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
       if (marking) {
         let markresults = Render.virtualRenderLine(this.marksession, this.marksession.cursor.path, {no_clicks: true});
         lineContents.unshift(virtualDom.h('span', {

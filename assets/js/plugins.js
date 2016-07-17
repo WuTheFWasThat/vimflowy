@@ -163,9 +163,7 @@ class PluginApi {
   }
 
   deregisterAll() {
-    let iterable = this.registrations.reverse();
-    for (let i = 0; i < iterable.length; i++) {
-      let registration = iterable[i];
+    this.registrations.reverse().forEach((registration) => {
       if (registration.type === 'mode') {
         this.deregisterMode.apply(this, registration.args);
       } else if (registration.type === 'command') {
@@ -181,7 +179,7 @@ class PluginApi {
       } else {
         throw new errors.GenericError `Unknown registration type ${registration.type}`;
       }
-    }
+    });
     return this.registrations = [];
   }
 
@@ -213,7 +211,7 @@ class PluginsManager extends EventEmitter {
 
   setStatus(name, status) {
     Logger.logger.info(`Plugin ${name} status: ${status}`);
-    if (!(PLUGINS[name] != null)) {
+    if (!PLUGINS[name]) {
       throw new Error(`Plugin ${name} was not registered`);
     }
     let plugin_info = this.plugin_infos[name] || {};
@@ -295,7 +293,7 @@ let registerPlugin = function(plugin_metadata, enable, disable) {
   utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, 'plugin');
   utils.fill_tv4_defaults(plugin_metadata, PLUGIN_SCHEMA);
 
-  errors.assert((enable != null), `Plugin ${plugin_metadata.name} needs to register with a callback`);
+  errors.assert(enable, `Plugin ${plugin_metadata.name} needs to register with a callback`);
 
   // Create the plugin object
   // Plugin stores all data about a plugin, including metadata

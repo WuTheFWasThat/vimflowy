@@ -92,7 +92,7 @@ class Session extends EventEmitter {
   //################
 
   showMessage(message, options = {}) {
-    if (options.time == null) { options.time = 5000; }
+    if (options.time === undefined) { options.time = 5000; }
     Logger.logger.info(`Showing message: ${message}`);
     if (this.messageDiv) {
       clearTimeout(this.messageDivTimeout);
@@ -102,11 +102,10 @@ class Session extends EventEmitter {
         this.messageDiv.addClass(`text-${options.text_class}`);
       }
 
-      return this.messageDivTimeout = setTimeout((() => {
+      return this.messageDivTimeout = setTimeout(() => {
         this.messageDiv.text('');
         return this.messageDiv.removeClass();
-      }
-      ), options.time);
+      }, options.time);
     }
   }
 
@@ -145,10 +144,10 @@ class Session extends EventEmitter {
   parsePlaintext(content) {
     // Step 1: parse into (int, string) pairs of indentation amounts.
     let lines = [];
-    let iterable = content.split('\n');
     let whitespace = /^\s*/;
-    for (let i = 0; i < iterable.length; i++) {
-      let line = iterable[i];
+    let content_lines = content.split('\n');
+    for (let i = 0; i < content_lines.length; i++) {
+      let line = content_lines[i];
       if (line.match(/^\s*".*"$/)) { // Flag workflowy annotations as special cases
         lines.push({
           indent: (line.match(whitespace))[0].length,
@@ -182,7 +181,7 @@ class Session extends EventEmitter {
           {text: lines[lineNumber].line};
         let result = parseAllChildren(lines[lineNumber].indent, lineNumber + 1);
         ({ lineNumber } = result);
-        if (result.children != null) {
+        if (result.children !== null) {
           child.children = result.children;
           child.collapsed = result.children.length > 0;
         }
@@ -239,17 +238,15 @@ class Session extends EventEmitter {
         }
         let lines = [];
         lines.push(`- ${node.text}`);
-        let iterable = node.children != null ? node.children : [];
-        for (let i = 0; i < iterable.length; i++) {
-          let child = iterable[i];
+        let children = node.children || [];
+        for (let i = 0; i < children.length; i++) {
+          let child = children[i];
           if (child.clone) {
             continue;
           }
-          let iterable1 = exportLines(child);
-          for (let j = 0; j < iterable1.length; j++) {
-            let line = iterable1[j];
+          exportLines(child).forEach((line) => {
             lines.push(`${indent}${line}`);
-          }
+          });
         }
         return lines;
       };
@@ -290,8 +287,7 @@ class Session extends EventEmitter {
     this.historyIndex += 1;
     return this.history.push({
       index: this.mutations.length
-    }
-    );
+    });
   }
 
   restoreViewState(state) {
@@ -408,7 +404,7 @@ class Session extends EventEmitter {
     }
     while (true) {
       let nextsib = this.document.getSiblingAfter(path);
-      if (nextsib != null) {
+      if (nextsib !== null) {
         return nextsib;
       }
       path = path.parent;
@@ -435,7 +431,7 @@ class Session extends EventEmitter {
       return null;
     }
     let prevsib = this.document.getSiblingBefore(path);
-    if (prevsib != null) {
+    if (prevsib !== null) {
       return this.lastVisible(prevsib);
     }
     let { parent } = path;
@@ -517,8 +513,7 @@ class Session extends EventEmitter {
     this.jumpHistory.push({
       viewRoot: this.viewRoot,
       cursor_before: this.cursor.clone()
-    }
-    );
+    });
     return this.jumpIndex += 1;
   }
 
@@ -598,8 +593,7 @@ class Session extends EventEmitter {
     }
     return this.addToJumpHistory(() => {
       return this._changeViewRoot(path);
-    }
-    );
+    });
   }
 
   // try to zoom into newroot, updating the cursor
@@ -797,10 +791,7 @@ class Session extends EventEmitter {
   toggleRowsProperty(property, rows) {
     let all_were_true = _.every(rows.map((row => {
       return _.every((this.document.getLine(row)).map((obj => obj[property])));
-    }
-    )
-    )
-    );
+    })));
     let new_value = !all_were_true;
     for (let i = 0; i < rows.length; i++) {
       let row = rows[i];
@@ -1041,7 +1032,7 @@ class Session extends EventEmitter {
       return;
     }
     let newparent = this.document.getSiblingBefore(row);
-    if (newparent == null) {
+    if (newparent === null) {
       this.showMessage('Cannot indent without higher sibling', {text_class: 'error'});
       return null; // cannot indent
     }
@@ -1094,14 +1085,12 @@ class Session extends EventEmitter {
     let sib = this.document.getSiblingBefore(path);
 
     let newparent = this.indentBlocks(path);
-    if (newparent == null) {
+    if (newparent === null) {
       return;
     }
-    let iterable = (this.document.getChildren(path)).slice();
-    for (let i = 0; i < iterable.length; i++) {
-      let child = iterable[i];
+    this.document.getChildren(path).forEach((child) => {
       this.moveBlock(child, sib, -1);
-    }
+    });
   }
 
   unindent(path = this.cursor.path) {
@@ -1122,21 +1111,19 @@ class Session extends EventEmitter {
     let p_i = this.document.indexOf(path);
 
     let newparent = this.unindentBlocks(path);
-    if (newparent == null) {
+    if (newparent === null) {
       return;
     }
 
     let p_children = this.document.getChildren(parent);
-    let iterable = p_children.slice(p_i);
-    for (let i = 0; i < iterable.length; i++) {
-      let child = iterable[i];
+    p_children.slice(p_i).forEach((child) => {
       this.moveBlock(child, path, -1);
-    }
+    });
   }
 
   swapDown(path = this.cursor.path) {
     let next = this.nextVisible(this.lastVisible(path));
-    if (next == null) {
+    if (next === null) {
       return;
     }
 
@@ -1153,7 +1140,7 @@ class Session extends EventEmitter {
 
   swapUp(path = this.cursor.path) {
     let prev = this.prevVisible(path);
-    if (prev == null) {
+    if (prev === null) {
       return;
     }
 
@@ -1194,8 +1181,8 @@ class Session extends EventEmitter {
       let index = this.document.indexOf(this.anchor.path);
       return [parent, index, index];
     } else {
-      let index1 = this.document.indexOf((ancestors1[0] != null ? ancestors1[0] : this.cursor.path));
-      let index2 = this.document.indexOf((ancestors2[0] != null ? ancestors2[0] : this.anchor.path));
+      let index1 = this.document.indexOf(ancestors1[0] || this.cursor.path);
+      let index2 = this.document.indexOf(ancestors2[0] || this.anchor.path);
       if (index2 < index1) {
         [index1, index2] = [index2, index1];
       }
@@ -1258,24 +1245,22 @@ class Session extends EventEmitter {
 
   getVisiblePaths() {
     let paths = [];
-    let iterable = $.makeArray($('.bullet'));
-    for (let i = 0; i < iterable.length; i++) {
-      let bullet = iterable[i];
+    $.makeArray($('.bullet')).forEach((bullet) => {
       if (!(utils.isScrolledIntoView($(bullet), this.mainDiv))) {
-        continue;
+        return;
       }
       if ($(bullet).hasClass('fa-clone')) {
-        continue;
+        return;
       }
       // NOTE: can't use $(x).data
       // http://stackoverflow.com/questions/25876274/jquery-data-not-working
       let ancestry = $(bullet).attr('data-ancestry');
       if (!ancestry) { // as far as i know, this only happens because of menu mode
-        continue;
+        return;
       }
       let path = Path.loadFromAncestry(JSON.parse(ancestry));
       paths.push(path);
-    }
+    });
     return paths;
   }
 }

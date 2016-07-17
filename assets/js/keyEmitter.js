@@ -153,8 +153,7 @@ class KeyEmitter extends EventEmitter {
       let results = this.emit('keydown', key);
       // return false to stop propagation, if any handler handled the key
       return !_.some(results);
-    }
-    );
+    });
   }
 }
 

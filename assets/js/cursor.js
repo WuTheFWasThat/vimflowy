@@ -13,13 +13,13 @@ class Cursor extends EventEmitter {
     super();
     this.session = session;
     this.document = session.document;
-    this.path = path != null ? path : (this.document.getChildren(this.session.viewRoot))[0];
-    this.col = col != null ? col : 0;
+    this.path = path !== null ? path : (this.document.getChildren(this.session.viewRoot))[0];
+    this.col = col !== null ? col : 0;
     this.properties = {};
     this._getPropertiesFromContext();
 
     // -1 means last col
-    this.moveCol = moveCol != null ? moveCol : col;
+    this.moveCol = moveCol !== null ? moveCol : col;
   }
 
   get row() {
@@ -362,14 +362,14 @@ class Cursor extends EventEmitter {
 
   up(cursorOptions = {}) {
     let path = this.session.prevVisible(this.path);
-    if (path != null) {
+    if (path !== null) {
       return this.setPath(path, cursorOptions);
     }
   }
 
   down(cursorOptions = {}) {
     let path = this.session.nextVisible(this.path);
-    if (path != null) {
+    if (path !== null) {
       return this.setPath(path, cursorOptions);
     }
   }
@@ -387,14 +387,14 @@ class Cursor extends EventEmitter {
 
   prevSibling(cursorOptions = {}) {
     let prevsib = this.document.getSiblingBefore(this.path);
-    if (prevsib != null) {
+    if (prevsib !== null) {
       return this.setPath(prevsib, cursorOptions);
     }
   }
 
   nextSibling(cursorOptions = {}) {
     let nextsib = this.document.getSiblingAfter(this.path);
-    if (nextsib != null) {
+    if (nextsib !== null) {
       return this.setPath(nextsib, cursorOptions);
     }
   }

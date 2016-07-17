@@ -30,8 +30,8 @@ let getCursorClass = function(cursorBetween) {
 };
 
 let renderLine = function(lineData, options = {}) {
-  if (options.cursors == null) { options.cursors = {}; }
-  if (options.highlights == null) { options.highlights = {}; }
+  if (options.cursors === undefined) { options.cursors = {}; }
+  if (options.highlights === undefined) { options.highlights = {}; }
 
   let results = [];
 
@@ -92,11 +92,11 @@ let renderLine = function(lineData, options = {}) {
   let word_start = 0;
 
 
-  let iterable = lineData.concat([{char: ' '}]);
-  for (var i = 0; i < iterable.length; i++) { // to make end condition easier
+  let newLineData = lineData.concat([{char: ' '}]);
+  for (var i = 0; i < newLineData.length; i++) { // to make end condition easier
     // TODO  or (utils.isPunctuation obj.char)
     // problem is URLs have dots in them...
-    let obj = iterable[i];
+    let obj = newLineData[i];
     if (utils.isWhitespace(obj.char)) {
       if (i !== word_start) {
         let word_info = {
@@ -104,7 +104,7 @@ let renderLine = function(lineData, options = {}) {
           start: word_start,
           end: i - 1
         };
-        if (options.wordHook != null) {
+        if (options.wordHook) {
           line = options.wordHook(line, word_info);
         }
         if (utils.isLink(word_info.word)) {
@@ -121,7 +121,7 @@ let renderLine = function(lineData, options = {}) {
     }
   }
 
-  if (options.lineHook != null) {
+  if (options.lineHook) {
     line = options.lineHook(line);
   }
 
@@ -223,7 +223,7 @@ let renderSession = function(session, options = {}) {
     return;
   }
 
-  if (!(session.vnode != null)) {
+  if (!session.vnode) {
     // TODO: stop attaching things to the session
     session.vtree = virtualRenderSession(session);
     session.vnode = virtualDom.create(session.vtree);
@@ -300,11 +300,9 @@ var virtualRenderSession = function(session, options = {}) {
   if (session.lineSelect) {
     // mirrors logic of finishes_visual_line in keyHandler.js
     let [parent, index1, index2] = session.getVisualLineSelections();
-    let iterable1 = session.document.getChildRange(parent, index1, index2);
-    for (let k = 0; k < iterable1.length; k++) {
-      let child = iterable1[k];
+    session.document.getChildRange(parent, index1, index2).forEach((child) => {
       options.highlight_blocks[child.row] = true;
-    }
+    });
   }
 
   let contentsNode;
@@ -334,9 +332,7 @@ var virtualRenderTree = function(session, parent, options = {}) {
 
   let childrenNodes = [];
 
-  let iterable = session.document.getChildren(parent);
-  for (let i = 0; i < iterable.length; i++) {
-    let path = iterable[i];
+  session.document.getChildren(parent).forEach((path) => {
     let pathElements = [];
 
     if (session.document.isClone(path.row)) {
@@ -401,7 +397,7 @@ var virtualRenderTree = function(session, parent, options = {}) {
     }, pathElements);
 
     childrenNodes.push(childNode);
-  }
+  });
   return childrenNodes;
 };
 
@@ -414,7 +410,7 @@ var virtualRenderLine = function(session, path, options = {}) {
     cursors[session.cursor.col] = true;
 
     if (session.anchor && !session.lineSelect) {
-      if ((session.anchor.path != null) && path.is(session.anchor.path)) {
+      if (session.anchor.path && path.is(session.anchor.path)) {
         for (let j = session.cursor.col; j <= session.anchor.col; j++) {
           highlights[j] = true;
         }
@@ -520,7 +516,7 @@ var renderMenu = function(menu) {
 
       let renderOptions = result.renderOptions || {};
       let contents = renderLine(result.contents, renderOptions);
-      if (result.renderHook != null) {
+      if (result.renderHook) {
         contents = result.renderHook(contents);
       }
       let resultLineDiv = virtualDom.create(virtualDom.h('span', {}, contents));
@@ -531,11 +527,11 @@ var renderMenu = function(menu) {
 };
 
 let renderPlugins = function(pluginManager) {
-  if (pluginManager.div == null) {
+  if (pluginManager.div === undefined) {
     return;
   }
   let vtree = virtualRenderPlugins(pluginManager);
-  if (!(pluginManager.vnode != null)) {
+  if (!pluginManager.vnode) {
     pluginManager.vtree = vtree;
     pluginManager.vnode = virtualDom.create(pluginManager.vtree);
     pluginManager.div.empty();
@@ -672,9 +668,9 @@ var buildTable = function(key_bindings, keyMap, actions, helpMenu) {
 
   let tables = $('<div>');
 
-  let iterable = [['Actions', actions], ['Motions', key_bindings.definitions.motions]];
-  for (let i = 0; i < iterable.length; i++) {
-    let [label, definitions] = iterable[i];
+  let sections = [['Actions', actions], ['Motions', key_bindings.definitions.motions]];
+  for (let i = 0; i < sections.length; i++) {
+    let [label, definitions] = sections[i];
     tables.append($('<h5>').text(label).css('margin', '5px 10px'));
     let table = $('<table>').addClass('keybindings-table theme-bg-secondary');
     buildTableContents(definitions, table);

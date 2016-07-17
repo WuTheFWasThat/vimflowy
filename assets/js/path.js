@@ -21,10 +21,12 @@ class Path {
     return ancestors;
   }
 
-  // length: () ->
-  //   if @parent == null
-  //     return 0
-  //   return 1 + (do @parent.length)
+  // length() {
+  //   if this.parent === null {
+  //     return 0;
+  //   }
+  //   return 1 + this.parent.length();
+  // }
 
   child(row) {
     errors.assert((row !== this.row));

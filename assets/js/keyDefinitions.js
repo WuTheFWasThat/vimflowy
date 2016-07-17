@@ -129,15 +129,14 @@ class KeyDefinitions {
   // currently used only for testing
   clone() {
     let other = new KeyDefinitions();
-    let iterable = [
+    let keys = [
       'motion_command_counts', 'action_command_counts_by_mode',
       'defaultHotkeys',
       'commands', 'motions', 'actions'
     ];
-    for (let i = 0; i < iterable.length; i++) {
-      let k = iterable[i];
-      other[k] = _.cloneDeep(this[k]);
-    }
+    keys.forEach((key) => {
+      other[key] = _.cloneDeep(this[key]);
+    });
     return other;
   }
 
@@ -258,7 +257,7 @@ class KeyDefinitions {
     utils.fill_tv4_defaults(motion, MOTION_SCHEMA);
     motion.definition = definition;
 
-    if (!(commands.slice != null)) {
+    if (!commands.slice) {
       // commands isn't an array
       commands = [commands];
     }
@@ -291,7 +290,7 @@ class KeyDefinitions {
   }
 
   deregisterMotion(commands) {
-    if (!(commands.slice != null)) {
+    if (!commands.slice) {
       // commands isn't an array
       commands = [commands];
     }
@@ -328,7 +327,7 @@ class KeyDefinitions {
     action = _.cloneDeep(action);
     action.definition = definition;
 
-    if (!(commands.slice != null)) {
+    if (!commands.slice) {
       // commands isn't an array
       commands = [commands];
     }
@@ -368,7 +367,7 @@ class KeyDefinitions {
   }
 
   deregisterAction(modes, commands) {
-    if (!(commands.slice != null)) {
+    if (!commands.slice) {
       // commands isn't an array
       commands = [commands];
     }

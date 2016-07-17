@@ -54,8 +54,7 @@ let create_session = function(doc, to_load) {
     let theme = this.value;
     settings.setSetting('theme', theme);
     return changeStyle(theme);
-  }
-  );
+  });
 
   $keybindingsDiv.toggleClass('active', (settings.getSetting('showKeyBindings')));
 
@@ -97,8 +96,7 @@ let create_session = function(doc, to_load) {
     $keybindingsDiv.toggleClass('active');
     doc.store.setSetting('showKeyBindings', $keybindingsDiv.hasClass('active'));
     return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
-  }
-  );
+  });
 
   //###################
   // plugins
@@ -122,8 +120,7 @@ let create_session = function(doc, to_load) {
     // refresh hotkeys, if any new ones were added/removed
     Render.renderHotkeysTable(session.bindings);
     return Render.renderModeTable(session.bindings, session.mode, $keybindingsDiv);
-  }
-  );
+  });
 
   //###################
   // load data
@@ -156,8 +153,7 @@ let create_session = function(doc, to_load) {
       Render.renderSession(session);
     }
     return handled;
-  }
-  );
+  });
 
   session.on('importFinished', () => Render.renderSession(session)
   );
@@ -181,8 +177,7 @@ let create_session = function(doc, to_load) {
           return $pasteHack.focus();
         }
       }
-    }
-    );
+    });
 
     $(document).on('paste', function(e) {
       e.preventDefault();
@@ -200,8 +195,7 @@ let create_session = function(doc, to_load) {
       }
       Render.renderSession(session);
       return session.save();
-    }
-    );
+    });
 
     $('#settings-link').click(function() {
       if (session.mode === Modes.modes.SETTINGS) {
@@ -221,7 +215,7 @@ let create_session = function(doc, to_load) {
 
     let load_file = function(filesDiv, cb) {
       let file = filesDiv.files[0];
-      if (!(file != null)) {
+      if (!file) {
         return cb('No file selected for import!');
       }
       session.showMessage('Reading in file...');
@@ -260,8 +254,7 @@ let create_session = function(doc, to_load) {
         } else {
           return session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
         }
-      }
-      )
+      })
     );
 
     $('#hotkeys_export').click(function() {
@@ -286,8 +279,7 @@ let create_session = function(doc, to_load) {
         } else {
           return session.showMessage('Import failed due to parsing issue', {text_class: 'error'});
         }
-      }
-      )
+      })
     );
 
     let export_type = function(type) {
@@ -332,8 +324,7 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
 
       )
     ), 5000);
-  }
-  );
+  });
 
 } else if (typeof localStorage !== 'undefined' && localStorage !== null) {
   datastore = new DataStore.LocalStorageLazy(docname);

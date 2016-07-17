@@ -121,17 +121,13 @@ class KeyBindings extends EventEmitter {
       for (let i = 0; i < mode_type_obj.modes.length; i++) {
         let mode = mode_type_obj.modes[i];
         let modeKeyMap = {};
-        let iterable = this.definitions.commands_for_mode(mode);
-        for (let j = 0; j < iterable.length; j++) {
-          let command = iterable[j];
+        this.definitions.commands_for_mode(mode).forEach((command) => {
           modeKeyMap[command] = hotkeys[mode_type][command].slice();
-        }
+        });
 
-        let motions = this.definitions.get_motions((!Modes.getMode(mode).within_row));
-        for (let k = 0; k < motions.length; k++) {
-          var command = motions[k];
+        this.definitions.get_motions((!Modes.getMode(mode).within_row)).forEach((command) => {
           modeKeyMap[command] = hotkeys[mode_type][command].slice();
-        }
+        });
 
         keyMaps[mode] = modeKeyMap;
       }

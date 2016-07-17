@@ -8,43 +8,39 @@ let CMD_BOLD = keyDefinitions.registerCommand({
   default_hotkeys: {
     all: ['ctrl+B']
   }
-}
-);
+});
 let CMD_ITALIC = keyDefinitions.registerCommand({
   name: 'ITALIC',
   default_hotkeys: {
     all: ['ctrl+I']
   }
-}
-);
+});
 let CMD_UNDERLINE = keyDefinitions.registerCommand({
   name: 'UNDERLINE',
   default_hotkeys: {
     all: ['ctrl+U']
   }
-}
-);
+});
 let CMD_STRIKETHROUGH = keyDefinitions.registerCommand({
   name: 'STRIKETHROUGH',
   default_hotkeys: {
     all: ['ctrl+enter']
   }
-}
-);
+});
 
-let text_format_normal = property =>
-  function() {
+let text_format_normal = (property) => {
+  return function() {
     let ndeleted = this.session.toggleRowProperty(property);
     this.session.cursor.setCol(((this.session.cursor.col + ndeleted) - 1));
     return this.keyStream.save();
-  }
-;
+  };
+};
 
-let text_format_insert = property =>
-  function() {
+let text_format_insert = (property) => {
+  return function() {
     return this.session.cursor.toggleProperty(property);
-  }
-;
+  };
+};
 
 let text_format_visual_line = property =>
   function() {

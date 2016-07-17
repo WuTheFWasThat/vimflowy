@@ -19,7 +19,7 @@ class Settings {
     this.keybindingsDiv = options.keybindingsDiv;
 
     for (let setting in default_settings) {
-      if (!((this.getSetting(setting)) != null)) {
+      if (!((this.getSetting(setting)) !== null)) {
         this.setSetting(setting, default_settings[setting]);
       }
     }

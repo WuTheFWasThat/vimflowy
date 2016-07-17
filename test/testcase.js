@@ -8,13 +8,11 @@ import path from 'path';
 import * as DataStore from '../assets/js/datastore';
 import Document from '../assets/js/document';
 import Session from '../assets/js/session';
-let iterable = fs.readdirSync(path.resolve(__dirname, '../assets/js/definitions'));
-for (let i = 0; i < iterable.length; i++) {
-  let file = iterable[i];
+fs.readdirSync(path.resolve(__dirname, '../assets/js/definitions')).forEach((file) => {
   if (file.match(/.*\.js$/)) {
     require(path.join('../assets/js/definitions', file));
   }
-}
+});
 import KeyDefinitions from '../assets/js/keyDefinitions';
 import KeyBindings from '../assets/js/keyBindings';
 import KeyHandler from '../assets/js/keyHandler';
@@ -33,7 +31,7 @@ class TestCase {
     this.document = new Document(this.store);
 
     let keyBindings;
-    if (options.plugins != null) {
+    if (options.plugins) {
       // TODO: do this less hackily?
       keyBindings = new KeyBindings((KeyDefinitions.clone()));
     } else {
@@ -46,7 +44,7 @@ class TestCase {
     this.register = this.session.register;
 
     this.pluginManager = new PluginsManager(this.session);
-    if (options.plugins != null) {
+    if (options.plugins) {
       for (let j = 0; j < options.plugins.length; j++) {
         let pluginName = options.plugins[j];
         this.pluginManager.enable(pluginName);

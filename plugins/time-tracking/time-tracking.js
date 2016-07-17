@@ -46,68 +46,58 @@ class TimeTrackingPlugin {
         }
       }
       return elements;
-    }
-    );
+    });
 
     this.api.registerListener('document', 'afterMove', info => {
       this._rebuildTreeTime(info.id);
       return this._rebuildTreeTime(info.old_parent, true);
-    }
-    );
+    });
 
     this.api.registerListener('document', 'afterAttach', info => {
       this._rebuildTreeTime(info.id);
       if (info.old_detached_parent) {
         return this._rebuildTreeTime(info.old_detached_parent, true);
       }
-    }
-    );
+    });
 
     this.api.registerListener('document', 'afterDetach', info => {
       return this._rebuildTreeTime(info.id);
-    }
-    );
+    });
 
     this.api.registerListener('session', 'exit', () => {
       return this.onRowChange(this.currentRow, null);
-    }
-    );
+    });
 
     let CMD_TOGGLE = this.api.registerCommand({
       name: 'TOGGLE',
       default_hotkeys: {
         normal_like: ['Z']
       }
-    }
-    );
+    });
     let CMD_TOGGLE_LOGGING = this.api.registerCommand({
       name: 'TOGGLE_LOGGING',
       default_hotkeys: {
         normal_like: ['l']
       }
-    }
-    );
+    });
     let CMD_CLEAR_TIME = this.api.registerCommand({
       name: 'CLEAR_TIME',
       default_hotkeys: {
         normal_like: ['c']
       }
-    }
-    );
+    });
     let CMD_ADD_TIME = this.api.registerCommand({
       name: 'ADD_TIME',
       default_hotkeys: {
         normal_like: ['>', 'a']
       }
-    }
-    );
+    });
     let CMD_SUBTRACT_TIME = this.api.registerCommand({
       name: 'SUBTRACT_TIME',
       default_hotkeys: {
         normal_like: ['<', 's']
       }
-    }
-    );
+    });
     this.api.registerAction([Modes.modes.NORMAL], CMD_TOGGLE, {
       description: 'Toggle a setting',
     }, {});
@@ -115,39 +105,34 @@ class TimeTrackingPlugin {
       description: 'Toggle whether time is being logged',
     }, () => {
       return this.toggleLogging();
-    }
-    );
+    });
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_CLEAR_TIME], {
       description: 'Clear current row time',
     }, () => {
       return this.resetCurrentRow();
-    }
-    );
+    });
     let me = this;
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_ADD_TIME], {
       description: 'Add time to current row (in minutes)',
     }, function() {
       return me.changeTimeCurrentRow(this.repeat);
-    }
-    );
+    });
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_SUBTRACT_TIME], {
       description: 'Subtract time from current row (in minutes)',
     }, function() {
       return me.changeTimeCurrentRow(-this.repeat);
-    }
-    );
+    });
 
-    return setInterval((() => {
-      if (this.currentRow != null) {
+    return setInterval(() => {
+      if (this.currentRow !== null) {
         let curTime = new Date() - this.currentRow.time;
         return $('.curtime').text((this.printTime(curTime)));
       }
-    }
-    ), 1000);
+    }, 1000);
   }
 
   changeTimeCurrentRow(delta_minutes) {
-    if (this.currentRow != null) {
+    if (this.currentRow !== null) {
       let curTime = new Date() - this.currentRow.time;
       curTime += delta_minutes * 60 * 1000;
       if (curTime < 0) {
@@ -200,8 +185,8 @@ class TimeTrackingPlugin {
       this.modifyTimeForId(from.row, (time - this.currentRow.time));
       this.currentRow = null;
     }
-    if (to != null) {
-      return this.currentRow != null ? this.currentRow : (this.currentRow = { id: to.row, time });
+    if (to !== null) {
+      return this.currentRow !== null ? this.currentRow : (this.currentRow = { id: to.row, time });
     }
   }
 
@@ -212,8 +197,7 @@ class TimeTrackingPlugin {
   }
 
   modifyTimeForId(id, delta) {
-    this.transformRowData(id, 'rowTotalTime', current => (current || 0) + delta
-    );
+    this.transformRowData(id, 'rowTotalTime', current => (current || 0) + delta);
     return this._rebuildTreeTime(id, true);
   }
 
@@ -231,12 +215,9 @@ class TimeTrackingPlugin {
   }
 
   _rebuildTreeTime(id, inclusive = false) {
-    let iterable = this.api.session.document.allAncestors(id, { inclusive });
-    for (let i = 0; i < iterable.length; i++) {
-      let ancestor_id = iterable[i];
+    this.api.session.document.allAncestors(id, { inclusive }).forEach((ancestor_id) => {
       this._rebuildTotalTime(ancestor_id);
-    }
-    return null;
+    });
   }
 
   rowTime(row) {

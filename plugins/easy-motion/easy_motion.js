@@ -15,8 +15,7 @@ Plugins.register({
     default_hotkeys: {
       normal_like: ['space']
     }
-  }
-  );
+  });
 
   api.registerMotion(CMD_EASY_MOTION, {
     description: 'Jump to a visible row (based on EasyMotion)',
@@ -27,7 +26,8 @@ Plugins.register({
       this.keyStream.wait();
 
       let paths = (this.session.getVisiblePaths()).filter(
-        path => !(path.is(this.session.cursor.path)));
+        path => !path.is(this.session.cursor.path)
+      );
 
       let keys = [
         'Z', 'X', 'C', 'V',
@@ -57,13 +57,11 @@ Plugins.register({
         key_to_path: {},
         path_to_key: {}
       };
-      let iterable = _.zip(paths, keys);
-      for (let i = 0; i < iterable.length; i++) {
-        let path;
-        [path, key] = iterable[i];
+      _.zip(paths, keys).forEach((pair) => {
+        let [path, key] = pair;
         mappings.key_to_path[key] = path;
         mappings.path_to_key[JSON.stringify(path.getAncestry())] = key;
-      }
+      });
       EASY_MOTION_MAPPINGS = mappings;
 
       return null;

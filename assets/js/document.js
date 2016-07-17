@@ -189,8 +189,7 @@ class Document extends EventEmitter {
 
   indexOf(child) {
     let children = this.getSiblings(child);
-    return _.findIndex(children, sib => sib.row === child.row
-    );
+    return _.findIndex(children, sib => sib.row === child.row);
   }
 
   collapsed(row) {
@@ -228,13 +227,13 @@ class Document extends EventEmitter {
   // Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   // NOTE: this is not very efficient, in the worst case, but probably doesn't matter
   canonicalPath(row) { // Given an row, return a path with that row
-    errors.assert((row != null), 'Empty row passed to canonicalPath');
+    errors.assert(row !== undefined && row !== null, 'Empty row passed to canonicalPath');
     if (row === constants.root_row) {
       return this.root;
     }
-    let iterable = this._getParents(row);
-    for (let i = 0; i < iterable.length; i++) {
-      let parentRow = iterable[i];
+    let parents = this._getParents(row);
+    for (let i = 0; i < parents.length; i++) {
+      let parentRow = parents[i];
       let canonicalParent = this.canonicalPath(parentRow);
       if (canonicalParent !== null) {
         return this.findChild(canonicalParent, row);
@@ -255,14 +254,12 @@ class Document extends EventEmitter {
     }
     let visit = n => { // DFS
       visited[n] = true;
-      let iterable = this._getParents(n);
-      for (let i = 0; i < iterable.length; i++) {
-        let parent = iterable[i];
+      this._getParents(n).forEach((parent) => {
         if (!(parent in visited)) {
           ancestors.push(parent);
           visit(parent);
         }
-      }
+      });
       return null;
     };
     visit(row);
@@ -445,7 +442,7 @@ class Document extends EventEmitter {
     for (let i = 0; i < row_path.length; i++) {
       let row = row_path[i];
       path = this.findChild(path, row);
-      if (path == null) {
+      if (path === undefined) {
         return null;
       }
     }
@@ -481,8 +478,7 @@ class Document extends EventEmitter {
         return null;
       }
       return path.child(child_row);
-    })
-    );
+    }));
   }
 
   _newChild(parent, index = -1) {
@@ -502,11 +498,9 @@ class Document extends EventEmitter {
 
     let helper = path => {
       paths.push(path);
-      let iterable = this.getChildren(path);
-      for (let i = 0; i < iterable.length; i++) {
-        let child = iterable[i];
+      this.getChildren(path).forEach((child) => {
         helper(child);
-      }
+      });
       return null;
     };
     helper(this.root);
@@ -548,7 +542,7 @@ class Document extends EventEmitter {
 
     var struct = this.serializeRow(row);
     let children = this._getChildren(row).map(
-      (childrow) => { return this.serialize(childrow, options, serialized); }
+      (childrow) => this.serialize(childrow, options, serialized)
     );
     if (children.length) {
       struct.children = children;

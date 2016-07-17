@@ -13,7 +13,7 @@ Plugins.register({
         position: 'relative',
         'font-weight': 'bold'
       }
-    }, ' ' + (info.path.getAncestry()).join(', ')));
+    }, ' ' + info.path.getAncestry().join(', ')));
 
     return pathElements;
   })

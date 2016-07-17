@@ -19,7 +19,10 @@ class EventEmitter {
 
   addListener(event, listener) {
     this.emit('newListener', event, listener);
-    (this.listeners[event] != null ? this.listeners[event]: (this.listeners[event] =[])).push(listener);
+    if (!this.listeners[event]) {
+      this.listeners[event] = [];
+    }
+    this.listeners[event].push(listener);
     return this;
   }
 
@@ -38,7 +41,7 @@ class EventEmitter {
 
   removeListener(event, listener) {
     if (!this.listeners[event]) { return this; }
-    this.listeners[event] = this.listeners[event].filter((l) => l != listener);
+    this.listeners[event] = this.listeners[event].filter((l) => l !== listener);
     return this;
   }
 
@@ -55,21 +58,23 @@ class EventEmitter {
   // NOTE: a little weird for eventEmitter to be in charge of this
 
   addHook(event, transform) {
-    return (this.hooks[event] != null ? this.hooks[event]: (this.hooks[event] =[])).push(transform);
+    if (!this.hooks[event]) {
+      this.hooks[event] = [];
+    }
+    this.hooks[event].push(transform);
+    return this;
   }
 
   removeHook(event, transform) {
     if (!this.hooks[event]) { return this; }
-    this.hooks[event] = this.hooks[event].filter((t) => t != transform);
+    this.hooks[event] = this.hooks[event].filter((t) => t !== transform);
     return this;
   }
 
   applyHook(event, obj, info) {
-    let iterable = this.hooks[event] || [];
-    for (let i = 0; i < iterable.length; i++) {
-      let transform = iterable[i];
+    (this.hooks[event] || []).forEach((transform) => {
       obj = transform(obj, info);
-    }
+    });
     return obj;
   }
 }
