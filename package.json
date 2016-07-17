@@ -14,13 +14,11 @@
   },
   "config": {
     "blanket": {
-      "pattern": "//assets/js/.*\\.coffee$/",
-      "loader": "./node-loaders/coffee-script"
+      "pattern": "//assets/js/.*\\.js$/"
     }
   },
   "dependencies": {
     "async": "latest",
-    "coffee-script": "latest",
     "express": "latest",
     "lodash": "latest",
     "tv4": "latest"
@@ -31,11 +29,9 @@
     "babelify": "latest",
     "blanket": "latest",
     "browserify": "latest",
-    "coffeeify": "latest",
     "del": "latest",
     "gulp": "latest",
     "gulp-babel": "latest",
-    "gulp-coffee": "latest",
     "gulp-jade": "latest",
     "gulp-mocha": "latest",
     "gulp-rename": "latest",

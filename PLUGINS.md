@@ -5,10 +5,9 @@ When/if it gets merged, we'll try not to break it.
 
 # Plugin API
 
-To make a plugin, you can place `.js`, `.css`, `.coffee`, or `.sass` files
+To make a plugin, you can place `.js`, `.css`, or `.sass` files
 anywhere within the `plugins` folder in the vimflowy source directory.
-A "hello world" sample plugin is included, in both
-[coffeescript](plugins/examples/example.coffee) and [plain javascript](plugins/examples/example2.js).
+See the ["hello world" sample plugin](plugins/examples/example2.js) for an extremely minimal example.
 
 You will have to rebuild vimflowy if using a static distribution.
 See [here](CONTRIBUTING.md) for details on development setup.
@@ -23,7 +22,7 @@ A plugin registers using
 Plugins.register(metadata, enableCallback[, disableCallback])
 ```
 where
-- `metadata`:  For the detailed format, read the tv4 PLUGIN_SCHEMA in [plugins.coffee](assets/js/plugins.coffee)
+- `metadata`:  For the detailed format, read the tv4 PLUGIN_SCHEMA in [plugins.js](assets/js/plugins.js)
   - name (required): string
     This will be displayed to the user in options. It should not be changed!
   - version (required): positive integer
@@ -71,7 +70,7 @@ It is defined by associating a sequence of commands with a function (that mutate
 An **action** is a manipulation of the document/underlying data.
 It is defined by associating a sequence of commands with a function to perform the action, for a given set of modes.
 There is a special 'MOTION' command which lets an action use any motion as a subroutine.
-See the definitions of yank and delete, in [`assets/js/definitions/basics.coffee`](assets/js/definitions/basics.coffee), for an example.
+See the definitions of yank and delete, in [`assets/js/definitions/basics.js`](assets/js/definitions/basics.js), for an example.
 
 For other example usages, see the folder [`assets/js/definitions`](assets/js/definitions), and the easy-motion plugin.
 
@@ -94,7 +93,7 @@ You can also manually call each deregister, but this is not recomended
     api.deregisterAction(modes, commands)
 ```
 
-See [`keyDefinitions.coffee`](assets/js/keyDefinitions.coffee) for detailed schema for the metadata of each of these.
+See [`keyDefinitions.js`](assets/js/keyDefinitions.js) for detailed schema for the metadata of each of these.
 
 #### vimflowy internals
 

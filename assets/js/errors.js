@@ -17,7 +17,7 @@ export let UnexpectedValue = errorFactory(function(name, value) {
 export let GenericError = errorFactory(function(message) { this.message = message; });
 export let SchemaVersion = errorFactory(function(message) { this.message = message; });
 
-// is special because ignored by error handling in index.coffee
+// is special because ignored by error handling in index.js
 export let DataPoisoned = errorFactory(function(message) { this.message = message; });
 
 //#########

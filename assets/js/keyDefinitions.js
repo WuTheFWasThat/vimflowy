@@ -55,7 +55,7 @@ let COMMAND_SCHEMA = {
 // NOTE: this is a special command, which causes definition functions
 // to always takes an extra cursor argument.
 // TODO: this is a hack, and should be done more properly
-// For more info/context, see keyBindings.coffee and definitions of CHANGE/DELETE/YANK
+// For more info/context, see keyBindings.js and definitions of CHANGE/DELETE/YANK
 let motionCommandName = 'MOTION';
 
 // MOTIONS

@@ -1,7 +1,7 @@
 /* globals document, window, navigator, alert, $ */
 import _ from 'lodash';
-import * as Logger from './logger.coffee';
-import EventEmitter from './eventEmitter.js';
+import * as Logger from './logger';
+import EventEmitter from './eventEmitter';
 
 /*
 KeyEmitter is an EventEmitter that emits keys
@@ -9,7 +9,7 @@ A key corresponds to a keypress in the browser, including modifiers/special keys
 
 The core function is to take browser keypress events, and normalize the key to have a string representation.
 
-For more info, see its consumer, keyHandler.coffee, as well as keyBindings.coffee
+For more info, see its consumer, keyHandler.js, as well as keyBindings.js
 Note that one-character keys are treated specially, in that they are insertable in insert mode.
 */
 

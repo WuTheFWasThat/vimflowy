@@ -13,7 +13,7 @@ the document itself includes:
   - the parent/child relationships and collapsed-ness of lines
 also deals with loading the initial document from the datastore, and serializing the document to a string
 
-Currently, the separation between the Session and Document classes is not very good.  (see session.coffee)
+Currently, the separation between the Session and Document classes is not very good.  (see session.js)
 */
 class Document extends EventEmitter {
   constructor(store) {

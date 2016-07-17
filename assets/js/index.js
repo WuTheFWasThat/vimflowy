@@ -29,7 +29,6 @@ import keyDefinitions from './keyDefinitions';
 require('./definitions/*.js', {mode: 'expand'});
 // load all plugins
 require('../../plugins/**/*.js', {mode: 'expand'});
-require('../../plugins/**/*.coffee', {mode: 'expand'});
 import KeyBindings from './keyBindings';
 
 

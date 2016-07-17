@@ -10,7 +10,7 @@ import EventEmitter from './eventEmitter';
 /*
 Terminology:
       key       - a key corresponds to a keypress, including modifiers/special keys
-      command   - a command is a semantic event (see keyDefinitions.coffee)
+      command   - a command is a semantic event (see keyDefinitions.js)
       mode      - same as vim's notion of modes.
                   each mode determines the set of possible commands, and a new set of bindings
       mode type - there are two mode types: insert-like and normal-like.

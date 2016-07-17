@@ -1,7 +1,6 @@
 /* globals afterEach */
 
 import 'blanket';
-import 'coffee-script/register';
 import _ from 'lodash';
 import fs from 'fs';
 import path from 'path';
@@ -12,7 +11,7 @@ import Session from '../assets/js/session';
 let iterable = fs.readdirSync(path.resolve(__dirname, '../assets/js/definitions'));
 for (let i = 0; i < iterable.length; i++) {
   let file = iterable[i];
-  if ((file.match(/.*\.js$/)) || (file.match(/.*\.coffee$/))) {
+  if (file.match(/.*\.js$/)) {
     require(path.join('../assets/js/definitions', file));
   }
 }

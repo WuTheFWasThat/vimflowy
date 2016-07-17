@@ -19,7 +19,7 @@ a Session represents a session with a vimflowy document
 It holds a Cursor, a Document object, and a Settings object
 It exposes methods for manipulation of the document, and movement of the cursor
 
-Currently, the separation between the Session and Document classes is not very good.  (see document.coffee)
+Currently, the separation between the Session and Document classes is not very good.  (see document.js)
 Ideally, session shouldn't do much more than handle cursors and history
 */
 

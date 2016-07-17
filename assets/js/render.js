@@ -298,7 +298,7 @@ var virtualRenderSession = function(session, options = {}) {
 
   options.highlight_blocks = {};
   if (session.lineSelect) {
-    // mirrors logic of finishes_visual_line in keyHandler.coffee
+    // mirrors logic of finishes_visual_line in keyHandler.js
     let [parent, index1, index2] = session.getVisualLineSelections();
     let iterable1 = session.document.getChildRange(parent, index1, index2);
     for (let k = 0; k < iterable1.length; k++) {

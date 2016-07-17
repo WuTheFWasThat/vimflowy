@@ -1,5 +1,5 @@
 /*
-Takes in keys, and, based on the keybindings (see keyBindings.coffee), manipulates the session (see session.coffee)
+Takes in keys, and, based on the keybindings (see keyBindings.js), manipulates the session (see session.js)
 
 The KeyHandler class manages the state of what keys have been input, dealing with the logic for
 - handling multi-key sequences, i.e. a key that semantically needs another key (e.g. the GO command, `g` in vim)
