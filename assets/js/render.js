@@ -463,7 +463,6 @@ var virtualRenderLine = function(session, path, options = {}) {
   return results;
 };
 
-
 var renderMenu = function(menu) {
   if (!menu.div) {
     return;

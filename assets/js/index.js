@@ -40,7 +40,7 @@ let docname = window.location.pathname.split('/')[1];
 
 let changeStyle = theme => $('body').attr('id', theme);
 
-let create_session = function(doc, to_load) {
+let create_session = async function(doc, to_load) {
 
   //###################
   // Settings
@@ -48,21 +48,23 @@ let create_session = function(doc, to_load) {
 
   let settings = new Settings(doc.store, {mainDiv: $settingsDiv});
 
-  changeStyle((settings.getSetting('theme')));
-  $settingsDiv.find('.theme-selection').val((settings.getSetting('theme')));
+  let theme = await settings.getSetting('theme');
+  changeStyle(theme);
+  $settingsDiv.find('.theme-selection').val(theme);
   $settingsDiv.find('.theme-selection').on('input', function(/*e*/) {
     let theme = this.value;
     settings.setSetting('theme', theme);
     return changeStyle(theme);
   });
 
-  $keybindingsDiv.toggleClass('active', (settings.getSetting('showKeyBindings')));
+  let showingKeyBindings = await settings.getSetting('showKeyBindings');
+  $keybindingsDiv.toggleClass('active', showingKeyBindings);
 
   //###################
   // hotkeys and key bindings
   //###################
 
-  let hotkey_settings = settings.getSetting('hotkeys');
+  let hotkey_settings = await settings.getSetting('hotkeys');
   let key_bindings = new KeyBindings(keyDefinitions, hotkey_settings);
 
   //###################
@@ -103,15 +105,11 @@ let create_session = function(doc, to_load) {
   //###################
 
   let pluginManager = new PluginsManager(session, $('#plugins'));
-  let enabledPlugins = (settings.getSetting('enabledPlugins')) || ['Marks'];
-  for (let i = 0; i < enabledPlugins.length; i++) {
-    let plugin_name = enabledPlugins[i];
-    pluginManager.enable(plugin_name);
-  }
+  let enabledPlugins = (await settings.getSetting('enabledPlugins')) || ['Marks'];
+  enabledPlugins.forEach((plugin_name) => pluginManager.enable(plugin_name));
   Render.renderPlugins(pluginManager);
 
-  pluginManager.on('status', () => Render.renderPlugins(pluginManager)
-  );
+  pluginManager.on('status', () => Render.renderPlugins(pluginManager));
 
   pluginManager.on('enabledPluginsChange', function(enabled) {
     settings.setSetting('enabledPlugins', enabled);
@@ -155,8 +153,7 @@ let create_session = function(doc, to_load) {
     return handled;
   });
 
-  session.on('importFinished', () => Render.renderSession(session)
-  );
+  session.on('importFinished', () => Render.renderSession(session));
 
   // expose globals, for debugging
   window.Modes = Modes;
@@ -312,7 +309,7 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
   datastore = new DataStore.InMemory();
   doc = new Document(datastore);
   chrome.storage.sync.get('save', function(results) {
-    create_session(doc, (results.save || constants.default_data));
+    create_session(doc, results.save || constants.default_data);
 
     // save every 5 seconds
     return setInterval((() =>
@@ -321,7 +318,6 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
       }, () =>
         // TODO have whether saved visualized
         Logger.logger.info('Saved')
-
       )
     ), 5000);
   });

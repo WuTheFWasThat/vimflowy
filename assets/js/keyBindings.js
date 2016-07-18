@@ -67,7 +67,7 @@ class KeyBindings extends EventEmitter {
         if (err) {
           return [err, null];
         } else {
-          v.definition= sub_bindings;
+          v.definition = sub_bindings;
         }
       }
 

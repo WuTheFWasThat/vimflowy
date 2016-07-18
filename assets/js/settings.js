@@ -26,12 +26,12 @@ class Settings {
     return null;
   }
 
-  getSetting(setting) {
-    return this.datastore.getSetting(setting);
+  async getSetting(setting, defaultValue = null) {
+    return await this.datastore.getSetting(setting, defaultValue);
   }
 
-  setSetting(setting, value) {
-    return this.datastore.setSetting(setting, value);
+  async setSetting(setting, value) {
+    return await this.datastore.setSetting(setting, value);
   }
 }
 

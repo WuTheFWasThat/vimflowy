@@ -102,10 +102,10 @@ class DataStore {
   }
 
   // get global settings (data not specific to a document)
-  getSetting(setting) {
+  async getSetting(setting) {
     return this.get((this._settingKey_(setting)));
   }
-  setSetting(setting, value) {
+  async setSetting(setting, value) {
     return this.set((this._settingKey_(setting)), value);
   }
 
