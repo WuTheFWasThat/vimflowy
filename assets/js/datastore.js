@@ -34,7 +34,7 @@ class DataStore {
     this._IDKey_ = `${this.prefix}:lastID`;
   }
 
-  get(key, default_value) {
+  get(key, default_value = undefined) {
     console.log('GET key', key, 'default value', default_value);
     throw new errors.NotImplemented();
   }
@@ -102,8 +102,8 @@ class DataStore {
   }
 
   // get global settings (data not specific to a document)
-  async getSetting(setting) {
-    return this.get((this._settingKey_(setting)));
+  async getSetting(setting, default_value = undefined) {
+    return this.get(this._settingKey_(setting), default_value);
   }
   async setSetting(setting, value) {
     return this.set((this._settingKey_(setting)), value);
@@ -120,7 +120,7 @@ class DataStore {
   setPluginData(plugin, key, data) {
     return this.set((this._pluginDataKey_(plugin, key)), data);
   }
-  getPluginData(plugin, key, default_value=null) {
+  getPluginData(plugin, key, default_value = undefined) {
     return this.get((this._pluginDataKey_(plugin, key)), default_value);
   }
 
@@ -147,7 +147,7 @@ class InMemory extends DataStore {
     this.cache = {};
   }
 
-  get(key, default_value = null) {
+  get(key, default_value = undefined) {
     if (key in this.cache) {
       return _.cloneDeep(this.cache[key]);
     } else {
@@ -167,7 +167,7 @@ class LocalStorageLazy extends DataStore {
     this.lastSave = Date.now();
   }
 
-  get(key, default_value=null) {
+  get(key, default_value = undefined) {
     if (!(key in this.cache)) {
       this.cache[key] = this._getLocalStorage_(key, default_value);
     }
@@ -195,7 +195,7 @@ class LocalStorageLazy extends DataStore {
     return localStorage.setItem(key, JSON.stringify(value));
   }
 
-  _getLocalStorage_(key, default_value) {
+  _getLocalStorage_(key, default_value = undefined) {
     Logger.logger.debug('getting from local storage', key, default_value);
     let stored = localStorage.getItem(key);
     if (stored === null) {

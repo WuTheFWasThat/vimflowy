@@ -64,7 +64,7 @@ let create_session = async function(doc, to_load) {
   // hotkeys and key bindings
   //###################
 
-  let hotkey_settings = await settings.getSetting('hotkeys');
+  let hotkey_settings = await settings.getSetting('hotkeys', {});
   let key_bindings = new KeyBindings(keyDefinitions, hotkey_settings);
 
   //###################

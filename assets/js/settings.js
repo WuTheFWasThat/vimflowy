@@ -26,7 +26,7 @@ class Settings {
     return null;
   }
 
-  async getSetting(setting, defaultValue = null) {
+  async getSetting(setting, defaultValue = undefined) {
     return await this.datastore.getSetting(setting, defaultValue);
   }
 
