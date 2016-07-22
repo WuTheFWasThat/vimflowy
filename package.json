@@ -38,6 +38,7 @@
     "gulp-babel": "latest",
     "gulp-jade": "latest",
     "gulp-mocha": "latest",
+    "gulp-plumber": "latest",
     "gulp-rename": "latest",
     "gulp-sass": "latest",
     "gulp-sourcemaps": "latest",
@@ -49,6 +50,7 @@
     "require-globify": "latest",
     "stream-to-array": "latest",
     "vinyl-buffer": "latest",
-    "vinyl-source-stream": "latest"
+    "vinyl-source-stream": "latest",
+    "watchify": "latest"
   }
 }

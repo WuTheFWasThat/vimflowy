@@ -15,6 +15,7 @@ import streamify from 'gulp-streamify';
 import toArray from 'stream-to-array';
 import source from 'vinyl-source-stream';
 import buffer from 'vinyl-buffer';
+import plumber from 'gulp-plumber';
 
 import 'babel-core/register';
 
@@ -43,9 +44,8 @@ gulp.task('clean', cb => del([`${out_folder}`], cb));
 
 
 let jsTask = (isDev) => {
-  // TODO get watchify to work..
   return function() {
-    let stream = browserify({
+    const browserifyOpts = {
       entries: 'assets/js/index',
       transform: [
         babelify.configure({
@@ -54,20 +54,43 @@ let jsTask = (isDev) => {
         }),
         'require-globify'
       ],
+      plugin: [],
       debug: isDev,
       insertGlobals: true,
       detectGlobals: false
-    }).bundle()
-      .pipe(source('index.js'))
-      .pipe(rename('bundle.js'));
+    };
 
-    if (!isDev) {
-      stream = stream.pipe(streamify(uglify()));
+    if (isDev) {
+      browserifyOpts.plugin.push(require('watchify'));
     }
 
-    return stream
-      .pipe(gulp.dest(`${out_folder}/js`))
-      .pipe(buffer());
+    let b = browserify(browserifyOpts);
+
+    function bundle() {
+      let stream = b.bundle();
+      if (isDev) {
+        stream = stream.pipe(plumber());
+      }
+
+      stream = stream
+        .pipe(source('index.js'))
+        .pipe(rename('bundle.js'));
+
+      if (!isDev) {
+        stream = stream.pipe(streamify(uglify()));
+      }
+
+      return stream
+        .pipe(gulp.dest(`${out_folder}/js`))
+        .pipe(buffer());
+    }
+
+    b.on('update', function (files) {
+      console.log('Updating', files);
+      bundle();
+    });
+
+    return bundle();
   };
 };
 
@@ -139,6 +162,7 @@ gulp.task('assets:prod', ['clean'], () => gulp.start('js:prod', 'css', 'html:pro
 
 gulp.task('test', () =>
   gulp.src(test_glob, {read: false})
+    .pipe(plumber())
     .pipe(mocha({
       reporter: 'dot',
       bail: true,
@@ -155,7 +179,8 @@ gulp.task('watch', function() {
 
   gulp.watch([sass_glob, plugin_sass_glob, plugin_css_glob], ['css']);
 
-  gulp.watch([js_glob, plugin_js_glob], ['js:dev', 'test']);
+  gulp.watch([js_glob, plugin_js_glob], ['test']);
+  // js:dev reruns via watchify
 
   return gulp.watch(test_glob, ['test']);
 });
