@@ -16,9 +16,10 @@ also deals with loading the initial document from the datastore, and serializing
 Currently, the separation between the Session and Document classes is not very good.  (see session.js)
 */
 class Document extends EventEmitter {
-  constructor(store) {
+  constructor(store, name = '') {
     super();
     this.store = store;
+    this.name = name;
     this.root = Path.getRoot();
     return this;
   }

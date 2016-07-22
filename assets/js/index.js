@@ -228,15 +228,6 @@ let create_session = async function(doc, to_load) {
       };
     };
 
-    let download_file = function(filename, mimetype, content) {
-      let exportDiv = $('#export');
-      exportDiv.attr('download', filename);
-      exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
-      exportDiv[0].click();
-      exportDiv.attr('download', null);
-      return exportDiv.attr('href', null);
-    };
-
     $('#hotkeys_import').click(() =>
       load_file($('#hotkeys_file_input')[0], function(err, content) {
         if (err) { return session.showMessage(err, {text_class: 'error'}); }
@@ -257,7 +248,7 @@ let create_session = async function(doc, to_load) {
     $('#hotkeys_export').click(function() {
       let filename = 'vimflowy_hotkeys.json';
       let content = JSON.stringify(key_bindings.hotkeys, null, 2);
-      download_file(filename, 'application/json', content);
+      utils.download_file(filename, 'application/json', content);
       return session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
     });
 
@@ -279,18 +270,8 @@ let create_session = async function(doc, to_load) {
       })
     );
 
-    let export_type = function(type) {
-      session.showMessage('Exporting...');
-      let filename = docname === '' ? `vimflowy.${type}` : `${docname}.${type}`;
-      // Infer mimetype from file extension
-      let mimetype = utils.mimetypeLookup(filename);
-      let content = session.exportContent(mimetype);
-      download_file(filename, mimetype, content);
-      return session.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
-    };
-
-    $('#data_export_json').click((export_type.bind(this, 'json')));
-    return $('#data_export_plain').click((export_type.bind(this, 'txt')));
+    $('#data_export_json').click(() => session.exportFile('json'));
+    $('#data_export_plain').click(() => session.exportFile('txt'));
   });
 
   return $(window).unload(() => session.exit());
@@ -307,7 +288,7 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
   // datastore = new DataStore.ChromeStorageLazy
 
   datastore = new DataStore.InMemory();
-  doc = new Document(datastore);
+  doc = new Document(datastore, docname);
   chrome.storage.sync.get('save', function(results) {
     create_session(doc, results.save || constants.default_data);
 

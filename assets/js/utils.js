@@ -76,3 +76,13 @@ export function fill_tv4_defaults(data, schema) {
   }
   return null;
 }
+
+export function download_file(filename, mimetype, content) {
+  let exportDiv = $('#export');
+  exportDiv.attr('download', filename);
+  exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
+  exportDiv[0].click();
+  exportDiv.attr('download', null);
+  return exportDiv.attr('href', null);
+};
+

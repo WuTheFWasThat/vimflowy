@@ -256,6 +256,18 @@ class Session extends EventEmitter {
     }
   }
 
+  exportFile(type = 'json') {
+    this.showMessage('Exporting...');
+    let filename = this.document.name === '' ?
+                   `vimflowy.${type}` :
+                   `${this.document.name}.${type}` ;
+    // Infer mimetype from file extension
+    let mimetype = utils.mimetypeLookup(filename);
+    let content = this.exportContent(mimetype);
+    utils.download_file(filename, mimetype, content);
+    return this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
+  }
+
   //################
   // MUTATIONS
   //################
