@@ -41,9 +41,9 @@ let CMD_REPLAY = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLAY, {
   description: 'Replay last command',
-}, function() {
+}, async function() {
   for (let j = 0; j < this.repeat; j++) {
-    this.keyHandler.playRecording(this.keyStream.lastSequence);
+    await this.keyHandler.playRecording(this.keyStream.lastSequence);
     this.session.save();
   }
   return this.keyStream.forget();
@@ -78,13 +78,13 @@ let CMD_PLAY_MACRO = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_PLAY_MACRO, {
   description: 'Play a macro',
-}, function() {
+}, async function() {
   let key = this.keyStream.dequeue();
   if (key === null) { return this.keyStream.wait(); }
   let recording = this.keyHandler.macros[key];
   if (recording === undefined) { return this.keyStream.forget(); }
   for (let j = 0; j < this.repeat; j++) {
-    this.keyHandler.playRecording(recording);
+    await this.keyHandler.playRecording(recording);
   }
   // save the macro-playing sequence itself
   return this.keyStream.save();

@@ -5,7 +5,7 @@ let jumpPreviousKey = 'ctrl+o';
 let jumpNextKey = 'ctrl+i';
 
 describe('jumps', function() {
-  it('basically works', function() {
+  it('basically works', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second'
@@ -52,15 +52,16 @@ describe('jumps', function() {
     t.sendKey(jumpNextKey); // succeeds
     t.expectViewRoot(1);
     t.sendKeys('jx');
-    return t.expect([
+    t.expect([
       'third',
       { text: 'first', children: [
         'econd'
       ] },
     ]);
+    await t.done();
   });
 
-  it('erases history properly', function() {
+  it('erases history properly', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second'
@@ -111,10 +112,11 @@ describe('jumps', function() {
     // possibly bad behavior since we've now cut off access to future jump history?
     t.sendKey(jumpNextKey);
     t.expectViewRoot(0);
-    return t.expectJumpIndex(2, 5);
+    t.expectJumpIndex(2, 5);
+    await t.done();
   });
 
-  it('tries to return cursor position', function() {
+  it('tries to return cursor position', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second',
@@ -242,10 +244,11 @@ describe('jumps', function() {
 
     t.expectJumpIndex(4);
     t.sendKey(jumpPreviousKey);
-    return t.expectJumpIndex(3);
+    t.expectJumpIndex(3);
+    await t.done();
   });
 
-  it('considers clones the same', function() {
+  it('considers clones the same', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second',
@@ -294,10 +297,11 @@ describe('jumps', function() {
 
     t.sendKey(jumpPreviousKey);
     t.expectCursor(1, 0);
-    return t.expectJumpIndex(0);
+    t.expectJumpIndex(0);
+    await t.done();
   });
 
-  return it('skips deleted rows', function() {
+  it('skips deleted rows', async function() {
     let t = new TestCase([
       'cursor',
       { text: 'first', children: [
@@ -328,6 +332,7 @@ describe('jumps', function() {
     t.sendKey(jumpPreviousKey);
     t.expectViewRoot(0);
     t.expectCursor(1, 0);
-    return t.expectJumpIndex(0);
+    t.expectJumpIndex(0);
+    await t.done();
   });
 });

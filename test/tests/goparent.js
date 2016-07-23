@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('go parent', function() {
-  it('works', function() {
+  it('works', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -36,16 +36,17 @@ describe('go parent', function() {
     ]);
     // can't go past the root
     t.sendKeys('gpx');
-    return t.expect([
+    t.expect([
       { text: 'p row', children: [
         { text: 'iddle row', children : [
           'ottom row'
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('causes a zoom out', function() {
+  it('causes a zoom out', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -89,16 +90,17 @@ describe('go parent', function() {
       ] },
     ]);
     t.sendKeys('ggx'); // verify viewroot is now top row
-    return t.expect([
+    t.expect([
       { text: 'p row', children: [
         { text: 'iddle row', children : [
           'ttom row'
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  return it('does nothing at view root', function() {
+  it('does nothing at view root', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -117,12 +119,13 @@ describe('go parent', function() {
     ]);
     t.sendKeys('gpx');
     t.expectViewRoot(0);
-    return t.expect([
+    t.expect([
       { text: 'p row', children: [
         { text: 'middle row', children : [
           'bottom row'
         ] },
       ] },
     ]);
+    await t.done();
   });
 });

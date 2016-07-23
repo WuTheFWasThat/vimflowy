@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('macros', function() {
-  it('basically work', function() {
+  it('basically work', async function() {
     let t = new TestCase([ 'banananana' ]);
     // does nothing since nothing has been recorded
     t.sendKeys('@q');
@@ -21,6 +21,7 @@ describe('macros', function() {
     t.expect([ 'annanana' ]);
     t.sendKeys('3.');
     t.expect([ 'annnn' ]);
+    await t.done();
 
     t = new TestCase([
       '00000000',
@@ -70,7 +71,7 @@ describe('macros', function() {
     ]);
     // should it only do one delete?  (just need to enable save on recorded keystream)
     t.sendKeys('.');
-    return t.expect([
+    t.expect([
       '12000000',
       '01200000',
       '00120000',
@@ -80,9 +81,10 @@ describe('macros', function() {
       '00000012',
       '00'
     ]);
+    await t.done();
   });
 
-  it('work nested', function() {
+  it('work nested', async function() {
     // create a checkerboard!
     let t = new TestCase([
       '00000000',
@@ -119,7 +121,7 @@ describe('macros', function() {
       '00000000'
     ]);
     t.sendKeys('3@o');
-    return t.expect([
+    t.expect([
       '10101010',
       '01010101',
       '10101010',
@@ -129,9 +131,10 @@ describe('macros', function() {
       '10101010',
       '01010101'
     ]);
+    await t.done();
   });
 
-  return it('works even if sequence contains q', function() {
+  it('works even if sequence contains q', async function() {
     let t = new TestCase([
       'a q b q c q d q'
     ]);
@@ -144,8 +147,9 @@ describe('macros', function() {
       'a  b  c q d q'
     ]);
     t.sendKeys('2@x');
-    return t.expect([
+    t.expect([
       'a  b  c  d '
     ]);
+    await t.done();
   });
 });

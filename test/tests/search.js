@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('search', function() {
-  it('works in basic cases', function() {
+  it('works in basic cases', async function() {
     let t = new TestCase([
       'blah',
       'searchblah',
@@ -33,10 +33,11 @@ describe('search', function() {
       ] }
     ]);
     t.sendKeys('/search');
-    return t.expectNumMenuResults(4);
+    t.expectNumMenuResults(4);
+    await t.done();
   });
 
-  it('can page down through menu results', function() {
+  it('can page down through menu results', async function() {
     let t = new TestCase([
       'blah',
       'searchblah',
@@ -69,6 +70,7 @@ describe('search', function() {
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(4);
+    await t.done();
 
     t = new TestCase([
       'blah',
@@ -102,10 +104,11 @@ describe('search', function() {
       ] }
     ]);
     t.sendKeys('/search');
-    return t.expectNumMenuResults(4);
+    t.expectNumMenuResults(4);
+    await t.done();
   });
 
-  it('delete works', function() {
+  it('delete works', async function() {
     let t = new TestCase([
       'blah',
       'blur',
@@ -119,6 +122,7 @@ describe('search', function() {
     t.expect([
       'blah',
     ]);
+    await t.done();
 
     t = new TestCase([
       'blah',
@@ -131,12 +135,13 @@ describe('search', function() {
     t.expectNumMenuResults(1);
     t.sendKey('enter');
     t.sendKeys('dd');
-    return t.expect([
+    t.expect([
       'blah',
     ]);
+    await t.done();
   });
 
-  it('can page up through menu results', function() {
+  it('can page up through menu results', async function() {
     let t = new TestCase([
       'blah',
       'searchblah',
@@ -167,10 +172,11 @@ describe('search', function() {
       'blah'
     ]);
     t.sendKeys('/search');
-    return t.expectNumMenuResults(4);
+    t.expectNumMenuResults(4);
+    await t.done();
   });
 
-  it('can be canceled', function() {
+  it('can be canceled', async function() {
     let t = new TestCase([
       'blah',
       'searchblah',
@@ -187,7 +193,7 @@ describe('search', function() {
     t.sendKeys('/search');
     t.sendKey('esc');
     t.sendKeys('dd');
-    return t.expect([
+    t.expect([
       'searchblah',
       'blahsearchblah',
       'search',
@@ -199,9 +205,10 @@ describe('search', function() {
         'search',
       ] }
     ]);
+    await t.done();
   });
 
-  it('is case insensitive', function() {
+  it('is case insensitive', async function() {
     let t = new TestCase([
       'case',
       'crease',
@@ -211,13 +218,14 @@ describe('search', function() {
     t.sendKey('ctrl+j');
     t.sendKey('enter');
     t.sendKeys('dd');
-    return t.expect([
+    t.expect([
       'case',
       'crease',
     ]);
+    await t.done();
   });
 
-  it('searches independently for words', function() {
+  it('searches independently for words', async function() {
     let t = new TestCase([
       'broomball',
       'basketball',
@@ -226,13 +234,14 @@ describe('search', function() {
     t.sendKeys('/bread basket');
     t.sendKey('enter');
     t.sendKeys('dd');
-    return t.expect([
+    t.expect([
       'broomball',
       'basketball',
     ]);
+    await t.done();
   });
 
-  return it('moves the cursor to the searched for row', function() {
+  it('moves the cursor to the searched for row', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', children: [
@@ -244,6 +253,7 @@ describe('search', function() {
     t.expectViewRoot(3);
     t.sendKeys('/fir');
     t.sendKey('enter');
-    return t.expectViewRoot(1);
+    t.expectViewRoot(1);
+    await t.done();
   });
 });

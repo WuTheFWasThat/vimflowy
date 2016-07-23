@@ -9,7 +9,7 @@ let zoomUpKey = 'alt+k';
 let zoomDownKey = 'alt+j';
 
 describe('zoom', function() {
-  it('works in basic cases', function() {
+  it('works in basic cases', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second'
@@ -40,15 +40,16 @@ describe('zoom', function() {
       'third'
     ]);
     t.sendKeys('jx');
-    return t.expect([
+    t.expect([
       { text: 'first', children: [
         'cond'
       ] },
       'hird'
     ]);
+    await t.done();
   });
 
-  it('works on collapsed, without affecting collapsedness', function() {
+  it('works on collapsed, without affecting collapsedness', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', children: [
@@ -76,16 +77,17 @@ describe('zoom', function() {
     // but now zoom out moves the cursor, since otherwise it's hidden
     t.sendKey(zoomOutKey);
     t.sendKeys('x');
-    return t.expect([
+    t.expect([
       { text: 'rst', collapsed: true, children: [
         { text: 'econd', children: [
           'third'
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('zooms all the way in', function() {
+  it('zooms all the way in', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', children: [
@@ -98,7 +100,7 @@ describe('zoom', function() {
     t.sendKeys('jjj');
     t.sendKey(zoomInAllKey);
     t.sendKeys('x');
-    return t.expect([
+    t.expect([
       { text: 'first', children: [
         { text: 'second', children: [
           { text: 'third', children: [
@@ -107,9 +109,10 @@ describe('zoom', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('preserves -1 column', function() {
+  it('preserves -1 column', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', children: [
@@ -155,7 +158,7 @@ describe('zoom', function() {
       ] },
     ]);
     t.sendKeys('gg$x'); // but we can go back up now
-    return t.expect([
+    t.expect([
       { text: 'fir', children: [
         { text: 'second', children: [
           { text: 'third', children: [
@@ -164,9 +167,10 @@ describe('zoom', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('doesnt allow unindenting out', function() {
+  it('doesnt allow unindenting out', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', children: [
@@ -201,17 +205,17 @@ describe('zoom', function() {
     ]);
     t.sendKey(zoomInAllKey);
     t.sendKey('shift+tab');
-    return t.expect([
+    t.expect([
       { text: 'first', children: [
         { text: 'second', children: [
           'third'
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-
-  return it('can zoom up and down', function() {
+  it('can zoom up and down', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', collapsed: true, children: [
@@ -261,6 +265,7 @@ describe('zoom', function() {
     t.sendKey(zoomUpKey);
     t.expectViewRoot(6);
     t.expectJumpIndex(5);
-    return t.expectCursor(6, 0);
+    t.expectCursor(6, 0);
+    await t.done();
   });
 });

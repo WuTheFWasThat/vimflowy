@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('back word', function() {
-  it('works with numbers, undo/redo', function() {
+  it('works with numbers, undo/redo', async function() {
     let t = new TestCase(['the quick brown fox   jumped   over the lazy dog']);
     t.sendKeys('$bx');
     t.expect(['the quick brown fox   jumped   over the lazy og']);
@@ -25,16 +25,18 @@ describe('back word', function() {
     t.sendKeys('bx');
     t.expect(['he ck fox   umped   ver he azy og']);
     t.sendKeys('5bx');
-    return t.expect(['e ck fox   umped   ver he azy og']);
+    t.expect(['e ck fox   umped   ver he azy og']);
+    await t.done();
   });
 
-  it('deletion works at beginning of line', function() {
+  it('deletion works at beginning of line', async function() {
     let t = new TestCase(['the']);
     t.sendKeys('0db');
-    return t.expect(['the']);
+    t.expect(['the']);
+    await t.done();
   });
 
-  it('skips over whitespace-only rows', function() {
+  it('skips over whitespace-only rows', async function() {
     let t = new TestCase(['a word', '', '  ', '', 'the', '', 'words', 'yes', '']);
     t.sendKeys(['i', 'enter', 'esc', 'k']);
     t.expect(['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']);
@@ -54,10 +56,11 @@ describe('back word', function() {
     t.sendKeys('bx');
     t.expect(['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']);
     t.sendKeys('ib');
-    return t.expect(['b', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']);
+    t.expect(['b', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']);
+    await t.done();
   });
 
-  it('works in block mode', function() {
+  it('works in block mode', async function() {
     let t = new TestCase(['ah... yes ... it *ahem* was me!']);
     t.sendKeys('$');
     t.sendKeys('bx');
@@ -82,6 +85,7 @@ describe('back word', function() {
     t.expect(['h.. es .. t hem as e!']);
     t.sendKeys('bx');
     t.expect(['.. es .. t hem as e!']);
+    await t.done();
 
     t = new TestCase(['ah... yes ... it *ahem* was me!']);
     t.sendKeys('$');
@@ -100,19 +104,21 @@ describe('back word', function() {
     t.sendKeys('Bx');
     t.expect(['h... es .. t ahem* as e!']);
     t.sendKeys('Bx');
-    return t.expect(['... es .. t ahem* as e!']);
+    t.expect(['... es .. t ahem* as e!']);
+    await t.done();
   });
 
   // TODO
-  return it('works with delete past the beginning', function() {
+  it('works with delete past the beginning', async function() {
     let t = new TestCase(['', 'the']);
     t.sendKeys('j0db');
-    return t.expect(['the']);
+    t.expect(['the']);
+    await t.done();
   });
 });
 
 describe('end word', function() {
-  it('works with numbers, undo/redo', function() {
+  it('works with numbers, undo/redo', async function() {
     let t = new TestCase(['the quick brown fox   jumped   over the lazy dog']);
     t.sendKeys('ex');
     t.expect(['th quick brown fox   jumped   over the lazy dog']);
@@ -135,16 +141,18 @@ describe('end word', function() {
     t.sendKeys('ex');
     t.expect(['th quic brow fo   jumpe   ove la do']);
     t.sendKeys('5ex');
-    return t.expect(['th quic brow fo   jumpe   ove la d']);
+    t.expect(['th quic brow fo   jumpe   ove la d']);
+    await t.done();
   });
 
-  it('deletion works at the end of a line', function() {
+  it('deletion works at the end of a line', async function() {
     let t = new TestCase(['the']);
     t.sendKeys('$de');
-    return t.expect(['th']);
+    t.expect(['th']);
+    await t.done();
   });
 
-  it('skips over whitespace-only rows', function() {
+  it('skips over whitespace-only rows', async function() {
     let t = new TestCase(['a word', '', '  ', '', 'the', '', 'words', 'yes', '']);
     t.sendKeys(['i', 'enter', 'esc', 'k']);
     t.expect(['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']);
@@ -163,10 +171,11 @@ describe('end word', function() {
     t.sendKeys('ex');
     t.expect(['', ' wor', '', '  ', '', 'th', '', 'word', 'ye', '']);
     t.sendKeys('ie');
-    return t.expect(['', ' wor', '', '  ', '', 'th', '', 'word', 'ye', 'e']);
+    t.expect(['', ' wor', '', '  ', '', 'th', '', 'word', 'ye', 'e']);
+    await t.done();
   });
 
-  return it('works in block mode', function() {
+  it('works in block mode', async function() {
     let t = new TestCase(['ah... yes ... it *ahem* was me!']);
     t.sendKeys('ex');
     t.expect(['a... yes ... it *ahem* was me!']);
@@ -190,6 +199,7 @@ describe('end word', function() {
     t.expect(['a.. ye .. i ahe* wa m']);
     t.sendKeys('ex');
     t.expect(['a.. ye .. i ahe* wa ']);
+    await t.done();
 
     t = new TestCase(['ah... yes ... it *ahem* was me!']);
     t.sendKeys('Ex');
@@ -207,12 +217,13 @@ describe('end word', function() {
     t.sendKeys('Ex');
     t.expect(['ah.. ye .. i *ahem wa me']);
     t.sendKeys('Ex');
-    return t.expect(['ah.. ye .. i *ahem wa m']);
+    t.expect(['ah.. ye .. i *ahem wa m']);
+    await t.done();
   });
 });
 
 describe('next word', function() {
-  it('works with numbers, undo/redo', function() {
+  it('works with numbers, undo/redo', async function() {
     let t = new TestCase(['the quick brown fox   jumped   over the lazy dog']);
     t.sendKeys('wx');
     t.expect(['the uick brown fox   jumped   over the lazy dog']);
@@ -235,22 +246,25 @@ describe('next word', function() {
     t.sendKeys('wx');
     t.expect(['the uick rown ox   umped   thlazy o']);
     t.sendKeys('5wx');
-    return t.expect(['the uick rown ox   umped   thlazy ']);
+    t.expect(['the uick rown ox   umped   thlazy ']);
+    await t.done();
   });
 
-  it('deletion works at the beginning of a line', function() {
+  it('deletion works at the beginning of a line', async function() {
     let t = new TestCase(['the']);
     t.sendKeys('dw');
-    return t.expect(['']);
+    t.expect(['']);
+    await t.done();
   });
 
-  it('deletion works at the end of a line', function() {
+  it('deletion works at the end of a line', async function() {
     let t = new TestCase(['the']);
     t.sendKeys('$dw');
-    return t.expect(['th']);
+    t.expect(['th']);
+    await t.done();
   });
 
-  it('skips over whitespace-only rows', function() {
+  it('skips over whitespace-only rows', async function() {
     let t = new TestCase(['a word', '', '  ', '', 'the', '', 'words', 'yes', '']);
     t.sendKeys(['i', 'enter', 'esc', 'k']);
     t.expect(['', 'a word', '', '  ', '', 'the', '', 'words', 'yes', '']);
@@ -269,10 +283,11 @@ describe('next word', function() {
     t.sendKeys('wx');
     t.expect(['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', '']);
     t.sendKeys('iw');
-    return t.expect(['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', 'w']);
+    t.expect(['', ' ord', '', '  ', '', 'he', '', 'ords', 'es', 'w']);
+    await t.done();
   });
 
-  return it('works in block mode', function() {
+  it('works in block mode', async function() {
     let t = new TestCase(['ah... yes ... it *ahem* was me!']);
     t.sendKeys('wx');
     t.expect(['ah.. yes ... it *ahem* was me!']);
@@ -294,6 +309,7 @@ describe('next word', function() {
     t.expect(['ah.. es .. t ahem as e']);
     t.sendKeys('wx');
     t.expect(['ah.. es .. t ahem as ']);
+    await t.done();
 
     t = new TestCase(['ah... yes ... it *ahem* was me!']);
     t.sendKeys('Wx');
@@ -311,7 +327,8 @@ describe('next word', function() {
     t.sendKeys('Wx');
     t.expect(['ah... es .. t ahem* as e']);
     t.sendKeys('Wx');
-    return t.expect(['ah... es .. t ahem* as ']);
+    t.expect(['ah... es .. t ahem* as ']);
+    await t.done();
   });
 });
 

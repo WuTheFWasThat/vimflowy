@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('collapse', () =>
-  it('works in basic case', function() {
+  it('works in basic case', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second'
@@ -24,12 +24,12 @@ describe('collapse', () =>
       'hird'
     ]);
     t.sendKeys('uu');
-    return t.expect([
+    t.expect([
       { text: 'first', children: [
         'second'
       ] },
       'third'
     ]);
+    await t.done();
   })
-
 );

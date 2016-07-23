@@ -5,7 +5,7 @@ let nextSiblingKey = '}';
 let prevSiblingKey = '{';
 
 describe('move siblings', () =>
-  it('works', function() {
+  it('works', async function() {
     let t = new TestCase([
       { text: 'one', children: [
         'uno',
@@ -74,7 +74,7 @@ describe('move siblings', () =>
     ]);
     t.sendKey(prevSiblingKey);
     t.sendKeys('x');
-    return t.expect([
+    t.expect([
       { text: '', children: [
         'uno',
       ] },
@@ -85,6 +85,7 @@ describe('move siblings', () =>
         'tacos',
       ] }
     ]);
+    await t.done();
   })
 
 );

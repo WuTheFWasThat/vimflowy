@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('delete to end', function() {
-  it('works in basic case', function() {
+  it('works in basic case', async function() {
     let t = new TestCase(['some random text']);
     t.sendKeys('wD');
     t.expect(['some ']);
@@ -11,21 +11,23 @@ describe('delete to end', function() {
     t.sendKeys('u');
     t.expect(['some ']);
     t.sendKeys('u');
-    return t.expect(['some random text']);
+    t.expect(['some random text']);
+    await t.done();
   });
 
-  return it('works at the end of a line', function() {
+  it('works at the end of a line', async function() {
     let t = new TestCase(['some random text']);
     t.sendKeys('$D');
     t.expect(['some random tex']);
     // paste should work
     t.sendKeys('P');
-    return t.expect(['some random tetx']);
+    t.expect(['some random tetx']);
+    await t.done();
   });
 });
 
 describe('delete to home/end in insert mode', function() {
-  it('works in basic cases', function() {
+  it('works in basic cases', async function() {
     let t = new TestCase(['some random text']);
     t.sendKeys('wi');
     t.sendKey('ctrl+k');
@@ -37,6 +39,7 @@ describe('delete to home/end in insert mode', function() {
     t.sendKey('esc');
     t.sendKeys('u');
     t.expect(['some random text']);
+    await t.done();
 
     t = new TestCase(['some random text']);
     t.sendKeys('wi');
@@ -48,10 +51,11 @@ describe('delete to home/end in insert mode', function() {
     t.expect(['random text']);
     t.sendKey('esc');
     t.sendKeys('u');
-    return t.expect(['some random text']);
+    t.expect(['some random text']);
+    await t.done();
   });
 
-  it('in insert mode, ctrl+y brings you past end', function() {
+  it('in insert mode, ctrl+y brings you past end', async function() {
     let t = new TestCase(['some random text']);
     t.sendKeys('wi');
     t.sendKey('ctrl+k');
@@ -59,10 +63,11 @@ describe('delete to home/end in insert mode', function() {
     t.sendKey('ctrl+y');
     t.expect(['some random text']);
     t.sendKey('s');
-    return t.expect(['some random texts']);
+    t.expect(['some random texts']);
+    await t.done();
   });
 
-  return it("doesn't cause an undoable mutation when nothing happens", function() {
+  it("doesn't cause an undoable mutation when nothing happens", async function() {
     let t = new TestCase(['some random text']);
     t.sendKeys('x');
     t.expect(['ome random text']);
@@ -72,6 +77,7 @@ describe('delete to home/end in insert mode', function() {
     t.expect(['ome random text']);
     t.sendKeys('u');
     t.expect(['some random text']);
+    await t.done();
 
     t = new TestCase(['some random text']);
     t.sendKeys('$x');
@@ -81,6 +87,7 @@ describe('delete to home/end in insert mode', function() {
     t.sendKey('esc');
     t.expect(['some random tex']);
     t.sendKeys('u');
-    return t.expect(['some random text']);
+    t.expect(['some random text']);
+    await t.done();
   });
 });

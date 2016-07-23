@@ -2,67 +2,76 @@
 import TestCase from '../testcase';
 
 describe('visual mode', function() {
-  it('works with basic motions', function() {
+  it('works with basic motions', async function() {
     let t = new TestCase(['hello world']);
     t.sendKeys('vwx');
     t.expect(['orld']);
+    await t.done();
 
     t = new TestCase(['hello world']);
     t.sendKeys('vex');
     t.expect([' world']);
+    await t.done();
 
     t = new TestCase(['hello world']);
     t.sendKeys('v$x');
     t.expect(['']);
+    await t.done();
 
     t = new TestCase(['hello world']);
     t.sendKeys('wv3lx');
-    return t.expect(['hello d']);
+    t.expect(['hello d']);
+    await t.done();
   });
 
-  it('keeps cursor after canceling', function() {
+  it('keeps cursor after canceling', async function() {
     let t = new TestCase(['hello world']);
     t.sendKeys('vw');
     t.sendKey('esc');
     t.sendKeys('x');
-    return t.expect(['hello orld']);
+    t.expect(['hello orld']);
+    await t.done();
   });
 
-  it('allows cursor swap', function() {
+  it('allows cursor swap', async function() {
     let t = new TestCase(['hello world']);
     t.sendKeys('wv3lo3hx');
     t.expect(['held']);
     t.sendKeys('u');
-    return t.expect(['hello world']);
+    t.expect(['hello world']);
+    await t.done();
   });
 
-  it('moves cursor back if needed', function() {
+  it('moves cursor back if needed', async function() {
     let t = new TestCase(['hello world']);
     t.sendKeys('v$');
     t.sendKey('esc');
     t.sendKeys('x');
     t.expect(['hello worl']);
     t.sendKeys('u');
-    return t.expect(['hello world']);
+    t.expect(['hello world']);
+    await t.done();
   });
 
-  it('pastes', function() {
+  it('pastes', async function() {
     let t = new TestCase([ 'hello world' ]);
     t.sendKeys('wv$y');
     t.sendKeys('P');
     t.expect([ 'hello worlworldd' ]);
     t.sendKeys('u');
-    return t.expect(['hello world']);
+    t.expect(['hello world']);
+    await t.done();
   });
 
-  return it('changes', function() {
+  it('changes', async function() {
     let t = new TestCase(['hello world']);
     t.sendKeys('vec');
     t.sendKeys('hi');
     t.sendKey('esc');
     t.expect(['hi world']);
     t.sendKeys('u');
-    return t.expect(['hello world']);
+    t.expect(['hello world']);
+    await t.done();
   });
 });
 

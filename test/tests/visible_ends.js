@@ -2,21 +2,24 @@
 import TestCase from '../testcase';
 
 describe('go visible end/beginning', function() {
-  it('take you to the first column', function() {
+  it('take you to the first column', async function() {
     let t = new TestCase(['always to front']);
     t.sendKeys('$Gx');
     t.expect(['lways to front']);
+    await t.done();
 
     t = new TestCase(['a', 'ab', 'abc']);
     t.sendKeys('$Gx');
     t.expect(['a', 'ab', 'bc']);
+    await t.done();
 
     t = new TestCase(['always to front']);
     t.sendKeys('$ggx');
-    return t.expect(['lways to front']);
+    t.expect(['lways to front']);
+    await t.done();
   });
 
-  it('basically works, at root', function() {
+  it('basically works, at root', async function() {
     let t = new TestCase([
       'ab',
       { text: 'bc', children: [
@@ -37,15 +40,17 @@ describe('go visible end/beginning', function() {
         'd'
       ] },
     ]);
+    await t.done();
 
     t = new TestCase(['a', 'ab', 'abc']);
     t.sendKeys('jj$x');
     t.expect(['a', 'ab', 'ab']);
     t.sendKeys('ggx');
-    return t.expect(['', 'ab', 'ab']);
+    t.expect(['', 'ab', 'ab']);
+    await t.done();
   });
 
-  it('ignores collapsed children', function() {
+  it('ignores collapsed children', async function() {
     let t = new TestCase([
       'ab',
       { text: 'bc', collapsed: true, children: [
@@ -53,15 +58,16 @@ describe('go visible end/beginning', function() {
       ] },
     ]);
     t.sendKeys('Gx');
-    return t.expect([
+    t.expect([
       'ab',
       { text: 'c', collapsed: true, children: [
         'cd'
       ] },
     ]);
+    await t.done();
   });
 
-  it('works zoomed in', function() {
+  it('works zoomed in', async function() {
     let t = new TestCase([
       'ab',
       { text: 'bc', children: [
@@ -80,7 +86,7 @@ describe('go visible end/beginning', function() {
       'de'
     ]);
     t.sendKeys('ggx');
-    return t.expect([
+    t.expect([
       'ab',
       { text: 'c', children: [
         'dc',
@@ -88,9 +94,10 @@ describe('go visible end/beginning', function() {
       ] },
       'de'
     ]);
+    await t.done();
   });
 
-  return it('works zoomed in to collapsed', function() {
+  it('works zoomed in to collapsed', async function() {
     let t = new TestCase([
       'ab',
       { text: 'bc', collapsed: true, children: [
@@ -127,7 +134,7 @@ describe('go visible end/beginning', function() {
       'de'
     ]);
     t.sendKeys('ggx');
-    return t.expect([
+    t.expect([
       'ab',
       { text: 'c', collapsed: true, children: [
         '',
@@ -135,5 +142,6 @@ describe('go visible end/beginning', function() {
       ] },
       'de'
     ]);
+    await t.done();
   });
 });

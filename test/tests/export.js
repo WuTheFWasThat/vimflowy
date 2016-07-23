@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('export', function() {
-  it('works in basic case', function() {
+  it('works in basic case', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second'
@@ -10,7 +10,7 @@ describe('export', function() {
       'third'
     ]);
     t.expectExport('text/plain', '- \n  - first\n    - second\n  - third');
-    return t.expectExport('application/json',
+    t.expectExport('application/json',
       (JSON.stringify({
         text: '', children: [
           { text: 'first', children: [
@@ -20,9 +20,10 @@ describe('export', function() {
         ]
       }, null, 2))
     );
+    await t.done();
   });
 
-  return it('doesnt care about zoom', function() {
+  it('doesnt care about zoom', async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second'
@@ -32,7 +33,7 @@ describe('export', function() {
     t.sendKey('down');
     t.sendKey('alt+l');
     t.expectExport('text/plain', '- \n  - first\n    - second\n  - third');
-    return t.expectExport('application/json',
+    t.expectExport('application/json',
       (JSON.stringify({
         text: '', children: [
           { text: 'first', children: [
@@ -41,11 +42,12 @@ describe('export', function() {
           { text: 'third' }
         ]}, null, 2))
     );
+    await t.done();
   });
 });
 
 describe('import', function() {
-  it('works from text format', function() {
+  it('works from text format', async function() {
     let t = new TestCase(['']);
     t.import(
 `- Line 1
@@ -61,7 +63,7 @@ describe('import', function() {
     t.sendKeys(['3', 'shift+tab']);
     t.sendKey('up');
     t.sendKeys('dd');
-    return t.expectExport('application/json',
+    t.expectExport('application/json',
       (JSON.stringify({
         text: '', children: [
             { text: 'Line 1' },
@@ -77,9 +79,10 @@ describe('import', function() {
             { text: 'Line 3' }
         ] }, null, 2))
     );
+    await t.done();
   });
 
-  it('works from json format', function() {
+  it('works from json format', async function() {
     let t = new TestCase(['']);
     t.import((JSON.stringify({
       'text': '',
@@ -123,7 +126,7 @@ describe('import', function() {
     t.sendKey('up');
     t.sendKeys('dd');
 
-    return t.expectExport('application/json',
+    t.expectExport('application/json',
       (JSON.stringify({
         text: '', children: [
             { text: 'Line 1' },
@@ -140,9 +143,10 @@ describe('import', function() {
         ]
       }, null, 2))
     );
+    await t.done();
   });
 
-  it('works from workflowy text format', function() {
+  it('works from workflowy text format', async function() {
     let t = new TestCase(['']);
     t.import(
 `- [COMPLETE] Line 1
@@ -158,7 +162,7 @@ describe('import', function() {
     t.sendKey('up');
     t.sendKeys('dd');
 
-    return t.expectExport('application/json',
+    t.expectExport('application/json',
       (JSON.stringify({
         text: '', children: [
             { text: 'Line 1', collapsed: true, children: [
@@ -170,9 +174,10 @@ describe('import', function() {
             { text: 'Line 3' }
         ] }, null, 2))
     );
+    await t.done();
   });
 
-  return it('works with clones', function() {
+  it('works with clones', async function() {
     let t = new TestCase(['']);
     t.import((JSON.stringify({
       'text': '',
@@ -212,7 +217,7 @@ describe('import', function() {
       }
     ]);
 
-    return t.expectExport('application/json', (JSON.stringify({
+    t.expectExport('application/json', (JSON.stringify({
       'text': '',
       'children': [
         {
@@ -233,7 +238,7 @@ describe('import', function() {
           ]
         }
       ]
-    }, null, 2))
-    );
+    }, null, 2)));
+    await t.done();
   });
 });

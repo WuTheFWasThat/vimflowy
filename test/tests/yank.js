@@ -4,22 +4,24 @@ import Register from '../../assets/js/register';
 
 describe('yank', function() {
   describe('characters', function() {
-    it('works in basic case', function() {
+    it('works in basic case', async function() {
       let t = new TestCase(['px']);
       t.sendKeys('xp');
       t.expect(['xp']);
       t.expectRegisterType(Register.TYPES.CHARS);
       t.sendKeys('xp');
-      return t.expect(['xp']);
+      t.expect(['xp']);
+      await t.done();
     });
 
-    it('works with deleting words', function() {
+    it('works with deleting words', async function() {
       let t = new TestCase(['one fish, two fish, red fish, blue fish']);
       t.sendKeys('dWWhp');
       t.expect(['fish, one two fish, red fish, blue fish']);
       // undo doesn't move cursor, and paste still has stuff in register
       t.sendKeys('up');
       t.expect(['fish, one two fish, red fish, blue fish']);
+      await t.done();
 
       t = new TestCase(['one fish, two fish, red fish, blue fish']);
       t.sendKeys('2dW2Whp');
@@ -27,6 +29,7 @@ describe('yank', function() {
       // undo doesn't move cursor, and paste still has stuff in register
       t.sendKeys('up');
       t.expect(['two fish, one fish, red fish, blue fish']);
+      await t.done();
 
       t = new TestCase(['one fish, two fish, red fish, blue fish']);
       t.sendKeys('d2W2Whp');
@@ -36,19 +39,21 @@ describe('yank', function() {
       // type hasnt changed
       t.expectRegisterType(Register.TYPES.CHARS);
       t.sendKeys('p');
-      return t.expect(['two fish, one fish, red fish, blue fish']);
+      t.expect(['two fish, one fish, red fish, blue fish']);
+      await t.done();
     });
 
-    it('works behind', function() {
+    it('works behind', async function() {
       let t = new TestCase(['one fish, two fish, red fish, blue fish']);
       t.sendKeys('$F,d$3bP');
       t.expect(['one fish, two fish, blue fish, red fish']);
       // undo doesn't move cursor, and paste still has stuff in register
       t.sendKeys('uP');
-      return t.expect(['one fish, two fish, blue fish, red fish']);
+      t.expect(['one fish, two fish, blue fish, red fish']);
+      await t.done();
     });
 
-    it('works behind in an edge case with empty line, and repeat', function() {
+    it('works behind in an edge case with empty line, and repeat', async function() {
       let t = new TestCase(['word']);
       t.sendKeys('de');
       t.expect(['']);
@@ -60,17 +65,20 @@ describe('yank', function() {
       t.sendKeys('.');
       t.expect(['word']);
       t.sendKeys('.');
-      return t.expect(['worwordd']);
+      t.expect(['worwordd']);
+      await t.done();
     });
 
-    return it('works with motions', function() {
+    it('works with motions', async function() {
       let t = new TestCase(['lol']);
       t.sendKeys('yllp');
       t.expect(['loll']);
+      await t.done();
 
       t = new TestCase(['lol']);
       t.sendKeys('y$P');
       t.expect(['lollol']);
+      await t.done();
 
       t = new TestCase(['lol']);
       t.sendKeys('$ybp');
@@ -79,22 +87,25 @@ describe('yank', function() {
       t.expect(['lol']);
       t.sendKeys('P');
       t.expect(['lolol']);
+      await t.done();
 
       t = new TestCase(['haha ... ha ... funny']);
       t.sendKeys('y3wP');
       t.expect(['haha ... ha haha ... ha ... funny']);
+      await t.done();
 
       t = new TestCase(['haha ... ha ... funny']);
       t.sendKeys('yep');
       t.expect(['hhahaaha ... ha ... funny']);
       // cursor ends at last character
       t.sendKeys('yffp');
-      return t.expect(['hhahaaaha ... ha ... faha ... ha ... funny']);
+      t.expect(['hhahaaaha ... ha ... faha ... ha ... funny']);
+      await t.done();
     });
   });
 
-  return describe('rows', function() {
-    it('works in a basic case', function() {
+  describe('rows', function() {
+    it('works in a basic case', async function() {
       let t = new TestCase(['humpty', 'dumpty']);
       t.sendKeys('dd');
       t.expectRegisterType(Register.TYPES.CLONED_ROWS);
@@ -108,20 +119,22 @@ describe('yank', function() {
       t.expect(['humpty', 'dumpty']);
       // violates cloning constraints
       t.sendKeys('p');
-      return t.expect(['humpty', 'dumpty']);
+      t.expect(['humpty', 'dumpty']);
+      await t.done();
     });
 
-    it('works behind', function() {
+    it('works behind', async function() {
       let t = new TestCase(['humpty', 'dumpty']);
       t.sendKeys('jddP');
       t.expect([ 'dumpty', 'humpty' ]);
       t.sendKeys('u');
       t.expect(['humpty']);
       t.sendKeys('u');
-      return t.expect(['humpty', 'dumpty']);
+      t.expect(['humpty', 'dumpty']);
+      await t.done();
     });
 
-    it('pastes siblings, not children', function() {
+    it('pastes siblings, not children', async function() {
       let t = new TestCase([
         { text: 'herpy', children: [
           { text: 'derpy', children: [
@@ -171,15 +184,16 @@ describe('yank', function() {
         ] },
       ]);
       t.sendKeys('jP');
-      return t.expect([
+      t.expect([
         { text: 'herpy', children: [
           'burpy',
           'derpy',
         ] },
       ]);
+      await t.done();
     });
 
-    it('pastes register of recent action after undo', function() {
+    it('pastes register of recent action after undo', async function() {
       let t = new TestCase(['hey', 'yo', 'yo', 'yo', 'yo', 'yo']);
       t.sendKeys('yyjp');
       t.expect(['hey', 'yo', 'hey', 'yo', 'yo', 'yo', 'yo']);
@@ -197,6 +211,7 @@ describe('yank', function() {
       // the register still contains the 'h' from the 'x'
       t.sendKeys('jjjjjp');
       t.expect(['hey', 'yo', 'hey', 'yo', 'yo', 'yo', 'yho']);
+      await t.done();
 
       // similar to above case
       t = new TestCase(['hey', 'yo', 'yo', 'yo', 'yo', 'yo']);
@@ -212,25 +227,27 @@ describe('yank', function() {
       t.expect(['hey', 'yo', 'yo', 'yo', 'yo', 'yo']);
       // splice does NOT replace register!
       t.sendKeys('jjjjjp');
-      return t.expect(['hey', 'yo', 'yo', 'yo', 'yo', 'yo', 'hey']);
+      t.expect(['hey', 'yo', 'yo', 'yo', 'yo', 'yo', 'hey']);
+      await t.done();
     });
 
-    it('works in basic case', function() {
+    it('works in basic case', async function() {
       let t = new TestCase([
         { text: 'hey', children: [
           'yo'
         ] }
       ]);
       t.sendKeys('yyp');
-      return t.expect([
+      t.expect([
         { text: 'hey', children: [
           'hey',
           'yo'
         ] }
       ]);
+      await t.done();
     });
 
-    it('works recursively', function() {
+    it('works recursively', async function() {
       let t = new TestCase([
         { text: 'hey', children: [
           'yo'
@@ -267,7 +284,7 @@ describe('yank', function() {
         ] }
       ]);
       t.sendKey('ctrl+r');
-      return t.expect([
+      t.expect([
         { text: 'hey', children: [
           { text: 'hey', children: [
             { text: 'hey', children: [
@@ -278,16 +295,17 @@ describe('yank', function() {
           'yo'
         ] }
       ]);
+      await t.done();
     });
 
-    it("preserves collapsedness, and doesn't paste as child of collapsed", function() {
+    it("preserves collapsedness, and doesn't paste as child of collapsed", async function() {
       let t = new TestCase([
         { text: 'hey', collapsed: true, children: [
           'yo'
         ] }
       ]);
       t.sendKeys('yrp');
-      return t.expect([
+      t.expect([
         { text: 'hey', collapsed: true, children: [
           'yo'
         ] },
@@ -295,16 +313,17 @@ describe('yank', function() {
           'yo'
         ] },
       ]);
+      await t.done();
     });
 
-    it('preserves collapsedness', function() {
+    it('preserves collapsedness', async function() {
       let t = new TestCase([
         { text: 'hey', collapsed: true, children: [
           'yo'
         ] }
       ]);
       t.sendKeys('yrzp');
-      return t.expect([
+      t.expect([
         { text: 'hey', children: [
           { text: 'hey', collapsed: true, children: [
             'yo'
@@ -312,9 +331,10 @@ describe('yank', function() {
           'yo'
         ] }
       ]);
+      await t.done();
     });
 
-    it('pastes clones', function() {
+    it('pastes clones', async function() {
       let t = new TestCase([
         { text: 'hey', collapsed: true, children: [
           'yo'
@@ -353,7 +373,7 @@ describe('yank', function() {
       ]);
       // second paste should be changed thing
       t.sendKeys('GP');
-      return t.expect([
+      t.expect([
         { text: 'yey', id: 1, children: [
           'ho'
         ] },
@@ -364,9 +384,10 @@ describe('yank', function() {
           'up'
         ] }
       ]);
+      await t.done();
     });
 
-    return it('yanks serialized (not cloned)', function() {
+    it('yanks serialized (not cloned)', async function() {
       let t = new TestCase([
         { text: 'hey', collapsed: true, children: [
           'yo'
@@ -391,7 +412,7 @@ describe('yank', function() {
       ]);
       // second paste should be changed thing
       t.sendKeys('GP');
-      return t.expect([
+      t.expect([
         { text: 'yey', children: [
           'ho'
         ] },
@@ -404,6 +425,7 @@ describe('yank', function() {
           'up'
         ] }
       ]);
+      await t.done();
     });
   });
 });

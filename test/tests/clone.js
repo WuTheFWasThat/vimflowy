@@ -5,7 +5,7 @@ let swapDownKey = 'ctrl+j';
 // let swapUpKey = 'ctrl+k';
 
 describe('cloning', function() {
-  it('works in basic case', function() {
+  it('works in basic case', async function() {
     let t = new TestCase([
       { text: 'one', children: [
         'uno',
@@ -20,7 +20,7 @@ describe('cloning', function() {
     t.sendKeys('yc');
     t.sendKeys('jjj');
     t.sendKeys('p');
-    return t.expect([
+    t.expect([
       { text: 'one', id: 1, children: [
         'uno',
       ] },
@@ -32,9 +32,10 @@ describe('cloning', function() {
         'tacos',
       ] }
     ]);
+    await t.done();
   });
 
-  it('works editing both clone and original; works with basic movement', function() {
+  it('works editing both clone and original; works with basic movement', async function() {
     let t = new TestCase([
       { text: 'one', children: [
         'uno',
@@ -69,7 +70,7 @@ describe('cloning', function() {
     // test movement from the clone
     t.sendKeys('jj');
     t.sendKeys('x');
-    return t.expect([
+    t.expect([
       { text: 'e', id: 1, children: [
         'uno',
       ] },
@@ -81,9 +82,10 @@ describe('cloning', function() {
         'tacos',
       ] }
     ]);
+    await t.done();
   });
 
-  it('works with movement in complex case', function() {
+  it('works with movement in complex case', async function() {
     let t = new TestCase([
       { text: 'Clone', children: [
         'Clone child'
@@ -120,10 +122,11 @@ describe('cloning', function() {
     t.sendKeys('k');
     t.expectCursor(1, 0);
     t.sendKeys('k');
-    return t.expectCursor(1, 0);
+    t.expectCursor(1, 0);
+    await t.done();
   });
 
-  it('prevents cloning to a sibling', function() {
+  it('prevents cloning to a sibling', async function() {
     let t = new TestCase([
       'one',
       'two',
@@ -132,14 +135,15 @@ describe('cloning', function() {
     t.sendKeys('yc');
     t.sendKeys('j');
     t.sendKeys('p');
-    return t.expect([
+    t.expect([
       'one',
       'two',
       'three'
     ]);
+    await t.done();
   });
 
-  it('prevents cycles', function() {
+  it('prevents cycles', async function() {
     let t = new TestCase([
       { text: 'one', children: [
         'uno',
@@ -148,14 +152,15 @@ describe('cloning', function() {
     t.sendKeys('yc');
     t.sendKeys('j');
     t.sendKeys('p');
-    return t.expect([
+    t.expect([
       { text: 'one', children: [
         'uno',
       ] }
     ]);
+    await t.done();
   });
 
-  it('prevents cycles part 2', function() {
+  it('prevents cycles part 2', async function() {
     let t = new TestCase([
       { text: 'blah', children: [
         'blah'
@@ -226,7 +231,7 @@ describe('cloning', function() {
       ] }
     ]);
     t.sendKeys('p');
-    return t.expect([
+    t.expect([
       { text: 'blah', children: [
         'blah',
         { text: 'eventually cloned', id: 3, children: [
@@ -237,10 +242,11 @@ describe('cloning', function() {
       ] },
       { clone: 3 }
     ]);
+    await t.done();
   });
 
 
-  it('works with repeat', function() {
+  it('works with repeat', async function() {
     let t = new TestCase([
       'one',
       'two',
@@ -258,7 +264,7 @@ describe('cloning', function() {
       ] }
     ]);
     t.sendKeys('jjp');
-    return t.expect([
+    t.expect([
       { text: 'one', id: 1 },
       { text: 'two', id: 2 },
       { text: 'three', children: [
@@ -267,9 +273,10 @@ describe('cloning', function() {
         'child',
       ] }
     ]);
+    await t.done();
   });
 
-  it('does not add to history when constraints are violated', function() {
+  it('does not add to history when constraints are violated', async function() {
     let t = new TestCase([
       'blah',
       { text: 'Will be cloned', children: [
@@ -291,15 +298,16 @@ describe('cloning', function() {
       ] }
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       'blah',
       { text: 'Will be cloned', children: [
         'not a clone'
       ] }
     ]);
+    await t.done();
   });
 
-  it('enforces constraints upon movement', function() {
+  it('enforces constraints upon movement', async function() {
     let t = new TestCase([
       { text: 'Clone', children: [
         'Clone child'
@@ -344,7 +352,7 @@ describe('cloning', function() {
 
     t.sendKeys('gg');
     t.sendKey(swapDownKey);
-    return t.expect([
+    t.expect([
       { text: 'Not a clone', children: [
         { text: 'Clone', children: [
           'Clone child'
@@ -352,10 +360,11 @@ describe('cloning', function() {
         'Not a clone'
       ] }
     ]);
+    await t.done();
   });
 
 
-  it('creates clone on regular paste', function() {
+  it('creates clone on regular paste', async function() {
     let t = new TestCase([
       'Will be cloned via delete',
       { text: 'parent', children: [
@@ -384,16 +393,17 @@ describe('cloning', function() {
     ]);
     t.sendKeys('jp');
     // pastes with the W even though it was deleted while cloned
-    return t.expect([
+    t.expect([
       { text: 'Will be cloned via delete', id: 1 },
       { text: 'parent', children: [
         { clone: 1 },
         'hm...'
       ] }
     ]);
+    await t.done();
   });
 
-  it('prevents constraint violation on regular paste', function() {
+  it('prevents constraint violation on regular paste', async function() {
     let t = new TestCase([
       'Will be deleted',
       'hm...'
@@ -405,13 +415,14 @@ describe('cloning', function() {
       'hm...'
     ]);
     t.sendKeys('p');
-    return t.expect([
+    t.expect([
       'Will be deleted',
       'hm...'
     ]);
+    await t.done();
   });
 
-  it('prevents constraint violation on paste', function() {
+  it('prevents constraint violation on paste', async function() {
     let t = new TestCase([
       'Will be cloned',
       { text: 'parent', children: [
@@ -433,7 +444,7 @@ describe('cloning', function() {
     ]);
 
     t.sendKeys('ddkkp');
-    return t.expect([
+    t.expect([
       'Will be cloned',
       { text: 'parent', children: [
         { text: 'blah', children: [
@@ -441,9 +452,10 @@ describe('cloning', function() {
         ] }
       ] }
     ]);
+    await t.done();
   });
 
-  it('prevents constraint violation on indent', function() {
+  it('prevents constraint violation on indent', async function() {
     let t = new TestCase([
       { text: 'parent', children: [
         'blah'
@@ -462,16 +474,17 @@ describe('cloning', function() {
 
     t.sendKeys('G');
     t.sendKeys('>');
-    return t.expect([
+    t.expect([
       { text: 'parent', children: [
         'blah',
         { text: 'Will be cloned', id: 3 }
       ] },
       { clone: 3 }
     ]);
+    await t.done();
   });
 
-  it('can paste clones of removed items', function() {
+  it('can paste clones of removed items', async function() {
     let t = new TestCase([
       'test',
       'hi',
@@ -485,13 +498,14 @@ describe('cloning', function() {
     ]);
 
     t.sendKeys('p');
-    return t.expect([
+    t.expect([
       'test',
       'hi'
     ]);
+    await t.done();
   });
 
-  it('can paste clones of removed items, part 2', function() {
+  it('can paste clones of removed items, part 2', async function() {
     let t = new TestCase([
       'test',
     ]);
@@ -510,13 +524,14 @@ describe('cloning', function() {
 
     t.sendKeys('p');
     // the pasted row is empty, since the typing got undone!
-    return t.expect([
+    t.expect([
       'test',
       ''
     ]);
+    await t.done();
   });
 
-  it('works nested, basic test', function() {
+  it('works nested, basic test', async function() {
     let t = new TestCase([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
@@ -558,7 +573,7 @@ describe('cloning', function() {
       { clone: 2 }
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
           { text: 'subclone', id: 3 },
@@ -569,9 +584,10 @@ describe('cloning', function() {
       ] },
       { clone: 2 }
     ]);
+    await t.done();
   });
 
-  it('works nested, second basic test', function() {
+  it('works nested, second basic test', async function() {
     let t = new TestCase([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
@@ -616,7 +632,7 @@ describe('cloning', function() {
     ]);
 
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'jango', children: [
         { text: 'clone', id: 2, children: [
           { text: 'subclone', id: 3 },
@@ -627,9 +643,10 @@ describe('cloning', function() {
       ] },
       { clone: 2 }
     ]);
+    await t.done();
   });
 
-  it('can cycle between clones', function() {
+  it('can cycle between clones', async function() {
     let t = new TestCase([
       { text: 'blah', children: [
         { text: 'clone', id: 2, children: [
@@ -693,7 +710,7 @@ describe('cloning', function() {
     ]);
 
     t.sendKeys('gcx');
-    return t.expect([
+    t.expect([
       'lah',
       'ibling',
       { text: 'ne', children: [
@@ -702,9 +719,10 @@ describe('cloning', function() {
       ] },
       'sibling'
     ]);
+    await t.done();
   });
 
-  return it('can cycle between clones with stranded parents', function() {
+  it('can cycle between clones with stranded parents', async function() {
     let t = new TestCase([
       { text: 'blah', children: [
         { text: 'clone', id: 2 }
@@ -748,7 +766,7 @@ describe('cloning', function() {
     ]);
 
     t.sendKeys('kgckx');
-    return t.expect([
+    t.expect([
       { text: 'blah2', children: [
         { text: 'clone', id: 2 }
       ] },
@@ -756,5 +774,6 @@ describe('cloning', function() {
       { clone: 2 },
       'sibling'
     ]);
+    await t.done();
   });
 });

@@ -4,7 +4,7 @@ import TestCase from '../testcase';
 let redoKey = 'ctrl+r';
 
 describe('basic multiline tests', function() {
-  it('tests basic multiline insertion and movement', function() {
+  it('tests basic multiline insertion and movement', async function() {
     let t = new TestCase(['']);
     t.sendKeys('ione');
     t.sendKey('esc');
@@ -16,32 +16,36 @@ describe('basic multiline tests', function() {
     t.expect(['on', 'to']);
     // don't go off the edge!
     t.sendKeys('kkkxjjjx');
-    return t.expect(['o', 'o']);
+    t.expect(['o', 'o']);
+    await t.done();
   });
 
-  it('tests that the final line never goes away', function() {
+  it('tests that the final line never goes away', async function() {
     let t = new TestCase(['unos', 'dos', 'tres', 'quatro']);
     t.sendKeys('$jjjx');
-    return t.expect(['unos', 'dos', 'tres', 'quatr']);
+    t.expect(['unos', 'dos', 'tres', 'quatr']);
+    await t.done();
   });
 
-  it('tests column -1 works', function() {
+  it('tests column -1 works', async function() {
     let t = new TestCase(['unos', 'dos', 'tres', 'quatro']);
     t.sendKeys('$A');
     t.sendKey('down');
     t.sendKey('down');
     t.sendKey('down');
     t.sendKey('backspace');
-    return t.expect(['unos', 'dos', 'tres', 'quatr']);
+    t.expect(['unos', 'dos', 'tres', 'quatr']);
+    await t.done();
   });
 
-  it('tests o and O edge cases', function() {
+  it('tests o and O edge cases', async function() {
     let t = new TestCase(['a', 's', 'd', 'f']);
     t.sendKeys('Oo');
     t.expect(['o', 'a', 's', 'd', 'f']);
     t.sendKey('esc');
     t.sendKeys('u');
     t.expect(['a', 's', 'd', 'f']);
+    await t.done();
 
     t = new TestCase(['a', 's', 'd', 'f']);
     t.sendKeys('5joO');
@@ -49,6 +53,7 @@ describe('basic multiline tests', function() {
     t.sendKey('esc');
     t.sendKeys('u');
     t.expect(['a', 's', 'd', 'f']);
+    await t.done();
 
     t = new TestCase(['a', 's', 'd', 'f']);
     t.sendKeys('oO');
@@ -56,16 +61,18 @@ describe('basic multiline tests', function() {
     t.sendKey('esc');
     t.sendKeys('u');
     t.expect(['a', 's', 'd', 'f']);
+    await t.done();
 
     t = new TestCase(['a', 's', 'd', 'f']);
     t.sendKeys('5jOo');
     t.expect(['a', 's', 'd', 'o', 'f']);
     t.sendKey('esc');
     t.sendKeys('u');
-    return t.expect(['a', 's', 'd', 'f']);
+    t.expect(['a', 's', 'd', 'f']);
+    await t.done();
   });
 
-  it('tests o and O undo and redo', function() {
+  it('tests o and O undo and redo', async function() {
     let threeRows = [
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -96,6 +103,7 @@ describe('basic multiline tests', function() {
         ] },
       ] },
     ]);
+    await t.done();
 
     t = new TestCase(threeRows);
     t.sendKeys('oO');
@@ -119,6 +127,7 @@ describe('basic multiline tests', function() {
         ] },
       ] },
     ]);
+    await t.done();
 
     t = new TestCase(threeRows);
     t.sendKeys('jOo');
@@ -142,6 +151,7 @@ describe('basic multiline tests', function() {
         ] },
       ] },
     ]);
+    await t.done();
 
     t = new TestCase(threeRows);
     t.sendKeys('joO');
@@ -165,6 +175,7 @@ describe('basic multiline tests', function() {
         ] },
       ] },
     ]);
+    await t.done();
 
     t = new TestCase(threeRows);
     t.sendKeys('2jOo');
@@ -188,6 +199,7 @@ describe('basic multiline tests', function() {
         ] },
       ] },
     ]);
+    await t.done();
 
     t = new TestCase(threeRows);
     t.sendKeys('2joO');
@@ -203,7 +215,7 @@ describe('basic multiline tests', function() {
     t.sendKeys('u');
     t.expect(threeRows);
     t.sendKey(redoKey);
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
@@ -211,9 +223,10 @@ describe('basic multiline tests', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('skips collapsed children', function() {
+  it('skips collapsed children', async function() {
     let t = new TestCase([
       { text: 'a', collapsed: true, children: [
         's', 'd'
@@ -221,16 +234,17 @@ describe('basic multiline tests', function() {
       'f'
     ]);
     t.sendKeys('oo');
-    return t.expect([
+    t.expect([
       { text: 'a', collapsed: true, children: [
         's', 'd'
       ] },
       'o',
       'f'
     ]);
+    await t.done();
   });
 
-  it('tricky -1 col case', function() {
+  it('tricky -1 col case', async function() {
     let t = new TestCase([
       'a row',
       'another row',
@@ -251,14 +265,15 @@ describe('basic multiline tests', function() {
     // tricky -1 on empty row case
     t.sendKeys('j$k');
     t.sendKeys('iab');
-    return t.expect([
+    t.expect([
       'a row',
       'ab',
       'a third row'
     ]);
+    await t.done();
   });
 
-  it('tests basic deletion', function() {
+  it('tests basic deletion', async function() {
     let t = new TestCase([
       'a row',
       'another row',
@@ -269,13 +284,14 @@ describe('basic multiline tests', function() {
       'another row'
     ]);
     t.sendKeys('ux');
-    return t.expect([
+    t.expect([
       'another row',
       ' third row'
     ]);
+    await t.done();
   });
 
-  it('tests deletion moves cursor properly', function() {
+  it('tests deletion moves cursor properly', async function() {
     let t = new TestCase([
       { text: 'here', children: [
         { text: 'and', children: [
@@ -288,6 +304,7 @@ describe('basic multiline tests', function() {
     t.expectCursor(4, 0);
     t.sendKeys('dd');
     t.expectCursor(3, 0);
+    await t.done();
 
     t = new TestCase([
       { text: 'here', children: [
@@ -300,10 +317,11 @@ describe('basic multiline tests', function() {
     t.sendKeys('G');
     t.expectCursor(4, 0);
     t.sendKeys('dd');
-    return t.expectCursor(2, 0);
+    t.expectCursor(2, 0);
+    await t.done();
   });
 
-  it('cursor moves correctly when last sibling is deleted', function() {
+  it('cursor moves correctly when last sibling is deleted', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -332,7 +350,7 @@ describe('basic multiline tests', function() {
       'another row'
     ]);
     t.sendKeys('2u');
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
@@ -341,9 +359,10 @@ describe('basic multiline tests', function() {
       ] },
       'another row'
     ]);
+    await t.done();
   });
 
-  it('cursor moves correctly when first sibling is deleted', function() {
+  it('cursor moves correctly when first sibling is deleted', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -372,7 +391,7 @@ describe('basic multiline tests', function() {
       'another row'
     ]);
     t.sendKeys('2u');
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
@@ -381,9 +400,10 @@ describe('basic multiline tests', function() {
       ] },
       'another row'
     ]);
+    await t.done();
   });
 
-  it('creates a new row when last sibling is deleted', function() {
+  it('creates a new row when last sibling is deleted', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -404,7 +424,7 @@ describe('basic multiline tests', function() {
 
     // brings back everything!
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
@@ -413,17 +433,19 @@ describe('basic multiline tests', function() {
       ] },
       'another row'
     ]);
+    await t.done();
   });
 
-  it('handles deletion of everything', function() {
+  it('handles deletion of everything', async function() {
     let t = new TestCase([ 'row', 'row', 'row your boat' ]);
     t.sendKeys('4dd');
     t.expect(['']);
     t.sendKey('u');
-    return t.expect([ 'row', 'row', 'row your boat' ]);
+    t.expect([ 'row', 'row', 'row your boat' ]);
+    await t.done();
   });
 
-  it('basic change row works', function() {
+  it('basic change row works', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -447,7 +469,7 @@ describe('basic multiline tests', function() {
     ]);
     // should paste properly
     t.sendKeys('p');
-    return t.expect([
+    t.expect([
       { text: 'a row', children: [
         'top row',
         { text: 'middle row', children : [
@@ -457,9 +479,10 @@ describe('basic multiline tests', function() {
       ] },
       'another row'
     ]);
+    await t.done();
   });
 
-  it('basic recursive change row works', function() {
+  it('basic recursive change row works', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -473,10 +496,11 @@ describe('basic multiline tests', function() {
     t.sendKeys('a row');
     t.sendKey('esc');
     t.expect([ 'a row', 'another row' ]);
-    return t.sendKeys('u');
+    t.sendKeys('u');
+    await t.done();
   });
 
-  it('change recursive works on row with children', function() {
+  it('change recursive works on row with children', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -490,7 +514,7 @@ describe('basic multiline tests', function() {
     t.sendKey('esc');
     t.expect([ 'a row' ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
@@ -498,9 +522,10 @@ describe('basic multiline tests', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('tests recursive change on children', function() {
+  it('tests recursive change on children', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         'middle row',
@@ -520,15 +545,16 @@ describe('basic multiline tests', function() {
     t.sendKeys('jcr');
     t.sendKeys('a row');
     t.sendKey('esc');
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         'middle row',
         'a row'
       ] },
     ]);
+    await t.done();
   });
 
-  it('tests cursor returns to where it was', function() {
+  it('tests cursor returns to where it was', async function() {
     let t = new TestCase([
       'top row',
       'middle row',
@@ -537,15 +563,15 @@ describe('basic multiline tests', function() {
     t.sendKeys('dd');
     t.sendKeys('jj');
     t.sendKeys('ux');
-    t.expect;
-    return t.expect([
+    t.expect([
       'op row',
       'middle row',
       'bottom row',
     ]);
+    await t.done();
   });
 
-  it('tests cursor returns to where it was after undo+redo+undo', function() {
+  it('tests cursor returns to where it was after undo+redo+undo', async function() {
     let t = new TestCase([
       'top row',
       'middle row',
@@ -556,15 +582,15 @@ describe('basic multiline tests', function() {
     t.sendKeys('u');
     t.sendKey('ctrl+r');
     t.sendKeys('ux');
-    t.expect;
-    return t.expect([
+    t.expect([
       'op row',
       'middle row',
       'bottom row',
     ]);
+    await t.done();
   });
 
-  it('tests redo in tricky case removing last row', function() {
+  it('tests redo in tricky case removing last row', async function() {
     let t = new TestCase([ 'a row' ]);
     t.sendKeys('cr');
     t.sendKeys('new row');
@@ -579,10 +605,11 @@ describe('basic multiline tests', function() {
     t.sendKey('ctrl+r');
     t.expect([ 'new row' ]);
     t.sendKey('ctrl+r');
-    return t.expect([ 'new ro' ]);
+    t.expect([ 'new ro' ]);
+    await t.done();
   });
 
-  it('tests new row creation works', function() {
+  it('tests new row creation works', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children: [
@@ -593,16 +620,17 @@ describe('basic multiline tests', function() {
     t.sendKeys('jjcr');
     t.sendKeys('a row');
     t.sendKey('esc');
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children: [
           'a row'
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('tests changing too many rows works', function() {
+  it('tests changing too many rows works', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children: [
@@ -613,16 +641,17 @@ describe('basic multiline tests', function() {
     t.sendKeys('jj2cr');
     t.sendKeys('a row');
     t.sendKey('esc');
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children: [
           'a row'
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('tests deleting too many rows works', function() {
+  it('tests deleting too many rows works', async function() {
     let t = new TestCase([
       { text: 'parent row', children: [
         'child row 1',
@@ -632,15 +661,16 @@ describe('basic multiline tests', function() {
     t.sendKeys('j3dd');
     t.expect([ 'parent row' ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'parent row', children: [
         'child row 1',
         'child row 2'
       ] },
     ]);
+    await t.done();
   });
 
-  it('tests undo on change', function() {
+  it('tests undo on change', async function() {
     let t = new TestCase([
       { text: 'parent row', children: [
         'child row 1',
@@ -661,7 +691,7 @@ describe('basic multiline tests', function() {
       ] },
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'parent row', children: [
         'child row 1',
         { text: 'child row 2', children: [
@@ -671,9 +701,10 @@ describe('basic multiline tests', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('tests redo in tricky case making sure redo re-creates the same row', function() {
+  it('tests redo in tricky case making sure redo re-creates the same row', async function() {
     let t = new TestCase([ 'a row' ]);
     t.sendKeys('cr');
     t.sendKeys('new row');
@@ -696,10 +727,11 @@ describe('basic multiline tests', function() {
     t.sendKey('ctrl+r');
     t.expect([ 'new row' ]);
     t.sendKey('ctrl+r');
-    return t.expect([ 'new ro' ]);
+    t.expect([ 'new ro' ]);
+    await t.done();
   });
 
-  it('tests redo in tricky case making sure redo paste re-creates the same row', function() {
+  it('tests redo in tricky case making sure redo paste re-creates the same row', async function() {
     let t = new TestCase([ 'a row' ]);
     t.sendKeys('yyp');
     t.expect([
@@ -729,13 +761,14 @@ describe('basic multiline tests', function() {
       'a row'
     ]);
     t.sendKey('ctrl+r');
-    return t.expect([
+    t.expect([
       'a row',
       ' row'
     ]);
+    await t.done();
   });
 
-  it('tests deleting viewroot', function() {
+  it('tests deleting viewroot', async function() {
     let t = new TestCase([
       { text: 'here', children: [
         'there'
@@ -745,10 +778,11 @@ describe('basic multiline tests', function() {
     t.sendKey('enter');
     t.expectViewRoot(2);
     t.sendKeys('dd');
-    return t.expectViewRoot(1);
+    t.expectViewRoot(1);
+    await t.done();
   });
 
-  it('tests editing viewroot', function() {
+  it('tests editing viewroot', async function() {
     let t = new TestCase([
       { text: 'here', children: [
         'there'
@@ -758,10 +792,11 @@ describe('basic multiline tests', function() {
     t.sendKey('enter');
     t.expectViewRoot(2);
     t.sendKeys('dd');
-    return t.expectViewRoot(1);
+    t.expectViewRoot(1);
+    await t.done();
   });
 
-  return it('cannot do new line above at view root', function() {
+  it('cannot do new line above at view root', async function() {
     let t = new TestCase([
       { text: 'here', children: [
         'there'
@@ -770,10 +805,11 @@ describe('basic multiline tests', function() {
     t.sendKeys('j');
     t.sendKey('enter');
     t.sendKeys('O');
-    return t.expect([
+    t.expect([
       { text: 'here', children: [
         'there'
       ] },
     ]);
+    await t.done();
   });
 });

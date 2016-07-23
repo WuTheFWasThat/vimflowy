@@ -179,7 +179,7 @@ gulp.task('watch', function() {
 
   gulp.watch([sass_glob, plugin_sass_glob, plugin_css_glob], ['css']);
 
-  gulp.watch([js_glob, plugin_js_glob], ['test']);
+  gulp.watch([js_glob, plugin_js_glob, 'test/testcase.js'], ['test']);
   // js:dev reruns via watchify
 
   return gulp.watch(test_glob, ['test']);

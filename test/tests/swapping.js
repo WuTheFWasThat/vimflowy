@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('swapping blocks', function() {
-  it('works', function() {
+  it('works', async function() {
     let t = new TestCase([
       { text: 'move', children: [
         'me'
@@ -246,7 +246,7 @@ describe('swapping blocks', function() {
       '...'
     ]);
     t.sendKey('ctrl+k');
-    return t.expect([
+    t.expect([
       { text: 'move', children: [
         'me'
       ] },
@@ -260,9 +260,10 @@ describe('swapping blocks', function() {
       ] },
       '...'
     ]);
+    await t.done();
   });
 
-  return it('swaps past collapsed', function() {
+  it('swaps past collapsed', async function() {
     let t = new TestCase([
       'line',
       { text: '1', collapsed: true, children: [
@@ -270,12 +271,13 @@ describe('swapping blocks', function() {
       ] },
     ]);
     t.sendKey('ctrl+j');
-    return t.expect([
+    t.expect([
       { text: '1', collapsed: true, children: [
         '2'
       ] },
       'line'
     ]);
+    await t.done();
   });
 });
 

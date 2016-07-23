@@ -9,7 +9,7 @@ let siblingDownKey = '}';
 let siblingUpKey = '{';
 
 describe('text formatting', function() {
-  it('works in insert mode', function() {
+  it('works in insert mode', async function() {
     let t = new TestCase(['']);
     t.sendKeys('i');
     t.sendKey(underlineKey);
@@ -31,16 +31,17 @@ describe('text formatting', function() {
     t.expect(['']);
     // redo knows the format
     t.sendKey('ctrl+r');
-    return t.expect([
+    t.expect([
       {
         text:          'underline strikethrough',
         underline:     '.........              ',
         strikethrough: '          .............'
       }
     ]);
+    await t.done();
   });
 
-  it('correctly detects cursor style in insert mode', function() {
+  it('correctly detects cursor style in insert mode', async function() {
     let t = new TestCase(['']);
     t.sendKeys('i');
     t.sendKeys('normal, ');
@@ -104,7 +105,7 @@ describe('text formatting', function() {
 
     // pastes properly
     t.sendKeys('p');
-    return t.expect([
+    t.expect([
       {
         text:   'vitalic, abroad italic, bald',
         bold:   '          ..................',
@@ -116,9 +117,10 @@ describe('text formatting', function() {
         italic: '........................    '
       }
     ]);
+    await t.done();
   });
 
-  it('preserves cursor style on next line in insert mode', function() {
+  it('preserves cursor style on next line in insert mode', async function() {
     let t = new TestCase(['']);
     t.sendKeys('i');
     t.sendKey(boldKey);
@@ -161,10 +163,11 @@ describe('text formatting', function() {
       },
       'normal'
     ]);
-    return t.sendKey('esc');
+    t.sendKey('esc');
+    await t.done();
   });
 
-  it('works with delete/paste', function() {
+  it('works with delete/paste', async function() {
     let t = new TestCase([
       {
         text:   'bim',
@@ -173,16 +176,17 @@ describe('text formatting', function() {
       }
     ]);
     t.sendKeys('xp');
-    return t.expect([
+    t.expect([
       {
         text:   'ibm',
         bold:   ' ..',
         italic: '. .'
       }
     ]);
+    await t.done();
   });
 
-  it('works in normal mode', function() {
+  it('works in normal mode', async function() {
     let t = new TestCase([
       'test'
     ]);
@@ -197,6 +201,7 @@ describe('text formatting', function() {
     t.expect([
       'test'
     ]);
+    await t.done();
 
     t = new TestCase([
       {
@@ -232,15 +237,16 @@ describe('text formatting', function() {
     ]);
     // cursor ends up where it was
     t.sendKeys('x');
-    return t.expect([
+    t.expect([
       {
         text:   'tet',
         bold:   '.. '
       }
     ]);
+    await t.done();
   });
 
-  it('works in visual mode', function() {
+  it('works in visual mode', async function() {
     let t = new TestCase([ 'hello world' ]);
     t.sendKeys('ve');
     t.sendKey(boldKey);
@@ -327,16 +333,17 @@ describe('text formatting', function() {
       }
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       {
         text:          'hell worl',
         bold:          ' ....    ',
         strikethrough: '    .    '
       }
     ]);
+    await t.done();
   });
 
-  return it('works in visual line mode', function() {
+  it('works in visual line mode', async function() {
     let t = new TestCase([ 'blah', 'blah', 'blah']);
     t.sendKeys('Vjj');
     t.sendKey(boldKey);
@@ -357,6 +364,7 @@ describe('text formatting', function() {
     t.sendKeys('ggVjj');
     t.sendKey(boldKey);
     t.expect([ 'blah', 'blah', 'blah' ]);
+    await t.done();
 
     t = new TestCase([
       {
@@ -449,7 +457,7 @@ describe('text formatting', function() {
       }
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       {
         text: 'blah',
         bold: '... ',
@@ -464,5 +472,6 @@ describe('text formatting', function() {
         bold: '   .'
       }
     ]);
+    await t.done();
   });
 });

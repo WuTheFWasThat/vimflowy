@@ -15,7 +15,7 @@ describe('block indent/unindent', function() {
     ] },
   ];
 
-  it('works in basic cases', function() {
+  it('works in basic cases', async function() {
     let t = new TestCase(threeRows);
     t.sendKey(indentBlockKey);
     t.expect(threeRows);
@@ -33,10 +33,11 @@ describe('block indent/unindent', function() {
       ] }
     ]);
     t.sendKeys('u');
-    return t.expect(threeRows);
+    t.expect(threeRows);
+    await t.done();
   });
 
-  it('moves past siblings and undoes', function() {
+  it('moves past siblings and undoes', async function() {
     let t = new TestCase([
       { text: 'a', children: [
         { text: 'ab', children : [
@@ -82,7 +83,7 @@ describe('block indent/unindent', function() {
       ] },
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'a', children: [
         { text: 'ab', children : [
           'abc'
@@ -92,9 +93,10 @@ describe('block indent/unindent', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('uncollapses if indenting into collapsed', function() {
+  it('uncollapses if indenting into collapsed', async function() {
     let t = new TestCase([
       { text: '1', collapsed: true, children: [
         '2'
@@ -105,7 +107,7 @@ describe('block indent/unindent', function() {
     ]);
     t.sendKeys('j');
     t.sendKey(indentBlockKey);
-    return t.expect([
+    t.expect([
       { text: '1', children: [
         '2',
         { text: '3', children: [
@@ -113,9 +115,10 @@ describe('block indent/unindent', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('works with something with children', function() {
+  it('works with something with children', async function() {
     let t = new TestCase([
       { text: '1', collapsed: true, children: [
         '2'
@@ -126,7 +129,7 @@ describe('block indent/unindent', function() {
     ]);
     t.sendKeys('j');
     t.sendKey(indentBlockKey);
-    return t.expect([
+    t.expect([
       { text: '1', children: [
         '2',
         { text: '3', children: [
@@ -134,9 +137,10 @@ describe('block indent/unindent', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  it('works with numbers', function() {
+  it('works with numbers', async function() {
     let t = new TestCase([
       { text: 'mama', children: [
         { text: 'oldest kid', children : [
@@ -148,7 +152,7 @@ describe('block indent/unindent', function() {
     ]);
     t.sendKeys('jjj2');
     t.sendKey(indentBlockKey);
-    return t.expect([
+    t.expect([
       { text: 'mama', children: [
         { text: 'oldest kid', children : [
           'grandkid',
@@ -157,9 +161,10 @@ describe('block indent/unindent', function() {
         ] },
       ] },
     ]);
+    await t.done();
   });
 
-  return it('works with numbers, somewhat trickier case leaving 1 sibling', function() {
+  it('works with numbers, somewhat trickier case leaving 1 sibling', async function() {
     let t = new TestCase([
       { text: 'mama', children: [
         { text: 'oldest kid', collapsed: true, children : [
@@ -198,7 +203,7 @@ describe('block indent/unindent', function() {
     ]);
     t.sendKeys('k2');
     t.sendKey(unindentBlockKey);
-    return t.expect([
+    t.expect([
       { text: 'mama', children : [
         'young kid'
       ] },
@@ -209,11 +214,12 @@ describe('block indent/unindent', function() {
         'grandkid 2'
       ] },
     ]);
+    await t.done();
   });
 });
 
 describe('random tests', () =>
-  it('tests random things', function() {
+  it('tests random things', async function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
@@ -337,7 +343,7 @@ describe('random tests', () =>
       ] },
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'top row', children: [
         'middle row',
         { text: 'ottom row', children : [
@@ -345,12 +351,12 @@ describe('random tests', () =>
         ] },
       ] },
     ]);
+    await t.done();
   })
-
 );
 
 describe('row indent/unindent', function() {
-  it('works in basic cases', function() {
+  it('works in basic cases', async function() {
     let t = new TestCase([
       '0',
       { text: '1', children: [
@@ -359,15 +365,16 @@ describe('row indent/unindent', function() {
     ]);
     t.sendKeys('j');
     t.sendKey(indentRowKey);
-    return t.expect([
+    t.expect([
       { text: '0', children: [
         '1',
         '2'
       ] },
     ]);
+    await t.done();
   });
 
-  it('works like indent block when collapsed', function() {
+  it('works like indent block when collapsed', async function() {
     let t = new TestCase([
       { text: 'grandmama', children: [
         { text: 'mama', collapsed: true, children : [
@@ -384,17 +391,18 @@ describe('row indent/unindent', function() {
     ]);
 
     t.sendKey(indentRowKey);
-    return t.expect([
+    t.expect([
       { text: 'grandmama', children: [
         { text: 'mama', collapsed: true, children : [
           'me'
         ] },
       ] },
     ]);
+    await t.done();
   });
 
 
-  it("can't indent the viewroot", function() {
+  it("can't indent the viewroot", async function() {
     let t = new TestCase([
       'blah',
       { text: 'first', children: [
@@ -425,10 +433,11 @@ describe('row indent/unindent', function() {
         ] },
       ] },
     ]);
-    return t.expectViewRoot(2);
+    t.expectViewRoot(2);
+    await t.done();
   });
 
-  it("can't unindent the viewroot", function() {
+  it("can't unindent the viewroot", async function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second'
@@ -450,10 +459,11 @@ describe('row indent/unindent', function() {
         'second'
       ] },
     ]);
-    return t.expectViewRoot(1);
+    t.expectViewRoot(1);
+    await t.done();
   });
 
-  return it('multi indent does as many as it can', function() {
+  it('multi indent does as many as it can', async function() {
     let t = new TestCase([
       'first',
       'second',
@@ -470,10 +480,11 @@ describe('row indent/unindent', function() {
     ]);
     t.sendKey('3');
     t.sendKey(unindentBlockKey);
-    return t.expect([
+    t.expect([
       'first',
       'second',
       'third'
     ]);
+    await t.done();
   });
 });

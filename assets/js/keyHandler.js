@@ -168,7 +168,7 @@ class KeyHandler extends EventEmitter {
         let mode_obj = Modes.getMode(this.session.mode);
         mode_obj.handle_bad_key(keyStream);
       } else if (fn) {
-        fn.apply(context, args);
+        await fn.apply(context, args);
         let mode_obj = Modes.getMode(this.session.mode);
         mode_obj.every(this.session, keyStream);
       }

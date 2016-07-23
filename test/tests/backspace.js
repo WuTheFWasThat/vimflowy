@@ -2,15 +2,16 @@
 import TestCase from '../testcase';
 
 describe('backspace', function() {
-  it('works in simple case', function() {
+  it('works in simple case', async function() {
     let t = new TestCase(['abc']);
     t.sendKey('A');
     t.sendKey('backspace');
     t.sendKey('backspace');
-    return t.expect(['a']);
+    t.expect(['a']);
+    await t.done();
   });
 
-  it('works deleting from second line', function() {
+  it('works deleting from second line', async function() {
     let t = new TestCase(['abc', 'def']);
     t.sendKeys('jli');
     t.sendKey('backspace');
@@ -27,10 +28,11 @@ describe('backspace', function() {
     t.expect(['ef']);
     t.sendKey('esc');
     t.sendKey('u');
-    return t.expect(['abc', 'def']);
+    t.expect(['abc', 'def']);
+    await t.done();
   });
 
-  it('works at end of line', function() {
+  it('works at end of line', async function() {
     let t = new TestCase(['ab', 'cd']);
     t.sendKeys('jA');
     t.sendKey('backspace');
@@ -39,10 +41,11 @@ describe('backspace', function() {
     t.sendKey('backspace');
     t.expect(['ab']);
     t.sendKey('backspace');
-    return t.expect(['a']);
+    t.expect(['a']);
+    await t.done();
   });
 
-  it('works from children', function() {
+  it('works from children', async function() {
     let t = new TestCase([
       { text: 'ab', children: [
         'bc'
@@ -86,14 +89,15 @@ describe('backspace', function() {
       ] },
     ]);
     t.sendKey('backspace');
-    return t.expect([
+    t.expect([
       { text: 'cd', children: [
         'de'
       ] },
     ]);
+    await t.done();
   });
 
-  it('works with undo/redo', function() {
+  it('works with undo/redo', async function() {
     let t = new TestCase([
       { text: 'ab', children: [
         'cd'
@@ -120,12 +124,13 @@ describe('backspace', function() {
       'abcd'
     ]);
     t.sendKey('x');
-    return t.expect([
+    t.expect([
       'acd'
     ]);
+    await t.done();
   });
 
-  return it('fails when both rows have children', function() {
+  it('fails when both rows have children', async function() {
     let t = new TestCase([
       { text: 'ab', children: [
         'cd'
@@ -167,18 +172,19 @@ describe('backspace', function() {
     ]);
     t.sendKey('esc');
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       'ab',
       { text: 'ab', children: [
         'cd'
       ] }
     ]);
+    await t.done();
   });
 });
 
 
 describe('delete', () =>
-  it('works in basic case', function() {
+  it('works in basic case', async function() {
     let t = new TestCase(['ab', 'cd']);
     t.sendKeys('i');
     t.sendKey('delete');
@@ -190,7 +196,8 @@ describe('delete', () =>
     t.expect(['', 'cd']);
     t.sendKey('esc');
     t.sendKey('u');
-    return t.expect(['ab', 'cd']);
+    t.expect(['ab', 'cd']);
+    await t.done();
   })
 );
 

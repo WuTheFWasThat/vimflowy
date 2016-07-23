@@ -2,7 +2,7 @@
 import TestCase from '../testcase';
 
 describe('random set of basic tests', function() {
-  it('tests adding, deleting, undoing, and redoing', function() {
+  it('tests adding, deleting, undoing, and redoing', async function() {
     let t = new TestCase(['']);
     t.sendKey('i');
     t.sendKeys('hello world');
@@ -45,10 +45,11 @@ describe('random set of basic tests', function() {
 
     t.sendKeys('a purple');
     t.sendKey('esc');
-    return t.expect(['yellowy purple']);
+    t.expect(['yellowy purple']);
+    await t.done();
   });
 
-  it("tests that redo doesn't go past latest", function() {
+  it("tests that redo doesn't go past latest", async function() {
     let t = new TestCase(['thing']);
     t.sendKey('x');
     t.expect(['hing']);
@@ -59,10 +60,11 @@ describe('random set of basic tests', function() {
     t.sendKey('ctrl+r');
     t.expect(['hing']);
     t.sendKeys('u');
-    return t.expect(['thing']);
+    t.expect(['thing']);
+    await t.done();
   });
 
-  it("i + esc moves the cursor back a character, a + esc doesn't", function() {
+  it("i + esc moves the cursor back a character, a + esc doesn't", async function() {
     let t = new TestCase(['hello']);
     t.sendKey('$');
     // i + esc moves the cursor back a character
@@ -79,10 +81,11 @@ describe('random set of basic tests', function() {
       t.sendKey('esc');
     }
     t.sendKeys('ru');
-    return t.expect(['hullo']);
+    t.expect(['hullo']);
+    await t.done();
   });
 
-  it('tests cursor behavior', function() {
+  it('tests cursor behavior', async function() {
     let t = new TestCase(['hello world']);
 
     // make sure delete and then undo doesn't move the cursor
@@ -119,31 +122,35 @@ describe('random set of basic tests', function() {
 
     // does nothing
     t.sendKeys('dycy');
-    return t.expect(['abu']);
+    t.expect(['abu']);
+    await t.done();
   });
 
-  it("tests the cursor doesn't go before line", function() {
+  it("tests the cursor doesn't go before line", async function() {
     let t = new TestCase(['blahblah']);
     t.sendKeys('0d$iab');
-    return t.expect(['ab']);
+    t.expect(['ab']);
+    await t.done();
   });
 
-  it('replaces with space properly', function() {
+  it('replaces with space properly', async function() {
     let t = new TestCase(['space']);
     t.sendKeys(['f', 'a', 'r', 'space']);
-    return t.expect(['sp ce']);
+    t.expect(['sp ce']);
+    await t.done();
   });
 
-  return it('replaces with number properly', function() {
+  it('replaces with number properly', async function() {
     let t = new TestCase(['number']);
     t.sendKeys(['f', 'e', 'r', '3']);
-    return t.expect(['numb3r']);
+    t.expect(['numb3r']);
+    await t.done();
   });
 });
 
 describe('numbers (repeat next action)', function() {
 
-  it('works on movement', function() {
+  it('works on movement', async function() {
     let t = new TestCase(['obladi oblada o lee lee o lah lah']);
     t.sendKeys('5lx');
     t.expect(['oblad oblada o lee lee o lah lah']);
@@ -172,10 +179,11 @@ describe('numbers (repeat next action)', function() {
     // try cut too
     t.sendKeys('c3eblah');
     t.sendKey('esc');
-    return t.expect(['blah blah blah blaha']);
+    t.expect(['blah blah blah blaha']);
+    await t.done();
   });
 
-  it('works on replace', function() {
+  it('works on replace', async function() {
     let t = new TestCase(['1234123412341234 is my credit card']);
     t.sendKeys('12r*');
     t.expect(['************1234 is my credit card']);
@@ -194,15 +202,17 @@ describe('numbers (repeat next action)', function() {
     t.sendKeys('8u');
     t.expect(['********1234 is my credit card']);
     t.sendKeys('6u');
-    return t.expect(['1234123412341234 is my credit card']);
+    t.expect(['1234123412341234 is my credit card']);
+    await t.done();
   });
 
-  return it('replace character yanks', function() {
+  it('replace character yanks', async function() {
     let t = new TestCase(['yank']);
     t.sendKeys('st');
     t.sendKey('esc');
     t.expect(['tank']);
     t.sendKey('p');
-    return t.expect(['tyank']);
+    t.expect(['tyank']);
+    await t.done();
   });
 });

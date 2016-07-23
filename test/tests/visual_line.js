@@ -4,15 +4,16 @@ let siblingDownKey = '}';
 let siblingUpKey = '{';
 
 describe('visual line mode', function() {
-  it('delete works in basic case', function() {
+  it('delete works in basic case', async function() {
     let t = new TestCase([ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]);
     t.sendKeys('Vjx');
     t.expect([ 'i', 'am', 'a', 'test', 'case' ]);
     t.sendKeys('u');
-    return t.expect([ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]);
+    t.expect([ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]);
+    await t.done();
   });
 
-  it('change works in basic case', function() {
+  it('change works in basic case', async function() {
     let t = new TestCase([ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]);
     t.sendKeys('GVkc');
     t.expect([ 'hello', 'world', 'i', 'am', 'a', '']);
@@ -20,10 +21,11 @@ describe('visual line mode', function() {
     t.expect([ 'hello', 'world', 'i', 'am', 'a', 'confused soul' ]);
     t.sendKey('esc');
     t.sendKeys('u');
-    return t.expect([ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]);
+    t.expect([ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]);
+    await t.done();
   });
 
-  it('allows cursor switch', function() {
+  it('allows cursor switch', async function() {
     let t = new TestCase([ 'hello', 'world', 'i', 'am', 'a', 'test', 'case' ]);
     t.sendKeys('jjjx');
     t.expect([ 'hello', 'world', 'i', 'm', 'a', 'test', 'case' ]);
@@ -32,26 +34,29 @@ describe('visual line mode', function() {
     t.sendKeys('u');
     t.expect([ 'hello', 'world', 'i', 'm', 'a', 'test', 'case' ]);
     t.sendKey('ctrl+r');
-    return t.expect([ 'hello', 'case' ]);
+    t.expect([ 'hello', 'case' ]);
+    await t.done();
   });
 
-  it('works with repeat', function() {
+  it('works with repeat', async function() {
     let t = new TestCase([ '1', '2', '3', '4', '5', '6', '7' ]);
     t.sendKeys('Vjjx');
     t.expect([ '4', '5', '6', '7' ]);
     t.sendKeys('.');
-    return t.expect([ '7' ]);
+    t.expect([ '7' ]);
+    await t.done();
   });
 
-  it('doesnt save on yank', function() {
+  it('doesnt save on yank', async function() {
     let t = new TestCase([ '1', '2' ]);
     t.sendKeys('xjVy');
     t.expect([ '', '2' ]);
     t.sendKeys('.'); // this is the x, not the y
-    return t.expect([ '', '' ]);
+    t.expect([ '', '' ]);
+    await t.done();
   });
 
-  it('works with deleting children', function() {
+  it('works with deleting children', async function() {
     let t = new TestCase([
       { text: 'nest', children: [
         'egg'
@@ -137,7 +142,7 @@ describe('visual line mode', function() {
       ] }
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'nest', children: [
         'egg'
       ] },
@@ -148,9 +153,10 @@ describe('visual line mode', function() {
         'egg 3'
       ] }
     ]);
+    await t.done();
   });
 
-  it('works with indent', function() {
+  it('works with indent', async function() {
     let t = new TestCase([
       { text: 'nest', children: [
         'egg'
@@ -235,7 +241,7 @@ describe('visual line mode', function() {
       ] }
     ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       { text: 'nest', children: [
         'egg'
       ] },
@@ -247,9 +253,10 @@ describe('visual line mode', function() {
         'egg 3'
       ] }
     ]);
+    await t.done();
   });
 
-  it('works when cursor/anchor are ancestors of each other', function() {
+  it('works when cursor/anchor are ancestors of each other', async function() {
     let t = new TestCase([
       { text: 'nest', children: [
         'egg'
@@ -273,14 +280,15 @@ describe('visual line mode', function() {
       ] }
     ]);
     t.sendKeys('jVkd');
-    return t.expect([
+    t.expect([
       { text: 'nest 3', children: [
         'egg 3'
       ] }
     ]);
+    await t.done();
   });
 
-  it('has LCA behavior', function() {
+  it('has LCA behavior', async function() {
     let t = new TestCase([
       { text: 'nest', children: [
         'egg'
@@ -299,6 +307,7 @@ describe('visual line mode', function() {
         'egg 3'
       ] }
     ]);
+    await t.done();
 
     t = new TestCase([
       { text: 'nest', children: [
@@ -318,6 +327,7 @@ describe('visual line mode', function() {
         'egg 3'
       ] }
     ]);
+    await t.done();
 
     t = new TestCase([
       { text: 'this case', children: [
@@ -329,14 +339,15 @@ describe('visual line mode', function() {
       ] }
     ]);
     t.sendKeys('jjjVkkd');
-    return t.expect([
+    t.expect([
       { text: 'this case', children: [
         'whoops!'
       ] }
     ]);
+    await t.done();
   });
 
-  return it('works with go to end of document', function() {
+  it('works with go to end of document', async function() {
     let t = new TestCase([
       'yay',
       { text: 'hip', children: [
@@ -349,7 +360,7 @@ describe('visual line mode', function() {
     t.sendKeys('VGd');
     t.expect([ '' ]);
     t.sendKeys('u');
-    return t.expect([
+    t.expect([
       'yay',
       { text: 'hip', children: [
         { text: 'hop', children: [
@@ -358,5 +369,6 @@ describe('visual line mode', function() {
       ] },
       'hooray!'
     ]);
+    await t.done();
   });
 });

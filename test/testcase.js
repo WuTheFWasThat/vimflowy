@@ -56,6 +56,17 @@ class TestCase {
     this.document.load(serialized);
     this.session.reset_history();
     this.session.reset_jump_history();
+
+    this.prom = Promise.resolve();
+  }
+
+  _chain(next) {
+    this.prom = this.prom.then(next);
+    return this;
+  }
+
+  done() {
+    return this.prom;
   }
 
   _expectDeepEqual(actual, expected, message) {
@@ -87,53 +98,80 @@ class TestCase {
   }
 
   sendKeys(keys) {
-    for (let j = 0; j < keys.length; j++) {
-      let key = keys[j];
-      // NOTE: this is an async function but since the datastore is inMemory,
-      // and we don't care about the return value,
-      // we can treat it as synchronous
-      this.keyhandler.handleKey(key);
+    if (typeof keys === 'string') {
+      keys = keys.split('');
     }
+    keys.forEach((key) => {
+      this._chain(() =>  {
+        return this.keyhandler.handleKey(key);
+      });
+    });
     return this;
   }
 
   sendKey(key) {
-    this.sendKeys([key]);
-    return this;
+    return this.sendKeys([key]);
   }
 
   import(content, mimetype) {
-    return this.session.importContent(content, mimetype);
+    return this._chain(() => {
+      return this.session.importContent(content, mimetype);
+    });
+  }
+
+  enablePlugin(pluginName) {
+    return this._chain(() => {
+      return this.pluginManager.enable(pluginName);
+    });
+  }
+
+  disablePlugin(pluginName) {
+    return this._chain(() => {
+      return this.pluginManager.disable(pluginName);
+    });
   }
 
   expect(expected) {
-    let serialized = this.document.serialize(this.document.root.row, {pretty: true});
-    this._expectDeepEqual(serialized.children, expected, 'Unexpected serialized content');
-    return this;
+    return this._chain(() => {
+      let serialized = this.document.serialize(
+        this.document.root.row, {pretty: true}
+      );
+      this._expectDeepEqual(serialized.children, expected, 'Unexpected serialized content');
+    });
   }
 
   expectViewRoot(expected) {
-    this._expectEqual(this.session.viewRoot.row, expected, 'Unexpected view root');
-    return this;
+    return this._chain(() => {
+      this._expectEqual(this.session.viewRoot.row, expected,
+                        'Unexpected view root');
+    });
   }
 
   expectCursor(row, col) {
-    this._expectEqual(this.session.cursor.row, row, 'Unexpected cursor row');
-    this._expectEqual(this.session.cursor.col, col, 'Unexpected cursor col');
-    return this;
+    return this._chain(() => {
+      this._expectEqual(this.session.cursor.row, row,
+                        'Unexpected cursor row');
+      this._expectEqual(this.session.cursor.col, col,
+                        'Unexpected cursor col');
+    });
   }
 
   expectJumpIndex(index, historyLength = null) {
-    this._expectEqual(this.session.jumpIndex, index, 'Unexpected jump index');
-    if (historyLength !== null) {
-      this._expectEqual(this.session.jumpHistory.length, historyLength, 'Unexpected jump history length');
-    }
-    return this;
+    return this._chain(() => {
+      this._expectEqual(this.session.jumpIndex, index,
+                        'Unexpected jump index');
+      if (historyLength !== null) {
+        this._expectEqual(this.session.jumpHistory.length, historyLength,
+                          'Unexpected jump history length');
+      }
+    });
   }
 
   expectNumMenuResults(num_results) {
-    this._expectEqual(this.session.menu.results.length, num_results, 'Unexpected number of results');
-    return this;
+    return this._chain(() => {
+      this._expectEqual(this.session.menu.results.length, num_results,
+                        'Unexpected number of results');
+    });
   }
 
   setRegister(value) {
@@ -142,21 +180,27 @@ class TestCase {
   }
 
   expectRegister(expected) {
-    let current = this.register.serialize();
-    this._expectDeepEqual(current, expected, 'Unexpected register content');
-    return this;
+    return this._chain(() => {
+      let current = this.register.serialize();
+      this._expectDeepEqual(current, expected,
+                            'Unexpected register content');
+    });
   }
 
   expectRegisterType(expected) {
-    let current = this.register.serialize();
-    this._expectDeepEqual(current.type, expected, 'Unexpected register type');
-    return this;
+    return this._chain(() => {
+      let current = this.register.serialize();
+      this._expectDeepEqual(current.type, expected,
+                            'Unexpected register type');
+    });
   }
 
   expectExport(fileExtension, expected) {
-    let export_ = this.session.exportContent(fileExtension);
-    this._expectEqual(export_, expected, 'Unexpected export content');
-    return this;
+    return this._chain(() => {
+      let export_ = this.session.exportContent(fileExtension);
+      this._expectEqual(export_, expected,
+                        'Unexpected export content');
+    });
   }
 }
 

@@ -3,7 +3,7 @@ import TestCase from '../testcase';
 import Register from '../../assets/js/register';
 
 describe('enter', function() {
-  it('works in basic case', function() {
+  it('works in basic case', async function() {
     let t = new TestCase(['']);
     t.sendKey('i');
     t.sendKeys('hello');
@@ -12,10 +12,11 @@ describe('enter', function() {
     t.sendKey('esc');
     t.expect(['hello', 'world']);
     t.sendKey('u');
-    return t.expect(['']);
+    t.expect(['']);
+    await t.done();
   });
 
-  it('works with tabbing', function() {
+  it('works with tabbing', async function() {
     let t = new TestCase(['']);
     t.sendKey('i');
     t.sendKeys('hello');
@@ -40,10 +41,11 @@ describe('enter', function() {
     t.sendKey('shift+tab');
     t.sendKeys(' goo');
     t.sendKey('esc');
-    return t.expect(['hello', 'world of goo']);
+    t.expect(['hello', 'world of goo']);
+    await t.done();
   });
 
-  it('does not mess up registers', function() {
+  it('does not mess up registers', async function() {
     let t = new TestCase(['']);
     t.setRegister({type: Register.TYPES.CHARS, saved: 'unchanged'});
     t.sendKey('i');
@@ -54,10 +56,11 @@ describe('enter', function() {
     t.sendKey('enter');
     t.sendKey('esc');
     t.expect(['hello', 'world']);
-    return t.expectRegister({type: Register.TYPES.CHARS, saved: 'unchanged'});
+    t.expectRegister({type: Register.TYPES.CHARS, saved: 'unchanged'});
+    await t.done();
   });
 
-  it('works at the end of a line', function() {
+  it('works at the end of a line', async function() {
     let t = new TestCase(['']);
     t.sendKey('i');
     t.sendKeys('hello');
@@ -65,10 +68,11 @@ describe('enter', function() {
     t.sendKey('esc');
     t.expect(['hello', '']);
     t.sendKey('u');
-    return t.expect(['']);
+    t.expect(['']);
+    await t.done();
   });
 
-  it('works at the beginning of a line', function() {
+  it('works at the beginning of a line', async function() {
     let t = new TestCase(['']);
     t.sendKey('i');
     t.sendKey('enter');
@@ -76,11 +80,12 @@ describe('enter', function() {
     t.sendKey('esc');
     t.expect(['', 'hello']);
     t.sendKey('u');
-    return t.expect(['']);
+    t.expect(['']);
+    await t.done();
   });
 
-  it('works on lines with children', function() {
-    let t=  new TestCase(['']);
+  it('works on lines with children', async function() {
+    let t = new TestCase(['']);
     t.sendKey('i');
     t.sendKeys('helloworld');
     t.sendKey('enter');
@@ -99,15 +104,16 @@ describe('enter', function() {
     }
     t.sendKey('enter');
     t.sendKey('esc');
-    return t.expect([
+    t.expect([
       'hello',
       { text: 'world', children: [
         'of goo'
       ] }
     ]);
+    await t.done();
   });
 
-  it('preserves identity at the end of a line', function() {
+  it('preserves identity at the end of a line', async function() {
     let t = new TestCase([
       { text: 'hey', id: 1 },
       'you',
@@ -116,15 +122,16 @@ describe('enter', function() {
     t.sendKey('A');
     t.sendKey('enter');
     t.sendKeys('i like');
-    return t.expect([
+    t.expect([
       { text: 'hey', id: 1 },
       'i like',
       'you',
       { clone: 1 }
     ]);
+    await t.done();
   });
 
-  it('doesnt preserve identity in the middle of a line', function() {
+  it('doesnt preserve identity in the middle of a line', async function() {
     let t = new TestCase([
       { text: 'hey', id: 1 },
       'you',
@@ -134,15 +141,16 @@ describe('enter', function() {
     t.sendKey('i');
     t.sendKey('enter');
     t.sendKeys('ya');
-    return t.expect([
+    t.expect([
       'he',
       { text: 'yay', id: 1 },
       'you',
       { clone: 1 }
     ]);
+    await t.done();
   });
 
-  it('handles case with children at end of line', function() {
+  it('handles case with children at end of line', async function() {
     let t = new TestCase([
       { text: 'hey', id: 1, children: [
         'like'
@@ -153,7 +161,7 @@ describe('enter', function() {
     t.sendKey('A');
     t.sendKey('enter');
     t.sendKeys('i');
-    return t.expect([
+    t.expect([
       { text: 'hey', id: 1, children: [
         'i',
         'like'
@@ -161,9 +169,10 @@ describe('enter', function() {
       'you',
       { clone: 1 }
     ]);
+    await t.done();
   });
 
-  it('handles collapsed case at end of line', function() {
+  it('handles collapsed case at end of line', async function() {
     let t = new TestCase([
       { text: 'hey', id: 1, collapsed: true, children: [
         'like'
@@ -174,7 +183,7 @@ describe('enter', function() {
     t.sendKey('A');
     t.sendKey('enter');
     t.sendKeys('i');
-    return t.expect([
+    t.expect([
       { text: 'hey', id: 1, collapsed: true, children: [
         'like'
       ] },
@@ -182,9 +191,10 @@ describe('enter', function() {
       'you',
       { clone: 1 }
     ]);
+    await t.done();
   });
 
-  return it('when using o on a blank bullet, collapses parent', function() {
+  it('when using o on a blank bullet, collapses parent', async function() {
     let t = new TestCase([
       { text: 'hey', children: [
         'you'
@@ -202,10 +212,11 @@ describe('enter', function() {
       ] }
     ]);
     t.sendKey('u');
-    return t.expect([
+    t.expect([
       { text: 'hey', children: [
         'you'
       ] }
     ]);
+    await t.done();
   });
 });
