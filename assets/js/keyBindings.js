@@ -144,8 +144,8 @@ class KeyBindings extends EventEmitter {
 
     let motion_bindings = {};
     for (mode_name in MODES) {
-      var mode = MODES[mode_name];
-      var [err, mode_bindings] = this.getBindings(this.definitions.motions, keyMaps[mode]);
+      const mode = MODES[mode_name];
+      const [err, mode_bindings] = this.getBindings(this.definitions.motions, keyMaps[mode]);
       if (err) { return `Error getting motion bindings for ${mode_name}: ${err}`; }
       motion_bindings[mode] = mode_bindings;
     }

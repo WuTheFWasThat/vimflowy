@@ -93,7 +93,7 @@ let renderLine = function(lineData, options = {}) {
 
 
   let newLineData = lineData.concat([{char: ' '}]);
-  for (var i = 0; i < newLineData.length; i++) { // to make end condition easier
+  for (let i = 0; i < newLineData.length; i++) { // to make end condition easier
     // TODO  or (utils.isPunctuation obj.char)
     // problem is URLs have dots in them...
     let obj = newLineData[i];
@@ -156,7 +156,7 @@ let renderLine = function(lineData, options = {}) {
 
     // collect line into groups to render
     for (let k1 = 0; k1 < line.length; k1++) {
-      var x = line[k1];
+      const x = line[k1];
       if (JSON.stringify(x.renderOptions) === JSON.stringify(renderOptions)) {
         acc.push(x.char);
       } else {
@@ -183,7 +183,7 @@ let renderLine = function(lineData, options = {}) {
 
     // make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
     for (let j2 = 0; j2 < constants.text_properties.length; j2++) {
-      var property = constants.text_properties[j2];
+      const property = constants.text_properties[j2];
       if (spec[property]) {
         classes.push(property);
       }
@@ -252,7 +252,7 @@ let renderSession = function(session, options = {}) {
 
 };
 
-var virtualRenderSession = function(session, options = {}) {
+const virtualRenderSession = function(session, options = {}) {
   let crumbs = [];
   let path = session.viewRoot;
   while (!path.is(session.document.root)) {
@@ -325,7 +325,7 @@ var virtualRenderSession = function(session, options = {}) {
   return virtualDom.h('div', {}, [breadcrumbsNode, contentsNode]);
 };
 
-var virtualRenderTree = function(session, parent, options = {}) {
+const virtualRenderTree = function(session, parent, options = {}) {
   if ((!options.ignoreCollapse) && (session.document.collapsed(parent.row))) {
     return;
   }
@@ -401,7 +401,7 @@ var virtualRenderTree = function(session, parent, options = {}) {
   return childrenNodes;
 };
 
-var virtualRenderLine = function(session, path, options = {}) {
+const virtualRenderLine = function(session, path, options = {}) {
   let lineData = session.document.getLine(path.row);
   let cursors = {};
   let highlights = {};
@@ -463,7 +463,7 @@ var virtualRenderLine = function(session, path, options = {}) {
   return results;
 };
 
-var renderMenu = function(menu) {
+const renderMenu = function(menu) {
   if (!menu.div) {
     return;
   }
@@ -543,7 +543,7 @@ let renderPlugins = function(pluginManager) {
   return pluginManager.vnode = virtualDom.patch(pluginManager.vnode, patches);
 };
 
-var virtualRenderPlugins = function(pluginManager) {
+const virtualRenderPlugins = function(pluginManager) {
   let header = virtualDom.h('tr', {}, [
     virtualDom.h('th', { className: 'plugin-name' }, 'Plugin'),
     virtualDom.h('th', { className: 'plugin-description' }, 'Description'),
@@ -557,7 +557,7 @@ var virtualRenderPlugins = function(pluginManager) {
   return virtualDom.h('table', {}, ([header].concat(pluginElements)));
 };
 
-var virtualRenderPlugin = function(pluginManager, name) {
+const virtualRenderPlugin = function(pluginManager, name) {
   let status = pluginManager.getStatus(name);
   let actions = [];
   let button;
@@ -627,7 +627,7 @@ let renderHotkeysTable = function(key_bindings) {
 };
 
 // build table to visualize hotkeys
-var buildTable = function(key_bindings, keyMap, actions, helpMenu) {
+const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
   let buildTableContents = function(bindings, onto, recursed=false) {
     for (let k in bindings) {
       let v = bindings[k];

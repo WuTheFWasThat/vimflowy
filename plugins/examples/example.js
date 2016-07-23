@@ -1,4 +1,4 @@
-var Plugins = require('../../assets/js/plugins');
+const Plugins = require('../../assets/js/plugins');
 
 Plugins.register({
   name: 'Hello World example',

@@ -541,7 +541,7 @@ class Document extends EventEmitter {
       return { clone: row };
     }
 
-    var struct = this.serializeRow(row);
+    const struct = this.serializeRow(row);
     let children = this._getChildren(row).map(
       (childrow) => this.serialize(childrow, options, serialized)
     );

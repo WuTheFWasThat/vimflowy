@@ -156,26 +156,33 @@ class KeyHandler extends EventEmitter {
   }
 
   // NOTE: handled tells the eventEmitter whether to preventDefault or not
-  //       returns whether the *last key* was handled
+  //       returns whether all keys were handled
+  //       ( NOTE: should it be whether the *last key* was handled? )
   processKeys(keyStream) {
-    let handled = true;
+    let handledAll = true;
     while (!keyStream.done() && !keyStream.waiting) {
       keyStream.checkpoint();
-      handled = this.processOnce(keyStream);
+      const { handled, fn, args, context } = this.getCommand(this.session.mode, keyStream);
       if (!handled) {
+        handledAll = false;
         let mode_obj = Modes.getMode(this.session.mode);
         mode_obj.handle_bad_key(keyStream);
+      } else if (fn) {
+        fn.apply(context, args);
+        let mode_obj = Modes.getMode(this.session.mode);
+        mode_obj.every(this.session, keyStream);
       }
     }
-    return handled;
+    return handledAll;
   }
 
-  processOnce(keyStream) {
-    return this.processMode(this.session.mode, keyStream);
-  }
 
-  // returns: whether we encountered a bad key
-  processMode(mode, keyStream, bindings = null, repeat = 1) {
+  // returns:
+  //   handled: whether we processed all keys (did not encounter a bad key)
+  //   fn: a function to apply
+  //   args: arguments to apply
+  //   context: a context to execute the function in
+  getCommand(mode, keyStream, bindings = null, repeat = 1) {
     if (bindings === null) {
       bindings = this.keyBindings.bindings[mode];
     }
@@ -198,7 +205,9 @@ class KeyHandler extends EventEmitter {
     if (key === null) {
       // either key was already null, or
       // a transform acted (which, for now, we always consider not bad.  could change)
-      return true;
+      return {
+        handled: true
+      };
     }
 
     let info;
@@ -206,7 +215,9 @@ class KeyHandler extends EventEmitter {
       info = bindings[key];
     } else {
       if (!('MOTION' in bindings)) {
-        return false;
+        return {
+          handled: false
+        };
       }
 
       // note: this uses original bindings to determine what's a motion
@@ -214,7 +225,9 @@ class KeyHandler extends EventEmitter {
         this.getMotion(keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat);
       context.repeat = motionrepeat;
       if (motion === null) {
-        return handled;
+        return {
+          handled
+        };
       }
 
       args.push(motion);
@@ -224,12 +237,15 @@ class KeyHandler extends EventEmitter {
     let { definition } = info;
     if (typeof definition === 'object') {
       // recursive definition
-      return this.processMode(mode, keyStream, info.definition, context.repeat);
+      return this.getCommand(mode, keyStream, info.definition, context.repeat);
     } else if (typeof definition === 'function') {
       context = mode_obj.transform_context(context);
-      info.definition.apply(context, args);
-      (Modes.getMode(this.session.mode)).every(this.session, keyStream);
-      return true;
+      return {
+        handled: true,
+        fn: info.definition,
+        args: args,
+        context: context,
+      };
     } else {
       throw new errors.UnexpectedValue('definition', definition);
     }
