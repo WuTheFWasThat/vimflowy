@@ -135,30 +135,30 @@ class KeyHandler extends EventEmitter {
     return this.recording.key = null;
   }
 
-  playRecording(recording) {
+  async playRecording(recording) {
     // the recording shouldn't save, (i.e. no @session.save)
     let recordKeyStream = new KeyStream(recording);
-    return this.processKeys(recordKeyStream);
+    return await this.processKeys(recordKeyStream);
   }
 
   //##################
   // general handling
   //##################
 
-  handleKey(key) {
+  async handleKey(key) {
     Logger.logger.debug('Handling key:', key);
     this.keyStream.enqueue(key);
     if (this.recording.stream) {
       this.recording.stream.enqueue(key);
     }
-    let handled = this.processKeys(this.keyStream);
+    let handled = await this.processKeys(this.keyStream);
     return handled;
   }
 
   // NOTE: handled tells the eventEmitter whether to preventDefault or not
   //       returns whether all keys were handled
   //       ( NOTE: should it be whether the *last key* was handled? )
-  processKeys(keyStream) {
+  async processKeys(keyStream) {
     let handledAll = true;
     while (!keyStream.done() && !keyStream.waiting) {
       keyStream.checkpoint();

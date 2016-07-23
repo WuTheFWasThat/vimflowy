@@ -145,8 +145,8 @@ let create_session = async function(doc, to_load) {
 
   let key_emitter = new KeyEmitter();
   key_emitter.listen();
-  key_emitter.on('keydown', function(key) {
-    let handled = key_handler.handleKey(key);
+  key_emitter.on('keydown', async (key) => {
+    let handled = await key_handler.handleKey(key);
     if (handled) {
       Render.renderSession(session);
     }

@@ -89,6 +89,9 @@ class TestCase {
   sendKeys(keys) {
     for (let j = 0; j < keys.length; j++) {
       let key = keys[j];
+      // NOTE: this is an async function but since the datastore is inMemory,
+      // and we don't care about the return value,
+      // we can treat it as synchronous
       this.keyhandler.handleKey(key);
     }
     return this;
