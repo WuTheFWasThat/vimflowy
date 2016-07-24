@@ -34,100 +34,100 @@ class DataStore {
     this._IDKey_ = `${this.prefix}:lastID`;
   }
 
-  get(key, default_value = undefined) {
+  _get(key, default_value = undefined) {
     console.log('GET key', key, 'default value', default_value);
     throw new errors.NotImplemented();
   }
 
-  set(key, value) {
+  _set(key, value) {
     console.log('SET key', key, 'value', value);
     throw new errors.NotImplemented();
   }
 
   // get and set values for a given row
   getLine(row) {
-    return this.get((this._lineKey_(row)), []);
+    return this._get((this._lineKey_(row)), []);
   }
   setLine(row, line) {
-    return this.set((this._lineKey_(row)), line);
+    return this._set((this._lineKey_(row)), line);
   }
 
   getParents(row) {
-    let parents = this.get((this._parentsKey_(row)), []);
+    let parents = this._get((this._parentsKey_(row)), []);
     if (typeof parents === 'number') {
       parents = [ parents ];
     }
     return parents;
   }
   setParents(row, parents) {
-    return this.set((this._parentsKey_(row)), parents);
+    return this._set((this._parentsKey_(row)), parents);
   }
 
   getChildren(row) {
-    return this.get((this._childrenKey_(row)), []);
+    return this._get((this._childrenKey_(row)), []);
   }
   setChildren(row, children) {
-    return this.set((this._childrenKey_(row)), children);
+    return this._set((this._childrenKey_(row)), children);
   }
 
   getDetachedParent(row) {
-    return this.get((this._detachedParentKey_(row)), null);
+    return this._get((this._detachedParentKey_(row)), null);
   }
   setDetachedParent(row, parent) {
-    return this.set((this._detachedParentKey_(row)), parent);
+    return this._set((this._detachedParentKey_(row)), parent);
   }
 
   getDetachedChildren(row) {
-    return this.get((this._detachedChildrenKey_(row)), []);
+    return this._get((this._detachedChildrenKey_(row)), []);
   }
   setDetachedChildren(row, children) {
-    return this.set((this._detachedChildrenKey_(row)), children);
+    return this._set((this._detachedChildrenKey_(row)), children);
   }
 
   getCollapsed(row) {
-    return this.get((this._collapsedKey_(row)));
+    return this._get((this._collapsedKey_(row)));
   }
   setCollapsed(row, collapsed) {
-    return this.set((this._collapsedKey_(row)), collapsed);
+    return this._set((this._collapsedKey_(row)), collapsed);
   }
 
   // get mapping of macro_key -> macro
   getMacros() {
-    return this.get(this._macrosKey_, {});
+    return this._get(this._macrosKey_, {});
   }
 
   // set mapping of macro_key -> macro
   setMacros(macros) {
-    return this.set(this._macrosKey_, macros);
+    return this._set(this._macrosKey_, macros);
   }
 
   // get global settings (data not specific to a document)
   async getSetting(setting, default_value = undefined) {
-    return this.get(this._settingKey_(setting), default_value);
+    return this._get(this._settingKey_(setting), default_value);
   }
   async setSetting(setting, value) {
-    return this.set((this._settingKey_(setting)), value);
+    return this._set((this._settingKey_(setting)), value);
   }
 
   // get last view (for page reload)
   setLastViewRoot(ancestry) {
-    return this.set(this._lastViewrootKey_, ancestry);
+    return this._set(this._lastViewrootKey_, ancestry);
   }
   getLastViewRoot() {
-    return this.get(this._lastViewrootKey_, []);
+    return this._get(this._lastViewrootKey_, []);
   }
 
   setPluginData(plugin, key, data) {
-    return this.set((this._pluginDataKey_(plugin, key)), data);
+    return this._set((this._pluginDataKey_(plugin, key)), data);
   }
   getPluginData(plugin, key, default_value = undefined) {
-    return this.get((this._pluginDataKey_(plugin, key)), default_value);
+    return this._get((this._pluginDataKey_(plugin, key)), default_value);
   }
 
   // get next row ID
   getId() { // Suggest to override this for efficiency
     let id = 1;
-    while ((this.get((this._lineKey_(id)), null)) !== null) {
+    while ((this._get((this._lineKey_(id)), null)) !== null) {
       id++;
     }
     return id;
@@ -147,7 +147,7 @@ class InMemory extends DataStore {
     this.cache = {};
   }
 
-  get(key, default_value = undefined) {
+  _get(key, default_value = undefined) {
     if (key in this.cache) {
       return _.cloneDeep(this.cache[key]);
     } else {
@@ -155,7 +155,7 @@ class InMemory extends DataStore {
     }
   }
 
-  set(key, value) {
+  _set(key, value) {
     return this.cache[key] = value;
   }
 }
@@ -167,14 +167,14 @@ class LocalStorageLazy extends DataStore {
     this.lastSave = Date.now();
   }
 
-  get(key, default_value = undefined) {
+  _get(key, default_value = undefined) {
     if (!(key in this.cache)) {
       this.cache[key] = this._getLocalStorage_(key, default_value);
     }
     return this.cache[key];
   }
 
-  set(key, value) {
+  _set(key, value) {
     this.cache[key] = value;
     return this._setLocalStorage_(key, value);
   }

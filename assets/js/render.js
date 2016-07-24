@@ -371,7 +371,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
       // if clicking outside of text, but on the row, move cursor to the end of the row
       onclick:  (function(path) {
         let col = options.cursorBetween ? -1 : -2;
-        session.cursor.set(path, col);
+        session.cursor.setPosition(path, col);
         return renderSession(session);
       }).bind(this, path)
     }, (virtualRenderLine(session, path, options)));
@@ -433,7 +433,7 @@ const virtualRenderLine = function(session, path, options = {}) {
   if (options.handle_clicks) {
     if (session.mode === MODES.NORMAL || session.mode === MODES.INSERT) {
       lineoptions.charclick = function(column, e) {
-        session.cursor.set(path, column);
+        session.cursor.setPosition(path, column);
         // assume they might click again
         renderSession(session, {handle_clicks: true});
         // prevent overall path click
@@ -587,7 +587,7 @@ const virtualRenderPlugin = function(pluginManager, name) {
     color = 'green';
   }
 
-  let plugin = (Plugins.get(name)) || {};
+  let plugin = Plugins.getPlugin(name) || {};
   return virtualDom.h('tr', {
     className: 'plugin theme-bg-secondary'
   }, [

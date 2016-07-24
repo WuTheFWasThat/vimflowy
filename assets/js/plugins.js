@@ -198,7 +198,7 @@ class PluginsManager extends EventEmitter {
     this.plugin_infos = {};
   }
 
-  get(name) {
+  getInfo(name) {
     return this.plugin_infos[name];
   }
 
@@ -313,6 +313,6 @@ let registerPlugin = function(plugin_metadata, enable, disable) {
 export { PluginsManager };
 export { registerPlugin as register };
 export function all() { return PLUGINS; }
-export function get(name) { return PLUGINS[name]; }
+export function getPlugin(name) { return PLUGINS[name]; }
 export function names() { return (_.keys(PLUGINS)).sort(); }
 export { STATUSES };

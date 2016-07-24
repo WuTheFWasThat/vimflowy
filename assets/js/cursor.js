@@ -55,7 +55,7 @@ class Cursor extends EventEmitter {
   //                      is true in normal mode (for de), false in visual (for vex)
   //   - keepProperties:  for movement, whether we should keep italic/bold state
 
-  set(path, col, cursorOptions) {
+  setPosition(path, col, cursorOptions) {
     this._setPath(path);
     return this.setCol(col, cursorOptions);
   }
@@ -136,7 +136,7 @@ class Cursor extends EventEmitter {
     } else {
       let nextpath = this.session.nextVisible(this.path);
       if (nextpath !== null) {
-        this.set(nextpath, 0);
+        this.setPosition(nextpath, 0);
         return true;
       }
     }
@@ -162,7 +162,7 @@ class Cursor extends EventEmitter {
     } else {
       let prevpath = this.session.prevVisible(this.path);
       if (prevpath !== null) {
-        this.set(prevpath, -1);
+        this.setPosition(prevpath, -1);
         return true;
       }
     }
@@ -186,13 +186,13 @@ class Cursor extends EventEmitter {
     } else {
       path = this.session.viewRoot;
     }
-    this.set(path, 0);
+    this.setPosition(path, 0);
     return this;
   }
 
   visibleEnd() {
     let path = this.session.lastVisible();
-    this.set(path, 0);
+    this.setPosition(path, 0);
     return this;
   }
 

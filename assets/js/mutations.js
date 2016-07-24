@@ -349,7 +349,7 @@ class DetachBlocks extends Mutation {
     if ((this.deleted.indexOf(child)) === -1) {
       return;
     }
-    return cursor.set((ancestor.extend(this.next)), 0);
+    return cursor.setPosition(ancestor.extend(this.next), 0);
   }
 }
 

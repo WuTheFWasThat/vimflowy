@@ -878,7 +878,7 @@ class Session extends EventEmitter {
       // cursor now is at inserted path, add the characters
       this.addCharsAfterCursor(mutation.deletedChars);
       // restore cursor
-      return this.cursor.set(path, 0, {keepProperties: true});
+      return this.cursor.setPosition(path, 0, {keepProperties: true});
     }
   }
 
@@ -900,7 +900,7 @@ class Session extends EventEmitter {
     }
 
     if (!(this.document.hasChildren(second.row))) {
-      this.cursor.set(first, -1);
+      this.cursor.setPosition(first, -1);
       this.delBlock(second, {noNew: true, noSave: true});
       if (addDelimiter) {
         let mutation = new mutations.AddChars(first.row, firstLine.length, [{ char: options.delimiter }]);
@@ -908,7 +908,7 @@ class Session extends EventEmitter {
       }
       let mutation = new mutations.AddChars(first.row, (firstLine.length + addDelimiter), secondLine);
       this.do(mutation);
-      this.cursor.set(first, firstLine.length);
+      this.cursor.setPosition(first, firstLine.length);
       return true;
     }
 
@@ -922,7 +922,7 @@ class Session extends EventEmitter {
       return false;
     }
 
-    this.cursor.set(second, 0);
+    this.cursor.setPosition(second, 0);
     this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter) {
       let mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
@@ -992,14 +992,14 @@ class Session extends EventEmitter {
     let mutation = new mutations.AddBlocks(parent, index, serialized_rows, options);
     this.do(mutation);
     if (options.setCursor === 'first') {
-      return this.cursor.set(mutation.added_rows[0], 0, options.cursorOptions);
+      return this.cursor.setPosition(mutation.added_rows[0], 0, options.cursorOptions);
     } else if (options.setCursor === 'last') {
-      return this.cursor.set(mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions);
+      return this.cursor.setPosition(mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions);
     }
   }
 
   yankBlocks(path, nrows) {
-    let siblings = this.document.getSiblingRange(path, 0, (nrows-1));
+    let siblings = this.document.getSiblingRange(path, 0, nrows-1);
     siblings = siblings.filter((x => x !== null));
     let serialized = siblings.map((x => { return this.document.serialize(x.row); }));
     return this.register.saveSerializedRows(serialized);
@@ -1010,7 +1010,7 @@ class Session extends EventEmitter {
   }
 
   yankBlocksClone(row, nrows) {
-    let siblings = this.document.getSiblingRange(row, 0, (nrows-1));
+    let siblings = this.document.getSiblingRange(row, 0, nrows-1);
     siblings = siblings.filter((x => x !== null));
     return this.register.saveClonedRows((siblings.map(sibling => sibling.row)));
   }
@@ -1027,9 +1027,9 @@ class Session extends EventEmitter {
     // TODO: do this more elegantly
     if (will_work) {
       if (options.setCursor === 'first') {
-        return this.cursor.set((this.document.findChild(parent, ids[0])), 0);
+        return this.cursor.setPosition(this.document.findChild(parent, ids[0]), 0);
       } else if (this.options.setCursor === 'last') {
-        return this.cursor.set((this.document.findChild(parent, ids[ids.length-1])), 0);
+        return this.cursor.setPosition(this.document.findChild(parent, ids[ids.length-1]), 0);
       }
     }
   }
@@ -1053,7 +1053,7 @@ class Session extends EventEmitter {
       this.toggleBlockCollapsed(newparent.row);
     }
 
-    let siblings = (this.document.getSiblingRange(row, 0, (numblocks-1))).filter((sib => sib !== null));
+    let siblings = this.document.getSiblingRange(row, 0, numblocks-1).filter(sib => sib !== null);
     for (let i = 0; i < siblings.length; i++) {
       let sib = siblings[i];
       this.moveBlock(sib, newparent, -1);
@@ -1072,7 +1072,7 @@ class Session extends EventEmitter {
       return null;
     }
 
-    let siblings = (this.document.getSiblingRange(row, 0, (numblocks-1))).filter((sib => sib !== null));
+    let siblings = this.document.getSiblingRange(row, 0, numblocks-1).filter(sib => sib !== null);
 
     let newparent = parent.parent;
     let pp_i = this.document.indexOf(parent);
