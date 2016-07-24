@@ -132,7 +132,7 @@ class MarksPlugin {
     });
     this.api.registerAction([MODES.NORMAL], CMD_MARK, {
       description: 'Mark a line',
-    }, function() {
+    }, async function() {
       return this.session.setMode(MODES.MARK);
     });
 
@@ -144,7 +144,7 @@ class MarksPlugin {
     });
     this.api.registerAction([MODES.MARK], CMD_FINISH_MARK, {
       description: 'Finish typing mark',
-    }, function() {
+    }, async function() {
       let mark = (that.marksession.curText()).join('');
       let err = that.updateMark(that.marksessionpath.row, mark);
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
@@ -156,7 +156,7 @@ class MarksPlugin {
     this.api.registerMotion([CMD_GO, CMD_MARK], {
       description: 'Go to the mark indicated by the cursor, if it exists',
     }, function() {
-      return cursor => {
+      return async cursor => {
         let word = this.session.document.getWord(cursor.row, cursor.col);
         if (word.length < 1 || word[0] !== '@') {
           return false;
@@ -177,7 +177,7 @@ class MarksPlugin {
     let CMD_DELETE = this.api.commands.DELETE;
     this.api.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MARK], {
       description: 'Delete mark at cursor'
-    }, function() {
+    }, async function() {
       let err = (that.updateMark(this.session.cursor.row, ''));
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       return this.keyStream.save();
@@ -191,7 +191,7 @@ class MarksPlugin {
     });
     this.api.registerAction([MODES.NORMAL], CMD_MARK_SEARCH, {
       description: 'Go to (search for) a mark',
-    }, function() {
+    }, async function() {
       this.session.setMode(MODES.SEARCH);
       return this.session.menu = new Menu(this.session.menuDiv, chars => {
         // find marks that start with the prefix
@@ -234,30 +234,32 @@ class MarksPlugin {
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_MOTION, {
       description: 'Move the cursor',
-    }, motion => motion(that.marksession.cursor, {pastEnd: true})
-    );
+    }, async function(motion) {
+      return motion(that.marksession.cursor, {pastEnd: true});
+    });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
       description: 'Delete last character (i.e. backspace key)',
-    }, () => that.marksession.deleteAtCursor()
-    );
+    }, async function() {
+      return that.marksession.deleteAtCursor();
+    });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
       description: 'Delete character at the cursor (i.e. del key)',
-    }, function() {
+    }, async function() {
       return this.session.sarkvession.delCharsAfterCursor(1);
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_HELP, {
       description: 'Show/hide key bindings (edit in settings)',
-    }, function() {
+    }, async function() {
       this.session.toggleBindingsDiv();
       return this.keyStream.forget(1);
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_EXIT_MODE, {
       description: 'Exit back to normal mode',
-    }, function() {
+    }, async function() {
       this.session.setMode(MODES.NORMAL);
       return this.keyStream.forget();
     });

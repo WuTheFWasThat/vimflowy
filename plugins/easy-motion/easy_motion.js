@@ -66,7 +66,7 @@ Plugins.register({
 
       return null;
     } else {
-      return function(cursor /*, options */) {
+      return async function(cursor /*, options */) {
         if (key in EASY_MOTION_MAPPINGS.key_to_path) {
           let path = EASY_MOTION_MAPPINGS.key_to_path[key];
           cursor.set(path, 0);

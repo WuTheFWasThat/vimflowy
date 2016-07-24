@@ -11,7 +11,7 @@ let CMD_UNDO = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_UNDO, {
   description: 'Undo',
-}, function() {
+}, async function() {
   for (let j = 0; j < this.repeat; j++) {
     this.session.undo();
   }
@@ -26,7 +26,7 @@ let CMD_REDO = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REDO, {
   description: 'Redo',
-}, function() {
+}, async function() {
   for (let j = 0; j < this.repeat; j++) {
     this.session.redo();
   }
@@ -57,7 +57,7 @@ let CMD_RECORD_MACRO = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_RECORD_MACRO, {
   description: 'Begin/stop recording a macro',
-}, function() {
+}, async function() {
   if (this.keyHandler.recording.stream === null) {
     let key = this.keyStream.dequeue();
     if (key === null) { return this.keyStream.wait(); }

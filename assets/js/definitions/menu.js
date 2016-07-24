@@ -14,7 +14,7 @@ let CMD_SEARCH = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
   description: 'Search',
-}, function() {
+}, async function() {
   this.session.setMode(MODES.SEARCH);
   return this.session.menu = new Menu(this.session.menuDiv, chars => {
     let find = function(document, query, options = {}) {
@@ -41,15 +41,14 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
         let path = paths[i];
         let line = canonicalize((document.getText(path.row)).join(''));
         let matches = [];
-        if (_.every(query_words.map((function(word) {
+        if (_.every(query_words.map(function(word) {
           let index = line.indexOf(word);
           if (index === -1) { return false; }
           for (let j = index; j < index + word.length; j++) {
             matches.push(j);
           }
           return true;
-        })
-        ))) {
+        }))) {
           results.push({ path, matches });
         }
         if (nresults > 0 && results.length === nresults) {
@@ -88,7 +87,7 @@ let CMD_MENU_SELECT = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_SELECT, {
   description: 'Select current menu selection',
-}, function() {
+}, async function() {
   this.session.menu.select();
   return this.session.setMode(MODES.NORMAL);
 });
@@ -101,7 +100,7 @@ let CMD_MENU_UP = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_UP, {
   description: 'Select previous menu selection',
-}, function() {
+}, async function() {
   return this.session.menu.up();
 });
 
@@ -113,7 +112,7 @@ let CMD_MENU_DOWN = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_DOWN, {
   description: 'Select next menu selection',
-}, function() {
+}, async function() {
   return this.session.menu.down();
 });
 

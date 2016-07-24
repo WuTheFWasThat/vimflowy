@@ -9,9 +9,9 @@ let CMD_LEFT = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_LEFT, {
   description: 'Move cursor left',
-}, () =>
-  (cursor, options) => cursor.left(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.left(options);
+});
 
 let CMD_RIGHT = keyDefinitions.registerCommand({
   name: 'RIGHT',
@@ -22,9 +22,9 @@ let CMD_RIGHT = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_RIGHT, {
   description: 'Move cursor right',
-}, () =>
-  (cursor, options) => cursor.right(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.right(options);
+});
 
 let CMD_UP = keyDefinitions.registerCommand({
   name: 'UP',
@@ -36,9 +36,9 @@ let CMD_UP = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_UP, {
   description: 'Move cursor up',
   multirow: true
-}, () =>
-  (cursor, options) => cursor.up(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.up(options);
+});
 
 let CMD_DOWN = keyDefinitions.registerCommand({
   name: 'DOWN',
@@ -50,9 +50,9 @@ let CMD_DOWN = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_DOWN, {
   description: 'Move cursor down',
   multirow: true
-}, () =>
-  (cursor, options) => cursor.down(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.down(options);
+});
 
 let CMD_HOME = keyDefinitions.registerCommand({
   name: 'HOME',
@@ -64,9 +64,9 @@ let CMD_HOME = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_HOME, {
   description: 'Move cursor to beginning of line',
-}, () =>
-  (cursor, options) => cursor.home(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.home(options);
+});
 
 let CMD_END = keyDefinitions.registerCommand({
   name: 'END',
@@ -78,9 +78,9 @@ let CMD_END = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_END, {
   description: 'Move cursor to end of line',
-}, () =>
-  (cursor, options) => cursor.end(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.end(options);
+});
 
 let CMD_BEGINNING_WORD = keyDefinitions.registerCommand({
   name: 'BEGINNING_WORD',
@@ -91,9 +91,9 @@ let CMD_BEGINNING_WORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_BEGINNING_WORD, {
   description: 'Move cursor to the first word-beginning before it',
-}, () =>
-  (cursor, options) => cursor.beginningWord({cursor: options})
-);
+}, function() {
+  return async (cursor, options) => cursor.beginningWord({cursor: options});
+});
 
 let CMD_END_WORD = keyDefinitions.registerCommand({
   name: 'END_WORD',
@@ -103,9 +103,9 @@ let CMD_END_WORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_END_WORD, {
   description: 'Move cursor to the first word-ending after it',
-}, () =>
-  (cursor, options) => cursor.endWord({cursor: options})
-);
+}, function() {
+  return async (cursor, options) => cursor.endWord({cursor: options});
+});
 
 let CMD_NEXT_WORD = keyDefinitions.registerCommand({
   name: 'NEXT_WORD',
@@ -116,9 +116,9 @@ let CMD_NEXT_WORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_NEXT_WORD, {
   description: 'Move cursor to the beginning of the next word',
-}, () =>
-  (cursor, options) => cursor.nextWord({cursor: options})
-);
+}, function() {
+  return async (cursor, options) => cursor.nextWord({cursor: options});
+});
 
 let CMD_BEGINNING_WWORD = keyDefinitions.registerCommand({
   name: 'BEGINNING_WWORD',
@@ -128,9 +128,9 @@ let CMD_BEGINNING_WWORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_BEGINNING_WWORD, {
   description: 'Move cursor to the first Word-beginning before it',
-}, () =>
-  (cursor, options) => cursor.beginningWord({cursor: options, whitespaceWord: true})
-);
+}, function() {
+  return async (cursor, options) => cursor.beginningWord({cursor: options, whitespaceWord: true});
+});
 
 let CMD_END_WWORD = keyDefinitions.registerCommand({
   name: 'END_WWORD',
@@ -140,9 +140,9 @@ let CMD_END_WWORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_END_WWORD, {
   description: 'Move cursor to the first Word-ending after it',
-}, () =>
-  (cursor, options) => cursor.endWord({cursor: options, whitespaceWord: true})
-);
+}, function() {
+  return async (cursor, options) => cursor.endWord({cursor: options, whitespaceWord: true});
+});
 
 let CMD_NEXT_WWORD = keyDefinitions.registerCommand({
   name: 'NEXT_WWORD',
@@ -152,9 +152,9 @@ let CMD_NEXT_WWORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_NEXT_WWORD, {
   description: 'Move cursor to the beginning of the next Word',
-}, () =>
-  (cursor, options) => cursor.nextWord({cursor: options, whitespaceWord: true})
-);
+}, function() {
+  return async (cursor, options) => cursor.nextWord({cursor: options, whitespaceWord: true});
+});
 
 let CMD_FIND_NEXT_CHAR = keyDefinitions.registerCommand({
   name: 'FIND_NEXT_CHAR',
@@ -170,7 +170,7 @@ keyDefinitions.registerMotion(CMD_FIND_NEXT_CHAR, {
     this.keyStream.wait();
     return null;
   }
-  return (cursor, options) => cursor.findNextChar(key, {cursor: options});
+  return async (cursor, options) => cursor.findNextChar(key, {cursor: options});
 });
 
 let CMD_FIND_PREV_CHAR = keyDefinitions.registerCommand({
@@ -187,7 +187,7 @@ keyDefinitions.registerMotion(CMD_FIND_PREV_CHAR, {
     this.keyStream.wait();
     return null;
   }
-  return (cursor, options) => cursor.findPrevChar(key, {cursor: options});
+  return async (cursor, options) => cursor.findPrevChar(key, {cursor: options});
 });
 
 let CMD_TO_NEXT_CHAR = keyDefinitions.registerCommand({
@@ -204,7 +204,7 @@ keyDefinitions.registerMotion(CMD_TO_NEXT_CHAR, {
     this.keyStream.wait();
     return null;
   }
-  return (cursor, options) => cursor.findNextChar(key, {cursor: options, beforeFound: true});
+  return async (cursor, options) => cursor.findNextChar(key, {cursor: options, beforeFound: true});
 });
 
 let CMD_TO_PREV_CHAR = keyDefinitions.registerCommand({
@@ -221,7 +221,7 @@ keyDefinitions.registerMotion(CMD_TO_PREV_CHAR, {
     this.keyStream.wait();
     return null;
   }
-  return (cursor, options) => cursor.findPrevChar(key, {cursor: options, beforeFound: true});
+  return async (cursor, options) => cursor.findPrevChar(key, {cursor: options, beforeFound: true});
 });
 
 // NOTE: for normal mode, this is done within the CMD_GO tree
@@ -233,10 +233,9 @@ let CMD_GO_HOME = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_GO_HOME, {
   description: 'Go to beginning of visible document',
-}, () =>
-  (cursor, options) => cursor.visibleHome(options)
-
-);
+}, function() {
+  return async (cursor, options) => cursor.visibleHome(options);
+});
 
 let CMD_GO_END = keyDefinitions.registerCommand({
   name: 'GO_END',
@@ -247,9 +246,9 @@ let CMD_GO_END = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_GO_END, {
   description: 'Go to end of visible document',
-}, () =>
-  (cursor, options) => cursor.visibleEnd(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.visibleEnd(options);
+});
 
 let CMD_NEXT_SIBLING = keyDefinitions.registerCommand({
   name: 'NEXT_SIBLING',
@@ -261,9 +260,9 @@ let CMD_NEXT_SIBLING = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_NEXT_SIBLING, {
   description: 'Move cursor to the next sibling of the current line',
   multirow: true
-}, () =>
-  (cursor, options) => cursor.nextSibling(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.nextSibling(options);
+});
 
 let CMD_PREV_SIBLING = keyDefinitions.registerCommand({
   name: 'PREV_SIBLING',
@@ -275,6 +274,6 @@ let CMD_PREV_SIBLING = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_PREV_SIBLING, {
   description: 'Move cursor to the previous sibling of the current line',
   multirow: true
-}, () =>
-  (cursor, options) => cursor.prevSibling(options)
-);
+}, function() {
+  return async (cursor, options) => cursor.prevSibling(options);
+});

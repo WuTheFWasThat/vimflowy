@@ -29,7 +29,7 @@ let CMD_STRIKETHROUGH = keyDefinitions.registerCommand({
 });
 
 let text_format_normal = (property) => {
-  return function() {
+  return async function() {
     let ndeleted = this.session.toggleRowProperty(property);
     this.session.cursor.setCol(((this.session.cursor.col + ndeleted) - 1));
     return this.keyStream.save();
@@ -37,13 +37,13 @@ let text_format_normal = (property) => {
 };
 
 let text_format_insert = (property) => {
-  return function() {
+  return async function() {
     return this.session.cursor.toggleProperty(property);
   };
 };
 
 let text_format_visual_line = property =>
-  function() {
+  async function() {
     let paths = this.session.document.getChildRange(this.parent, this.row_start_i, this.row_end_i);
     let rows = paths.map(path => path.row);
     // TODO: dedup rows to avoid double toggle
@@ -54,7 +54,7 @@ let text_format_visual_line = property =>
 ;
 
 let text_format_visual = property =>
-  function() {
+  async function() {
     this.session.toggleRowPropertyBetween(property, this.session.cursor, this.session.anchor, {includeEnd: true});
     this.session.setMode(MODES.NORMAL);
     return this.keyStream.save();

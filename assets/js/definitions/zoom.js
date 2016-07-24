@@ -12,7 +12,7 @@ let CMD_ZOOM_UP = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_UP, {
   description: 'Zoom to view root\'s previous sibling',
-}, function() {
+}, async function() {
   this.session.zoomUp();
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
@@ -28,7 +28,7 @@ let CMD_ZOOM_DOWN = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_DOWN, {
   description: 'Zoom to view root\'s next sibling',
-}, function() {
+}, async function() {
   this.session.zoomDown();
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
@@ -44,7 +44,7 @@ let CMD_ZOOM_IN = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN, {
   description: 'Zoom in by one level',
-}, function() {
+}, async function() {
   this.session.zoomIn();
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
@@ -60,7 +60,7 @@ let CMD_ZOOM_OUT = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT, {
   description: 'Zoom out by one level',
-}, function() {
+}, async function() {
   this.session.zoomOut();
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
@@ -76,7 +76,7 @@ let CMD_ZOOM_IN_ALL = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN_ALL, {
   description: 'Zoom in onto cursor',
-}, function() {
+}, async function() {
   this.session.zoomInto(this.session.cursor.path);
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
@@ -92,7 +92,7 @@ let CMD_ZOOM_OUT_ALL = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT_ALL, {
   description: 'Zoom out to home',
-}, function() {
+}, async function() {
   this.session.zoomInto(this.session.document.root);
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
@@ -107,7 +107,7 @@ let CMD_JUMP_PREVIOUS = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_JUMP_PREVIOUS, {
   description: 'Jump to previous location',
-}, function() {
+}, async function() {
   this.session.jumpPrevious();
   return this.keyStream.forget(1);
 });
@@ -120,7 +120,7 @@ let CMD_JUMP_NEXT = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_JUMP_NEXT, {
   description: 'Jump to next location',
-}, function() {
+}, async function() {
   this.session.jumpNext();
   return this.keyStream.forget(1);
 });

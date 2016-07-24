@@ -292,7 +292,7 @@ class KeyHandler extends EventEmitter {
     let { definition } = bindings[motionKey];
     if (typeof definition === 'object') {
       // recursive definition
-      return (this.getMotion(keyStream, null, definition, repeat));
+      return this.getMotion(keyStream, null, definition, repeat);
     } else if (typeof definition === 'function') {
       let context = {
         session: this.session,

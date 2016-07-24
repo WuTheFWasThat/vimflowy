@@ -12,7 +12,7 @@ let CMD_EXPORT = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_EXPORT, {
   description: 'Export as Json file',
-}, function() {
+}, async function() {
   return this.session.exportFile('json');
 });
 
