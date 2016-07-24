@@ -3,7 +3,7 @@ import _ from 'lodash';
 // takes a constructor and returns an error class
 let errorFactory = function(f) {
   let g = function() {
-    this.stack = new Error().stack();
+    this.stack = new Error().stack;
     return f.apply(this, arguments);
   };
   g.prototype = Object.create(Error.prototype);

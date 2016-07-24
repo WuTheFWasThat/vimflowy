@@ -287,7 +287,7 @@ class Document extends EventEmitter {
   _removeChild(parent_row, row) {
     let children = this._getChildren(parent_row);
     let ci = _.findIndex(children, sib => sib === row);
-    errors.assert((ci !== -1));
+    errors.assert(ci !== -1);
     children.splice(ci, 1);
     this._setChildren(parent_row, children);
 
@@ -308,7 +308,7 @@ class Document extends EventEmitter {
 
   _addChild(parent_row, row, index) {
     let children = this._getChildren(parent_row);
-    errors.assert((index <= children.length));
+    errors.assert(index <= children.length);
     if (index === -1) {
       children.push(row);
     } else {
@@ -354,7 +354,7 @@ class Document extends EventEmitter {
       this.store.setDetachedParent(child_row, null);
       let detached_children = this.store.getDetachedChildren(old_detached_parent);
       let ci = _.findIndex(detached_children, sib => sib === child_row);
-      errors.assert((ci !== -1));
+      errors.assert(ci !== -1);
       detached_children.splice(ci, 1);
       this.store.setDetachedChildren(old_detached_parent, detached_children);
     }
@@ -412,7 +412,7 @@ class Document extends EventEmitter {
     }
     let ancestors = [];
     while (!row.is(stop)) {
-      errors.assert((!row.isRoot()), `Failed to get ancestry for ${row} going up until ${stop}`);
+      errors.assert(!row.isRoot(), `Failed to get ancestry for ${row} going up until ${stop}`);
       ancestors.push(row);
       row = row.parent;
     }
@@ -564,7 +564,7 @@ class Document extends EventEmitter {
   loadTo(serialized, parent_path = this.root, index = -1, id_mapping = {}, replace_empty = false) {
     if (serialized.clone) {
       // NOTE: this assumes we load in the same order we serialize
-      errors.assert((serialized.clone in id_mapping));
+      errors.assert(serialized.clone in id_mapping);
       let row = id_mapping[serialized.clone];
       let path = parent_path.child(row);
       this.attachChild(parent_path, path, index);
