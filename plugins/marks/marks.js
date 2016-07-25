@@ -10,6 +10,7 @@ import Session from '../../assets/js/session';
 import * as Render from '../../assets/js/render';
 import * as mutations from '../../assets/js/mutations';
 import * as errors from '../../assets/js/errors';
+import * as constants from '../../assets/js/constants';
 
 import * as basic_defs from '../../assets/js/definitions/basics';
 
@@ -101,7 +102,8 @@ class MarksPlugin {
       within_row: true,
       enter: session => {
         // initialize marks stuff
-        let document = new Document((new DataStore.InMemory()));
+        let document = new Document(new DataStore.InMemory());
+        document.load(constants.empty_data);
         this.marksession = new Session(document);
         this.marksession.setMode(MODES.INSERT);
         return this.marksessionpath = session.cursor.path;

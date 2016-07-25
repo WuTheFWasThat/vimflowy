@@ -2,6 +2,7 @@ import Session from './session';
 import Document from './document';
 import * as DataStore from './datastore';
 import * as Modes from './modes';
+import * as constants from './constants';
 
 /*
 Represents the menu shown in menu mode.
@@ -14,7 +15,8 @@ class Menu {
     this.div = div;
     this.fn = fn;
 
-    let document = new Document((new DataStore.InMemory()));
+    let document = new Document(new DataStore.InMemory());
+    document.load(constants.empty_data);
 
     // a bit of a overkill-y hack, use an entire session object internally
     this.session = new Session(document);

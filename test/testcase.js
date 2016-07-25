@@ -18,6 +18,8 @@ import KeyBindings from '../assets/js/keyBindings';
 import KeyHandler from '../assets/js/keyHandler';
 import * as Logger from '../assets/js/logger';
 import { PluginsManager } from '../assets/js/plugins';
+import Cursor from '../assets/js/cursor';
+import Path from '../assets/js/path';
 
 Logger.logger.setStream(Logger.STREAM.QUEUE);
 afterEach('empty the queue', () => Logger.logger.empty());
@@ -38,7 +40,10 @@ class TestCase {
       // just share keybindings, for efficiency
       keyBindings = defaultKeyBindings;
     }
-    this.session = new Session(this.document, {bindings: keyBindings});
+    this.session = new Session(this.document, {
+      bindings: keyBindings,
+      viewRoot: Path.root(),
+    });
 
     this.keyhandler = new KeyHandler(this.session, keyBindings);
     this.register = this.session.register;
@@ -54,8 +59,11 @@ class TestCase {
     // this must be *after* plugin loading because of plugins with state
     // e.g. marks needs the database to have the marks loaded
     this.document.load(serialized);
+    this.session.cursor =
+      new Cursor(this.session, this.document.getChildren(Path.root())[0], 0);
     this.session.reset_history();
     this.session.reset_jump_history();
+    // NOTE: HACKY
 
     this.prom = Promise.resolve();
   }

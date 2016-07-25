@@ -82,13 +82,13 @@ class Path {
     return this.parent.is(other.parent);
   }
 
-  static getRoot() {
+  static root() {
     return new Path(null, constants.root_row);
   }
 
   static loadFromAncestry(ancestry) {
     if (ancestry.length === 0) {
-      return Path.getRoot();
+      return Path.root();
     }
     let row = ancestry.pop();
     let parent = Path.loadFromAncestry(ancestry);

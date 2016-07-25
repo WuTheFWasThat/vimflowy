@@ -21,6 +21,7 @@ import * as DataStore from './datastore';
 import Document from './document';
 import Settings from './settings';
 import { PluginsManager } from './plugins';
+import Path from './path';
 import Session from './session';
 import * as Render from './render';
 
@@ -71,12 +72,29 @@ let create_session = async function(doc, to_load) {
   // session
   //###################
 
+  if (!doc.hasChildren(doc.root.row)) {
+    // HACKY: should load the actual data now, but since plugins aren't enabled...
+    doc.load(constants.empty_data);
+  }
+
+  const viewRoot = Path.loadFromAncestry(doc.store.getLastViewRoot());
+  
+  // TODO: if we ever support multi-user case, ensure last view root is valid
+  let cursorPath;
+  if (viewRoot.isRoot()) {
+    cursorPath = doc.getChildren(viewRoot)[0];
+  } else {
+    cursorPath = viewRoot;
+  }
+
   let session = new Session(doc, {
     bindings: key_bindings,
     settings,
     mainDiv: $('#view'),
     messageDiv: $('#message'),
-    menuDiv: $('#menu')
+    menuDiv: $('#menu'),
+    viewRoot: viewRoot,
+    cursorPath: cursorPath,
   });
 
   key_bindings.on('applied_hotkey_settings', function(hotkey_settings) {
@@ -203,7 +221,7 @@ let create_session = async function(doc, to_load) {
     });
 
     $('#settings-nav li').click(function(e) {
-      let tab = ($(e.target).data('tab'));
+      let tab = $(e.target).data('tab');
       $settingsDiv.find('.tabs > li').removeClass('active');
       $settingsDiv.find('.tab-pane').removeClass('active');
       $settingsDiv.find(`.tabs > li[data-tab=${tab}]`).addClass('active');

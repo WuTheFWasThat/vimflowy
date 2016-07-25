@@ -20,7 +20,7 @@ class Document extends EventEmitter {
     super();
     this.store = store;
     this.name = name;
-    this.root = Path.getRoot();
+    this.root = Path.root();
     return this;
   }
 

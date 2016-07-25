@@ -2,7 +2,6 @@
 import _ from 'lodash';
 
 import * as mutations from './mutations';
-import * as constants from './constants';
 import * as utils from './utils';
 import * as errors from './errors';
 import Cursor from './cursor';
@@ -38,19 +37,8 @@ class Session extends EventEmitter {
 
     this.register = new Register(this);
 
-    // TODO: if we ever support multi-user case, ensure last view root is valid
-    this.viewRoot = Path.loadFromAncestry((this.document.store.getLastViewRoot() || []));
-    if (!(this.document.hasChildren(this.document.root.row))) {
-      this.document.load(constants.empty_data);
-    }
-
-    let path;
-    if (this.viewRoot.is(this.document.root)) {
-      path = (this.document.getChildren(this.viewRoot))[0];
-    } else {
-      path = this.viewRoot;
-    }
-    this.cursor = new Cursor(this, path, 0);
+    this.viewRoot = options.viewRoot || Path.root();
+    this.cursor = new Cursor(this, options.cursorPath || this.viewRoot, 0);
 
     this.reset_history();
     this.reset_jump_history();

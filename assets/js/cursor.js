@@ -4,6 +4,7 @@ import EventEmitter from './eventEmitter';
 
 let wordRegex = /^[a-z0-9_]+$/i;
 
+// TODO: make a view class which includes viewRoot and cursor
 /*
 Cursor represents a cursor within a session
 it handles movement logic, insert mode line properties (e.g. bold/italic)

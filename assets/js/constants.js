@@ -1,9 +1,9 @@
 /* eslint-disable max-len */
-export let text_properties = ['bold', 'italic', 'underline', 'strikethrough'];
+export const text_properties = ['bold', 'italic', 'underline', 'strikethrough'];
 
-export let root_row = 0;
-export let empty_data = [''];
-export let default_data = [
+export const root_row = 0;
+export const empty_data = [''];
+export const default_data = [
   'Welcome to vimflowy!',
   '(I hope you know to use j and k to move up and down!)',
   { text: 'Features', children: [
