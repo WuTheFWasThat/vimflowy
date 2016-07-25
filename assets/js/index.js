@@ -305,7 +305,7 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
 
 } else if (typeof localStorage !== 'undefined' && localStorage !== null) {
   datastore = new DataStore.LocalStorageLazy(docname);
-  doc = new Document(datastore);
+  doc = new Document(datastore, docname);
 
   let to_load = null;
   if ((datastore.getLastSave()) === 0) {
@@ -316,7 +316,7 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
 } else {
   alert('You need local storage support for data to be persisted!');
   datastore = new DataStore.InMemory;
-  doc = new Document(datastore);
+  doc = new Document(datastore, docname);
   create_session(doc, constants.default_data);
 }
 
