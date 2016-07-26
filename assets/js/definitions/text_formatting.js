@@ -30,8 +30,7 @@ let CMD_STRIKETHROUGH = keyDefinitions.registerCommand({
 
 let text_format_normal = (property) => {
   return async function() {
-    let ndeleted = this.session.toggleRowProperty(property);
-    this.session.cursor.setCol(((this.session.cursor.col + ndeleted) - 1));
+    this.session.toggleRowProperty(property);
     return this.keyStream.save();
   };
 };

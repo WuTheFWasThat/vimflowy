@@ -717,15 +717,13 @@ class Session extends EventEmitter {
 
   replaceCharsAfterCursor(char, nchars) {
     let ndeleted = this.changeChars(this.cursor.row, this.cursor.col, nchars, (chars =>
-      chars.map((function(char_obj) {
+      chars.map(function(char_obj) {
         let new_obj = _.clone(char_obj);
         new_obj.char = char;
         return new_obj;
       })
-      )
-    )
-    );
-    return this.cursor.setCol(((this.cursor.col + ndeleted) - 1));
+    ));
+    return this.cursor.setCol(this.cursor.col + ndeleted - 1);
   }
 
   clearRowAtCursor(options) {
@@ -784,36 +782,34 @@ class Session extends EventEmitter {
   // toggling text properties
   // if new_value is null, should be inferred based on old values
   toggleProperty(property, new_value, row, col, n) {
-    return this.changeChars(row, col, n, (function(deleted) {
+    return this.changeChars(row, col, n, function(deleted) {
       if (new_value === null) {
         let all_were_true = _.every(deleted.map((obj => obj[property])));
         new_value = !all_were_true;
       }
 
-      return deleted.map((function(char_obj) {
+      return deleted.map(function(char_obj) {
         let new_obj = _.clone(char_obj);
         new_obj[property] = new_value;
         return new_obj;
-      })
-      );
-    })
-    );
+      });
+    });
   }
 
   toggleRowsProperty(property, rows) {
-    let all_were_true = _.every(rows.map((row => {
-      return _.every((this.document.getLine(row)).map((obj => obj[property])));
-    })));
+    let all_were_true = _.every(rows.map(row => {
+      return _.every(this.document.getLine(row).map(obj => obj[property]));
+    }));
     let new_value = !all_were_true;
     for (let i = 0; i < rows.length; i++) {
       let row = rows[i];
-      this.toggleProperty(property, new_value, row, 0, (this.document.getLength(row)));
+      this.toggleProperty(property, new_value, row, 0, this.document.getLength(row));
     }
     return null;
   }
 
   toggleRowProperty(property, row = this.cursor.row) {
-    return this.toggleProperty(property, null, row, 0, (this.document.getLength(row)));
+    return this.toggleProperty(property, null, row, 0, this.document.getLength(row));
   }
 
   toggleRowPropertyBetween(property, cursor1, cursor2, options) {
@@ -827,14 +823,14 @@ class Session extends EventEmitter {
     }
 
     let offset = options.includeEnd ? 1 : 0;
-    return this.toggleProperty(property, null, cursor1.row, cursor1.col, ((cursor2.col - cursor1.col) + offset));
+    return this.toggleProperty(property, null, cursor1.row, cursor1.col, cursor2.col - cursor1.col + offset);
   }
 
   newLineBelow(options = {}) {
     options.setCursor = 'first';
 
     if (this.cursor.path.is(this.viewRoot)) {
-      if (!(this.document.hasChildren(this.cursor.row))) {
+      if (!this.document.hasChildren(this.cursor.row)) {
         if (!this.document.collapsed(this.cursor.row)) {
           this.toggleBlockCollapsed(this.cursor.row);
         }

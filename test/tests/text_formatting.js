@@ -246,6 +246,23 @@ describe('text formatting', function() {
     await t.done();
   });
 
+  it('preserves cursor in normal mode', async function() {
+    let t = new TestCase([
+      'test'
+    ]);
+    t.sendKey('l');
+    t.expectCursor(1, 1);
+    t.sendKey(strikethroughKey);
+    t.expectCursor(1, 1);
+    t.expect([
+      {
+        text:          'test',
+        strikethrough: '....'
+      }
+    ]);
+    await t.done();
+  });
+
   it('works in visual mode', async function() {
     let t = new TestCase([ 'hello world' ]);
     t.sendKeys('ve');
