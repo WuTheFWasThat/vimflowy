@@ -248,7 +248,7 @@ let renderSession = function(session, options = {}) {
 
   clearTimeout(session.cursorBlinkTimeout);
   session.mainDiv.removeClass('animate-blink-cursor');
-  session.cursorBlinkTimeout = setTimeout((() => session.mainDiv.addClass('animate-blink-cursor')), 500);
+  session.cursorBlinkTimeout = setTimeout(() => session.mainDiv.addClass('animate-blink-cursor'), 500);
 
 };
 
@@ -326,7 +326,7 @@ const virtualRenderSession = function(session, options = {}) {
 };
 
 const virtualRenderTree = function(session, parent, options = {}) {
-  if ((!options.ignoreCollapse) && (session.document.collapsed(parent.row))) {
+  if ((!options.ignoreCollapse) && session.document.collapsed(parent.row)) {
     return;
   }
 
@@ -594,8 +594,8 @@ const virtualRenderPlugin = function(pluginManager, name) {
     /* eslint-disable max-len */
     virtualDom.h('td', { className: 'center theme-trim plugin-name' },name),
     virtualDom.h('td', { className: 'theme-trim plugin-description', style: {'font-size': '12px'} }, (plugin.description || '')),
-    virtualDom.h('td', { className: 'center theme-trim plugin-version' }, ((plugin.version || '') + '')),
-    virtualDom.h('td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, (plugin.author || '')),
+    virtualDom.h('td', { className: 'center theme-trim plugin-version' }, (plugin.version || '') + ''),
+    virtualDom.h('td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, plugin.author || ''),
     virtualDom.h('td', { className: 'center theme-trim plugin-status', style: {'box-shadow': `inset 0px 0px 0px 2px ${color}` } }, status),
     virtualDom.h('td', { className: 'center theme-trim plugin-actions' }, actions)
     /* eslint-enable max-len */
@@ -608,7 +608,7 @@ const virtualRenderPlugin = function(pluginManager, name) {
 //#####
 let renderHotkeysTable = function(key_bindings) {
   let mode_defs = MODE_TYPES[NORMAL_MODE_TYPE].modes.map(
-    mode => _.cloneDeep((key_bindings.definitions.actions_for_mode(mode)))
+    mode => _.cloneDeep(key_bindings.definitions.actions_for_mode(mode))
   );
   $('#hotkey-edit-normal').empty().append(
     $('<div>').addClass('tooltip').text(NORMAL_MODE_TYPE).attr('title', MODE_TYPES[NORMAL_MODE_TYPE].description)
@@ -617,7 +617,7 @@ let renderHotkeysTable = function(key_bindings) {
   );
 
   mode_defs = MODE_TYPES[INSERT_MODE_TYPE].modes.map(
-    mode => _.cloneDeep((key_bindings.definitions.actions_for_mode(mode)))
+    mode => _.cloneDeep(key_bindings.definitions.actions_for_mode(mode))
   );
   return $('#hotkey-edit-insert').empty().append(
     $('<div>').addClass('tooltip').text(INSERT_MODE_TYPE).attr('title', MODE_TYPES[INSERT_MODE_TYPE].description)

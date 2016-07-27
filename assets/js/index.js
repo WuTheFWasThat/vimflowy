@@ -57,7 +57,7 @@ let create_session = async function(doc, to_load) {
     settings.setSetting('theme', theme);
     return changeStyle(theme);
   });
-
+  
   let showingKeyBindings = await settings.getSetting('showKeyBindings');
   $keybindingsDiv.toggleClass('active', showingKeyBindings);
 
@@ -105,7 +105,7 @@ let create_session = async function(doc, to_load) {
 
   let render_mode_info = function(mode) {
     Render.renderModeTable(key_bindings, mode, $keybindingsDiv);
-    return $modeDiv.text((Modes.getMode(mode)).name);
+    return $modeDiv.text(Modes.getMode(mode).name);
   };
 
   render_mode_info(session.mode);
@@ -246,7 +246,7 @@ let create_session = async function(doc, to_load) {
       };
     };
 
-    $('#hotkeys_import').click(() =>
+    $('#hotkeys_import').click(() => {
       load_file($('#hotkeys_file_input')[0], function(err, content) {
         if (err) { return session.showMessage(err, {text_class: 'error'}); }
         try {
@@ -260,8 +260,8 @@ let create_session = async function(doc, to_load) {
         } else {
           return session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
         }
-      })
-    );
+      });
+    });
 
     $('#hotkeys_export').click(function() {
       let filename = 'vimflowy_hotkeys.json';
@@ -275,7 +275,7 @@ let create_session = async function(doc, to_load) {
       return session.showMessage('Loaded defaults!', {text_class: 'success'});
     });
 
-    $('#data_import').click(() =>
+    $('#data_import').click(() => {
       load_file($('#import-file :file')[0], function(err, content, filename) {
         if (err) { return session.showMessage(err, {text_class: 'error'}); }
         let mimetype = utils.mimetypeLookup(filename);
@@ -285,8 +285,8 @@ let create_session = async function(doc, to_load) {
         } else {
           return session.showMessage('Import failed due to parsing issue', {text_class: 'error'});
         }
-      })
-    );
+      });
+    });
 
     $('#data_export_json').click(() => session.exportFile('json'));
     $('#data_export_plain').click(() => session.exportFile('txt'));
@@ -311,14 +311,14 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
     create_session(doc, results.save || constants.default_data);
 
     // save every 5 seconds
-    return setInterval((() =>
+    return setInterval(() => {
       chrome.storage.sync.set({
         'save': doc.serialize()
-      }, () =>
+      }, () => {
         // TODO have whether saved visualized
-        Logger.logger.info('Saved')
-      )
-    ), 5000);
+        Logger.logger.info('Saved');
+      });
+    }, 5000);
   });
 
 } else if (typeof localStorage !== 'undefined' && localStorage !== null) {
@@ -326,7 +326,7 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
   doc = new Document(datastore, docname);
 
   let to_load = null;
-  if ((datastore.getLastSave()) === 0) {
+  if (datastore.getLastSave() === 0) {
     to_load = constants.default_data;
   }
 

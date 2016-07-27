@@ -126,7 +126,7 @@ class TimeTrackingPlugin {
     return setInterval(() => {
       if (this.currentRow !== null) {
         let curTime = new Date() - this.currentRow.time;
-        return $('.curtime').text((this.printTime(curTime)));
+        return $('.curtime').text(this.printTime(curTime));
       }
     }, 1000);
   }
@@ -155,7 +155,7 @@ class TimeTrackingPlugin {
   }
 
   transformRowData(id, keytype, transform) {
-    return this.setRowData(id, keytype, (transform((this.getRowData(id, keytype)))));
+    return this.setRowData(id, keytype, transform(this.getRowData(id, keytype)));
   }
 
   isLogging() {
@@ -210,7 +210,7 @@ class TimeTrackingPlugin {
       child_id => this.getRowData(child_id, 'treeTotalTime', 0)
     );
     let rowTime = this.getRowData(id, 'rowTotalTime', 0);
-    let totalTime = childTotalTimes.reduce(((a,b) => a+b), rowTime);
+    let totalTime = childTotalTimes.reduce((a,b) => a+b, rowTime);
     return this.setRowData(id, 'treeTotalTime', totalTime);
   }
 
@@ -230,9 +230,9 @@ class TimeTrackingPlugin {
       sign = '-';
       ms = - ms;
     }
-    let seconds = Math.floor(((ms /     1000) % 60));
-    let minutes = Math.floor(((ms /    60000) % 60));
-    let hours   = Math.floor((ms /  3600000));
+    let seconds = Math.floor((ms /     1000) % 60);
+    let minutes = Math.floor((ms /    60000) % 60);
+    let hours   = Math.floor( ms /  3600000);
     if (hours > 0) {
       return `${sign}${hours}h:${pad(minutes, 2)}m`;
     } else if (minutes > 0) {

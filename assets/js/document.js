@@ -47,7 +47,7 @@ class Document extends EventEmitter {
   }
 
   getText(row) {
-    return this.getLine(row).map((obj => obj.char));
+    return this.getLine(row).map(obj => obj.char);
   }
 
   getChar(row, col) {
@@ -56,16 +56,14 @@ class Document extends EventEmitter {
   }
 
   setLine(row, line) {
-    return (this.store.setLine(row, (line.map(function(obj) {
+    return this.store.setLine(row, line.map(function(obj) {
       // if no properties are true, serialize just the character to save space
-      if (_.every(constants.text_properties.map((property => !obj[property])))) {
+      if (_.every(constants.text_properties.map(property => !obj[property]))) {
         return obj.char;
       } else {
         return obj;
       }
-
-    }))
-    ));
+    }));
   }
 
   // get word at this location
@@ -79,10 +77,10 @@ class Document extends EventEmitter {
 
     let start = col;
     let end = col;
-    while ((start > 0) && !(utils.isWhitespace(text[start-1]))) {
+    while ((start > 0) && !utils.isWhitespace(text[start-1])) {
       start -= 1;
     }
-    while ((end < text.length - 1) && !(utils.isWhitespace(text[end+1]))) {
+    while ((end < text.length - 1) && !utils.isWhitespace(text[end+1])) {
       end += 1;
     }
     let word = text.slice(start, end + 1).join('');
@@ -143,8 +141,7 @@ class Document extends EventEmitter {
 
   _childIndex(parent, child) {
     let children = this._getChildren(parent);
-    return _.findIndex(children, row => row === child
-    );
+    return _.findIndex(children, row => row === child);
   }
 
   _getParents(row) {
@@ -156,15 +153,15 @@ class Document extends EventEmitter {
   }
 
   getChildren(parent_path) {
-    return (this._getChildren(parent_path.row)).map(row => parent_path.child(row));
+    return this._getChildren(parent_path.row).map(row => parent_path.child(row));
   }
 
   findChild(parent_path, row) {
-    return _.find((this.getChildren(parent_path)), (x => x.row === row));
+    return _.find(this.getChildren(parent_path), x => x.row === row);
   }
 
   hasChildren(row) {
-    return ((this._getChildren(row)).length > 0);
+    return this._getChildren(row).length > 0;
   }
 
   getSiblings(row) {
@@ -198,7 +195,7 @@ class Document extends EventEmitter {
   }
 
   toggleCollapsed(row) {
-    return this.store.setCollapsed(row, (!this.collapsed(row)));
+    return this.store.setCollapsed(row, !this.collapsed(row));
   }
 
   // last thing visible nested within row
@@ -221,7 +218,7 @@ class Document extends EventEmitter {
     if (parents.length < 2) { // for efficiency reasons
       return false;
     }
-    let numAttachedParents = (parents.filter(parent => this.isAttached(parent))).length;
+    let numAttachedParents = parents.filter(parent => this.isAttached(parent)).length;
     return numAttachedParents > 1;
   }
 
@@ -345,7 +342,7 @@ class Document extends EventEmitter {
   }
 
   _attach(child_row, parent_row, index = -1) {
-    let isFirst = (this._getParents(child_row)).length === 0;
+    let isFirst = this._getParents(child_row).length === 0;
     this.emit('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
     let info = this._addChild(parent_row, child_row, index);
     let old_detached_parent = this.store.getDetachedParent(child_row);
@@ -382,7 +379,7 @@ class Document extends EventEmitter {
   // attaches a detached child to a parent
   // the child should not have a parent already
   attachChild(parent, child, index = -1) {
-    return (this.attachChildren(parent, [child], index))[0];
+    return this.attachChildren(parent, [child], index)[0];
   }
 
   attachChildren(parent, new_children, index = -1) {
@@ -433,7 +430,7 @@ class Document extends EventEmitter {
       pair =>
         (pair[0] !== undefined) && (pair[1] !== undefined) && pair[0].is(pair[1])
     );
-    let common = (_.last(commonAncestry))[0];
+    let common = _.last(commonAncestry)[0];
     let firstDifference = commonAncestry.length;
     return [common, ancestors1.slice(firstDifference), ancestors2.slice(firstDifference)];
   }
@@ -465,21 +462,21 @@ class Document extends EventEmitter {
   }
 
   getSiblingOffset(path, offset) {
-    return (this.getSiblingRange(path, offset, offset))[0];
+    return this.getSiblingRange(path, offset, offset)[0];
   }
 
   getSiblingRange(path, min_offset, max_offset) {
     let index = this.indexOf(path);
-    return this.getChildRange(path.parent, (min_offset + index), (max_offset + index));
+    return this.getChildRange(path.parent, min_offset + index, max_offset + index);
   }
 
   getChildRange(path, min, max) {
-    return (this._getChildren(path.row, min, max)).map((function(child_row) {
+    return this._getChildren(path.row, min, max).map(function(child_row) {
       if (child_row === null) {
         return null;
       }
       return path.child(child_row);
-    }));
+    });
   }
 
   _newChild(parent, index = -1) {
@@ -490,7 +487,7 @@ class Document extends EventEmitter {
 
   addChild(path, index = -1) {
     let row = this._newChild(path.row, index);
-    return (path.child(row));
+    return path.child(row);
   }
 
   orderedLines() {
@@ -499,9 +496,7 @@ class Document extends EventEmitter {
 
     let helper = path => {
       paths.push(path);
-      this.getChildren(path).forEach((child) => {
-        helper(child);
-      });
+      this.getChildren(path).forEach(child => helper(child));
       return null;
     };
     helper(this.root);
@@ -515,15 +510,15 @@ class Document extends EventEmitter {
   // important: serialized automatically garbage collects
   serializeRow(row = this.root.row) {
     let line = this.getLine(row);
-    let text = (this.getText(row)).join('');
+    let text = this.getText(row).join('');
     let struct = {
       text
     };
 
     for (let i = 0; i < constants.text_properties.length; i++) {
       let property = constants.text_properties[i];
-      if (_.some(line.map((obj => obj[property])))) {
-        struct[property] = line.map((obj) => obj[property] ? '.' : ' ').join('');
+      if (_.some(line.map(obj => obj[property]))) {
+        struct[property] = line.map(obj => obj[property] ? '.' : ' ').join('');
       }
     }
     if (this.collapsed(row)) {
@@ -552,7 +547,7 @@ class Document extends EventEmitter {
     serialized[row] = struct;
 
     if (options.pretty) {
-      if (children.length === 0 && (!this.isClone(row)) &&
+      if ((children.length === 0) && (!this.isClone(row)) &&
           (_.every(Object.keys(struct), key => key === 'children' || key === 'text' || key === 'collapsed'
           ))) {
         return struct.text;
@@ -574,7 +569,7 @@ class Document extends EventEmitter {
     let children = this.getChildren(parent_path);
     // if parent_path has only one child and it's empty, delete it
     let path;
-    if (replace_empty && children.length === 1 && ((this.getLine(children[0].row)).length === 0)) {
+    if (replace_empty && children.length === 1 && (this.getLine(children[0].row).length === 0)) {
       path = children[0];
     } else {
       path = this.addChild(parent_path, index);

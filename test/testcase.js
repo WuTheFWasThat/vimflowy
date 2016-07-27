@@ -25,7 +25,7 @@ Logger.logger.setStream(Logger.STREAM.QUEUE);
 afterEach('empty the queue', () => Logger.logger.empty());
 
 // will have default bindings
-let defaultKeyBindings = new KeyBindings((KeyDefinitions.clone()));
+let defaultKeyBindings = new KeyBindings(KeyDefinitions.clone());
 
 class TestCase {
   constructor(serialized = [''], options = {}) {
@@ -35,7 +35,7 @@ class TestCase {
     let keyBindings;
     if (options.plugins) {
       // TODO: do this less hackily?
-      keyBindings = new KeyBindings((KeyDefinitions.clone()));
+      keyBindings = new KeyBindings(KeyDefinitions.clone());
     } else {
       // just share keybindings, for efficiency
       keyBindings = defaultKeyBindings;

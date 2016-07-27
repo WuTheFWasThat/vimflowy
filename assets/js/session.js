@@ -62,11 +62,11 @@ class Session extends EventEmitter {
 
     let oldmode = this.mode;
     if (oldmode) {
-      (Modes.getMode(oldmode)).exit(this, newmode);
+      Modes.getMode(oldmode).exit(this, newmode);
     }
 
     this.mode = newmode;
-    (Modes.getMode(this.mode)).enter(this, oldmode);
+    Modes.getMode(this.mode).enter(this, oldmode);
 
     return this.emit('modeChange', oldmode, newmode);
   }
@@ -378,7 +378,7 @@ class Session extends EventEmitter {
   }
 
   fixCursorForMode() {
-    if ((Modes.getMode(this.mode)).metadata.hotkey_type !== Modes.INSERT_MODE_TYPE) {
+    if (Modes.getMode(this.mode).metadata.hotkey_type !== Modes.INSERT_MODE_TYPE) {
       return this.cursor.backIfNeeded();
     }
   }
@@ -742,7 +742,7 @@ class Session extends EventEmitter {
     }
 
     let offset = options.includeEnd ? 1 : 0;
-    return this.yankChars(cursor1.path, cursor1.col, ((cursor2.col - cursor1.col) + offset));
+    return this.yankChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset);
   }
 
   yankRowAtCursor() {
@@ -762,7 +762,7 @@ class Session extends EventEmitter {
       [cursor1, cursor2] = [cursor2, cursor1];
     }
     let offset = options.includeEnd ? 1 : 0;
-    return this.delChars(cursor1.path, cursor1.col, ((cursor2.col - cursor1.col) + offset), options);
+    return this.delChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset, options);
   }
 
   // TODO: fix a bunch of these to use rows (they're still actually paths)
@@ -772,7 +772,7 @@ class Session extends EventEmitter {
   toggleProperty(property, new_value, row, col, n) {
     return this.changeChars(row, col, n, function(deleted) {
       if (new_value === null) {
-        let all_were_true = _.every(deleted.map((obj => obj[property])));
+        let all_were_true = _.every(deleted.map(obj => obj[property]));
         new_value = !all_were_true;
       }
 
@@ -984,8 +984,8 @@ class Session extends EventEmitter {
 
   yankBlocks(path, nrows) {
     let siblings = this.document.getSiblingRange(path, 0, nrows-1);
-    siblings = siblings.filter((x => x !== null));
-    let serialized = siblings.map((x => { return this.document.serialize(x.row); }));
+    siblings = siblings.filter(x => x !== null);
+    let serialized = siblings.map(x => this.document.serialize(x.row));
     return this.register.saveSerializedRows(serialized);
   }
 
@@ -995,8 +995,8 @@ class Session extends EventEmitter {
 
   yankBlocksClone(row, nrows) {
     let siblings = this.document.getSiblingRange(row, 0, nrows-1);
-    siblings = siblings.filter((x => x !== null));
-    return this.register.saveClonedRows((siblings.map(sibling => sibling.row)));
+    siblings = siblings.filter(x => x !== null);
+    return this.register.saveClonedRows(siblings.map(sibling => sibling.row));
   }
 
   yankBlocksCloneAtCursor(nrows) {
@@ -1194,7 +1194,7 @@ class Session extends EventEmitter {
     this.emit('scroll', npages);
     // TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
     let line_height = $('.node-text').height() || 21;
-    errors.assert((line_height > 0));
+    errors.assert(line_height > 0);
     let page_height = $(document).height();
     let height = npages * page_height;
 
@@ -1211,7 +1211,7 @@ class Session extends EventEmitter {
       }
     }
 
-    return this.scrollMain((line_height * numlines));
+    return this.scrollMain(line_height * numlines);
   }
 
   scrollMain(amount) {
@@ -1232,10 +1232,10 @@ class Session extends EventEmitter {
 
     if (elemTop < top_margin) {
       // scroll up
-      return this.scrollMain((elemTop - top_margin));
+      return this.scrollMain(elemTop - top_margin);
     } else if (elemBottom > window.innerHeight - bottom_margin) {
       // scroll down
-      return this.scrollMain ((elemBottom - window.innerHeight) + bottom_margin);
+      return this.scrollMain(elemBottom - window.innerHeight + bottom_margin);
     }
   }
 

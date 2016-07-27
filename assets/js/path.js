@@ -29,12 +29,12 @@ class Path {
   // }
 
   child(row) {
-    errors.assert((row !== this.row));
+    errors.assert(row !== this.row);
     return new Path(this, row);
   }
 
   isDescendant(other_path) {
-    return (this.walkFrom(other_path)) !== null;
+    return this.walkFrom(other_path) !== null;
   }
 
   walkFrom(ancestor) {

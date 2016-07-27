@@ -92,11 +92,11 @@ class Cursor extends EventEmitter {
   }
 
   _left() {
-    return this.setCol((this.col - 1));
+    return this.setCol(this.col - 1);
   }
 
   _right() {
-    return this.setCol((this.col + 1));
+    return this.setCol(this.col + 1);
   }
 
   left() {
@@ -176,7 +176,7 @@ class Cursor extends EventEmitter {
   }
 
   end(cursorOptions = {cursor: {}}) {
-    this.setCol((cursorOptions.pastEnd ? -1 : -2));
+    this.setCol(cursorOptions.pastEnd ? -1 : -2);
     return this;
   }
 
@@ -221,9 +221,9 @@ class Cursor extends EventEmitter {
 
   getWordCheck(options, matchChar) {
     if (options.whitespaceWord) {
-      return ((path, col) => !this.isInWhitespace(path, col));
+      return (path, col) => !this.isInWhitespace(path, col);
     } else {
-      return ((path, col) => this.isInWord(path, col, matchChar));
+      return (path, col) => this.isInWord(path, col, matchChar);
     }
   }
 
@@ -237,7 +237,7 @@ class Cursor extends EventEmitter {
     }
 
     let wordcheck = this.getWordCheck(options, (this.document.getChar(this.path.row, this.col)));
-    while ((this.col > 0) && wordcheck(this.path, (this.col-1))) {
+    while ((this.col > 0) && wordcheck(this.path, this.col-1)) {
       this._left();
     }
     return this;
@@ -281,9 +281,9 @@ class Cursor extends EventEmitter {
       return this;
     }
 
-    let end = (this.document.getLength(this.path.row)) - 1;
-    let wordcheck = this.getWordCheck(options, (this.document.getChar(this.path.row, this.col)));
-    while (this.col < end && wordcheck(this.path, (this.col+1))) {
+    let end = this.document.getLength(this.path.row) - 1;
+    let wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
+    while (this.col < end && wordcheck(this.path, this.col+1)) {
       this._right();
     }
 
@@ -300,7 +300,7 @@ class Cursor extends EventEmitter {
   }
 
   findNextChar(char, options = {}) {
-    let end = (this.document.getLength(this.path.row)) - 1;
+    let end = this.document.getLength(this.path.row) - 1;
     if (this.col === end) {
       return;
     }
@@ -313,7 +313,7 @@ class Cursor extends EventEmitter {
     let found = null;
     while (col < end) {
       col += 1;
-      if ((this.document.getChar(this.path.row, col)) === char) {
+      if (this.document.getChar(this.path.row, col) === char) {
         found = col;
         break;
       }
@@ -345,7 +345,7 @@ class Cursor extends EventEmitter {
     let found = null;
     while (col > 0) {
       col -= 1;
-      if ((this.document.getChar(this.path.row, col)) === char) {
+      if (this.document.getChar(this.path.row, col) === char) {
         found = col;
         break;
       }
@@ -411,7 +411,7 @@ class Cursor extends EventEmitter {
   }
 
   toggleProperty(property) {
-    return this.setProperty(property, (!(this.getProperty(property))));
+    return this.setProperty(property, !this.getProperty(property));
   }
 
   // get whether the cursor should be bold/italic based on surroundings
