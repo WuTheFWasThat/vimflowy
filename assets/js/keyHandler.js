@@ -90,8 +90,8 @@ export class KeyStream extends EventEmitter {
       n = this.index;
     }
 
-    errors.assert((this.index >= n));
-    let dropped = this.queue.splice((this.index-n), n);
+    errors.assert(this.index >= n);
+    let dropped = this.queue.splice(this.index-n, n);
     this.index = this.index - n;
     return dropped;
   }
@@ -116,6 +116,8 @@ class KeyHandler extends EventEmitter {
     this.keyStream.on('save', () => {
       return this.session.save();
     });
+
+    this.processQueue = Promise.resolve();
   }
 
   //###########
@@ -151,29 +153,25 @@ class KeyHandler extends EventEmitter {
     if (this.recording.stream) {
       this.recording.stream.enqueue(key);
     }
-    let handled = await this.processKeys(this.keyStream);
-    return handled;
+    return await this.processKeys(this.keyStream);
   }
 
-  // NOTE: handled tells the eventEmitter whether to preventDefault or not
-  //       returns whether all keys were handled
-  //       ( NOTE: should it be whether the *last key* was handled? )
   async processKeys(keyStream) {
-    let handledAll = true;
-    while (!keyStream.done() && !keyStream.waiting) {
-      keyStream.checkpoint();
-      const { handled, fn, args, context } = this.getCommand(this.session.mode, keyStream);
-      if (!handled) {
-        handledAll = false;
-        let mode_obj = Modes.getMode(this.session.mode);
-        mode_obj.handle_bad_key(keyStream);
-      } else if (fn) {
-        await fn.apply(context, args);
-        let mode_obj = Modes.getMode(this.session.mode);
-        mode_obj.every(this.session, keyStream);
+    return this.processQueue.then(async () => {
+      while (!keyStream.done() && !keyStream.waiting) {
+        keyStream.checkpoint();
+        const { handled, command } = this.getCommand(this.session.mode, keyStream);
+        if (!handled) {
+          let mode_obj = Modes.getMode(this.session.mode);
+          mode_obj.handle_bad_key(keyStream);
+        } else if (command) {
+          const { fn, context, args } = command;
+          await fn.apply(context, args);
+          let mode_obj = Modes.getMode(this.session.mode);
+          mode_obj.every(this.session, this.keyStream);
+        }
       }
-    }
-    return handledAll;
+    });
   }
 
 
@@ -242,9 +240,11 @@ class KeyHandler extends EventEmitter {
       context = mode_obj.transform_context(context);
       return {
         handled: true,
-        fn: info.definition,
-        args: args,
-        context: context,
+        command: {
+          fn: info.definition,
+          args: args,
+          context: context,
+        },
       };
     } else {
       throw new errors.UnexpectedValue('definition', definition);
