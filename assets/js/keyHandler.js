@@ -29,7 +29,7 @@ import * as Logger from './logger';
 // - wait for more keys
 // - flush sequences of keys
 // - save sequences of relevant keys
-class KeyStream extends EventEmitter {
+export class KeyStream extends EventEmitter {
   constructor(keys = []) {
     super();
 

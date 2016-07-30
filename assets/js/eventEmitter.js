@@ -9,12 +9,13 @@ class EventEmitter {
 
   // emit an event and return all responses from the listeners
   emit(event, ...args) {
-    (this.listeners['all'] || []).map((listener) => {
-      listener.apply(listener, arguments);
-    });
-    return (this.listeners[event] || []).map((listener) => {
-      listener.apply(listener, args);
-    });
+    return (this.listeners['all'] || []).map((listener) => {
+      return listener.apply(listener, arguments);
+    }).concat(
+      (this.listeners[event] || []).map((listener) => {
+        return listener.apply(listener, args);
+      })
+    );
   }
 
   addListener(event, listener) {

@@ -23,6 +23,12 @@ if (!isChrome && !isFirefox && !isSafari) {
   alert('Unsupported browser!  Please use a recent Chrome, Firefox, or Safari');
 }
 
+function cancel(ev) {
+  ev.stopPropagation();
+  ev.preventDefault();
+  return false;
+}
+
 let shiftMap = {
   '`': '~',
   '1': '!',
@@ -152,7 +158,10 @@ class KeyEmitter extends EventEmitter {
       Logger.logger.debug('keycode', e.keyCode, 'key', key);
       let results = this.emit('keydown', key);
       // return false to stop propagation, if any handler handled the key
-      return !_.some(results);
+      if (_.some(results)) {
+        return cancel(e);
+      }
+      return true;
     });
   }
 }
