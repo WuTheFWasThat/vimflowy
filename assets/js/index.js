@@ -172,7 +172,7 @@ let create_session = async function(doc, to_load) {
 
     let handled = true;
     // ALSO HACKY: getCommand currently causes key_transforms in search mode
-    if ((session.mode === Modes.modes.NORMAL) || (session.mode === Modes.modes.INSERT)) {
+    if (session.mode === Modes.modes.NORMAL) {
       handled = key_handler.getCommand(session.mode, keyStream).handled;
     }
     // fire and forget
