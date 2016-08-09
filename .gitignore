@@ -1,6 +1,7 @@
 public/
 dist/
 .sass-cache
+.bitballoon
 
 node_modules/
 npm-debug.log

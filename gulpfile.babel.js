@@ -97,7 +97,7 @@ let jsTask = (isDev) => {
 gulp.task('js:dev', jsTask(true));
 gulp.task('js:prod', jsTask(false));
 
-let htmlTask = (isDev) => {
+let htmlTask = (/* isDev */) => {
   return function() {
     let plugin_css_files_stream = gulp.src([
       plugin_sass_glob, plugin_css_glob
@@ -111,7 +111,6 @@ let htmlTask = (isDev) => {
           locals: {
             plugin_css_path: plugin_css_dst_path,
             plugin_css_files: plugin_css_filenames,
-            use_cdn: !isDev
           }
         })))
         .pipe(gulp.dest(`${out_folder}/`));

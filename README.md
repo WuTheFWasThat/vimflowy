@@ -5,7 +5,7 @@
 This is a productivity tool which draws great inspiration from workflowy and vim.
 
 Try it out!
-- [online] (https://vimflowy.pancakeapps.com)
+- [online] (https://vimflowy.bitballoon.com)
 - [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei)
 - [local/dev](CONTRIBUTING.md)
 

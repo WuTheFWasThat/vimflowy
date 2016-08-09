@@ -34,40 +34,40 @@ require('../../plugins/**/*.js', {mode: 'expand'});
 import KeyBindings from './keyBindings';
 
 
-let $keybindingsDiv = $('#keybindings');
-let $settingsDiv = $('#settings');
-let $modeDiv = $('#mode');
+const $keybindingsDiv = $('#keybindings');
+const $settingsDiv = $('#settings');
+const $modeDiv = $('#mode');
 
-let docname = window.location.pathname.split('/')[1];
+const docname = window.location.pathname.split('/')[1];
 
-let changeStyle = theme => $('body').attr('id', theme);
+const changeStyle = theme => $('body').attr('id', theme);
 
-let create_session = async function(doc, to_load) {
+async function create_session(doc, to_load) {
 
   //###################
   // Settings
   //###################
 
-  let settings = new Settings(doc.store, {mainDiv: $settingsDiv});
+  const settings = new Settings(doc.store, {mainDiv: $settingsDiv});
 
-  let theme = await settings.getSetting('theme');
+  const theme = await settings.getSetting('theme');
   changeStyle(theme);
   $settingsDiv.find('.theme-selection').val(theme);
   $settingsDiv.find('.theme-selection').on('input', function(/*e*/) {
-    let theme = this.value;
+    const theme = this.value;
     settings.setSetting('theme', theme);
     return changeStyle(theme);
   });
 
-  let showingKeyBindings = await settings.getSetting('showKeyBindings');
+  const showingKeyBindings = await settings.getSetting('showKeyBindings');
   $keybindingsDiv.toggleClass('active', showingKeyBindings);
 
   //###################
   // hotkeys and key bindings
   //###################
 
-  let hotkey_settings = await settings.getSetting('hotkeys', {});
-  let key_bindings = new KeyBindings(keyDefinitions, hotkey_settings);
+  const hotkey_settings = await settings.getSetting('hotkeys', {});
+  const key_bindings = new KeyBindings(keyDefinitions, hotkey_settings);
 
   //###################
   // session
@@ -88,7 +88,7 @@ let create_session = async function(doc, to_load) {
     cursorPath = viewRoot;
   }
 
-  let session = new Session(doc, {
+  const session = new Session(doc, {
     bindings: key_bindings,
     settings,
     mainDiv: $('#view'),
@@ -104,7 +104,7 @@ let create_session = async function(doc, to_load) {
     return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
   });
 
-  let render_mode_info = function(mode) {
+  const render_mode_info = function(mode) {
     Render.renderModeTable(key_bindings, mode, $keybindingsDiv);
     return $modeDiv.text(Modes.getMode(mode).name);
   };
@@ -123,8 +123,11 @@ let create_session = async function(doc, to_load) {
   // plugins
   //###################
 
-  let pluginManager = new PluginsManager(session, $('#plugins'));
+  const pluginManager = new PluginsManager(session, $('#plugins'));
   let enabledPlugins = (await settings.getSetting('enabledPlugins')) || ['Marks'];
+  if (typeof enabledPlugins === 'object') { // for backwards compatibility
+    enabledPlugins = Object.keys(enabledPlugins);
+  }
   enabledPlugins.forEach((plugin_name) => pluginManager.enable(plugin_name));
   Render.renderPlugins(pluginManager);
 
@@ -160,9 +163,9 @@ let create_session = async function(doc, to_load) {
     return Render.renderSession(session);
   });
 
-  let key_handler = new KeyHandler(session, key_bindings);
+  const key_handler = new KeyHandler(session, key_bindings);
 
-  let key_emitter = new KeyEmitter();
+  const key_emitter = new KeyEmitter();
   key_emitter.listen();
   key_emitter.on('keydown', (key) => {
     // TODO HACKY: this is just a best guess... e.g. the mode could be wrong
@@ -193,7 +196,7 @@ let create_session = async function(doc, to_load) {
 
   $(document).ready(function() {
     // needed for safari
-    let $pasteHack = $('#paste-hack');
+    const $pasteHack = $('#paste-hack');
     $pasteHack.focus();
     $(document).on('click', function() {
       // if settings menu is up, we don't want to blur (the dropdowns need focus)
@@ -207,16 +210,16 @@ let create_session = async function(doc, to_load) {
 
     $(document).on('paste', function(e) {
       e.preventDefault();
-      let text = (e.originalEvent || e).clipboardData.getData('text/plain');
+      const text = (e.originalEvent || e).clipboardData.getData('text/plain');
       // TODO: deal with this better when there are multiple lines
       // maybe put in insert mode?
-      let lines = text.split('\n');
+      const lines = text.split('\n');
       for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
+        const line = lines[i];
         if (i !== 0) {
           session.newLineAtCursor();
         }
-        let chars = line.split('');
+        const chars = line.split('');
         session.addCharsAtCursor(chars);
       }
       Render.renderSession(session);
@@ -232,23 +235,23 @@ let create_session = async function(doc, to_load) {
     });
 
     $('#settings-nav li').click(function(e) {
-      let tab = $(e.target).data('tab');
+      const tab = $(e.target).data('tab');
       $settingsDiv.find('.tabs > li').removeClass('active');
       $settingsDiv.find('.tab-pane').removeClass('active');
       $settingsDiv.find(`.tabs > li[data-tab=${tab}]`).addClass('active');
       return $settingsDiv.find(`.tab-pane#${tab}`).addClass('active');
     });
 
-    let load_file = function(filesDiv, cb) {
-      let file = filesDiv.files[0];
+    const load_file = function(filesDiv, cb) {
+      const file = filesDiv.files[0];
       if (!file) {
         return cb('No file selected for import!');
       }
       session.showMessage('Reading in file...');
-      let reader = new FileReader();
+      const reader = new FileReader();
       reader.readAsText(file, 'UTF-8');
       reader.onload = function(evt) {
-        let content = evt.target.result;
+        const content = evt.target.result;
         return cb(null, content, file.name);
       };
       return reader.onerror = function(evt) {
@@ -260,6 +263,7 @@ let create_session = async function(doc, to_load) {
     $('#hotkeys_import').click(() => {
       load_file($('#hotkeys_file_input')[0], function(err, content) {
         if (err) { return session.showMessage(err, {text_class: 'error'}); }
+        let hotkey_settings;
         try {
           hotkey_settings = JSON.parse(content);
         } catch (e) {
@@ -275,8 +279,8 @@ let create_session = async function(doc, to_load) {
     });
 
     $('#hotkeys_export').click(function() {
-      let filename = 'vimflowy_hotkeys.json';
-      let content = JSON.stringify(key_bindings.hotkeys, null, 2);
+      const filename = 'vimflowy_hotkeys.json';
+      const content = JSON.stringify(key_bindings.hotkeys, null, 2);
       utils.download_file(filename, 'application/json', content);
       return session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
     });
@@ -289,7 +293,7 @@ let create_session = async function(doc, to_load) {
     $('#data_import').click(() => {
       load_file($('#import-file :file')[0], function(err, content, filename) {
         if (err) { return session.showMessage(err, {text_class: 'error'}); }
-        let mimetype = utils.mimetypeLookup(filename);
+        const mimetype = utils.mimetypeLookup(filename);
         if (session.importContent(content, mimetype)) {
           session.showMessage('Imported!', {text_class: 'success'});
           return session.setMode(Modes.modes.NORMAL);
@@ -305,7 +309,6 @@ let create_session = async function(doc, to_load) {
 
   return $(window).unload(() => session.exit());
 };
-
 
 let datastore;
 let doc;
