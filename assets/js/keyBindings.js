@@ -42,14 +42,13 @@ It also internally maintains
 // TODO: merge this into keyDefinitions
 
 const MODES = Modes.modes;
-let MODE_TYPES = Modes.types;
+const MODE_TYPES = Modes.types;
 
 class KeyBindings extends EventEmitter {
   // takes key definitions and keyMappings, and combines them to key bindings
   getBindings(definitions, keyMap) {
-    let bindings = {};
-    for (let name in definitions) {
-      let v = definitions[name];
+    const bindings = {};
+    for (const name in definitions) {
       let keys;
       if (name === 'MOTION') {
         keys = ['MOTION'];
@@ -59,11 +58,11 @@ class KeyBindings extends EventEmitter {
         continue;
       }
 
-      v = _.cloneDeep(v);
+      const v = _.cloneDeep(definitions[name]);
       v.name = name;
 
       if (typeof v.definition === 'object') {
-        let [err, sub_bindings] = this.getBindings(v.definition, keyMap);
+        const [err, sub_bindings] = this.getBindings(v.definition, keyMap);
         if (err) {
           return [err, null];
         } else {
@@ -72,7 +71,7 @@ class KeyBindings extends EventEmitter {
       }
 
       for (let i = 0; i < keys.length; i++) {
-        let key = keys[i];
+        const key = keys[i];
         if (key in bindings) {
           return [`Duplicate binding on key ${key}`, bindings];
         }
@@ -92,7 +91,7 @@ class KeyBindings extends EventEmitter {
     this.bindings = null;
 
     this.hotkey_settings = null;
-    let err = this.apply_hotkey_settings(hotkey_settings);
+    const err = this.apply_hotkey_settings(hotkey_settings);
 
     if (err) {
       Logger.logger.error(`Failed to apply desired hotkeys ${hotkey_settings}`);
@@ -108,19 +107,18 @@ class KeyBindings extends EventEmitter {
   //   - command, motion, or action registered/deregistered
   apply_hotkey_settings(hotkey_settings = {}) {
     // merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
-    let hotkeys = {};
-    let mode_type;
-    for (mode_type in MODE_TYPES) {
+    const hotkeys = {};
+    for (const mode_type in MODE_TYPES) {
       hotkeys[mode_type] = _.extend({}, this.definitions.defaultHotkeys[mode_type], hotkey_settings[mode_type] || {});
     }
 
     // for each mode, get key mapping for that particular mode - a mapping from command to set of keys
-    let keyMaps = {};
-    for (mode_type in MODE_TYPES) {
-      let mode_type_obj = MODE_TYPES[mode_type];
+    const keyMaps = {};
+    for (const mode_type in MODE_TYPES) {
+      const mode_type_obj = MODE_TYPES[mode_type];
       for (let i = 0; i < mode_type_obj.modes.length; i++) {
-        let mode = mode_type_obj.modes[i];
-        let modeKeyMap = {};
+        const mode = mode_type_obj.modes[i];
+        const modeKeyMap = {};
         this.definitions.commands_for_mode(mode).forEach((command) => {
           modeKeyMap[command] = hotkeys[mode_type][command].slice();
         });
@@ -133,17 +131,16 @@ class KeyBindings extends EventEmitter {
       }
     }
 
-    let bindings = {};
-    let mode_name;
-    for (mode_name in MODES) {
-      let mode = MODES[mode_name];
-      let [err, mode_bindings] = this.getBindings((this.definitions.actions_for_mode(mode)), keyMaps[mode]);
+    const bindings = {};
+    for (const mode_name in MODES) {
+      const mode = MODES[mode_name];
+      const [err, mode_bindings] = this.getBindings((this.definitions.actions_for_mode(mode)), keyMaps[mode]);
       if (err) { return `Error getting bindings for ${mode_name}: ${err}`; }
       bindings[mode] = mode_bindings;
     }
 
-    let motion_bindings = {};
-    for (mode_name in MODES) {
+    const motion_bindings = {};
+    for (const mode_name in MODES) {
       const mode = MODES[mode_name];
       const [err, mode_bindings] = this.getBindings(this.definitions.motions, keyMaps[mode]);
       if (err) { return `Error getting motion bindings for ${mode_name}: ${err}`; }
@@ -162,12 +159,12 @@ class KeyBindings extends EventEmitter {
 
   // apply default hotkeys
   apply_default_hotkey_settings() {
-    let err = this.apply_hotkey_settings({});
+    const err = this.apply_hotkey_settings({});
     return errors.assert_equals(err, null, 'Failed to apply default hotkeys');
   }
 
   reapply_hotkey_settings() {
-    let err = this.apply_hotkey_settings(this.hotkey_settings);
+    const err = this.apply_hotkey_settings(this.hotkey_settings);
     return err;
   }
 }

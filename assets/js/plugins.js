@@ -8,7 +8,7 @@ import * as Logger from './logger';
 import * as errors from './errors';
 import EventEmitter from './eventEmitter';
 
-let PLUGIN_SCHEMA = {
+const PLUGIN_SCHEMA = {
   title: 'Plugin metadata schema',
   type: 'object',
   required: [ 'name' ],
@@ -79,14 +79,14 @@ class PluginApi {
   //       (first try combining bindings into definitions)
   //       should also re-render mode table
   _reapply_hotkeys() {
-    let err = this.session.bindings.reapply_hotkey_settings();
+    const err = this.session.bindings.reapply_hotkey_settings();
     if (err) {
       throw new errors.GenericError(`Error applying hotkeys: ${err}`);
     }
   }
 
   registerMode(metadata) {
-    let mode = Modes.registerMode(metadata);
+    const mode = Modes.registerMode(metadata);
     this.registrations.push({type: 'mode', args: [mode]});
     return this._reapply_hotkeys();
   }
@@ -97,7 +97,7 @@ class PluginApi {
   }
 
   registerCommand(metadata) {
-    let cmd = this.definitions.registerCommand(metadata);
+    const cmd = this.definitions.registerCommand(metadata);
     this.registrations.push({type: 'command', args: [cmd]});
     this._reapply_hotkeys();
     return cmd;
@@ -141,24 +141,24 @@ class PluginApi {
   }
 
   registerListener(who, event, listener) {
-    let emitter = this._getEmitter(who);
+    const emitter = this._getEmitter(who);
     emitter.on(event, listener);
     return this.registrations.push({type: 'listener', args: [who, event, listener]});
   }
 
   deregisterListener(who, event, listener) {
-    let emitter = this._getEmitter(who);
+    const emitter = this._getEmitter(who);
     return emitter.off(event, listener);
   }
 
   registerHook(who, event, transform) {
-    let emitter = this._getEmitter(who);
+    const emitter = this._getEmitter(who);
     emitter.addHook(event, transform);
     return this.registrations.push({type: 'hook', args: [who, event, transform]});
   }
 
   deregisterHook(who, event, transform) {
-    let emitter = this._getEmitter(who);
+    const emitter = this._getEmitter(who);
     return emitter.removeHook(event, transform);
   }
 
@@ -214,15 +214,15 @@ class PluginsManager extends EventEmitter {
     if (!PLUGINS[name]) {
       throw new Error(`Plugin ${name} was not registered`);
     }
-    let plugin_info = this.plugin_infos[name] || {};
+    const plugin_info = this.plugin_infos[name] || {};
     plugin_info.status = status;
     this.plugin_infos[name] = plugin_info;
     return this.emit('status');
   }
 
   updateEnabledPlugins() {
-    let enabled = [];
-    for (let name in this.plugin_infos) {
+    const enabled = [];
+    for (const name in this.plugin_infos) {
       if ((this.getStatus(name)) === STATUSES.ENABLED) {
         enabled.push(name);
       }
@@ -231,7 +231,7 @@ class PluginsManager extends EventEmitter {
   }
 
   enable(name) {
-    let status = this.getStatus(name);
+    const status = this.getStatus(name);
     if (status === STATUSES.UNREGISTERED) {
       Logger.logger.error(`No plugin registered as ${name}`);
       PLUGINS[name] = null;
@@ -250,9 +250,9 @@ class PluginsManager extends EventEmitter {
     errors.assert((status === STATUSES.DISABLED));
     this.setStatus(name, STATUSES.ENABLING);
 
-    let plugin = PLUGINS[name];
-    let api = new PluginApi(this.session, plugin, this);
-    let value = plugin.enable(api);
+    const plugin = PLUGINS[name];
+    const api = new PluginApi(this.session, plugin, this);
+    const value = plugin.enable(api);
 
     this.plugin_infos[name] = {
       api,
@@ -263,7 +263,7 @@ class PluginsManager extends EventEmitter {
   }
 
   disable(name) {
-    let status = this.getStatus(name);
+    const status = this.getStatus(name);
     if (status === STATUSES.UNREGISTERED) {
       throw new errors.GenericError(`No plugin registered as ${name}`);
     }
@@ -281,15 +281,15 @@ class PluginsManager extends EventEmitter {
     errors.assert((status === STATUSES.ENABLED));
     this.setStatus(name, STATUSES.DISABLING);
 
-    let plugin_info = this.plugin_infos[name];
-    let plugin = PLUGINS[name];
+    const plugin_info = this.plugin_infos[name];
+    const plugin = PLUGINS[name];
     plugin.disable(plugin_info.api, plugin_info.value);
     delete this.plugin_infos[name];
     return this.updateEnabledPlugins();
   }
 }
 
-let registerPlugin = function(plugin_metadata, enable, disable) {
+const registerPlugin = function(plugin_metadata, enable, disable) {
   utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, 'plugin');
   utils.fill_tv4_defaults(plugin_metadata, PLUGIN_SCHEMA);
 
@@ -298,7 +298,7 @@ let registerPlugin = function(plugin_metadata, enable, disable) {
   // Create the plugin object
   // Plugin stores all data about a plugin, including metadata
   // plugin.value contains the actual resolved value
-  let plugin = _.cloneDeep(plugin_metadata);
+  const plugin = _.cloneDeep(plugin_metadata);
   PLUGINS[plugin.name] = plugin;
   plugin.enable = enable;
   return plugin.disable = disable || _.once(function(api) {

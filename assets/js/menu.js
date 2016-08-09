@@ -15,7 +15,7 @@ class Menu {
     this.div = div;
     this.fn = fn;
 
-    let document = new Document(new DataStore.InMemory());
+    const document = new Document(new DataStore.InMemory());
     document.load(constants.empty_data);
 
     // a bit of a overkill-y hack, use an entire session object internally
@@ -53,7 +53,7 @@ class Menu {
   }
 
   update() {
-    let query = this.session.curText();
+    const query = this.session.curText();
     if ((JSON.stringify(query)) !== (JSON.stringify(this.lastquery))) {
       this.lastquery = query;
       this.results = this.fn(query);
@@ -65,7 +65,7 @@ class Menu {
     if (!this.results.length) {
       return;
     }
-    let result = this.results[this.selection];
+    const result = this.results[this.selection];
     return result.fn();
   }
 }

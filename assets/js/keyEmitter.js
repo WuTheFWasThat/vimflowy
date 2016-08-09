@@ -14,10 +14,10 @@ Note that one-character keys are treated specially, in that they are insertable 
 */
 
 // SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
-let isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
-let isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0; // Safari 3+
-let isChrome = !!window.chrome && !isOpera; // Chrome 1+
-let isFirefox = typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
+const isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
+const isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0; // Safari 3+
+const isChrome = !!window.chrome && !isOpera; // Chrome 1+
+const isFirefox = typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
 
 if (!isChrome && !isFirefox && !isSafari) {
   alert('Unsupported browser!  Please use a recent Chrome, Firefox, or Safari');
@@ -29,7 +29,7 @@ function cancel(ev) {
   return false;
 }
 
-let shiftMap = {
+const shiftMap = {
   '`': '~',
   '1': '!',
   '2': '@',
@@ -55,7 +55,7 @@ let shiftMap = {
   '/': '?'
 };
 
-let ignoreMap = {
+const ignoreMap = {
   16: 'shift alone',
   17: 'ctrl alone',
   18: 'alt alone',
@@ -63,7 +63,7 @@ let ignoreMap = {
   93: 'right command alone'
 };
 
-let keyCodeMap = {
+const keyCodeMap = {
   8: 'backspace',
   9: 'tab',
   13: 'enter',
@@ -105,9 +105,9 @@ let keyCodeMap = {
 };
 
 for (let j = 1; j <= 26; j++) {
-  let keyCode = j + 64;
-  let letter = String.fromCharCode(keyCode);
-  let lower = letter.toLowerCase();
+  const keyCode = j + 64;
+  const letter = String.fromCharCode(keyCode);
+  const lower = letter.toLowerCase();
   keyCodeMap[keyCode] = lower;
   shiftMap[lower] = letter;
 }
@@ -156,7 +156,7 @@ class KeyEmitter extends EventEmitter {
       }
 
       Logger.logger.debug('keycode', e.keyCode, 'key', key);
-      let results = this.emit('keydown', key);
+      const results = this.emit('keydown', key);
       // return false to stop propagation, if any handler handled the key
       if (_.some(results)) {
         return cancel(e);

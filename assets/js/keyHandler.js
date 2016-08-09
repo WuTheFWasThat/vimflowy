@@ -40,7 +40,7 @@ export class KeyStream extends EventEmitter {
     this.waiting = false;
 
     for (let i = 0; i < keys.length; i++) {
-      let key = keys[i];
+      const key = keys[i];
       this.enqueue(key);
     }
   }
@@ -78,7 +78,7 @@ export class KeyStream extends EventEmitter {
   }
 
   save() {
-    let processed = this.forget();
+    const processed = this.forget();
     this.lastSequence = processed;
     return this.emit('save');
   }
@@ -91,7 +91,7 @@ export class KeyStream extends EventEmitter {
     }
 
     errors.assert(this.index >= n);
-    let dropped = this.queue.splice(this.index-n, n);
+    const dropped = this.queue.splice(this.index-n, n);
     this.index = this.index - n;
     return dropped;
   }
@@ -130,7 +130,7 @@ class KeyHandler extends EventEmitter {
   }
 
   finishRecording() {
-    let macro = this.recording.stream.queue;
+    const macro = this.recording.stream.queue;
     this.macros[this.recording.key] = macro;
     this.session.document.store.setMacros(this.macros);
     this.recording.stream = null;
@@ -139,7 +139,7 @@ class KeyHandler extends EventEmitter {
 
   async playRecording(recording) {
     // the recording shouldn't save, (i.e. no @session.save)
-    let recordKeyStream = new KeyStream(recording);
+    const recordKeyStream = new KeyStream(recording);
     return await this.processKeys(recordKeyStream);
   }
 
@@ -162,12 +162,12 @@ class KeyHandler extends EventEmitter {
         keyStream.checkpoint();
         const { handled, command } = this.getCommand(this.session.mode, keyStream);
         if (!handled) {
-          let mode_obj = Modes.getMode(this.session.mode);
+          const mode_obj = Modes.getMode(this.session.mode);
           mode_obj.handle_bad_key(keyStream);
         } else if (command) {
           const { fn, context, args } = command;
           await fn.apply(context, args);
-          let mode_obj = Modes.getMode(this.session.mode);
+          const mode_obj = Modes.getMode(this.session.mode);
           mode_obj.every(this.session, this.keyStream);
         }
       }
@@ -193,11 +193,11 @@ class KeyHandler extends EventEmitter {
       keyHandler: this
     };
 
-    let mode_obj = Modes.getMode(mode);
+    const mode_obj = Modes.getMode(mode);
 
     let key = keyStream.dequeue();
 
-    let args = [];
+    const args = [];
 
     [key, context] = mode_obj.transform_key(key, context);
     if (key === null) {
@@ -219,7 +219,7 @@ class KeyHandler extends EventEmitter {
       }
 
       // note: this uses original bindings to determine what's a motion
-      let [motion, motionrepeat, handled] =
+      const [motion, motionrepeat, handled] =
         this.getMotion(keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat);
       context.repeat = motionrepeat;
       if (motion === null) {
@@ -232,7 +232,7 @@ class KeyHandler extends EventEmitter {
       info = bindings['MOTION'];
     }
 
-    let { definition } = info;
+    const { definition } = info;
     if (typeof definition === 'object') {
       // recursive definition
       return this.getCommand(mode, keyStream, info.definition, context.repeat);
@@ -258,8 +258,8 @@ class KeyHandler extends EventEmitter {
     if (key === null) {
       key = keyStream.dequeue();
     }
-    let begins = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
-    let continues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
+    const begins = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
+    const continues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
     if (begins.indexOf(key) === -1) {
       return [1, key];
     }
@@ -289,18 +289,18 @@ class KeyHandler extends EventEmitter {
       return [null, repeat, false];
     }
 
-    let { definition } = bindings[motionKey];
+    const { definition } = bindings[motionKey];
     if (typeof definition === 'object') {
       // recursive definition
       return this.getMotion(keyStream, null, definition, repeat);
     } else if (typeof definition === 'function') {
-      let context = {
+      const context = {
         session: this.session,
         repeat,
         keyStream,
         keyHandler: this
       };
-      let motion = definition.apply(context, []);
+      const motion = definition.apply(context, []);
       return [motion, repeat, true];
     } else {
       throw new errors.UnexpectedValue('definition', definition);

@@ -22,7 +22,7 @@ class Logger {
     this.setLevel(level);
     this.setStream(stream);
 
-    let register_loglevel = (name, value) => {
+    const register_loglevel = (name, value) => {
       return this[name.toLowerCase()] = function() {
         if (this.level <= value) {
           return this.log.apply(this, arguments);
@@ -30,8 +30,8 @@ class Logger {
       };
     };
 
-    for (let name in LEVEL) {
-      let value = LEVEL[name];
+    for (const name in LEVEL) {
+      const value = LEVEL[name];
       register_loglevel(name, value);
     }
   }
@@ -66,7 +66,7 @@ class Logger {
   flush() {
     if (this.stream === STREAM.QUEUE) {
       for (let i = 0; i < this.queue.length; i++) {
-        let args = this.queue[i];
+        const args = this.queue[i];
         console.log.apply(console, args);
       }
       return this.empty();

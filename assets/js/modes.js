@@ -5,10 +5,10 @@ import * as constants from './constants';
 // import { Document } from './document';
 // import * as DataStore from './datastore';
 
-let NORMAL_MODE_TYPE = 'Normal-like modes';
-let INSERT_MODE_TYPE = 'Insert-like modes';
+const NORMAL_MODE_TYPE = 'Normal-like modes';
+const INSERT_MODE_TYPE = 'Insert-like modes';
 
-let MODE_SCHEMA = {
+const MODE_SCHEMA = {
   title: 'Mode metadata schema',
   type: 'object',
   required: [ 'name' ],
@@ -113,10 +113,10 @@ class Mode {
 }
 
 // an enum dictionary,
-let MODES_ENUM = {};
+const MODES_ENUM = {};
 // mapping from mode name to the actual mode object
 const MODES = {};
-let MODE_TYPES = {};
+const MODE_TYPES = {};
 MODE_TYPES[NORMAL_MODE_TYPE] = {
   description:
     'Modes in which text is not being inserted, and all keys are configurable as commands.  ' +
@@ -131,17 +131,17 @@ MODE_TYPES[INSERT_MODE_TYPE] = {
 };
 
 let modeCounter = 1;
-let registerMode = function(metadata) {
+const registerMode = function(metadata) {
   utils.tv4_validate(metadata, MODE_SCHEMA, 'mode');
   utils.fill_tv4_defaults(metadata, MODE_SCHEMA);
 
-  let { name } = metadata;
+  const { name } = metadata;
   // if name of MODES_ENUM
   //   # NOTE: re-registration of the mode currently happens in unit tests
   //   #       not sure why, but marks tests fail when not letting it re-register
   //   # TODO figure this out better.  also tests shouldn't keep registering new modes anyways
   //   return MODES[MODES_ENUM[name]]
-  let mode = new Mode(metadata);
+  const mode = new Mode(metadata);
   MODES_ENUM[name] = modeCounter;
   MODES[modeCounter] = mode;
   MODE_TYPES[metadata.hotkey_type].modes.push(modeCounter);
@@ -149,15 +149,15 @@ let registerMode = function(metadata) {
   return mode;
 };
 
-let deregisterMode = function(mode) {
+const deregisterMode = function(mode) {
   modeCounter = MODES_ENUM[mode.name];
   delete MODES_ENUM[mode.name];
   delete MODES[modeCounter];
-  let index = MODE_TYPES[mode.metadata.hotkey_type].modes.indexOf(modeCounter);
+  const index = MODE_TYPES[mode.metadata.hotkey_type].modes.indexOf(modeCounter);
   return MODE_TYPES[mode.metadata.hotkey_type].modes.splice(index, 1);
 };
 
-let transform_insert_key = function(key) {
+const transform_insert_key = function(key) {
   if (key === 'shift+enter') {
     key = '\n';
   } else if (key === 'space' || key === 'shift+space') {
@@ -192,9 +192,9 @@ registerMode({
       key = transform_insert_key(key);
       if (key.length === 1) {
         // simply insert the key
-        let obj = {char: key};
+        const obj = {char: key};
         for (let i = 0; i < constants.text_properties.length; i++) {
-          let property = constants.text_properties[i];
+          const property = constants.text_properties[i];
           if (context.session.cursor.getProperty(property)) { obj[property] = true; }
         }
         context.session.addCharsAtCursor([obj]);
@@ -228,8 +228,8 @@ registerMode({
     return session.lineSelect = false;
   },
   transform_context(context) {
-    let { session } = context;
-    let [parent, index1, index2] = session.getVisualLineSelections();
+    const { session } = context;
+    const [parent, index1, index2] = session.getVisualLineSelections();
     context.row_start_i = index1;
     context.row_end_i = index2;
     context.row_start = (session.document.getChildren(parent))[index1];
@@ -295,7 +295,7 @@ registerMode({
   ]
 });
 
-let getMode = mode => MODES[mode];
+const getMode = mode => MODES[mode];
 
 export {
   registerMode,

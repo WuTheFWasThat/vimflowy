@@ -11,7 +11,7 @@ class Command {
   }
 }
 
-let COMMAND_SCHEMA = {
+const COMMAND_SCHEMA = {
   title: 'Command metadata schema',
   type: 'object',
   required: [ 'name' ],
@@ -56,7 +56,7 @@ let COMMAND_SCHEMA = {
 // to always takes an extra cursor argument.
 // TODO: this is a hack, and should be done more properly
 // For more info/context, see keyBindings.js and definitions of CHANGE/DELETE/YANK
-let motionCommandName = 'MOTION';
+const motionCommandName = 'MOTION';
 
 // MOTIONS
 // should have a fn, returns a motion fn (or null)
@@ -66,7 +66,7 @@ let motionCommandName = 'MOTION';
 //     pastEnd: whether to allow going past the end of the line
 //     pastEndWord: whether we consider the end of a word to be after the last letter
 
-let MOTION_SCHEMA = {
+const MOTION_SCHEMA = {
   title: 'Motion metadata schema',
   type: 'object',
   required: [ 'description' ],
@@ -94,7 +94,7 @@ It may also have, bindings:
     another (recursive) set of key definitions, i.e. a dictionary from command names to definitions
 */
 
-let ACTION_SCHEMA = {
+const ACTION_SCHEMA = {
   title: 'Action metadata schema',
   type: 'object',
   required: [ 'description' ],
@@ -128,8 +128,8 @@ class KeyDefinitions {
 
   // currently used only for testing
   clone() {
-    let other = new KeyDefinitions();
-    let keys = [
+    const other = new KeyDefinitions();
+    const keys = [
       'motion_command_counts', 'action_command_counts_by_mode',
       'defaultHotkeys',
       'commands', 'motions', 'actions'
@@ -146,7 +146,7 @@ class KeyDefinitions {
       if (!this.action_command_counts_by_mode[mode]) {
         this.action_command_counts_by_mode[mode] = {};
       }
-      let count = this.action_command_counts_by_mode[mode][command.name] || 0;
+      const count = this.action_command_counts_by_mode[mode][command.name] || 0;
       return this.action_command_counts_by_mode[mode][command.name] = count + 1;
     }
   }
@@ -157,7 +157,7 @@ class KeyDefinitions {
       if (!this.action_command_counts_by_mode[mode]) {
         this.action_command_counts_by_mode[mode] = {};
       }
-      let count = this.action_command_counts_by_mode[mode][command.name] || 0;
+      const count = this.action_command_counts_by_mode[mode][command.name] || 0;
       if (count === 0) {
         throw new errors.GenericError(`Cannot remove command ${command}`);
       } else if (count === 1) {
@@ -169,7 +169,7 @@ class KeyDefinitions {
   }
 
   _add_motion(command, multirow) {
-    let counts = this.motion_command_counts[command.name] || {};
+    const counts = this.motion_command_counts[command.name] || {};
     if (multirow) {
       counts.multirow = (counts.multirow || 0) + 1;
     }
@@ -178,7 +178,7 @@ class KeyDefinitions {
   }
 
   _remove_motion(command, multirow) {
-    let counts = this.motion_command_counts[command.name] || {};
+    const counts = this.motion_command_counts[command.name] || {};
     if (multirow) {
       if (counts.multirow === 0) {
         throw new errors.GenericError(`Cannot remove multirow motion ${command}`);
@@ -196,9 +196,9 @@ class KeyDefinitions {
   }
 
   get_motions(multirow) {
-    let result = [];
-    for (let name in this.motion_command_counts) {
-      let counts = this.motion_command_counts[name];
+    const result = [];
+    for (const name in this.motion_command_counts) {
+      const counts = this.motion_command_counts[name];
       if (multirow) {
         result.push(name);
       } else {
@@ -224,8 +224,8 @@ class KeyDefinitions {
   registerCommand(metadata) {
     utils.tv4_validate(metadata, COMMAND_SCHEMA, 'command');
     utils.fill_tv4_defaults(metadata, COMMAND_SCHEMA);
-    let { name } = metadata;
-    let command = new Command(metadata);
+    const { name } = metadata;
+    const command = new Command(metadata);
 
     if (command.name in this.commands) {
       throw new errors.GenericError(`Command ${command.name} has already been defined`);
@@ -283,7 +283,7 @@ class KeyDefinitions {
     }
     obj[command.name] = motion;
     for (let k = 0; k < commands.length; k++) {
-      let cmd = commands[k];
+      const cmd = commands[k];
       this._add_motion(cmd, motion.multirow);
     }
     return null;
@@ -313,10 +313,10 @@ class KeyDefinitions {
     if (!(command.name in obj)) {
       throw new errors.GenericError(`Motion ${command.name} not found`);
     }
-    let motion = obj[command.name];
+    const motion = obj[command.name];
     delete obj[command.name];
     for (let k = 0; k < commands.length; k++) {
-      let cmd = commands[k];
+      const cmd = commands[k];
       this._remove_motion(cmd, motion.multirow);
     }
     return null;
@@ -333,7 +333,7 @@ class KeyDefinitions {
     }
 
     for (let j = 0; j < modes.length; j++) {
-      let mode = modes[j];
+      const mode = modes[j];
       if (!this.actions[mode]) {
         this.actions[mode] = {};
       }
@@ -359,7 +359,7 @@ class KeyDefinitions {
 
       obj[command.name] = action;
       for (let i1 = 0; i1 < commands.length; i1++) {
-        let cmd = commands[i1];
+        const cmd = commands[i1];
         this._add_command(mode, cmd);
       }
     }
@@ -373,7 +373,7 @@ class KeyDefinitions {
     }
 
     for (let j = 0; j < modes.length; j++) {
-      let mode = modes[j];
+      const mode = modes[j];
       if (!this.actions[mode]) {
         this.actions[mode] = {};
       }
@@ -399,7 +399,7 @@ class KeyDefinitions {
 
       delete obj[command.name];
       for (let i1 = 0; i1 < commands.length; i1++) {
-        let cmd = commands[i1];
+        const cmd = commands[i1];
         this._remove_command(mode, cmd);
       }
     }
