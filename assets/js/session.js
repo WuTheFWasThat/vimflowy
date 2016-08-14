@@ -60,7 +60,7 @@ class Session extends EventEmitter {
       return;
     }
 
-    let oldmode = this.mode;
+    const oldmode = this.mode;
     if (oldmode) {
       Modes.getMode(oldmode).exit(this, newmode);
     }
@@ -109,14 +109,14 @@ class Session extends EventEmitter {
       this.showMessage('The uploaded file is not valid JSON', {text_class: 'error'});
       return false;
     }
-    let verify = function(node) {
+    const verify = function(node) {
       if (node.clone) {
         return true;
       }
       if (!node.text && node.text !== '') { return false; }
       if (node.children) {
         for (let i = 0; i < node.children.length; i++) {
-          let child = node.children[i];
+          const child = node.children[i];
           if (!verify(child)) { return false; }
         }
       }
@@ -132,8 +132,8 @@ class Session extends EventEmitter {
   parsePlaintext(content) {
     // Step 1: parse into (int, string) pairs of indentation amounts.
     let lines = [];
-    let whitespace = /^\s*/;
-    let content_lines = content.split('\n');
+    const whitespace = /^\s*/;
+    const content_lines = content.split('\n');
     for (let i = 0; i < content_lines.length; i++) {
       let line = content_lines[i];
       if (line.match(/^\s*".*"$/)) { // Flag workflowy annotations as special cases
@@ -155,8 +155,8 @@ class Session extends EventEmitter {
     }
 
     // Step 2: convert a list of (int, string, annotation?) into a forest format
-    let parseAllChildren = function(parentIndentation, lineNumber) {
-      let children = [];
+    const parseAllChildren = function(parentIndentation, lineNumber) {
+      const children = [];
       if (lineNumber < lines.length && lines[lineNumber].annotation) {
         // Each node can have an annotation immediately follow it
         children.push({
@@ -165,9 +165,9 @@ class Session extends EventEmitter {
       }
       while (lineNumber < lines.length && lines[lineNumber].indent > parentIndentation) {
         // For [the first line of] each child
-        let child =
+        const child =
           {text: lines[lineNumber].line};
-        let result = parseAllChildren(lines[lineNumber].indent, lineNumber + 1);
+        const result = parseAllChildren(lines[lineNumber].indent, lineNumber + 1);
         ({ lineNumber } = result);
         if (result.children !== null) {
           child.children = result.children;
@@ -177,8 +177,8 @@ class Session extends EventEmitter {
       }
       return { children, lineNumber};
     };
-    let forest = (parseAllChildren(-1, 0)).children;
-    let root = {
+    const forest = (parseAllChildren(-1, 0)).children;
+    const root = {
       text: '',
       children: forest,
       collapsed: (forest.length > 0)
@@ -198,9 +198,9 @@ class Session extends EventEmitter {
 
   // TODO: make this use replace_empty = true?
   importContent(content, mimetype) {
-    let root = this.parseContent(content, mimetype);
+    const root = this.parseContent(content, mimetype);
     if (!root) { return false; }
-    let { path } = this.cursor;
+    const { path } = this.cursor;
     if (root.text === '' && root.children) { // Complete export, not one node
       this.addBlocks(path, 0, root.children);
     } else {
@@ -212,23 +212,23 @@ class Session extends EventEmitter {
   }
 
   exportContent(mimetype) {
-    let jsonContent = this.document.serialize();
+    const jsonContent = this.document.serialize();
     if (mimetype === 'application/json') {
       delete jsonContent.viewRoot;
       return JSON.stringify(jsonContent, undefined, 2);
     } else if (mimetype === 'text/plain') {
       // Workflowy compatible plaintext export
       //   Ignores 'collapsed' and viewRoot
-      let indent = '  ';
-      let exportLines = function(node) {
+      const indent = '  ';
+      const exportLines = function(node) {
         if (typeof(node) === 'string') {
           return [`- ${node}`];
         }
-        let lines = [];
+        const lines = [];
         lines.push(`- ${node.text}`);
-        let children = node.children || [];
+        const children = node.children || [];
         for (let i = 0; i < children.length; i++) {
-          let child = children[i];
+          const child = children[i];
           if (child.clone) {
             continue;
           }
@@ -246,12 +246,12 @@ class Session extends EventEmitter {
 
   exportFile(type = 'json') {
     this.showMessage('Exporting...');
-    let filename = this.document.name === '' ?
+    const filename = this.document.name === '' ?
                    `vimflowy.${type}` :
                    `${this.document.name}.${type}` ;
     // Infer mimetype from file extension
-    let mimetype = utils.mimetypeLookup(filename);
-    let content = this.exportContent(mimetype);
+    const mimetype = utils.mimetypeLookup(filename);
+    const content = this.exportContent(mimetype);
     utils.download_file(filename, mimetype, content);
     return this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
   }
@@ -278,7 +278,7 @@ class Session extends EventEmitter {
       return;
     }
 
-    let state = this.history[this.historyIndex];
+    const state = this.history[this.historyIndex];
     state.after = {
       cursor: this.cursor.clone(),
       viewRoot: this.viewRoot
@@ -298,21 +298,20 @@ class Session extends EventEmitter {
 
   undo() {
     if (this.historyIndex > 0) {
-      let oldState = this.history[this.historyIndex];
+      const oldState = this.history[this.historyIndex];
       this.historyIndex -= 1;
-      let newState = this.history[this.historyIndex];
+      const newState = this.history[this.historyIndex];
 
       Logger.logger.debug('UNDOING <');
       for (let j = oldState.index - 1; j > newState.index - 1; j--) {
-        let mutation = this.mutations[j];
+        const mutation = this.mutations[j];
         Logger.logger.debug(`  Undoing mutation ${mutation.constructor.name}(${mutation.str()})`);
-        let undo_mutations = mutation.rewind(this);
-        for (let k = 0; k < undo_mutations.length; k++) {
-          let undo_mutation = undo_mutations[k];
+        const undo_mutations = mutation.rewind(this);
+        undo_mutations.forEach((undo_mutation) => {
           Logger.logger.debug(`  Undo mutation ${undo_mutation.constructor.name}(${undo_mutation.str()})`);
           undo_mutation.mutate(this);
           undo_mutation.moveCursor(this.cursor);
-        }
+        });
       }
 
       Logger.logger.debug('> END UNDO');
@@ -322,13 +321,13 @@ class Session extends EventEmitter {
 
   redo() {
     if (this.historyIndex < this.history.length - 1) {
-      let oldState = this.history[this.historyIndex];
+      const oldState = this.history[this.historyIndex];
       this.historyIndex += 1;
-      let newState = this.history[this.historyIndex];
+      const newState = this.history[this.historyIndex];
 
       Logger.logger.debug('REDOING <');
       for (let j = oldState.index; j < newState.index; j++) {
-        let mutation = this.mutations[j];
+        const mutation = this.mutations[j];
         Logger.logger.debug(`  Redoing mutation ${mutation.constructor.name}(${mutation.str()})`);
         if (!mutation.validate(this)) {
           // this should not happen, since the state should be the same as before
@@ -356,7 +355,7 @@ class Session extends EventEmitter {
       this.mutations = this.mutations.slice(0, this.history[this.historyIndex].index);
     }
 
-    let state = this.history[this.historyIndex];
+    const state = this.history[this.historyIndex];
     if (this.mutations.length === state.index) {
       state.before = {
         cursor: this.cursor.clone(),
@@ -394,7 +393,7 @@ class Session extends EventEmitter {
 
   nextVisible(path) {
     if (this.viewable(path)) {
-      let children = this.document.getChildren(path);
+      const children = this.document.getChildren(path);
       if (children.length > 0) {
         return children[0];
       }
@@ -403,7 +402,7 @@ class Session extends EventEmitter {
       return null;
     }
     while (true) {
-      let nextsib = this.document.getSiblingAfter(path);
+      const nextsib = this.document.getSiblingAfter(path);
       if (nextsib !== null) {
         return nextsib;
       }
@@ -419,7 +418,7 @@ class Session extends EventEmitter {
     if (!this.viewable(path)) {
       return path;
     }
-    let children = this.document.getChildren(path);
+    const children = this.document.getChildren(path);
     if (children.length > 0) {
       return this.lastVisible(children[children.length - 1]);
     }
@@ -430,11 +429,11 @@ class Session extends EventEmitter {
     if (path.is(this.viewRoot)) {
       return null;
     }
-    let prevsib = this.document.getSiblingBefore(path);
+    const prevsib = this.document.getSiblingBefore(path);
     if (prevsib !== null) {
       return this.lastVisible(prevsib);
     }
-    let { parent } = path;
+    const { parent } = path;
     if (parent.is(this.viewRoot)) {
       if (parent.is(this.document.root)) {
         return null;
@@ -450,7 +449,7 @@ class Session extends EventEmitter {
   oldestVisibleAncestor(path) {
     let last = path;
     while (true) {
-      let cur = last.parent;
+      const cur = last.parent;
       if (cur.is(this.viewRoot)) {
         return last;
       }
@@ -481,7 +480,7 @@ class Session extends EventEmitter {
   }
 
   isVisible(path) {
-    let visibleAncestor = this.youngestVisibleAncestor(path);
+    const visibleAncestor = this.youngestVisibleAncestor(path);
     return (visibleAncestor !== null) && (path.is(visibleAncestor));
   }
 
@@ -503,7 +502,7 @@ class Session extends EventEmitter {
   }
 
   addToJumpHistory(jump_fn) {
-    let jump = this.jumpHistory[this.jumpIndex];
+    const jump = this.jumpHistory[this.jumpIndex];
     jump.cursor_after = this.cursor.clone();
 
     this.jumpHistory = this.jumpHistory.slice(0, (this.jumpIndex+1));
@@ -527,7 +526,7 @@ class Session extends EventEmitter {
       return false; // invalid location
     }
 
-    let children = this.document.getChildren(jump.viewRoot);
+    const children = this.document.getChildren(jump.viewRoot);
 
     this._changeViewRoot(jump.viewRoot);
     if (children.length) {
@@ -538,7 +537,7 @@ class Session extends EventEmitter {
 
     if (this.document.isAttached(jump.cursor_after.row)) {
       // if the row is attached and under the view root, switch to it
-      let cursor_path = this.youngestVisibleAncestor(jump.cursor_after.path);
+      const cursor_path = this.youngestVisibleAncestor(jump.cursor_after.path);
       if (cursor_path !== null) {
         this.cursor.setPath(cursor_path);
       }
@@ -547,9 +546,9 @@ class Session extends EventEmitter {
   }
 
   jumpPrevious() {
-    let { jumpIndex } = this;
+    let jumpIndex = this.jumpIndex;
 
-    let jump = this.jumpHistory[jumpIndex];
+    const jump = this.jumpHistory[jumpIndex];
     jump.cursor_after = this.cursor.clone();
 
     while (true) {
@@ -557,7 +556,7 @@ class Session extends EventEmitter {
         return false;
       }
       jumpIndex -= 1;
-      let oldjump = this.jumpHistory[jumpIndex];
+      const oldjump = this.jumpHistory[jumpIndex];
       if (this.tryJump(oldjump)) {
         this.jumpIndex = jumpIndex;
         return true;
@@ -566,9 +565,9 @@ class Session extends EventEmitter {
   }
 
   jumpNext() {
-    let { jumpIndex } = this;
+    let jumpIndex = this.jumpIndex;
 
-    let jump = this.jumpHistory[jumpIndex];
+    const jump = this.jumpHistory[jumpIndex];
     jump.cursor_after = this.cursor.clone();
 
     while (true) {
@@ -576,7 +575,7 @@ class Session extends EventEmitter {
         return false;
       }
       jumpIndex += 1;
-      let newjump = this.jumpHistory[jumpIndex];
+      const newjump = this.jumpHistory[jumpIndex];
       if (this.tryJump(newjump)) {
         this.jumpIndex = jumpIndex;
         return true;
@@ -608,7 +607,7 @@ class Session extends EventEmitter {
 
   zoomOut() {
     if (this.viewRoot.row !== this.document.root.row) {
-      let { parent } = this.viewRoot;
+      const { parent } = this.viewRoot;
       return this.zoomInto(parent);
     }
   }
@@ -617,7 +616,7 @@ class Session extends EventEmitter {
     if (this.cursor.path.is(this.viewRoot)) {
       return false;
     }
-    let newroot = this.oldestVisibleAncestor(this.cursor.path);
+    const newroot = this.oldestVisibleAncestor(this.cursor.path);
     if (this.zoomInto(newroot)) {
       return true;
     }
@@ -625,7 +624,7 @@ class Session extends EventEmitter {
   }
 
   zoomDown() {
-    let sib = this.document.getSiblingAfter(this.viewRoot);
+    const sib = this.document.getSiblingAfter(this.viewRoot);
     if (sib === null) {
       this.showMessage('No next sibling to zoom down to', {text_class: 'error'});
       return;
@@ -634,7 +633,7 @@ class Session extends EventEmitter {
   }
 
   zoomUp() {
-    let sib = this.document.getSiblingBefore(this.viewRoot);
+    const sib = this.document.getSiblingBefore(this.viewRoot);
     if (sib === null) {
       this.showMessage('No previous sibling to zoom up to', {text_class: 'error'});
       return;
@@ -667,7 +666,7 @@ class Session extends EventEmitter {
   }
 
   addCharsAfterCursor(chars) {
-    let { col } = this.cursor;
+    let col = this.cursor.col;
     if (col < (this.document.getLength(this.cursor.row))) {
       col += 1;
     }
@@ -675,10 +674,10 @@ class Session extends EventEmitter {
   }
 
   delChars(path, col, nchars, options = {}) {
-    let n = this.document.getLength(path.row);
+    const n = this.document.getLength(path.row);
     let deleted = [];
     if ((n > 0) && (nchars > 0) && (col < n)) {
-      let mutation = new mutations.DelChars(path.row, col, nchars);
+      const mutation = new mutations.DelChars(path.row, col, nchars);
       this.do(mutation);
       deleted = mutation.deletedChars;
       if (options.yank) {
@@ -698,15 +697,15 @@ class Session extends EventEmitter {
   }
 
   changeChars(row, col, nchars, change_fn) {
-    let mutation = new mutations.ChangeChars(row, col, nchars, change_fn);
+    const mutation = new mutations.ChangeChars(row, col, nchars, change_fn);
     this.do(mutation);
     return mutation.ncharsDeleted;
   }
 
   replaceCharsAfterCursor(char, nchars) {
-    let ndeleted = this.changeChars(this.cursor.row, this.cursor.col, nchars, (chars =>
+    const ndeleted = this.changeChars(this.cursor.row, this.cursor.col, nchars, (chars =>
       chars.map(function(char_obj) {
-        let new_obj = _.clone(char_obj);
+        const new_obj = _.clone(char_obj);
         new_obj.char = char;
         return new_obj;
       })
@@ -723,7 +722,7 @@ class Session extends EventEmitter {
   }
 
   yankChars(path, col, nchars) {
-    let line = this.document.getLine(path.row);
+    const line = this.document.getLine(path.row);
     if (line.length > 0) {
       return this.register.saveChars(line.slice(col, col + nchars));
     }
@@ -741,12 +740,12 @@ class Session extends EventEmitter {
       [cursor1, cursor2] = [cursor2, cursor1];
     }
 
-    let offset = options.includeEnd ? 1 : 0;
+    const offset = options.includeEnd ? 1 : 0;
     return this.yankChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset);
   }
 
   yankRowAtCursor() {
-    let serialized_row = this.document.serializeRow(this.cursor.row);
+    const serialized_row = this.document.serializeRow(this.cursor.row);
     return this.register.saveSerializedRows([serialized_row]);
   }
 
@@ -761,7 +760,7 @@ class Session extends EventEmitter {
     if (cursor2.col < cursor1.col) {
       [cursor1, cursor2] = [cursor2, cursor1];
     }
-    let offset = options.includeEnd ? 1 : 0;
+    const offset = options.includeEnd ? 1 : 0;
     return this.delChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset, options);
   }
 
@@ -772,12 +771,12 @@ class Session extends EventEmitter {
   toggleProperty(property, new_value, row, col, n) {
     return this.changeChars(row, col, n, function(deleted) {
       if (new_value === null) {
-        let all_were_true = _.every(deleted.map(obj => obj[property]));
+        const all_were_true = _.every(deleted.map(obj => obj[property]));
         new_value = !all_were_true;
       }
 
       return deleted.map(function(char_obj) {
-        let new_obj = _.clone(char_obj);
+        const new_obj = _.clone(char_obj);
         new_obj[property] = new_value;
         return new_obj;
       });
@@ -785,14 +784,13 @@ class Session extends EventEmitter {
   }
 
   toggleRowsProperty(property, rows) {
-    let all_were_true = _.every(rows.map(row => {
+    const all_were_true = _.every(rows.map(row => {
       return _.every(this.document.getLine(row).map(obj => obj[property]));
     }));
-    let new_value = !all_were_true;
-    for (let i = 0; i < rows.length; i++) {
-      let row = rows[i];
+    const new_value = !all_were_true;
+    rows.forEach((row) => {
       this.toggleProperty(property, new_value, row, 0, this.document.getLength(row));
-    }
+    });
     return null;
   }
 
@@ -810,7 +808,7 @@ class Session extends EventEmitter {
       [cursor1, cursor2] = [cursor2, cursor1];
     }
 
-    let offset = options.includeEnd ? 1 : 0;
+    const offset = options.includeEnd ? 1 : 0;
     return this.toggleProperty(property, null, cursor1.row, cursor1.col, cursor2.col - cursor1.col + offset);
   }
 
@@ -828,8 +826,8 @@ class Session extends EventEmitter {
     } else if ((!this.document.collapsed(this.cursor.row)) && this.document.hasChildren(this.cursor.row)) {
       return this.addBlocks(this.cursor.path, 0, [''], options);
     } else {
-      let { parent } = this.cursor.path;
-      let index = this.document.indexOf(this.cursor.path);
+      const parent = this.cursor.path.parent;
+      const index = this.document.indexOf(this.cursor.path);
       return this.addBlocks(parent, (index+1), [''], options);
     }
   }
@@ -838,8 +836,8 @@ class Session extends EventEmitter {
     if (this.cursor.path.is(this.viewRoot)) {
       return;
     }
-    let { parent } = this.cursor.path;
-    let index = this.document.indexOf(this.cursor.path);
+    const parent = this.cursor.path.parent;
+    const index = this.document.indexOf(this.cursor.path);
     return this.addBlocks(parent, index, [''], {setCursor: 'first'});
   }
 
@@ -854,9 +852,9 @@ class Session extends EventEmitter {
     if (this.cursor.col === this.document.getLength(this.cursor.row)) {
       return this.newLineBelow({cursorOptions: {keepProperties: true}});
     } else {
-      let mutation = new mutations.DelChars(this.cursor.row, 0, this.cursor.col);
+      const mutation = new mutations.DelChars(this.cursor.row, 0, this.cursor.col);
       this.do(mutation);
-      let { path } = this.cursor;
+      const path = this.cursor.path;
 
       this.newLineAbove();
       // cursor now is at inserted path, add the characters
@@ -871,8 +869,8 @@ class Session extends EventEmitter {
   // - second is first child of first, AND has no children
   joinRows(first, second, options = {}) {
     let addDelimiter = false;
-    let firstLine = this.document.getLine(first.row);
-    let secondLine = this.document.getLine(second.row);
+    const firstLine = this.document.getLine(first.row);
+    const secondLine = this.document.getLine(second.row);
     if (options.delimiter) {
       if (firstLine.length && secondLine.length) {
         if (firstLine[firstLine.length - 1].char !== options.delimiter) {
@@ -887,10 +885,10 @@ class Session extends EventEmitter {
       this.cursor.setPosition(first, -1);
       this.delBlock(second, {noNew: true, noSave: true});
       if (addDelimiter) {
-        let mutation = new mutations.AddChars(first.row, firstLine.length, [{ char: options.delimiter }]);
+        const mutation = new mutations.AddChars(first.row, firstLine.length, [{ char: options.delimiter }]);
         this.do(mutation);
       }
-      let mutation = new mutations.AddChars(first.row, (firstLine.length + addDelimiter), secondLine);
+      const mutation = new mutations.AddChars(first.row, (firstLine.length + addDelimiter), secondLine);
       this.do(mutation);
       this.cursor.setPosition(first, firstLine.length);
       return true;
@@ -909,10 +907,10 @@ class Session extends EventEmitter {
     this.cursor.setPosition(second, 0);
     this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter) {
-      let mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
+      const mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
       this.do(mutation);
     }
-    let mutation = new mutations.AddChars(second.row, 0, firstLine);
+    const mutation = new mutations.AddChars(second.row, 0, firstLine);
     this.do(mutation);
 
     if (addDelimiter) {
@@ -923,8 +921,8 @@ class Session extends EventEmitter {
   }
 
   joinAtCursor() {
-    let { path } = this.cursor;
-    let sib = this.nextVisible(path);
+    const path = this.cursor.path;
+    const sib = this.nextVisible(path);
     if (sib !== null) {
       return this.joinRows(path, sib, {delimiter: ' '});
     }
@@ -937,8 +935,8 @@ class Session extends EventEmitter {
       return true;
     }
 
-    let { path } = this.cursor;
-    let sib = this.prevVisible(path);
+    const path = this.cursor.path;
+    const sib = this.prevVisible(path);
     if (sib === null) {
       return false;
     }
@@ -955,7 +953,7 @@ class Session extends EventEmitter {
   }
 
   delBlocks(parent, index, nrows, options = {}) {
-    let mutation = new mutations.DetachBlocks(parent, index, nrows, options);
+    const mutation = new mutations.DetachBlocks(parent, index, nrows, options);
     this.do(mutation);
     if (!options.noSave) {
       this.register.saveClonedRows(mutation.deleted);
@@ -967,13 +965,13 @@ class Session extends EventEmitter {
   }
 
   delBlocksAtCursor(nrows, options = {}) {
-    let { parent } = this.cursor.path;
-    let index = this.document.indexOf(this.cursor.path);
+    const parent = this.cursor.path.parent;
+    const index = this.document.indexOf(this.cursor.path);
     return this.delBlocks(parent.row, index, nrows, options);
   }
 
   addBlocks(parent, index = -1, serialized_rows, options = {}) {
-    let mutation = new mutations.AddBlocks(parent, index, serialized_rows, options);
+    const mutation = new mutations.AddBlocks(parent, index, serialized_rows, options);
     this.do(mutation);
     if (options.setCursor === 'first') {
       return this.cursor.setPosition(mutation.added_rows[0], 0, options.cursorOptions);
@@ -983,9 +981,8 @@ class Session extends EventEmitter {
   }
 
   yankBlocks(path, nrows) {
-    let siblings = this.document.getSiblingRange(path, 0, nrows-1);
-    siblings = siblings.filter(x => x !== null);
-    let serialized = siblings.map(x => this.document.serialize(x.row));
+    const siblings = this.document.getSiblingRange(path, 0, nrows-1).filter(x => x !== null);
+    const serialized = siblings.map(x => this.document.serialize(x.row));
     return this.register.saveSerializedRows(serialized);
   }
 
@@ -994,8 +991,7 @@ class Session extends EventEmitter {
   }
 
   yankBlocksClone(row, nrows) {
-    let siblings = this.document.getSiblingRange(row, 0, nrows-1);
-    siblings = siblings.filter(x => x !== null);
+    const siblings = this.document.getSiblingRange(row, 0, nrows-1).filter(x => x !== null);
     return this.register.saveClonedRows(siblings.map(sibling => sibling.row));
   }
 
@@ -1004,8 +1000,8 @@ class Session extends EventEmitter {
   }
 
   attachBlocks(parent, ids, index = -1, options = {}) {
-    let mutation = new mutations.AttachBlocks(parent.row, ids, index, options);
-    let will_work = mutation.validate(this);
+    const mutation = new mutations.AttachBlocks(parent.row, ids, index, options);
+    const will_work = mutation.validate(this);
     this.do(mutation);
 
     // TODO: do this more elegantly
@@ -1027,7 +1023,7 @@ class Session extends EventEmitter {
       this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
     }
-    let newparent = this.document.getSiblingBefore(row);
+    const newparent = this.document.getSiblingBefore(row);
     if (newparent === null) {
       this.showMessage('Cannot indent without higher sibling', {text_class: 'error'});
       return null; // cannot indent
@@ -1037,11 +1033,10 @@ class Session extends EventEmitter {
       this.toggleBlockCollapsed(newparent.row);
     }
 
-    let siblings = this.document.getSiblingRange(row, 0, numblocks-1).filter(sib => sib !== null);
-    for (let i = 0; i < siblings.length; i++) {
-      let sib = siblings[i];
+    const siblings = this.document.getSiblingRange(row, 0, numblocks-1).filter(sib => sib !== null);
+    siblings.forEach((sib) => {
       this.moveBlock(sib, newparent, -1);
-    }
+    });
     return newparent;
   }
 
@@ -1050,19 +1045,19 @@ class Session extends EventEmitter {
       this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
     }
-    let { parent } = row;
+    const parent = row.parent;
     if (parent.row === this.viewRoot.row) {
       this.showMessage('Cannot unindent past root', {text_class: 'error'});
       return null;
     }
 
-    let siblings = this.document.getSiblingRange(row, 0, numblocks-1).filter(sib => sib !== null);
+    const siblings = this.document.getSiblingRange(row, 0, numblocks-1).filter(sib => sib !== null);
 
-    let newparent = parent.parent;
+    const newparent = parent.parent;
     let pp_i = this.document.indexOf(parent);
 
     for (let i = 0; i < siblings.length; i++) {
-      let sib = siblings[i];
+      const sib = siblings[i];
       pp_i += 1;
       this.moveBlock(sib, newparent, pp_i);
     }
@@ -1078,9 +1073,9 @@ class Session extends EventEmitter {
       return this.indentBlocks(path);
     }
 
-    let sib = this.document.getSiblingBefore(path);
+    const sib = this.document.getSiblingBefore(path);
 
-    let newparent = this.indentBlocks(path);
+    const newparent = this.indentBlocks(path);
     if (newparent === null) {
       return;
     }
@@ -1103,22 +1098,22 @@ class Session extends EventEmitter {
       return;
     }
 
-    let { parent } = path;
-    let p_i = this.document.indexOf(path);
+    const parent = path.parent;
+    const p_i = this.document.indexOf(path);
 
-    let newparent = this.unindentBlocks(path);
+    const newparent = this.unindentBlocks(path);
     if (newparent === null) {
       return;
     }
 
-    let p_children = this.document.getChildren(parent);
+    const p_children = this.document.getChildren(parent);
     p_children.slice(p_i).forEach((child) => {
       this.moveBlock(child, path, -1);
     });
   }
 
   swapDown(path = this.cursor.path) {
-    let next = this.nextVisible(this.lastVisible(path));
+    const next = this.nextVisible(this.lastVisible(path));
     if (next === null) {
       return;
     }
@@ -1128,21 +1123,21 @@ class Session extends EventEmitter {
       return this.moveBlock(path, next, 0);
     } else {
       // make it the next sibling
-      let { parent } = next;
-      let p_i = this.document.indexOf(next);
-      return this.moveBlock(path, parent, (p_i+1));
+      const parent = next.parent;
+      const p_i = this.document.indexOf(next);
+      return this.moveBlock(path, parent, p_i+1);
     }
   }
 
   swapUp(path = this.cursor.path) {
-    let prev = this.prevVisible(path);
+    const prev = this.prevVisible(path);
     if (prev === null) {
       return;
     }
 
     // make it the previous sibling
-    let { parent } = prev;
-    let p_i = this.document.indexOf(prev);
+    const parent = prev.parent;
+    const p_i = this.document.indexOf(prev);
     return this.moveBlock(path, parent, p_i);
   }
 
@@ -1165,16 +1160,16 @@ class Session extends EventEmitter {
   // given an anchor and cursor, figures out the right blocks to be deleting
   // returns a parent, minindex, and maxindex
   getVisualLineSelections() {
-    let [common, ancestors1, ancestors2] = this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
+    const [common, ancestors1, ancestors2] = this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
     if (ancestors1.length === 0) {
       // anchor is underneath cursor
-      let { parent } = common;
-      let index = this.document.indexOf(this.cursor.path);
+      const parent = common.parent;
+      const index = this.document.indexOf(this.cursor.path);
       return [parent, index, index];
     } else if (ancestors2.length === 0) {
       // cursor is underneath anchor
-      let { parent } = common;
-      let index = this.document.indexOf(this.anchor.path);
+      const parent = common.parent;
+      const index = this.document.indexOf(this.anchor.path);
       return [parent, index, index];
     } else {
       let index1 = this.document.indexOf(ancestors1[0] || this.cursor.path);
@@ -1193,10 +1188,10 @@ class Session extends EventEmitter {
   scroll(npages) {
     this.emit('scroll', npages);
     // TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
-    let line_height = $('.node-text').height() || 21;
+    const line_height = $('.node-text').height() || 21;
     errors.assert(line_height > 0);
-    let page_height = $(document).height();
-    let height = npages * page_height;
+    const page_height = $(document).height();
+    const height = npages * page_height;
 
     let numlines = Math.round(height / line_height);
     numlines = Math.max(Math.min(numlines, 1000), -1000); // guard against craziness
@@ -1223,12 +1218,12 @@ class Session extends EventEmitter {
   }
 
   scrollIntoView(el) {
-    let elemTop = el.getBoundingClientRect().top;
-    let elemBottom = el.getBoundingClientRect().bottom;
+    const elemTop = el.getBoundingClientRect().top;
+    const elemBottom = el.getBoundingClientRect().bottom;
 
-    let margin = 50;
-    let top_margin = margin;
-    let bottom_margin = margin + $('#bottom-bar').height();
+    const margin = 50;
+    const top_margin = margin;
+    const bottom_margin = margin + $('#bottom-bar').height();
 
     if (elemTop < top_margin) {
       // scroll up
@@ -1240,7 +1235,7 @@ class Session extends EventEmitter {
   }
 
   getVisiblePaths() {
-    let paths = [];
+    const paths = [];
     $.makeArray($('.bullet')).forEach((bullet) => {
       if (!(utils.isScrolledIntoView($(bullet), this.mainDiv))) {
         return;
@@ -1250,11 +1245,11 @@ class Session extends EventEmitter {
       }
       // NOTE: can't use $(x).data
       // http://stackoverflow.com/questions/25876274/jquery-data-not-working
-      let ancestry = $(bullet).attr('data-ancestry');
+      const ancestry = $(bullet).attr('data-ancestry');
       if (!ancestry) { // as far as i know, this only happens because of menu mode
         return;
       }
-      let path = Path.loadFromAncestry(JSON.parse(ancestry));
+      const path = Path.loadFromAncestry(JSON.parse(ancestry));
       paths.push(path);
     });
     return paths;
