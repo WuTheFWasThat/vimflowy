@@ -177,6 +177,9 @@ async function create_session(doc, to_load) {
     // ALSO HACKY: getCommand currently causes key_transforms in search mode
     if (session.mode === Modes.modes.NORMAL) {
       handled = key_handler.getCommand(session.mode, keyStream).handled;
+    } else {
+      // just a good heuristic
+      handled = !!key_bindings.bindings[session.mode][key];
     }
     // fire and forget
     key_handler.handleKey(key).then(() => {
