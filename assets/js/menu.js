@@ -10,16 +10,16 @@ Functions for paging through and selecting results, and for rendering.
 Internally uses an entire session object (this is sorta weird..)
 */
 
-class Menu {
+export default class Menu {
   constructor(div, fn) {
     this.div = div;
     this.fn = fn;
 
-    const document = new Document(new DataStore.InMemory());
-    document.load(constants.empty_data);
+    const doc = new Document(new DataStore.InMemory());
+    doc.load(constants.empty_data);
 
     // a bit of a overkill-y hack, use an entire session object internally
-    this.session = new Session(document);
+    this.session = new Session(doc);
     this.session.setMode(Modes.modes.INSERT);
     this.selection = 0;
 
@@ -69,6 +69,3 @@ class Menu {
     return result.fn();
   }
 }
-
-// exports
-export default Menu;

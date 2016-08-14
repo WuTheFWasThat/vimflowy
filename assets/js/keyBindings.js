@@ -44,7 +44,7 @@ It also internally maintains
 const MODES = Modes.modes;
 const MODE_TYPES = Modes.types;
 
-class KeyBindings extends EventEmitter {
+export default class KeyBindings extends EventEmitter {
   // takes key definitions and keyMappings, and combines them to key bindings
   getBindings(definitions, keyMap) {
     const bindings = {};
@@ -123,7 +123,7 @@ class KeyBindings extends EventEmitter {
           modeKeyMap[command] = hotkeys[mode_type][command].slice();
         });
 
-        this.definitions.get_motions((!Modes.getMode(mode).within_row)).forEach((command) => {
+        this.definitions.get_motions(!Modes.getMode(mode).within_row).forEach((command) => {
           modeKeyMap[command] = hotkeys[mode_type][command].slice();
         });
 
@@ -134,7 +134,7 @@ class KeyBindings extends EventEmitter {
     const bindings = {};
     for (const mode_name in MODES) {
       const mode = MODES[mode_name];
-      const [err, mode_bindings] = this.getBindings((this.definitions.actions_for_mode(mode)), keyMaps[mode]);
+      const [err, mode_bindings] = this.getBindings(this.definitions.actions_for_mode(mode), keyMaps[mode]);
       if (err) { return `Error getting bindings for ${mode_name}: ${err}`; }
       bindings[mode] = mode_bindings;
     }
@@ -170,5 +170,3 @@ class KeyBindings extends EventEmitter {
 }
 
   // TODO getBindings: (mode) -> return @bindings[mode]
-
-export default KeyBindings;

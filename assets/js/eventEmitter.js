@@ -1,6 +1,6 @@
 // based on https://gist.github.com/contra/2759355
 
-class EventEmitter {
+export default class EventEmitter {
   constructor() {
     // mapping from event to list of listeners
     this.listeners = {};
@@ -79,6 +79,3 @@ class EventEmitter {
     return obj;
   }
 }
-
-// exports
-export default EventEmitter;

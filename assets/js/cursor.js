@@ -9,12 +9,12 @@ const wordRegex = /^[a-z0-9_]+$/i;
 Cursor represents a cursor within a session
 it handles movement logic, insert mode line properties (e.g. bold/italic)
 */
-class Cursor extends EventEmitter {
+export default class Cursor extends EventEmitter {
   constructor(session, path = null, col = null, moveCol = null) {
     super();
     this.session = session;
     this.document = session.document;
-    this.path = path !== null ? path : (this.document.getChildren(this.session.viewRoot))[0];
+    this.path = path !== null ? path : this.document.getChildren(this.session.viewRoot)[0];
     this.col = col !== null ? col : 0;
     this.properties = {};
     this._getPropertiesFromContext();
@@ -107,19 +107,19 @@ class Cursor extends EventEmitter {
 
   right(cursorOptions = {}) {
     const shift = cursorOptions.pastEnd ? 0 : 1;
-    if (this.col < (this.document.getLength(this.path.row)) - shift) {
+    if (this.col < this.document.getLength(this.path.row) - shift) {
       return this._right();
     }
   }
 
   backIfNeeded() {
-    if (this.col > (this.document.getLength(this.path.row)) - 1) {
+    if (this.col > this.document.getLength(this.path.row) - 1) {
       return this.left();
     }
   }
 
   atVisibleEnd() {
-    if (this.col < (this.document.getLength(this.path.row)) - 1) {
+    if (this.col < this.document.getLength(this.path.row) - 1) {
       return false;
     } else {
       const nextpath = this.session.nextVisible(this.path);
@@ -131,7 +131,7 @@ class Cursor extends EventEmitter {
   }
 
   nextChar() {
-    if (this.col < (this.document.getLength(this.path.row)) - 1) {
+    if (this.col < this.document.getLength(this.path.row) - 1) {
       this._right();
       return true;
     } else {
@@ -236,7 +236,7 @@ class Cursor extends EventEmitter {
       this.prevChar();
     }
 
-    const wordcheck = this.getWordCheck(options, (this.document.getChar(this.path.row, this.col)));
+    const wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
     while ((this.col > 0) && wordcheck(this.path, this.col-1)) {
       this._left();
     }
@@ -258,7 +258,7 @@ class Cursor extends EventEmitter {
 
     let end = this.document.getLength(this.path.row) - 1;
     const wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
-    while (this.col < end && wordcheck(this.path, (this.col+1))) {
+    while (this.col < end && wordcheck(this.path, this.col+1)) {
       this._right();
     }
 
@@ -431,6 +431,3 @@ class Cursor extends EventEmitter {
     });
   }
 }
-
-// exports
-export default Cursor;

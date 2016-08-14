@@ -22,7 +22,7 @@ Currently, the separation between the Session and Document classes is not very g
 Ideally, session shouldn't do much more than handle cursors and history
 */
 
-class Session extends EventEmitter {
+export default class Session extends EventEmitter {
   constructor(doc, options = {}) {
     super();
 
@@ -227,15 +227,12 @@ class Session extends EventEmitter {
         const lines = [];
         lines.push(`- ${node.text}`);
         const children = node.children || [];
-        for (let i = 0; i < children.length; i++) {
-          const child = children[i];
-          if (child.clone) {
-            continue;
-          }
+        children.forEach((child) => {
+          if (child.clone) { return; }
           exportLines(child).forEach((line) => {
             lines.push(`${indent}${line}`);
           });
-        }
+        });
         return lines;
       };
       return (exportLines(jsonContent)).join('\n');
@@ -351,7 +348,7 @@ class Session extends EventEmitter {
     }
 
     if (this.historyIndex !== this.history.length - 1) {
-      this.history = this.history.slice(0, (this.historyIndex + 1));
+      this.history = this.history.slice(0, this.historyIndex + 1);
       this.mutations = this.mutations.slice(0, this.history[this.historyIndex].index);
     }
 
@@ -388,7 +385,7 @@ class Session extends EventEmitter {
 
   // whether contents are currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
   viewable(path) {
-    return (!this.document.collapsed(path.row)) || (path.is(this.viewRoot));
+    return (!this.document.collapsed(path.row)) || path.is(this.viewRoot);
   }
 
   nextVisible(path) {
@@ -481,7 +478,7 @@ class Session extends EventEmitter {
 
   isVisible(path) {
     const visibleAncestor = this.youngestVisibleAncestor(path);
-    return (visibleAncestor !== null) && (path.is(visibleAncestor));
+    return (visibleAncestor !== null) && path.is(visibleAncestor);
   }
 
   //#################
@@ -505,7 +502,7 @@ class Session extends EventEmitter {
     const jump = this.jumpHistory[this.jumpIndex];
     jump.cursor_after = this.cursor.clone();
 
-    this.jumpHistory = this.jumpHistory.slice(0, (this.jumpIndex+1));
+    this.jumpHistory = this.jumpHistory.slice(0, this.jumpIndex+1);
 
     jump_fn();
 
@@ -667,7 +664,7 @@ class Session extends EventEmitter {
 
   addCharsAfterCursor(chars) {
     let col = this.cursor.col;
-    if (col < (this.document.getLength(this.cursor.row))) {
+    if (col < this.document.getLength(this.cursor.row)) {
       col += 1;
     }
     return this.addChars(this.cursor.row, col, chars);
@@ -718,7 +715,7 @@ class Session extends EventEmitter {
       // yank as a row, not chars
       this.yankRowAtCursor();
     }
-    return this.delChars(this.cursor.path, 0, (this.curLineLength()));
+    return this.delChars(this.cursor.path, 0, this.curLineLength());
   }
 
   yankChars(path, col, nchars) {
@@ -731,7 +728,7 @@ class Session extends EventEmitter {
   // options:
   //   - includeEnd says whether to also delete cursor2 location
   yankBetween(cursor1, cursor2, options = {}) {
-    if (!(cursor2.path.is(cursor1.path))) {
+    if (!cursor2.path.is(cursor1.path)) {
       logger.warn('Not yet implemented');
       return;
     }
@@ -752,7 +749,7 @@ class Session extends EventEmitter {
   // options:
   //   - includeEnd says whether to also delete cursor2 location
   deleteBetween(cursor1, cursor2, options = {}) {
-    if (!(cursor2.path.is(cursor1.path))) {
+    if (!cursor2.path.is(cursor1.path)) {
       logger.warn('Not yet implemented');
       return;
     }
@@ -881,7 +878,7 @@ class Session extends EventEmitter {
       }
     }
 
-    if (!(this.document.hasChildren(second.row))) {
+    if (!this.document.hasChildren(second.row)) {
       this.cursor.setPosition(first, -1);
       this.delBlock(second, {noNew: true, noSave: true});
       if (addDelimiter) {
@@ -949,7 +946,7 @@ class Session extends EventEmitter {
   }
 
   delBlock(path, options) {
-    return this.delBlocks(path.parent.row, (this.document.indexOf(path)), 1, options);
+    return this.delBlocks(path.parent.row, this.document.indexOf(path), 1, options);
   }
 
   delBlocks(parent, index, nrows, options = {}) {
@@ -958,7 +955,7 @@ class Session extends EventEmitter {
     if (!options.noSave) {
       this.register.saveClonedRows(mutation.deleted);
     }
-    if (!(this.isVisible(this.cursor.path))) {
+    if (!this.isVisible(this.cursor.path)) {
       // view root got deleted
       return this.zoomOut();
     }
@@ -1056,11 +1053,10 @@ class Session extends EventEmitter {
     const newparent = parent.parent;
     let pp_i = this.document.indexOf(parent);
 
-    for (let i = 0; i < siblings.length; i++) {
-      const sib = siblings[i];
+    siblings.forEach((sib) => {
       pp_i += 1;
       this.moveBlock(sib, newparent, pp_i);
-    }
+    });
     return newparent;
   }
 
@@ -1118,7 +1114,7 @@ class Session extends EventEmitter {
       return;
     }
 
-    if ((this.document.hasChildren(next.row)) && (!this.document.collapsed(next.row))) {
+    if (this.document.hasChildren(next.row) && !this.document.collapsed(next.row)) {
       // make it the first child
       return this.moveBlock(path, next, 0);
     } else {
@@ -1237,7 +1233,7 @@ class Session extends EventEmitter {
   getVisiblePaths() {
     const paths = [];
     $.makeArray($('.bullet')).forEach((bullet) => {
-      if (!(utils.isScrolledIntoView($(bullet), this.mainDiv))) {
+      if (!utils.isScrolledIntoView($(bullet), this.mainDiv)) {
         return;
       }
       if ($(bullet).hasClass('fa-clone')) {
@@ -1255,6 +1251,3 @@ class Session extends EventEmitter {
     return paths;
   }
 }
-
-// exports
-export default Session;

@@ -15,7 +15,7 @@ also deals with loading the initial document from the datastore, and serializing
 
 Currently, the separation between the Session and Document classes is not very good.  (see session.js)
 */
-class Document extends EventEmitter {
+export default class Document extends EventEmitter {
   constructor(store, name = '') {
     super();
     this.store = store;
@@ -36,7 +36,7 @@ class Document extends EventEmitter {
   // }
   // in the case where all properties are false, it may be simply the character (to save space)
   getLine(row) {
-    return (this.store.getLine(row)).map(function(obj) {
+    return this.store.getLine(row).map(function(obj) {
       if (typeof obj === 'string') {
         obj = {
           char: obj
@@ -546,8 +546,8 @@ class Document extends EventEmitter {
 
     if (options.pretty) {
       if ((children.length === 0) && (!this.isClone(row)) &&
-          (_.every(Object.keys(struct), key => key === 'children' || key === 'text' || key === 'collapsed'
-          ))) {
+          _.every(Object.keys(struct), key => key === 'children' || key === 'text' || key === 'collapsed'
+          )) {
         return struct.text;
       }
     }
@@ -574,12 +574,12 @@ class Document extends EventEmitter {
     }
 
     if (typeof serialized === 'string') {
-      this.setLine(path.row, (serialized.split('')));
+      this.setLine(path.row, serialized.split(''));
     } else {
       if (serialized.id) {
         id_mapping[serialized.id] = path.row;
       }
-      const line = (serialized.text.split('')).map(char => ({char}));
+      const line = serialized.text.split('').map(char => ({char}));
       constants.text_properties.forEach((property) => {
         if (serialized[property]) {
           for (const i in serialized[property]) {
@@ -613,6 +613,3 @@ class Document extends EventEmitter {
     });
   }
 }
-
-// exports
-export default Document;

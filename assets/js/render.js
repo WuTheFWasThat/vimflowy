@@ -659,20 +659,20 @@ const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
 
   const tables = $('<div>');
 
-  const sections = [['Actions', actions], ['Motions', key_bindings.definitions.motions]];
-  for (let i = 0; i < sections.length; i++) {
-    const [label, definitions] = sections[i];
+  [{label: 'Actions', definitions: actions},
+   {label: 'Motions', definitions: key_bindings.definitions.motions}
+  ].forEach(({label, definitions}) => {
     tables.append($('<h5>').text(label).css('margin', '5px 10px'));
     const table = $('<table>').addClass('keybindings-table theme-bg-secondary');
     buildTableContents(definitions, table);
     tables.append(table);
-  }
+  });
 
   return tables;
 };
 
 export function renderModeTable(key_bindings, mode, onto) {
   const table =
-    buildTable(key_bindings, key_bindings.keyMaps[mode], (key_bindings.definitions.actions_for_mode(mode)), true);
+    buildTable(key_bindings, key_bindings.keyMaps[mode], key_bindings.definitions.actions_for_mode(mode), true);
   return onto.empty().append(table);
 };

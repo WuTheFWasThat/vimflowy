@@ -25,7 +25,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
       const canonicalize = x => options.case_sensitive ? x : x.toLowerCase();
 
       const get_words = char_array =>
-        (char_array.join(''))
+        char_array.join('')
           .split(/\s/g)
           .filter(x => x.length)
           .map(canonicalize)
@@ -39,9 +39,9 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
       const paths = document.orderedLines();
       for (let i = 0; i < paths.length; i++) {
         const path = paths[i];
-        const line = canonicalize((document.getText(path.row)).join(''));
+        const line = canonicalize(document.getText(path.row).join(''));
         const matches = [];
-        if (_.every(query_words.map(function(word) {
+        if (_.every(query_words.map((word) => {
           const index = line.indexOf(word);
           if (index === -1) { return false; }
           for (let j = index; j < index + word.length; j++) {
@@ -59,7 +59,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
     };
 
     return _.map(
-      (find(this.session.document, chars)),
+      find(this.session.document, chars),
       found => {
         const path = found.path;
         const highlights = {};

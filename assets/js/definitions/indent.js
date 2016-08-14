@@ -39,7 +39,7 @@ keyDefinitions.registerAction([MODES.INSERT], CMD_INDENT_RIGHT, {
 // NOTE: this matches block indent behavior, in visual line
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_INDENT_RIGHT, {
   description: 'Indent row right',
-}, (visual_line_indent()));
+}, visual_line_indent());
 
 const CMD_INDENT_LEFT = keyDefinitions.registerCommand({
   name: 'INDENT_LEFT',
@@ -61,7 +61,7 @@ keyDefinitions.registerAction([MODES.INSERT], CMD_INDENT_LEFT, {
 // NOTE: this matches block indent behavior, in visual line
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_INDENT_LEFT, {
   description: 'Indent row left',
-}, (visual_line_unindent()));
+}, visual_line_unindent());
 
 const CMD_MOVE_BLOCK_RIGHT = keyDefinitions.registerCommand({
   name: 'MOVE_BLOCK_RIGHT',
@@ -83,7 +83,7 @@ keyDefinitions.registerAction([MODES.INSERT], CMD_MOVE_BLOCK_RIGHT, {
 });
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
-}, (visual_line_indent()));
+}, visual_line_indent());
 
 const CMD_MOVE_BLOCK_LEFT = keyDefinitions.registerCommand({
   name: 'MOVE_BLOCK_LEFT',
@@ -105,7 +105,7 @@ keyDefinitions.registerAction([MODES.INSERT], CMD_MOVE_BLOCK_LEFT, {
 });
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
-}, (visual_line_unindent()));
+}, visual_line_unindent());
 
 const CMD_MOVE_BLOCK_DOWN = keyDefinitions.registerCommand({
   name: 'MOVE_BLOCK_DOWN',

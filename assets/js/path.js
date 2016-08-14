@@ -3,7 +3,7 @@ import * as errors from './errors';
 
 // represents a tree-traversal starting from the root going down
 // should be immutable
-class Path {
+export default class Path {
   constructor(parent, row) {
     this.parent = parent;
     this.row = row;
@@ -94,5 +94,3 @@ class Path {
     return parent.child(row);
   }
 }
-
-export default Path;

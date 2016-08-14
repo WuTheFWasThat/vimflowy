@@ -264,9 +264,8 @@ class KeyDefinitions {
 
     let obj = this.motions;
     let command;
-    for (let j = 0; j < commands.length - 1; j++) {
-      command = commands[j];
-
+    for (let k = 0; k < commands.length - 1; k++) {
+      command = commands[k];
       if (!(command.name in obj)) {
         throw new errors.GenericError(`Motion ${command.name} doesn't exist`);
       } else if (typeof obj[command.name] !== 'object') {
@@ -282,10 +281,7 @@ class KeyDefinitions {
       throw new errors.GenericError(`Motion ${command.name} has already been defined`);
     }
     obj[command.name] = motion;
-    for (let k = 0; k < commands.length; k++) {
-      const cmd = commands[k];
-      this._add_motion(cmd, motion.multirow);
-    }
+    commands.forEach((cmd) => this._add_motion(cmd, motion.multirow));
     return null;
   }
 
@@ -297,9 +293,8 @@ class KeyDefinitions {
 
     let obj = this.motions;
     let command;
-    for (let j = 0; j < commands.length - 1; j++) {
-      command = commands[j];
-
+    for (let k = 0; k < commands.length - 1; k++) {
+      command = commands[k];
       if (!(command.name in obj)) {
         throw new errors.GenericError(`Motion ${command.name} doesn't exist`);
       } else if (typeof obj[command.name] !== 'object') {
@@ -315,10 +310,7 @@ class KeyDefinitions {
     }
     const motion = obj[command.name];
     delete obj[command.name];
-    for (let k = 0; k < commands.length; k++) {
-      const cmd = commands[k];
-      this._remove_motion(cmd, motion.multirow);
-    }
+    commands.forEach((cmd) => this._remove_motion(cmd, motion.multirow));
     return null;
   }
 
@@ -332,8 +324,7 @@ class KeyDefinitions {
       commands = [commands];
     }
 
-    for (let j = 0; j < modes.length; j++) {
-      const mode = modes[j];
+    modes.forEach((mode) => {
       if (!this.actions[mode]) {
         this.actions[mode] = {};
       }
@@ -341,7 +332,7 @@ class KeyDefinitions {
 
       let command;
       for (let k = 0; k < commands.length - 1; k++) {
-        command = commands[j];
+        command = commands[k];
 
         if (!(command.name in obj)) {
           throw new errors.GenericError(`Action ${command.name} doesn't exist`);
@@ -358,11 +349,8 @@ class KeyDefinitions {
       }
 
       obj[command.name] = action;
-      for (let i1 = 0; i1 < commands.length; i1++) {
-        const cmd = commands[i1];
-        this._add_command(mode, cmd);
-      }
-    }
+      commands.forEach((cmd) => this._add_command(mode, cmd));
+    });
     return null;
   }
 
@@ -372,8 +360,7 @@ class KeyDefinitions {
       commands = [commands];
     }
 
-    for (let j = 0; j < modes.length; j++) {
-      const mode = modes[j];
+    modes.forEach((mode) => {
       if (!this.actions[mode]) {
         this.actions[mode] = {};
       }
@@ -398,11 +385,8 @@ class KeyDefinitions {
       }
 
       delete obj[command.name];
-      for (let i1 = 0; i1 < commands.length; i1++) {
-        const cmd = commands[i1];
-        this._remove_command(mode, cmd);
-      }
-    }
+      commands.forEach((cmd) => this._remove_command(mode, cmd));
+    });
     return null;
   }
 }

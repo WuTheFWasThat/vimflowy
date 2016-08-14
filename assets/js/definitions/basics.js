@@ -33,7 +33,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
     motion(tmp, {pastEnd: true});
   }
 
-  if (!(tmp.path.is(this.session.cursor.path))) { // only allow same-row movement
+  if (!tmp.path.is(this.session.cursor.path)) { // only allow same-row movement
     return this.session.showMessage('Visual mode currently only works on one line', {text_class: 'error'});
   } else {
     return this.session.cursor.from(tmp);
@@ -294,10 +294,10 @@ const CMD_DELETE = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerAction([MODES.VISUAL], CMD_DELETE, {
   description: 'Delete',
-}, (visual_mode_delete_fn()));
+}, visual_mode_delete_fn());
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_DELETE, {
   description: 'Delete',
-}, (visual_line_mode_delete_fn()));
+}, visual_line_mode_delete_fn());
 
 keyDefinitions.registerAction([MODES.NORMAL], CMD_DELETE, {
   description: 'Delete (operator)',
@@ -478,11 +478,11 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_DELETE_CHAR, {
 
 keyDefinitions.registerAction([MODES.VISUAL], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
-}, (visual_mode_delete_fn()));
+}, visual_mode_delete_fn());
 
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
-}, (visual_line_mode_delete_fn()));
+}, visual_line_mode_delete_fn());
 
 keyDefinitions.registerAction([MODES.INSERT], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
@@ -517,11 +517,11 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_DELETE_LAST_CHAR, {
 
 keyDefinitions.registerAction([MODES.VISUAL], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
-}, (visual_mode_delete_fn()));
+}, visual_mode_delete_fn());
 
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
-}, (visual_line_mode_delete_fn()));
+}, visual_line_mode_delete_fn());
 
 keyDefinitions.registerAction([MODES.INSERT], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',

@@ -12,7 +12,7 @@ const TYPES = {
   CLONED_ROWS: 3
 };
 
-class Register {
+export default class Register {
 
   constructor(session) {
     this.session = session;
@@ -87,7 +87,7 @@ class Register {
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
         return this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
       } else {
-        return this.session.addBlocks(parent, (index + 1), serialized_rows, {setCursor: 'first'});
+        return this.session.addBlocks(parent, index + 1, serialized_rows, {setCursor: 'first'});
       }
     }
   }
@@ -106,13 +106,10 @@ class Register {
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
         return this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
       } else {
-        return this.session.attachBlocks(parent, cloned_rows, (index + 1), {setCursor: 'first'});
+        return this.session.attachBlocks(parent, cloned_rows, index + 1, {setCursor: 'first'});
       }
     }
   }
 }
 
 Register.TYPES = TYPES;
-
-// exports
-export default Register;

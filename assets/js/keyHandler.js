@@ -94,7 +94,7 @@ export class KeyStream extends EventEmitter {
   }
 }
 
-class KeyHandler extends EventEmitter {
+export default class KeyHandler extends EventEmitter {
 
   constructor(session, keyBindings) {
     super();
@@ -304,5 +304,3 @@ class KeyHandler extends EventEmitter {
     }
   }
 }
-
-export default KeyHandler;

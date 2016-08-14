@@ -10,7 +10,7 @@ const default_settings = {
   hotkeys: {}
 };
 
-class Settings {
+export default class Settings {
 
   constructor(datastore, options = {}) {
     this.datastore = datastore;
@@ -19,7 +19,7 @@ class Settings {
     this.keybindingsDiv = options.keybindingsDiv;
 
     for (const setting in default_settings) {
-      if (!((this.getSetting(setting)) !== null)) {
+      if (this.getSetting(setting) === null) {
         this.setSetting(setting, default_settings[setting]);
       }
     }
@@ -34,5 +34,3 @@ class Settings {
     return await this.datastore.setSetting(setting, value);
   }
 }
-
-export default Settings;

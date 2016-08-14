@@ -117,7 +117,7 @@ if (isFirefox) {
 }
 
 
-class KeyEmitter extends EventEmitter {
+export default class KeyEmitter extends EventEmitter {
   constructor() {
     super();
   }
@@ -165,5 +165,3 @@ class KeyEmitter extends EventEmitter {
     });
   }
 }
-
-export default KeyEmitter;

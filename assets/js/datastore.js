@@ -12,7 +12,7 @@ However, in the case of a key-value store, one can simply implement `get` and `s
 Currently, DataStore has a synchronous API.  This may need to change eventually...  :(
 */
 
-class DataStore {
+export default class DataStore {
   constructor(prefix='') {
     this.prefix = `${prefix}save`;
 
@@ -141,7 +141,7 @@ class DataStore {
   }
 }
 
-class InMemory extends DataStore {
+export class InMemory extends DataStore {
   constructor() {
     super('');
     this.cache = {};
@@ -160,7 +160,7 @@ class InMemory extends DataStore {
   }
 }
 
-class LocalStorageLazy extends DataStore {
+export class LocalStorageLazy extends DataStore {
   constructor(prefix='') {
     super(prefix);
     this.cache = {};
@@ -227,10 +227,7 @@ class LocalStorageLazy extends DataStore {
     while (this._getLocalStorage_(this._lineKey_(id), null) !== null) {
       id++;
     }
-    this._setLocalStorage_(this._IDKey_, (id + 1));
+    this._setLocalStorage_(this._IDKey_, id + 1);
     return id;
   }
 }
-
-export { InMemory };
-export { LocalStorageLazy };
