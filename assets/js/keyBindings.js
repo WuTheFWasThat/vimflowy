@@ -4,7 +4,7 @@ import _ from 'lodash';
 // import * as utils from './utils';
 import * as Modes from './modes';
 import * as errors from './errors';
-import * as Logger from './logger';
+import logger from './logger';
 import EventEmitter from './eventEmitter';
 
 /*
@@ -94,8 +94,8 @@ class KeyBindings extends EventEmitter {
     const err = this.apply_hotkey_settings(hotkey_settings);
 
     if (err) {
-      Logger.logger.error(`Failed to apply desired hotkeys ${hotkey_settings}`);
-      Logger.logger.error(err);
+      logger.error(`Failed to apply desired hotkeys ${hotkey_settings}`);
+      logger.error(err);
       this.apply_default_hotkey_settings();
     }
   }

@@ -1,6 +1,6 @@
 /* globals document, window, navigator, alert, $ */
 import _ from 'lodash';
-import * as Logger from './logger';
+import logger from './logger';
 import EventEmitter from './eventEmitter';
 
 /*
@@ -155,7 +155,7 @@ class KeyEmitter extends EventEmitter {
         key = `meta+${key}`;
       }
 
-      Logger.logger.debug('keycode', e.keyCode, 'key', key);
+      logger.debug('keycode', e.keyCode, 'key', key);
       const results = this.emit('keydown', key);
       // return false to stop propagation, if any handler handled the key
       if (_.some(results)) {

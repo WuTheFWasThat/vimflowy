@@ -6,7 +6,7 @@ import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
-let CMD_SEARCH = keyDefinitions.registerCommand({
+const CMD_SEARCH = keyDefinitions.registerCommand({
   name: 'SEARCH',
   default_hotkeys: {
     normal_like: ['/', 'ctrl+f']
@@ -17,32 +17,32 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
 }, async function() {
   this.session.setMode(MODES.SEARCH);
   return this.session.menu = new Menu(this.session.menuDiv, chars => {
-    let find = function(document, query, options = {}) {
-      let nresults = options.nresults || 10;
+    const find = function(document, query, options = {}) {
+      const nresults = options.nresults || 10;
 
-      let results = []; // list of (path, index) pairs
+      const results = []; // list of (path, index) pairs
 
-      let canonicalize = x => options.case_sensitive ? x : x.toLowerCase();
+      const canonicalize = x => options.case_sensitive ? x : x.toLowerCase();
 
-      let get_words = char_array =>
+      const get_words = char_array =>
         (char_array.join(''))
           .split(/\s/g)
           .filter(x => x.length)
           .map(canonicalize)
       ;
 
-      let query_words = get_words(query);
+      const query_words = get_words(query);
       if (query.length === 0) {
         return results;
       }
 
-      let paths = document.orderedLines();
+      const paths = document.orderedLines();
       for (let i = 0; i < paths.length; i++) {
-        let path = paths[i];
-        let line = canonicalize((document.getText(path.row)).join(''));
-        let matches = [];
+        const path = paths[i];
+        const line = canonicalize((document.getText(path.row)).join(''));
+        const matches = [];
         if (_.every(query_words.map(function(word) {
-          let index = line.indexOf(word);
+          const index = line.indexOf(word);
           if (index === -1) { return false; }
           for (let j = index; j < index + word.length; j++) {
             matches.push(j);
@@ -61,12 +61,11 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
     return _.map(
       (find(this.session.document, chars)),
       found => {
-        let { path } = found;
-        let highlights = {};
-        for (let j = 0; j < found.matches.length; j++) {
-          let i = found.matches[j];
+        const path = found.path;
+        const highlights = {};
+        found.matches.forEach((i) => {
           highlights[i] = true;
-        }
+        });
         return {
           contents: this.session.document.getLine(path.row),
           renderOptions: { highlights },
@@ -79,7 +78,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
   });
 });
 
-let CMD_MENU_SELECT = keyDefinitions.registerCommand({
+const CMD_MENU_SELECT = keyDefinitions.registerCommand({
   name: 'MENU_SELECT',
   default_hotkeys: {
     insert_like: ['enter']
@@ -92,7 +91,7 @@ keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_SELECT, {
   return this.session.setMode(MODES.NORMAL);
 });
 
-let CMD_MENU_UP = keyDefinitions.registerCommand({
+const CMD_MENU_UP = keyDefinitions.registerCommand({
   name: 'MENU_UP',
   default_hotkeys: {
     insert_like: ['ctrl+k', 'up', 'tab']
@@ -104,7 +103,7 @@ keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_UP, {
   return this.session.menu.up();
 });
 
-let CMD_MENU_DOWN = keyDefinitions.registerCommand({
+const CMD_MENU_DOWN = keyDefinitions.registerCommand({
   name: 'MENU_DOWN',
   default_hotkeys: {
     insert_like: ['ctrl+j', 'down', 'shift+tab']

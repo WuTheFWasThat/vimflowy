@@ -3,7 +3,7 @@ import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
-let visual_line_indent = () =>
+const visual_line_indent = () =>
   async function() {
     this.session.indentBlocks(this.row_start, this.num_rows);
     this.session.setMode(MODES.NORMAL);
@@ -11,7 +11,7 @@ let visual_line_indent = () =>
   }
 ;
 
-let visual_line_unindent = () =>
+const visual_line_unindent = () =>
   async function() {
     this.session.unindentBlocks(this.row_start, this.num_rows);
     this.session.setMode(MODES.NORMAL);
@@ -19,7 +19,7 @@ let visual_line_unindent = () =>
   }
 ;
 
-let CMD_INDENT_RIGHT = keyDefinitions.registerCommand({
+const CMD_INDENT_RIGHT = keyDefinitions.registerCommand({
   name: 'INDENT_RIGHT',
   default_hotkeys: {
     normal_like: ['>']
@@ -41,7 +41,7 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_INDENT_RIGHT, {
   description: 'Indent row right',
 }, (visual_line_indent()));
 
-let CMD_INDENT_LEFT = keyDefinitions.registerCommand({
+const CMD_INDENT_LEFT = keyDefinitions.registerCommand({
   name: 'INDENT_LEFT',
   default_hotkeys: {
     normal_like: ['<']
@@ -63,7 +63,7 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_INDENT_LEFT, {
   description: 'Indent row left',
 }, (visual_line_unindent()));
 
-let CMD_MOVE_BLOCK_RIGHT = keyDefinitions.registerCommand({
+const CMD_MOVE_BLOCK_RIGHT = keyDefinitions.registerCommand({
   name: 'MOVE_BLOCK_RIGHT',
   default_hotkeys: {
     normal_like: ['tab', 'ctrl+l'],
@@ -85,7 +85,7 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
 }, (visual_line_indent()));
 
-let CMD_MOVE_BLOCK_LEFT = keyDefinitions.registerCommand({
+const CMD_MOVE_BLOCK_LEFT = keyDefinitions.registerCommand({
   name: 'MOVE_BLOCK_LEFT',
   default_hotkeys: {
     normal_like: ['shift+tab', 'ctrl+h'],
@@ -107,7 +107,7 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
 }, (visual_line_unindent()));
 
-let CMD_MOVE_BLOCK_DOWN = keyDefinitions.registerCommand({
+const CMD_MOVE_BLOCK_DOWN = keyDefinitions.registerCommand({
   name: 'MOVE_BLOCK_DOWN',
   default_hotkeys: {
     normal_like: ['ctrl+j']
@@ -122,7 +122,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_MOVE_BLOCK_DOWN,
   }
 });
 
-let CMD_MOVE_BLOCK_UP = keyDefinitions.registerCommand({
+const CMD_MOVE_BLOCK_UP = keyDefinitions.registerCommand({
   name: 'MOVE_BLOCK_UP',
   default_hotkeys: {
     normal_like: ['ctrl+k']

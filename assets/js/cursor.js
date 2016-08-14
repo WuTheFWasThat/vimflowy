@@ -2,7 +2,7 @@ import * as utils from './utils';
 import * as constants from './constants';
 import EventEmitter from './eventEmitter';
 
-let wordRegex = /^[a-z0-9_]+$/i;
+const wordRegex = /^[a-z0-9_]+$/i;
 
 // TODO: make a view class which includes viewRoot and cursor
 /*
@@ -77,8 +77,8 @@ class Cursor extends EventEmitter {
   }
 
   _fromMoveCol(cursorOptions = {}) {
-    let len = this.document.getLength(this.path.row);
-    let maxcol = len - (cursorOptions.pastEnd ? 0 : 1);
+    const len = this.document.getLength(this.path.row);
+    const maxcol = len - (cursorOptions.pastEnd ? 0 : 1);
     let col;
     if (this.moveCol < 0) {
       col = Math.max(0, len + this.moveCol + 1);
@@ -106,7 +106,7 @@ class Cursor extends EventEmitter {
   }
 
   right(cursorOptions = {}) {
-    let shift = cursorOptions.pastEnd ? 0 : 1;
+    const shift = cursorOptions.pastEnd ? 0 : 1;
     if (this.col < (this.document.getLength(this.path.row)) - shift) {
       return this._right();
     }
@@ -122,7 +122,7 @@ class Cursor extends EventEmitter {
     if (this.col < (this.document.getLength(this.path.row)) - 1) {
       return false;
     } else {
-      let nextpath = this.session.nextVisible(this.path);
+      const nextpath = this.session.nextVisible(this.path);
       if (nextpath !== null) {
         return false;
       }
@@ -135,7 +135,7 @@ class Cursor extends EventEmitter {
       this._right();
       return true;
     } else {
-      let nextpath = this.session.nextVisible(this.path);
+      const nextpath = this.session.nextVisible(this.path);
       if (nextpath !== null) {
         this.setPosition(nextpath, 0);
         return true;
@@ -148,7 +148,7 @@ class Cursor extends EventEmitter {
     if (this.col > 0) {
       return false;
     } else {
-      let prevpath = this.session.prevVisible(this.path);
+      const prevpath = this.session.prevVisible(this.path);
       if (prevpath !== null) {
         return false;
       }
@@ -161,7 +161,7 @@ class Cursor extends EventEmitter {
       this._left();
       return true;
     } else {
-      let prevpath = this.session.prevVisible(this.path);
+      const prevpath = this.session.prevVisible(this.path);
       if (prevpath !== null) {
         this.setPosition(prevpath, -1);
         return true;
@@ -192,13 +192,13 @@ class Cursor extends EventEmitter {
   }
 
   visibleEnd() {
-    let path = this.session.lastVisible();
+    const path = this.session.lastVisible();
     this.setPosition(path, 0);
     return this;
   }
 
   isInWhitespace(path, col) {
-    let char = this.document.getChar(path.row, col);
+    const char = this.document.getChar(path.row, col);
     return utils.isWhitespace(char);
   }
 
@@ -207,7 +207,7 @@ class Cursor extends EventEmitter {
       return false;
     }
 
-    let char = this.document.getChar(path.row, col);
+    const char = this.document.getChar(path.row, col);
     if (utils.isWhitespace(char)) {
       return false;
     }
@@ -236,7 +236,7 @@ class Cursor extends EventEmitter {
       this.prevChar();
     }
 
-    let wordcheck = this.getWordCheck(options, (this.document.getChar(this.path.row, this.col)));
+    const wordcheck = this.getWordCheck(options, (this.document.getChar(this.path.row, this.col)));
     while ((this.col > 0) && wordcheck(this.path, this.col-1)) {
       this._left();
     }
@@ -256,8 +256,8 @@ class Cursor extends EventEmitter {
       this.nextChar();
     }
 
-    let end = (this.document.getLength(this.path.row)) - 1;
-    let wordcheck = this.getWordCheck(options, (this.document.getChar(this.path.row, this.col)));
+    let end = this.document.getLength(this.path.row) - 1;
+    const wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
     while (this.col < end && wordcheck(this.path, (this.col+1))) {
       this._right();
     }
@@ -282,7 +282,7 @@ class Cursor extends EventEmitter {
     }
 
     let end = this.document.getLength(this.path.row) - 1;
-    let wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
+    const wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
     while (this.col < end && wordcheck(this.path, this.col+1)) {
       this._right();
     }
@@ -300,12 +300,12 @@ class Cursor extends EventEmitter {
   }
 
   findNextChar(char, options = {}) {
-    let end = this.document.getLength(this.path.row) - 1;
+    const end = this.document.getLength(this.path.row) - 1;
     if (this.col === end) {
       return;
     }
 
-    let { col } = this;
+    let col = this.col;
     if (options.beforeFound) {
       col += 1;
     }
@@ -337,7 +337,7 @@ class Cursor extends EventEmitter {
       return;
     }
 
-    let { col } = this;
+    let col = this.col;
     if (options.beforeFound) {
       col -= 1;
     }
@@ -362,21 +362,21 @@ class Cursor extends EventEmitter {
   }
 
   up(cursorOptions = {}) {
-    let path = this.session.prevVisible(this.path);
+    const path = this.session.prevVisible(this.path);
     if (path !== null) {
       return this.setPath(path, cursorOptions);
     }
   }
 
   down(cursorOptions = {}) {
-    let path = this.session.nextVisible(this.path);
+    const path = this.session.nextVisible(this.path);
     if (path !== null) {
       return this.setPath(path, cursorOptions);
     }
   }
 
   parent(cursorOptions = {}) {
-    let path = this.path.parent;
+    const path = this.path.parent;
     if (path.row === this.document.root.row) {
       return;
     }
@@ -387,14 +387,14 @@ class Cursor extends EventEmitter {
   }
 
   prevSibling(cursorOptions = {}) {
-    let prevsib = this.document.getSiblingBefore(this.path);
+    const prevsib = this.document.getSiblingBefore(this.path);
     if (prevsib !== null) {
       return this.setPath(prevsib, cursorOptions);
     }
   }
 
   nextSibling(cursorOptions = {}) {
-    let nextsib = this.document.getSiblingAfter(this.path);
+    const nextsib = this.document.getSiblingAfter(this.path);
     if (nextsib !== null) {
       return this.setPath(nextsib, cursorOptions);
     }
@@ -417,7 +417,7 @@ class Cursor extends EventEmitter {
   // get whether the cursor should be bold/italic based on surroundings
   // NOTE: only relevant for insert mode.
   _getPropertiesFromContext() {
-    let line = this.document.getLine(this.path.row);
+    const line = this.document.getLine(this.path.row);
     let obj;
     if (line.length === 0) {
       obj = {};
@@ -426,10 +426,9 @@ class Cursor extends EventEmitter {
     } else {
       obj = line[this.col-1];
     }
-    for (let i = 0; i < constants.text_properties.length; i++) {
-      let property = constants.text_properties[i];
+    constants.text_properties.forEach((property) => {
       this.setProperty(property, obj[property]);
-    }
+    });
   }
 }
 

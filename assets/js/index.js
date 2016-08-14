@@ -12,7 +12,7 @@ initialize the main page
 import * as constants from './constants';
 import * as errors from './errors';
 import * as utils from './utils';
-import * as Logger from './logger';
+import logger from './logger';
 
 import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';
@@ -256,7 +256,7 @@ async function create_session(doc, to_load) {
       };
       return reader.onerror = function(evt) {
         cb('Import failed due to file-reading issue');
-        return Logger.logger.error('Import Error', evt);
+        return logger.error('Import Error', evt);
       };
     };
 
@@ -314,7 +314,7 @@ let datastore;
 let doc;
 
 if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
-  Logger.logger.info('using chrome storage');
+  logger.info('using chrome storage');
 
   // TODO
   // datastore = new DataStore.ChromeStorageLazy
@@ -330,7 +330,7 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
         'save': doc.serialize()
       }, () => {
         // TODO have whether saved visualized
-        Logger.logger.info('Saved');
+        logger.info('Saved');
       });
     }, 5000);
   });
@@ -353,9 +353,9 @@ if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
 }
 
 window.onerror = function(msg, url, line, col, err) {
-  Logger.logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
+  logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
   if (err !== undefined) {
-    Logger.logger.error('Error: ', err, err.stack);
+    logger.error('Error: ', err, err.stack);
   }
 
   if (err instanceof errors.DataPoisoned) {

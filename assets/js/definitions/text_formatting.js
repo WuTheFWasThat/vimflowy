@@ -3,48 +3,48 @@ import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
-let CMD_BOLD = keyDefinitions.registerCommand({
+const CMD_BOLD = keyDefinitions.registerCommand({
   name: 'BOLD',
   default_hotkeys: {
     all: ['ctrl+B']
   }
 });
-let CMD_ITALIC = keyDefinitions.registerCommand({
+const CMD_ITALIC = keyDefinitions.registerCommand({
   name: 'ITALIC',
   default_hotkeys: {
     all: ['ctrl+I']
   }
 });
-let CMD_UNDERLINE = keyDefinitions.registerCommand({
+const CMD_UNDERLINE = keyDefinitions.registerCommand({
   name: 'UNDERLINE',
   default_hotkeys: {
     all: ['ctrl+U']
   }
 });
-let CMD_STRIKETHROUGH = keyDefinitions.registerCommand({
+const CMD_STRIKETHROUGH = keyDefinitions.registerCommand({
   name: 'STRIKETHROUGH',
   default_hotkeys: {
     all: ['ctrl+enter']
   }
 });
 
-let text_format_normal = (property) => {
+const text_format_normal = (property) => {
   return async function() {
     this.session.toggleRowProperty(property);
     return this.keyStream.save();
   };
 };
 
-let text_format_insert = (property) => {
+const text_format_insert = (property) => {
   return async function() {
     return this.session.cursor.toggleProperty(property);
   };
 };
 
-let text_format_visual_line = property =>
+const text_format_visual_line = property =>
   async function() {
-    let paths = this.session.document.getChildRange(this.parent, this.row_start_i, this.row_end_i);
-    let rows = paths.map(path => path.row);
+    const paths = this.session.document.getChildRange(this.parent, this.row_start_i, this.row_end_i);
+    const rows = paths.map(path => path.row);
     // TODO: dedup rows to avoid double toggle
     this.session.toggleRowsProperty(property, rows);
     this.session.setMode(MODES.NORMAL);
@@ -52,7 +52,7 @@ let text_format_visual_line = property =>
   }
 ;
 
-let text_format_visual = property =>
+const text_format_visual = property =>
   async function() {
     this.session.toggleRowPropertyBetween(property, this.session.cursor, this.session.anchor, {includeEnd: true});
     this.session.setMode(MODES.NORMAL);

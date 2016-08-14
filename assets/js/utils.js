@@ -14,15 +14,15 @@ export function isPunctuation(char) {
   return char === '.' || char === ',' || char === '!' || char === '?';
 }
 
-let urlRegex = /^https?:\/\/([^\s]+\.[^\s]+$|localhost)/;
+const urlRegex = /^https?:\/\/([^\s]+\.[^\s]+$|localhost)/;
 export function isLink(word) {
   return urlRegex.test(word);
 }
 
 export function mimetypeLookup(filename) {
-  let parts = filename.split('.');
-  let extension = parts.length > 1 ? parts[parts.length - 1] : '';
-  let extensionLookup = {
+  const parts = filename.split('.');
+  const extension = parts.length > 1 ? parts[parts.length - 1] : '';
+  const extensionLookup = {
     'json': 'application/json',
     'txt': 'text/plain',
     '': 'text/plain'
@@ -31,14 +31,14 @@ export function mimetypeLookup(filename) {
 }
 
 export function isScrolledIntoView(elem, container) {
-  let $elem = $(elem);
-  let $container = $(container);
+  const $elem = $(elem);
+  const $container = $(container);
 
-  let docViewTop = $container.offset().top;
-  let docViewBottom = docViewTop + $container.outerHeight();
+  const docViewTop = $container.offset().top;
+  const docViewBottom = docViewTop + $container.outerHeight();
 
-  let elemTop = $elem.offset().top;
-  let elemBottom = elemTop + $elem.height();
+  const elemTop = $elem.offset().top;
+  const elemBottom = elemTop + $elem.height();
 
   return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
@@ -55,8 +55,8 @@ export function tv4_validate(data, schema, object='data') {
 
 // shim for filling in default values, with tv4
 export function fill_tv4_defaults(data, schema) {
-  for (let prop in schema.properties) {
-    let prop_info = schema.properties[prop];
+  for (const prop in schema.properties) {
+    const prop_info = schema.properties[prop];
     if (!(prop in data)) {
       if ('default' in prop_info) {
         let def_val = prop_info['default'];
@@ -78,7 +78,7 @@ export function fill_tv4_defaults(data, schema) {
 }
 
 export function download_file(filename, mimetype, content) {
-  let exportDiv = $('#export');
+  const exportDiv = $('#export');
   exportDiv.attr('download', filename);
   exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
   exportDiv[0].click();

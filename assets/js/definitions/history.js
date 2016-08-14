@@ -3,7 +3,7 @@ import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
-let CMD_UNDO = keyDefinitions.registerCommand({
+const CMD_UNDO = keyDefinitions.registerCommand({
   name: 'UNDO',
   default_hotkeys: {
     normal_like: ['u']
@@ -18,7 +18,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_UNDO, {
   return this.keyStream.forget();
 });
 
-let CMD_REDO = keyDefinitions.registerCommand({
+const CMD_REDO = keyDefinitions.registerCommand({
   name: 'REDO',
   default_hotkeys: {
     normal_like: ['ctrl+r']
@@ -33,7 +33,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_REDO, {
   return this.keyStream.forget();
 });
 
-let CMD_REPLAY = keyDefinitions.registerCommand({
+const CMD_REPLAY = keyDefinitions.registerCommand({
   name: 'REPLAY',
   default_hotkeys: {
     normal_like: ['.']
@@ -49,7 +49,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLAY, {
   return this.keyStream.forget();
 });
 
-let CMD_RECORD_MACRO = keyDefinitions.registerCommand({
+const CMD_RECORD_MACRO = keyDefinitions.registerCommand({
   name: 'RECORD_MACRO',
   default_hotkeys: {
     normal_like: ['q']
@@ -59,7 +59,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_RECORD_MACRO, {
   description: 'Begin/stop recording a macro',
 }, async function() {
   if (this.keyHandler.recording.stream === null) {
-    let key = this.keyStream.dequeue();
+    const key = this.keyStream.dequeue();
     if (key === null) { return this.keyStream.wait(); }
     this.keyHandler.beginRecording(key);
   } else {
@@ -70,7 +70,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_RECORD_MACRO, {
   return this.keyStream.forget();
 });
 
-let CMD_PLAY_MACRO = keyDefinitions.registerCommand({
+const CMD_PLAY_MACRO = keyDefinitions.registerCommand({
   name: 'PLAY_MACRO',
   default_hotkeys: {
     normal_like: ['@']
@@ -79,9 +79,9 @@ let CMD_PLAY_MACRO = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_PLAY_MACRO, {
   description: 'Play a macro',
 }, async function() {
-  let key = this.keyStream.dequeue();
+  const key = this.keyStream.dequeue();
   if (key === null) { return this.keyStream.wait(); }
-  let recording = this.keyHandler.macros[key];
+  const recording = this.keyHandler.macros[key];
   if (recording === undefined) { return this.keyStream.forget(); }
   for (let j = 0; j < this.repeat; j++) {
     await this.keyHandler.playRecording(recording);

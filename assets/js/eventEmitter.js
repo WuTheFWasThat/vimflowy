@@ -32,7 +32,7 @@ class EventEmitter {
   }
 
   once(event, listener) {
-    let fn = function() {
+    const fn = function() {
       this.removeListener(event, fn);
       return listener(...arguments);
     };

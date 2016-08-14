@@ -3,7 +3,7 @@ A straightforward class for configurable logging
 Log-levels and streams (currently only one stream at a time)
 */
 
-const LEVEL = {
+export const LEVEL = {
   DEBUG: 0,
   INFO: 1,
   WARN: 2,
@@ -11,13 +11,13 @@ const LEVEL = {
   FATAL: 4
 };
 
-const STREAM = {
+export const STREAM = {
   STDOUT: 0,
   STDERR: 1,
   QUEUE: 2
 };
 
-class Logger {
+export class Logger {
   constructor(level=LEVEL.INFO, stream=STREAM.STDOUT) {
     this.setLevel(level);
     this.setStream(stream);
@@ -65,10 +65,9 @@ class Logger {
 
   flush() {
     if (this.stream === STREAM.QUEUE) {
-      for (let i = 0; i < this.queue.length; i++) {
-        const args = this.queue[i];
+      this.queue.forEach((args) => {
         console.log.apply(console, args);
-      }
+      });
       return this.empty();
     }
   }
@@ -78,8 +77,5 @@ class Logger {
   }
 }
 
-export { Logger };
-export { LEVEL };
-export { STREAM };
-
-export let logger = new Logger(LEVEL.DEBUG);
+const logger = new Logger(LEVEL.DEBUG);
+export default logger;

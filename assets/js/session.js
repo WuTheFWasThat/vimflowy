@@ -6,7 +6,7 @@ import * as utils from './utils';
 import * as errors from './errors';
 import Cursor from './cursor';
 import Register from './register';
-import * as Logger from './logger';
+import logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 
@@ -81,7 +81,7 @@ class Session extends EventEmitter {
 
   showMessage(message, options = {}) {
     if (options.time === undefined) { options.time = 5000; }
-    Logger.logger.info(`Showing message: ${message}`);
+    logger.info(`Showing message: ${message}`);
     if (this.messageDiv) {
       clearTimeout(this.messageDivTimeout);
 
@@ -302,19 +302,19 @@ class Session extends EventEmitter {
       this.historyIndex -= 1;
       const newState = this.history[this.historyIndex];
 
-      Logger.logger.debug('UNDOING <');
+      logger.debug('UNDOING <');
       for (let j = oldState.index - 1; j > newState.index - 1; j--) {
         const mutation = this.mutations[j];
-        Logger.logger.debug(`  Undoing mutation ${mutation.constructor.name}(${mutation.str()})`);
+        logger.debug(`  Undoing mutation ${mutation.constructor.name}(${mutation.str()})`);
         const undo_mutations = mutation.rewind(this);
         undo_mutations.forEach((undo_mutation) => {
-          Logger.logger.debug(`  Undo mutation ${undo_mutation.constructor.name}(${undo_mutation.str()})`);
+          logger.debug(`  Undo mutation ${undo_mutation.constructor.name}(${undo_mutation.str()})`);
           undo_mutation.mutate(this);
           undo_mutation.moveCursor(this.cursor);
         });
       }
 
-      Logger.logger.debug('> END UNDO');
+      logger.debug('> END UNDO');
       return this.restoreViewState(newState.before);
     }
   }
@@ -325,10 +325,10 @@ class Session extends EventEmitter {
       this.historyIndex += 1;
       const newState = this.history[this.historyIndex];
 
-      Logger.logger.debug('REDOING <');
+      logger.debug('REDOING <');
       for (let j = oldState.index; j < newState.index; j++) {
         const mutation = this.mutations[j];
-        Logger.logger.debug(`  Redoing mutation ${mutation.constructor.name}(${mutation.str()})`);
+        logger.debug(`  Redoing mutation ${mutation.constructor.name}(${mutation.str()})`);
         if (!mutation.validate(this)) {
           // this should not happen, since the state should be the same as before
           throw new errors.GenericError(`Failed to redo mutation: ${mutation.str()}`);
@@ -336,7 +336,7 @@ class Session extends EventEmitter {
         mutation.remutate(this);
         mutation.moveCursor(this.cursor);
       }
-      Logger.logger.debug('> END REDO');
+      logger.debug('> END REDO');
       return this.restoreViewState(oldState.after);
     }
   }
@@ -345,7 +345,7 @@ class Session extends EventEmitter {
     if (!this.history) {
       // NOTE: we let mutations through since some plugins may apply mutations on load
       // these mutations won't be undoable, which is desired
-      Logger.logger.warn(`Tried mutation ${mutation} before init!`);
+      logger.warn(`Tried mutation ${mutation} before init!`);
       mutation.mutate(this);
       return true;
     }
@@ -363,7 +363,7 @@ class Session extends EventEmitter {
       };
     }
 
-    Logger.logger.debug(`Applying mutation ${mutation.constructor.name}(${mutation.str()})`);
+    logger.debug(`Applying mutation ${mutation.constructor.name}(${mutation.str()})`);
     if (!mutation.validate(this)) {
       return false;
     }
@@ -732,7 +732,7 @@ class Session extends EventEmitter {
   //   - includeEnd says whether to also delete cursor2 location
   yankBetween(cursor1, cursor2, options = {}) {
     if (!(cursor2.path.is(cursor1.path))) {
-      Logger.logger.warn('Not yet implemented');
+      logger.warn('Not yet implemented');
       return;
     }
 
@@ -753,7 +753,7 @@ class Session extends EventEmitter {
   //   - includeEnd says whether to also delete cursor2 location
   deleteBetween(cursor1, cursor2, options = {}) {
     if (!(cursor2.path.is(cursor1.path))) {
-      Logger.logger.warn('Not yet implemented');
+      logger.warn('Not yet implemented');
       return;
     }
 
@@ -800,7 +800,7 @@ class Session extends EventEmitter {
 
   toggleRowPropertyBetween(property, cursor1, cursor2, options) {
     if (!(cursor2.path.is(cursor1.path))) {
-      Logger.logger.warn('Not yet implemented');
+      logger.warn('Not yet implemented');
       return;
     }
 

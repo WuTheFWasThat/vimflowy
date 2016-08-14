@@ -3,7 +3,7 @@ import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
-let CMD_EXPORT = keyDefinitions.registerCommand({
+const CMD_EXPORT = keyDefinitions.registerCommand({
   name: 'EXPORT',
   default_hotkeys: {
     normal_like: ['ctrl+s'],

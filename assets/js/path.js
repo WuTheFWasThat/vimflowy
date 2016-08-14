@@ -16,7 +16,7 @@ class Path {
   // gets a list of IDs
   getAncestry() {
     if (this.isRoot()) { return []; }
-    let ancestors = this.parent.getAncestry();
+    const ancestors = this.parent.getAncestry();
     ancestors.push(this.row);
     return ancestors;
   }
@@ -38,8 +38,8 @@ class Path {
   }
 
   walkFrom(ancestor) {
-    let my_ancestry = this.getAncestry();
-    let their_ancestry = ancestor.getAncestry();
+    const my_ancestry = this.getAncestry();
+    const their_ancestry = ancestor.getAncestry();
     if (my_ancestry.length < their_ancestry.length) {
       return null;
     }
@@ -53,7 +53,7 @@ class Path {
 
   shedUntil(row) {
     let ancestor = this;
-    let path = [];
+    const path = [];
     while (ancestor.row !== row) {
       if (!ancestor.parent) {
         return [null, null];
@@ -66,10 +66,9 @@ class Path {
 
   extend(walk) {
     let descendent = this;
-    for (let i = 0; i < walk.length; i++) {
-      let row = walk[i];
+    walk.forEach((row) => {
       descendent = descendent.child(row);
-    }
+    });
     return descendent;
   }
 
@@ -90,8 +89,8 @@ class Path {
     if (ancestry.length === 0) {
       return Path.root();
     }
-    let row = ancestry.pop();
-    let parent = Path.loadFromAncestry(ancestry);
+    const row = ancestry.pop();
+    const parent = Path.loadFromAncestry(ancestry);
     return parent.child(row);
   }
 }

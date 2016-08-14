@@ -16,13 +16,13 @@ fs.readdirSync(path.resolve(__dirname, '../assets/js/definitions')).forEach((fil
 import KeyDefinitions from '../assets/js/keyDefinitions';
 import KeyBindings from '../assets/js/keyBindings';
 import KeyHandler from '../assets/js/keyHandler';
-import * as Logger from '../assets/js/logger';
+import logger, * as Logger from '../assets/js/logger';
 import { PluginsManager } from '../assets/js/plugins';
 import Cursor from '../assets/js/cursor';
 import Path from '../assets/js/path';
 
-Logger.logger.setStream(Logger.STREAM.QUEUE);
-afterEach('empty the queue', () => Logger.logger.empty());
+logger.setStream(Logger.STREAM.QUEUE);
+afterEach('empty the queue', () => logger.empty());
 
 // will have default bindings
 let defaultKeyBindings = new KeyBindings(KeyDefinitions.clone());
@@ -79,7 +79,7 @@ class TestCase {
 
   _expectDeepEqual(actual, expected, message) {
     if (!_.isEqual(actual, expected)) {
-      Logger.logger.flush();
+      logger.flush();
       console.error(`
         \nExpected:
         \n${JSON.stringify(expected, null, 2)}
@@ -93,7 +93,7 @@ class TestCase {
 
   _expectEqual(actual, expected, message) {
     if (actual !== expected) {
-      Logger.logger.flush();
+      logger.flush();
       console.error(`
         \nExpected:
         \n${expected}

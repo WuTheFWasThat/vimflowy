@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 import * as utils from './utils';
 import * as Modes from './modes';
-import * as Logger from './logger';
+import logger from './logger';
 import * as errors from './errors';
 import EventEmitter from './eventEmitter';
 
@@ -58,7 +58,7 @@ class PluginApi {
     this.document = this.session.document;
     this.cursor = this.session.cursor;
     // TODO: Add subloggers and prefix all log messages with the plugin name
-    this.logger = Logger.logger;
+    this.logger = logger;
 
     this.bindings = this.session.bindings;
     this.definitions = this.bindings.definitions;
@@ -210,7 +210,7 @@ class PluginsManager extends EventEmitter {
   }
 
   setStatus(name, status) {
-    Logger.logger.info(`Plugin ${name} status: ${status}`);
+    logger.info(`Plugin ${name} status: ${status}`);
     if (!PLUGINS[name]) {
       throw new Error(`Plugin ${name} was not registered`);
     }
@@ -233,7 +233,7 @@ class PluginsManager extends EventEmitter {
   enable(name) {
     const status = this.getStatus(name);
     if (status === STATUSES.UNREGISTERED) {
-      Logger.logger.error(`No plugin registered as ${name}`);
+      logger.error(`No plugin registered as ${name}`);
       PLUGINS[name] = null;
       return;
     }

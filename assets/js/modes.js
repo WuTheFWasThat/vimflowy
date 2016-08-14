@@ -93,7 +93,7 @@ class Mode {
 
   transform_key(key, context) {
     for (let i = 0; i < this.key_transforms.length; i++) {
-      let key_transform = this.key_transforms[i];
+      const key_transform = this.key_transforms[i];
       [key, context] = key_transform(key, context);
       if (key === null) {
         break;

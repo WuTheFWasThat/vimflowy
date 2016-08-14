@@ -4,7 +4,7 @@ Uses a datastore key which is agnostic to which document is being viewed
 (i.e. /blah and /blah2 have the same settings)
 */
 
-let default_settings = {
+const default_settings = {
   theme: 'default-theme',
   showKeyBindings: true,
   hotkeys: {}
@@ -18,7 +18,7 @@ class Settings {
     this.mainDiv = options.mainDiv;
     this.keybindingsDiv = options.keybindingsDiv;
 
-    for (let setting in default_settings) {
+    for (const setting in default_settings) {
       if (!((this.getSetting(setting)) !== null)) {
         this.setSetting(setting, default_settings[setting]);
       }

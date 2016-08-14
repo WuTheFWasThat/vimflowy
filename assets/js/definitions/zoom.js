@@ -3,7 +3,7 @@ import keyDefinitions from '../keyDefinitions';
 
 const MODES = Modes.modes;
 
-let CMD_ZOOM_UP = keyDefinitions.registerCommand({
+const CMD_ZOOM_UP = keyDefinitions.registerCommand({
   name: 'ZOOM_UP',
   default_hotkeys: {
     normal_like: ['alt+k'],
@@ -19,7 +19,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_UP, {
   }
 });
 
-let CMD_ZOOM_DOWN = keyDefinitions.registerCommand({
+const CMD_ZOOM_DOWN = keyDefinitions.registerCommand({
   name: 'ZOOM_DOWN',
   default_hotkeys: {
     normal_like: ['alt+j'],
@@ -35,7 +35,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_DOWN, {
   }
 });
 
-let CMD_ZOOM_IN = keyDefinitions.registerCommand({
+const CMD_ZOOM_IN = keyDefinitions.registerCommand({
   name: 'ZOOM_IN',
   default_hotkeys: {
     normal_like: [']', 'alt+l', 'ctrl+right'],
@@ -51,7 +51,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN, {
   }
 });
 
-let CMD_ZOOM_OUT = keyDefinitions.registerCommand({
+const CMD_ZOOM_OUT = keyDefinitions.registerCommand({
   name: 'ZOOM_OUT',
   default_hotkeys: {
     normal_like: ['[', 'alt+h', 'ctrl+left'],
@@ -67,7 +67,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT, {
   }
 });
 
-let CMD_ZOOM_IN_ALL = keyDefinitions.registerCommand({
+const CMD_ZOOM_IN_ALL = keyDefinitions.registerCommand({
   name: 'ZOOM_IN_ALL',
   default_hotkeys: {
     normal_like: ['enter', 'ctrl+shift+right'],
@@ -83,7 +83,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN_ALL, {
   }
 });
 
-let CMD_ZOOM_OUT_ALL = keyDefinitions.registerCommand({
+const CMD_ZOOM_OUT_ALL = keyDefinitions.registerCommand({
   name: 'ZOOM_OUT_ALL',
   default_hotkeys: {
     normal_like: ['shift+enter', 'ctrl+shift+left'],
@@ -99,7 +99,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT_ALL, {
   }
 });
 
-let CMD_JUMP_PREVIOUS = keyDefinitions.registerCommand({
+const CMD_JUMP_PREVIOUS = keyDefinitions.registerCommand({
   name: 'JUMP_PREVIOUS',
   default_hotkeys: {
     normal_like: ['ctrl+o']
@@ -112,7 +112,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_JUMP_PREVIOUS, {
   return this.keyStream.forget(1);
 });
 
-let CMD_JUMP_NEXT = keyDefinitions.registerCommand({
+const CMD_JUMP_NEXT = keyDefinitions.registerCommand({
   name: 'JUMP_NEXT',
   default_hotkeys: {
     normal_like: ['ctrl+i']

@@ -8,7 +8,7 @@ import * as DataStore from '../../assets/js/datastore';
 import Document from '../../assets/js/document';
 import Session from '../../assets/js/session';
 import * as Render from '../../assets/js/render';
-import * as mutations from '../../assets/js/mutations';
+import Mutation from '../../assets/js/mutations';
 import * as errors from '../../assets/js/errors';
 import * as constants from '../../assets/js/constants';
 
@@ -28,9 +28,9 @@ class MarksPlugin {
     this.logger = this.api.logger;
     this.session = this.api.session;
     this.document = this.session.document;
-    let that = this;
+    const that = this;
 
-    class SetMark extends mutations.Mutation {
+    class SetMark extends Mutation {
       constructor(row, mark) {
         super();
         this.row = row;
@@ -52,7 +52,7 @@ class MarksPlugin {
     }
     this.SetMark = SetMark;
 
-    class UnsetMark extends mutations.Mutation {
+    class UnsetMark extends Mutation {
       constructor(row) {
         super();
         this.row = row;
@@ -75,7 +75,7 @@ class MarksPlugin {
     // Serialization #
 
     this.api.registerHook('document', 'serializeRow', (struct, info) => {
-      let mark = this._getMark(info.row);
+      const mark = this._getMark(info.row);
       if (mark) {
         struct.mark = mark;
       }
@@ -84,14 +84,14 @@ class MarksPlugin {
 
     this.api.registerListener('document', 'loadRow', (path, serialized) => {
       if (serialized.mark) {
-        let err = this.updateMark(path.row, serialized.mark);
+        const err = this.updateMark(path.row, serialized.mark);
         if (err) { return this.session.showMessage(err, {text_class: 'error'}); }
       }
     });
 
     // Commands #
 
-    let MODES = Modes.modes;
+    const MODES = Modes.modes;
 
     this.marksession = null;
     this.marksessionpath = null;
@@ -102,9 +102,9 @@ class MarksPlugin {
       within_row: true,
       enter: session => {
         // initialize marks stuff
-        let document = new Document(new DataStore.InMemory());
-        document.load(constants.empty_data);
-        this.marksession = new Session(document);
+        const doc = new Document(new DataStore.InMemory());
+        doc.load(constants.empty_data);
+        this.marksession = new Session(doc);
         this.marksession.setMode(MODES.INSERT);
         return this.marksessionpath = session.cursor.path;
       },
@@ -126,7 +126,7 @@ class MarksPlugin {
       ]
     });
 
-    let CMD_MARK = this.api.registerCommand({
+    const CMD_MARK = this.api.registerCommand({
       name: 'MARK',
       default_hotkeys: {
         normal_like: ['m']
@@ -138,7 +138,7 @@ class MarksPlugin {
       return this.session.setMode(MODES.MARK);
     });
 
-    let CMD_FINISH_MARK = this.api.registerCommand({
+    const CMD_FINISH_MARK = this.api.registerCommand({
       name: 'FINISH_MARK',
       default_hotkeys: {
         insert_like: ['enter']
@@ -147,27 +147,27 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], CMD_FINISH_MARK, {
       description: 'Finish typing mark',
     }, async function() {
-      let mark = (that.marksession.curText()).join('');
-      let err = that.updateMark(that.marksessionpath.row, mark);
+      const mark = (that.marksession.curText()).join('');
+      const err = that.updateMark(that.marksessionpath.row, mark);
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       this.session.setMode(MODES.NORMAL);
       return this.keyStream.save();
     });
 
-    let CMD_GO = this.api.commands.GO;
+    const CMD_GO = this.api.commands.GO;
     this.api.registerMotion([CMD_GO, CMD_MARK], {
       description: 'Go to the mark indicated by the cursor, if it exists',
     }, function() {
       return async cursor => {
-        let word = this.session.document.getWord(cursor.row, cursor.col);
+        const word = this.session.document.getWord(cursor.row, cursor.col);
         if (word.length < 1 || word[0] !== '@') {
           return false;
         }
-        let mark = word.slice(1);
-        let allMarks = that.listMarks();
+        const mark = word.slice(1);
+        const allMarks = that.listMarks();
         if (mark in allMarks) {
-          let row = allMarks[mark];
-          let path = this.session.document.canonicalPath(row);
+          const row = allMarks[mark];
+          const path = this.session.document.canonicalPath(row);
           this.session.zoomInto(path);
           return true;
         } else {
@@ -176,16 +176,16 @@ class MarksPlugin {
       };
     });
 
-    let CMD_DELETE = this.api.commands.DELETE;
+    const CMD_DELETE = this.api.commands.DELETE;
     this.api.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MARK], {
       description: 'Delete mark at cursor'
     }, async function() {
-      let err = (that.updateMark(this.session.cursor.row, ''));
+      const err = (that.updateMark(this.session.cursor.row, ''));
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       return this.keyStream.save();
     });
 
-    let CMD_MARK_SEARCH = this.api.registerCommand({
+    const CMD_MARK_SEARCH = this.api.registerCommand({
       name: 'MARK_SEARCH',
       default_hotkeys: {
         normal_like: ['\'', '`']
@@ -197,13 +197,13 @@ class MarksPlugin {
       this.session.setMode(MODES.SEARCH);
       return this.session.menu = new Menu(this.session.menuDiv, chars => {
         // find marks that start with the prefix
-        let findMarks = (document, prefix, nresults = 10) => {
-          let marks = that.listMarks();
-          let results = []; // list of paths
-          for (let mark in marks) {
-            let row = marks[mark];
+        const findMarks = (document, prefix, nresults = 10) => {
+          const marks = that.listMarks();
+          const results = []; // list of paths
+          for (const mark in marks) {
+            const row = marks[mark];
             if ((mark.indexOf(prefix)) === 0) {
-              let path = this.session.document.canonicalPath(row);
+              const path = this.session.document.canonicalPath(row);
               results.push({ path, mark });
               if (nresults > 0 && results.length === nresults) {
                 break;
@@ -213,11 +213,11 @@ class MarksPlugin {
           return results;
         };
 
-        let text = chars.join('');
+        const text = chars.join('');
         return _.map(
           (findMarks(this.session.document, text)),
           found => {
-            let { path } = found;
+            const path = found.path;
             return {
               contents: this.session.document.getLine(path.row),
               renderHook(contents) {
@@ -267,7 +267,7 @@ class MarksPlugin {
     });
 
     this.api.registerHook('session', 'renderCursorsDict', (cursors, info) => {
-      let marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
+      const marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
       if (marking) {
         return {}; // do not render any cursors on the regular line
       }
@@ -275,14 +275,14 @@ class MarksPlugin {
     });
 
     this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
-      let marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
+      const marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
       if (marking) {
-        let markresults = Render.virtualRenderLine(this.marksession, this.marksession.cursor.path, {no_clicks: true});
+        const markresults = Render.virtualRenderLine(this.marksession, this.marksession.cursor.path, {no_clicks: true});
         lineContents.unshift(virtualDom.h('span', {
           className: 'mark theme-bg-secondary theme-trim-accent'
         }, markresults));
       } else {
-        let mark = this._getMark(info.path.row);
+        const mark = this._getMark(info.path.row);
         if (mark) {
           lineContents.unshift(virtualDom.h('span', {
             className: 'mark theme-bg-secondary theme-trim'
@@ -295,10 +295,10 @@ class MarksPlugin {
     return this.api.registerHook('session', 'renderLineWordHook', (line, word_info) => {
       if (this.session.mode === MODES.NORMAL) {
         if (word_info.word[0] === '@') {
-          let mark = word_info.word.slice(1);
-          let row = this.getRowForMark(mark);
+          const mark = word_info.word.slice(1);
+          const row = this.getRowForMark(mark);
           if (row !== null) {
-            let markpath = this.document.canonicalPath(row);
+            const markpath = this.document.canonicalPath(row);
             errors.assert((markpath !== null));
             for (let i = word_info.start; i <= word_info.end; i++) {
               line[i].renderOptions.type = 'a';
@@ -328,11 +328,11 @@ class MarksPlugin {
   }
 
   _sanityCheckMarks() {
-    let marks_to_rows = this._getMarksToRows();
-    let rows_to_marks = this._getRowsToMarks();
-    let marks_to_rows2 = {};
-    for (let row in rows_to_marks) {
-      let mark = rows_to_marks[row];
+    const marks_to_rows = this._getMarksToRows();
+    const rows_to_marks = this._getRowsToMarks();
+    const marks_to_rows2 = {};
+    for (const row in rows_to_marks) {
+      const mark = rows_to_marks[row];
       marks_to_rows2[mark] = parseInt(row);
     }
     return errors.assert_deep_equals(marks_to_rows, marks_to_rows2, 'Inconsistent rows_to_marks');
@@ -340,14 +340,14 @@ class MarksPlugin {
 
   // get mark for an row, '' if it doesn't exist
   _getMark(row) {
-    let marks = this._getRowsToMarks();
+    const marks = this._getRowsToMarks();
     return marks[row] || '';
   }
 
   _setMark(row, mark) {
     this._sanityCheckMarks();
-    let marks_to_rows = this._getMarksToRows();
-    let rows_to_marks = this._getRowsToMarks();
+    const marks_to_rows = this._getMarksToRows();
+    const rows_to_marks = this._getRowsToMarks();
     errors.assert(!marks_to_rows.hasOwnProperty(mark));
     errors.assert(!rows_to_marks.hasOwnProperty(row));
     marks_to_rows[mark] = row;
@@ -359,8 +359,8 @@ class MarksPlugin {
 
   _unsetMark(row, mark) {
     this._sanityCheckMarks();
-    let marks_to_rows = this._getMarksToRows();
-    let rows_to_marks = this._getRowsToMarks();
+    const marks_to_rows = this._getMarksToRows();
+    const rows_to_marks = this._getRowsToMarks();
     errors.assert_equals(marks_to_rows[mark], row);
     errors.assert_equals(rows_to_marks[row], mark);
     delete marks_to_rows[mark];
@@ -372,11 +372,11 @@ class MarksPlugin {
 
   getRowForMark(mark) {
     this._sanityCheckMarks();
-    let marks_to_rows = this._getMarksToRows();
+    const marks_to_rows = this._getMarksToRows();
     if (!(mark in marks_to_rows)) {
       return null;
     }
-    let row = marks_to_rows[mark];
+    const row = marks_to_rows[mark];
     if (this.document.isAttached(row)) {
       return row;
     }
@@ -385,11 +385,11 @@ class MarksPlugin {
 
   listMarks() {
     this._sanityCheckMarks();
-    let marks_to_rows = this._getMarksToRows();
+    const marks_to_rows = this._getMarksToRows();
 
-    let all_marks = {};
-    for (let mark in marks_to_rows) {
-      let row = marks_to_rows[mark];
+    const all_marks = {};
+    for (const mark in marks_to_rows) {
+      const row = marks_to_rows[mark];
       if (this.document.isAttached(row)) {
         all_marks[mark] = row;
       }
@@ -400,9 +400,9 @@ class MarksPlugin {
   // Set the mark for row
   // Returns whether setting mark succeeded
   updateMark(row, mark = '') {
-    let marks_to_rows = this._getMarksToRows();
-    let rows_to_marks = this._getRowsToMarks();
-    let oldmark = rows_to_marks[row];
+    const marks_to_rows = this._getMarksToRows();
+    const rows_to_marks = this._getRowsToMarks();
+    const oldmark = rows_to_marks[row];
 
     if (!(oldmark || mark)) {
       return 'No mark to delete!';
@@ -413,7 +413,7 @@ class MarksPlugin {
         return 'Already marked, nothing to do!';
       }
 
-      let other_row = marks_to_rows[mark];
+      const other_row = marks_to_rows[mark];
       if (this.document.isAttached(other_row)) {
         return `Mark '${mark}' was already taken!`;
       } else {
@@ -441,7 +441,7 @@ class MarksPlugin {
 
 // NOTE: because listing marks filters, disabling is okay
 
-let pluginName = 'Marks';
+const pluginName = 'Marks';
 
 Plugins.register({
   name: pluginName,

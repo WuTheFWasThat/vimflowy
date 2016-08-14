@@ -20,7 +20,7 @@ import * as errors from './errors';
 import * as Modes from './modes';
 // import * as constants from './constants';
 
-import * as Logger from './logger';
+import logger from './logger';
 
 // const MODES = Modes.modes;
 
@@ -39,10 +39,7 @@ export class KeyStream extends EventEmitter {
     this.checkpoint_index = 0;
     this.waiting = false;
 
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      this.enqueue(key);
-    }
+    keys.forEach((key) => this.enqueue(key));
   }
 
   empty() {
@@ -148,7 +145,7 @@ class KeyHandler extends EventEmitter {
   //##################
 
   async handleKey(key) {
-    Logger.logger.debug('Handling key:', key);
+    logger.debug('Handling key:', key);
     this.keyStream.enqueue(key);
     if (this.recording.stream) {
       this.recording.stream.enqueue(key);

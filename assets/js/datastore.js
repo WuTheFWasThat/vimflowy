@@ -3,7 +3,7 @@
 import _ from 'lodash';
 
 import * as errors from './errors';
-import * as Logger from './logger';
+import logger from './logger';
 
 /*
 DataStore abstracts the data layer, so that it can be swapped out.
@@ -134,7 +134,7 @@ class DataStore {
   }
 
   getNew() {
-    let id = this.getId();
+    const id = this.getId();
     this.setLine(id, []);
     this.setChildren(id, []);
     return id;
@@ -191,23 +191,23 @@ class LocalStorageLazy extends DataStore {
       localStorage.setItem(this._lastSaveKey_, this.lastSave);
     }
 
-    Logger.logger.debug('setting local storage', key, value);
+    logger.debug('setting local storage', key, value);
     return localStorage.setItem(key, JSON.stringify(value));
   }
 
   _getLocalStorage_(key, default_value = undefined) {
-    Logger.logger.debug('getting from local storage', key, default_value);
-    let stored = localStorage.getItem(key);
+    logger.debug('getting from local storage', key, default_value);
+    const stored = localStorage.getItem(key);
     if (stored === null) {
-      Logger.logger.debug('got nothing, defaulting to', default_value);
+      logger.debug('got nothing, defaulting to', default_value);
       return default_value;
     }
     try {
-      let val = JSON.parse(stored);
-      Logger.logger.debug('got ', val);
+      const val = JSON.parse(stored);
+      logger.debug('got ', val);
       return val;
     } catch (error) {
-      Logger.logger.debug('parse failure:', stored);
+      logger.debug('parse failure:', stored);
       return default_value;
     }
   }

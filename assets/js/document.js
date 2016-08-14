@@ -2,7 +2,7 @@ import _ from 'lodash';
 import * as utils from './utils';
 import * as errors from './errors';
 import * as constants from './constants';
-// import * as Logger from './logger';
+// import logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 
@@ -51,7 +51,7 @@ class Document extends EventEmitter {
   }
 
   getChar(row, col) {
-    let charInfo = this.getLine(row)[col];
+    const charInfo = this.getLine(row)[col];
     return charInfo && charInfo.char;
   }
 
@@ -69,7 +69,7 @@ class Document extends EventEmitter {
   // get word at this location
   // if on a whitespace character, return nothing
   getWord(row, col) {
-    let text = this.getText(row);
+    const text = this.getText(row);
 
     if (utils.isWhitespace(text[col])) {
       return '';
@@ -91,15 +91,15 @@ class Document extends EventEmitter {
   }
 
   writeChars(row, col, chars) {
-    let args = [col, 0].concat(chars);
-    let line = this.getLine(row);
+    const args = [col, 0].concat(chars);
+    const line = this.getLine(row);
     [].splice.apply(line, args);
     return this.setLine(row, line);
   }
 
   deleteChars(row, col, num) {
-    let line = this.getLine(row);
-    let deleted = line.splice(col, num);
+    const line = this.getLine(row);
+    const deleted = line.splice(col, num);
     this.setLine(row, line);
     return deleted;
   }
@@ -113,14 +113,14 @@ class Document extends EventEmitter {
   //############
 
   _getChildren(row, min=0, max=-1) {
-    let children = this.store.getChildren(row);
+    const children = this.store.getChildren(row);
     if (children.length === 0) {
       return [];
     }
     if (max === -1) {
       max = children.length - 1;
     }
-    let indices = [];
+    const indices = [];
     for (let i = min; i <= max; i++) {
       indices.push(i);
     }
@@ -140,7 +140,7 @@ class Document extends EventEmitter {
   }
 
   _childIndex(parent, child) {
-    let children = this._getChildren(parent);
+    const children = this._getChildren(parent);
     return _.findIndex(children, row => row === child);
   }
 
@@ -169,7 +169,7 @@ class Document extends EventEmitter {
   }
 
   nextClone(path) {
-    let parents = this._getParents(path.row);
+    const parents = this._getParents(path.row);
     let i = parents.indexOf(path.parent.row);
     errors.assert(i > -1);
     let new_parent_path;
@@ -186,7 +186,7 @@ class Document extends EventEmitter {
   }
 
   indexOf(child) {
-    let children = this.getSiblings(child);
+    const children = this.getSiblings(child);
     return _.findIndex(children, sib => sib.row === child.row);
   }
 
@@ -203,22 +203,22 @@ class Document extends EventEmitter {
     if (this.collapsed(row)) {
       return pathsofar;
     }
-    let children = this._getChildren(row);
+    const children = this._getChildren(row);
     if (children.length === 0) {
       return pathsofar;
     }
-    let child = children[children.length - 1];
+    const child = children[children.length - 1];
     return [child].concat(this.walkToLastVisible(child));
   }
 
   // a node is cloned only if it has multiple parents.
   // note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
   isClone(row) {
-    let parents = this._getParents(row);
+    const parents = this._getParents(row);
     if (parents.length < 2) { // for efficiency reasons
       return false;
     }
-    let numAttachedParents = parents.filter(parent => this.isAttached(parent)).length;
+    const numAttachedParents = parents.filter(parent => this.isAttached(parent)).length;
     return numAttachedParents > 1;
   }
 
@@ -229,10 +229,10 @@ class Document extends EventEmitter {
     if (row === constants.root_row) {
       return this.root;
     }
-    let parents = this._getParents(row);
+    const parents = this._getParents(row);
     for (let i = 0; i < parents.length; i++) {
-      let parentRow = parents[i];
-      let canonicalParent = this.canonicalPath(parentRow);
+      const parentRow = parents[i];
+      const canonicalParent = this.canonicalPath(parentRow);
       if (canonicalParent !== null) {
         return this.findChild(canonicalParent, row);
       }
@@ -245,12 +245,12 @@ class Document extends EventEmitter {
   // NOTE: includes possibly detached nodes
   allAncestors(row, options) {
     options = _.defaults({}, options, { inclusive: false });
-    let visited = {};
-    let ancestors = []; // 'visited' with preserved insert order
+    const visited = {};
+    const ancestors = []; // 'visited' with preserved insert order
     if (options.inclusive) {
       ancestors.push(row);
     }
-    let visit = n => { // DFS
+    const visit = n => { // DFS
       visited[n] = true;
       this._getParents(n).forEach((parent) => {
         if (!(parent in visited)) {
@@ -266,8 +266,8 @@ class Document extends EventEmitter {
 
   // detach a block from the graph
   detach(path) {
-    let { parent } = path;
-    let index = this.indexOf(path);
+    const parent = path.parent;
+    const index = this.indexOf(path);
     this._detach(path.row, parent.row);
     return {
       parent,
@@ -276,24 +276,24 @@ class Document extends EventEmitter {
   }
 
   _hasChild(parent_row, row) {
-    let children = this._getChildren(parent_row);
-    let ci = _.findIndex(children, sib => sib === row);
+    const children = this._getChildren(parent_row);
+    const ci = _.findIndex(children, sib => sib === row);
     return ci !== -1;
   }
 
   _removeChild(parent_row, row) {
-    let children = this._getChildren(parent_row);
-    let ci = _.findIndex(children, sib => sib === row);
+    const children = this._getChildren(parent_row);
+    const ci = _.findIndex(children, sib => sib === row);
     errors.assert(ci !== -1);
     children.splice(ci, 1);
     this._setChildren(parent_row, children);
 
-    let parents = this._getParents(row);
-    let pi = _.findIndex(parents, par => par === parent_row);
+    const parents = this._getParents(row);
+    const pi = _.findIndex(parents, par => par === parent_row);
     parents.splice(pi, 1);
     this._setParents(row, parents);
 
-    let info = {
+    const info = {
       parentId: parent_row,
       parentIndex: pi,
       childId: row,
@@ -304,7 +304,7 @@ class Document extends EventEmitter {
   }
 
   _addChild(parent_row, row, index) {
-    let children = this._getChildren(parent_row);
+    const children = this._getChildren(parent_row);
     errors.assert(index <= children.length);
     if (index === -1) {
       children.push(row);
@@ -313,10 +313,10 @@ class Document extends EventEmitter {
     }
     this._setChildren(parent_row, children);
 
-    let parents = this._getParents(row);
+    const parents = this._getParents(row);
     parents.push(parent_row);
     this._setParents(row, parents);
-    let info = {
+    const info = {
       parentId: parent_row,
       parentIndex: parents.length - 1,
       childId: row,
@@ -327,13 +327,13 @@ class Document extends EventEmitter {
   }
 
   _detach(row, parent_row) {
-    let wasLast = (this._getParents(row)).length === 1;
+    const wasLast = (this._getParents(row)).length === 1;
 
     this.emit('beforeDetach', { id: row, parent_id: parent_row, last: wasLast });
-    let info = this._removeChild(parent_row, row);
+    const info = this._removeChild(parent_row, row);
     if (wasLast) {
       this.store.setDetachedParent(row, parent_row);
-      let detached_children = this.store.getDetachedChildren(parent_row);
+      const detached_children = this.store.getDetachedChildren(parent_row);
       detached_children.push(row);
       this.store.setDetachedChildren(parent_row, detached_children);
     }
@@ -342,15 +342,15 @@ class Document extends EventEmitter {
   }
 
   _attach(child_row, parent_row, index = -1) {
-    let isFirst = this._getParents(child_row).length === 0;
+    const isFirst = this._getParents(child_row).length === 0;
     this.emit('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
-    let info = this._addChild(parent_row, child_row, index);
-    let old_detached_parent = this.store.getDetachedParent(child_row);
+    const info = this._addChild(parent_row, child_row, index);
+    const old_detached_parent = this.store.getDetachedParent(child_row);
     if (old_detached_parent !== null) {
       errors.assert(isFirst);
       this.store.setDetachedParent(child_row, null);
-      let detached_children = this.store.getDetachedChildren(old_detached_parent);
-      let ci = _.findIndex(detached_children, sib => sib === child_row);
+      const detached_children = this.store.getDetachedChildren(old_detached_parent);
+      const ci = _.findIndex(detached_children, sib => sib === child_row);
       errors.assert(ci !== -1);
       detached_children.splice(ci, 1);
       this.store.setDetachedChildren(old_detached_parent, detached_children);
@@ -362,11 +362,11 @@ class Document extends EventEmitter {
   _move(child_row, old_parent_row, new_parent_row, index = -1) {
     this.emit('beforeMove', { id: child_row, old_parent: old_parent_row, new_parent: new_parent_row });
 
-    let remove_info = this._removeChild(old_parent_row, child_row);
+    const remove_info = this._removeChild(old_parent_row, child_row);
     if ((old_parent_row === new_parent_row) && (index > remove_info.childIndex)) {
       index = index - 1;
     }
-    let add_info = this._addChild(new_parent_row, child_row, index);
+    const add_info = this._addChild(new_parent_row, child_row, index);
 
     this.emit('afterMove', { id: child_row, old_parent: old_parent_row, new_parent: new_parent_row });
 
@@ -391,7 +391,7 @@ class Document extends EventEmitter {
 
   _attachChildren(parent, new_children, index = -1) {
     for (let i = 0; i < new_children.length; i++) {
-      let child = new_children[i];
+      const child = new_children[i];
       this._attach(child, parent, index);
       if (index >= 0) {
         index += 1;
@@ -407,7 +407,7 @@ class Document extends EventEmitter {
     if (stop === undefined) {
       stop = this.root;
     }
-    let ancestors = [];
+    const ancestors = [];
     while (!row.is(stop)) {
       errors.assert(!row.isRoot(), `Failed to get ancestry for ${row} going up until ${stop}`);
       ancestors.push(row);
@@ -423,22 +423,22 @@ class Document extends EventEmitter {
   // 2. the array of ancestors between common ancestor and row1
   // 3. the array of ancestors between common ancestor and row2
   getCommonAncestor(row1, row2) {
-    let ancestors1 = this.getAncestry(row1);
-    let ancestors2 = this.getAncestry(row2);
-    let commonAncestry = _.takeWhile(
+    const ancestors1 = this.getAncestry(row1);
+    const ancestors2 = this.getAncestry(row2);
+    const commonAncestry = _.takeWhile(
       _.zip(ancestors1, ancestors2),
       pair =>
         (pair[0] !== undefined) && (pair[1] !== undefined) && pair[0].is(pair[1])
     );
-    let common = _.last(commonAncestry)[0];
-    let firstDifference = commonAncestry.length;
+    const common = _.last(commonAncestry)[0];
+    const firstDifference = commonAncestry.length;
     return [common, ancestors1.slice(firstDifference), ancestors2.slice(firstDifference)];
   }
 
   // extends a path by a list of rows going downwards (used when moving blocks around)
   combineAncestry(path, row_path) {
     for (let i = 0; i < row_path.length; i++) {
-      let row = row_path[i];
+      const row = row_path[i];
       path = this.findChild(path, row);
       if (path === undefined) {
         return null;
@@ -466,7 +466,7 @@ class Document extends EventEmitter {
   }
 
   getSiblingRange(path, min_offset, max_offset) {
-    let index = this.indexOf(path);
+    const index = this.indexOf(path);
     return this.getChildRange(path.parent, min_offset + index, max_offset + index);
   }
 
@@ -480,21 +480,21 @@ class Document extends EventEmitter {
   }
 
   _newChild(parent, index = -1) {
-    let row = this.store.getNew();
+    const row = this.store.getNew();
     this._attach(row, parent, index);
     return row;
   }
 
   addChild(path, index = -1) {
-    let row = this._newChild(path.row, index);
+    const row = this._newChild(path.row, index);
     return path.child(row);
   }
 
   orderedLines() {
     // TODO: deal with clones
-    let paths = [];
+    const paths = [];
 
-    let helper = path => {
+    const helper = path => {
       paths.push(path);
       this.getChildren(path).forEach(child => helper(child));
       return null;
@@ -509,35 +509,33 @@ class Document extends EventEmitter {
 
   // important: serialized automatically garbage collects
   serializeRow(row = this.root.row) {
-    let line = this.getLine(row);
-    let text = this.getText(row).join('');
-    let struct = {
+    const line = this.getLine(row);
+    const text = this.getText(row).join('');
+    const struct = {
       text
     };
 
-    for (let i = 0; i < constants.text_properties.length; i++) {
-      let property = constants.text_properties[i];
+    constants.text_properties.forEach((property) => {
       if (_.some(line.map(obj => obj[property]))) {
         struct[property] = line.map(obj => obj[property] ? '.' : ' ').join('');
       }
-    }
+    });
     if (this.collapsed(row)) {
       struct.collapsed = true;
     }
 
-    struct = this.applyHook('serializeRow', struct, {row});
-    return struct;
+    return this.applyHook('serializeRow', struct, {row});
   }
 
   serialize(row = this.root.row, options={}, serialized={}) {
     if (row in serialized) {
-      let struct = serialized[row];
+      const struct = serialized[row];
       struct.id = row;
       return { clone: row };
     }
 
     const struct = this.serializeRow(row);
-    let children = this._getChildren(row).map(
+    const children = this._getChildren(row).map(
       (childrow) => this.serialize(childrow, options, serialized)
     );
     if (children.length) {
@@ -560,13 +558,13 @@ class Document extends EventEmitter {
     if (serialized.clone) {
       // NOTE: this assumes we load in the same order we serialize
       errors.assert(serialized.clone in id_mapping);
-      let row = id_mapping[serialized.clone];
-      let path = parent_path.child(row);
+      const row = id_mapping[serialized.clone];
+      const path = parent_path.child(row);
       this.attachChild(parent_path, path, index);
       return path;
     }
 
-    let children = this.getChildren(parent_path);
+    const children = this.getChildren(parent_path);
     // if parent_path has only one child and it's empty, delete it
     let path;
     if (replace_empty && children.length === 1 && (this.getLine(children[0].row).length === 0)) {
@@ -581,27 +579,25 @@ class Document extends EventEmitter {
       if (serialized.id) {
         id_mapping[serialized.id] = path.row;
       }
-      let line = (serialized.text.split('')).map(char => ({char}));
-      for (let j = 0; j < constants.text_properties.length; j++) {
-        let property = constants.text_properties[j];
+      const line = (serialized.text.split('')).map(char => ({char}));
+      constants.text_properties.forEach((property) => {
         if (serialized[property]) {
-          for (let i in serialized[property]) {
-            let val = serialized[property][i];
+          for (const i in serialized[property]) {
+            const val = serialized[property][i];
             if (val === '.') {
               line[i][property] = true;
             }
           }
         }
-      }
+      });
 
       this.setLine(path.row, line);
       this.store.setCollapsed(path.row, serialized.collapsed);
 
       if (serialized.children) {
-        for (let k = 0; k < serialized.children.length; k++) {
-          let serialized_child = serialized.children[k];
+        serialized.children.forEach((serialized_child) => {
           this.loadTo(serialized_child, path, -1, id_mapping);
-        }
+        });
       }
     }
 
@@ -611,12 +607,10 @@ class Document extends EventEmitter {
   }
 
   load(serialized_rows) {
-    let id_mapping = {};
-    for (let i = 0; i < serialized_rows.length; i++) {
-      let serialized_row = serialized_rows[i];
+    const id_mapping = {};
+    serialized_rows.forEach((serialized_row) => {
       this.loadTo(serialized_row, this.root, -1, id_mapping, true);
-    }
-    return null;
+    });
   }
 }
 

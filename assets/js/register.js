@@ -64,7 +64,7 @@ class Register {
   }
 
   pasteChars(options = {}) {
-    let chars = this.saved;
+    const chars = this.saved;
     if (options.before) {
       return this.session.addCharsAtCursor(chars);
     } else {
@@ -74,16 +74,16 @@ class Register {
   }
 
   pasteSerializedRows(options = {}) {
-    let { path } = this.session.cursor;
-    let { parent } = path;
-    let index = this.session.document.indexOf(path);
+    const path = this.session.cursor.path;
+    const parent = path.parent;
+    const index = this.session.document.indexOf(path);
 
-    let serialized_rows = this.saved;
+    const serialized_rows = this.saved;
 
     if (options.before) {
       return this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
     } else {
-      let children = this.session.document.getChildren(path);
+      const children = this.session.document.getChildren(path);
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
         return this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
       } else {
@@ -93,16 +93,16 @@ class Register {
   }
 
   pasteClonedRows(options = {}) {
-    let { path } = this.session.cursor;
-    let { parent } = path;
-    let index = this.session.document.indexOf(path);
+    const path = this.session.cursor.path;
+    const parent = path.parent;
+    const index = this.session.document.indexOf(path);
 
-    let cloned_rows = this.saved;
+    const cloned_rows = this.saved;
 
     if (options.before) {
       return this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});
     } else {
-      let children = this.session.document.getChildren(path);
+      const children = this.session.document.getChildren(path);
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
         return this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
       } else {

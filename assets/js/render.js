@@ -5,7 +5,7 @@ import _ from 'lodash';
 
 import * as constants from './constants';
 import * as utils from './utils';
-import * as Logger from './logger';
+import logger from './logger';
 import * as Plugins from './plugins';
 import * as Modes from './modes';
 const MODES = Modes.modes;
@@ -236,7 +236,7 @@ export function renderSession(session, options = {}) {
   const patches = virtualDom.diff(session.vtree, vtree);
   session.vnode = virtualDom.patch(session.vnode, patches);
   session.vtree = vtree;
-  Logger.logger.debug('Rendering: ', !!options.handle_clicks, (Date.now()-t));
+  logger.debug('Rendering: ', !!options.handle_clicks, (Date.now()-t));
 
   const cursorDiv = $(`.${getCursorClass(options.cursorBetween)}`, session.mainDiv)[0];
   if (cursorDiv) {
@@ -414,7 +414,7 @@ export function virtualRenderLine(session, path, options = {}) {
           highlights[j] = true;
         }
       } else {
-        Logger.logger.warn('Multiline not yet implemented');
+        logger.warn('Multiline not yet implemented');
       }
     }
 

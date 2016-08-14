@@ -26,7 +26,7 @@ import _ from 'lodash';
 import * as errors from './errors';
 
 // validate inserting id as a child of parent_id
-let validateRowInsertion = function(session, parent_id, id, options={}) {
+const validateRowInsertion = function(session, parent_id, id, options={}) {
   // check that there won't be doubled siblings
   if (!options.noSiblingCheck) {
     if (session.document._hasChild(parent_id, id)) {
@@ -47,7 +47,7 @@ let validateRowInsertion = function(session, parent_id, id, options={}) {
   return true;
 };
 
-class Mutation {
+export default class Mutation {
   str() {
     return '';
   }
@@ -68,7 +68,7 @@ class Mutation {
   }
 }
 
-class AddChars extends Mutation {
+export class AddChars extends Mutation {
   constructor(row, col, chars) {
     super();
     this.row = row;
@@ -102,7 +102,7 @@ class AddChars extends Mutation {
   }
 }
 
-class DelChars extends Mutation {
+export class DelChars extends Mutation {
   constructor(row, col, nchars) {
     super();
     this.row = row;
@@ -138,7 +138,7 @@ class DelChars extends Mutation {
   }
 }
 
-class ChangeChars extends Mutation {
+export class ChangeChars extends Mutation {
   constructor(row, col, nchars, transform, newChars) {
     super();
     this.row = row;
@@ -172,11 +172,11 @@ class ChangeChars extends Mutation {
     session.document.deleteChars(this.row, this.col, this.ncharsDeleted);
     return session.document.writeChars(this.row, this.col, this.newChars);
   }
-}
 
   // doesn't move cursors
+}
 
-class MoveBlock extends Mutation {
+export class MoveBlock extends Mutation {
   constructor(path, parent, index) {
     super();
     this.path = path;
@@ -195,13 +195,13 @@ class MoveBlock extends Mutation {
 
   validate(session) {
     // if parent is the same, don't do sibling clone validation
-    let sameParent = this.parent.row === this.old_parent.row;
+    const sameParent = this.parent.row === this.old_parent.row;
     return (validateRowInsertion(session, this.parent.row, this.path.row, {noSiblingCheck: sameParent}));
   }
 
   mutate(session) {
     errors.assert((!this.path.isRoot()), 'Cannot detach root');
-    let info = session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
+    const info = session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
     return this.old_index = info.old.childIndex;
   }
 
@@ -212,7 +212,7 @@ class MoveBlock extends Mutation {
   }
 
   moveCursor(cursor) {
-    let walk = cursor.path.walkFrom(this.path);
+    const walk = cursor.path.walkFrom(this.path);
     if (walk === null) {
       return;
     }
@@ -222,7 +222,7 @@ class MoveBlock extends Mutation {
   }
 }
 
-class AttachBlocks extends Mutation {
+export class AttachBlocks extends Mutation {
   constructor(parent, cloned_rows, index, options) {
     super();
     this.parent = parent;
@@ -242,7 +242,7 @@ class AttachBlocks extends Mutation {
 
   validate(session) {
     for (let i = 0; i < this.cloned_rows.length; i++) {
-      let row = this.cloned_rows[i];
+      const row = this.cloned_rows[i];
       if (!(validateRowInsertion(session, this.parent, row))) {
         return false;
       }
@@ -263,7 +263,7 @@ class AttachBlocks extends Mutation {
   }
 }
 
-class DetachBlocks extends Mutation {
+export class DetachBlocks extends Mutation {
   constructor(parent, index, nrows, options) {
     super();
     this.parent = parent;
@@ -281,7 +281,7 @@ class DetachBlocks extends Mutation {
       .filter((sib => sib !== null));
 
     for (let i = 0; i < this.deleted.length; i++) {
-      let row = this.deleted[i];
+      const row = this.deleted[i];
       session.document._detach(row, this.parent);
     }
 
@@ -291,7 +291,7 @@ class DetachBlocks extends Mutation {
       this.created_index = session.document._childIndex(this.parent, this.created);
     }
 
-    let children = session.document._getChildren(this.parent);
+    const children = session.document._getChildren(this.parent);
 
     // note: next is a path, relative to the parent
 
@@ -309,8 +309,8 @@ class DetachBlocks extends Mutation {
           }
         }
       } else {
-        let child = children[this.index - 1];
-        let walk = session.document.walkToLastVisible(child);
+        const child = children[this.index - 1];
+        const walk = session.document.walkToLastVisible(child);
         next = [child].concat(walk);
       }
     }
@@ -319,7 +319,7 @@ class DetachBlocks extends Mutation {
   }
 
   rewind(/* session */) {
-    let mutations = [];
+    const mutations = [];
     if (this.created !== null) {
       mutations.push(new DetachBlocks(this.parent, this.created_index, 1, {noNew: true}));
     }
@@ -328,24 +328,23 @@ class DetachBlocks extends Mutation {
   }
 
   remutate(session) {
-    for (let i = 0; i < this.deleted.length; i++) {
-      let row = this.deleted[i];
+    this.deleted.forEach((row) => {
       session.document._detach(row, this.parent);
-    }
+    });
     if (this.created !== null) {
       return session.document._attach(this.created, this.parent, this.created_index);
     }
   }
 
   moveCursor(cursor) {
-    let [walk, ancestor] = cursor.path.shedUntil(this.parent);
+    const [walk, ancestor] = cursor.path.shedUntil(this.parent);
     if (walk === null) {
       return;
     }
     if (walk.length === 0) {
       return;
     }
-    let child = walk[0];
+    const child = walk[0];
     if ((this.deleted.indexOf(child)) === -1) {
       return;
     }
@@ -354,7 +353,7 @@ class DetachBlocks extends Mutation {
 }
 
 // creates new blocks (as opposed to attaching ones that already exist)
-class AddBlocks extends Mutation {
+export class AddBlocks extends Mutation {
   constructor(parent, index, serialized_rows) {
     super();
     this.parent = parent;
@@ -372,16 +371,15 @@ class AddBlocks extends Mutation {
   }
 
   mutate(session) {
-    let { index } = this;
+    let index = this.index;
 
-    let id_mapping = {};
+    const id_mapping = {};
     this.added_rows = [];
-    for (let i = 0; i < this.serialized_rows.length; i++) {
-      let serialized_row = this.serialized_rows[i];
-      let row = session.document.loadTo(serialized_row, this.parent, index, id_mapping);
+    this.serialized_rows.forEach((serialized_row) => {
+      const row = session.document.loadTo(serialized_row, this.parent, index, id_mapping);
       this.added_rows.push(row);
       index += 1;
-    }
+    });
     return null;
   }
 
@@ -392,17 +390,16 @@ class AddBlocks extends Mutation {
   }
 
   remutate(session) {
-    let { index } = this;
-    for (let i = 0; i < this.added_rows.length; i++) {
-      let sib = this.added_rows[i];
+    let index = this.index;
+    this.added_rows.forEach((sib) => {
       session.document.attachChild(this.parent, sib, index);
       index += 1;
-    }
+    });
     return null;
   }
 }
 
-class ToggleBlock extends Mutation {
+export class ToggleBlock extends Mutation {
   constructor(row) {
     super();
     this.row = row;
@@ -421,14 +418,3 @@ class ToggleBlock extends Mutation {
   // TODO: if a cursor is within the toggle block and their
   // viewRoot isn't, do a moveCursor?
 }
-
-export { Mutation };
-
-export { AddChars };
-export { DelChars };
-export { ChangeChars };
-export { AddBlocks };
-export { DetachBlocks };
-export { AttachBlocks };
-export { MoveBlock };
-export { ToggleBlock };
