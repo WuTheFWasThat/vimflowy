@@ -41,6 +41,7 @@ let renderLine = function(lineData, options = {}) {
   let line = [];
 
   // add cursor if at end
+  // NOTE: this doesn't seem to work for the breadcrumbs, e.g. try visual selecting word at end
   if (lineData.length in options.cursors) {
     lineData.push({char: cursorChar});
   }
@@ -411,7 +412,9 @@ const virtualRenderLine = function(session, path, options = {}) {
 
     if (session.anchor && !session.lineSelect) {
       if (session.anchor.path && path.is(session.anchor.path)) {
-        for (let j = session.cursor.col; j <= session.anchor.col; j++) {
+        const start = Math.min(session.cursor.col, session.anchor.col);
+        const end = Math.max(session.cursor.col, session.anchor.col);
+        for (let j = start; j <= end; j++) {
           highlights[j] = true;
         }
       } else {
