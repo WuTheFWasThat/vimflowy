@@ -69,8 +69,8 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
         return {
           contents: this.session.document.getLine(path.row),
           renderOptions: { highlights },
-          fn: () => {
-            this.session.zoomInto(path);
+          fn: async () => {
+            await this.session.zoomInto(path);
             return this.session.cursor.setPath(path);
           }
         };
@@ -87,7 +87,7 @@ const CMD_MENU_SELECT = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_SELECT, {
   description: 'Select current menu selection',
 }, async function() {
-  this.session.menu.select();
+  await this.session.menu.select();
   return this.session.setMode(MODES.NORMAL);
 });
 

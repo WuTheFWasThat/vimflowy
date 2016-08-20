@@ -261,10 +261,10 @@ function virtualRenderSession(session, options = {}) {
     const m_options = {};
     if (session.mode === MODES.NORMAL && !isLast) {
       m_options.className = 'theme-text-link';
-      m_options.onclick = function() {
-        session.zoomInto(path);
+      m_options.onclick = async () => {
+        await session.zoomInto(path);
         session.save();
-        return renderSession(session);
+        renderSession(session);
       };
     }
     let text;

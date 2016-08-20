@@ -61,11 +61,11 @@ export default class Menu {
     }
   }
 
-  select() {
+  async select() {
     if (!this.results.length) {
       return;
     }
     const result = this.results[this.selection];
-    return result.fn();
+    return await result.fn();
   }
 }

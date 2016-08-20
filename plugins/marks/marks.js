@@ -19,7 +19,6 @@ import * as basic_defs from '../../assets/js/definitions/basics';
 
 class MarksPlugin {
   constructor(api) {
-    this.goMark = this.goMark.bind(this);
     this.api = api;
     this.enableAPI();
   }
@@ -168,7 +167,7 @@ class MarksPlugin {
         if (mark in allMarks) {
           const row = allMarks[mark];
           const path = this.session.document.canonicalPath(row);
-          this.session.zoomInto(path);
+          await this.session.zoomInto(path);
           return true;
         } else {
           return false;
@@ -227,7 +226,7 @@ class MarksPlugin {
                 );
                 return contents;
               },
-              fn: () => this.session.zoomInto(path)
+              fn: async () => await this.session.zoomInto(path)
             };
           }
         );
@@ -243,7 +242,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
       description: 'Delete last character (i.e. backspace key)',
     }, async function() {
-      return that.marksession.deleteAtCursor();
+      return await that.marksession.deleteAtCursor();
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
@@ -302,7 +301,11 @@ class MarksPlugin {
             errors.assert((markpath !== null));
             for (let i = word_info.start; i <= word_info.end; i++) {
               line[i].renderOptions.type = 'a';
-              line[i].renderOptions.onclick = this.goMark.bind(this, markpath);
+              line[i].renderOptions.onclick = async () => {
+                await this.session.zoomInto(markpath);
+                this.session.save();
+                this.session.render();
+              };
             }
           }
         }
@@ -430,12 +433,6 @@ class MarksPlugin {
     }
 
     return null;
-  }
-
-  goMark(path) {
-    this.session.zoomInto(path);
-    this.session.save();
-    return this.session.render();
   }
 }
 

@@ -204,9 +204,9 @@ class TestCase {
   }
 
   expectExport(fileExtension, expected) {
-    return this._chain(() => {
-      let export_ = this.session.exportContent(fileExtension);
-      this._expectEqual(export_, expected,
+    return this._chain(async () => {
+      let content = await this.session.exportContent(fileExtension);
+      this._expectEqual(content, expected,
                         'Unexpected export content');
     });
   }

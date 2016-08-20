@@ -13,6 +13,6 @@ const CMD_EXPORT = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_EXPORT, {
   description: 'Export as Json file',
 }, async function() {
-  return this.session.exportFile('json');
+  return await this.session.exportFile('json');
 });
 

@@ -197,7 +197,7 @@ export default class Session extends EventEmitter {
   }
 
   // TODO: make this use replace_empty = true?
-  importContent(content, mimetype) {
+  async importContent(content, mimetype) {
     const root = this.parseContent(content, mimetype);
     if (!root) { return false; }
     const { path } = this.cursor;
@@ -211,7 +211,7 @@ export default class Session extends EventEmitter {
     return true;
   }
 
-  exportContent(mimetype) {
+  async exportContent(mimetype) {
     const jsonContent = this.document.serialize();
     if (mimetype === 'application/json') {
       delete jsonContent.viewRoot;
@@ -241,16 +241,16 @@ export default class Session extends EventEmitter {
     }
   }
 
-  exportFile(type = 'json') {
+  async exportFile(type = 'json') {
     this.showMessage('Exporting...');
     const filename = this.document.name === '' ?
                    `vimflowy.${type}` :
                    `${this.document.name}.${type}` ;
     // Infer mimetype from file extension
     const mimetype = utils.mimetypeLookup(filename);
-    const content = this.exportContent(mimetype);
+    const content = await this.exportContent(mimetype);
     utils.download_file(filename, mimetype, content);
-    return this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
+    this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
   }
 
   //################
@@ -262,7 +262,7 @@ export default class Session extends EventEmitter {
     this.history = [{
       index: 0
     }];
-    return this.historyIndex = 0; // index into indices
+    this.historyIndex = 0; // index into indices
   }
 
   save() {
@@ -282,18 +282,18 @@ export default class Session extends EventEmitter {
     };
 
     this.historyIndex += 1;
-    return this.history.push({
+    this.history.push({
       index: this.mutations.length
     });
   }
 
-  restoreViewState(state) {
+  async _restoreViewState(state) {
     this.cursor.from(state.cursor);
     this.fixCursorForMode();
-    return this.changeView(state.viewRoot);
+    await this.changeView(state.viewRoot);
   }
 
-  undo() {
+  async undo() {
     if (this.historyIndex > 0) {
       const oldState = this.history[this.historyIndex];
       this.historyIndex -= 1;
@@ -312,11 +312,11 @@ export default class Session extends EventEmitter {
       }
 
       logger.debug('> END UNDO');
-      return this.restoreViewState(newState.before);
+      await this._restoreViewState(newState.before);
     }
   }
 
-  redo() {
+  async redo() {
     if (this.historyIndex < this.history.length - 1) {
       const oldState = this.history[this.historyIndex];
       this.historyIndex += 1;
@@ -334,7 +334,7 @@ export default class Session extends EventEmitter {
         mutation.moveCursor(this.cursor);
       }
       logger.debug('> END REDO');
-      return this.restoreViewState(oldState.after);
+      await this._restoreViewState(oldState.after);
     }
   }
 
@@ -485,7 +485,7 @@ export default class Session extends EventEmitter {
   // View root
   //#################
 
-  _changeViewRoot(path) {
+  async changeViewRoot(path) {
     this.viewRoot = path;
     return this.document.store.setLastViewRoot(path.getAncestry());
   }
@@ -498,7 +498,7 @@ export default class Session extends EventEmitter {
     return this.jumpIndex = 0; // index into jump history
   }
 
-  addToJumpHistory(jump_fn) {
+  _addToJumpHistory(jump_fn) {
     const jump = this.jumpHistory[this.jumpIndex];
     jump.cursor_after = this.cursor.clone();
 
@@ -510,11 +510,11 @@ export default class Session extends EventEmitter {
       viewRoot: this.viewRoot,
       cursor_before: this.cursor.clone()
     });
-    return this.jumpIndex += 1;
+    this.jumpIndex += 1;
   }
 
   // try going to jump, return true if succeeds
-  tryJump(jump) {
+  async tryJump(jump) {
     if (jump.viewRoot.row === this.viewRoot.row) {
       return false; // not moving, don't jump
     }
@@ -525,7 +525,7 @@ export default class Session extends EventEmitter {
 
     const children = this.document.getChildren(jump.viewRoot);
 
-    this._changeViewRoot(jump.viewRoot);
+    await this.changeViewRoot(jump.viewRoot);
     if (children.length) {
       this.cursor.setPath(children[0]);
     } else {
@@ -542,7 +542,7 @@ export default class Session extends EventEmitter {
     return true;
   }
 
-  jumpPrevious() {
+  async jumpPrevious() {
     let jumpIndex = this.jumpIndex;
 
     const jump = this.jumpHistory[jumpIndex];
@@ -554,14 +554,14 @@ export default class Session extends EventEmitter {
       }
       jumpIndex -= 1;
       const oldjump = this.jumpHistory[jumpIndex];
-      if (this.tryJump(oldjump)) {
+      if (await this.tryJump(oldjump)) {
         this.jumpIndex = jumpIndex;
         return true;
       }
     }
   }
 
-  jumpNext() {
+  async jumpNext() {
     let jumpIndex = this.jumpIndex;
 
     const jump = this.jumpHistory[jumpIndex];
@@ -573,7 +573,7 @@ export default class Session extends EventEmitter {
       }
       jumpIndex += 1;
       const newjump = this.jumpHistory[jumpIndex];
-      if (this.tryJump(newjump)) {
+      if (await this.tryJump(newjump)) {
         this.jumpIndex = jumpIndex;
         return true;
       }
@@ -583,18 +583,18 @@ export default class Session extends EventEmitter {
   // try to change the view root to row
   // fails if there is no child
   // records in jump history
-  changeView(path) {
+  async changeView(path) {
     if (path.row === this.viewRoot.row) {
       return; // not moving, do nothing
     }
-    return this.addToJumpHistory(() => {
-      return this._changeViewRoot(path);
+    await this._addToJumpHistory(async () => {
+      return await this.changeViewRoot(path);
     });
   }
 
   // try to zoom into newroot, updating the cursor
-  zoomInto(newroot) {
-    this.changeView(newroot);
+  async zoomInto(newroot) {
+    await this.changeView(newroot);
     let newrow = this.youngestVisibleAncestor(this.cursor.path);
     if (newrow === null) { // not visible, need to reset cursor
       newrow = newroot;
@@ -602,40 +602,40 @@ export default class Session extends EventEmitter {
     return this.cursor.setPath(newrow);
   }
 
-  zoomOut() {
+  async zoomOut() {
     if (this.viewRoot.row !== this.document.root.row) {
       const { parent } = this.viewRoot;
-      return this.zoomInto(parent);
+      return await this.zoomInto(parent);
     }
   }
 
-  zoomIn() {
+  async zoomIn() {
     if (this.cursor.path.is(this.viewRoot)) {
       return false;
     }
     const newroot = this.oldestVisibleAncestor(this.cursor.path);
-    if (this.zoomInto(newroot)) {
+    if (await this.zoomInto(newroot)) {
       return true;
     }
     return false;
   }
 
-  zoomDown() {
+  async zoomDown() {
     const sib = this.document.getSiblingAfter(this.viewRoot);
     if (sib === null) {
       this.showMessage('No next sibling to zoom down to', {text_class: 'error'});
       return;
     }
-    return this.zoomInto(sib);
+    return await this.zoomInto(sib);
   }
 
-  zoomUp() {
+  async zoomUp() {
     const sib = this.document.getSiblingBefore(this.viewRoot);
     if (sib === null) {
       this.showMessage('No previous sibling to zoom up to', {text_class: 'error'});
       return;
     }
-    return this.zoomInto(sib);
+    return await this.zoomInto(sib);
   }
 
   //#################
@@ -809,7 +809,7 @@ export default class Session extends EventEmitter {
     return this.toggleProperty(property, null, cursor1.row, cursor1.col, cursor2.col - cursor1.col + offset);
   }
 
-  newLineBelow(options = {}) {
+  async newLineBelow(options = {}) {
     options.setCursor = 'first';
 
     if (this.cursor.path.is(this.viewRoot)) {
@@ -829,7 +829,7 @@ export default class Session extends EventEmitter {
     }
   }
 
-  newLineAbove() {
+  async newLineAbove() {
     if (this.cursor.path.is(this.viewRoot)) {
       return;
     }
@@ -845,15 +845,15 @@ export default class Session extends EventEmitter {
   // If enter is at the end:
   //     insert a new node after
   //     if the node has children, this is the new first child
-  newLineAtCursor() {
+  async newLineAtCursor() {
     if (this.cursor.col === this.document.getLength(this.cursor.row)) {
-      return this.newLineBelow({cursorOptions: {keepProperties: true}});
+      return await this.newLineBelow({cursorOptions: {keepProperties: true}});
     } else {
       const mutation = new mutations.DelChars(this.cursor.row, 0, this.cursor.col);
       this.do(mutation);
       const path = this.cursor.path;
 
-      this.newLineAbove();
+      await this.newLineAbove();
       // cursor now is at inserted path, add the characters
       this.addCharsAfterCursor(mutation.deletedChars);
       // restore cursor
@@ -864,7 +864,7 @@ export default class Session extends EventEmitter {
   // can only join if either:
   // - first is previous sibling of second, AND has no children
   // - second is first child of first, AND has no children
-  joinRows(first, second, options = {}) {
+  async _joinRows(first, second, options = {}) {
     let addDelimiter = false;
     const firstLine = this.document.getLine(first.row);
     const secondLine = this.document.getLine(second.row);
@@ -880,7 +880,7 @@ export default class Session extends EventEmitter {
 
     if (!this.document.hasChildren(second.row)) {
       this.cursor.setPosition(first, -1);
-      this.delBlock(second, {noNew: true, noSave: true});
+      await this.delBlock(second, {noNew: true, noSave: true});
       if (addDelimiter) {
         const mutation = new mutations.AddChars(first.row, firstLine.length, [{ char: options.delimiter }]);
         this.do(mutation);
@@ -902,7 +902,7 @@ export default class Session extends EventEmitter {
     }
 
     this.cursor.setPosition(second, 0);
-    this.delBlock(first, {noNew: true, noSave: true});
+    await this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter) {
       const mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
       this.do(mutation);
@@ -917,16 +917,16 @@ export default class Session extends EventEmitter {
     return true;
   }
 
-  joinAtCursor() {
+  async joinAtCursor() {
     const path = this.cursor.path;
     const sib = this.nextVisible(path);
     if (sib !== null) {
-      return this.joinRows(path, sib, {delimiter: ' '});
+      return await this._joinRows(path, sib, {delimiter: ' '});
     }
   }
 
   // implements proper "backspace" behavior
-  deleteAtCursor() {
+  async deleteAtCursor() {
     if (this.cursor.col > 0) {
       this.delCharsBeforeCursor(1, {cursor: {pastEnd: true}});
       return true;
@@ -938,18 +938,18 @@ export default class Session extends EventEmitter {
       return false;
     }
 
-    if (this.joinRows(sib, path)) {
+    if (await this._joinRows(sib, path)) {
       return true;
     }
 
     return false;
   }
 
-  delBlock(path, options) {
-    return this.delBlocks(path.parent.row, this.document.indexOf(path), 1, options);
+  async delBlock(path, options) {
+    return await this.delBlocks(path.parent.row, this.document.indexOf(path), 1, options);
   }
 
-  delBlocks(parent, index, nrows, options = {}) {
+  async delBlocks(parent, index, nrows, options = {}) {
     const mutation = new mutations.DetachBlocks(parent, index, nrows, options);
     this.do(mutation);
     if (!options.noSave) {
@@ -957,14 +957,14 @@ export default class Session extends EventEmitter {
     }
     if (!this.isVisible(this.cursor.path)) {
       // view root got deleted
-      return this.zoomOut();
+      return await this.zoomOut();
     }
   }
 
-  delBlocksAtCursor(nrows, options = {}) {
+  async delBlocksAtCursor(nrows, options = {}) {
     const parent = this.cursor.path.parent;
     const index = this.document.indexOf(this.cursor.path);
-    return this.delBlocks(parent.row, index, nrows, options);
+    return await this.delBlocks(parent.row, index, nrows, options);
   }
 
   addBlocks(parent, index = -1, serialized_rows, options = {}) {

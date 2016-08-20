@@ -15,14 +15,14 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
   for (let j = 0; j < this.repeat; j++) {
-    motion(this.session.cursor, {});
+    await motion(this.session.cursor, {});
   }
   return this.keyStream.forget();
 });
 keyDefinitions.registerAction([MODES.INSERT], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
-  return motion(this.session.cursor, {pastEnd: true});
+  return await motion(this.session.cursor, {pastEnd: true});
 });
 keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
   description: 'Move the cursor',
@@ -30,7 +30,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
   // this is necessary until we figure out multiline
   const tmp = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
-    motion(tmp, {pastEnd: true});
+    await motion(tmp, {pastEnd: true});
   }
 
   if (!tmp.path.is(this.session.cursor.path)) { // only allow same-row movement
@@ -43,14 +43,14 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
   for (let j = 0; j < this.repeat; j++) {
-    motion(this.session.cursor, {pastEnd: true});
+    await motion(this.session.cursor, {pastEnd: true});
   }
   return null;
 });
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
-  return motion(this.session.menu.session.cursor, {pastEnd: true});
+  return await motion(this.session.menu.session.cursor, {pastEnd: true});
 });
 
 const CMD_HELP = keyDefinitions.registerCommand({
@@ -139,7 +139,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_LINE_BELOW, {
   description: 'Insert on new line after current line',
 }, async function() {
   this.session.setMode(MODES.INSERT);
-  return this.session.newLineBelow();
+  return await this.session.newLineBelow();
 });
 
 const CMD_INSERT_LINE_ABOVE = keyDefinitions.registerCommand({
@@ -152,7 +152,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_LINE_ABOVE, {
   description: 'Insert on new line before current line',
 }, async function() {
   this.session.setMode(MODES.INSERT);
-  return this.session.newLineAbove();
+  return await this.session.newLineAbove();
 });
 
 const CMD_GO = keyDefinitions.registerCommand({
@@ -186,7 +186,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_PARENT], {
   description: 'Go to the parent of current line',
   multirow: true
 }, function() {
-  return async (cursor, options) => cursor.parent(options);
+  return async (cursor, options) => await cursor.parent(options);
 });
 
 const CMD_CLONE = keyDefinitions.registerCommand({
@@ -207,7 +207,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_CLONE], {
     const newPath = this.session.document.nextClone(cursor.path);
     cursor.setPath(newPath);
     if (!this.session.isVisible(newPath)) {
-      return this.session.zoomInto(newPath);
+      return await this.session.zoomInto(newPath);
     }
   };
 });
@@ -236,7 +236,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_LINK], {
 
 const visual_line_mode_delete_fn = () =>
   async function() {
-    this.session.delBlocks(this.parent.row, this.row_start_i, this.num_rows, {addNew: false});
+    await this.session.delBlocks(this.parent.row, this.row_start_i, this.num_rows, {addNew: false});
     this.session.setMode(MODES.NORMAL);
     return this.keyStream.save();
   }
@@ -305,7 +305,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_DELETE, {
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_DELETE], {
   description: 'Delete blocks'
 }, async function() {
-  this.session.delBlocksAtCursor(this.repeat, {addNew: false});
+  await this.session.delBlocksAtCursor(this.repeat, {addNew: false});
   return this.keyStream.save();
 });
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
@@ -313,7 +313,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
 }, async function(motion) {
   const cursor = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
-    motion(cursor, {pastEnd: true, pastEndWord: true});
+    await motion(cursor, {pastEnd: true, pastEndWord: true});
   }
 
   this.session.deleteBetween(this.session.cursor, cursor, { yank: true });
@@ -349,7 +349,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_CHANGE, {
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_CHANGE, {
   description: 'Change',
 }, async function() {
-  this.session.delBlocks(this.parent.row, this.row_start_i, this.num_rows, {addNew: true});
+  await this.session.delBlocks(this.parent.row, this.row_start_i, this.num_rows, {addNew: true});
   return this.session.setMode(MODES.INSERT);
 });
 
@@ -369,7 +369,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_RECURSIVE], {
   description: 'Delete blocks, and enter insert mode'
 }, async function() {
   this.session.setMode(MODES.INSERT);
-  return this.session.delBlocksAtCursor(this.repeat, {addNew: true});
+  return await this.session.delBlocksAtCursor(this.repeat, {addNew: true});
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
@@ -377,7 +377,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
 }, async function(motion) {
   const cursor = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
-    motion(cursor, {pastEnd: true, pastEndWord: true});
+    await motion(cursor, {pastEnd: true, pastEndWord: true});
   }
   this.session.setMode(MODES.INSERT);
   return this.session.deleteBetween(this.session.cursor, cursor, {yank: true});
@@ -435,7 +435,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
 }, async function(motion) {
   const cursor = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
-    motion(cursor, {pastEnd: true, pastEndWord: true});
+    await motion(cursor, {pastEnd: true, pastEndWord: true});
   }
 
   this.session.yankBetween(this.session.cursor, cursor, {});
@@ -526,13 +526,13 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_DELETE_LAST_CHAR, {
 keyDefinitions.registerAction([MODES.INSERT], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, async function() {
-  return this.session.deleteAtCursor();
+  return await this.session.deleteAtCursor();
 });
 
 keyDefinitions.registerAction([MODES.SEARCH], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, async function() {
-  return this.session.menu.session.deleteAtCursor();
+  return await this.session.menu.session.deleteAtCursor();
 });
 
 const CMD_CHANGE_CHAR = keyDefinitions.registerCommand({
@@ -620,7 +620,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_LAST_WORD
   }
   this.session.deleteBetween(
     this.session.cursor,
-    this.session.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}),
+    await this.session.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}),
     options
   );
   if (this.mode === MODES.NORMAL) {
@@ -670,7 +670,7 @@ const CMD_JOIN_LINE = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_JOIN_LINE, {
   description: 'Join current line with line below',
 }, async function() {
-  this.session.joinAtCursor();
+  await this.session.joinAtCursor();
   return this.keyStream.save();
 });
 
@@ -684,7 +684,7 @@ const CMD_SPLIT_LINE = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SPLIT_LINE, {
   description: 'Split line at cursor (i.e. enter key)',
 }, async function() {
-  this.session.newLineAtCursor();
+  await this.session.newLineAtCursor();
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }

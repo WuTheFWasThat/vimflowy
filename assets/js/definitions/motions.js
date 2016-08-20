@@ -37,7 +37,7 @@ keyDefinitions.registerMotion(CMD_UP, {
   description: 'Move cursor up',
   multirow: true
 }, function() {
-  return async (cursor, options) => cursor.up(options);
+  return async (cursor, options) => await cursor.up(options);
 });
 
 const CMD_DOWN = keyDefinitions.registerCommand({
@@ -51,7 +51,7 @@ keyDefinitions.registerMotion(CMD_DOWN, {
   description: 'Move cursor down',
   multirow: true
 }, function() {
-  return async (cursor, options) => cursor.down(options);
+  return async (cursor, options) => await cursor.down(options);
 });
 
 const CMD_HOME = keyDefinitions.registerCommand({
@@ -92,7 +92,8 @@ const CMD_BEGINNING_WORD = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_BEGINNING_WORD, {
   description: 'Move cursor to the first word-beginning before it',
 }, function() {
-  return async (cursor, options) => cursor.beginningWord({cursor: options});
+  return async (cursor, options) =>
+    await cursor.beginningWord({cursor: options});
 });
 
 const CMD_END_WORD = keyDefinitions.registerCommand({
@@ -104,7 +105,8 @@ const CMD_END_WORD = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_END_WORD, {
   description: 'Move cursor to the first word-ending after it',
 }, function() {
-  return async (cursor, options) => cursor.endWord({cursor: options});
+  return async (cursor, options) =>
+    await cursor.endWord({cursor: options});
 });
 
 const CMD_NEXT_WORD = keyDefinitions.registerCommand({
@@ -117,7 +119,8 @@ const CMD_NEXT_WORD = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_NEXT_WORD, {
   description: 'Move cursor to the beginning of the next word',
 }, function() {
-  return async (cursor, options) => cursor.nextWord({cursor: options});
+  return async (cursor, options) =>
+    await cursor.nextWord({cursor: options});
 });
 
 const CMD_BEGINNING_WWORD = keyDefinitions.registerCommand({
@@ -129,7 +132,8 @@ const CMD_BEGINNING_WWORD = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_BEGINNING_WWORD, {
   description: 'Move cursor to the first Word-beginning before it',
 }, function() {
-  return async (cursor, options) => cursor.beginningWord({cursor: options, whitespaceWord: true});
+  return async (cursor, options) =>
+    await cursor.beginningWord({cursor: options, whitespaceWord: true});
 });
 
 const CMD_END_WWORD = keyDefinitions.registerCommand({
@@ -141,7 +145,8 @@ const CMD_END_WWORD = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_END_WWORD, {
   description: 'Move cursor to the first Word-ending after it',
 }, function() {
-  return async (cursor, options) => cursor.endWord({cursor: options, whitespaceWord: true});
+  return async (cursor, options) =>
+    await cursor.endWord({cursor: options, whitespaceWord: true});
 });
 
 const CMD_NEXT_WWORD = keyDefinitions.registerCommand({
@@ -153,7 +158,8 @@ const CMD_NEXT_WWORD = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_NEXT_WWORD, {
   description: 'Move cursor to the beginning of the next Word',
 }, function() {
-  return async (cursor, options) => cursor.nextWord({cursor: options, whitespaceWord: true});
+  return async (cursor, options) =>
+    await cursor.nextWord({cursor: options, whitespaceWord: true});
 });
 
 const CMD_FIND_NEXT_CHAR = keyDefinitions.registerCommand({
@@ -170,7 +176,8 @@ keyDefinitions.registerMotion(CMD_FIND_NEXT_CHAR, {
     this.keyStream.wait();
     return null;
   }
-  return async (cursor, options) => cursor.findNextChar(key, {cursor: options});
+  return async (cursor, options) =>
+    await cursor.findNextChar(key, {cursor: options});
 });
 
 const CMD_FIND_PREV_CHAR = keyDefinitions.registerCommand({
@@ -187,7 +194,8 @@ keyDefinitions.registerMotion(CMD_FIND_PREV_CHAR, {
     this.keyStream.wait();
     return null;
   }
-  return async (cursor, options) => cursor.findPrevChar(key, {cursor: options});
+  return async (cursor, options) =>
+    await cursor.findPrevChar(key, {cursor: options});
 });
 
 const CMD_TO_NEXT_CHAR = keyDefinitions.registerCommand({
@@ -204,7 +212,8 @@ keyDefinitions.registerMotion(CMD_TO_NEXT_CHAR, {
     this.keyStream.wait();
     return null;
   }
-  return async (cursor, options) => cursor.findNextChar(key, {cursor: options, beforeFound: true});
+  return async (cursor, options) =>
+    await cursor.findNextChar(key, {cursor: options, beforeFound: true});
 });
 
 const CMD_TO_PREV_CHAR = keyDefinitions.registerCommand({
@@ -221,7 +230,8 @@ keyDefinitions.registerMotion(CMD_TO_PREV_CHAR, {
     this.keyStream.wait();
     return null;
   }
-  return async (cursor, options) => cursor.findPrevChar(key, {cursor: options, beforeFound: true});
+  return async (cursor, options) =>
+    await cursor.findPrevChar(key, {cursor: options, beforeFound: true});
 });
 
 // NOTE: for normal mode, this is done within the CMD_GO tree

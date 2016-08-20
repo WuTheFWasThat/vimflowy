@@ -13,7 +13,7 @@ const CMD_ZOOM_UP = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_UP, {
   description: 'Zoom to view root\'s previous sibling',
 }, async function() {
-  this.session.zoomUp();
+  await this.session.zoomUp();
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
@@ -29,7 +29,7 @@ const CMD_ZOOM_DOWN = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_DOWN, {
   description: 'Zoom to view root\'s next sibling',
 }, async function() {
-  this.session.zoomDown();
+  await this.session.zoomDown();
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
@@ -45,7 +45,7 @@ const CMD_ZOOM_IN = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN, {
   description: 'Zoom in by one level',
 }, async function() {
-  this.session.zoomIn();
+  await this.session.zoomIn();
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
@@ -77,7 +77,7 @@ const CMD_ZOOM_IN_ALL = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN_ALL, {
   description: 'Zoom in onto cursor',
 }, async function() {
-  this.session.zoomInto(this.session.cursor.path);
+  await this.session.zoomInto(this.session.cursor.path);
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
@@ -93,7 +93,7 @@ const CMD_ZOOM_OUT_ALL = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT_ALL, {
   description: 'Zoom out to home',
 }, async function() {
-  this.session.zoomInto(this.session.document.root);
+  await this.session.zoomInto(this.session.document.root);
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
@@ -108,7 +108,7 @@ const CMD_JUMP_PREVIOUS = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_JUMP_PREVIOUS, {
   description: 'Jump to previous location',
 }, async function() {
-  this.session.jumpPrevious();
+  await this.session.jumpPrevious();
   return this.keyStream.forget(1);
 });
 
@@ -121,6 +121,6 @@ const CMD_JUMP_NEXT = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_JUMP_NEXT, {
   description: 'Jump to next location',
 }, async function() {
-  this.session.jumpNext();
+  await this.session.jumpNext();
   return this.keyStream.forget(1);
 });

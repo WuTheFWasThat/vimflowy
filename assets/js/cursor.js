@@ -118,7 +118,7 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  atVisibleEnd() {
+  async atVisibleEnd() {
     if (this.col < this.document.getLength(this.path.row) - 1) {
       return false;
     } else {
@@ -144,7 +144,7 @@ export default class Cursor extends EventEmitter {
     return false;
   }
 
-  atVisibleStart() {
+  async atVisibleStart() {
     if (this.col > 0) {
       return false;
     } else {
@@ -197,12 +197,12 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  isInWhitespace(path, col) {
+  async isInWhitespace(path, col) {
     const char = this.document.getChar(path.row, col);
     return utils.isWhitespace(char);
   }
 
-  isInWord(path, col, matchChar) {
+  async isInWord(path, col, matchChar) {
     if (utils.isWhitespace(matchChar)) {
       return false;
     }
@@ -219,32 +219,34 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  getWordCheck(options, matchChar) {
+  // return function that sees whether we're still in the word
+  _getWordCheck(options, matchChar) {
     if (options.whitespaceWord) {
-      return (path, col) => !this.isInWhitespace(path, col);
+      return async (path, col) => !await this.isInWhitespace(path, col);
     } else {
-      return (path, col) => this.isInWord(path, col, matchChar);
+      return async (path, col) => await this.isInWord(path, col, matchChar);
     }
   }
 
-  beginningWord(options = {}) {
-    if (this.atVisibleStart()) {
+  async beginningWord(options = {}) {
+    if (await this.atVisibleStart()) {
       return this;
     }
     this.prevChar();
-    while ((!this.atVisibleStart()) && this.isInWhitespace(this.path, this.col)) {
+    while ((!await this.atVisibleStart()) &&
+           await this.isInWhitespace(this.path, this.col)) {
       this.prevChar();
     }
 
-    const wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
-    while ((this.col > 0) && wordcheck(this.path, this.col-1)) {
+    const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
+    while ((this.col > 0) && (await wordcheck(this.path, this.col-1))) {
       this._left();
     }
     return this;
   }
 
-  endWord(options = {}) {
-    if (this.atVisibleEnd()) {
+  async endWord(options = {}) {
+    if (await this.atVisibleEnd()) {
       if (options.cursor.pastEnd) {
         this._right();
       }
@@ -252,13 +254,14 @@ export default class Cursor extends EventEmitter {
     }
 
     this.nextChar();
-    while ((!this.atVisibleEnd()) && this.isInWhitespace(this.path, this.col)) {
+    while ((! await this.atVisibleEnd()) &&
+            await this.isInWhitespace(this.path, this.col)) {
       this.nextChar();
     }
 
     let end = this.document.getLength(this.path.row) - 1;
-    const wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
-    while (this.col < end && wordcheck(this.path, this.col+1)) {
+    const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
+    while (this.col < end && (await wordcheck(this.path, this.col+1))) {
       this._right();
     }
 
@@ -273,8 +276,8 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  nextWord(options = {}) {
-    if (this.atVisibleEnd()) {
+  async nextWord(options = {}) {
+    if (await this.atVisibleEnd()) {
       if (options.cursor.pastEnd) {
         this._right();
       }
@@ -282,13 +285,14 @@ export default class Cursor extends EventEmitter {
     }
 
     let end = this.document.getLength(this.path.row) - 1;
-    const wordcheck = this.getWordCheck(options, this.document.getChar(this.path.row, this.col));
-    while (this.col < end && wordcheck(this.path, this.col+1)) {
+    const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
+    while (this.col < end && (await wordcheck(this.path, this.col+1))) {
       this._right();
     }
 
     this.nextChar();
-    while ((!this.atVisibleEnd()) && this.isInWhitespace(this.path, this.col)) {
+    while ((!await this.atVisibleEnd()) &&
+            await this.isInWhitespace(this.path, this.col)) {
       this.nextChar();
     }
 
@@ -299,7 +303,7 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  findNextChar(char, options = {}) {
+  async findNextChar(char, options = {}) {
     const end = this.document.getLength(this.path.row) - 1;
     if (this.col === end) {
       return;
@@ -332,7 +336,7 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  findPrevChar(char, options = {}) {
+  async findPrevChar(char, options = {}) {
     if (this.col === 0) {
       return;
     }
@@ -361,27 +365,27 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  up(cursorOptions = {}) {
+  async up(cursorOptions = {}) {
     const path = this.session.prevVisible(this.path);
     if (path !== null) {
       return this.setPath(path, cursorOptions);
     }
   }
 
-  down(cursorOptions = {}) {
+  async down(cursorOptions = {}) {
     const path = this.session.nextVisible(this.path);
     if (path !== null) {
       return this.setPath(path, cursorOptions);
     }
   }
 
-  parent(cursorOptions = {}) {
+  async parent(cursorOptions = {}) {
     const path = this.path.parent;
     if (path.row === this.document.root.row) {
       return;
     }
     if (this.path.is(this.session.viewRoot)) {
-      this.session._changeViewRoot(path);
+      await this.session.changeViewRoot(path);
     }
     return this.setPath(path, cursorOptions);
   }

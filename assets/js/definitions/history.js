@@ -13,7 +13,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_UNDO, {
   description: 'Undo',
 }, async function() {
   for (let j = 0; j < this.repeat; j++) {
-    this.session.undo();
+    await this.session.undo();
   }
   return this.keyStream.forget();
 });
@@ -28,7 +28,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_REDO, {
   description: 'Redo',
 }, async function() {
   for (let j = 0; j < this.repeat; j++) {
-    this.session.redo();
+    await this.session.redo();
   }
   return this.keyStream.forget();
 });

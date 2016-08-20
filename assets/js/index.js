@@ -211,7 +211,7 @@ async function create_session(doc, to_load) {
       }
     });
 
-    $(document).on('paste', function(e) {
+    $(document).on('paste', async (e) => {
       e.preventDefault();
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
       // TODO: deal with this better when there are multiple lines
@@ -220,13 +220,13 @@ async function create_session(doc, to_load) {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         if (i !== 0) {
-          session.newLineAtCursor();
+          await session.newLineAtCursor();
         }
         const chars = line.split('');
         session.addCharsAtCursor(chars);
       }
       Render.renderSession(session);
-      return session.save();
+      session.save();
     });
 
     $('#settings-link').click(function() {
@@ -294,14 +294,14 @@ async function create_session(doc, to_load) {
     });
 
     $('#data_import').click(() => {
-      load_file($('#import-file :file')[0], function(err, content, filename) {
+      load_file($('#import-file :file')[0], async (err, content, filename) => {
         if (err) { return session.showMessage(err, {text_class: 'error'}); }
         const mimetype = utils.mimetypeLookup(filename);
-        if (session.importContent(content, mimetype)) {
+        if (await session.importContent(content, mimetype)) {
           session.showMessage('Imported!', {text_class: 'success'});
-          return session.setMode(Modes.modes.NORMAL);
+          session.setMode(Modes.modes.NORMAL);
         } else {
-          return session.showMessage('Import failed due to parsing issue', {text_class: 'error'});
+          session.showMessage('Import failed due to parsing issue', {text_class: 'error'});
         }
       });
     });
