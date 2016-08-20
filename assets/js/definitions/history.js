@@ -65,7 +65,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_RECORD_MACRO, {
   } else {
     // pop off the RECORD_MACRO itself
     this.keyHandler.recording.stream.queue.pop();
-    this.keyHandler.finishRecording();
+    await this.keyHandler.finishRecording();
   }
   return this.keyStream.forget();
 });

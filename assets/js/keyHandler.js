@@ -103,7 +103,10 @@ export default class KeyHandler extends EventEmitter {
 
     this.keyBindings = keyBindings;
 
-    this.macros = this.session.document.store.getMacros();
+    this.macros = {};
+    this.session.document.store.getMacros().then((macros) => {
+      this.macros = macros;
+    });
     this.recording = {
       stream: null,
       key: null
@@ -123,15 +126,15 @@ export default class KeyHandler extends EventEmitter {
 
   beginRecording(key) {
     this.recording.stream = new KeyStream();
-    return this.recording.key = key;
+    this.recording.key = key;
   }
 
-  finishRecording() {
+  async finishRecording() {
     const macro = this.recording.stream.queue;
     this.macros[this.recording.key] = macro;
-    this.session.document.store.setMacros(this.macros);
+    await this.session.document.store.setMacros(this.macros);
     this.recording.stream = null;
-    return this.recording.key = null;
+    this.recording.key = null;
   }
 
   async playRecording(recording) {

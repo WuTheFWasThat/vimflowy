@@ -92,12 +92,12 @@ export default class DataStore {
   }
 
   // get mapping of macro_key -> macro
-  getMacros() {
+  async getMacros() {
     return this._get(this._macrosKey_, {});
   }
 
   // set mapping of macro_key -> macro
-  setMacros(macros) {
+  async setMacros(macros) {
     return this._set(this._macrosKey_, macros);
   }
 
