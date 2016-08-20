@@ -137,7 +137,7 @@ export default class KeyHandler extends EventEmitter {
   async playRecording(recording) {
     // the recording shouldn't save, (i.e. no @session.save)
     const recordKeyStream = new KeyStream(recording);
-    return await this.processKeys(recordKeyStream);
+    return await this._processKeys(recordKeyStream);
   }
 
   //##################
@@ -150,27 +150,31 @@ export default class KeyHandler extends EventEmitter {
     if (this.recording.stream) {
       this.recording.stream.enqueue(key);
     }
-    return await this.processKeys(this.keyStream);
+    return await this._processKeys(this.keyStream);
   }
 
-  async processKeys(keyStream) {
-    return this.processQueue.then(async () => {
-      while (!keyStream.done() && !keyStream.waiting) {
-        keyStream.checkpoint();
-        const { handled, command } = this.getCommand(this.session.mode, keyStream);
-        if (!handled) {
-          const mode_obj = Modes.getMode(this.session.mode);
-          mode_obj.handle_bad_key(keyStream);
-        } else if (command) {
-          const { fn, context, args } = command;
-          await fn.apply(context, args);
-          const mode_obj = Modes.getMode(this.session.mode);
-          mode_obj.every(this.session, this.keyStream);
-        }
+  async _processKeys(keyStream) {
+    while (!keyStream.done() && !keyStream.waiting) {
+      keyStream.checkpoint();
+      const { handled, command } = this.getCommand(this.session.mode, keyStream);
+      if (!handled) {
+        const mode_obj = Modes.getMode(this.session.mode);
+        mode_obj.handle_bad_key(keyStream);
+      } else if (command) {
+        const { fn, context, args } = command;
+        await fn.apply(context, args);
+        const mode_obj = Modes.getMode(this.session.mode);
+        mode_obj.every(this.session, this.keyStream);
       }
-    });
+    }
   }
 
+  processKeys(keyStream) {
+    this.processQueue = this.processQueue.then(async () => {
+      this._processKeys(keyStream);
+    });
+    return this.processQueue;
+  }
 
   // returns:
   //   handled: whether we processed all keys (did not encounter a bad key)
