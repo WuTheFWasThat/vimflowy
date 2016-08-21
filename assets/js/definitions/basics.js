@@ -68,15 +68,17 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE, MO
 });
 
 // TODO: flesh out settings menu commands (in separate file)
-// CMD_SETTINGS = keyDefinitions.registerCommand {
+// CMD_SETTINGS = keyDefinitions.registerCommand({
 //   name: 'SETTINGS'
-//   default_hotkeys:
+//   default_hotkeys: {
 //     normal_like: [':']
-// }
-// keyDefinitions.registerAction [MODES.NORMAL], CMD_SETTINGS, {
+//   }
+// });
+// keyDefinitions.registerAction([MODES.NORMAL], CMD_SETTINGS, {
 //   description: 'Open settings menu',
-// }, () ->
-//   @session.setMode MODES.SETTINGS
+// }, async function() {
+//   await this.session.setMode(MODES.SETTINGS);
+// });
 
 const CMD_INSERT = keyDefinitions.registerCommand({
   name: 'INSERT',
@@ -87,7 +89,7 @@ const CMD_INSERT = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT, {
   description: 'Insert at character',
 }, async function() {
-  return this.session.setMode(MODES.INSERT);
+  return await this.session.setMode(MODES.INSERT);
 });
 
 const CMD_INSERT_AFTER = keyDefinitions.registerCommand({
@@ -99,7 +101,7 @@ const CMD_INSERT_AFTER = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_AFTER, {
   description: 'Insert after character',
 }, async function() {
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return this.session.cursor.right({pastEnd: true});
 });
 
@@ -112,7 +114,7 @@ const CMD_INSERT_HOME = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_HOME, {
   description: 'Insert at beginning of line',
 }, async function() {
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return this.session.cursor.home();
 });
 
@@ -125,7 +127,7 @@ const CMD_INSERT_END = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_END, {
   description: 'Insert after end of line',
 }, async function() {
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return this.session.cursor.end({pastEnd: true});
 });
 
@@ -138,7 +140,7 @@ const CMD_INSERT_LINE_BELOW = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_LINE_BELOW, {
   description: 'Insert on new line after current line',
 }, async function() {
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return await this.session.newLineBelow();
 });
 
@@ -151,7 +153,7 @@ const CMD_INSERT_LINE_ABOVE = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_LINE_ABOVE, {
   description: 'Insert on new line before current line',
 }, async function() {
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return await this.session.newLineAbove();
 });
 
@@ -237,7 +239,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_LINK], {
 const visual_line_mode_delete_fn = () =>
   async function() {
     await this.session.delBlocks(this.parent.row, this.row_start_i, this.num_rows, {addNew: false});
-    this.session.setMode(MODES.NORMAL);
+    await this.session.setMode(MODES.NORMAL);
     return this.keyStream.save();
   }
 ;
@@ -246,7 +248,7 @@ const visual_mode_delete_fn = () =>
   async function() {
     const options = {includeEnd: true, yank: true};
     this.session.deleteBetween(this.session.cursor, this.session.anchor, options);
-    this.session.setMode(MODES.NORMAL);
+    await this.session.setMode(MODES.NORMAL);
     return this.keyStream.save();
   }
 ;
@@ -343,14 +345,14 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_CHANGE, {
 }, async function() {
   const options = {includeEnd: true, yank: true};
   this.session.deleteBetween(this.session.cursor, this.session.anchor, options);
-  return this.session.setMode(MODES.INSERT);
+  return await this.session.setMode(MODES.INSERT);
 });
 
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_CHANGE, {
   description: 'Change',
 }, async function() {
   await this.session.delBlocks(this.parent.row, this.row_start_i, this.num_rows, {addNew: true});
-  return this.session.setMode(MODES.INSERT);
+  return await this.session.setMode(MODES.INSERT);
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], CMD_CHANGE, {
@@ -361,14 +363,14 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_CHANGE, {
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_CHANGE], {
   description: 'Delete row, and enter insert mode'
 }, async function() {
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return this.session.clearRowAtCursor({yank: true});
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_RECURSIVE], {
   description: 'Delete blocks, and enter insert mode'
 }, async function() {
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return await this.session.delBlocksAtCursor(this.repeat, {addNew: true});
 });
 
@@ -379,7 +381,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
   for (let j = 0; j < this.repeat; j++) {
     await motion(cursor, {pastEnd: true, pastEndWord: true});
   }
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return this.session.deleteBetween(this.session.cursor, cursor, {yank: true});
 });
 
@@ -399,7 +401,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_YANK, {
 }, async function() {
   const options = {includeEnd: true};
   this.session.yankBetween(this.session.cursor, this.session.anchor, options);
-  this.session.setMode(MODES.NORMAL);
+  await this.session.setMode(MODES.NORMAL);
   return this.keyStream.forget();
 });
 
@@ -407,7 +409,7 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_YANK, {
   description: 'Yank',
 }, async function() {
   this.session.yankBlocks(this.row_start, this.num_rows);
-  this.session.setMode(MODES.NORMAL);
+  await this.session.setMode(MODES.NORMAL);
   return this.keyStream.forget();
 });
 
@@ -449,13 +451,14 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_CLONE], {
   return this.keyStream.forget();
 });
 
-//   jeff: c conflicts with change, so this doesn't work
-// keyDefinitions.registerAction [MODES.VISUAL_LINE],  CMD_CLONE, {
+// NOTE: c conflicts with change, so this doesn't work
+// keyDefinitions.registerAction([MODES.VISUAL_LINE],  CMD_CLONE, {
 //   description: 'Yank blocks as a clone',
-// }, () ->
-//   @session.yankBlocksClone @row_start, @num_rows
-//   @session.setMode MODES.NORMAL
-//   do @keyStream.forget
+// }, function() {
+//   this.session.yankBlocksClone(this.row_start, this.num_rows);
+//   await this.session.setMode(MODES.NORMAL);
+//   this.keyStream.forget();
+// });
 
 //################
 // delete
@@ -545,7 +548,7 @@ const CMD_CHANGE_CHAR = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_CHANGE_CHAR, {
   description: 'Change character',
 }, async function() {
-  this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
   return this.session.delCharsAfterCursor(1, {yank: true});
 });
 
@@ -730,14 +733,14 @@ const CMD_EXIT_MODE = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MODES.SETTINGS], CMD_EXIT_MODE, {
   description: 'Exit back to normal mode',
 }, async function() {
-  this.session.setMode(MODES.NORMAL);
+  await this.session.setMode(MODES.NORMAL);
   return this.keyStream.forget();
 });
 keyDefinitions.registerAction([MODES.INSERT], CMD_EXIT_MODE, {
   description: 'Exit back to normal mode',
 }, async function() {
   this.session.cursor.left();
-  this.session.setMode(MODES.NORMAL);
+  await this.session.setMode(MODES.NORMAL);
   // unlike other modes, esc in insert mode keeps changes
   return this.keyStream.save();
 });
@@ -752,7 +755,7 @@ const CMD_ENTER_VISUAL = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_ENTER_VISUAL, {
   description: 'Enter visual mode',
 }, async function() {
-  return this.session.setMode(MODES.VISUAL);
+  return await this.session.setMode(MODES.VISUAL);
 });
 
 const CMD_ENTER_VISUAL_LINE = keyDefinitions.registerCommand({
@@ -764,7 +767,7 @@ const CMD_ENTER_VISUAL_LINE = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_ENTER_VISUAL_LINE, {
   description: 'Enter visual line mode',
 }, async function() {
-  return this.session.setMode(MODES.VISUAL_LINE);
+  return await this.session.setMode(MODES.VISUAL_LINE);
 });
 
 const CMD_SWAP_CURSOR = keyDefinitions.registerCommand({

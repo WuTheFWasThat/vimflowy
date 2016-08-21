@@ -73,21 +73,21 @@ class Mode {
     this.transform_context = metadata.transform_context;
   }
 
-  enter(session) {
+  async enter(session) {
     if (this.metadata.enter) {
-      return this.metadata.enter(session);
+      return await this.metadata.enter(session);
     }
   }
 
-  every(session, keyStream) {
+  async every(session, keyStream) {
     if (this.metadata.every) {
-      return this.metadata.every(session, keyStream);
+      return await this.metadata.every(session, keyStream);
     }
   }
 
-  exit(session) {
+  async exit(session) {
     if (this.metadata.exit) {
-      return this.metadata.exit(session);
+      return await this.metadata.exit(session);
     }
   }
 
@@ -169,7 +169,7 @@ const transform_insert_key = function(key) {
 registerMode({
   name: 'NORMAL',
   hotkey_type: NORMAL_MODE_TYPE,
-  enter(session) {
+  async enter(session) {
     return session.cursor.backIfNeeded();
   },
   key_transforms: [
@@ -208,10 +208,10 @@ registerMode({
 registerMode({
   name: 'VISUAL',
   hotkey_type: NORMAL_MODE_TYPE,
-  enter(session) {
+  async enter(session) {
     return session.anchor = session.cursor.clone();
   },
-  exit(session) {
+  async exit(session) {
     return session.anchor = null;
   }
 });
@@ -219,11 +219,11 @@ registerMode({
 registerMode({
   name: 'VISUAL_LINE',
   hotkey_type: NORMAL_MODE_TYPE,
-  enter(session) {
+  async enter(session) {
     session.anchor = session.cursor.clone();
     return session.lineSelect = true;
   },
-  exit(session) {
+  async exit(session) {
     session.anchor = null;
     return session.lineSelect = false;
   },
@@ -243,14 +243,14 @@ registerMode({
 registerMode({
   name: 'SETTINGS',
   hotkey_type: NORMAL_MODE_TYPE,
-  enter(session /*, oldmode */) {
+  async enter(session /*, oldmode */) {
     if (session.settings.mainDiv) {
       session.settings.mainDiv.removeClass('hidden');
       $('#settings-open').addClass('hidden');
       return $('#settings-close').removeClass('hidden');
     }
   },
-  exit(session) {
+  async exit(session) {
     if (session.settings.mainDiv) {
       session.settings.mainDiv.addClass('hidden');
       $('#settings-open').removeClass('hidden');
@@ -264,17 +264,17 @@ registerMode({
   name: 'SEARCH',
   hotkey_type: INSERT_MODE_TYPE,
   within_row: true,
-  enter(session) {
+  async enter(session) {
     if (session.menuDiv) {
       session.menuDiv.removeClass('hidden');
       return session.mainDiv.addClass('hidden');
     }
   },
-  every(session, keyStream) {
+  async every(session, keyStream) {
     session.menu.update();
     return keyStream.forget();
   },
-  exit(session) {
+  async exit(session) {
     session.menu = null;
     if (session.menuDiv) {
       session.menuDiv.addClass('hidden');

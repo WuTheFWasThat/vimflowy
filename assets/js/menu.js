@@ -20,6 +20,8 @@ export default class Menu {
 
     // a bit of a overkill-y hack, use an entire session object internally
     this.session = new Session(doc);
+    // NOTE: this is fire and forget
+    // TODO: fix?
     this.session.setMode(Modes.modes.INSERT);
     this.selection = 0;
 

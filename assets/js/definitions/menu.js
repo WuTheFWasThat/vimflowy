@@ -15,7 +15,7 @@ const CMD_SEARCH = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
   description: 'Search',
 }, async function() {
-  this.session.setMode(MODES.SEARCH);
+  await this.session.setMode(MODES.SEARCH);
   return this.session.menu = new Menu(this.session.menuDiv, chars => {
     const find = function(document, query, options = {}) {
       const nresults = options.nresults || 10;
@@ -88,7 +88,7 @@ keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_SELECT, {
   description: 'Select current menu selection',
 }, async function() {
   await this.session.menu.select();
-  return this.session.setMode(MODES.NORMAL);
+  return await this.session.setMode(MODES.NORMAL);
 });
 
 const CMD_MENU_UP = keyDefinitions.registerCommand({

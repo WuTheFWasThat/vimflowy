@@ -43,6 +43,8 @@ export default class Session extends EventEmitter {
     this.reset_history();
     this.reset_jump_history();
 
+    // NOTE: this is fire and forget
+    // TODO: fix?
     this.setMode(MODES.NORMAL);
     return this;
   }
@@ -55,18 +57,18 @@ export default class Session extends EventEmitter {
   // modes related
   //################
 
-  setMode(newmode) {
+  async setMode(newmode) {
     if (newmode === this.mode) {
       return;
     }
 
     const oldmode = this.mode;
     if (oldmode) {
-      Modes.getMode(oldmode).exit(this, newmode);
+      await Modes.getMode(oldmode).exit(this, newmode);
     }
 
     this.mode = newmode;
-    Modes.getMode(this.mode).enter(this, oldmode);
+    await Modes.getMode(this.mode).enter(this, oldmode);
 
     return this.emit('modeChange', oldmode, newmode);
   }

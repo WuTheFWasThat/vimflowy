@@ -229,11 +229,11 @@ async function create_session(doc, to_load) {
       session.save();
     });
 
-    $('#settings-link').click(function() {
+    $('#settings-link').click(async function() {
       if (session.mode === Modes.modes.SETTINGS) {
-        return session.setMode(Modes.modes.NORMAL);
+        await session.setMode(Modes.modes.NORMAL);
       } else {
-        return session.setMode(Modes.modes.SETTINGS);
+        await session.setMode(Modes.modes.SETTINGS);
       }
     });
 
@@ -299,7 +299,7 @@ async function create_session(doc, to_load) {
         const mimetype = utils.mimetypeLookup(filename);
         if (await session.importContent(content, mimetype)) {
           session.showMessage('Imported!', {text_class: 'success'});
-          session.setMode(Modes.modes.NORMAL);
+          await session.setMode(Modes.modes.NORMAL);
         } else {
           session.showMessage('Import failed due to parsing issue', {text_class: 'error'});
         }

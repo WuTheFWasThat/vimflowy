@@ -47,7 +47,7 @@ const text_format_visual_line = property =>
     const rows = paths.map(path => path.row);
     // TODO: dedup rows to avoid double toggle
     this.session.toggleRowsProperty(property, rows);
-    this.session.setMode(MODES.NORMAL);
+    await this.session.setMode(MODES.NORMAL);
     return this.keyStream.save();
   }
 ;
@@ -55,7 +55,7 @@ const text_format_visual_line = property =>
 const text_format_visual = property =>
   async function() {
     this.session.toggleRowPropertyBetween(property, this.session.cursor, this.session.anchor, {includeEnd: true});
-    this.session.setMode(MODES.NORMAL);
+    await this.session.setMode(MODES.NORMAL);
     return this.keyStream.save();
   }
 ;

@@ -6,7 +6,7 @@ const MODES = Modes.modes;
 const visual_line_indent = () =>
   async function() {
     this.session.indentBlocks(this.row_start, this.num_rows);
-    this.session.setMode(MODES.NORMAL);
+    await this.session.setMode(MODES.NORMAL);
     return this.keyStream.save();
   }
 ;
@@ -14,7 +14,7 @@ const visual_line_indent = () =>
 const visual_line_unindent = () =>
   async function() {
     this.session.unindentBlocks(this.row_start, this.num_rows);
-    this.session.setMode(MODES.NORMAL);
+    await this.session.setMode(MODES.NORMAL);
     return this.keyStream.save();
   }
 ;

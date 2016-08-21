@@ -99,15 +99,15 @@ class MarksPlugin {
       name: 'MARK',
       hotkey_type: Modes.INSERT_MODE_TYPE,
       within_row: true,
-      enter: session => {
+      enter: async (session) => {
         // initialize marks stuff
         const doc = new Document(new DataStore.InMemory());
         doc.load(constants.empty_data);
         this.marksession = new Session(doc);
-        this.marksession.setMode(MODES.INSERT);
+        await this.marksession.setMode(MODES.INSERT);
         return this.marksessionpath = session.cursor.path;
       },
-      exit: (/*session*/) => {
+      exit: async (/*session*/) => {
         this.marksession = null;
         return this.marksessionpath = null;
       },
@@ -134,7 +134,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.NORMAL], CMD_MARK, {
       description: 'Mark a line',
     }, async function() {
-      return this.session.setMode(MODES.MARK);
+      return await this.session.setMode(MODES.MARK);
     });
 
     const CMD_FINISH_MARK = this.api.registerCommand({
@@ -149,7 +149,7 @@ class MarksPlugin {
       const mark = (that.marksession.curText()).join('');
       const err = that.updateMark(that.marksessionpath.row, mark);
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
-      this.session.setMode(MODES.NORMAL);
+      await this.session.setMode(MODES.NORMAL);
       return this.keyStream.save();
     });
 
@@ -193,7 +193,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.NORMAL], CMD_MARK_SEARCH, {
       description: 'Go to (search for) a mark',
     }, async function() {
-      this.session.setMode(MODES.SEARCH);
+      await this.session.setMode(MODES.SEARCH);
       return this.session.menu = new Menu(this.session.menuDiv, chars => {
         // find marks that start with the prefix
         const findMarks = (document, prefix, nresults = 10) => {
@@ -261,7 +261,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], basic_defs.CMD_EXIT_MODE, {
       description: 'Exit back to normal mode',
     }, async function() {
-      this.session.setMode(MODES.NORMAL);
+      await this.session.setMode(MODES.NORMAL);
       return this.keyStream.forget();
     });
 

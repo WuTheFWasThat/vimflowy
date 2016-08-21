@@ -167,7 +167,7 @@ export default class KeyHandler extends EventEmitter {
         const { fn, context, args } = command;
         await fn.apply(context, args);
         const mode_obj = Modes.getMode(this.session.mode);
-        mode_obj.every(this.session, this.keyStream);
+        await mode_obj.every(this.session, this.keyStream);
       }
     }
   }
