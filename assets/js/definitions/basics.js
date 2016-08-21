@@ -102,7 +102,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_AFTER, {
   description: 'Insert after character',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  return this.session.cursor.right({pastEnd: true});
+  await this.session.cursor.right({pastEnd: true});
 });
 
 const CMD_INSERT_HOME = keyDefinitions.registerCommand({
@@ -115,7 +115,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_HOME, {
   description: 'Insert at beginning of line',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  return this.session.cursor.home();
+  await this.session.cursor.home();
 });
 
 const CMD_INSERT_END = keyDefinitions.registerCommand({
@@ -128,7 +128,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_END, {
   description: 'Insert after end of line',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  return this.session.cursor.end({pastEnd: true});
+  await this.session.cursor.end({pastEnd: true});
 });
 
 const CMD_INSERT_LINE_BELOW = keyDefinitions.registerCommand({
@@ -174,7 +174,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_GO], {
   description: 'Go to the beginning of visible document',
   multirow: true
 }, function() {
-  return async (cursor, options) => cursor.visibleHome(options);
+  return async (cursor, options) => await cursor.visibleHome(options);
 });
 
 const CMD_PARENT = keyDefinitions.registerCommand({
@@ -207,9 +207,9 @@ keyDefinitions.registerMotion([CMD_GO, CMD_CLONE], {
       return;
     }
     const newPath = this.session.document.nextClone(cursor.path);
-    cursor.setPath(newPath);
+    await cursor.setPath(newPath);
     if (!this.session.isVisible(newPath)) {
-      return await this.session.zoomInto(newPath);
+      await this.session.zoomInto(newPath);
     }
   };
 });
@@ -571,7 +571,11 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_TO_HOME, 
   if (this.mode === MODES.INSERT) {
     options.cursor.pastEnd = true;
   }
-  this.session.deleteBetween(this.session.cursor, this.session.cursor.clone().home(options.cursor), options);
+  this.session.deleteBetween(
+    this.session.cursor,
+    await this.session.cursor.clone().home(options.cursor),
+    options
+  );
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
@@ -596,7 +600,11 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_TO_END, {
   if (this.mode === MODES.INSERT) {
     options.cursor.pastEnd = true;
   }
-  this.session.deleteBetween(this.session.cursor, this.session.cursor.clone().end(options.cursor), options);
+  this.session.deleteBetween(
+    this.session.cursor,
+    await this.session.cursor.clone().end(options.cursor),
+    options
+  );
   if (this.mode === MODES.NORMAL) {
     return this.keyStream.save();
   }
@@ -739,7 +747,7 @@ keyDefinitions.registerAction([MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MO
 keyDefinitions.registerAction([MODES.INSERT], CMD_EXIT_MODE, {
   description: 'Exit back to normal mode',
 }, async function() {
-  this.session.cursor.left();
+  await this.session.cursor.left();
   await this.session.setMode(MODES.NORMAL);
   // unlike other modes, esc in insert mode keeps changes
   return this.keyStream.save();

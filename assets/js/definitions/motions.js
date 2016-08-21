@@ -10,7 +10,7 @@ const CMD_LEFT = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_LEFT, {
   description: 'Move cursor left',
 }, function() {
-  return async (cursor, options) => cursor.left(options);
+  return async (cursor, options) => await cursor.left(options);
 });
 
 const CMD_RIGHT = keyDefinitions.registerCommand({
@@ -23,7 +23,7 @@ const CMD_RIGHT = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_RIGHT, {
   description: 'Move cursor right',
 }, function() {
-  return async (cursor, options) => cursor.right(options);
+  return async (cursor, options) => await cursor.right(options);
 });
 
 const CMD_UP = keyDefinitions.registerCommand({
@@ -65,7 +65,7 @@ const CMD_HOME = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_HOME, {
   description: 'Move cursor to beginning of line',
 }, function() {
-  return async (cursor, options) => cursor.home(options);
+  return async (cursor, options) => await cursor.home(options);
 });
 
 const CMD_END = keyDefinitions.registerCommand({
@@ -79,7 +79,7 @@ const CMD_END = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_END, {
   description: 'Move cursor to end of line',
 }, function() {
-  return async (cursor, options) => cursor.end(options);
+  return async (cursor, options) => await cursor.end(options);
 });
 
 const CMD_BEGINNING_WORD = keyDefinitions.registerCommand({
@@ -244,7 +244,7 @@ const CMD_GO_HOME = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_GO_HOME, {
   description: 'Go to beginning of visible document',
 }, function() {
-  return async (cursor, options) => cursor.visibleHome(options);
+  return async (cursor, options) => await cursor.visibleHome(options);
 });
 
 const CMD_GO_END = keyDefinitions.registerCommand({
@@ -257,7 +257,7 @@ const CMD_GO_END = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_GO_END, {
   description: 'Go to end of visible document',
 }, function() {
-  return async (cursor, options) => cursor.visibleEnd(options);
+  return async (cursor, options) => await cursor.visibleEnd(options);
 });
 
 const CMD_NEXT_SIBLING = keyDefinitions.registerCommand({
@@ -271,7 +271,7 @@ keyDefinitions.registerMotion(CMD_NEXT_SIBLING, {
   description: 'Move cursor to the next sibling of the current line',
   multirow: true
 }, function() {
-  return async (cursor, options) => cursor.nextSibling(options);
+  return async (cursor, options) => await cursor.nextSibling(options);
 });
 
 const CMD_PREV_SIBLING = keyDefinitions.registerCommand({
@@ -285,5 +285,5 @@ keyDefinitions.registerMotion(CMD_PREV_SIBLING, {
   description: 'Move cursor to the previous sibling of the current line',
   multirow: true
 }, function() {
-  return async (cursor, options) => cursor.prevSibling(options);
+  return async (cursor, options) => await cursor.prevSibling(options);
 });

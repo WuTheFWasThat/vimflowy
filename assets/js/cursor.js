@@ -61,7 +61,7 @@ export default class Cursor extends EventEmitter {
     return this.setCol(col, cursorOptions);
   }
 
-  setPath(path, cursorOptions) {
+  async setPath(path, cursorOptions) {
     this._setPath(path);
     return this._fromMoveCol(cursorOptions);
   }
@@ -99,23 +99,25 @@ export default class Cursor extends EventEmitter {
     return this.setCol(this.col + 1);
   }
 
-  left() {
+  async left() {
     if (this.col > 0) {
       return this._left();
     }
   }
 
-  right(cursorOptions = {}) {
+  async right(cursorOptions = {}) {
     const shift = cursorOptions.pastEnd ? 0 : 1;
     if (this.col < this.document.getLength(this.path.row) - shift) {
       return this._right();
     }
   }
 
-  backIfNeeded() {
+  async backIfNeeded() {
     if (this.col > this.document.getLength(this.path.row) - 1) {
-      return this.left();
+      await this.left();
+      return true;
     }
+    return false;
   }
 
   async atVisibleEnd() {
@@ -130,7 +132,7 @@ export default class Cursor extends EventEmitter {
     return true;
   }
 
-  nextChar() {
+  async _nextChar() {
     if (this.col < this.document.getLength(this.path.row) - 1) {
       this._right();
       return true;
@@ -156,7 +158,7 @@ export default class Cursor extends EventEmitter {
     return true;
   }
 
-  prevChar() {
+  async _prevChar() {
     if (this.col > 0) {
       this._left();
       return true;
@@ -170,17 +172,17 @@ export default class Cursor extends EventEmitter {
     return false;
   }
 
-  home() {
+  async home() {
     this.setCol(0);
     return this;
   }
 
-  end(cursorOptions = {cursor: {}}) {
+  async end(cursorOptions = {cursor: {}}) {
     this.setCol(cursorOptions.pastEnd ? -1 : -2);
     return this;
   }
 
-  visibleHome() {
+  async visibleHome() {
     let path;
     if (this.session.viewRoot.is(this.session.document.root)) {
       path = this.session.nextVisible(this.session.viewRoot);
@@ -191,7 +193,7 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  visibleEnd() {
+  async visibleEnd() {
     const path = this.session.lastVisible();
     this.setPosition(path, 0);
     return this;
@@ -232,10 +234,10 @@ export default class Cursor extends EventEmitter {
     if (await this.atVisibleStart()) {
       return this;
     }
-    this.prevChar();
+    await this._prevChar();
     while ((!await this.atVisibleStart()) &&
            await this.isInWhitespace(this.path, this.col)) {
-      this.prevChar();
+      await this._prevChar();
     }
 
     const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
@@ -253,10 +255,10 @@ export default class Cursor extends EventEmitter {
       return this;
     }
 
-    this.nextChar();
+    await this._nextChar();
     while ((! await this.atVisibleEnd()) &&
             await this.isInWhitespace(this.path, this.col)) {
-      this.nextChar();
+      await this._nextChar();
     }
 
     let end = this.document.getLength(this.path.row) - 1;
@@ -290,10 +292,10 @@ export default class Cursor extends EventEmitter {
       this._right();
     }
 
-    this.nextChar();
+    await this._nextChar();
     while ((!await this.atVisibleEnd()) &&
             await this.isInWhitespace(this.path, this.col)) {
-      this.nextChar();
+      await this._nextChar();
     }
 
     end = (this.document.getLength(this.path.row)) - 1;
@@ -368,14 +370,14 @@ export default class Cursor extends EventEmitter {
   async up(cursorOptions = {}) {
     const path = this.session.prevVisible(this.path);
     if (path !== null) {
-      return this.setPath(path, cursorOptions);
+      return await this.setPath(path, cursorOptions);
     }
   }
 
   async down(cursorOptions = {}) {
     const path = this.session.nextVisible(this.path);
     if (path !== null) {
-      return this.setPath(path, cursorOptions);
+      return await this.setPath(path, cursorOptions);
     }
   }
 
@@ -387,20 +389,20 @@ export default class Cursor extends EventEmitter {
     if (this.path.is(this.session.viewRoot)) {
       await this.session.changeViewRoot(path);
     }
-    return this.setPath(path, cursorOptions);
+    return await this.setPath(path, cursorOptions);
   }
 
-  prevSibling(cursorOptions = {}) {
+  async prevSibling(cursorOptions = {}) {
     const prevsib = this.document.getSiblingBefore(this.path);
     if (prevsib !== null) {
-      return this.setPath(prevsib, cursorOptions);
+      return await this.setPath(prevsib, cursorOptions);
     }
   }
 
-  nextSibling(cursorOptions = {}) {
+  async nextSibling(cursorOptions = {}) {
     const nextsib = this.document.getSiblingAfter(this.path);
     if (nextsib !== null) {
-      return this.setPath(nextsib, cursorOptions);
+      return await this.setPath(nextsib, cursorOptions);
     }
   }
 

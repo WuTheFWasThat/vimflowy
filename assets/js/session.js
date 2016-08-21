@@ -291,7 +291,7 @@ export default class Session extends EventEmitter {
 
   async _restoreViewState(state) {
     this.cursor.from(state.cursor);
-    this.fixCursorForMode();
+    await this.fixCursorForMode();
     await this.changeView(state.viewRoot);
   }
 
@@ -369,15 +369,16 @@ export default class Session extends EventEmitter {
     mutation.mutate(this);
     mutation.moveCursor(this.cursor);
     // TODO: do this elsewhere
+    // TODO this is fire and forget.  should await this
     this.fixCursorForMode();
 
     this.mutations.push(mutation);
     return true;
   }
 
-  fixCursorForMode() {
+  async fixCursorForMode() {
     if (Modes.getMode(this.mode).metadata.hotkey_type !== Modes.INSERT_MODE_TYPE) {
-      return this.cursor.backIfNeeded();
+      await this.cursor.backIfNeeded();
     }
   }
 
@@ -529,16 +530,16 @@ export default class Session extends EventEmitter {
 
     await this.changeViewRoot(jump.viewRoot);
     if (children.length) {
-      this.cursor.setPath(children[0]);
+      await this.cursor.setPath(children[0]);
     } else {
-      this.cursor.setPath(jump.viewRoot);
+      await this.cursor.setPath(jump.viewRoot);
     }
 
     if (this.document.isAttached(jump.cursor_after.row)) {
       // if the row is attached and under the view root, switch to it
       const cursor_path = this.youngestVisibleAncestor(jump.cursor_after.path);
       if (cursor_path !== null) {
-        this.cursor.setPath(cursor_path);
+        await this.cursor.setPath(cursor_path);
       }
     }
     return true;
@@ -601,7 +602,7 @@ export default class Session extends EventEmitter {
     if (newrow === null) { // not visible, need to reset cursor
       newrow = newroot;
     }
-    return this.cursor.setPath(newrow);
+    await this.cursor.setPath(newrow);
   }
 
   async zoomOut() {
@@ -913,7 +914,7 @@ export default class Session extends EventEmitter {
     this.do(mutation);
 
     if (addDelimiter) {
-      this.cursor.left();
+      await this.cursor.left();
     }
 
     return true;

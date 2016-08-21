@@ -71,7 +71,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
           renderOptions: { highlights },
           fn: async () => {
             await this.session.zoomInto(path);
-            return this.session.cursor.setPath(path);
+            await this.session.cursor.setPath(path);
           }
         };
       });

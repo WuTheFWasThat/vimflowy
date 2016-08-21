@@ -170,7 +170,7 @@ registerMode({
   name: 'NORMAL',
   hotkey_type: NORMAL_MODE_TYPE,
   async enter(session) {
-    return session.cursor.backIfNeeded();
+    await session.cursor.backIfNeeded();
   },
   key_transforms: [
     function(key, context) {
