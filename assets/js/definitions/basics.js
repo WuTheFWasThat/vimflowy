@@ -648,8 +648,8 @@ const CMD_PASTE_AFTER = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_PASTE_AFTER, {
   description: 'Paste after cursor',
 }, async function() {
-  this.session.pasteAfter();
-  return this.keyStream.save();
+  await this.session.pasteAfter();
+  this.keyStream.save();
 });
 // NOTE: paste after doesn't make sense for insert mode
 
@@ -663,13 +663,13 @@ const CMD_PASTE_BEFORE = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_PASTE_BEFORE, {
   description: 'Paste before cursor',
 }, async function() {
-  this.session.pasteBefore();
-  return this.keyStream.save();
+  await this.session.pasteBefore();
+  this.keyStream.save();
 });
 keyDefinitions.registerAction([MODES.INSERT], CMD_PASTE_BEFORE, {
   description: 'Paste before cursor',
 }, async function() {
-  return this.session.pasteBefore();
+  await this.session.pasteBefore();
 });
 
 const CMD_JOIN_LINE = keyDefinitions.registerCommand({

@@ -1148,12 +1148,12 @@ export default class Session extends EventEmitter {
     return this.do(new mutations.ToggleBlock(row));
   }
 
-  pasteBefore() {
-    return this.register.paste({before: true});
+  async pasteBefore() {
+    return await this.register.paste({before: true});
   }
 
-  pasteAfter() {
-    return this.register.paste({});
+  async pasteAfter() {
+    return await this.register.paste({});
   }
 
   // given an anchor and cursor, figures out the right blocks to be deleting

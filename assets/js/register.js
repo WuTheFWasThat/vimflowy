@@ -53,17 +53,17 @@ export default class Register {
   // Pasting
   //##########
 
-  paste(options = {}) {
+  async paste(options = {}) {
     if (this.type === TYPES.CHARS) {
-      return this.pasteChars(options);
+      return await this.pasteChars(options);
     } else if (this.type === TYPES.SERIALIZED_ROWS) {
-      return this.pasteSerializedRows(options);
+      return await this.pasteSerializedRows(options);
     } else if (this.type === TYPES.CLONED_ROWS) {
-      return this.pasteClonedRows(options);
+      return await this.pasteClonedRows(options);
     }
   }
 
-  pasteChars(options = {}) {
+  async pasteChars(options = {}) {
     const chars = this.saved;
     if (options.before) {
       return this.session.addCharsAtCursor(chars);
@@ -73,7 +73,7 @@ export default class Register {
     }
   }
 
-  pasteSerializedRows(options = {}) {
+  async pasteSerializedRows(options = {}) {
     const path = this.session.cursor.path;
     const parent = path.parent;
     const index = this.session.document.indexOf(path);
@@ -92,7 +92,7 @@ export default class Register {
     }
   }
 
-  pasteClonedRows(options = {}) {
+  async pasteClonedRows(options = {}) {
     const path = this.session.cursor.path;
     const parent = path.parent;
     const index = this.session.document.indexOf(path);

@@ -81,9 +81,9 @@ class MarksPlugin {
       return struct;
     });
 
-    this.api.registerListener('document', 'loadRow', (path, serialized) => {
+    this.api.registerListener('document', 'loadRow', async (path, serialized) => {
       if (serialized.mark) {
-        const err = this.updateMark(path.row, serialized.mark);
+        const err = await this.updateMark(path.row, serialized.mark);
         if (err) { return this.session.showMessage(err, {text_class: 'error'}); }
       }
     });
@@ -147,7 +147,7 @@ class MarksPlugin {
       description: 'Finish typing mark',
     }, async function() {
       const mark = (that.marksession.curText()).join('');
-      const err = that.updateMark(that.marksessionpath.row, mark);
+      const err = await that.updateMark(that.marksessionpath.row, mark);
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       await this.session.setMode(MODES.NORMAL);
       return this.keyStream.save();
@@ -179,7 +179,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MARK], {
       description: 'Delete mark at cursor'
     }, async function() {
-      const err = (that.updateMark(this.session.cursor.row, ''));
+      const err = await that.updateMark(this.session.cursor.row, '');
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       return this.keyStream.save();
     });
@@ -402,7 +402,7 @@ class MarksPlugin {
 
   // Set the mark for row
   // Returns whether setting mark succeeded
-  updateMark(row, mark = '') {
+  async updateMark(row, mark = '') {
     const marks_to_rows = this._getMarksToRows();
     const rows_to_marks = this._getRowsToMarks();
     const oldmark = rows_to_marks[row];
@@ -420,16 +420,16 @@ class MarksPlugin {
       if (this.document.isAttached(other_row)) {
         return `Mark '${mark}' was already taken!`;
       } else {
-        this.session.do(new this.UnsetMark(other_row, mark));
+        await this.session.do(new this.UnsetMark(other_row, mark));
       }
     }
 
     if (oldmark) {
-      this.session.do(new this.UnsetMark(row, oldmark));
+      await this.session.do(new this.UnsetMark(row, oldmark));
     }
 
     if (mark) {
-      this.session.do(new this.SetMark(row, mark));
+      await this.session.do(new this.SetMark(row, mark));
     }
 
     return null;
