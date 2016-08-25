@@ -6,8 +6,9 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 
 Try it out!
 - [online] (https://vimflowy.bitballoon.com)
-- [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei)
 - [local/dev](CONTRIBUTING.md)
+- [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei)
+  *This will no longer be maintained, as [Chrome apps are getting essentially deprecated](https://blog.chromium.org/2016/08/from-chrome-apps-to-web.html).*
 
 (Video coming eventually...)
 
