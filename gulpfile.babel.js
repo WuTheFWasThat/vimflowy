@@ -47,9 +47,10 @@ let jsTask = (isDev) => {
   return function() {
     const browserifyOpts = {
       entries: 'assets/js/index',
+      ignore: /node_modules/,
       transform: [
         babelify.configure({
-          presets: ['es2015', 'stage-3'],
+          presets: ['es2015', 'react', 'stage-3'],
           plugins: ['transform-runtime'],
         }),
       ],

@@ -89,7 +89,7 @@ $bottom-bar-height: 25px
 
         #hotkey-edit-normal, #hotkey-edit-insert
             display: inline-block
-            width: 50%
+            @include calc(width, '50% - 10px')
             height: 100%
             vertical-align: top
 

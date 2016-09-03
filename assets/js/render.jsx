@@ -8,6 +8,12 @@ import * as utils from './utils';
 import logger from './logger';
 import * as Plugins from './plugins';
 import * as Modes from './modes';
+
+/* eslint-disable no-unused-vars */
+import React from 'react';
+/* eslint-enable no-unused-vars */
+import ReactDOM from 'react-dom';
+
 const MODES = Modes.modes;
 const { NORMAL_MODE_TYPE } = Modes;
 const { INSERT_MODE_TYPE } = Modes;
@@ -610,17 +616,29 @@ export function renderHotkeysTable(key_bindings) {
     const mode_defs = MODE_TYPES[mode_type].modes.map(
       mode => _.cloneDeep(key_bindings.definitions.actions_for_mode(mode))
     );
-    onto.empty().append(
-      $('<div>').addClass('tooltip').text(mode_type).attr('title', MODE_TYPES[mode_type].description)
-    ).append(
-      buildTable(key_bindings, key_bindings.hotkeys[mode_type], (_.extend.apply(this, mode_defs)))
+    ReactDOM.render(
+      <div>
+        <div className='tooltip' title={MODE_TYPES[mode_type].description}>
+          {mode_type}
+        </div>
+        {
+          buildTable(
+            key_bindings,
+            key_bindings.hotkeys[mode_type],
+            _.extend.apply(this, mode_defs)
+          )
+        }
+      </div>
+      ,
+      onto[0]
     );
   });
 };
 
 // build table to visualize hotkeys
 const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
-  const buildTableContents = function(bindings, onto, recursed=false) {
+  const buildTableContents = function(bindings, recursed=false) {
+    const result = [];
     for (const k in bindings) {
       const v = bindings[k];
       let keys;
@@ -641,38 +659,63 @@ const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
         continue;
       }
 
-      const row = $('<tr>');
+      const el = (
+        <tr key={k}>
+          <td key='keys'>
+            { keys.join(' OR ') }
+          </td>
+          <td key='desc' style={{width: '100%'}}>
+            { v.description }
+            {
+              (() => {
+                if (typeof v.definition === 'object') {
+                  return buildTableContents(v.definition, true);
+                }
+              })()
+            }
+          </td>
+        </tr>
+      );
 
-      // row.append $('<td>').text keys[0]
-      row.append($('<td>').text(keys.join(' OR ')));
-
-      const display_cell = $('<td>').css('width', '100%').html(v.description);
-      if (typeof v.definition === 'object') {
-        buildTableContents(v.definition, display_cell, true);
-      }
-      row.append(display_cell);
-
-      onto.append(row);
+      result.push(el);
     }
-    return null;
+    return result;
   };
 
-  const tables = $('<div>');
-
-  [{label: 'Actions', definitions: actions},
-   {label: 'Motions', definitions: key_bindings.definitions.motions}
-  ].forEach(({label, definitions}) => {
-    tables.append($('<h5>').text(label).css('margin', '5px 10px'));
-    const table = $('<table>').addClass('keybindings-table theme-bg-secondary');
-    buildTableContents(definitions, table);
-    tables.append(table);
-  });
-
-  return tables;
+  return (
+    <div>
+      {
+        (() => {
+          return [
+            {label: 'Actions', definitions: actions},
+            {label: 'Motions', definitions: key_bindings.definitions.motions}
+          ].map(({label, definitions}) => {
+            return [
+              <h5 style={{margin: '5px 10px'}}>
+                {label}
+              </h5>
+              ,
+              <table className='keybindings-table theme-bg-secondary'>
+                <tbody>
+                  {buildTableContents(definitions)}
+                </tbody>
+              </table>
+            ];
+          });
+        })()
+      }
+    </div>
+  );
 };
 
 export function renderModeTable(key_bindings, mode, onto) {
-  const table =
-    buildTable(key_bindings, key_bindings.keyMaps[mode], key_bindings.definitions.actions_for_mode(mode), true);
-  return onto.empty().append(table);
+  ReactDOM.render(
+    buildTable(
+      key_bindings,
+      key_bindings.keyMaps[mode],
+      key_bindings.definitions.actions_for_mode(mode),
+      true
+    ),
+    onto[0]
+  );
 };
