@@ -1,11 +1,11 @@
-/* globals $, window, document, FileReader, chrome, localStorage, alert */
+/* globals $, window, document, FileReader, localStorage, alert */
 
 /*
 initialize the main page
 - handle button clicks (import/export/hotkey stuff)
 - handle clipboard paste
 - handle errors
-- load document from localStorage/chrome storage (fall back to plain in-memory datastructures)
+- load document from localStorage (fall back to plain in-memory datastructures)
 - initialize objects (session, settings, etc.) with relevant divs
 */
 
@@ -316,29 +316,7 @@ async function create_session(doc, to_load) {
 let datastore;
 let doc;
 
-if ((typeof chrome !== 'undefined') && chrome.storage && chrome.storage.sync) {
-  logger.info('using chrome storage');
-
-  // TODO
-  // datastore = new DataStore.ChromeStorageLazy
-
-  datastore = new DataStore.InMemory();
-  doc = new Document(datastore, docname);
-  chrome.storage.sync.get('save', function(results) {
-    create_session(doc, results.save || constants.default_data);
-
-    // save every 5 seconds
-    return setInterval(() => {
-      chrome.storage.sync.set({
-        'save': doc.serialize()
-      }, () => {
-        // TODO have whether saved visualized
-        logger.info('Saved');
-      });
-    }, 5000);
-  });
-
-} else if (typeof localStorage !== 'undefined' && localStorage !== null) {
+if (typeof localStorage !== 'undefined' && localStorage !== null) {
   datastore = new DataStore.LocalStorageLazy(docname);
   doc = new Document(datastore, docname);
 
