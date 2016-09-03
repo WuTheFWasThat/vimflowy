@@ -26,10 +26,10 @@ import Session from './session';
 import * as Render from './render';
 
 import keyDefinitions from './keyDefinitions';
-// load all definitions
-require('./definitions/*.js', {mode: 'expand'});
+// load actual definitions
+import './definitions';
 // load all plugins
-require('../../plugins/**/*.js', {mode: 'expand'});
+import '../../plugins';
 import KeyBindings from './keyBindings';
 
 

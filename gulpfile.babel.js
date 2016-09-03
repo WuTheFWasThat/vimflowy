@@ -52,7 +52,6 @@ let jsTask = (isDev) => {
           presets: ['es2015', 'stage-3'],
           plugins: ['transform-runtime'],
         }),
-        'require-globify'
       ],
       plugin: [],
       debug: isDev,

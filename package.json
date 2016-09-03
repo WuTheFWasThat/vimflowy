@@ -47,7 +47,6 @@
     "gulp-util": "latest",
     "mocha": "latest",
     "mocha-multi": "latest",
-    "require-globify": "latest",
     "stream-to-array": "latest",
     "vinyl-buffer": "latest",
     "vinyl-source-stream": "latest",

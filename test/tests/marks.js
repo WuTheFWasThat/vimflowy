@@ -1,6 +1,6 @@
 /* globals describe, it */
 import TestCase from '../testcase';
-import * as Marks from '../../plugins/marks/marks';
+import * as Marks from '../../plugins/marks';
 import '../../assets/js/plugins';
 
 // Testing
