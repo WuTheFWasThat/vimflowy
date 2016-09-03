@@ -7,10 +7,10 @@
     "npm": "1.2.x"
   },
   "scripts": {
-    "start": "node_modules/.bin/gulp",
-    "test": "node_modules/.bin/mocha --compilers js:babel-core/register test/tests",
+    "build": "NODE_ENV=production webpack --config config/webpack.prod.js",
     "coverage": "multi='spec=- html-cov=public/coverage.html' node_modules/.bin/mocha  --compilers js:babel-core/register test/tests --require blanket --reporter mocha-multi test/tests/*",
-    "build": "node_modules/.bin/gulp assets:prod"
+    "start": "node dev_server.js",
+    "test": "node_modules/.bin/mocha --compilers js:babel-core/register test/tests"
   },
   "config": {
     "blanket": {
@@ -21,11 +21,14 @@
     "async": "latest",
     "express": "latest",
     "lodash": "latest",
+    "ts-loader": "^0.8.1",
+    "typescript": "^1.7.5",
     "tv4": "latest"
   },
   "devDependencies": {
-    "babel-core": "latest",
+    "babel-core": "6.4.5",
     "babel-eslint": "latest",
+    "babel-loader": "6.2.1",
     "babel-plugin-transform-runtime": "latest",
     "babel-preset-es2015": "latest",
     "babel-preset-stage-3": "latest",
@@ -33,23 +36,12 @@
     "babelify": "latest",
     "blanket": "latest",
     "browserify": "latest",
-    "del": "latest",
-    "gulp": "latest",
-    "gulp-babel": "latest",
-    "gulp-jade": "latest",
-    "gulp-mocha": "latest",
-    "gulp-plumber": "latest",
-    "gulp-rename": "latest",
-    "gulp-sass": "latest",
-    "gulp-sourcemaps": "latest",
-    "gulp-streamify": "latest",
-    "gulp-uglify": "latest",
-    "gulp-util": "latest",
     "mocha": "latest",
     "mocha-multi": "latest",
-    "stream-to-array": "latest",
-    "vinyl-buffer": "latest",
-    "vinyl-source-stream": "latest",
-    "watchify": "latest"
+    "tslint": "^3.3.0",
+    "tslint-loader": "^2.1.0",
+    "webpack": "^1.12.15",
+    "webpack-dev-middleware": "^1.5.1",
+    "webpack-hot-middleware": "^2.6.4"
   }
 }
