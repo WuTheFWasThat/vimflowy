@@ -1184,7 +1184,7 @@ export default class Session extends EventEmitter {
   // scrolling
   //##################
 
-  scroll(npages) {
+  async scroll(npages) {
     this.emit('scroll', npages);
     // TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
     const line_height = $('.node-text').height() || 21;
@@ -1197,11 +1197,11 @@ export default class Session extends EventEmitter {
 
     if (numlines > 0) {
       for (let j = 0; j < numlines; j++) {
-        this.cursor.down();
+        await this.cursor.down();
       }
     } else {
       for (let j = 0; j < -numlines; j++) {
-        this.cursor.up();
+        await this.cursor.up();
       }
     }
 
@@ -1233,7 +1233,7 @@ export default class Session extends EventEmitter {
     }
   }
 
-  getVisiblePaths() {
+  async getVisiblePaths() {
     const paths = [];
     $.makeArray($('.bullet')).forEach((bullet) => {
       if (!utils.isScrolledIntoView($(bullet), this.mainDiv)) {

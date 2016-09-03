@@ -712,7 +712,7 @@ const CMD_SCROLL_DOWN = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SCROLL_DOWN, {
   description: 'Scroll half window down',
 }, async function() {
-  this.session.scroll(0.5);
+  await this.session.scroll(0.5);
   return this.keyStream.forget(1);
 });
 
@@ -727,7 +727,7 @@ const CMD_SCROLL_UP = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SCROLL_UP, {
   description: 'Scroll half window up',
 }, async function() {
-  this.session.scroll(-0.5);
+  await this.session.scroll(-0.5);
   return this.keyStream.forget(1);
 });
 

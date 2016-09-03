@@ -124,7 +124,7 @@ async function create_session(doc, to_load) {
 
   const pluginManager = new PluginsManager(session, $('#plugins'));
   let enabledPlugins = (await settings.getSetting('enabledPlugins')) || ['Marks'];
-  if (typeof enabledPlugins === 'object') { // for backwards compatibility
+  if (typeof enabledPlugins.slice === 'undefined') { // for backwards compatibility
     enabledPlugins = Object.keys(enabledPlugins);
   }
   enabledPlugins.forEach((plugin_name) => pluginManager.enable(plugin_name));

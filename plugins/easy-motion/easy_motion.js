@@ -25,7 +25,7 @@ Plugins.register({
     if (key === null) {
       this.keyStream.wait();
 
-      let paths = (this.session.getVisiblePaths()).filter(
+      let paths = (await this.session.getVisiblePaths()).filter(
         path => !path.is(this.session.cursor.path)
       );
 
