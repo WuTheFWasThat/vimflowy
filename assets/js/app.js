@@ -9,18 +9,18 @@ initialize the main page
 - initialize objects (session, settings, etc.) with relevant divs
 */
 
-import '../css/utils.sass';
-import '../css/index.sass';
-import '../css/view.sass';
-import '../css/themes/default.sass';
-import '../css/themes/dark.sass';
-import '../css/themes/solarized_dark.sass';
-import '../css/themes/solarized_light.sass';
-
-// TODO include in plugins
-import '../../plugins/easy-motion/easy_motion.sass';
-import '../../plugins/marks/marks.sass';
-import '../../plugins/time-tracking/time-tracking.sass';
+// import '../css/utils.sass';
+// import '../css/index.sass';
+// import '../css/view.sass';
+// import '../css/themes/default.sass';
+// import '../css/themes/dark.sass';
+// import '../css/themes/solarized_dark.sass';
+// import '../css/themes/solarized_light.sass';
+//
+// // TODO include in plugins
+// import '../../plugins/easy-motion/easy_motion.sass';
+// import '../../plugins/marks/marks.sass';
+// import '../../plugins/time-tracking/time-tracking.sass';
 
 import * as constants from './constants';
 import * as errors from './errors';
