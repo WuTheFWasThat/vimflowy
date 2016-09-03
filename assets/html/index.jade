@@ -1,6 +1,27 @@
-extends layout
+html
+  head
+    title Vimflowy
 
-block content
+    link(rel="stylesheet" href="css/constants.css")
+    link(rel="stylesheet" href="css/utils.css")
+    link(rel="stylesheet" href="css/index.css")
+
+    // template for themes
+    link(rel="stylesheet" href="css/view.css")
+
+    // themes
+    link(rel="stylesheet" href="css/themes/default.css")
+    link(rel="stylesheet" href="css/themes/dark.css")
+    link(rel="stylesheet" href="css/themes/solarized_dark.css")
+    link(rel="stylesheet" href="css/themes/solarized_light.css")
+
+    link(rel="stylesheet" href="css/font-awesome.min.css")
+    link(rel="icon" type="image/png" href="images/vimflowy-32.png")
+
+    each plugin_css_file in plugin_css_files
+      link(rel="stylesheet" href= plugin_css_path + '/' + plugin_css_file)
+
+  body.theme-bg-primary#default-theme
     // hack for firefox paste
     #paste-hack.offscreen(contenteditable="true")
 
@@ -78,3 +99,8 @@ block content
         #mode.center.theme-bg-secondary
 
     a#export.hidden
+
+    script(src='js/jquery-2.1.1.min.js')
+    script(src='js/virtual-dom.js')
+
+    script(src='js/bundle.js')
