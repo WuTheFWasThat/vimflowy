@@ -6,7 +6,7 @@ var APP_DIR = path.join(__dirname, '..', 'assets');
 
 module.exports = {
   devtool: 'source-map',
-  entry: './assets/js/index.js',
+  entry: './assets/js/app.js',
   module: {
     preLoaders: [{
       test: /\.tsx?$/,
@@ -31,12 +31,16 @@ module.exports = {
           'babel', 'ts'
         ],
         include: APP_DIR
-      }
+      },
+      {
+        test: /\.sass$/,
+        loaders: ['style', 'css', 'sass']
+      },
     ]
   },
   output: {
     path: path.join(__dirname, '..', 'build'),
-    filename: 'index.js',
+    filename: 'app.js',
     publicPath: '/static/'
   },
   plugins: [

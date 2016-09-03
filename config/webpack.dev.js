@@ -7,7 +7,7 @@ var APP_DIR = path.join(__dirname, '..', 'assets');
 module.exports = {
   debug: true,
   devtool: 'eval',
-  entry: ['webpack-hot-middleware/client', './assets/js/index.js'],
+  entry: ['webpack-hot-middleware/client', './assets/js/app.js'],
   module: {
     preLoaders: [{
       test: /\.tsx?$/,
@@ -32,11 +32,15 @@ module.exports = {
           'babel', 'ts'
         ],
         include: APP_DIR
-      }
+      },
+      {
+        test: /\.sass$/,
+        loaders: ['style', 'css', 'sass']
+      },
     ]
   },
   output: {
-    filename: 'index.js',
+    filename: 'app.js',
     path: path.join(__dirname, '..', 'build'),
     publicPath: '/static/'
   },
