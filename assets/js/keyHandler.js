@@ -98,7 +98,6 @@ export default class KeyHandler extends EventEmitter {
 
   constructor(session, keyBindings) {
     super();
-    this.getMotion = this.getMotion.bind(this);
     this.session = session;
 
     this.keyBindings = keyBindings;
@@ -159,7 +158,7 @@ export default class KeyHandler extends EventEmitter {
   async _processKeys(keyStream) {
     while (!keyStream.done() && !keyStream.waiting) {
       keyStream.checkpoint();
-      const { handled, command } = this.getCommand(this.session.mode, keyStream);
+      const { handled, command } = await this.getCommand(this.session.mode, keyStream);
       if (!handled) {
         const mode_obj = Modes.getMode(this.session.mode);
         mode_obj.handle_bad_key(keyStream);
@@ -184,7 +183,7 @@ export default class KeyHandler extends EventEmitter {
   //   fn: a function to apply
   //   args: arguments to apply
   //   context: a context to execute the function in
-  getCommand(mode, keyStream, bindings = null, repeat = 1) {
+  async getCommand(mode, keyStream, bindings = null, repeat = 1) {
     if (bindings === null) {
       bindings = this.keyBindings.bindings[mode];
     }
@@ -223,8 +222,8 @@ export default class KeyHandler extends EventEmitter {
       }
 
       // note: this uses original bindings to determine what's a motion
-      const [motion, motionrepeat, handled] =
-        this.getMotion(keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat);
+      const [motion, motionrepeat, handled] = await this.getMotion(
+        keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat);
       context.repeat = motionrepeat;
       if (motion === null) {
         return {
@@ -239,7 +238,7 @@ export default class KeyHandler extends EventEmitter {
     const { definition } = info;
     if (typeof definition === 'object') {
       // recursive definition
-      return this.getCommand(mode, keyStream, info.definition, context.repeat);
+      return await this.getCommand(mode, keyStream, info.definition, context.repeat);
     } else if (typeof definition === 'function') {
       context = mode_obj.transform_context(context);
       return {
@@ -279,7 +278,7 @@ export default class KeyHandler extends EventEmitter {
   }
 
   // useful when you expect a motion
-  getMotion(keyStream, motionKey, bindings, repeat) {
+  async getMotion(keyStream, motionKey, bindings, repeat) {
     let motionRepeat;
     [motionRepeat, motionKey] = this.getRepeat(keyStream, motionKey);
     repeat = repeat * motionRepeat;
@@ -296,7 +295,7 @@ export default class KeyHandler extends EventEmitter {
     const { definition } = bindings[motionKey];
     if (typeof definition === 'object') {
       // recursive definition
-      return this.getMotion(keyStream, null, definition, repeat);
+      return await this.getMotion(keyStream, null, definition, repeat);
     } else if (typeof definition === 'function') {
       const context = {
         session: this.session,
@@ -304,7 +303,7 @@ export default class KeyHandler extends EventEmitter {
         keyStream,
         keyHandler: this
       };
-      const motion = definition.apply(context, []);
+      const motion = await definition.apply(context, []);
       return [motion, repeat, true];
     } else {
       throw new errors.UnexpectedValue('definition', definition);

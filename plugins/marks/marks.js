@@ -156,7 +156,7 @@ class MarksPlugin {
     const CMD_GO = this.api.commands.GO;
     this.api.registerMotion([CMD_GO, CMD_MARK], {
       description: 'Go to the mark indicated by the cursor, if it exists',
-    }, function() {
+    }, async function() {
       return async cursor => {
         const word = this.session.document.getWord(cursor.row, cursor.col);
         if (word.length < 1 || word[0] !== '@') {

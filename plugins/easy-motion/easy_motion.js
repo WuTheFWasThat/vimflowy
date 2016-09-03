@@ -20,7 +20,7 @@ Plugins.register({
   api.registerMotion(CMD_EASY_MOTION, {
     description: 'Jump to a visible row (based on EasyMotion)',
     multirow: true,
-  }, function() {
+  }, async function() {
     let key = this.keyStream.dequeue();
     if (key === null) {
       this.keyStream.wait();
@@ -71,7 +71,7 @@ Plugins.register({
           let path = EASY_MOTION_MAPPINGS.key_to_path[key];
           cursor.setPosition(path, 0);
         }
-        return EASY_MOTION_MAPPINGS = null;
+        EASY_MOTION_MAPPINGS = null;
       };
     }
   });

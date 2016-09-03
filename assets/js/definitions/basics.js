@@ -173,7 +173,7 @@ keyDefinitions.registerMotion(CMD_GO, {
 keyDefinitions.registerMotion([CMD_GO, CMD_GO], {
   description: 'Go to the beginning of visible document',
   multirow: true
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.visibleHome(options);
 });
 
@@ -187,7 +187,7 @@ const CMD_PARENT = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion([CMD_GO, CMD_PARENT], {
   description: 'Go to the parent of current line',
   multirow: true
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.parent(options);
 });
 
@@ -200,7 +200,7 @@ const CMD_CLONE = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion([CMD_GO, CMD_CLONE], {
   description: 'Go to next copy of this clone',
   multirow: true
-}, function() {
+}, async function() {
   return async (cursor /*, options */) => {
     if (this.session.mode !== MODES.NORMAL) {
       // doesn't work for visual_line mode due to zoomInto
@@ -223,7 +223,7 @@ const CMD_LINK = keyDefinitions.registerCommand({
 // TODO: this isn't actually a motion, but that's okay for now...
 keyDefinitions.registerMotion([CMD_GO, CMD_LINK], {
   description: 'Visit to the link indicated by the cursor, in a new tab',
-}, function() {
+}, async function() {
   return async (cursor) => {
     const word = this.session.document.getWord(cursor.row, cursor.col);
     if (utils.isLink(word)) {

@@ -9,7 +9,7 @@ const CMD_LEFT = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_LEFT, {
   description: 'Move cursor left',
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.left(options);
 });
 
@@ -22,7 +22,7 @@ const CMD_RIGHT = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_RIGHT, {
   description: 'Move cursor right',
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.right(options);
 });
 
@@ -36,7 +36,7 @@ const CMD_UP = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_UP, {
   description: 'Move cursor up',
   multirow: true
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.up(options);
 });
 
@@ -50,7 +50,7 @@ const CMD_DOWN = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_DOWN, {
   description: 'Move cursor down',
   multirow: true
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.down(options);
 });
 
@@ -64,7 +64,7 @@ const CMD_HOME = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_HOME, {
   description: 'Move cursor to beginning of line',
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.home(options);
 });
 
@@ -78,7 +78,7 @@ const CMD_END = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_END, {
   description: 'Move cursor to end of line',
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.end(options);
 });
 
@@ -91,7 +91,7 @@ const CMD_BEGINNING_WORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_BEGINNING_WORD, {
   description: 'Move cursor to the first word-beginning before it',
-}, function() {
+}, async function() {
   return async (cursor, options) =>
     await cursor.beginningWord({cursor: options});
 });
@@ -104,7 +104,7 @@ const CMD_END_WORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_END_WORD, {
   description: 'Move cursor to the first word-ending after it',
-}, function() {
+}, async function() {
   return async (cursor, options) =>
     await cursor.endWord({cursor: options});
 });
@@ -118,7 +118,7 @@ const CMD_NEXT_WORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_NEXT_WORD, {
   description: 'Move cursor to the beginning of the next word',
-}, function() {
+}, async function() {
   return async (cursor, options) =>
     await cursor.nextWord({cursor: options});
 });
@@ -131,7 +131,7 @@ const CMD_BEGINNING_WWORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_BEGINNING_WWORD, {
   description: 'Move cursor to the first Word-beginning before it',
-}, function() {
+}, async function() {
   return async (cursor, options) =>
     await cursor.beginningWord({cursor: options, whitespaceWord: true});
 });
@@ -144,7 +144,7 @@ const CMD_END_WWORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_END_WWORD, {
   description: 'Move cursor to the first Word-ending after it',
-}, function() {
+}, async function() {
   return async (cursor, options) =>
     await cursor.endWord({cursor: options, whitespaceWord: true});
 });
@@ -157,7 +157,7 @@ const CMD_NEXT_WWORD = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_NEXT_WWORD, {
   description: 'Move cursor to the beginning of the next Word',
-}, function() {
+}, async function() {
   return async (cursor, options) =>
     await cursor.nextWord({cursor: options, whitespaceWord: true});
 });
@@ -170,7 +170,7 @@ const CMD_FIND_NEXT_CHAR = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_FIND_NEXT_CHAR, {
   description: 'Move cursor to next occurrence of character in line',
-}, function() {
+}, async function() {
   const key = this.keyStream.dequeue();
   if (key === null) {
     this.keyStream.wait();
@@ -188,7 +188,7 @@ const CMD_FIND_PREV_CHAR = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_FIND_PREV_CHAR, {
   description: 'Move cursor to previous occurrence of character in line',
-}, function() {
+}, async function() {
   const key = this.keyStream.dequeue();
   if (key === null) {
     this.keyStream.wait();
@@ -206,7 +206,7 @@ const CMD_TO_NEXT_CHAR = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_TO_NEXT_CHAR, {
   description: 'Move cursor to just before next occurrence of character in line',
-}, function() {
+}, async function() {
   const key = this.keyStream.dequeue();
   if (key === null) {
     this.keyStream.wait();
@@ -224,7 +224,7 @@ const CMD_TO_PREV_CHAR = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_TO_PREV_CHAR, {
   description: 'Move cursor to just after previous occurrence of character in line',
-}, function() {
+}, async function() {
   const key = this.keyStream.dequeue();
   if (key === null) {
     this.keyStream.wait();
@@ -243,7 +243,7 @@ const CMD_GO_HOME = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_GO_HOME, {
   description: 'Go to beginning of visible document',
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.visibleHome(options);
 });
 
@@ -256,7 +256,7 @@ const CMD_GO_END = keyDefinitions.registerCommand({
 });
 keyDefinitions.registerMotion(CMD_GO_END, {
   description: 'Go to end of visible document',
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.visibleEnd(options);
 });
 
@@ -270,7 +270,7 @@ const CMD_NEXT_SIBLING = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_NEXT_SIBLING, {
   description: 'Move cursor to the next sibling of the current line',
   multirow: true
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.nextSibling(options);
 });
 
@@ -284,6 +284,6 @@ const CMD_PREV_SIBLING = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_PREV_SIBLING, {
   description: 'Move cursor to the previous sibling of the current line',
   multirow: true
-}, function() {
+}, async function() {
   return async (cursor, options) => await cursor.prevSibling(options);
 });

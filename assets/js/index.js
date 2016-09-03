@@ -16,7 +16,6 @@ import logger from './logger';
 
 import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';
-import { KeyStream } from './keyHandler';
 import KeyHandler from './keyHandler';
 import * as DataStore from './datastore';
 import Document from './document';
@@ -168,19 +167,11 @@ async function create_session(doc, to_load) {
   const key_emitter = new KeyEmitter();
   key_emitter.listen();
   key_emitter.on('keydown', (key) => {
-    // TODO HACKY: this is just a best guess... e.g. the mode could be wrong
+    // NOTE: this is just a best guess... e.g. the mode could be wrong
     // problem is that we process asynchronously, but need to
     // return synchronously
-    const keyStream = new KeyStream([key]);
+    const handled = !!key_bindings.bindings[session.mode][key];
 
-    let handled = true;
-    // ALSO HACKY: getCommand currently causes key_transforms in search mode
-    if (session.mode === Modes.modes.NORMAL) {
-      handled = key_handler.getCommand(session.mode, keyStream).handled;
-    } else {
-      // just a good heuristic
-      handled = !!key_bindings.bindings[session.mode][key];
-    }
     // fire and forget
     key_handler.handleKey(key).then(() => {
       Render.renderSession(session);

@@ -97,7 +97,7 @@ export class AddChars extends Mutation {
       return;
     }
     if (cursor.col >= this.col) {
-      return cursor.setCol((cursor.col + this.chars.length));
+      return cursor.setCol(cursor.col + this.chars.length);
     }
   }
 }
@@ -133,7 +133,7 @@ export class DelChars extends Mutation {
     } else if (cursor.col < this.col + this.nchars) {
       return cursor.setCol(this.col);
     } else {
-      return cursor.setCol((cursor.col - this.nchars));
+      return cursor.setCol(cursor.col - this.nchars);
     }
   }
 }

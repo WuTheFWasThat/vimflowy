@@ -10,12 +10,12 @@ Cursor represents a cursor within a session
 it handles movement logic, insert mode line properties (e.g. bold/italic)
 */
 export default class Cursor extends EventEmitter {
-  constructor(session, path = null, col = null, moveCol = null) {
+  constructor(session, path, col = 0, moveCol = null) {
     super();
     this.session = session;
     this.document = session.document;
-    this.path = path !== null ? path : this.document.getChildren(this.session.viewRoot)[0];
-    this.col = col !== null ? col : 0;
+    this.path = path;
+    this.col = col;
     this.properties = {};
     this._getPropertiesFromContext();
 
