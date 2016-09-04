@@ -8,23 +8,11 @@ module.exports = {
   devtool: 'source-map',
   entry: './src/assets/js/app.js',
   module: {
-    preLoaders: [{
-      test: /\.tsx?$/,
-      loader: 'tslint',
-      include: SRC_DIR
-    }],
     loaders: [
       {
         test: /\.jsx?$/,
         loaders: ['babel'],
         include: SRC_DIR,
-      },
-      {
-        test: /\.tsx?$/,
-        loaders: [
-          'babel', 'ts'
-        ],
-        include: SRC_DIR
       },
       {
         test: /\.(sass|css)$/,
@@ -56,10 +44,6 @@ module.exports = {
     })
   ],
   resolve: {
-    extensions: ['', '.jsx', '.js', '.tsx', '.ts']
-  },
-  tslint: {
-    emitErrors: true,
-    failOnHint: true
+    extensions: ['', '.jsx', '.js']
   }
 };

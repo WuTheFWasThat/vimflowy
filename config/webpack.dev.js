@@ -9,23 +9,11 @@ module.exports = {
   devtool: 'eval',
   entry: ['webpack-hot-middleware/client', './src/assets/js/app.js'],
   module: {
-    preLoaders: [{
-      test: /\.tsx?$/,
-      loader: 'tslint',
-      include: SRC_DIR
-    }],
     loaders: [
       {
         test: /\.jsx?$/,
         loaders: ['babel'],
         include: SRC_DIR,
-      },
-      {
-        test: /\.tsx?$/,
-        loaders: [
-          'babel', 'ts'
-        ],
-        include: SRC_DIR
       },
       {
         test: /\.(sass|css)$/,
@@ -48,6 +36,6 @@ module.exports = {
     new webpack.NoErrorsPlugin()
   ],
   resolve: {
-    extensions: ['', '.jsx', '.js', '.tsx', '.ts']
+    extensions: ['', '.jsx', '.js']
   }
 };
