@@ -41,8 +41,8 @@ module.exports = {
   },
   output: {
     filename: 'app.js',
-    path: path.join(__dirname, '..', 'build'),
-    publicPath: '/static/'
+    path: path.join(__dirname, '..', 'static', 'build'),
+    publicPath: '/build/'
   },
   plugins: [
     new AsyncAwaitPlugin({}),

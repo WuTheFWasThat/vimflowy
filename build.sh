@@ -46,13 +46,10 @@ fi
 mkdir -p $OUTPUT_FOLDER
 rm -rf $OUTPUT_FOLDER/vimflowy
 
-# builds everything into public/
+# builds everything into static/build/
 npm run build
-# copy entire public folder
-cp -r public $OUTPUT_FOLDER/vimflowy
-
-# stuff for chrome packaged app
-cp package/* $OUTPUT_FOLDER/vimflowy/
+# copy entire static folder
+cp -r static/* $OUTPUT_FOLDER/vimflowy
 
 echo "Success!  Result at $OUTPUT_FOLDER/vimflowy"
 

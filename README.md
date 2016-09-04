@@ -1,4 +1,4 @@
-# ![Vimflowy](/assets/images/vimflowy-32.png?raw=true) Vimflowy
+# ![Vimflowy](/static/images/vimflowy-32.png?raw=true) Vimflowy
 
 [![Join Gitter chat](https://badges.gitter.im/WuTheFWasThat/vimflowy.svg)](https://gitter.im/WuTheFWasThat/vimflowy)
 
