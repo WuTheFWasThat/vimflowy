@@ -791,51 +791,62 @@ export function renderPlugins(pluginManager) {
   if (pluginManager.div === undefined) {
     return;
   }
-  const vtree = virtualRenderPlugins(pluginManager);
-  if (!pluginManager.vnode) {
-    pluginManager.vtree = vtree;
-    pluginManager.vnode = virtualDom.create(pluginManager.vtree);
-    pluginManager.div.empty();
-    pluginManager.div.append(pluginManager.vnode);
-    return;
-  }
 
-  const patches = virtualDom.diff(pluginManager.vtree, vtree);
-  pluginManager.vtree = vtree;
-  return pluginManager.vnode = virtualDom.patch(pluginManager.vnode, patches);
-};
-
-const virtualRenderPlugins = function(pluginManager) {
-  const header = virtualDom.h('tr', {}, [
-    virtualDom.h('th', { className: 'plugin-name' }, 'Plugin'),
-    virtualDom.h('th', { className: 'plugin-description' }, 'Description'),
-    virtualDom.h('th', { className: 'plugin-version' }, 'Version'),
-    virtualDom.h('th', { className: 'plugin-author' }, 'Author'),
-    virtualDom.h('th', { className: 'plugin-status' }, 'Status'),
-    virtualDom.h('th', { className: 'plugin-actions' }, 'Actions')
-  ]
+  const pluginElements = Plugins.names().map(
+    name => renderReactPlugin(pluginManager, name)
   );
-  const pluginElements = (Plugins.names()).map(name => virtualRenderPlugin(pluginManager, name));
-  return virtualDom.h('table', {}, ([header].concat(pluginElements)));
+
+  ReactDOM.render(
+    (
+      <table>
+        <tr>
+          <th className='plugin-name'>
+            Plugin
+          </th>
+          <th className='plugin-description'>
+            Description
+          </th>
+          <th className='plugin-version'>
+            Version
+          </th>
+          <th className='plugin-author'>
+            Author
+          </th>
+          <th className='plugin-status'>
+            Status
+          </th>
+          <th className='plugin-actions'>
+            Actions
+          </th>
+        </tr>
+        {pluginElements}
+      </table>
+    ),
+    pluginManager.div[0]
+  );
 };
 
-const virtualRenderPlugin = function(pluginManager, name) {
+const renderReactPlugin = function(pluginManager, name) {
   const status = pluginManager.getStatus(name);
   const actions = [];
   let button;
   if (status === Plugins.STATUSES.ENABLED) {
-    // "Disable" action
-    button = virtualDom.h('div', {
-      className: 'btn theme-trim',
-      onclick() { return pluginManager.disable(name); }
-    }, 'Disable');
+    button = (
+      <div className='btn theme-trim'
+        onClick={() => { return pluginManager.disable(name); }}
+      >
+        Disable
+      </div>
+    );
     actions.push(button);
   } else if (status === Plugins.STATUSES.DISABLED) {
-    // "Enable" action
-    button = virtualDom.h('div', {
-      className: 'btn theme-trim',
-      onclick() { return pluginManager.enable(name); }
-    }, 'Enable');
+    button = (
+      <div className='btn theme-trim'
+        onClick={() => { return pluginManager.enable(name); }}
+      >
+        Enable
+      </div>
+    );
     actions.push(button);
   }
 
@@ -850,18 +861,28 @@ const virtualRenderPlugin = function(pluginManager, name) {
   }
 
   const plugin = Plugins.getPlugin(name) || {};
-  return virtualDom.h('tr', {
-    className: 'plugin theme-bg-secondary'
-  }, [
-    /* eslint-disable max-len */
-    virtualDom.h('td', { className: 'center theme-trim plugin-name' },name),
-    virtualDom.h('td', { className: 'theme-trim plugin-description', style: {'font-size': '12px'} }, (plugin.description || '')),
-    virtualDom.h('td', { className: 'center theme-trim plugin-version' }, (plugin.version || '') + ''),
-    virtualDom.h('td', { className: 'center theme-trim plugin-author', style: {'font-size': '12px'} }, plugin.author || ''),
-    virtualDom.h('td', { className: 'center theme-trim plugin-status', style: {'box-shadow': `inset 0px 0px 0px 2px ${color}` } }, status),
-    virtualDom.h('td', { className: 'center theme-trim plugin-actions' }, actions)
-    /* eslint-enable max-len */
-  ]
+  return (
+    <tr className='plugin theme-bg-secondary'>
+      <td className='center theme-trim plugin-name'>
+        { name }
+      </td>
+      <td className='theme-trim plugin-description' style={{fontSize: 12}}>
+        { plugin.description || '' }
+      </td>
+      <td className='center theme-trim plugin-version'>
+        { (plugin.version || '') + '' }
+      </td>
+      <td className='center theme-trim plugin-author' style={{fontSize: 12}}>
+        { plugin.author || '' }
+      </td>
+      <td className='center theme-trim plugin-status'
+        style={{boxShadow: `inset 0px 0px 0px 2px ${color}`}}>
+        {status}
+      </td>
+      <td className='center theme-trim plugin-actions'>
+        {actions}
+      </td>
+    </tr>
   );
 };
 
