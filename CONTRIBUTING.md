@@ -18,6 +18,10 @@ Assuming you have (recent versions of) node and npm
     cd vimflowy
     npm install
 
+Install typescript, then
+
+    typings install
+
 #### START: ####
 
 Just run

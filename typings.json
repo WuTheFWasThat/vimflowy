@@ -1,0 +1,12 @@
+{
+  "name": "vimflowy",
+  "globalDependencies": {
+    "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#6e54cb627506cf64d6effba1fe49b5a091ac4297",
+    "lodash": "github:DefinitelyTyped/DefinitelyTyped/lodash/lodash.d.ts#d01120d564974dbcecb761deea9ef56c3d1f21f3",
+    "react": "github:DefinitelyTyped/DefinitelyTyped/react/react.d.ts#ba424f7ee39717d51c17699a09ac8df312a7e9a1",
+    "react-dom": "github:DefinitelyTyped/DefinitelyTyped/react/react-dom.d.ts#ba424f7ee39717d51c17699a09ac8df312a7e9a1"
+
+  },
+  "dependencies": {
+  }
+}

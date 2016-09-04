@@ -11,3 +11,6 @@ npm-debug.log
 *.sw*
 # spacemacs files
 .#*
+
+# type definitions
+/typings

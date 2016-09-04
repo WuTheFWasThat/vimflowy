@@ -13,11 +13,23 @@ module.exports = {
     './src/assets/js/app.jsx'
   ],
   module: {
+    preLoaders: [{
+      test: /\.tsx?$/,
+      loader: 'tslint',
+      include: SRC_DIR
+    }],
     loaders: [
       {
         test: /\.jsx?$/,
         loaders: ['react-hot', 'babel'],
         include: SRC_DIR,
+      },
+      {
+        test: /\.tsx?$/,
+        loaders: [
+          'babel', 'ts'
+        ],
+        include: SRC_DIR
       },
       {
         test: /\.(sass|css)$/,
@@ -40,6 +52,6 @@ module.exports = {
     new webpack.NoErrorsPlugin()
   ],
   resolve: {
-    extensions: ['', '.jsx', '.js']
+    extensions: ['', '.jsx', '.js', '.tsx', '.ts']
   }
 };
