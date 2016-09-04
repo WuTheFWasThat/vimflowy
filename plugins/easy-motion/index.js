@@ -1,5 +1,3 @@
-/* globals virtualDom */
-
 import _ from 'lodash';
 import * as Plugins from '../../assets/js/plugins';
 
@@ -81,8 +79,11 @@ Plugins.register({
   return api.registerHook('session', 'renderBullet', function(bullet, info) {
     let ancestry_str = JSON.stringify(info.path.getAncestry());
     if (EASY_MOTION_MAPPINGS && ancestry_str in EASY_MOTION_MAPPINGS.path_to_key) {
-      let char = EASY_MOTION_MAPPINGS.path_to_key[ancestry_str];
-      bullet = virtualDom.h('span', {className: 'bullet theme-text-accent easy-motion'}, [char]);
+      bullet = (
+        <span className='bullet theme-text-accent easy-motion'>
+          {EASY_MOTION_MAPPINGS.path_to_key[ancestry_str]}
+        </span>
+      );
     }
     return bullet;
   });

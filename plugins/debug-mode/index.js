@@ -1,4 +1,7 @@
-/* globals virtualDom */
+/* eslint-disable no-unused-vars */
+import React from 'react';
+/* eslint-enable no-unused-vars */
+
 import * as Plugins from '../../assets/js/plugins';
 
 Plugins.register({
@@ -8,12 +11,11 @@ Plugins.register({
   version: 1
 }, (api =>
   api.registerHook('session', 'renderInfoElements', function(pathElements, info) {
-    pathElements.unshift(virtualDom.h('span', {
-      style: {
-        position: 'relative',
-        'font-weight': 'bold'
-      }
-    }, ' ' + info.path.getAncestry().join(', ')));
+    pathElements.unshift(
+      <span style={{ position: 'relative', fontWeight: 'bold'}}>
+        {' ' + info.path.getAncestry().join(', ')}
+      </span>
+    );
 
     return pathElements;
   })

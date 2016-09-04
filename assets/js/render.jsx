@@ -1,16 +1,16 @@
-/* globals $ */
 /* eslint-disable no-use-before-define */
+
+import $ from 'jquery';
+/* eslint-disable no-unused-vars */
+import React from 'react';
+/* eslint-enable no-unused-vars */
+import ReactDOM from 'react-dom';
 
 import * as constants from './constants';
 import * as utils from './utils';
 import logger from './logger';
 import * as Plugins from './plugins';
 import * as Modes from './modes';
-
-/* eslint-disable no-unused-vars */
-import React from 'react';
-/* eslint-enable no-unused-vars */
-import ReactDOM from 'react-dom';
 
 const MODES = Modes.modes;
 const { NORMAL_MODE_TYPE } = Modes;
@@ -232,8 +232,7 @@ export function virtualRenderLine(session, path, options = {}) {
       }
     }
 
-    // TODO BRING BACK
-    // cursors = session.applyHook('renderCursorsDict', cursors, { path });
+    cursors = session.applyHook('renderCursorsDict', cursors, { path });
   }
 
   const results = [];
@@ -259,18 +258,14 @@ export function virtualRenderLine(session, path, options = {}) {
     lineoptions.linemouseover = () => renderSession(session, {handle_clicks: true});
   }
 
-  // TODO BRING BACK
-  // lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
-  // lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
+  lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
+  lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
 
   let lineContents = renderLine(lineData, lineoptions);
-  // TODO BRING BACK
-  // lineContents = session.applyHook('renderLineContents', lineContents, { path });
+  lineContents = session.applyHook('renderLineContents', lineContents, { path });
   [].push.apply(results, lineContents);
 
-  // TODO BRING BACK
-  // const infoChildren = session.applyHook('renderInfoElements', [], { path });
-  const infoChildren = [];
+  const infoChildren = session.applyHook('renderInfoElements', [], { path });
 
   const info = (
     <span className='node-info'>
@@ -279,9 +274,7 @@ export function virtualRenderLine(session, path, options = {}) {
   );
   results.push(info);
 
-  // TODO BRING BACK
-  // return session.applyHook('renderLineElements', results, { path });
-  return results;
+  return session.applyHook('renderLineElements', results, { path });
 };
 
 
@@ -443,8 +436,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
       <i className={`fa ${icon} bullet`} style={style} onClick={onClick}>
       </i>
     );
-    // TODO bring back
-    // bullet = session.applyHook('renderBullet', bullet, { path });
+    bullet = session.applyHook('renderBullet', bullet, { path });
 
     pathElements.push(bullet);
 
@@ -476,9 +468,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
       className += ' theme-bg-highlight';
     }
 
-    const postHookPathElements = pathElements;
-    // TODO BRING BACK
-    // const postHookPathElements = session.applyHook('renderPathElements', pathElements, { path });
+    const postHookPathElements = session.applyHook('renderPathElements', pathElements, { path });
 
     const childNode = (
       <div id={containerDivID(path.row)} className={className}>
@@ -537,18 +527,14 @@ export function virtualRenderLine(session, path, options = {}) {
     lineoptions.linemouseover = () => renderSession(session, {handle_clicks: true});
   }
 
-  // TODO BRING BACK
-  // lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
-  // lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
+  lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
+  lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
 
   let lineContents = renderLine(lineData, lineoptions);
-  // TODO BRING BACK
-  // lineContents = session.applyHook('renderLineContents', lineContents, { path });
+  lineContents = session.applyHook('renderLineContents', lineContents, { path });
   [].push.apply(results, lineContents);
 
-  // TODO BRING BACK
-  const infoChildren = [];
-  // const infoChildren = session.applyHook('renderInfoElements', [], { path });
+  const infoChildren = session.applyHook('renderInfoElements', [], { path });
   const info = (
     <span className='node-info'>
       {infoChildren}
@@ -556,9 +542,7 @@ export function virtualRenderLine(session, path, options = {}) {
   );
   results.push(info);
 
-  // TODO BRING BACK
-  // return session.applyHook('renderLineElements', results, { path });
-  return results;
+  return session.applyHook('renderLineElements', results, { path });
 };
 
 export function renderMenu(menu) {
@@ -600,10 +584,9 @@ export function renderMenu(menu) {
 
       const renderOptions = result.renderOptions || {};
       let contents = renderLine(result.contents, renderOptions);
-      // TODO BRING BACK
-      // if (result.renderHook) {
-      //   contents = result.renderHook(contents);
-      // }
+      if (result.renderHook) {
+        contents = result.renderHook(contents);
+      }
 
       const className = selected ? 'theme-bg-selection' : '';
       const icon = selected ? 'fa-arrow-circle-right' : 'fa-circle';

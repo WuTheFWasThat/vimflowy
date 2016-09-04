@@ -1,8 +1,11 @@
-/* globals virtualDom, $ */
 // Time-tracking keeps track of the amount of time spent in each subtree.
 // Clones are double-counted. This is a known bug and will not be fixed.
-//
+
 import _ from 'lodash';
+import $ from 'jquery';
+/* eslint-disable no-unused-vars */
+import React from 'react';
+/* eslint-enable no-unused-vars */
 
 import * as Plugins from '../../assets/js/plugins';
 import * as Modes from '../../assets/js/modes';
@@ -40,11 +43,15 @@ class TimeTrackingPlugin {
         if (isCurRow) {
           timeStr += ' + ';
         }
-        elements.push(virtualDom.h('span', { className: 'time' }, timeStr));
+        elements.push(
+          <span className='time'>{timeStr}</span>
+        );
 
         if (isCurRow) {
           let curTime = new Date() - this.currentRow.time;
-          elements.push(virtualDom.h('span', { className: 'time curtime' }, (this.printTime(curTime))));
+          elements.push(
+            <span className='time curtime'>{this.printTime(curTime)}</span>
+          );
         }
       }
       return elements;

@@ -136,7 +136,8 @@ For listeners:
 For hooks:
 - `hookname` is the name of the hook being registered
 - `fn(value, info)` is a callback taking some value and some additional information the hook provides, and which should return a new value.
-  In the case of rendering hooks, for example, the value is a virtualDom element (or array of them), and thus the hook function should return a new virtualDom element (or array of them).
+  In the case of rendering hooks, for example, the value is a ReactDOM element (or array of them),
+  and thus the hook function should return a new ReactDOM element (or array of them).
 
 *More detailed info will be added in the future.*
 

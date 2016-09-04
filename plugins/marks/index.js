@@ -1,5 +1,7 @@
-/* globals virtualDom */
 import _ from 'lodash';
+/* eslint-disable no-unused-vars */
+import React from 'react';
+/* eslint-enable no-unused-vars */
 
 import * as Plugins from '../../assets/js/plugins';
 import Menu from '../../assets/js/menu';
@@ -222,9 +224,10 @@ class MarksPlugin {
             return {
               contents: this.session.document.getLine(path.row),
               renderHook(contents) {
-                contents.unshift(virtualDom.h('span', {
-                  className: 'mark theme-bg-secondary theme-trim'
-                }, found.mark)
+                contents.unshift(
+                  <span className='mark theme-bg-secondary theme-trim'>
+                    {found.mark}
+                  </span>
                 );
                 return contents;
               },
@@ -279,15 +282,19 @@ class MarksPlugin {
       const marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
       if (marking) {
         const markresults = Render.virtualRenderLine(this.marksession, this.marksession.cursor.path, {no_clicks: true});
-        lineContents.unshift(virtualDom.h('span', {
-          className: 'mark theme-bg-secondary theme-trim-accent'
-        }, markresults));
+        lineContents.unshift(
+          <span className='mark theme-bg-secondary theme-trim-accent'>
+            {markresults}
+          </span>
+        );
       } else {
         const mark = this._getMark(info.path.row);
         if (mark) {
-          lineContents.unshift(virtualDom.h('span', {
-            className: 'mark theme-bg-secondary theme-trim'
-          }, mark));
+          lineContents.unshift(
+            <span className='mark theme-bg-secondary theme-trim'>
+              {mark}
+            </span>
+          );
         }
       }
       return lineContents;
