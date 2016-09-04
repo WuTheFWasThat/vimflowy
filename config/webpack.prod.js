@@ -16,11 +16,7 @@ module.exports = {
     loaders: [
       {
         test: /\.jsx?$/,
-        loader: ['babel'],
-        query: {
-          presets: ['es2015', 'react'],
-          plugins: []
-        },
+        loaders: ['babel'],
         exclude: /node_modules/
         // include: APP_DIR,
         // also should include plugins
