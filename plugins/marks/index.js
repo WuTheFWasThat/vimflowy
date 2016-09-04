@@ -218,14 +218,14 @@ class MarksPlugin {
 
         const text = chars.join('');
         return _.map(
-          (findMarks(this.session.document, text)),
+          findMarks(this.session.document, text),
           found => {
             const path = found.path;
             return {
               contents: this.session.document.getLine(path.row),
               renderHook(contents) {
                 contents.unshift(
-                  <span className='mark theme-bg-secondary theme-trim'>
+                  <span key={found.mark} className='mark theme-bg-secondary theme-trim'>
                     {found.mark}
                   </span>
                 );

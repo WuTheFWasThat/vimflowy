@@ -19,12 +19,6 @@ const MODE_TYPES = Modes.types;
 
 // TODO: move mode-specific logic into mode render functions
 
-const containerDivID = id => `node-${id}`;
-
-const rowDivID = id => `node-${id}-row`;
-
-const childrenDivID = id => `node-${id}-children`;
-
 function getCursorClass(cursorBetween) {
   if (cursorBetween) {
     return 'theme-cursor-insert';
@@ -268,7 +262,7 @@ export function virtualRenderLine(session, path, options = {}) {
   const infoChildren = session.applyHook('renderInfoElements', [], { path });
 
   const info = (
-    <span className='node-info'>
+    <span key='info' className='node-info'>
       {infoChildren}
     </span>
   );
@@ -326,7 +320,7 @@ function virtualRenderSession(session, options = {}) {
       };
     }
     return (
-      <span className='crumb'>
+      <span key={'crumb_' + path.row} className='crumb'>
         <span className={className} onClick={onClick}>
           {
             (() => {
@@ -400,9 +394,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
     return;
   }
 
-  const childrenNodes = [];
-
-  session.document.getChildren(parent).forEach((path) => {
+  return session.document.getChildren(parent).map((path) => {
     const pathElements = [];
 
     if (session.document.isClone(path.row)) {
@@ -421,7 +413,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
     let onClick = null;
     if (session.document.hasChildren(path.row)) {
       style.cursor = 'pointer';
-      onClick = (path) => {
+      onClick = () => {
         session.toggleBlockCollapsed(path.row);
         session.save();
         return renderSession(session);
@@ -429,7 +421,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
     }
 
     let bullet = (
-      <i className={`fa ${icon} bullet`}
+      <i className={`fa ${icon} bullet`} key='bullet'
         style={style} onClick={onClick}
         data-ancestry={JSON.stringify(path.getAncestry())}
       >
@@ -440,7 +432,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
     pathElements.push(bullet);
 
     const elLine = (
-      <div id={rowDivID(path.row)} className='node-text'
+      <div key={'text_' + path.row} className='node-text'
            onClick={() => {
              // if clicking outside of text, but on the row,
              // move cursor to the end of the row
@@ -456,7 +448,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
 
     options.ignoreCollapse = false;
     const children = (
-      <div id={childrenDivID(path.row)} className='node-children'>
+      <div className='node-children' key='children'>
         {virtualRenderTree(session, path, options)}
       </div>
     );
@@ -469,14 +461,12 @@ const virtualRenderTree = function(session, parent, options = {}) {
 
     const postHookPathElements = session.applyHook('renderPathElements', pathElements, { path });
 
-    const childNode = (
-      <div id={containerDivID(path.row)} className={className}>
+    return (
+      <div className={className} key={path.row}>
         {postHookPathElements}
       </div>
     );
-    childrenNodes.push(childNode);
   });
-  return childrenNodes;
 };
 
 export function virtualRenderLine(session, path, options = {}) {
@@ -617,93 +607,95 @@ export function renderPlugins(pluginManager) {
     return;
   }
 
-  const pluginElements = Plugins.names().map(
-    name => renderReactPlugin(pluginManager, name)
-  );
-
   ReactDOM.render(
     (
       <table>
-        <tr>
-          <th className='plugin-name'>
-            Plugin
-          </th>
-          <th className='plugin-description'>
-            Description
-          </th>
-          <th className='plugin-version'>
-            Version
-          </th>
-          <th className='plugin-author'>
-            Author
-          </th>
-          <th className='plugin-status'>
-            Status
-          </th>
-          <th className='plugin-actions'>
-            Actions
-          </th>
-        </tr>
-        {pluginElements}
+        <thead>
+          <tr>
+            <th className='plugin-name'>
+              Plugin
+            </th>
+            <th className='plugin-description'>
+              Description
+            </th>
+            <th className='plugin-version'>
+              Version
+            </th>
+            <th className='plugin-author'>
+              Author
+            </th>
+            <th className='plugin-status'>
+              Status
+            </th>
+            <th className='plugin-actions'>
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            Plugins.names().map(
+              name => {
+                const status = pluginManager.getStatus(name);
+                const actions = [];
+                let btnClick;
+                let btnText;
+                if (status === Plugins.STATUSES.ENABLED) {
+                  btnClick = () => { return pluginManager.disable(name); };
+                  btnText = 'Disable';
+                } else if (status === Plugins.STATUSES.DISABLED) {
+                  btnClick= () => { return pluginManager.enable(name); };
+                  btnText = 'Enable';
+                }
+                if (btnText) {
+                  actions.push(
+                    <div key={btnText} className='btn theme-trim' onClick={btnClick}>
+                      {btnText}
+                    </div>
+                  );
+                }
+
+                let color = 'inherit';
+                if (status === Plugins.STATUSES.ENABLING || status === Plugins.STATUSES.DISABLING) {
+                  color = 'yellow';
+                }
+                if (status === Plugins.STATUSES.UNREGISTERED || status === Plugins.STATUSES.DISABLED) {
+                  color = 'red';
+                } else if (status === Plugins.STATUSES.ENABLED) {
+                  color = 'green';
+                }
+
+                const plugin = Plugins.getPlugin(name) || {};
+                return (
+                  <tr key={name} className='plugin theme-bg-secondary'>
+                    <td className='center theme-trim plugin-name'>
+                      { name }
+                    </td>
+                    <td className='theme-trim plugin-description' style={{fontSize: 12}}>
+                      { plugin.description || '' }
+                    </td>
+                    <td className='center theme-trim plugin-version'>
+                      { (plugin.version || '') + '' }
+                    </td>
+                    <td className='center theme-trim plugin-author' style={{fontSize: 12}}>
+                      { plugin.author || '' }
+                    </td>
+                    <td className='center theme-trim plugin-status'
+                      style={{boxShadow: `inset 0px 0px 0px 2px ${color}`}}>
+                      {status}
+                    </td>
+                    <td className='center theme-trim plugin-actions'>
+                      {actions}
+                    </td>
+                  </tr>
+                );
+              }
+            )
+          }
+        </tbody>
       </table>
     ),
     pluginManager.div[0]
-  );
-};
-
-const renderReactPlugin = function(pluginManager, name) {
-  const status = pluginManager.getStatus(name);
-  const actions = [];
-  let btnClick;
-  let btnText;
-  if (status === Plugins.STATUSES.ENABLED) {
-    btnClick = () => { return pluginManager.disable(name); };
-    btnText = 'Disable';
-  } else if (status === Plugins.STATUSES.DISABLED) {
-    btnClick= () => { return pluginManager.enable(name); };
-    btnText = 'Enable';
-  }
-  if (btnText) {
-    actions.push(
-      <div className='btn theme-trim' onClick={btnClick}>
-        {btnText}
-      </div>
-    );
-  }
-
-  let color = 'inherit';
-  if (status === Plugins.STATUSES.ENABLING || status === Plugins.STATUSES.DISABLING) {
-    color = 'yellow';
-  }
-  if (status === Plugins.STATUSES.UNREGISTERED || status === Plugins.STATUSES.DISABLED) {
-    color = 'red';
-  } else if (status === Plugins.STATUSES.ENABLED) {
-    color = 'green';
-  }
-
-  const plugin = Plugins.getPlugin(name) || {};
-  return (
-    <tr className='plugin theme-bg-secondary'>
-      <td className='center theme-trim plugin-name'>
-        { name }
-      </td>
-      <td className='theme-trim plugin-description' style={{fontSize: 12}}>
-        { plugin.description || '' }
-      </td>
-      <td className='center theme-trim plugin-version'>
-        { (plugin.version || '') + '' }
-      </td>
-      <td className='center theme-trim plugin-author' style={{fontSize: 12}}>
-        { plugin.author || '' }
-      </td>
-      <td className='center theme-trim plugin-status'
-        style={{boxShadow: `inset 0px 0px 0px 2px ${color}`}}>
-        {status}
-      </td>
-      <td className='center theme-trim plugin-actions'>
-        {actions}
-      </td>
-    </tr>
   );
 };
 

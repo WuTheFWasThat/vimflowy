@@ -44,13 +44,13 @@ class TimeTrackingPlugin {
           timeStr += ' + ';
         }
         elements.push(
-          <span className='time'>{timeStr}</span>
+          <span key='time' className='time'>{timeStr}</span>
         );
 
         if (isCurRow) {
           let curTime = new Date() - this.currentRow.time;
           elements.push(
-            <span className='time curtime'>{this.printTime(curTime)}</span>
+            <span key='curtime' className='time curtime'>{this.printTime(curTime)}</span>
           );
         }
       }

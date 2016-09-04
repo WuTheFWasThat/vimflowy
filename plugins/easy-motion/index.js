@@ -84,7 +84,7 @@ Plugins.register({
     let ancestry_str = JSON.stringify(info.path.getAncestry());
     if (EASY_MOTION_MAPPINGS && ancestry_str in EASY_MOTION_MAPPINGS.path_to_key) {
       bullet = (
-        <span className='bullet theme-text-accent easy-motion'>
+        <span key='easymotion' className='bullet theme-text-accent easy-motion'>
           {EASY_MOTION_MAPPINGS.path_to_key[ancestry_str]}
         </span>
       );
