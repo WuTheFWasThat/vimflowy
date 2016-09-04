@@ -15,6 +15,7 @@ import React from 'react';
 /* eslint-enable no-unused-vars */
 import ReactDOM from 'react-dom';
 
+import 'font-awesome/css/font-awesome.css';
 import '../css/utils.sass';
 import '../css/index.sass';
 import '../css/view.sass';

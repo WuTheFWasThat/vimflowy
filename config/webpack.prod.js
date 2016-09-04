@@ -29,14 +29,18 @@ module.exports = {
         include: APP_DIR
       },
       {
-        test: /\.sass$/,
+        test: /\.(sass|css)$/,
         loaders: ['style', 'css', 'sass']
+      },
+      {
+        test: /\.(svg|woff|woff2|ttf|eot)(\?.*$|$)/,
+        loader: 'file'
       },
     ]
   },
   output: {
-    path: path.join(__dirname, '..', 'build'),
     filename: 'app.js',
+    path: path.join(__dirname, '..', 'build'),
     publicPath: '/static/'
   },
   plugins: [

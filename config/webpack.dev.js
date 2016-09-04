@@ -30,8 +30,12 @@ module.exports = {
         include: APP_DIR
       },
       {
-        test: /\.sass$/,
+        test: /\.(sass|css)$/,
         loaders: ['style', 'css', 'sass']
+      },
+      {
+        test: /\.(svg|woff|woff2|ttf|eot)(\?.*$|$)/,
+        loader: 'file'
       },
     ]
   },
