@@ -5,8 +5,8 @@ When/if it gets merged, we'll try not to break it.
 
 # Plugin API
 
-To make a plugin, you can place `.js`, `.css`, or `.sass` files
-anywhere within the `plugins` folder in the vimflowy source directory.
+To make a plugin, import your javascript from [plugins/index.js](plugins/index.js).
+You can import CSS as well, from your javascript file.
 See the ["hello world" sample plugin](plugins/examples/example2.js) for an extremely minimal example.
 
 You will have to rebuild vimflowy if using a static distribution.

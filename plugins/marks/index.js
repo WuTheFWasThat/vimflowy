@@ -14,6 +14,8 @@ import * as constants from '../../assets/js/constants';
 
 import * as basic_defs from '../../assets/js/definitions/basics';
 
+import './marks.sass';
+
 // NOTE: mark mode is still in the core code
 // TODO: separate that out too?
 

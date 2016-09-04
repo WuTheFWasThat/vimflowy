@@ -7,6 +7,8 @@ import _ from 'lodash';
 import * as Plugins from '../../assets/js/plugins';
 import * as Modes from '../../assets/js/modes';
 
+import './time-tracking.sass';
+
 function pad(val, length, padChar = '0') {
   val += '';
   let numPads = length - val.length;

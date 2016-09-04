@@ -3,6 +3,8 @@
 import _ from 'lodash';
 import * as Plugins from '../../assets/js/plugins';
 
+import './easy_motion.sass';
+
 Plugins.register({
   name: 'Easy motion',
   author: 'Jeff Wu',
