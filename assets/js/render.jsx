@@ -35,6 +35,258 @@ function getCursorClass(cursorBetween) {
   }
 };
 
+function renderReactLine(lineData, options = {}) {
+  if (options.cursors === undefined) { options.cursors = {}; }
+  if (options.highlights === undefined) { options.highlights = {}; }
+
+  const results = [];
+
+  // ideally this takes up space but is unselectable (uncopyable)
+  const cursorChar = ' ';
+
+  let line = [];
+
+  // add cursor if at end
+  // NOTE: this doesn't seem to work for the breadcrumbs, e.g. try visual selecting word at end
+  if (lineData.length in options.cursors) {
+    lineData.push({char: cursorChar});
+  }
+
+  if (lineData.length === 0) {
+    return results;
+  }
+
+  for (let i = 0; i < lineData.length; i++) {
+    const obj = lineData[i];
+    const info = {
+      column: i
+    };
+    const renderOptions = {};
+
+    constants.text_properties.forEach((property) => {
+      if (obj[property]) {
+        renderOptions[property] = true;
+      }
+    });
+
+    let x = obj.char;
+
+    if (obj.char === '\n') {
+      // tricky logic for rendering new lines within a bullet
+      // (copies correctly, works when cursor is on the newline itself)
+      x = '';
+      info.break = true;
+      if (i in options.cursors) {
+        x = cursorChar + x;
+      }
+    }
+
+    if (i in options.cursors) {
+      renderOptions.cursor = true;
+    } else if (i in options.highlights) {
+      renderOptions.highlight = true;
+    }
+
+    info.char = x;
+    info.renderOptions = renderOptions;
+
+    line.push(info);
+  }
+
+  // collect set of words, { word: word, start: start, end: end }
+  let word_chars = [];
+  let word_start = 0;
+
+
+  const newLineData = lineData.concat([{char: ' '}]);
+  for (let i = 0; i < newLineData.length; i++) { // to make end condition easier
+    // TODO  or (utils.isPunctuation obj.char)
+    // problem is URLs have dots in them...
+    const obj = newLineData[i];
+    if (utils.isWhitespace(obj.char)) {
+      if (i !== word_start) {
+        const word_info = {
+          word: word_chars.join(''),
+          start: word_start,
+          end: i - 1
+        };
+        if (options.wordHook) {
+          line = options.wordHook(line, word_info);
+        }
+        if (utils.isLink(word_info.word)) {
+          for (let j = word_info.start; j <= word_info.end; j++) {
+            line[j].renderOptions.type = 'a';
+            line[j].renderOptions.href = word_info.word;
+          }
+        }
+      }
+      word_start = i + 1;
+      word_chars = [];
+    } else {
+      word_chars.push(obj.char);
+    }
+  }
+
+  if (options.lineHook) {
+    line = options.lineHook(line);
+  }
+
+  const renderSpec = [];
+  // Normally, we collect things of the same type and render them in one div
+  // If there are column-specific handlers, however, we must break up the div to handle
+  // separate click events
+  if (options.charclick) {
+    line.forEach((x) => {
+      x.renderOptions.text = x.char;
+      if (!x.renderOptions.href) {
+        x.renderOptions.onclick = options.charclick.bind(this, x.column);
+      }
+      renderSpec.push(x.renderOptions);
+      if (x.break) {
+        renderSpec.push({type: 'div'});
+      }
+    });
+  } else {
+    let acc = [];
+    let renderOptions = {};
+
+    const flush = function() {
+      if (acc.length) {
+        renderOptions.text = acc.join('');
+        renderSpec.push(renderOptions);
+        acc = [];
+      }
+      renderOptions = {};
+    };
+
+    // collect line into groups to render
+    line.forEach((x) => {
+      if (JSON.stringify(x.renderOptions) === JSON.stringify(renderOptions)) {
+        acc.push(x.char);
+      } else {
+        flush();
+        acc.push(x.char);
+        ({ renderOptions } = x);
+      }
+
+      if (x.break) {
+        flush();
+        renderSpec.push({type: 'div'});
+      }
+    });
+    flush();
+  }
+
+  for (let i2 = 0; i2 < renderSpec.length; i2++) {
+    const spec = renderSpec[i2];
+    const classes = spec.classes || [];
+    const type = spec.type || 'span';
+    if (type === 'a') {
+      classes.push('theme-text-link');
+    }
+
+    // make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
+    constants.text_properties.forEach((property) => {
+      if (spec[property]) {
+        classes.push(property);
+      }
+    });
+
+    if (spec.cursor) {
+      classes.push(getCursorClass(options.cursorBetween));
+    }
+    if (spec.highlight) {
+      classes.push('theme-bg-highlight');
+    }
+
+    results.push(
+      <type
+        className={classes.join(' ')}
+        href={spec.href}
+        onMouseover={options.linemouseover}
+        onClick={spec.onclick}
+      >
+        {spec.text}
+      </type>
+    );
+  }
+
+  return results;
+};
+
+export function virtualRenderReactLine(session, path, options = {}) {
+  const lineData = session.document.getLine(path.row);
+  let cursors = {};
+  const highlights = {};
+
+  if (path.is(session.cursor.path)) {
+    cursors[session.cursor.col] = true;
+
+    if (session.anchor && !session.lineSelect) {
+      if (session.anchor.path && path.is(session.anchor.path)) {
+        const start = Math.min(session.cursor.col, session.anchor.col);
+        const end = Math.max(session.cursor.col, session.anchor.col);
+        for (let j = start; j <= end; j++) {
+          highlights[j] = true;
+        }
+      } else {
+        logger.warn('Multiline not yet implemented');
+      }
+    }
+
+    // TODO BRING BACK
+    // cursors = session.applyHook('renderCursorsDict', cursors, { path });
+  }
+
+  const results = [];
+
+  const lineoptions = {
+    cursors,
+    highlights,
+    cursorBetween: options.cursorBetween
+  };
+
+  if (options.handle_clicks) {
+    if (session.mode === MODES.NORMAL || session.mode === MODES.INSERT) {
+      lineoptions.charclick = function(column, e) {
+        session.cursor.setPosition(path, column);
+        // assume they might click again
+        renderSession(session, {handle_clicks: true});
+        // prevent overall path click
+        e.stopPropagation();
+        return false;
+      };
+    }
+  } else if (!options.no_clicks) {
+    lineoptions.linemouseover = () => renderSession(session, {handle_clicks: true});
+  }
+
+  // TODO BRING BACK
+  // lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
+  // lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
+
+  let lineContents = renderReactLine(lineData, lineoptions);
+  // TODO BRING BACK
+  // lineContents = session.applyHook('renderLineContents', lineContents, { path });
+  [].push.apply(results, lineContents);
+
+  // TODO BRING BACK
+  // const infoChildren = session.applyHook('renderInfoElements', [], { path });
+  const infoChildren = [];
+
+  const info = (
+    <span className='node-info'>
+      {infoChildren}
+    </span>
+  );
+  results.push(info);
+
+  // TODO BRING BACK
+  // return session.applyHook('renderLineElements', results, { path });
+  return results;
+};
+
+
 export function renderLine(lineData, options = {}) {
   if (options.cursors === undefined) { options.cursors = {}; }
   if (options.highlights === undefined) { options.highlights = {}; }
@@ -471,19 +723,21 @@ export function renderMenu(menu) {
     return;
   }
 
-  menu.div.empty();
-
-  const searchBox = $('<div>').addClass('searchBox theme-trim').appendTo(menu.div);
-  searchBox.append($('<i>').addClass('fa fa-search').css({
-    'margin-right': '10px'
-  }));
-
-  const searchRow = virtualDom.create(
-    virtualDom.h('span', {},
-      virtualRenderLine(menu.session, menu.session.cursor.path, {cursorBetween: true, no_clicks: true})
-    )
+  const searchBox = (
+    <div className='searchBox theme-trim'>
+      <i className='fa fa-search' style={{'margin-right': 10}}/>
+      <span>
+        {
+          virtualRenderReactLine(
+            menu.session, menu.session.cursor.path,
+            {cursorBetween: true, no_clicks: true}
+          )
+        }
+      </span>
+    </div>
   );
-  searchBox.append(searchRow);
+
+  let searchResults;
 
   if (menu.results.length === 0) {
     let message = '';
@@ -492,39 +746,45 @@ export function renderMenu(menu) {
     } else {
       message = 'No results!  Try typing something else';
     }
-    menu.div.append(
-      $('<div>').html(message).css({
-        'font-size': '20px',
-        'opacity': '0.5'
-      }).addClass('center')
+    searchResults = (
+      <div style={{fontSize: 20, opacity: 0.5}} className='center'>
+        {message}
+      </div>
     );
   } else {
-    for (let i = 0; i < menu.results.length; i++) {
-
-      const result = menu.results[i];
-      const resultDiv = $('<div>').css({
-        'margin-bottom': '10px'
-      }).appendTo(menu.div);
-
-      let icon = 'fa-circle';
-      if (i === menu.selection) {
-        resultDiv.addClass('theme-bg-selection');
-        icon = 'fa-arrow-circle-right';
-      }
-      resultDiv.append($('<i>').addClass(`fa ${icon} bullet`).css({
-        'margin-right': '20px'
-      }));
+    searchResults = menu.results.map((result, i) => {
+      const selected = i === menu.selection;
 
       const renderOptions = result.renderOptions || {};
-      let contents = renderLine(result.contents, renderOptions);
-      if (result.renderHook) {
-        contents = result.renderHook(contents);
-      }
-      const resultLineDiv = virtualDom.create(virtualDom.h('span', {}, contents));
-      resultDiv.append(resultLineDiv);
-    }
+      let contents = renderReactLine(result.contents, renderOptions);
+      // TODO BRING BACK
+      // if (result.renderHook) {
+      //   contents = result.renderHook(contents);
+      // }
+
+      const className = selected ? 'theme-bg-selection' : '';
+      const icon = selected ? 'fa-arrow-circle-right' : 'fa-circle';
+      return (
+        <div style={{marginBottom: 10}} className={className}>
+          <i className={`fa ${icon} bullet`} style={{marginRight: 20}}>
+          </i>
+          <span>
+            {contents}
+          </span>
+        </div>
+      );
+    });
   }
-  return null;
+
+  ReactDOM.render(
+    <div>
+      {searchBox}
+      {searchResults}
+    </div>
+    ,
+    menu.div[0]
+  );
+
 };
 
 export function renderPlugins(pluginManager) {
