@@ -1,7 +1,5 @@
-/* globals virtualDom, $ */
+/* globals $ */
 /* eslint-disable no-use-before-define */
-// virtualDom = require 'virtual-dom'
-import _ from 'lodash';
 
 import * as constants from './constants';
 import * as utils from './utils';
@@ -35,7 +33,7 @@ function getCursorClass(cursorBetween) {
   }
 };
 
-function renderReactLine(lineData, options = {}) {
+function renderLine(lineData, options = {}) {
   if (options.cursors === undefined) { options.cursors = {}; }
   if (options.highlights === undefined) { options.highlights = {}; }
 
@@ -139,7 +137,7 @@ function renderReactLine(lineData, options = {}) {
     line.forEach((x) => {
       x.renderOptions.text = x.char;
       if (!x.renderOptions.href) {
-        x.renderOptions.onclick = options.charclick.bind(this, x.column);
+        x.renderOptions.onClick = options.charclick.bind(this, x.column);
       }
       renderSpec.push(x.renderOptions);
       if (x.break) {
@@ -203,8 +201,8 @@ function renderReactLine(lineData, options = {}) {
       <type
         className={classes.join(' ')}
         href={spec.href}
-        onMouseover={options.linemouseover}
-        onClick={spec.onclick}
+        onMouseOver={options.linemouseover}
+        onClick={spec.onClick}
       >
         {spec.text}
       </type>
@@ -214,7 +212,7 @@ function renderReactLine(lineData, options = {}) {
   return results;
 };
 
-export function virtualRenderReactLine(session, path, options = {}) {
+export function virtualRenderLine(session, path, options = {}) {
   const lineData = session.document.getLine(path.row);
   let cursors = {};
   const highlights = {};
@@ -265,7 +263,7 @@ export function virtualRenderReactLine(session, path, options = {}) {
   // lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
   // lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
 
-  let lineContents = renderReactLine(lineData, lineoptions);
+  let lineContents = renderLine(lineData, lineoptions);
   // TODO BRING BACK
   // lineContents = session.applyHook('renderLineContents', lineContents, { path });
   [].push.apply(results, lineContents);
@@ -287,213 +285,20 @@ export function virtualRenderReactLine(session, path, options = {}) {
 };
 
 
-export function renderLine(lineData, options = {}) {
-  if (options.cursors === undefined) { options.cursors = {}; }
-  if (options.highlights === undefined) { options.highlights = {}; }
-
-  const results = [];
-
-  // ideally this takes up space but is unselectable (uncopyable)
-  const cursorChar = ' ';
-
-  let line = [];
-
-  // add cursor if at end
-  // NOTE: this doesn't seem to work for the breadcrumbs, e.g. try visual selecting word at end
-  if (lineData.length in options.cursors) {
-    lineData.push({char: cursorChar});
-  }
-
-  if (lineData.length === 0) {
-    return results;
-  }
-
-  for (let i = 0; i < lineData.length; i++) {
-    const obj = lineData[i];
-    const info = {
-      column: i
-    };
-    const renderOptions = {};
-
-    constants.text_properties.forEach((property) => {
-      if (obj[property]) {
-        renderOptions[property] = true;
-      }
-    });
-
-    let x = obj.char;
-
-    if (obj.char === '\n') {
-      // tricky logic for rendering new lines within a bullet
-      // (copies correctly, works when cursor is on the newline itself)
-      x = '';
-      info.break = true;
-      if (i in options.cursors) {
-        x = cursorChar + x;
-      }
-    }
-
-    if (i in options.cursors) {
-      renderOptions.cursor = true;
-    } else if (i in options.highlights) {
-      renderOptions.highlight = true;
-    }
-
-    info.char = x;
-    info.renderOptions = renderOptions;
-
-    line.push(info);
-  }
-
-  // collect set of words, { word: word, start: start, end: end }
-  let word_chars = [];
-  let word_start = 0;
-
-
-  const newLineData = lineData.concat([{char: ' '}]);
-  for (let i = 0; i < newLineData.length; i++) { // to make end condition easier
-    // TODO  or (utils.isPunctuation obj.char)
-    // problem is URLs have dots in them...
-    const obj = newLineData[i];
-    if (utils.isWhitespace(obj.char)) {
-      if (i !== word_start) {
-        const word_info = {
-          word: word_chars.join(''),
-          start: word_start,
-          end: i - 1
-        };
-        if (options.wordHook) {
-          line = options.wordHook(line, word_info);
-        }
-        if (utils.isLink(word_info.word)) {
-          for (let j = word_info.start; j <= word_info.end; j++) {
-            line[j].renderOptions.type = 'a';
-            line[j].renderOptions.href = word_info.word;
-          }
-        }
-      }
-      word_start = i + 1;
-      word_chars = [];
-    } else {
-      word_chars.push(obj.char);
-    }
-  }
-
-  if (options.lineHook) {
-    line = options.lineHook(line);
-  }
-
-  const renderSpec = [];
-  // Normally, we collect things of the same type and render them in one div
-  // If there are column-specific handlers, however, we must break up the div to handle
-  // separate click events
-  if (options.charclick) {
-    line.forEach((x) => {
-      x.renderOptions.text = x.char;
-      if (!x.renderOptions.href) {
-        x.renderOptions.onclick = options.charclick.bind(this, x.column);
-      }
-      renderSpec.push(x.renderOptions);
-      if (x.break) {
-        renderSpec.push({type: 'div'});
-      }
-    });
-  } else {
-    let acc = [];
-    let renderOptions = {};
-
-    const flush = function() {
-      if (acc.length) {
-        renderOptions.text = acc.join('');
-        renderSpec.push(renderOptions);
-        acc = [];
-      }
-      renderOptions = {};
-    };
-
-    // collect line into groups to render
-    line.forEach((x) => {
-      if (JSON.stringify(x.renderOptions) === JSON.stringify(renderOptions)) {
-        acc.push(x.char);
-      } else {
-        flush();
-        acc.push(x.char);
-        ({ renderOptions } = x);
-      }
-
-      if (x.break) {
-        flush();
-        renderSpec.push({type: 'div'});
-      }
-    });
-    flush();
-  }
-
-  for (let i2 = 0; i2 < renderSpec.length; i2++) {
-    const spec = renderSpec[i2];
-    const classes = spec.classes || [];
-    const type = spec.type || 'span';
-    if (type === 'a') {
-      classes.push('theme-text-link');
-    }
-
-    // make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
-    constants.text_properties.forEach((property) => {
-      if (spec[property]) {
-        classes.push(property);
-      }
-    });
-
-    if (spec.cursor) {
-      classes.push(getCursorClass(options.cursorBetween));
-    }
-    if (spec.highlight) {
-      classes.push('theme-bg-highlight');
-    }
-
-    const divoptions = {};
-    if (classes.length) {
-      divoptions.className = (classes.join(' '));
-    }
-    if (spec.href) {
-      divoptions.href = spec.href;
-    }
-    if (spec.onclick) {
-      divoptions.onclick = spec.onclick;
-    }
-    if (options.linemouseover) {
-      divoptions.onmouseover = options.linemouseover;
-    }
-
-    results.push(virtualDom.h(type, divoptions, spec.text));
-  }
-
-  return results;
-};
-
-
 export function renderSession(session, options = {}) {
   if (session.menu) {
     renderMenu(session.menu);
     return;
   }
 
-  if (!session.vnode) {
-    // TODO: stop attaching things to the session
-    session.vtree = virtualRenderSession(session);
-    session.vnode = virtualDom.create(session.vtree);
-    session.mainDiv.empty();
-    session.mainDiv.append(session.vnode);
-    return;
-  }
-
-  options.cursorBetween = (Modes.getMode(session.mode)).metadata.hotkey_type === Modes.INSERT_MODE_TYPE;
+  options.cursorBetween =
+      Modes.getMode(session.mode).metadata.hotkey_type === Modes.INSERT_MODE_TYPE;
 
   const t = Date.now();
-  const vtree = virtualRenderSession(session, options);
-  const patches = virtualDom.diff(session.vtree, vtree);
-  session.vnode = virtualDom.patch(session.vnode, patches);
-  session.vtree = vtree;
+  ReactDOM.render(
+    virtualRenderSession(session, options),
+    session.mainDiv[0]
+  );
   logger.debug('Rendering: ', !!options.handle_clicks, (Date.now()-t));
 
   const cursorDiv = $(`.${getCursorClass(options.cursorBetween)}`, session.mainDiv)[0];
@@ -503,7 +308,8 @@ export function renderSession(session, options = {}) {
 
   clearTimeout(session.cursorBlinkTimeout);
   session.mainDiv.removeClass('animate-blink-cursor');
-  session.cursorBlinkTimeout = setTimeout(() => session.mainDiv.addClass('animate-blink-cursor'), 500);
+  session.cursorBlinkTimeout = setTimeout(
+    () => session.mainDiv.addClass('animate-blink-cursor'), 500);
 
 };
 
@@ -515,27 +321,34 @@ function virtualRenderSession(session, options = {}) {
     path = path.parent;
   }
 
-  const makeCrumb = function(path, isLast) {
-    const m_options = {};
+  const makeCrumb = (path, isLast) => {
+    let className = '';
+    let onClick = null;
     if (session.mode === MODES.NORMAL && !isLast) {
-      m_options.className = 'theme-text-link';
-      m_options.onclick = async () => {
+      className = 'theme-text-link';
+      onClick = async () => {
         await session.zoomInto(path);
         session.save();
         renderSession(session);
       };
     }
-    let text;
-    if (isLast) {
-      text = virtualRenderLine(session, path, options);
-    } else if (path.is(session.document.root)) {
-      text = virtualDom.h('icon', {className: 'fa fa-home'});
-    } else {
-      text = session.document.getText(path.row).join('');
-    }
-    return virtualDom.h('span', { className: 'crumb' }, [
-      virtualDom.h('span', m_options, [ text ])
-    ]);
+    return (
+      <span className='crumb'>
+        <span className={className} onClick={onClick}>
+          {
+            (() => {
+              if (isLast) {
+                return virtualRenderLine(session, path, options);
+              } else if (path.is(session.document.root)) {
+                return <icon className='fa fa-home'/>;
+              } else {
+                return session.document.getText(path.row).join('');
+              }
+            })()
+          }
+        </span>
+      </span>
+    );
   };
 
   const crumbNodes = [];
@@ -545,9 +358,11 @@ function virtualRenderSession(session, options = {}) {
     crumbNodes.push(makeCrumb(path, i===0));
   }
 
-  const breadcrumbsNode = virtualDom.h('div', {
-    id: 'breadcrumbs'
-  }, crumbNodes);
+  const breadcrumbsNode = (
+    <div id='breadcrumbs'>
+      {crumbNodes}
+    </div>
+  );
 
   options.ignoreCollapse = true; // since we're the root, even if we're collapsed, we should render
 
@@ -562,22 +377,29 @@ function virtualRenderSession(session, options = {}) {
 
   let contentsNode;
   if (session.document.hasChildren(session.viewRoot.row)) {
-    const contentsChildren = virtualRenderTree(session, session.viewRoot, options);
-    contentsNode = virtualDom.h('div', {}, contentsChildren);
+    contentsNode = (
+      <div>
+        {virtualRenderTree(session, session.viewRoot, options)}
+      </div>
+    );
   } else {
     let message = 'Nothing here yet.';
     if (session.mode === MODES.NORMAL) {
       message += ' Press o to start adding content!';
     }
-    contentsNode = virtualDom.h('div', {
-      class: 'center',
-      style: {
-        'padding': '20px', 'font-size': '20px', 'opacity': '0.5'
-      }
-    }, message);
+    contentsNode = (
+      <div className='center' style={{padding: 20, fontSize: 20, opacity: 0.5}}>
+        { message }
+      </div>
+    );
   }
 
-  return virtualDom.h('div', {}, [breadcrumbsNode, contentsNode]);
+  return (
+    <div>
+      {breadcrumbsNode}
+      {contentsNode}
+    </div>
+  );
 };
 
 const virtualRenderTree = function(session, parent, options = {}) {
@@ -591,52 +413,62 @@ const virtualRenderTree = function(session, parent, options = {}) {
     const pathElements = [];
 
     if (session.document.isClone(path.row)) {
-      const cloneIcon = virtualDom.h('i', { className: 'fa fa-clone bullet clone-icon', title: 'Cloned' });
+      const cloneIcon = (
+        <i className='fa fa-clone bullet clone-icon' title='Cloned'/>
+      );
       pathElements.push(cloneIcon);
     }
 
-    const ancestry_str = JSON.stringify(path.getAncestry());
+    // const ancestry_str = JSON.stringify(path.getAncestry());
 
     let icon = 'fa-circle';
     if (session.document.hasChildren(path.row)) {
       icon = session.document.collapsed(path.row) ? 'fa-plus-circle' : 'fa-minus-circle';
     }
 
-    const bulletOpts = {
-      className: `fa ${icon} bullet`,
-      attributes: {'data-id': path.row, 'data-ancestry': ancestry_str}
-    };
+    // TODO BRING BACK
+    // attributes: {'data-id': path.row, 'data-ancestry': ancestry_str}
+    const style = {};
+    let onClick = null;
     if (session.document.hasChildren(path.row)) {
-      bulletOpts.style = {cursor: 'pointer'};
-      bulletOpts.onclick = (function(path) {
+      style.cursor = 'pointer';
+      onClick = (path) => {
         session.toggleBlockCollapsed(path.row);
         session.save();
         return renderSession(session);
-      }).bind(this, path);
+      };
     }
 
-    let bullet = virtualDom.h('i', bulletOpts);
-    bullet = session.applyHook('renderBullet', bullet, { path });
+    let bullet = (
+      <i className={`fa ${icon} bullet`} style={style} onClick={onClick}>
+      </i>
+    );
+    // TODO bring back
+    // bullet = session.applyHook('renderBullet', bullet, { path });
 
     pathElements.push(bullet);
 
-    const elLine = virtualDom.h('div', {
-      id: rowDivID(path.row),
-      className: 'node-text',
-      // if clicking outside of text, but on the row, move cursor to the end of the row
-      onclick:  (function(path) {
-        let col = options.cursorBetween ? -1 : -2;
-        session.cursor.setPosition(path, col);
-        return renderSession(session);
-      }).bind(this, path)
-    }, (virtualRenderLine(session, path, options)));
+    const elLine = (
+      <div id={rowDivID(path.row)} className='node-text'
+           onClick={() => {
+             // if clicking outside of text, but on the row,
+             // move cursor to the end of the row
+             let col = options.cursorBetween ? -1 : -2;
+             session.cursor.setPosition(path, col);
+             return renderSession(session);
+           }}
+      >
+        {virtualRenderLine(session, path, options)}
+      </div>
+    );
     pathElements.push(elLine);
 
     options.ignoreCollapse = false;
-    const children = virtualDom.h('div', {
-      id: childrenDivID(path.row),
-      className: 'node-children'
-    }, (virtualRenderTree(session, path, options)));
+    const children = (
+      <div id={childrenDivID(path.row)} className='node-children'>
+        {virtualRenderTree(session, path, options)}
+      </div>
+    );
     pathElements.push(children);
 
     let className = 'node';
@@ -644,13 +476,15 @@ const virtualRenderTree = function(session, parent, options = {}) {
       className += ' theme-bg-highlight';
     }
 
-    const postHookPathElements = session.applyHook('renderPathElements', pathElements, { path });
+    const postHookPathElements = pathElements;
+    // TODO BRING BACK
+    // const postHookPathElements = session.applyHook('renderPathElements', pathElements, { path });
 
-    const childNode = virtualDom.h('div', {
-      id: containerDivID(path.row),
-      className
-    }, postHookPathElements);
-
+    const childNode = (
+      <div id={containerDivID(path.row)} className={className}>
+        {postHookPathElements}
+      </div>
+    );
     childrenNodes.push(childNode);
   });
   return childrenNodes;
@@ -690,6 +524,7 @@ export function virtualRenderLine(session, path, options = {}) {
   if (options.handle_clicks) {
     if (session.mode === MODES.NORMAL || session.mode === MODES.INSERT) {
       lineoptions.charclick = function(column, e) {
+        console.log('column', column, e, path);
         session.cursor.setPosition(path, column);
         // assume they might click again
         renderSession(session, {handle_clicks: true});
@@ -702,20 +537,28 @@ export function virtualRenderLine(session, path, options = {}) {
     lineoptions.linemouseover = () => renderSession(session, {handle_clicks: true});
   }
 
-  lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
-  lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
+  // TODO BRING BACK
+  // lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
+  // lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
 
   let lineContents = renderLine(lineData, lineoptions);
-  lineContents = session.applyHook('renderLineContents', lineContents, { path });
+  // TODO BRING BACK
+  // lineContents = session.applyHook('renderLineContents', lineContents, { path });
   [].push.apply(results, lineContents);
 
-  const infoChildren = session.applyHook('renderInfoElements', [], { path });
-  const info = virtualDom.h('span', {
-    className: 'node-info'
-  }, infoChildren);
+  // TODO BRING BACK
+  const infoChildren = [];
+  // const infoChildren = session.applyHook('renderInfoElements', [], { path });
+  const info = (
+    <span className='node-info'>
+      {infoChildren}
+    </span>
+  );
   results.push(info);
 
-  return session.applyHook('renderLineElements', results, { path });
+  // TODO BRING BACK
+  // return session.applyHook('renderLineElements', results, { path });
+  return results;
 };
 
 export function renderMenu(menu) {
@@ -728,7 +571,7 @@ export function renderMenu(menu) {
       <i className='fa fa-search' style={{'margin-right': 10}}/>
       <span>
         {
-          virtualRenderReactLine(
+          virtualRenderLine(
             menu.session, menu.session.cursor.path,
             {cursorBetween: true, no_clicks: true}
           )
@@ -756,7 +599,7 @@ export function renderMenu(menu) {
       const selected = i === menu.selection;
 
       const renderOptions = result.renderOptions || {};
-      let contents = renderReactLine(result.contents, renderOptions);
+      let contents = renderLine(result.contents, renderOptions);
       // TODO BRING BACK
       // if (result.renderHook) {
       //   contents = result.renderHook(contents);
@@ -829,25 +672,21 @@ export function renderPlugins(pluginManager) {
 const renderReactPlugin = function(pluginManager, name) {
   const status = pluginManager.getStatus(name);
   const actions = [];
-  let button;
+  let btnClick;
+  let btnText;
   if (status === Plugins.STATUSES.ENABLED) {
-    button = (
-      <div className='btn theme-trim'
-        onClick={() => { return pluginManager.disable(name); }}
-      >
-        Disable
-      </div>
-    );
-    actions.push(button);
+    btnClick = () => { return pluginManager.disable(name); };
+    btnText = 'Disable';
   } else if (status === Plugins.STATUSES.DISABLED) {
-    button = (
-      <div className='btn theme-trim'
-        onClick={() => { return pluginManager.enable(name); }}
-      >
-        Enable
+    btnClick= () => { return pluginManager.enable(name); };
+    btnText = 'Enable';
+  }
+  if (btnText) {
+    actions.push(
+      <div className='btn theme-trim' onClick={btnClick}>
+        {btnText}
       </div>
     );
-    actions.push(button);
   }
 
   let color = 'inherit';
@@ -895,20 +734,14 @@ export function renderHotkeysTable(key_bindings) {
     { mode_type: INSERT_MODE_TYPE, onto: $('#hotkey-edit-insert') },
   ].forEach(({mode_type, onto}) => {
     const mode_defs = MODE_TYPES[mode_type].modes.map(
-      mode => _.cloneDeep(key_bindings.definitions.actions_for_mode(mode))
+      mode => key_bindings.definitions.actions_for_mode(mode)
     );
     ReactDOM.render(
       <div>
         <div className='tooltip' title={MODE_TYPES[mode_type].description}>
           {mode_type}
         </div>
-        {
-          buildTable(
-            key_bindings,
-            key_bindings.hotkeys[mode_type],
-            _.extend.apply(this, mode_defs)
-          )
-        }
+        { buildTable(key_bindings, key_bindings.hotkeys[mode_type], mode_defs) }
       </div>
       ,
       onto[0]
