@@ -1,4 +1,4 @@
-/* globals $, window, document, FileReader, localStorage, alert */
+/* globals window, document, FileReader, localStorage, alert */
 
 /*
 initialize the main page
@@ -8,6 +8,8 @@ initialize the main page
 - load document from localStorage (fall back to plain in-memory datastructures)
 - initialize objects (session, settings, etc.) with relevant divs
 */
+
+import $ from 'jquery';
 
 import '../css/utils.sass';
 import '../css/index.sass';
@@ -309,7 +311,7 @@ async function create_session(doc, to_load) {
     $('#data_export_plain').click(() => session.exportFile('txt'));
   });
 
-  return $(window).unload(() => session.exit());
+  return $(window).on('unload', () => session.exit());
 };
 
 let datastore;

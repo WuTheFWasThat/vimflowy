@@ -1,5 +1,7 @@
-/* globals document, window, navigator, alert, $ */
+/* globals document, window, navigator, alert */
+import $ from 'jquery';
 import _ from 'lodash';
+
 import logger from './logger';
 import EventEmitter from './eventEmitter';
 

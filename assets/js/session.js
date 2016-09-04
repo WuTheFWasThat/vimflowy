@@ -1,4 +1,5 @@
-/* globals $, document, window */
+/* globals document, window */
+import $ from 'jquery';
 import _ from 'lodash';
 
 import * as mutations from './mutations';

@@ -412,15 +412,11 @@ const virtualRenderTree = function(session, parent, options = {}) {
       pathElements.push(cloneIcon);
     }
 
-    // const ancestry_str = JSON.stringify(path.getAncestry());
-
     let icon = 'fa-circle';
     if (session.document.hasChildren(path.row)) {
       icon = session.document.collapsed(path.row) ? 'fa-plus-circle' : 'fa-minus-circle';
     }
 
-    // TODO BRING BACK
-    // attributes: {'data-id': path.row, 'data-ancestry': ancestry_str}
     const style = {};
     let onClick = null;
     if (session.document.hasChildren(path.row)) {
@@ -433,7 +429,10 @@ const virtualRenderTree = function(session, parent, options = {}) {
     }
 
     let bullet = (
-      <i className={`fa ${icon} bullet`} style={style} onClick={onClick}>
+      <i className={`fa ${icon} bullet`}
+        style={style} onClick={onClick}
+        data-ancestry={JSON.stringify(path.getAncestry())}
+      >
       </i>
     );
     bullet = session.applyHook('renderBullet', bullet, { path });
@@ -788,11 +787,11 @@ const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
             {label: 'Motions', definitions: key_bindings.definitions.motions}
           ].map(({label, definitions}) => {
             return [
-              <h5 style={{margin: '5px 10px'}}>
+              <h5 key={label+'_header'} style={{margin: '5px 10px'}}>
                 {label}
               </h5>
               ,
-              <table className='keybindings-table theme-bg-secondary'>
+              <table key={label+'_table'} className='keybindings-table theme-bg-secondary'>
                 <tbody>
                   {buildTableContents(definitions)}
                 </tbody>

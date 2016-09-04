@@ -1,4 +1,4 @@
-/* globals $ */
+import $ from 'jquery';
 import _ from 'lodash';
 import tv4 from 'tv4';
 
