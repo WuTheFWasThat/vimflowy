@@ -16,10 +16,14 @@ import * as constants from '../../assets/js/constants';
 
 import * as basic_defs from '../../assets/js/definitions/basics';
 
-import './marks.sass';
-
 // NOTE: mark mode is still in the core code
 // TODO: separate that out too?
+
+const markStyle = {
+  padding: '0px 10px',
+  marginRight: 10,
+  borderRadius: 6,
+};
 
 class MarksPlugin {
   constructor(api) {
@@ -225,7 +229,8 @@ class MarksPlugin {
               contents: this.session.document.getLine(path.row),
               renderHook(contents) {
                 contents.unshift(
-                  <span key={found.mark} className='mark theme-bg-secondary theme-trim'>
+                  <span key={found.mark} style={markStyle}
+                        className='theme-bg-secondary theme-trim'>
                     {found.mark}
                   </span>
                 );
@@ -283,7 +288,8 @@ class MarksPlugin {
       if (marking) {
         const markresults = Render.virtualRenderLine(this.marksession, this.marksession.cursor.path, {no_clicks: true});
         lineContents.unshift(
-          <span className='mark theme-bg-secondary theme-trim-accent'>
+          <span style={markStyle}
+                className='theme-bg-secondary theme-trim-accent'>
             {markresults}
           </span>
         );
@@ -291,7 +297,7 @@ class MarksPlugin {
         const mark = this._getMark(info.path.row);
         if (mark) {
           lineContents.unshift(
-            <span className='mark theme-bg-secondary theme-trim'>
+            <span style={markStyle} className='theme-bg-secondary theme-trim'>
               {mark}
             </span>
           );

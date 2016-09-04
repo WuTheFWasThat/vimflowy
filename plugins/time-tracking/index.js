@@ -10,8 +10,6 @@ import React from 'react';
 import * as Plugins from '../../assets/js/plugins';
 import * as Modes from '../../assets/js/modes';
 
-import './time-tracking.sass';
-
 function pad(val, length, padChar = '0') {
   val += '';
   let numPads = length - val.length;
@@ -44,13 +42,15 @@ class TimeTrackingPlugin {
           timeStr += ' + ';
         }
         elements.push(
-          <span key='time' className='time'>{timeStr}</span>
+          <span key='time' style={{color: 'lightgray'}}>{timeStr}</span>
         );
 
         if (isCurRow) {
           let curTime = new Date() - this.currentRow.time;
           elements.push(
-            <span key='curtime' className='time curtime'>{this.printTime(curTime)}</span>
+            <span key='curtime' style={{color: 'lightgray'}} className='curtime'>
+              {this.printTime(curTime)}
+            </span>
           );
         }
       }

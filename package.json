@@ -49,6 +49,7 @@
     "tslint": "^3.3.0",
     "tslint-loader": "^2.1.0",
     "webpack": "^1.12.15",
+    "webpack-async-await": "^1.0.4",
     "webpack-dev-middleware": "^1.5.1",
     "webpack-hot-middleware": "^2.6.4"
   }

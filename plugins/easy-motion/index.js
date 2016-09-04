@@ -5,8 +5,6 @@ import React from 'react';
 
 import * as Plugins from '../../assets/js/plugins';
 
-import './easy_motion.sass';
-
 Plugins.register({
   name: 'Easy motion',
   author: 'Jeff Wu',
@@ -84,7 +82,8 @@ Plugins.register({
     let ancestry_str = JSON.stringify(info.path.getAncestry());
     if (EASY_MOTION_MAPPINGS && ancestry_str in EASY_MOTION_MAPPINGS.path_to_key) {
       bullet = (
-        <span key='easymotion' className='bullet theme-text-accent easy-motion'>
+        <span key='easymotion' style={{fontWeight: 'bold'}}
+              className='bullet theme-text-accent'>
           {EASY_MOTION_MAPPINGS.path_to_key[ancestry_str]}
         </span>
       );
