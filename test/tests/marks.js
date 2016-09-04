@@ -1,7 +1,7 @@
 /* globals describe, it */
 import TestCase from '../testcase';
-import * as Marks from '../../plugins/marks';
-import '../../assets/js/plugins';
+import * as Marks from '../../src/plugins/marks';
+import '../../src/assets/js/plugins';
 
 // Testing
 TestCase.prototype.expectMarks = function(expected) {

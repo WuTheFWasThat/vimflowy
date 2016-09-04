@@ -2,32 +2,30 @@ var webpack = require('webpack');
 var path = require('path');
 var AsyncAwaitPlugin = require('webpack-async-await') ;
 
-var APP_DIR = path.join(__dirname, '..', 'assets');
+var SRC_DIR = path.join(__dirname, '..', 'src');
 
 module.exports = {
   debug: true,
   devtool: 'eval',
-  entry: ['webpack-hot-middleware/client', './assets/js/app.js'],
+  entry: ['webpack-hot-middleware/client', './src/assets/js/app.js'],
   module: {
     preLoaders: [{
       test: /\.tsx?$/,
       loader: 'tslint',
-      include: APP_DIR
+      include: SRC_DIR
     }],
     loaders: [
       {
         test: /\.jsx?$/,
         loaders: ['babel'],
-        exclude: /node_modules/
-        // include: APP_DIR,
-        // also should include plugins
+        include: SRC_DIR,
       },
       {
         test: /\.tsx?$/,
         loaders: [
           'babel', 'ts'
         ],
-        include: APP_DIR
+        include: SRC_DIR
       },
       {
         test: /\.(sass|css)$/,

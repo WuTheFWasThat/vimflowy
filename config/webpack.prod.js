@@ -2,31 +2,29 @@ var path = require('path');
 var webpack = require('webpack');
 var AsyncAwaitPlugin = require('webpack-async-await') ;
 
-var APP_DIR = path.join(__dirname, '..', 'assets');
+var SRC_DIR = path.join(__dirname, '..', 'src');
 
 module.exports = {
   devtool: 'source-map',
-  entry: './assets/js/app.js',
+  entry: './src/assets/js/app.js',
   module: {
     preLoaders: [{
       test: /\.tsx?$/,
       loader: 'tslint',
-      include: APP_DIR
+      include: SRC_DIR
     }],
     loaders: [
       {
         test: /\.jsx?$/,
         loaders: ['babel'],
-        exclude: /node_modules/
-        // include: APP_DIR,
-        // also should include plugins
+        include: SRC_DIR,
       },
       {
         test: /\.tsx?$/,
         loaders: [
           'babel', 'ts'
         ],
-        include: APP_DIR
+        include: SRC_DIR
       },
       {
         test: /\.(sass|css)$/,

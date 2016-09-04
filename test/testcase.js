@@ -2,24 +2,18 @@
 
 import 'blanket';
 import _ from 'lodash';
-import fs from 'fs';
-import path from 'path';
 
-import * as DataStore from '../assets/js/datastore';
-import Document from '../assets/js/document';
-import Session from '../assets/js/session';
-fs.readdirSync(path.resolve(__dirname, '../assets/js/definitions')).forEach((file) => {
-  if (file.match(/.*\.js$/)) {
-    require(path.join('../assets/js/definitions', file));
-  }
-});
-import KeyDefinitions from '../assets/js/keyDefinitions';
-import KeyBindings from '../assets/js/keyBindings';
-import KeyHandler from '../assets/js/keyHandler';
-import logger, * as Logger from '../assets/js/logger';
-import { PluginsManager } from '../assets/js/plugins';
-import Cursor from '../assets/js/cursor';
-import Path from '../assets/js/path';
+import * as DataStore from '../src/assets/js/datastore';
+import Document from '../src/assets/js/document';
+import Session from '../src/assets/js/session';
+import '../src/assets/js/definitions';
+import KeyDefinitions from '../src/assets/js/keyDefinitions';
+import KeyBindings from '../src/assets/js/keyBindings';
+import KeyHandler from '../src/assets/js/keyHandler';
+import logger, * as Logger from '../src/assets/js/logger';
+import { PluginsManager } from '../src/assets/js/plugins';
+import Cursor from '../src/assets/js/cursor';
+import Path from '../src/assets/js/path';
 
 logger.setStream(Logger.STREAM.QUEUE);
 afterEach('empty the queue', () => logger.empty());
