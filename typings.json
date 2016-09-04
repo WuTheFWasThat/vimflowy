@@ -1,9 +1,11 @@
 {
   "name": "react-typescript-boilerplate",
   "globalDependencies": {
-    "react-redux": "github:DefinitelyTyped/DefinitelyTyped/react-redux/react-redux.d.ts#ba424f7ee39717d51c17699a09ac8df312a7e9a1",
-    "react-dom": "github:DefinitelyTyped/DefinitelyTyped/react/react-dom.d.ts#ba424f7ee39717d51c17699a09ac8df312a7e9a1",
-    "redux": "github:DefinitelyTyped/DefinitelyTyped/redux/redux.d.ts#ba424f7ee39717d51c17699a09ac8df312a7e9a1",
-    "react": "github:DefinitelyTyped/DefinitelyTyped/react/react.d.ts#ba424f7ee39717d51c17699a09ac8df312a7e9a1"
+    "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#6e54cb627506cf64d6effba1fe49b5a091ac4297"
+  },
+  "dependencies": {
+    "lodash": "registry:npm/lodash#4.0.0+20160723033700",
+    "react": "registry:npm/react#15.0.1+20160601175240",
+    "react-dom": "registry:npm/react-dom#15.0.1+20160826174104"
   }
 }

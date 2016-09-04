@@ -12,7 +12,7 @@ For development, you'll probably want to run a web version of vimflowy locally.
 
 #### INSTALL: ####
 
-Assuming you have node and npm
+Assuming you have (recent versions of) node and npm
 
     git clone https://github.com/WuTheFWasThat/vimflowy.git
     cd vimflowy
@@ -24,11 +24,11 @@ Just run
 
     npm start
 
-And you can visit the app at `http://localhost:8080/`
+And you can visit the app at `http://localhost:3000/`
 
 Assets will be automatically recompiled when the source changes, and tests are automatically re-ran.
 
-Note that you may make new documents simply by visiting `http://localhost:8080/somedocumentname`
+Note that you may make new documents simply by visiting `http://localhost:3000/somedocumentname`
 
 #### RUN TESTS: ####
 

@@ -1,5 +1,5 @@
-dist/
-build/
+/dist/
+/static/build/
 .sass-cache
 .bitballoon
 
