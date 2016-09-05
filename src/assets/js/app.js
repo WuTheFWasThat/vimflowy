@@ -207,6 +207,8 @@ $(document).ready(function() {
   const $modeDiv = $('#mode');
   const $messageDiv = $('#message');
   const $pluginsDiv = $('#plugins');
+  const $menuDiv = $('#menu');
+  const $mainDiv = $('#view');
 
   const docname = window.location.pathname.split('/')[1];
 
@@ -265,7 +267,6 @@ $(document).ready(function() {
       bindings: key_bindings,
       settings,
       mainDiv: $('#view'),
-      menuDiv: $('#menu'),
       viewRoot: viewRoot,
       cursorPath: cursorPath,
       showMessage: (message, options = {}) => {
@@ -310,6 +311,14 @@ $(document).ready(function() {
       session.reset_jump_history();
     }
 
+    function renderMain() {
+      if (session.mode === Modes.modes.SEARCH) {
+        Render.renderMenu(session.menu, $menuDiv[0]);
+      } else {
+        Render.renderSession(session);
+      }
+    }
+
     //###################
     // prepare dom
     //###################
@@ -329,6 +338,11 @@ $(document).ready(function() {
         $settingsDiv.toggleClass('hidden', newmode !== Modes.modes.SETTINGS);
         $('#settings-open').toggleClass('hidden', newmode === Modes.modes.SETTINGS);
         $('#settings-close').toggleClass('hidden', newmode !== Modes.modes.SETTINGS);
+
+        $menuDiv.toggleClass('hidden', newmode !== Modes.modes.SEARCH);
+        // NOTE: maybe showing mainDiv would be nice?
+        // removing this line mostly works
+        $mainDiv.toggleClass('hidden', newmode === Modes.modes.SEARCH);
       });
 
       const render_hotkey_settings = (hotkey_settings) => {
@@ -358,7 +372,7 @@ $(document).ready(function() {
       });
 
       if (docname !== '') { document.title = `${docname} - Vimflowy`; }
-      return Render.renderSession(session);
+      return renderMain();
     });
 
     const key_handler = new KeyHandler(session, key_bindings);
@@ -373,7 +387,7 @@ $(document).ready(function() {
 
       // fire and forget
       key_handler.handleKey(key).then(() => {
-        Render.renderSession(session);
+        renderMain();
       });
       return handled;
     });

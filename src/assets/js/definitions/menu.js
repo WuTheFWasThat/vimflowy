@@ -16,7 +16,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
   description: 'Search',
 }, async function() {
   await this.session.setMode(MODES.SEARCH);
-  return this.session.menu = new Menu(this.session.menuDiv, chars => {
+  return this.session.menu = new Menu(chars => {
     const find = function(document, query, options = {}) {
       const nresults = options.nresults || 10;
 

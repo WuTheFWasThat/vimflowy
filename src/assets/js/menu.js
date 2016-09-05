@@ -11,7 +11,7 @@ Internally uses an entire session object (this is sorta weird..)
 */
 
 export default class Menu {
-  constructor(div, fn) {
+  constructor(fn) {
     this.fn = fn;
 
     const doc = new Document(new DataStore.InMemory());

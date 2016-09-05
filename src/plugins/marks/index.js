@@ -202,7 +202,7 @@ class MarksPlugin {
       description: 'Go to (search for) a mark',
     }, async function() {
       await this.session.setMode(MODES.SEARCH);
-      return this.session.menu = new Menu(this.session.menuDiv, chars => {
+      return this.session.menu = new Menu(chars => {
         // find marks that start with the prefix
         const findMarks = (document, prefix, nresults = 10) => {
           const marks = that.listMarks();

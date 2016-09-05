@@ -264,22 +264,12 @@ registerMode({
   name: 'SEARCH',
   hotkey_type: INSERT_MODE_TYPE,
   within_row: true,
-  async enter(session) {
-    if (session.menuDiv) {
-      session.menuDiv.removeClass('hidden');
-      return session.mainDiv.addClass('hidden');
-    }
-  },
   async every(session, keyStream) {
     session.menu.update();
     return keyStream.forget();
   },
   async exit(session) {
     session.menu = null;
-    if (session.menuDiv) {
-      session.menuDiv.addClass('hidden');
-      return session.mainDiv.removeClass('hidden');
-    }
   },
   key_transforms: [
     function(key, context) {

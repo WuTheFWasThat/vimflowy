@@ -273,11 +273,6 @@ export function virtualRenderLine(session, path, options = {}) {
 
 
 export function renderSession(session, options = {}) {
-  if (session.menu) {
-    renderMenu(session.menu);
-    return;
-  }
-
   options.cursorBetween =
       Modes.getMode(session.mode).metadata.hotkey_type === Modes.INSERT_MODE_TYPE;
 
@@ -534,11 +529,7 @@ export function virtualRenderLine(session, path, options = {}) {
   return session.applyHook('renderLineElements', results, { path });
 };
 
-export function renderMenu(menu) {
-  if (!menu.div) {
-    return;
-  }
-
+export function renderMenu(menu, onto) {
   const searchBox = (
     <div className='searchBox theme-trim'>
       <i className='fa fa-search' style={{'margin-right': 10}}/>
@@ -597,9 +588,8 @@ export function renderMenu(menu) {
       {searchResults}
     </div>
     ,
-    menu.div[0]
+    onto
   );
-
 };
 
 export function renderPlugins($div, pluginManager) {
