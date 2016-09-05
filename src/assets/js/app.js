@@ -82,7 +82,7 @@ $(document).ready(function() {
             Visual Theme
           </div>
           <div className="settings-content">
-            <select className="theme-selection">
+            <select className="theme-selection" defaultValue={'default-theme'}>
               <option value="default-theme">
                 Default
               </option>
@@ -205,6 +205,7 @@ $(document).ready(function() {
   const $keybindingsDiv = $('#keybindings');
   const $settingsDiv = $('#settings');
   const $modeDiv = $('#mode');
+  const $messageDiv = $('#message');
 
   const docname = window.location.pathname.split('/')[1];
 
@@ -217,7 +218,7 @@ $(document).ready(function() {
     // Settings
     //###################
 
-    const settings = new Settings(doc.store, {mainDiv: $settingsDiv});
+    const settings = new Settings(doc.store);
 
     const theme = await settings.getSetting('theme');
     changeStyle(theme);
@@ -257,14 +258,33 @@ $(document).ready(function() {
       cursorPath = viewRoot;
     }
 
+    let messageDivTimeout = null;
+
     const session = new Session(doc, {
       bindings: key_bindings,
       settings,
       mainDiv: $('#view'),
-      messageDiv: $('#message'),
       menuDiv: $('#menu'),
       viewRoot: viewRoot,
       cursorPath: cursorPath,
+      showMessage: (message, options = {}) => {
+        if (options.time === undefined) { options.time = 5000; }
+        logger.info(`Showing message: ${message}`);
+        if ($messageDiv) {
+          clearTimeout(messageDivTimeout);
+
+          $messageDiv.text(message);
+          if (options.text_class) {
+            $messageDiv.addClass(`text-${options.text_class}`);
+          }
+
+          messageDivTimeout = setTimeout(() => {
+            $messageDiv.text('');
+            return $messageDiv.removeClass();
+          }, options.time);
+        }
+      }
+
     });
 
     //###################
@@ -302,7 +322,13 @@ $(document).ready(function() {
       };
 
       render_mode_info(session.mode);
-      session.on('modeChange', (oldmode, newmode) => render_mode_info(newmode));
+      session.on('modeChange', (oldmode, newmode) => {
+        render_mode_info(newmode);
+
+        $settingsDiv.toggleClass('hidden', newmode !== Modes.modes.SETTINGS);
+        $('#settings-open').toggleClass('hidden', newmode === Modes.modes.SETTINGS);
+        $('#settings-close').toggleClass('hidden', newmode !== Modes.modes.SETTINGS);
+      });
 
       const render_hotkey_settings = (hotkey_settings) => {
         settings.setSetting('hotkeys', hotkey_settings);

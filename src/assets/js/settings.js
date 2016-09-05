@@ -11,12 +11,8 @@ const default_settings = {
 };
 
 export default class Settings {
-
-  constructor(datastore, options = {}) {
+  constructor(datastore) {
     this.datastore = datastore;
-
-    this.mainDiv = options.mainDiv;
-    this.keybindingsDiv = options.keybindingsDiv;
 
     for (const setting in default_settings) {
       if (this.getSetting(setting) === null) {

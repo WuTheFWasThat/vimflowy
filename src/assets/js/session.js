@@ -33,8 +33,11 @@ export default class Session extends EventEmitter {
     this.settings = options.settings;
     // session needs to know div for page scrolling, getting visible rows
     this.mainDiv = options.mainDiv;
-    this.messageDiv = options.messageDiv;
     this.menuDiv = options.menuDiv;
+
+    this.showMessage = options.showMessage || ((message) => {
+      logger.info(`Showing message: ${message}`);
+    });
 
     this.register = new Register(this);
 
@@ -76,28 +79,6 @@ export default class Session extends EventEmitter {
 
   toggleBindingsDiv() {
     return this.emit('toggleBindingsDiv');
-  }
-
-  //################
-  // show message
-  //################
-
-  showMessage(message, options = {}) {
-    if (options.time === undefined) { options.time = 5000; }
-    logger.info(`Showing message: ${message}`);
-    if (this.messageDiv) {
-      clearTimeout(this.messageDivTimeout);
-
-      this.messageDiv.text(message);
-      if (options.text_class) {
-        this.messageDiv.addClass(`text-${options.text_class}`);
-      }
-
-      return this.messageDivTimeout = setTimeout(() => {
-        this.messageDiv.text('');
-        return this.messageDiv.removeClass();
-      }, options.time);
-    }
   }
 
   //################
