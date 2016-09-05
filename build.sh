@@ -45,6 +45,7 @@ fi
 
 mkdir -p $OUTPUT_FOLDER
 rm -rf $OUTPUT_FOLDER/vimflowy
+mkdir -p $OUTPUT_FOLDER/vimflowy
 
 # builds everything into static/build/
 npm run build

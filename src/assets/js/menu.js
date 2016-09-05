@@ -12,7 +12,6 @@ Internally uses an entire session object (this is sorta weird..)
 
 export default class Menu {
   constructor(div, fn) {
-    this.div = div;
     this.fn = fn;
 
     const doc = new Document(new DataStore.InMemory());
@@ -23,7 +22,7 @@ export default class Menu {
     // NOTE: this is fire and forget
     // TODO: fix?
     this.session.setMode(Modes.modes.INSERT);
-    this.selection = 0;
+    this.selection = 1;
 
     // list of results:
     //   contents: a line of contents

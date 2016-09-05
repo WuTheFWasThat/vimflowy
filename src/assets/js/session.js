@@ -141,7 +141,7 @@ export default class Session extends EventEmitter {
       let line = content_lines[i];
       if (line.match(/^\s*".*"$/)) { // Flag workflowy annotations as special cases
         lines.push({
-          indent: (line.match(whitespace))[0].length,
+          indent: line.match(whitespace)[0].length,
           line: line.replace(/^\s*"(.*)"$/, '$1'),
           annotation: true
         });
@@ -149,8 +149,8 @@ export default class Session extends EventEmitter {
       }
       // TODO: record whether COMPLETE and strikethrough line if so?
       lines.push({
-        indent: (line.match(whitespace))[0].length,
-        line: (line.replace(whitespace, '')).replace(/^(?:-\s*)?(?:\[COMPLETE\] )?/, '')
+        indent: line.match(whitespace)[0].length,
+        line: line.replace(whitespace, '').replace(/^(?:-\s*)?(?:\[COMPLETE\] )?/, '')
       });
     }
     while (lines[lines.length-1].line === '') { // Strip trailing blank line(s)
@@ -178,7 +178,7 @@ export default class Session extends EventEmitter {
         }
         children.push(child);
       }
-      return { children, lineNumber};
+      return { children, lineNumber };
     };
     const forest = (parseAllChildren(-1, 0)).children;
     const root = {

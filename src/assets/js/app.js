@@ -9,6 +9,9 @@ initialize the main page
 - initialize objects (session, settings, etc.) with relevant divs
 */
 
+// TODO: use react more properly
+//      - get rid of div options (i.e. mainDiv, etc)
+
 import $ from 'jquery';
 /* eslint-disable no-unused-vars */
 import React from 'react';

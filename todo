@@ -1,7 +1,0 @@
-make webpack dev server run tests on reload?
-make sure prod build works:
-  copy images, etc.
-use react more properly
-make sure favicon works
-
-make doc names work
