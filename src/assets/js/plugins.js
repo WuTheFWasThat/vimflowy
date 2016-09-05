@@ -191,10 +191,9 @@ class PluginApi {
 
 class PluginsManager extends EventEmitter {
 
-  constructor(session, div) {
+  constructor(session) {
     super();
     this.session = session;
-    this.div = div;
     this.plugin_infos = {};
   }
 

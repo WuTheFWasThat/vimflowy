@@ -206,6 +206,7 @@ $(document).ready(function() {
   const $settingsDiv = $('#settings');
   const $modeDiv = $('#mode');
   const $messageDiv = $('#message');
+  const $pluginsDiv = $('#plugins');
 
   const docname = window.location.pathname.split('/')[1];
 
@@ -291,7 +292,7 @@ $(document).ready(function() {
     // plugins
     //###################
 
-    const pluginManager = new PluginsManager(session, $('#plugins'));
+    const pluginManager = new PluginsManager(session);
     let enabledPlugins = (await settings.getSetting('enabledPlugins')) || ['Marks'];
     if (typeof enabledPlugins.slice === 'undefined') { // for backwards compatibility
       enabledPlugins = Object.keys(enabledPlugins);
@@ -344,12 +345,12 @@ $(document).ready(function() {
         return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
       });
 
-      Render.renderPlugins(pluginManager);
-      pluginManager.on('status', () => Render.renderPlugins(pluginManager));
+      Render.renderPlugins($pluginsDiv, pluginManager);
+      pluginManager.on('status', () => Render.renderPlugins($pluginsDiv, pluginManager));
 
       pluginManager.on('enabledPluginsChange', function(enabled) {
         settings.setSetting('enabledPlugins', enabled);
-        Render.renderPlugins(pluginManager);
+        Render.renderPlugins($pluginsDiv, pluginManager);
         Render.renderSession(session);
         // refresh hotkeys, if any new ones were added/removed
         Render.renderHotkeysTable(session.bindings);

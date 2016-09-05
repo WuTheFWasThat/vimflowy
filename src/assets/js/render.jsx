@@ -602,11 +602,7 @@ export function renderMenu(menu) {
 
 };
 
-export function renderPlugins(pluginManager) {
-  if (pluginManager.div === undefined) {
-    return;
-  }
-
+export function renderPlugins($div, pluginManager) {
   ReactDOM.render(
     (
       <table>
@@ -695,7 +691,7 @@ export function renderPlugins(pluginManager) {
         </tbody>
       </table>
     ),
-    pluginManager.div[0]
+    $div[0]
   );
 };
 
