@@ -285,8 +285,39 @@ $(document).ready(function() {
             return $messageDiv.removeClass();
           }, options.time);
         }
-      }
-
+      },
+      getVisiblePaths: async () => {
+        const paths = [];
+        $.makeArray($('.bullet')).forEach((bullet) => {
+          if (!utils.isScrolledIntoView($(bullet), $mainDiv)) {
+            return;
+          }
+          if ($(bullet).hasClass('fa-clone')) {
+            return;
+          }
+          // NOTE: can't use $(x).data
+          // http://stackoverflow.com/questions/25876274/jquery-data-not-working
+          const ancestry = $(bullet).attr('data-ancestry');
+          if (!ancestry) { // as far as i know, this only happens because of menu mode
+            return;
+          }
+          const path = Path.loadFromAncestry(JSON.parse(ancestry));
+          paths.push(path);
+        });
+        return paths;
+      },
+      toggleBindingsDiv: () => {
+        $keybindingsDiv.toggleClass('active');
+        doc.store.setSetting('showKeyBindings', $keybindingsDiv.hasClass('active'));
+        return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
+      },
+      getLinesPerPage: () => {
+        // TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
+        const line_height = $('.node-text').height() || 21;
+        errors.assert(line_height > 0);
+        const page_height = $(document).height();
+        return page_height / line_height;
+      },
     });
 
     //###################
@@ -352,12 +383,6 @@ $(document).ready(function() {
       };
       render_hotkey_settings(initial_hotkey_settings);
       key_bindings.on('applied_hotkey_settings', render_hotkey_settings);
-
-      session.on('toggleBindingsDiv', function() {
-        $keybindingsDiv.toggleClass('active');
-        doc.store.setSetting('showKeyBindings', $keybindingsDiv.hasClass('active'));
-        return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
-      });
 
       Render.renderPlugins($pluginsDiv, pluginManager);
       pluginManager.on('status', () => Render.renderPlugins($pluginsDiv, pluginManager));

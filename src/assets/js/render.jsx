@@ -1,3 +1,4 @@
+/* global window */
 /* eslint-disable no-use-before-define */
 
 import $ from 'jquery';
@@ -271,6 +272,23 @@ export function virtualRenderLine(session, path, options = {}) {
   return session.applyHook('renderLineElements', results, { path });
 };
 
+function scrollIntoView(el, $within) {
+  const elemTop = el.getBoundingClientRect().top;
+  const elemBottom = el.getBoundingClientRect().bottom;
+
+  const margin = 50;
+  const top_margin = margin;
+  const bottom_margin = margin + $('#bottom-bar').height();
+
+  if (elemTop < top_margin) {
+    // scroll up
+    return utils.scrollDiv($within, elemTop - top_margin);
+  } else if (elemBottom > window.innerHeight - bottom_margin) {
+    // scroll down
+    return utils.scrollDiv($within,
+                           elemBottom - window.innerHeight + bottom_margin);
+  }
+}
 
 export function renderSession(session, options = {}) {
   options.cursorBetween =
@@ -285,7 +303,7 @@ export function renderSession(session, options = {}) {
 
   const cursorDiv = $(`.${getCursorClass(options.cursorBetween)}`, session.mainDiv)[0];
   if (cursorDiv) {
-    session.scrollIntoView(cursorDiv);
+    scrollIntoView(cursorDiv, session.mainDiv);
   }
 
   clearTimeout(session.cursorBlinkTimeout);

@@ -1,5 +1,3 @@
-/* globals document, window */
-import $ from 'jquery';
 import _ from 'lodash';
 
 import * as mutations from './mutations';
@@ -31,13 +29,15 @@ export default class Session extends EventEmitter {
 
     this.bindings = options.bindings;
     this.settings = options.settings;
-    // session needs to know div for page scrolling, getting visible rows
+    // session needs to know div for rendering
     this.mainDiv = options.mainDiv;
-    this.menuDiv = options.menuDiv;
 
     this.showMessage = options.showMessage || ((message) => {
       logger.info(`Showing message: ${message}`);
     });
+    this.getVisiblePaths = options.getVisiblePaths || (() => []);
+    this.toggleBindingsDiv = options.toggleBindingsDiv || (() => {});
+    this.getLinesPerPage = options.getLinesPerPage || (() => 10);
 
     this.register = new Register(this);
 
@@ -75,10 +75,6 @@ export default class Session extends EventEmitter {
     await Modes.getMode(this.mode).enter(this, oldmode);
 
     return this.emit('modeChange', oldmode, newmode);
-  }
-
-  toggleBindingsDiv() {
-    return this.emit('toggleBindingsDiv');
   }
 
   //################
@@ -1162,19 +1158,8 @@ export default class Session extends EventEmitter {
     }
   }
 
-  //##################
-  // scrolling
-  //##################
-
   async scroll(npages) {
-    this.emit('scroll', npages);
-    // TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
-    const line_height = $('.node-text').height() || 21;
-    errors.assert(line_height > 0);
-    const page_height = $(document).height();
-    const height = npages * page_height;
-
-    let numlines = Math.round(height / line_height);
+    let numlines = Math.round(npages * this.getLinesPerPage());
     numlines = Math.max(Math.min(numlines, 1000), -1000); // guard against craziness
 
     if (numlines > 0) {
@@ -1187,52 +1172,7 @@ export default class Session extends EventEmitter {
       }
     }
 
-    return this.scrollMain(line_height * numlines);
+    return this.emit('scroll', numlines);
   }
 
-  scrollMain(amount) {
-    // # animate.  seems to not actually be great though
-    // @mainDiv.stop().animate({
-    //     scrollTop: @mainDiv[0].scrollTop + amount
-    //  }, 50)
-    return this.mainDiv.scrollTop(this.mainDiv.scrollTop() + amount);
-  }
-
-  scrollIntoView(el) {
-    const elemTop = el.getBoundingClientRect().top;
-    const elemBottom = el.getBoundingClientRect().bottom;
-
-    const margin = 50;
-    const top_margin = margin;
-    const bottom_margin = margin + $('#bottom-bar').height();
-
-    if (elemTop < top_margin) {
-      // scroll up
-      return this.scrollMain(elemTop - top_margin);
-    } else if (elemBottom > window.innerHeight - bottom_margin) {
-      // scroll down
-      return this.scrollMain(elemBottom - window.innerHeight + bottom_margin);
-    }
-  }
-
-  async getVisiblePaths() {
-    const paths = [];
-    $.makeArray($('.bullet')).forEach((bullet) => {
-      if (!utils.isScrolledIntoView($(bullet), this.mainDiv)) {
-        return;
-      }
-      if ($(bullet).hasClass('fa-clone')) {
-        return;
-      }
-      // NOTE: can't use $(x).data
-      // http://stackoverflow.com/questions/25876274/jquery-data-not-working
-      const ancestry = $(bullet).attr('data-ancestry');
-      if (!ancestry) { // as far as i know, this only happens because of menu mode
-        return;
-      }
-      const path = Path.loadFromAncestry(JSON.parse(ancestry));
-      paths.push(path);
-    });
-    return paths;
-  }
 }

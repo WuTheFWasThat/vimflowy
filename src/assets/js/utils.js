@@ -30,6 +30,14 @@ export function mimetypeLookup(filename) {
   return extensionLookup[extension.toLowerCase()];
 }
 
+export function scrollDiv($elem, amount) {
+  // # animate.  seems to not actually be great though
+  // $elem.stop().animate({
+  //     scrollTop: $elem[0].scrollTop + amount
+  // }, 50)
+  return $elem.scrollTop($elem.scrollTop() + amount);
+}
+
 export function isScrolledIntoView(elem, container) {
   const $elem = $(elem);
   const $container = $(container);
