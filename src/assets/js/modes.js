@@ -1,5 +1,3 @@
-import $ from 'jquery';
-
 import * as utils from './utils';
 import * as constants from './constants';
 // import { Document } from './document';
@@ -243,20 +241,6 @@ registerMode({
 registerMode({
   name: 'SETTINGS',
   hotkey_type: NORMAL_MODE_TYPE,
-  async enter(session /*, oldmode */) {
-    if (session.settings.mainDiv) {
-      session.settings.mainDiv.removeClass('hidden');
-      $('#settings-open').addClass('hidden');
-      return $('#settings-close').removeClass('hidden');
-    }
-  },
-  async exit(session) {
-    if (session.settings.mainDiv) {
-      session.settings.mainDiv.addClass('hidden');
-      $('#settings-open').removeClass('hidden');
-      return $('#settings-close').addClass('hidden');
-    }
-  }
   // TODO: exit settings on any bad key press?
 });
 

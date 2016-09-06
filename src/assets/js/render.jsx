@@ -207,6 +207,7 @@ function renderLine(lineData, options = {}) {
   return results;
 };
 
+
 export function virtualRenderLine(session, path, options = {}) {
   const lineData = session.document.getLine(path.row);
   let cursors = {};
@@ -295,7 +296,6 @@ export function renderSession(session, $onto, options = {}) {
       Modes.getMode(session.mode).metadata.hotkey_type === Modes.INSERT_MODE_TYPE;
 
   const rerender = (options) => {
-    console.log('rerendering', options);
     renderSession(session, $onto, options);
   };
   options.rerender = rerender;
@@ -486,71 +486,6 @@ const virtualRenderTree = function(session, parent, options = {}) {
       </div>
     );
   });
-};
-
-export function virtualRenderLine(session, path, options = {}) {
-  const lineData = session.document.getLine(path.row);
-  let cursors = {};
-  const highlights = {};
-
-  if (path.is(session.cursor.path)) {
-    cursors[session.cursor.col] = true;
-
-    if (session.anchor && !session.lineSelect) {
-      if (session.anchor.path && path.is(session.anchor.path)) {
-        const start = Math.min(session.cursor.col, session.anchor.col);
-        const end = Math.max(session.cursor.col, session.anchor.col);
-        for (let j = start; j <= end; j++) {
-          highlights[j] = true;
-        }
-      } else {
-        logger.warn('Multiline not yet implemented');
-      }
-    }
-
-    cursors = session.applyHook('renderCursorsDict', cursors, { path });
-  }
-
-  const results = [];
-
-  const lineoptions = {
-    cursors,
-    highlights,
-    cursorBetween: options.cursorBetween
-  };
-
-  if (options.handle_clicks) {
-    if (session.mode === MODES.NORMAL || session.mode === MODES.INSERT) {
-      lineoptions.charclick = function(column, e) {
-        console.log('column', column, e, path);
-        session.cursor.setPosition(path, column);
-        // assume they might click again
-        options.rerender({handle_clicks: true});
-        // prevent overall path click
-        e.stopPropagation();
-        return false;
-      };
-    }
-  } else if (!options.no_clicks) {
-    lineoptions.linemouseover = () => options.rerender({handle_clicks: true});
-  }
-
-  lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
-  lineoptions.lineHook = session.applyHook.bind(session, 'renderLineTextOptions');
-
-  let lineContents = renderLine(lineData, lineoptions);
-  lineContents = session.applyHook('renderLineContents', lineContents, { path });
-  [].push.apply(results, lineContents);
-
-  const infoChildren = session.applyHook('renderInfoElements', [], { path });
-  const info = (
-    <span className='node-info'>
-      {infoChildren}
-    </span>
-  );
-  results.push(info);
-
-  return session.applyHook('renderLineElements', results, { path });
 };
 
 export function renderMenu(menu, onto) {
