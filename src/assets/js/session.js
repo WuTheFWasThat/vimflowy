@@ -29,8 +29,6 @@ export default class Session extends EventEmitter {
 
     this.bindings = options.bindings;
     this.settings = options.settings;
-    // session needs to know div for rendering
-    this.mainDiv = options.mainDiv;
 
     this.showMessage = options.showMessage || ((message) => {
       logger.info(`Showing message: ${message}`);

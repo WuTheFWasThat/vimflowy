@@ -261,31 +261,37 @@ $(document).ready(function() {
       cursorPath = viewRoot;
     }
 
-    let messageDivTimeout = null;
+    function getLineHeight() {
+      const line_height = $('.node-text').height() || 21;
+      errors.assert(line_height > 0);
+      return line_height;
+    }
 
     const session = new Session(doc, {
       bindings: key_bindings,
       settings,
-      mainDiv: $('#view'),
       viewRoot: viewRoot,
       cursorPath: cursorPath,
-      showMessage: (message, options = {}) => {
-        if (options.time === undefined) { options.time = 5000; }
-        logger.info(`Showing message: ${message}`);
-        if ($messageDiv) {
-          clearTimeout(messageDivTimeout);
+      showMessage: (() => {
+        let messageDivTimeout = null;
+        return (message, options = {}) => {
+          if (options.time === undefined) { options.time = 5000; }
+          logger.info(`Showing message: ${message}`);
+          if ($messageDiv) {
+            clearTimeout(messageDivTimeout);
 
-          $messageDiv.text(message);
-          if (options.text_class) {
-            $messageDiv.addClass(`text-${options.text_class}`);
+            $messageDiv.text(message);
+            if (options.text_class) {
+              $messageDiv.addClass(`text-${options.text_class}`);
+            }
+
+            messageDivTimeout = setTimeout(() => {
+              $messageDiv.text('');
+              return $messageDiv.removeClass();
+            }, options.time);
           }
-
-          messageDivTimeout = setTimeout(() => {
-            $messageDiv.text('');
-            return $messageDiv.removeClass();
-          }, options.time);
-        }
-      },
+        };
+      })(),
       getVisiblePaths: async () => {
         const paths = [];
         $.makeArray($('.bullet')).forEach((bullet) => {
@@ -312,12 +318,15 @@ $(document).ready(function() {
         return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
       },
       getLinesPerPage: () => {
-        // TODO:  find out height per line, figure out number of lines to move down, scroll down corresponding height
-        const line_height = $('.node-text').height() || 21;
-        errors.assert(line_height > 0);
+        const line_height = getLineHeight();
         const page_height = $(document).height();
         return page_height / line_height;
       },
+    });
+
+    session.on('scroll', (numlines) => {
+      const line_height = getLineHeight();
+      utils.scrollDiv($mainDiv, line_height * numlines);
     });
 
     //###################
@@ -346,7 +355,7 @@ $(document).ready(function() {
       if (session.mode === Modes.modes.SEARCH) {
         Render.renderMenu(session.menu, $menuDiv[0]);
       } else {
-        Render.renderSession(session);
+        Render.renderSession(session, $mainDiv);
       }
     }
 
@@ -390,7 +399,7 @@ $(document).ready(function() {
       pluginManager.on('enabledPluginsChange', function(enabled) {
         settings.setSetting('enabledPlugins', enabled);
         Render.renderPlugins($pluginsDiv, pluginManager);
-        Render.renderSession(session);
+        Render.renderSession(session, $mainDiv);
         // refresh hotkeys, if any new ones were added/removed
         Render.renderHotkeysTable(session.bindings);
         return Render.renderModeTable(session.bindings, session.mode, $keybindingsDiv);
@@ -417,7 +426,7 @@ $(document).ready(function() {
       return handled;
     });
 
-    session.on('importFinished', () => Render.renderSession(session));
+    session.on('importFinished', () => Render.renderSession(session, $mainDiv));
 
     // expose globals, for debugging
     window.Modes = Modes;
@@ -454,7 +463,7 @@ $(document).ready(function() {
           const chars = line.split('');
           session.addCharsAtCursor(chars);
         }
-        Render.renderSession(session);
+        Render.renderSession(session, $mainDiv);
         session.save();
       });
 

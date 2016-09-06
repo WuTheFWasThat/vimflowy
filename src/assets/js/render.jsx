@@ -243,14 +243,14 @@ export function virtualRenderLine(session, path, options = {}) {
       lineoptions.charclick = function(column, e) {
         session.cursor.setPosition(path, column);
         // assume they might click again
-        renderSession(session, {handle_clicks: true});
+        options.rerender({handle_clicks: true});
         // prevent overall path click
         e.stopPropagation();
         return false;
       };
     }
   } else if (!options.no_clicks) {
-    lineoptions.linemouseover = () => renderSession(session, {handle_clicks: true});
+    lineoptions.linemouseover = () => options.rerender({handle_clicks: true});
   }
 
   lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
@@ -290,26 +290,32 @@ function scrollIntoView(el, $within) {
   }
 }
 
-export function renderSession(session, options = {}) {
+export function renderSession(session, $onto, options = {}) {
   options.cursorBetween =
       Modes.getMode(session.mode).metadata.hotkey_type === Modes.INSERT_MODE_TYPE;
+
+  const rerender = (options) => {
+    console.log('rerendering', options);
+    renderSession(session, $onto, options);
+  };
+  options.rerender = rerender;
 
   const t = Date.now();
   ReactDOM.render(
     virtualRenderSession(session, options),
-    session.mainDiv[0]
+    $onto[0]
   );
   logger.debug('Rendering: ', !!options.handle_clicks, (Date.now()-t));
 
-  const cursorDiv = $(`.${getCursorClass(options.cursorBetween)}`, session.mainDiv)[0];
+  const cursorDiv = $(`.${getCursorClass(options.cursorBetween)}`, $onto)[0];
   if (cursorDiv) {
-    scrollIntoView(cursorDiv, session.mainDiv);
+    scrollIntoView(cursorDiv, $onto);
   }
 
   clearTimeout(session.cursorBlinkTimeout);
-  session.mainDiv.removeClass('animate-blink-cursor');
+  $onto.removeClass('animate-blink-cursor');
   session.cursorBlinkTimeout = setTimeout(
-    () => session.mainDiv.addClass('animate-blink-cursor'), 500);
+    () => $onto.addClass('animate-blink-cursor'), 500);
 
 };
 
@@ -329,7 +335,7 @@ function virtualRenderSession(session, options = {}) {
       onClick = async () => {
         await session.zoomInto(path);
         session.save();
-        renderSession(session);
+        options.rerender();
       };
     }
     return (
@@ -429,7 +435,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
       onClick = () => {
         session.toggleBlockCollapsed(path.row);
         session.save();
-        return renderSession(session);
+        options.rerender();
       };
     }
 
@@ -451,7 +457,7 @@ const virtualRenderTree = function(session, parent, options = {}) {
              // move cursor to the end of the row
              let col = options.cursorBetween ? -1 : -2;
              session.cursor.setPosition(path, col);
-             return renderSession(session);
+             options.rerender();
            }}
       >
         {virtualRenderLine(session, path, options)}
@@ -519,14 +525,14 @@ export function virtualRenderLine(session, path, options = {}) {
         console.log('column', column, e, path);
         session.cursor.setPosition(path, column);
         // assume they might click again
-        renderSession(session, {handle_clicks: true});
+        options.rerender({handle_clicks: true});
         // prevent overall path click
         e.stopPropagation();
         return false;
       };
     }
   } else if (!options.no_clicks) {
-    lineoptions.linemouseover = () => renderSession(session, {handle_clicks: true});
+    lineoptions.linemouseover = () => options.rerender({handle_clicks: true});
   }
 
   lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
