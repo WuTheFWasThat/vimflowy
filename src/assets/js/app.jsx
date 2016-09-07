@@ -378,14 +378,6 @@ $(document).ready(function() {
             await session.setMode(Modes.modes.SETTINGS);
           }
         });
-
-        $('#settings-nav li').click(function(e) {
-          const tab = $(e.target).data('tab');
-          $settingsDiv.find('.tabs > li').removeClass('active');
-          $settingsDiv.find('.tab-pane').removeClass('active');
-          $settingsDiv.find(`.tabs > li[data-tab=${tab}]`).addClass('active');
-          return $settingsDiv.find(`.tab-pane#${tab}`).addClass('active');
-        });
       });
     });
 
