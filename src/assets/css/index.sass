@@ -4,10 +4,6 @@ body, html
     margin: 0
     font-family: 'Monaco', monospace // Courier New?
 
-    // required for selection of text in the chrome app
-    // SEE: http://stackoverflow.com/questions/19149993/how-to-select-highlight-text-in-chrome-app
-    -webkit-user-select: text
-
 $bottom-bar-height: 25px
 #bottom-bar
     z-index: 3
@@ -20,30 +16,8 @@ $bottom-bar-height: 25px
     width: 100%
     font-size: 12px
 
-    $vertical-padding: 5px
-    $horizontal-padding: 15px
-
     & > div, & > a
-        position: relative
-        float: left
-        height: $bottom-bar-height - 2 * $vertical-padding
-        padding: $vertical-padding $horizontal-padding
-
-    $mode-width: 80px // must cover visual line
-
-    #mode
-        width: $mode-width
-        float: right
-
-    #message
-        padding-left: 20px
-
-    $settings-link-width: 100px
-
-    #settings-link
-        width: $settings-link-width
-        text-decoration: none
-        cursor: pointer
+        padding: 5px 15px
 
 .btn
     padding: 5px
@@ -54,22 +28,12 @@ $bottom-bar-height: 25px
     &:focus
         outline: 0
 
-.keybindings-table
-    width: 100%
-    td
-        font-size: 10px
-        border: 1px solid
-        padding: 5px
-
 #settings
     position: absolute
     width: 100%
     @include calc(height, '100% - #{$bottom-bar-height}')
     z-index: 2
     overflow-y: auto
-
-    .tabs, .tab-pane
-        margin: 20px
 
     .settings-content
         padding: 20px 0px
@@ -81,33 +45,15 @@ $bottom-bar-height: 25px
         -moz-border-radius: 5px
         padding: $header-padding
 
-    #hotkey-actions
-        margin-bottom: 10px
-
-    #hotkey-edit
-        min-height: 100px
-
-        #hotkey-edit-normal, #hotkey-edit-insert
-            display: inline-block
-            @include calc(width, '50% - 10px')
-            height: 100%
-            vertical-align: top
+    #hotkey-edit-normal, #hotkey-edit-insert
+        display: inline-block
+        @include calc(width, '50% - 5px')
+        height: 100%
+        vertical-align: top
 
     #plugins > table
-        width: 100%
         td
             padding: 5px
-        border-collapse: collapse
-        .plugin-version
-            max-width: 10%
-        .plugin-author
-            max-width: 15%
-        .plugin-status
-            max-width: 10%
-        .plugin-actions
-            max-width: 20%
-            .btn
-                width: 60px
 
 #contents
     display: flex
@@ -181,8 +127,3 @@ $bottom-bar-height: 25px
         left: 0
         border-bottom: $tab-bar-height solid
         z-index: 3
-
-.tab-pane
-    display: none
-    &.active
-        display: block

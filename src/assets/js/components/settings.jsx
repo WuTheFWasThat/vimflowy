@@ -145,7 +145,7 @@ export default class SettingsMenu extends React.Component {
         div: (
           <div>
             <div className="settings-content">
-              <div id="hotkey-actions" className="clearfix">
+              <div className="clearfix" style={{marginBottom: 10}}>
                 <div style={{float:'left'}} className="btn theme-bg-secondary theme-trim"
                   onClick={() => {
                     const filename = 'vimflowy_hotkeys.json';
@@ -184,9 +184,9 @@ export default class SettingsMenu extends React.Component {
 
                   Import from file
                 </div>
-                <input id="hotkeys_file_input" type="file" name="hotkeys-file" style={{float:'left'}}/>
+                <input id="hotkeys_file_input" type="file" style={{float:'left'}}/>
               </div>
-              <div id="hotkey-edit">
+              <div>
                 <div id="hotkey-edit-normal">
                 </div>
                 <div id="hotkey-edit-insert">
@@ -212,7 +212,7 @@ export default class SettingsMenu extends React.Component {
     return (
       <div>
         {/* NOTE: must have theme as well so that inherit works for tabs*/}
-        <ul className="tabs theme-bg-primary">
+        <ul className="tabs theme-bg-primary" style={{margin: 20}}>
           {
             (() => {
               return _.map(tabs_info, (info) => {

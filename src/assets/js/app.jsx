@@ -210,8 +210,24 @@ $(document).ready(function() {
             />
           </div>
 
-          <div id="bottom-bar" className="theme-bg-primary theme-trim">
-            <a id="settings-link" className="center theme-bg-secondary">
+          <div id="bottom-bar" className="theme-bg-primary theme-trim"
+               style={{
+                 display: 'flex'
+               }}
+          >
+            <a className="center theme-bg-secondary"
+               onClick={async () => {
+                 if (session.mode === Modes.modes.SETTINGS) {
+                   await session.setMode(Modes.modes.NORMAL);
+                 } else {
+                   await session.setMode(Modes.modes.SETTINGS);
+                 }
+               }}
+               style={{
+                 flexBasis: 100, flexGrow: 0,
+                 cursor: 'pointer', textDecoration: 'none'
+               }}
+            >
               <div id="settings-open">
                 <span style={{marginRight:10}} className="fa fa-cog">
                 </span>
@@ -226,9 +242,14 @@ $(document).ready(function() {
                 </span>
               </div>
             </a>
-            <div id="message">
+            <div id="message"
+                 style={{flexBasis: 0, flexGrow: 1}}
+            >
             </div>
-            <div id="mode" className="center theme-bg-secondary">
+            {/* should be wide enough to fit the words 'VISUAL LINE'*/}
+            <div id="mode" className="center theme-bg-secondary"
+                 style={{flexBasis: 80, flexGrow: 0}}
+            >
             </div>
           </div>
 
@@ -369,14 +390,6 @@ $(document).ready(function() {
           }
           Render.renderSession(session, $mainDiv);
           session.save();
-        });
-
-        $('#settings-link').click(async function() {
-          if (session.mode === Modes.modes.SETTINGS) {
-            await session.setMode(Modes.modes.NORMAL);
-          } else {
-            await session.setMode(Modes.modes.SETTINGS);
-          }
         });
       });
     });

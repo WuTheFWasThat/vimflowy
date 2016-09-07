@@ -553,25 +553,25 @@ export function renderMenu(menu, onto) {
 export function renderPlugins($div, pluginManager) {
   ReactDOM.render(
     (
-      <table>
+      <table style={{width: '100%', borderCollapse: 'collapse'}}>
         <thead>
           <tr>
-            <th className='plugin-name'>
+            <th className='theme-trim'>
               Plugin
             </th>
-            <th className='plugin-description'>
+            <th className='theme-trim'>
               Description
             </th>
-            <th className='plugin-version'>
+            <th className='theme-trim' style={{maxWidth: '10%'}}>
               Version
             </th>
-            <th className='plugin-author'>
+            <th className='theme-trim' style={{maxWidth: '15%'}}>
               Author
             </th>
-            <th className='plugin-status'>
+            <th className='theme-trim' style={{maxWidth: '10%'}}>
               Status
             </th>
-            <th className='plugin-actions'>
+            <th className='theme-trim' style={{maxWidth: '20%'}}>
               Actions
             </th>
           </tr>
@@ -593,42 +593,44 @@ export function renderPlugins($div, pluginManager) {
                 }
                 if (btnText) {
                   actions.push(
-                    <div key={btnText} className='btn theme-trim' onClick={btnClick}>
+                    <div key={btnText} onClick={btnClick}
+                      className='btn theme-trim' style={{width: 60}}>
                       {btnText}
                     </div>
                   );
                 }
 
                 let color = 'inherit';
-                if (status === Plugins.STATUSES.ENABLING || status === Plugins.STATUSES.DISABLING) {
-                  color = 'yellow';
-                }
-                if (status === Plugins.STATUSES.UNREGISTERED || status === Plugins.STATUSES.DISABLED) {
-                  color = 'red';
-                } else if (status === Plugins.STATUSES.ENABLED) {
+                if (status === Plugins.STATUSES.ENABLED) {
                   color = 'green';
+                } else if (status === Plugins.STATUSES.ENABLING ||
+                           status === Plugins.STATUSES.DISABLING) {
+                  color = 'yellow';
+                } else if (status === Plugins.STATUSES.UNREGISTERED ||
+                           status === Plugins.STATUSES.DISABLED) {
+                  color = 'red';
                 }
 
                 const plugin = Plugins.getPlugin(name) || {};
                 return (
-                  <tr key={name} className='plugin theme-bg-secondary'>
+                  <tr key={name} className='theme-bg-secondary'>
                     <td className='center theme-trim plugin-name'>
                       { name }
                     </td>
-                    <td className='theme-trim plugin-description' style={{fontSize: 12}}>
+                    <td className='theme-trim' style={{fontSize: 12}}>
                       { plugin.description || '' }
                     </td>
-                    <td className='center theme-trim plugin-version'>
+                    <td className='center theme-trim'>
                       { (plugin.version || '') + '' }
                     </td>
-                    <td className='center theme-trim plugin-author' style={{fontSize: 12}}>
+                    <td className='center theme-trim' style={{fontSize: 12}}>
                       { plugin.author || '' }
                     </td>
-                    <td className='center theme-trim plugin-status'
+                    <td className='center theme-trim'
                       style={{boxShadow: `inset 0px 0px 0px 2px ${color}`}}>
                       {status}
                     </td>
-                    <td className='center theme-trim plugin-actions'>
+                    <td className='center theme-trim'>
                       {actions}
                     </td>
                   </tr>
@@ -691,12 +693,18 @@ const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
         continue;
       }
 
+      const cellStyle = {
+        fontSize: 10,
+        border: '1px solid',
+        padding: 5,
+      };
+
       const el = (
         <tr key={k}>
-          <td key='keys'>
+          <td key='keys' style={cellStyle}>
             { keys.join(' OR ') }
           </td>
-          <td key='desc' style={{width: '100%'}}>
+          <td key='desc' style={ Object.assign({width: '100%'}, cellStyle) }>
             { v.description }
             {
               (() => {
@@ -727,7 +735,9 @@ const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
                 {label}
               </h5>
               ,
-              <table key={label+'_table'} className='keybindings-table theme-bg-secondary'>
+              <table key={label+'_table'} className='theme-bg-secondary'
+                     style={{width: '100%'}}
+              >
                 <tbody>
                   {buildTableContents(definitions)}
                 </tbody>

@@ -27,6 +27,7 @@
     "no-unused-vars": [2],
     "no-undef": [2],
     "no-use-before-define": [2, "nofunc"],
+    "no-constant-condition": [0],
     "no-shadow": [0],
     "max-len": [2, 120, 4]
   }
