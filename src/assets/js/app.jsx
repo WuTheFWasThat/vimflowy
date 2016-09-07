@@ -214,6 +214,7 @@ $(document).ready(function() {
 
     function renderMain() {
       return new Promise((resolve) => {
+        const settingsMode = session.mode === Modes.modes.SETTINGS;
         ReactDOM.render(
           <div>
             {/* hack for firefox paste */}
@@ -229,6 +230,10 @@ $(document).ready(function() {
 
 
               <div id="view" className={session.mode === Modes.modes.SEARCH ? 'hidden' : ''}>
+                {/* NOTE: maybe always showing mainDiv would be nice?
+                  * Mostly works to never have 'hidden',
+                  * but would be cool if it mirrored selected search result
+                  */}
                 <SessionComponent
                   session={session}
                   onRender={(options) => {
@@ -252,7 +257,7 @@ $(document).ready(function() {
               <div id="keybindings" className="theme-bg-secondary"></div>
             </div>
 
-            <div id="settings" className="hidden theme-bg-primary">
+            <div id="settings" className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
               <SettingsComponent
                 session={session}
                 key_bindings={key_bindings}
@@ -275,7 +280,7 @@ $(document).ready(function() {
             >
               <a className="center theme-bg-secondary"
                  onClick={async () => {
-                   if (session.mode === Modes.modes.SETTINGS) {
+                   if (settingsMode) {
                      await session.setMode(Modes.modes.NORMAL);
                    } else {
                      await session.setMode(Modes.modes.SETTINGS);
@@ -286,13 +291,13 @@ $(document).ready(function() {
                    cursor: 'pointer', textDecoration: 'none'
                  }}
               >
-                <div id="settings-open">
+                <div className={settingsMode ? 'hidden' : ''}>
                   <span style={{marginRight:10}} className="fa fa-cog">
                   </span>
                   <span>Settings
                   </span>
                 </div>
-                <div id="settings-close" className="hidden">
+                <div className={settingsMode ? '' : 'hidden'}>
                   <span style={{marginRight:10}} className="fa fa-arrow-left">
                   </span>
                   <span>
@@ -324,7 +329,6 @@ $(document).ready(function() {
       const $settingsDiv = $('#settings');
       const $modeDiv = $('#mode');
       const $pluginsDiv = $('#plugins');
-      const $menuDiv = $('#menu');
       const $mainDiv = $('#view');
 
       session.on('scroll', (numlines) => {
@@ -368,15 +372,7 @@ $(document).ready(function() {
         render_mode_info(session.mode);
         session.on('modeChange', (oldmode, newmode) => {
           render_mode_info(newmode);
-
-          $settingsDiv.toggleClass('hidden', newmode !== Modes.modes.SETTINGS);
-          $('#settings-open').toggleClass('hidden', newmode === Modes.modes.SETTINGS);
-          $('#settings-close').toggleClass('hidden', newmode !== Modes.modes.SETTINGS);
-
-          $menuDiv.toggleClass('hidden', newmode !== Modes.modes.SEARCH);
-          // NOTE: maybe showing mainDiv would be nice?
-          // removing this line mostly works
-          $mainDiv.toggleClass('hidden', newmode === Modes.modes.SEARCH);
+          renderMain();
         });
 
         const render_hotkey_settings = (hotkey_settings) => {
