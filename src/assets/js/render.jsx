@@ -1,4 +1,3 @@
-/* global window */
 /* eslint-disable no-use-before-define */
 
 import $ from 'jquery';
@@ -19,7 +18,7 @@ const MODE_TYPES = Modes.types;
 
 // TODO: move mode-specific logic into mode render functions
 
-function getCursorClass(cursorBetween) {
+export function getCursorClass(cursorBetween) {
   if (cursorBetween) {
     return 'theme-cursor-insert';
   } else {
@@ -27,7 +26,7 @@ function getCursorClass(cursorBetween) {
   }
 }
 
-function renderLine(lineData, options = {}) {
+export function renderLine(lineData, options = {}) {
   if (options.cursors === undefined) { options.cursors = {}; }
   if (options.highlights === undefined) { options.highlights = {}; }
 
@@ -272,53 +271,7 @@ export function virtualRenderLine(session, path, options = {}) {
   return session.applyHook('renderLineElements', results, { path });
 }
 
-function scrollIntoView(el, $within) {
-  const elemTop = el.getBoundingClientRect().top;
-  const elemBottom = el.getBoundingClientRect().bottom;
-
-  const margin = 50;
-  const top_margin = margin;
-  const bottom_margin = margin + $('#bottom-bar').height();
-
-  if (elemTop < top_margin) {
-    // scroll up
-    return utils.scrollDiv($within, elemTop - top_margin);
-  } else if (elemBottom > window.innerHeight - bottom_margin) {
-    // scroll down
-    return utils.scrollDiv($within,
-                           elemBottom - window.innerHeight + bottom_margin);
-  }
-}
-
-export function renderSession(session, $onto, options = {}) {
-  options.cursorBetween =
-      Modes.getMode(session.mode).metadata.hotkey_type === Modes.INSERT_MODE_TYPE;
-
-  const rerender = (options) => {
-    renderSession(session, $onto, options);
-  };
-  options.rerender = rerender;
-
-  const t = Date.now();
-  ReactDOM.render(
-    virtualRenderSession(session, options),
-    $onto[0]
-  );
-  logger.debug('Rendering: ', !!options.handle_clicks, (Date.now()-t));
-
-  const cursorDiv = $(`.${getCursorClass(options.cursorBetween)}`, $onto)[0];
-  if (cursorDiv) {
-    scrollIntoView(cursorDiv, $onto);
-  }
-
-  clearTimeout(session.cursorBlinkTimeout);
-  $onto.removeClass('animate-blink-cursor');
-  session.cursorBlinkTimeout = setTimeout(
-    () => $onto.addClass('animate-blink-cursor'), 500);
-
-}
-
-function virtualRenderSession(session, options = {}) {
+export function virtualRenderSession(session, options = {}) {
   const crumbs = [];
   let path = session.viewRoot;
   while (!path.is(session.document.root)) {
@@ -486,69 +439,6 @@ const virtualRenderTree = function(session, parent, options = {}) {
     );
   });
 };
-
-export function renderMenu(menu, onto) {
-  const searchBox = (
-    <div className='searchBox theme-trim'>
-      <i className='fa fa-search' style={{'margin-right': 10}}/>
-      <span>
-        {
-          virtualRenderLine(
-            menu.session, menu.session.cursor.path,
-            {cursorBetween: true, no_clicks: true}
-          )
-        }
-      </span>
-    </div>
-  );
-
-  let searchResults;
-
-  if (menu.results.length === 0) {
-    let message = '';
-    if (menu.session.curLineLength() === 0) {
-      message = 'Type something to search!';
-    } else {
-      message = 'No results!  Try typing something else';
-    }
-    searchResults = (
-      <div style={{fontSize: 20, opacity: 0.5}} className='center'>
-        {message}
-      </div>
-    );
-  } else {
-    searchResults = menu.results.map((result, i) => {
-      const selected = i === menu.selection;
-
-      const renderOptions = result.renderOptions || {};
-      let contents = renderLine(result.contents, renderOptions);
-      if (result.renderHook) {
-        contents = result.renderHook(contents);
-      }
-
-      const className = selected ? 'theme-bg-selection' : '';
-      const icon = selected ? 'fa-arrow-circle-right' : 'fa-circle';
-      return (
-        <div style={{marginBottom: 10}} className={className}>
-          <i className={`fa ${icon} bullet`} style={{marginRight: 20}}>
-          </i>
-          <span>
-            {contents}
-          </span>
-        </div>
-      );
-    });
-  }
-
-  ReactDOM.render(
-    <div>
-      {searchBox}
-      {searchResults}
-    </div>
-    ,
-    onto
-  );
-}
 
 export function renderPlugins($div, pluginManager) {
   ReactDOM.render(

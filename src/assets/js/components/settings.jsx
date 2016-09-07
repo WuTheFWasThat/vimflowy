@@ -13,7 +13,7 @@ const TABS = {
   PLUGIN: 'PLUGIN',
 };
 
-export default class SettingsMenu extends React.Component {
+export default class SettingsComponent extends React.Component {
   static get propTypes() {
     return {
       session: React.PropTypes.any.isRequired,

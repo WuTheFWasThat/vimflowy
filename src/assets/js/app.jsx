@@ -41,7 +41,9 @@ import Path from './path';
 import Session from './session';
 import * as Render from './render';
 
-import SettingsMenu from './components/settings.jsx';
+import SettingsComponent from './components/settings.jsx';
+import SessionComponent from './components/session.jsx';
+import MenuComponent from './components/menu.jsx';
 
 import keyDefinitions from './keyDefinitions';
 // load actual definitions
@@ -49,6 +51,24 @@ import './definitions';
 // load all plugins
 import '../../plugins';
 import KeyBindings from './keyBindings';
+
+function scrollIntoView(el, $within) {
+  const elemTop = el.getBoundingClientRect().top;
+  const elemBottom = el.getBoundingClientRect().bottom;
+
+  const margin = 50;
+  const top_margin = margin;
+  const bottom_margin = margin + $('#bottom-bar').height();
+
+  if (elemTop < top_margin) {
+    // scroll up
+    return utils.scrollDiv($within, elemTop - top_margin);
+  } else if (elemBottom > window.innerHeight - bottom_margin) {
+    // scroll down
+    return utils.scrollDiv($within,
+                           elemBottom - window.innerHeight + bottom_margin);
+  }
+}
 
 $(document).ready(function() {
 
@@ -192,87 +212,115 @@ $(document).ready(function() {
     const initialTheme = await settings.getSetting('theme');
     changeStyle(initialTheme);
 
-    const renderProm = new Promise((resolve) => {
-      ReactDOM.render(
-        <div>
-          {/* hack for firefox paste */}
-          <div id="paste-hack" contentEditable="true" className="offscreen">
-          </div>
-
-          <div id="contents">
-            <div id="menu" className="hidden"></div>
-            <div id="view"></div>
-            <div id="keybindings" className="theme-bg-secondary"></div>
-          </div>
-
-          <div id="settings" className="hidden theme-bg-primary">
-            <SettingsMenu
-              session={session}
-              key_bindings={key_bindings}
-              initialTheme={initialTheme}
-              onThemeChange={(theme) => {
-                settings.setSetting('theme', theme);
-                changeStyle(theme);
-              }}
-              onExport={() => {
-                const filename = 'vimflowy_hotkeys.json';
-                const content = JSON.stringify(key_bindings.hotkeys, null, 2);
-                download_file(filename, 'application/json', content);
-                session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
-              }}
-            />
-          </div>
-
-          <div id="bottom-bar" className="theme-bg-primary theme-trim"
-               style={{ display: 'flex' }}
-          >
-            <a className="center theme-bg-secondary"
-               onClick={async () => {
-                 if (session.mode === Modes.modes.SETTINGS) {
-                   await session.setMode(Modes.modes.NORMAL);
-                 } else {
-                   await session.setMode(Modes.modes.SETTINGS);
-                 }
-               }}
-               style={{
-                 flexBasis: 100, flexGrow: 0,
-                 cursor: 'pointer', textDecoration: 'none'
-               }}
-            >
-              <div id="settings-open">
-                <span style={{marginRight:10}} className="fa fa-cog">
-                </span>
-                <span>Settings
-                </span>
-              </div>
-              <div id="settings-close" className="hidden">
-                <span style={{marginRight:10}} className="fa fa-arrow-left">
-                </span>
-                <span>
-                  Back
-                </span>
-              </div>
-            </a>
-            <div id="message"
-                 style={{flexBasis: 0, flexGrow: 1}}
-            >
+    function renderMain() {
+      return new Promise((resolve) => {
+        ReactDOM.render(
+          <div>
+            {/* hack for firefox paste */}
+            <div id="paste-hack" contentEditable="true" className="offscreen">
             </div>
-            {/* should be wide enough to fit the words 'VISUAL LINE'*/}
-            <div id="mode" className="center theme-bg-secondary"
-                 style={{flexBasis: 80, flexGrow: 0}}
-            >
+
+            <div id="contents">
+              <div id="menu" className={session.mode === Modes.modes.SEARCH ? '' : 'hidden'}>
+                <MenuComponent
+                  menu={session.menu}
+                />
+              </div>
+
+
+              <div id="view" className={session.mode === Modes.modes.SEARCH ? 'hidden' : ''}>
+                <SessionComponent
+                  session={session}
+                  onRender={(options) => {
+                    const $onto = $('#view');
+                    logger.info('Render called: ', options);
+                    setTimeout(() => {
+                      const cursorDiv = $(`.${Render.getCursorClass(options.cursorBetween)}`, $onto)[0];
+                      if (cursorDiv) {
+                        scrollIntoView(cursorDiv, $onto);
+                      }
+
+                      clearTimeout(session.cursorBlinkTimeout);
+                      $onto.removeClass('animate-blink-cursor');
+                      session.cursorBlinkTimeout = setTimeout(
+                        () => $onto.addClass('animate-blink-cursor'), 500);
+                    }, 100);
+                  }}
+                />
+              </div>
+
+              <div id="keybindings" className="theme-bg-secondary"></div>
             </div>
+
+            <div id="settings" className="hidden theme-bg-primary">
+              <SettingsComponent
+                session={session}
+                key_bindings={key_bindings}
+                initialTheme={initialTheme}
+                onThemeChange={(theme) => {
+                  settings.setSetting('theme', theme);
+                  changeStyle(theme);
+                }}
+                onExport={() => {
+                  const filename = 'vimflowy_hotkeys.json';
+                  const content = JSON.stringify(key_bindings.hotkeys, null, 2);
+                  download_file(filename, 'application/json', content);
+                  session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
+                }}
+              />
+            </div>
+
+            <div id="bottom-bar" className="theme-bg-primary theme-trim"
+                 style={{ display: 'flex' }}
+            >
+              <a className="center theme-bg-secondary"
+                 onClick={async () => {
+                   if (session.mode === Modes.modes.SETTINGS) {
+                     await session.setMode(Modes.modes.NORMAL);
+                   } else {
+                     await session.setMode(Modes.modes.SETTINGS);
+                   }
+                 }}
+                 style={{
+                   flexBasis: 100, flexGrow: 0,
+                   cursor: 'pointer', textDecoration: 'none'
+                 }}
+              >
+                <div id="settings-open">
+                  <span style={{marginRight:10}} className="fa fa-cog">
+                  </span>
+                  <span>Settings
+                  </span>
+                </div>
+                <div id="settings-close" className="hidden">
+                  <span style={{marginRight:10}} className="fa fa-arrow-left">
+                  </span>
+                  <span>
+                    Back
+                  </span>
+                </div>
+              </a>
+              <div id="message"
+                   style={{flexBasis: 0, flexGrow: 1}}
+              >
+              </div>
+              {/* should be wide enough to fit the words 'VISUAL LINE'*/}
+              <div id="mode" className="center theme-bg-secondary"
+                   style={{flexBasis: 80, flexGrow: 0}}
+              >
+              </div>
+            </div>
+
+            <a id="export" className="hidden"> </a>
           </div>
+          ,
+          $('#app')[0],
+          resolve
+        );
+      });
+    }
 
-          <a id="export" className="hidden"> </a>
-        </div>
-        ,
-        $('#app')[0],
-        resolve
-      );
-    });
-
-    renderProm.then(async () => {
+    renderMain().then(async () => {
       const $settingsDiv = $('#settings');
       const $modeDiv = $('#mode');
       const $pluginsDiv = $('#plugins');
@@ -289,15 +337,7 @@ $(document).ready(function() {
       const showingKeyBindings = await settings.getSetting('showKeyBindings');
       getKeybindingsDiv().toggleClass('active', showingKeyBindings);
 
-      session.on('importFinished', () => Render.renderSession(session, $mainDiv));
-
-      function renderMain() {
-        if (session.mode === Modes.modes.SEARCH) {
-          Render.renderMenu(session.menu, $menuDiv[0]);
-        } else {
-          Render.renderSession(session, $mainDiv);
-        }
-      }
+      session.on('importFinished', renderMain);
 
       key_emitter.listen();
       key_emitter.on('keydown', (key) => {
@@ -353,7 +393,7 @@ $(document).ready(function() {
         pluginManager.on('enabledPluginsChange', function(enabled) {
           settings.setSetting('enabledPlugins', enabled);
           Render.renderPlugins($pluginsDiv, pluginManager);
-          Render.renderSession(session, $mainDiv);
+          renderMain();
           // refresh hotkeys, if any new ones were added/removed
           Render.renderHotkeysTable(session.bindings);
           return Render.renderModeTable(session.bindings, session.mode, getKeybindingsDiv());
@@ -390,8 +430,8 @@ $(document).ready(function() {
             const chars = line.split('');
             session.addCharsAtCursor(chars);
           }
-          Render.renderSession(session, $mainDiv);
           session.save();
+          renderMain();
         });
       });
     });
