@@ -7,6 +7,8 @@
     "node": true,
     "es6": true
   },
+  "plugins": ["react"],
+  "extends": ["eslint:recommended", "plugin:react/recommended"],
   "rules": {
     "semi": [2, "always"],
     "valid-jsdoc": [2],

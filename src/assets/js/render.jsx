@@ -2,9 +2,8 @@
 /* eslint-disable no-use-before-define */
 
 import $ from 'jquery';
-/* eslint-disable no-unused-vars */
+import _ from 'lodash';
 import React from 'react';
-/* eslint-enable no-unused-vars */
 import ReactDOM from 'react-dom';
 
 import * as constants from './constants';
@@ -26,7 +25,7 @@ function getCursorClass(cursorBetween) {
   } else {
     return 'theme-cursor';
   }
-};
+}
 
 function renderLine(lineData, options = {}) {
   if (options.cursors === undefined) { options.cursors = {}; }
@@ -205,7 +204,7 @@ function renderLine(lineData, options = {}) {
   }
 
   return results;
-};
+}
 
 
 export function virtualRenderLine(session, path, options = {}) {
@@ -271,7 +270,7 @@ export function virtualRenderLine(session, path, options = {}) {
   results.push(info);
 
   return session.applyHook('renderLineElements', results, { path });
-};
+}
 
 function scrollIntoView(el, $within) {
   const elemTop = el.getBoundingClientRect().top;
@@ -317,7 +316,7 @@ export function renderSession(session, $onto, options = {}) {
   session.cursorBlinkTimeout = setTimeout(
     () => $onto.addClass('animate-blink-cursor'), 500);
 
-};
+}
 
 function virtualRenderSession(session, options = {}) {
   const crumbs = [];
@@ -406,7 +405,7 @@ function virtualRenderSession(session, options = {}) {
       {contentsNode}
     </div>
   );
-};
+}
 
 const virtualRenderTree = function(session, parent, options = {}) {
   if ((!options.ignoreCollapse) && session.document.collapsed(parent.row)) {
@@ -549,7 +548,7 @@ export function renderMenu(menu, onto) {
     ,
     onto
   );
-};
+}
 
 export function renderPlugins($div, pluginManager) {
   ReactDOM.render(
@@ -642,7 +641,7 @@ export function renderPlugins($div, pluginManager) {
     ),
     $div[0]
   );
-};
+}
 
 //#####
 // hotkeys
@@ -660,13 +659,13 @@ export function renderHotkeysTable(key_bindings) {
         <div className='tooltip' title={MODE_TYPES[mode_type].description}>
           {mode_type}
         </div>
-        { buildTable(key_bindings, key_bindings.hotkeys[mode_type], mode_defs) }
+        { buildTable(key_bindings, key_bindings.hotkeys[mode_type], _.extend.apply(_, mode_defs)) }
       </div>
       ,
       onto[0]
     );
   });
-};
+}
 
 // build table to visualize hotkeys
 const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
@@ -751,4 +750,4 @@ export function renderModeTable(key_bindings, mode, onto) {
     ),
     onto[0]
   );
-};
+}

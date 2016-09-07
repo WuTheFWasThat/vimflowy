@@ -7,7 +7,7 @@ var SRC_DIR = path.join(__dirname, '..', 'src');
 module.exports = {
   debug: true,
   devtool: 'eval',
-  entry: ['webpack-hot-middleware/client', './src/assets/js/app.js'],
+  entry: ['webpack-hot-middleware/client', './src/assets/js/app.jsx'],
   module: {
     loaders: [
       {

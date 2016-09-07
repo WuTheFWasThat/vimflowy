@@ -3,9 +3,7 @@
 
 import _ from 'lodash';
 import $ from 'jquery';
-/* eslint-disable no-unused-vars */
 import React from 'react';
-/* eslint-enable no-unused-vars */
 
 import * as Plugins from '../../assets/js/plugins';
 import * as Modes from '../../assets/js/modes';
