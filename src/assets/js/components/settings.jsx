@@ -18,6 +18,10 @@ export default class SettingsMenu extends React.Component {
     return {
       session: React.PropTypes.any.isRequired,
       key_bindings: React.PropTypes.any.isRequired,
+
+      initialTheme: React.PropTypes.string.isRequired,
+      onThemeChange: React.PropTypes.func.isRequired,
+      onExport: React.PropTypes.func.isRequired,
     };
   }
 
@@ -60,7 +64,9 @@ export default class SettingsMenu extends React.Component {
               Visual Theme
             </div>
             <div className="settings-content">
-              <select className="theme-selection" defaultValue={'default-theme'}>
+              <select defaultValue={this.props.initialTheme}
+                onChange={(e) => this.props.onThemeChange(e.target.value)}
+              >
                 <option value="default-theme">
                   Default
                 </option>
@@ -147,12 +153,7 @@ export default class SettingsMenu extends React.Component {
             <div className="settings-content">
               <div className="clearfix" style={{marginBottom: 10}}>
                 <div style={{float:'left'}} className="btn theme-bg-secondary theme-trim"
-                  onClick={() => {
-                    const filename = 'vimflowy_hotkeys.json';
-                    const content = JSON.stringify(key_bindings.hotkeys, null, 2);
-                    utils.download_file(filename, 'application/json', content);
-                    return session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
-                  }}>
+                  onClick={this.props.onExport} >
                   Export as file
                 </div>
                 <div style={{float:'left'}} className="btn theme-bg-secondary theme-trim"

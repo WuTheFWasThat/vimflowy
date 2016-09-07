@@ -36,6 +36,10 @@ export default class Session extends EventEmitter {
     this.getVisiblePaths = options.getVisiblePaths || (() => []);
     this.toggleBindingsDiv = options.toggleBindingsDiv || (() => {});
     this.getLinesPerPage = options.getLinesPerPage || (() => 10);
+    this.downloadFile = options.downloadFile || ((filename, mimetype, content) => {
+      logger.info(`Would download file to ${filename}`);
+      logger.debug(content);
+    });
 
     this.register = new Register(this);
 
@@ -227,8 +231,9 @@ export default class Session extends EventEmitter {
     // Infer mimetype from file extension
     const mimetype = utils.mimetypeLookup(filename);
     const content = await this.exportContent(mimetype);
-    utils.download_file(filename, mimetype, content);
+    this.downloadFile(filename, mimetype, content);
     this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
+    utils.download_file(filename, mimetype, content);
   }
 
   //################

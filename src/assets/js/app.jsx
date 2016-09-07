@@ -6,11 +6,11 @@ initialize the main page
 - handle clipboard paste
 - handle errors
 - load document from localStorage (fall back to plain in-memory datastructures)
-- initialize objects (session, settings, etc.) with relevant divs
+- initialize objects (session, settings, etc.)
+- handle rendering logic
 */
 
 // TODO: use react more properly
-//      - get rid of div options (i.e. mainDiv, etc)
 
 import $ from 'jquery';
 import React from 'react';
@@ -63,31 +63,18 @@ $(document).ready(function() {
   // const changeStyle = theme => $('body').removeClass().addClass(theme);
 
   async function create_session(doc, to_load) {
-
-    //###################
-    // Settings
-    //###################
-
     const settings = new Settings(doc.store);
 
-    //###################
     // hotkeys and key bindings
-    //###################
-
     const initial_hotkey_settings = await settings.getSetting('hotkeys', {});
     const key_bindings = new KeyBindings(keyDefinitions, initial_hotkey_settings);
 
-    //###################
     // session
-    //###################
-
     if (!doc.hasChildren(doc.root.row)) {
       // HACKY: should load the actual data now, but since plugins aren't enabled...
       doc.load(constants.empty_data);
     }
-
     const viewRoot = Path.loadFromAncestry(doc.store.getLastViewRoot());
-
     // TODO: if we ever support multi-user case, ensure last view root is valid
     let cursorPath;
     if (viewRoot.isRoot()) {
@@ -100,6 +87,15 @@ $(document).ready(function() {
       const line_height = $('.node-text').height() || 21;
       errors.assert(line_height > 0);
       return line_height;
+    }
+
+    function download_file(filename, mimetype, content) {
+      const exportDiv = $('#export');
+      exportDiv.attr('download', filename);
+      exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
+      exportDiv[0].click();
+      exportDiv.attr('download', null);
+      return exportDiv.attr('href', null);
     }
 
     const session = new Session(doc, {
@@ -159,6 +155,9 @@ $(document).ready(function() {
         const page_height = $(document).height();
         return page_height / line_height;
       },
+      downloadFile: (filename, mimetype, content) => {
+        download_file(filename, mimetype, content);
+      },
     });
 
     // load plugins
@@ -190,6 +189,9 @@ $(document).ready(function() {
     window.key_emitter = key_emitter;
     window.key_bindings = key_bindings;
 
+    const initialTheme = await settings.getSetting('theme');
+    changeStyle(initialTheme);
+
     const renderProm = new Promise((resolve) => {
       ReactDOM.render(
         <div>
@@ -207,13 +209,22 @@ $(document).ready(function() {
             <SettingsMenu
               session={session}
               key_bindings={key_bindings}
+              initialTheme={initialTheme}
+              onThemeChange={(theme) => {
+                settings.setSetting('theme', theme);
+                changeStyle(theme);
+              }}
+              onExport={() => {
+                const filename = 'vimflowy_hotkeys.json';
+                const content = JSON.stringify(key_bindings.hotkeys, null, 2);
+                download_file(filename, 'application/json', content);
+                session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
+              }}
             />
           </div>
 
           <div id="bottom-bar" className="theme-bg-primary theme-trim"
-               style={{
-                 display: 'flex'
-               }}
+               style={{ display: 'flex' }}
           >
             <a className="center theme-bg-secondary"
                onClick={async () => {
@@ -274,15 +285,6 @@ $(document).ready(function() {
       });
 
       // load settings
-
-      const theme = await settings.getSetting('theme');
-      changeStyle(theme);
-      $settingsDiv.find('.theme-selection').val(theme);
-      $settingsDiv.find('.theme-selection').on('input', function(/*e*/) {
-        const theme = this.value;
-        settings.setSetting('theme', theme);
-        return changeStyle(theme);
-      });
 
       const showingKeyBindings = await settings.getSetting('showKeyBindings');
       getKeybindingsDiv().toggleClass('active', showingKeyBindings);
