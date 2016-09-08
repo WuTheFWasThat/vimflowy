@@ -71,6 +71,169 @@ function scrollIntoView(el, $within) {
   }
 }
 
+function download_file(filename, mimetype, content) {
+  const exportDiv = $('#export');
+  exportDiv.attr('download', filename);
+  exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
+  exportDiv[0].click();
+  exportDiv.attr('download', null);
+  return exportDiv.attr('href', null);
+}
+
+
+class AppComponent extends React.Component {
+  static get propTypes() {
+    return {
+      pluginManager: React.PropTypes.any.isRequired,
+      session: React.PropTypes.any.isRequired,
+      showingKeyBindings: React.PropTypes.bool.isRequired,
+      keyBindings: React.PropTypes.any.isRequired,
+      initialTheme: React.PropTypes.string.isRequired,
+      onThemeChange: React.PropTypes.func.isRequired,
+    };
+  }
+
+  render() {
+    const pluginManager = this.props.pluginManager;
+    const session = this.props.session;
+    const keyBindings = this.props.keyBindings;
+    const settingsMode = session.mode === Modes.modes.SETTINGS;
+    return (
+      <div>
+        {/* hack for firefox paste */}
+        <div id="paste-hack" contentEditable="true" className="offscreen">
+        </div>
+
+        <div id="contents">
+          <div id="menu"
+            className={session.mode === Modes.modes.SEARCH ? '' : 'hidden'}
+          >
+            <MenuComponent
+              menu={session.menu}
+            />
+          </div>
+
+
+          <div id="view"
+            style={{flex: '1 1 auto', fontSize: 10}}
+            className={session.mode === Modes.modes.SEARCH ? 'hidden' : ''}
+          >
+            {/* NOTE: maybe always showing session would be nice?
+              * Mostly works to never have 'hidden',
+              * but would be cool if it mirrored selected search result
+              */}
+              <SessionComponent
+                session={session}
+                onRender={(options) => {
+                  const $onto = $('#view');
+                  logger.info('Render called: ', options);
+                  setTimeout(() => {
+                    const cursorDiv = $(`.${Render.getCursorClass(options.cursorBetween)}`, $onto)[0];
+                    if (cursorDiv) {
+                      scrollIntoView(cursorDiv, $onto);
+                    }
+
+                    clearTimeout(session.cursorBlinkTimeout);
+                    $onto.removeClass('animate-blink-cursor');
+                    session.cursorBlinkTimeout = setTimeout(
+                      () => $onto.addClass('animate-blink-cursor'), 500);
+                  }, 100);
+                }}
+              />
+            </div>
+
+            <div
+              className={'theme-bg-secondary transition-ease-width'}
+              style={
+                (() => {
+                  const style = {
+                    overflowY: 'auto',
+                    height: '100%',
+                    flex: '0 1 auto',
+                    position: 'relative',
+                  };
+                  if (this.props.showingKeyBindings) {
+                    style.width = 500;
+                  } else {
+                    style.width = '0%';
+                  }
+                  return style;
+                })()
+              }
+            >
+              <ModeHotkeysTableComponent
+                keyBindings={keyBindings}
+                mode={session.mode}
+              />
+            </div>
+          </div>
+
+          <div id="settings" className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
+            <SettingsComponent
+              session={session}
+              key_bindings={keyBindings}
+              pluginManager={pluginManager}
+              initialTheme={this.props.initialTheme}
+              onThemeChange={(theme) => {
+                this.props.onThemeChange(theme);
+              }}
+              onExport={() => {
+                const filename = 'vimflowy_hotkeys.json';
+                const content = JSON.stringify(keyBindings.hotkeys, null, 2);
+                download_file(filename, 'application/json', content);
+                session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
+              }}
+            />
+          </div>
+
+          <div id="bottom-bar" className="theme-bg-primary theme-trim"
+            style={{ display: 'flex' }}
+          >
+            <a className="center theme-bg-secondary"
+              onClick={async () => {
+                if (settingsMode) {
+                  await session.setMode(Modes.modes.NORMAL);
+                } else {
+                  await session.setMode(Modes.modes.SETTINGS);
+                }
+              }}
+              style={{
+                flexBasis: 100, flexGrow: 0,
+                cursor: 'pointer', textDecoration: 'none'
+              }}
+            >
+              <div className={settingsMode ? 'hidden' : ''}>
+                <span style={{marginRight:10}} className="fa fa-cog">
+                </span>
+                <span>Settings
+                </span>
+              </div>
+              <div className={settingsMode ? '' : 'hidden'}>
+                <span style={{marginRight:10}} className="fa fa-arrow-left">
+                </span>
+                <span>
+                  Back
+                </span>
+              </div>
+            </a>
+            <div id="message"
+              style={{flexBasis: 0, flexGrow: 1}}
+            >
+            </div>
+            {/* should be wide enough to fit the words 'VISUAL LINE'*/}
+            <div className="center theme-bg-secondary"
+              style={{flexBasis: 80, flexGrow: 0}}
+            >
+              {Modes.getMode(session.mode).name}
+            </div>
+          </div>
+
+          <a id="export" className="hidden"> </a>
+        </div>
+    );
+  }
+}
+
 $(document).ready(function() {
 
   const getMessageDiv = () => $('#message');
@@ -79,12 +242,15 @@ $(document).ready(function() {
   const docname = window.location.pathname.split('/')[1];
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
 
-  const changeStyle = theme => $('body').attr('id', theme);
-  // const changeStyle = theme => $('body').removeClass().addClass(theme);
-
   async function create_session(doc, to_load) {
+
     const settings = new Settings(doc.store);
 
+    const changeStyle = (theme) => {
+      // $('body').removeClass().addClass(theme);
+      $('body').attr('id', theme);
+      settings.setSetting('theme', theme);
+    };
     const initialTheme = await settings.getSetting('theme');
     changeStyle(initialTheme);
     let showingKeyBindings = await settings.getSetting('showKeyBindings');
@@ -111,15 +277,6 @@ $(document).ready(function() {
       const line_height = $('.node-text').height() || 21;
       errors.assert(line_height > 0);
       return line_height;
-    }
-
-    function download_file(filename, mimetype, content) {
-      const exportDiv = $('#export');
-      exportDiv.attr('download', filename);
-      exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
-      exportDiv[0].click();
-      exportDiv.attr('download', null);
-      return exportDiv.attr('href', null);
     }
 
     const session = new Session(doc, {
@@ -214,141 +371,15 @@ $(document).ready(function() {
 
     function renderMain() {
       return new Promise((resolve) => {
-        const settingsMode = session.mode === Modes.modes.SETTINGS;
         ReactDOM.render(
-          <div>
-            {/* hack for firefox paste */}
-            <div id="paste-hack" contentEditable="true" className="offscreen">
-            </div>
-
-            <div id="contents">
-              <div id="menu"
-                className={session.mode === Modes.modes.SEARCH ? '' : 'hidden'}
-              >
-                <MenuComponent
-                  menu={session.menu}
-                />
-              </div>
-
-
-              <div id="view"
-                style={{flex: '1 1 auto', fontSize: 10}}
-                className={session.mode === Modes.modes.SEARCH ? 'hidden' : ''}
-              >
-                {/* NOTE: maybe always showing session would be nice?
-                  * Mostly works to never have 'hidden',
-                  * but would be cool if it mirrored selected search result
-                  */}
-                <SessionComponent
-                  session={session}
-                  onRender={(options) => {
-                    const $onto = $('#view');
-                    logger.info('Render called: ', options);
-                    setTimeout(() => {
-                      const cursorDiv = $(`.${Render.getCursorClass(options.cursorBetween)}`, $onto)[0];
-                      if (cursorDiv) {
-                        scrollIntoView(cursorDiv, $onto);
-                      }
-
-                      clearTimeout(session.cursorBlinkTimeout);
-                      $onto.removeClass('animate-blink-cursor');
-                      session.cursorBlinkTimeout = setTimeout(
-                        () => $onto.addClass('animate-blink-cursor'), 500);
-                    }, 100);
-                  }}
-                />
-              </div>
-
-              <div
-                className={'theme-bg-secondary transition-ease-width'}
-                style={
-                  (() => {
-                    const style = {
-                      overflowY: 'auto',
-                      height: '100%',
-                      flex: '0 1 auto',
-                      position: 'relative',
-                    };
-                    if (showingKeyBindings) {
-                      style.width = 500;
-                    } else {
-                      style.width = '0%';
-                    }
-                    return style;
-                  })()
-                }
-              >
-                <ModeHotkeysTableComponent
-                  keyBindings={key_bindings}
-                  mode={session.mode}
-                />
-              </div>
-            </div>
-
-            <div id="settings" className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
-              <SettingsComponent
-                session={session}
-                key_bindings={key_bindings}
-                pluginManager={pluginManager}
-                initialTheme={initialTheme}
-                onThemeChange={(theme) => {
-                  settings.setSetting('theme', theme);
-                  changeStyle(theme);
-                }}
-                onExport={() => {
-                  const filename = 'vimflowy_hotkeys.json';
-                  const content = JSON.stringify(key_bindings.hotkeys, null, 2);
-                  download_file(filename, 'application/json', content);
-                  session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
-                }}
-              />
-            </div>
-
-            <div id="bottom-bar" className="theme-bg-primary theme-trim"
-                 style={{ display: 'flex' }}
-            >
-              <a className="center theme-bg-secondary"
-                 onClick={async () => {
-                   if (settingsMode) {
-                     await session.setMode(Modes.modes.NORMAL);
-                   } else {
-                     await session.setMode(Modes.modes.SETTINGS);
-                   }
-                 }}
-                 style={{
-                   flexBasis: 100, flexGrow: 0,
-                   cursor: 'pointer', textDecoration: 'none'
-                 }}
-              >
-                <div className={settingsMode ? 'hidden' : ''}>
-                  <span style={{marginRight:10}} className="fa fa-cog">
-                  </span>
-                  <span>Settings
-                  </span>
-                </div>
-                <div className={settingsMode ? '' : 'hidden'}>
-                  <span style={{marginRight:10}} className="fa fa-arrow-left">
-                  </span>
-                  <span>
-                    Back
-                  </span>
-                </div>
-              </a>
-              <div id="message"
-                   style={{flexBasis: 0, flexGrow: 1}}
-              >
-              </div>
-              {/* should be wide enough to fit the words 'VISUAL LINE'*/}
-              <div className="center theme-bg-secondary"
-                   style={{flexBasis: 80, flexGrow: 0}}
-              >
-                {Modes.getMode(session.mode).name}
-              </div>
-            </div>
-
-            <a id="export" className="hidden"> </a>
-          </div>
-          ,
+          <AppComponent
+            onThemeChange={changeStyle}
+            session={session}
+            pluginManager={pluginManager}
+            showingKeyBindings={showingKeyBindings}
+            keyBindings={key_bindings}
+            initialTheme={initialTheme}
+          />,
           $('#app')[0],
           resolve
         );
