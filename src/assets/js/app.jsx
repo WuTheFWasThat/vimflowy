@@ -44,6 +44,7 @@ import * as Render from './render';
 import SettingsComponent from './components/settings.jsx';
 import SessionComponent from './components/session.jsx';
 import MenuComponent from './components/menu.jsx';
+import { ModeHotkeysTableComponent } from './components/hotkeysTable.jsx';
 
 import keyDefinitions from './keyDefinitions';
 // load actual definitions
@@ -72,7 +73,6 @@ function scrollIntoView(el, $within) {
 
 $(document).ready(function() {
 
-  const getKeybindingsDiv = () => $('#keybindings');
   const getMessageDiv = () => $('#message');
   const getMainDiv = () => $('#view');
 
@@ -84,6 +84,10 @@ $(document).ready(function() {
 
   async function create_session(doc, to_load) {
     const settings = new Settings(doc.store);
+
+    const initialTheme = await settings.getSetting('theme');
+    changeStyle(initialTheme);
+    let showingKeyBindings = await settings.getSetting('showKeyBindings');
 
     // hotkeys and key bindings
     const initial_hotkey_settings = await settings.getSetting('hotkeys', {});
@@ -165,10 +169,9 @@ $(document).ready(function() {
         return paths;
       },
       toggleBindingsDiv: () => {
-        const $keybindingsDiv = getKeybindingsDiv();
-        $keybindingsDiv.toggleClass('active');
-        doc.store.setSetting('showKeyBindings', $keybindingsDiv.hasClass('active'));
-        return Render.renderModeTable(key_bindings, session.mode, $keybindingsDiv);
+        showingKeyBindings = !showingKeyBindings;
+        doc.store.setSetting('showKeyBindings', showingKeyBindings);
+        return renderMain();
       },
       getLinesPerPage: () => {
         const line_height = getLineHeight();
@@ -209,9 +212,6 @@ $(document).ready(function() {
     window.key_emitter = key_emitter;
     window.key_bindings = key_bindings;
 
-    const initialTheme = await settings.getSetting('theme');
-    changeStyle(initialTheme);
-
     function renderMain() {
       return new Promise((resolve) => {
         const settingsMode = session.mode === Modes.modes.SETTINGS;
@@ -222,15 +222,20 @@ $(document).ready(function() {
             </div>
 
             <div id="contents">
-              <div id="menu" className={session.mode === Modes.modes.SEARCH ? '' : 'hidden'}>
+              <div id="menu"
+                className={session.mode === Modes.modes.SEARCH ? '' : 'hidden'}
+              >
                 <MenuComponent
                   menu={session.menu}
                 />
               </div>
 
 
-              <div id="view" className={session.mode === Modes.modes.SEARCH ? 'hidden' : ''}>
-                {/* NOTE: maybe always showing mainDiv would be nice?
+              <div id="view"
+                style={{flex: '1 1 auto', fontSize: 10}}
+                className={session.mode === Modes.modes.SEARCH ? 'hidden' : ''}
+              >
+                {/* NOTE: maybe always showing session would be nice?
                   * Mostly works to never have 'hidden',
                   * but would be cool if it mirrored selected search result
                   */}
@@ -254,7 +259,30 @@ $(document).ready(function() {
                 />
               </div>
 
-              <div id="keybindings" className="theme-bg-secondary"></div>
+              <div
+                className={'theme-bg-secondary transition-ease-width'}
+                style={
+                  (() => {
+                    const style = {
+                      overflowY: 'auto',
+                      height: '100%',
+                      flex: '0 1 auto',
+                      position: 'relative',
+                    };
+                    if (showingKeyBindings) {
+                      style.width = 500;
+                    } else {
+                      style.width = '0%';
+                    }
+                    return style;
+                  })()
+                }
+              >
+                <ModeHotkeysTableComponent
+                  keyBindings={key_bindings}
+                  mode={session.mode}
+                />
+              </div>
             </div>
 
             <div id="settings" className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
@@ -310,9 +338,10 @@ $(document).ready(function() {
               >
               </div>
               {/* should be wide enough to fit the words 'VISUAL LINE'*/}
-              <div id="mode" className="center theme-bg-secondary"
+              <div className="center theme-bg-secondary"
                    style={{flexBasis: 80, flexGrow: 0}}
               >
+                {Modes.getMode(session.mode).name}
               </div>
             </div>
 
@@ -327,7 +356,6 @@ $(document).ready(function() {
 
     renderMain().then(async () => {
       const $settingsDiv = $('#settings');
-      const $modeDiv = $('#mode');
       const $pluginsDiv = $('#plugins');
       const $mainDiv = $('#view');
 
@@ -337,9 +365,6 @@ $(document).ready(function() {
       });
 
       // load settings
-
-      const showingKeyBindings = await settings.getSetting('showKeyBindings');
-      getKeybindingsDiv().toggleClass('active', showingKeyBindings);
 
       session.on('importFinished', renderMain);
 
@@ -363,25 +388,14 @@ $(document).ready(function() {
 
       // render when ready
       $(document).ready(function() {
-        // render mode
-        const render_mode_info = function(mode) {
-          Render.renderModeTable(key_bindings, mode, getKeybindingsDiv());
-          return $modeDiv.text(Modes.getMode(mode).name);
-        };
-
-        render_mode_info(session.mode);
-        session.on('modeChange', (oldmode, newmode) => {
-          render_mode_info(newmode);
+        session.on('modeChange', () => {
           renderMain();
         });
 
-        const render_hotkey_settings = (hotkey_settings) => {
+        key_bindings.on('applied_hotkey_settings', (hotkey_settings) => {
           settings.setSetting('hotkeys', hotkey_settings);
-          Render.renderHotkeysTable(key_bindings);
-          return Render.renderModeTable(key_bindings, session.mode, getKeybindingsDiv());
-        };
-        render_hotkey_settings(initial_hotkey_settings);
-        key_bindings.on('applied_hotkey_settings', render_hotkey_settings);
+          renderMain();
+        });
 
         Render.renderPlugins($pluginsDiv, pluginManager);
         pluginManager.on('status', () => Render.renderPlugins($pluginsDiv, pluginManager));
@@ -390,9 +404,6 @@ $(document).ready(function() {
           settings.setSetting('enabledPlugins', enabled);
           Render.renderPlugins($pluginsDiv, pluginManager);
           renderMain();
-          // refresh hotkeys, if any new ones were added/removed
-          Render.renderHotkeysTable(session.bindings);
-          return Render.renderModeTable(session.bindings, session.mode, getKeybindingsDiv());
         });
 
         return renderMain();

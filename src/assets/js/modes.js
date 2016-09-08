@@ -1,7 +1,11 @@
+import React from 'react';
+
 import * as utils from './utils';
 import * as constants from './constants';
 // import { Document } from './document';
 // import * as DataStore from './datastore';
+
+export const PropType = React.PropTypes.number;
 
 const NORMAL_MODE_TYPE = 'Normal-like modes';
 const INSERT_MODE_TYPE = 'Insert-like modes';

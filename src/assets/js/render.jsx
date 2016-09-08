@@ -1,7 +1,5 @@
 /* eslint-disable no-use-before-define */
 
-import $ from 'jquery';
-import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -12,9 +10,6 @@ import * as Plugins from './plugins';
 import * as Modes from './modes';
 
 const MODES = Modes.modes;
-const { NORMAL_MODE_TYPE } = Modes;
-const { INSERT_MODE_TYPE } = Modes;
-const MODE_TYPES = Modes.types;
 
 // TODO: move mode-specific logic into mode render functions
 
@@ -317,7 +312,12 @@ export function virtualRenderSession(session, options = {}) {
   }
 
   const breadcrumbsNode = (
-    <div id='breadcrumbs'>
+    <div className='breadcrumbs'
+      style={{
+        fontSize: 20,
+        marginBottom: 20,
+      }}
+    >
       {crumbNodes}
     </div>
   );
@@ -532,122 +532,5 @@ export function renderPlugins($div, pluginManager) {
       </table>
     ),
     $div[0]
-  );
-}
-
-//#####
-// hotkeys
-//#####
-export function renderHotkeysTable(key_bindings) {
-  [
-    { mode_type: NORMAL_MODE_TYPE, onto: $('#hotkey-edit-normal') },
-    { mode_type: INSERT_MODE_TYPE, onto: $('#hotkey-edit-insert') },
-  ].forEach(({mode_type, onto}) => {
-    const mode_defs = MODE_TYPES[mode_type].modes.map(
-      mode => key_bindings.definitions.actions_for_mode(mode)
-    );
-    ReactDOM.render(
-      <div>
-        <div className='tooltip' title={MODE_TYPES[mode_type].description}>
-          {mode_type}
-        </div>
-        { buildTable(key_bindings, key_bindings.hotkeys[mode_type], _.extend.apply(_, mode_defs)) }
-      </div>
-      ,
-      onto[0]
-    );
-  });
-}
-
-// build table to visualize hotkeys
-const buildTable = function(key_bindings, keyMap, actions, helpMenu) {
-  const buildTableContents = function(bindings, recursed=false) {
-    const result = [];
-    for (const k in bindings) {
-      const v = bindings[k];
-      let keys;
-      if (k === 'MOTION') {
-        if (recursed) {
-          keys = ['<MOTION>'];
-        } else {
-          continue;
-        }
-      } else {
-        keys = keyMap[k];
-        if (!keys) {
-          continue;
-        }
-      }
-
-      if (keys.length === 0 && helpMenu) {
-        continue;
-      }
-
-      const cellStyle = {
-        fontSize: 10,
-        border: '1px solid',
-        padding: 5,
-      };
-
-      const el = (
-        <tr key={k}>
-          <td key='keys' style={cellStyle}>
-            { keys.join(' OR ') }
-          </td>
-          <td key='desc' style={ Object.assign({width: '100%'}, cellStyle) }>
-            { v.description }
-            {
-              (() => {
-                if (typeof v.definition === 'object') {
-                  return buildTableContents(v.definition, true);
-                }
-              })()
-            }
-          </td>
-        </tr>
-      );
-
-      result.push(el);
-    }
-    return result;
-  };
-
-  return (
-    <div>
-      {
-        (() => {
-          return [
-            {label: 'Actions', definitions: actions},
-            {label: 'Motions', definitions: key_bindings.definitions.motions}
-          ].map(({label, definitions}) => {
-            return [
-              <h5 key={label+'_header'} style={{margin: '5px 10px'}}>
-                {label}
-              </h5>
-              ,
-              <table key={label+'_table'} className='theme-bg-secondary'
-                     style={{width: '100%'}}
-              >
-                <tbody>
-                  {buildTableContents(definitions)}
-                </tbody>
-              </table>
-            ];
-          });
-        })()
-      }
-    </div>
-  );
-};
-
-export function renderModeTable(key_bindings, mode, onto) {
-  ReactDOM.render(
-    buildTable(
-      key_bindings,
-      key_bindings.keyMaps[mode],
-      key_bindings.definitions.actions_for_mode(mode),
-      true
-    ),
-    onto[0]
   );
 }

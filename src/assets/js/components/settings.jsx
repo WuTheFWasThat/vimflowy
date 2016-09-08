@@ -7,6 +7,12 @@ import * as utils from '../utils';
 import logger from '../logger';
 import * as Modes from '../modes';
 
+import HotkeysTableComponent from './hotkeysTable';
+
+const { NORMAL_MODE_TYPE } = Modes;
+const { INSERT_MODE_TYPE } = Modes;
+const MODE_TYPES = Modes.types;
+
 const TABS = {
   MAIN: 'MAIN',
   HOTKEYS: 'HOTKEYS',
@@ -188,10 +194,30 @@ export default class SettingsComponent extends React.Component {
                 <input id="hotkeys_file_input" type="file" style={{float:'left'}}/>
               </div>
               <div>
-                <div id="hotkey-edit-normal">
-                </div>
-                <div id="hotkey-edit-insert">
-                </div>
+                {
+                  (() => {
+                    return [
+                      { mode_type: NORMAL_MODE_TYPE, id: 'hotkey-edit-normal' },
+                      { mode_type: INSERT_MODE_TYPE, id: 'hotkey-edit-insert' },
+                    ].map(({mode_type, id}) => {
+                      const mode_defs = MODE_TYPES[mode_type].modes.map(
+                        mode => key_bindings.definitions.actions_for_mode(mode)
+                      );
+                      return (
+                        <div id={id}>
+                          <div className='tooltip' title={MODE_TYPES[mode_type].description}>
+                            {mode_type}
+                          </div>
+                          <HotkeysTableComponent
+                            keyMap={key_bindings.hotkeys[mode_type]}
+                            motions={key_bindings.definitions.motions}
+                            actions={_.extend.apply(_, mode_defs)}
+                          />
+                        </div>
+                      );
+                    });
+                  })()
+                }
               </div>
             </div>
           </div>

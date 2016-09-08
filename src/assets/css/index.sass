@@ -55,6 +55,9 @@ $bottom-bar-height: 25px
         td
             padding: 5px
 
+.transition-ease-width
+    @include transition(width 0.2s ease-in-out)
+
 #contents
     display: flex
     flex-direction: row
@@ -63,40 +66,20 @@ $bottom-bar-height: 25px
     width: 100%
     @include calc(height, '100% - #{$bottom-bar-height}')
 
-    #keybindings
-        position: relative
-        flex: 0 1 auto
-        width: 0%
-        height: 100%
-        overflow-y: auto
-
-        @include transition(width 0.2s ease-in-out)
-
-        &.active
-            min-width: 500px
-
     #view, #menu
         $content-padding: 50px
         padding: $content-padding
-
         @include calc(height, '100% - #{2 * $content-padding}')
-        width: 100%
-
         overflow-y: auto
 
-    #view
-        flex: 1 1 auto
-        #breadcrumbs
-            font-size: 20px
-            margin-bottom: 20px
-            .crumb:not(:last-child)::after
-                font-family: FontAwesome
-                // angle-right
-                content: '\f105'
-                margin-right: 20px
-                margin-left: 20px
+.breadcrumbs
+    .crumb:not(:last-child)::after
+        font-family: FontAwesome
+        // angle-right
+        content: '\f105'
+        margin-right: 20px
+        margin-left: 20px
 
-        font-size: 10px
 
 .tabs
     list-style: none

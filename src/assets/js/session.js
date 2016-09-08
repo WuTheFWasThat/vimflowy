@@ -233,7 +233,6 @@ export default class Session extends EventEmitter {
     const content = await this.exportContent(mimetype);
     this.downloadFile(filename, mimetype, content);
     this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
-    utils.download_file(filename, mimetype, content);
   }
 
   //################
