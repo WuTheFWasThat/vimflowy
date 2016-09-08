@@ -71,7 +71,7 @@ function scrollIntoView(el, $within) {
   }
 }
 
-function download_file(filename, mimetype, content) {
+function downloadFile(filename, mimetype, content) {
   const exportDiv = $('#export');
   exportDiv.attr('download', filename);
   exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
@@ -171,7 +171,7 @@ class AppComponent extends React.Component {
           <div id="settings" className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
             <SettingsComponent
               session={session}
-              key_bindings={keyBindings}
+              keyBindings={keyBindings}
               pluginManager={pluginManager}
               initialTheme={this.props.initialTheme}
               onThemeChange={(theme) => {
@@ -180,7 +180,7 @@ class AppComponent extends React.Component {
               onExport={() => {
                 const filename = 'vimflowy_hotkeys.json';
                 const content = JSON.stringify(keyBindings.hotkeys, null, 2);
-                download_file(filename, 'application/json', content);
+                downloadFile(filename, 'application/json', content);
                 session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
               }}
             />
@@ -257,7 +257,7 @@ $(document).ready(function() {
 
     // hotkeys and key bindings
     const initial_hotkey_settings = await settings.getSetting('hotkeys', {});
-    const key_bindings = new KeyBindings(keyDefinitions, initial_hotkey_settings);
+    const keyBindings = new KeyBindings(keyDefinitions, initial_hotkey_settings);
 
     // session
     if (!doc.hasChildren(doc.root.row)) {
@@ -280,7 +280,7 @@ $(document).ready(function() {
     }
 
     const session = new Session(doc, {
-      bindings: key_bindings,
+      bindings: keyBindings,
       settings,
       viewRoot: viewRoot,
       cursorPath: cursorPath,
@@ -327,7 +327,7 @@ $(document).ready(function() {
       },
       toggleBindingsDiv: () => {
         showingKeyBindings = !showingKeyBindings;
-        doc.store.setSetting('showKeyBindings', showingKeyBindings);
+        settings.setSetting('showKeyBindings', showingKeyBindings);
         return renderMain();
       },
       getLinesPerPage: () => {
@@ -335,9 +335,7 @@ $(document).ready(function() {
         const page_height = $(document).height();
         return page_height / line_height;
       },
-      downloadFile: (filename, mimetype, content) => {
-        download_file(filename, mimetype, content);
-      },
+      downloadFile: downloadFile
     });
 
     // load plugins
@@ -358,16 +356,16 @@ $(document).ready(function() {
       session.reset_jump_history();
     }
 
-    const key_handler = new KeyHandler(session, key_bindings);
+    const keyHandler = new KeyHandler(session, keyBindings);
 
-    const key_emitter = new KeyEmitter();
+    const keyEmitter = new KeyEmitter();
 
     // expose globals, for debugging
     window.Modes = Modes;
     window.session = session;
-    window.key_handler = key_handler;
-    window.key_emitter = key_emitter;
-    window.key_bindings = key_bindings;
+    window.keyHandler = keyHandler;
+    window.keyEmitter = keyEmitter;
+    window.keyBindings = keyBindings;
 
     function renderMain() {
       return new Promise((resolve) => {
@@ -377,7 +375,7 @@ $(document).ready(function() {
             session={session}
             pluginManager={pluginManager}
             showingKeyBindings={showingKeyBindings}
-            keyBindings={key_bindings}
+            keyBindings={keyBindings}
             initialTheme={initialTheme}
           />,
           $('#app')[0],
@@ -399,15 +397,15 @@ $(document).ready(function() {
 
       session.on('importFinished', renderMain);
 
-      key_emitter.listen();
-      key_emitter.on('keydown', (key) => {
+      keyEmitter.listen();
+      keyEmitter.on('keydown', (key) => {
         // NOTE: this is just a best guess... e.g. the mode could be wrong
         // problem is that we process asynchronously, but need to
         // return synchronously
-        const handled = !!key_bindings.bindings[session.mode][key];
+        const handled = !!keyBindings.bindings[session.mode][key];
 
         // fire and forget
-        key_handler.handleKey(key).then(() => {
+        keyHandler.handleKey(key).then(() => {
           renderMain();
         });
         return handled;
@@ -419,11 +417,9 @@ $(document).ready(function() {
 
       // render when ready
       $(document).ready(function() {
-        session.on('modeChange', () => {
-          renderMain();
-        });
+        session.on('modeChange', renderMain);
 
-        key_bindings.on('applied_hotkey_settings', (hotkey_settings) => {
+        keyBindings.on('applied_hotkey_settings', (hotkey_settings) => {
           settings.setSetting('hotkeys', hotkey_settings);
           renderMain();
         });
@@ -435,10 +431,6 @@ $(document).ready(function() {
           renderMain();
         });
 
-        return renderMain();
-      });
-
-      $(document).ready(function() {
         // needed for safari
         const $pasteHack = $('#paste-hack');
         $pasteHack.focus();

@@ -24,7 +24,7 @@ export default class SettingsComponent extends React.Component {
   static get propTypes() {
     return {
       session: React.PropTypes.any.isRequired,
-      key_bindings: React.PropTypes.any.isRequired,
+      keyBindings: React.PropTypes.any.isRequired,
       pluginManager: React.PropTypes.any.isRequired,
 
       initialTheme: React.PropTypes.string.isRequired,
@@ -42,7 +42,7 @@ export default class SettingsComponent extends React.Component {
 
   render() {
     const session = this.props.session;
-    const key_bindings = this.props.key_bindings;
+    const keyBindings = this.props.keyBindings;
 
     const load_file = function(filesDiv, cb) {
       const file = filesDiv.files[0];
@@ -166,7 +166,7 @@ export default class SettingsComponent extends React.Component {
                 </div>
                 <div style={{float:'left'}} className="btn theme-bg-secondary theme-trim"
                   onClick={() => {
-                    key_bindings.apply_default_hotkey_settings();
+                    keyBindings.apply_default_hotkey_settings();
                     return session.showMessage('Loaded defaults!', {text_class: 'success'});
                   }}>
 
@@ -182,7 +182,7 @@ export default class SettingsComponent extends React.Component {
                       } catch (e) {
                         return session.showMessage(`Failed to parse JSON: ${e}`, {text_class: 'error'});
                       }
-                      err = key_bindings.apply_hotkey_settings(hotkey_settings);
+                      err = keyBindings.apply_hotkey_settings(hotkey_settings);
                       if (err) {
                         return session.showMessage(err, {text_class: 'error'});
                       } else {
@@ -203,7 +203,7 @@ export default class SettingsComponent extends React.Component {
                       { mode_type: INSERT_MODE_TYPE, id: 'hotkey-edit-insert' },
                     ].map(({mode_type, id}) => {
                       const mode_defs = MODE_TYPES[mode_type].modes.map(
-                        mode => key_bindings.definitions.actions_for_mode(mode)
+                        mode => keyBindings.definitions.actions_for_mode(mode)
                       );
                       return (
                         <div id={id}>
@@ -211,8 +211,8 @@ export default class SettingsComponent extends React.Component {
                             {mode_type}
                           </div>
                           <HotkeysTableComponent
-                            keyMap={key_bindings.hotkeys[mode_type]}
-                            motions={key_bindings.definitions.motions}
+                            keyMap={keyBindings.hotkeys[mode_type]}
+                            motions={keyBindings.definitions.motions}
                             actions={_.extend.apply(_, mode_defs)}
                           />
                         </div>
