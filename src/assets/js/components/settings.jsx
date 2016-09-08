@@ -8,6 +8,7 @@ import logger from '../logger';
 import * as Modes from '../modes';
 
 import HotkeysTableComponent from './hotkeysTable';
+import PluginsTableComponent from './pluginTable';
 
 const { NORMAL_MODE_TYPE } = Modes;
 const { INSERT_MODE_TYPE } = Modes;
@@ -24,6 +25,7 @@ export default class SettingsComponent extends React.Component {
     return {
       session: React.PropTypes.any.isRequired,
       key_bindings: React.PropTypes.any.isRequired,
+      pluginManager: React.PropTypes.any.isRequired,
 
       initialTheme: React.PropTypes.string.isRequired,
       onThemeChange: React.PropTypes.func.isRequired,
@@ -227,11 +229,9 @@ export default class SettingsComponent extends React.Component {
         tab: TABS.PLUGIN,
         heading: 'Plugins',
         div: (
-          <div id="plugins">
-            <p>
-              Plugin system has not loaded.
-            </p>
-          </div>
+          <PluginsTableComponent
+            pluginManager={this.props.pluginManager}
+          />
         )
       },
     ];

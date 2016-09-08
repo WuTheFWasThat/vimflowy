@@ -289,6 +289,7 @@ $(document).ready(function() {
               <SettingsComponent
                 session={session}
                 key_bindings={key_bindings}
+                pluginManager={pluginManager}
                 initialTheme={initialTheme}
                 onThemeChange={(theme) => {
                   settings.setSetting('theme', theme);
@@ -356,7 +357,6 @@ $(document).ready(function() {
 
     renderMain().then(async () => {
       const $settingsDiv = $('#settings');
-      const $pluginsDiv = $('#plugins');
       const $mainDiv = $('#view');
 
       session.on('scroll', (numlines) => {
@@ -397,12 +397,10 @@ $(document).ready(function() {
           renderMain();
         });
 
-        Render.renderPlugins($pluginsDiv, pluginManager);
-        pluginManager.on('status', () => Render.renderPlugins($pluginsDiv, pluginManager));
+        pluginManager.on('status', renderMain);
 
         pluginManager.on('enabledPluginsChange', function(enabled) {
           settings.setSetting('enabledPlugins', enabled);
-          Render.renderPlugins($pluginsDiv, pluginManager);
           renderMain();
         });
 

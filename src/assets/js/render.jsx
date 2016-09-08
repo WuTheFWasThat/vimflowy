@@ -1,12 +1,10 @@
 /* eslint-disable no-use-before-define */
 
 import React from 'react';
-import ReactDOM from 'react-dom';
 
 import * as constants from './constants';
 import * as utils from './utils';
 import logger from './logger';
-import * as Plugins from './plugins';
 import * as Modes from './modes';
 
 const MODES = Modes.modes;
@@ -439,98 +437,3 @@ const virtualRenderTree = function(session, parent, options = {}) {
     );
   });
 };
-
-export function renderPlugins($div, pluginManager) {
-  ReactDOM.render(
-    (
-      <table style={{width: '100%', borderCollapse: 'collapse'}}>
-        <thead>
-          <tr>
-            <th className='theme-trim'>
-              Plugin
-            </th>
-            <th className='theme-trim'>
-              Description
-            </th>
-            <th className='theme-trim' style={{maxWidth: '10%'}}>
-              Version
-            </th>
-            <th className='theme-trim' style={{maxWidth: '15%'}}>
-              Author
-            </th>
-            <th className='theme-trim' style={{maxWidth: '10%'}}>
-              Status
-            </th>
-            <th className='theme-trim' style={{maxWidth: '20%'}}>
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            Plugins.names().map(
-              name => {
-                const status = pluginManager.getStatus(name);
-                const actions = [];
-                let btnClick;
-                let btnText;
-                if (status === Plugins.STATUSES.ENABLED) {
-                  btnClick = () => { return pluginManager.disable(name); };
-                  btnText = 'Disable';
-                } else if (status === Plugins.STATUSES.DISABLED) {
-                  btnClick= () => { return pluginManager.enable(name); };
-                  btnText = 'Enable';
-                }
-                if (btnText) {
-                  actions.push(
-                    <div key={btnText} onClick={btnClick}
-                      className='btn theme-trim' style={{width: 60}}>
-                      {btnText}
-                    </div>
-                  );
-                }
-
-                let color = 'inherit';
-                if (status === Plugins.STATUSES.ENABLED) {
-                  color = 'green';
-                } else if (status === Plugins.STATUSES.ENABLING ||
-                           status === Plugins.STATUSES.DISABLING) {
-                  color = 'yellow';
-                } else if (status === Plugins.STATUSES.UNREGISTERED ||
-                           status === Plugins.STATUSES.DISABLED) {
-                  color = 'red';
-                }
-
-                const plugin = Plugins.getPlugin(name) || {};
-                return (
-                  <tr key={name} className='theme-bg-secondary'>
-                    <td className='center theme-trim plugin-name'>
-                      { name }
-                    </td>
-                    <td className='theme-trim' style={{fontSize: 12}}>
-                      { plugin.description || '' }
-                    </td>
-                    <td className='center theme-trim'>
-                      { (plugin.version || '') + '' }
-                    </td>
-                    <td className='center theme-trim' style={{fontSize: 12}}>
-                      { plugin.author || '' }
-                    </td>
-                    <td className='center theme-trim'
-                      style={{boxShadow: `inset 0px 0px 0px 2px ${color}`}}>
-                      {status}
-                    </td>
-                    <td className='center theme-trim'>
-                      {actions}
-                    </td>
-                  </tr>
-                );
-              }
-            )
-          }
-        </tbody>
-      </table>
-    ),
-    $div[0]
-  );
-}

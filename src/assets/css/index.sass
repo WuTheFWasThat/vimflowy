@@ -51,10 +51,6 @@ $bottom-bar-height: 25px
         height: 100%
         vertical-align: top
 
-    #plugins > table
-        td
-            padding: 5px
-
 .transition-ease-width
     @include transition(width 0.2s ease-in-out)
 
@@ -69,7 +65,10 @@ $bottom-bar-height: 25px
     #view, #menu
         $content-padding: 50px
         padding: $content-padding
+
         @include calc(height, '100% - #{2 * $content-padding}')
+        width: 100%
+
         overflow-y: auto
 
 .breadcrumbs
