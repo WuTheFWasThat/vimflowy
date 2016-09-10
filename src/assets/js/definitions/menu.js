@@ -60,10 +60,9 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
 
     return _.map(
       find(this.session.document, chars),
-      found => {
-        const path = found.path;
+      ({ path, matches }) => {
         const highlights = {};
-        found.matches.forEach((i) => {
+        matches.forEach((i) => {
           highlights[i] = true;
         });
         return {

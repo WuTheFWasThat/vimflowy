@@ -39,7 +39,6 @@ import Settings from './settings';
 import { PluginsManager } from './plugins';
 import Path from './path';
 import Session from './session';
-import * as Render from './render';
 
 import SettingsComponent from './components/settings.jsx';
 import SessionComponent from './components/session.jsx';
@@ -128,7 +127,7 @@ class AppComponent extends React.Component {
                   const $onto = $('#view');
                   logger.info('Render called: ', options);
                   setTimeout(() => {
-                    const cursorDiv = $(`.${Render.getCursorClass(options.cursorBetween)}`, $onto)[0];
+                    const cursorDiv = $('.cursor', $onto)[0];
                     if (cursorDiv) {
                       scrollIntoView(cursorDiv, $onto);
                     }

@@ -26,7 +26,7 @@ export default class Menu {
 
     // list of results:
     //   contents: a line of contents
-    //   renderOptions: options for renderLine
+    //   renderOptions: props for rendering LineComponent
     //   fn: call if selected
     this.results = [];
   }

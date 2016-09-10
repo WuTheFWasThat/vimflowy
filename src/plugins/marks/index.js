@@ -7,7 +7,7 @@ import * as Modes from '../../assets/js/modes';
 import * as DataStore from '../../assets/js/datastore';
 import Document from '../../assets/js/document';
 import Session from '../../assets/js/session';
-import * as Render from '../../assets/js/render';
+import LineComponent from '../../assets/js/components/line';
 import Mutation from '../../assets/js/mutations';
 import * as errors from '../../assets/js/errors';
 import * as constants from '../../assets/js/constants';
@@ -221,18 +221,18 @@ class MarksPlugin {
         const text = chars.join('');
         return _.map(
           findMarks(this.session.document, text),
-          found => {
-            const path = found.path;
+          ({ path, mark }) => {
             return {
               contents: this.session.document.getLine(path.row),
-              renderHook(contents) {
-                contents.unshift(
-                  <span key={found.mark} style={markStyle}
+              renderHook(line) {
+                return [
+                  <span key='mark' style={markStyle}
                         className='theme-bg-secondary theme-trim'>
-                    {found.mark}
+                    {mark}
                   </span>
-                );
-                return contents;
+                  ,
+                  line
+                ];
               },
               fn: async () => await this.session.zoomInto(path)
             };
@@ -273,22 +273,29 @@ class MarksPlugin {
       return this.keyStream.forget();
     });
 
-    this.api.registerHook('session', 'renderCursorsDict', (cursors, info) => {
+    this.api.registerHook('session', 'renderLineOptions', (options, info) => {
       const marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
       if (marking) {
-        return {}; // do not render any cursors on the regular line
+        options.cursors = {};
       }
-      return cursors;
+      return options;
     });
 
     this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
       const marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
       if (marking) {
-        const markresults = Render.virtualRenderLine(this.marksession, this.marksession.cursor.path, {no_clicks: true});
         lineContents.unshift(
           <span style={markStyle}
                 className='theme-bg-secondary theme-trim-accent'>
-            {markresults}
+            <LineComponent
+              lineData={
+                this.marksession.document.getLine(this.marksession.cursor.path.row)
+              }
+              cursors={{
+                [this.marksession.cursor.col]: true
+              }}
+              cursorBetween={true}
+            />
           </span>
         );
       } else {

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { renderLine, virtualRenderLine } from '../render.jsx';
+import LineComponent from './line.jsx';
 
 export default class MenuComponent extends React.Component {
   static get propTypes() {
@@ -23,12 +23,15 @@ export default class MenuComponent extends React.Component {
       <div className='searchBox theme-trim'>
         <i className='fa fa-search' style={{'marginRight': 10}}/>
         <span>
-          {
-            virtualRenderLine(
-              menu.session, menu.session.cursor.path,
-              {cursorBetween: true, no_clicks: true}
-            )
-          }
+          <LineComponent
+            lineData={
+              menu.session.document.getLine(menu.session.cursor.path.row)
+            }
+            cursors={{
+              [menu.session.cursor.col]: true
+            }}
+            cursorBetween={true}
+          />
         </span>
       </div>
     );
@@ -52,7 +55,12 @@ export default class MenuComponent extends React.Component {
         const selected = i === menu.selection;
 
         const renderOptions = result.renderOptions || {};
-        let contents = renderLine(result.contents, renderOptions);
+        let contents = (
+          <LineComponent
+            lineData={result.contents}
+            {...renderOptions}
+          />
+        );
         if (result.renderHook) {
           contents = result.renderHook(contents);
         }
@@ -63,9 +71,7 @@ export default class MenuComponent extends React.Component {
           <div key={i} style={{marginBottom: 10}} className={className}>
             <i className={`fa ${icon} bullet`} style={{marginRight: 20}}>
             </i>
-            <span>
-              {contents}
-            </span>
+            {contents}
           </div>
         );
       });
