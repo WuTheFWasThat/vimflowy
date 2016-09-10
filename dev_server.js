@@ -20,6 +20,7 @@ app.get('/:docname', (req, res) => {
   res.sendFile(path.join(__dirname, 'static/index.html'));
 });
 
+/* eslint-disable no-console */
 app.listen(port, 'localhost', err => {
   if (err) {
     return console.log(err);
