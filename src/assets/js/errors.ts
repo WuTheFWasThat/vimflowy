@@ -1,9 +1,10 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 // takes a constructor and returns an error class
 const errorFactory = function(f) {
-  const g = function() {
-    this.stack = new Error().stack;
+  const g: any = function() {
+    const e: any = new Error();
+    this.stack = e.stack;
     return f.apply(this, arguments);
   };
   g.prototype = Object.create(Error.prototype);
@@ -20,26 +21,30 @@ export const SchemaVersion = errorFactory(function(message) { this.message = mes
 // is special because ignored by error handling in index.js
 export const DataPoisoned = errorFactory(function(message) { this.message = message; });
 
-//#########
+///////////
 // asserts
-//#########
+///////////
 
-export const AssertionError = errorFactory(function(message) { return this.message = `Assertion error: ${message}`; });
+export const AssertionError = errorFactory(function(message) {
+  this.message = `Assertion error: ${message}`;
+});
 
-export function assert(a, message='assert error') {
-  if (!a) { throw new AssertionError(`${message}\nExpected ${a} to be true`); }
+export function assert(a, message = 'assert error') {
+  if (!a) {
+    throw new AssertionError(`${message}\nExpected ${a} to be true`);
+  }
 }
 
-export function assert_equals(a, b, message='assert_equals error') {
+export function assert_equals(a, b, message = 'assert_equals error') {
   if (a !== b) { throw new AssertionError(`${message}\nExpected ${a} == ${b}`); }
 }
 
-export function assert_not_equals(a, b, message='assert_not_equals error') {
+export function assert_not_equals(a, b, message = 'assert_not_equals error') {
   if (a === b) { throw new AssertionError(`${message}\nExpected ${a} != ${b}`); }
 }
 
 // for asserting object equality
-export function assert_deep_equals(a, b, message='assert_deep_equals error') {
+export function assert_deep_equals(a, b, message = 'assert_deep_equals error') {
   if (!_.isEqual(a, b)) {
     throw new AssertionError(`${message}
       \nExpected:
@@ -48,7 +53,6 @@ export function assert_deep_equals(a, b, message='assert_deep_equals error') {
       \n${JSON.stringify(b, null, 2)}
     `
     );
-    throw new Error(message);
   }
 }
 

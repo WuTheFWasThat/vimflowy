@@ -18,8 +18,9 @@ Assuming you have (recent versions of) node and npm
     cd vimflowy
     npm install
 
-Install typescript, then
+Install typescript (I've tested with version 1.8.10), then
 
+    npm install tslint typescript typings -g
     typings install
 
 #### START: ####

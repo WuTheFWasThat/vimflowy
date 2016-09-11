@@ -3,22 +3,37 @@ A straightforward class for configurable logging
 Log-levels and streams (currently only one stream at a time)
 */
 
-export const LEVEL = {
-  DEBUG: 0,
-  INFO: 1,
-  WARN: 2,
-  ERROR: 3,
-  FATAL: 4
-};
+export enum LEVEL {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+  FATAL = 4,
+}
 
-export const STREAM = {
-  STDOUT: 0,
-  STDERR: 1,
-  QUEUE: 2
+const LEVELS = [
+  'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL',
+];
+
+export enum STREAM {
+  STDOUT = 0,
+  STDERR = 1,
+  QUEUE = 2
 };
 
 export class Logger {
-  constructor(level=LEVEL.INFO, stream=STREAM.STDOUT) {
+  private stream: STREAM;
+  private level: LEVEL;
+  private queue: Array<any>;
+
+  // hack since we add the methods dynamically
+  public info: any;
+  public debug: any;
+  public warn: any;
+  public error: any;
+  public fatal: any;
+
+  constructor(level = LEVEL.INFO, stream = STREAM.STDOUT) {
     this.setLevel(level);
     this.setStream(stream);
 
@@ -30,13 +45,14 @@ export class Logger {
       };
     };
 
-    for (const name in LEVEL) {
+    LEVELS.forEach((name) => {
       const value = LEVEL[name];
       register_loglevel(name, value);
-    }
+    });
   }
 
-  log() {
+  // tslint:disable-next-line:no-unused-variable
+  private log() {
     if (this.stream === STREAM.STDOUT) {
       return console.log.apply(console, arguments);
     } else if (this.stream === STREAM.STDERR) {
@@ -46,24 +62,24 @@ export class Logger {
     }
   }
 
-  setLevel(level) {
-    return this.level = level;
+  public setLevel(level) {
+    this.level = level;
   }
 
-  off() {
-    return this.level = Infinity;
+  public off() {
+    this.level = Infinity;
   }
 
-  setStream(stream) {
+  public setStream(stream) {
     this.stream = stream;
     if (this.stream === STREAM.QUEUE) {
-      return this.queue = [];
+      this.queue = [];
     }
   }
 
   // for queue
 
-  flush() {
+  public flush() {
     if (this.stream === STREAM.QUEUE) {
       this.queue.forEach((args) => {
         console.log.apply(console, args);
@@ -72,8 +88,8 @@ export class Logger {
     }
   }
 
-  empty() {
-    return this.queue = [];
+  public empty() {
+    this.queue = [];
   }
 }
 

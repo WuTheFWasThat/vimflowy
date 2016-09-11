@@ -21,7 +21,7 @@
       "max-line-length": [true, 140],
       "member-access": true,
       "member-ordering": [true,
-              "public-before-private",
+              "private-before-public",
               "static-before-instance",
               "variables-before-functions"
           ],
@@ -44,7 +44,7 @@
       "no-duplicate-variable": true,
       "no-empty": true,
       "no-eval": true,
-      "no-inferrable-types": false,
+      "no-inferrable-types": true,
       "no-internal-module": true,
       "no-require-imports": false,
       "no-string-literal": true,
@@ -73,10 +73,7 @@
           }],
       "triple-equals": [true, "allow-null-check"],
       "typedef": [true,
-              "call-signature",
-              "parameter",
               "property-declaration",
-              "variable-declaration",
               "member-variable-declaration"
           ],
       "typedef-whitespace": [true, {
