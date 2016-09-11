@@ -195,15 +195,13 @@ export default class LineComponent extends React.Component {
       }
 
       results.push(
-        <type
-          key={index}
-          className={classes.join(' ')}
-          href={spec.href}
-          onMouseOver={this.props.linemouseover}
-          onClick={spec.onClick}
-        >
-          {spec.text}
-        </type>
+        React.createElement(type, {
+          key: index,
+          className: classes.join(' '),
+          href: spec.href,
+          onMouseOver: this.props.linemouseover,
+          onClick: spec.onClick,
+        }, spec.text)
       );
     });
 
