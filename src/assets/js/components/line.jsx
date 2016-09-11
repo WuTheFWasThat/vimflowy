@@ -48,7 +48,7 @@ export default class LineComponent extends React.Component {
     }
 
     if (lineData.length === 0) {
-      return results;
+      return <span></span>;
     }
 
     for (let i = 0; i < lineData.length; i++) {
