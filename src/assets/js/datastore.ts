@@ -5,18 +5,14 @@ import * as _ from 'lodash';
 import * as errors from './errors';
 import logger from './logger';
 
+import { Line, Row, Path, MacroMap } from './types';
+
 /*
 DataStore abstracts the data layer, so that it can be swapped out.
 There are many methods the each type of DataStore should implement to satisfy the API.
 However, in the case of a key-value store, one can simply implement `get` and `set` methods.
 Currently, DataStore has a synchronous API.  This may need to change eventually...  :(
 */
-
-type Row = number;
-type Char = any;
-type Line = Array<Char>;
-type Path = Array<any>;
-type MacroMap = {[key: string]: string};
 
 export default class DataStore {
   protected prefix: string;
