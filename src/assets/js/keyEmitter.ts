@@ -1,6 +1,6 @@
-/* globals document, window, navigator, alert */
-import $ from 'jquery';
-import _ from 'lodash';
+/* globals document, window, navigator, alert, InstallTrigger */
+import * as $ from 'jquery';
+import * as _ from 'lodash';
 
 import logger from './logger';
 import EventEmitter from './eventEmitter';
@@ -15,11 +15,14 @@ For more info, see its consumer, keyHandler.js, as well as keyBindings.js
 Note that one-character keys are treated specially, in that they are insertable in insert mode.
 */
 
+// tslint:disable:no-string-literal
 // SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
-const isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
-const isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0; // Safari 3+
-const isChrome = !!window.chrome && !isOpera; // Chrome 1+
+const isOpera = !!window['opera'] || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
+const isSafari = Object.prototype.toString.call(window['HTMLElement']).indexOf('Constructor') > 0; // Safari 3+
+const isChrome = !!window['chrome'] && !isOpera; // Chrome 1+
+declare var InstallTrigger: any;
 const isFirefox = typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
+// tslint:enable:no-string-literal
 
 if (!isChrome && !isFirefox && !isSafari) {
   alert('Unsupported browser!  Please use a recent Chrome, Firefox, or Safari');
@@ -50,11 +53,9 @@ const shiftMap = {
   ';': ':',
   '\'': '"',
   '\\': '|',
-  '[': '{',
-  ']': '}',
   '.': '>',
   ',': '<',
-  '/': '?'
+  '/': '?',
 };
 
 const ignoreMap = {
@@ -62,7 +63,7 @@ const ignoreMap = {
   17: 'ctrl alone',
   18: 'alt alone',
   91: 'left command alone',
-  93: 'right command alone'
+  93: 'right command alone',
 };
 
 const keyCodeMap = {
@@ -103,7 +104,7 @@ const keyCodeMap = {
   219: '[',
   220: '\\',
   221: ']',
-  222: '\''
+  222: '\'',
 };
 
 for (let j = 1; j <= 26; j++) {
@@ -124,7 +125,7 @@ export default class KeyEmitter extends EventEmitter {
     super();
   }
 
-  listen() {
+  public listen() {
     return $(document).keydown(e => {
       if (e.keyCode in ignoreMap) {
         return true;

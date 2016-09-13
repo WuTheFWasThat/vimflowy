@@ -1,6 +1,9 @@
 // based on https://gist.github.com/contra/2759355
 
 export default class EventEmitter {
+  private listeners: {[key: string]: Array<(...args: any[]) => any>};
+  private hooks: {[key: string]: Array<(obj: any, info: any) => any>};
+
   constructor() {
     // mapping from event to list of listeners
     this.listeners = {};
@@ -8,17 +11,13 @@ export default class EventEmitter {
   }
 
   // emit an event and return all responses from the listeners
-  emit(event, ...args) {
-    return (this.listeners['all'] || []).map((listener) => {
-      return listener.apply(listener, arguments);
-    }).concat(
-      (this.listeners[event] || []).map((listener) => {
-        return listener.apply(listener, args);
-      })
-    );
+  public emit(event, ...args) {
+    return (this.listeners[event] || []).map((listener) => {
+      return listener.apply(listener, args);
+    });
   }
 
-  addListener(event, listener) {
+  public addListener(event, listener) {
     this.emit('newListener', event, listener);
     if (!this.listeners[event]) {
       this.listeners[event] = [];
@@ -27,11 +26,11 @@ export default class EventEmitter {
     return this;
   }
 
-  on() {
-    return this.addListener.apply(this, arguments);
+  public on(event, listener) {
+    return this.addListener(event, listener);
   }
 
-  once(event, listener) {
+  public once(event, listener) {
     const fn = function() {
       this.removeListener(event, fn);
       return listener(...arguments);
@@ -40,25 +39,25 @@ export default class EventEmitter {
     return this;
   }
 
-  removeListener(event, listener) {
+  public removeListener(event, listener) {
     if (!this.listeners[event]) { return this; }
     this.listeners[event] = this.listeners[event].filter((l) => l !== listener);
     return this;
   }
 
-  removeAllListeners(event) {
+  public removeAllListeners(event) {
     delete this.listeners[event];
     return this;
   }
 
-  off() {
-    return this.removeListener.apply(this, arguments);
+  public off(event, listener) {
+    return this.removeListener(event, listener);
   }
 
   // ordered set of hooks for mutating
   // NOTE: a little weird for eventEmitter to be in charge of this
 
-  addHook(event, transform) {
+  public addHook(event, transform) {
     if (!this.hooks[event]) {
       this.hooks[event] = [];
     }
@@ -66,13 +65,13 @@ export default class EventEmitter {
     return this;
   }
 
-  removeHook(event, transform) {
+  public removeHook(event, transform) {
     if (!this.hooks[event]) { return this; }
     this.hooks[event] = this.hooks[event].filter((t) => t !== transform);
     return this;
   }
 
-  applyHook(event, obj, info) {
+  public applyHook(event, obj, info) {
     (this.hooks[event] || []).forEach((transform) => {
       obj = transform(obj, info);
     });
