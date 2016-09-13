@@ -1,7 +1,6 @@
-import * as constants from './constants';
 import * as errors from './errors';
 
-import { Row } from './types';
+import { Row, SerializedPath } from './types';
 
 // represents a tree-traversal starting from the root going down
 // should be immutable
@@ -9,11 +8,15 @@ export default class Path {
   public parent: Path;
   public row: Row;
 
-  public static root() {
-    return new Path(null, constants.root_row);
+  public static rootRow(): Row {
+    return 0;
   }
 
-  public static loadFromAncestry(ancestry) {
+  public static root() {
+    return new Path(null, Path.rootRow());
+  }
+
+  public static loadFromAncestry(ancestry: SerializedPath) {
     if (ancestry.length === 0) {
       return Path.root();
     }
@@ -28,11 +31,11 @@ export default class Path {
   }
 
   public isRoot() {
-    return this.row === constants.root_row;
+    return this.row === Path.rootRow();
   }
 
   // gets a list of IDs
-  public getAncestry() {
+  public getAncestry(): SerializedPath {
     if (this.isRoot()) { return []; }
     const ancestors = this.parent.getAncestry();
     ancestors.push(this.row);

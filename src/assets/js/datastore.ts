@@ -2,10 +2,11 @@
 
 import * as _ from 'lodash';
 
+import * as constants from './constants';
 import * as errors from './errors';
 import logger from './logger';
 
-import { Line, Row, Path, MacroMap } from './types';
+import { Line, Row, SerializedPath, MacroMap } from './types';
 
 /*
 DataStore abstracts the data layer, so that it can be swapped out.
@@ -71,10 +72,24 @@ export default class DataStore {
 
   // get and set values for a given row
   public getLine(row: Row): Line {
-    return this._get(this._lineKey_(row), []);
+    return this._get(this._lineKey_(row), []).map(function(obj) {
+      if (typeof obj === 'string') {
+        obj = {
+          char: obj,
+        };
+      }
+      return obj;
+    });
   }
   public setLine(row: Row, line: Line): void {
-    return this._set(this._lineKey_(row), line);
+    return this._set(this._lineKey_(row), line.map(function(obj) {
+      // if no properties are true, serialize just the character to save space
+      if (_.every(constants.text_properties.map(property => !obj[property]))) {
+        return obj.char;
+      } else {
+        return obj;
+      }
+    }));
   }
 
   public getParents(row: Row): Array<Row> {
@@ -137,10 +152,10 @@ export default class DataStore {
   }
 
   // get last view (for page reload)
-  public setLastViewRoot(ancestry: Path): void {
+  public setLastViewRoot(ancestry: SerializedPath): void {
     this._set(this._lastViewrootKey_(), ancestry);
   }
-  public getLastViewRoot(): Path {
+  public getLastViewRoot(): SerializedPath {
     return this._get(this._lastViewrootKey_(), []);
   }
 

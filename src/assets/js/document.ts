@@ -1,10 +1,13 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
+
 import * as utils from './utils';
 import * as errors from './errors';
 import * as constants from './constants';
 // import logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
+import DataStore from './datastore';
+import { SerializedLine } from './types';
 
 /*
 Document is a wrapper class around the actual datastore, providing methods to manipulate the document
@@ -16,6 +19,10 @@ also deals with loading the initial document from the datastore, and serializing
 Currently, the separation between the Session and Document classes is not very good.  (see session.js)
 */
 export default class Document extends EventEmitter {
+  public store: DataStore;
+  public name: string;
+  public root: Path;
+
   constructor(store, name = '') {
     super();
     this.store = store;
@@ -24,51 +31,26 @@ export default class Document extends EventEmitter {
     return this;
   }
 
-  //########
-  // lines #
-  //########
-
-  // an array of objects:
-  // {
-  //   char: 'a'
-  //   bold: true
-  //   italic: false
-  // }
-  // in the case where all properties are false, it may be simply the character (to save space)
-  getLine(row) {
-    return this.store.getLine(row).map(function(obj) {
-      if (typeof obj === 'string') {
-        obj = {
-          char: obj
-        };
-      }
-      return obj;
-    });
+  public getLine(row) {
+    return this.store.getLine(row);
   }
 
-  getText(row) {
+  public getText(row) {
     return this.getLine(row).map(obj => obj.char);
   }
 
-  getChar(row, col) {
+  public getChar(row, col) {
     const charInfo = this.getLine(row)[col];
     return charInfo && charInfo.char;
   }
 
-  setLine(row, line) {
-    return this.store.setLine(row, line.map(function(obj) {
-      // if no properties are true, serialize just the character to save space
-      if (_.every(constants.text_properties.map(property => !obj[property]))) {
-        return obj.char;
-      } else {
-        return obj;
-      }
-    }));
+  public setLine(row, line) {
+    return this.store.setLine(row, line);
   }
 
   // get word at this location
   // if on a whitespace character, return nothing
-  getWord(row, col) {
+  public getWord(row, col) {
     const text = this.getText(row);
 
     if (utils.isWhitespace(text[col])) {
@@ -77,10 +59,10 @@ export default class Document extends EventEmitter {
 
     let start = col;
     let end = col;
-    while ((start > 0) && !utils.isWhitespace(text[start-1])) {
+    while ((start > 0) && !utils.isWhitespace(text[start - 1])) {
       start -= 1;
     }
-    while ((end < text.length - 1) && !utils.isWhitespace(text[end+1])) {
+    while ((end < text.length - 1) && !utils.isWhitespace(text[end + 1])) {
       end += 1;
     }
     let word = text.slice(start, end + 1).join('');
@@ -90,29 +72,27 @@ export default class Document extends EventEmitter {
     return word;
   }
 
-  writeChars(row, col, chars) {
+  public writeChars(row, col, chars) {
     const args = [col, 0].concat(chars);
     const line = this.getLine(row);
     [].splice.apply(line, args);
     return this.setLine(row, line);
   }
 
-  deleteChars(row, col, num) {
+  public deleteChars(row, col, num) {
     const line = this.getLine(row);
     const deleted = line.splice(col, num);
     this.setLine(row, line);
     return deleted;
   }
 
-  getLength(row) {
+  public getLength(row) {
     return this.getLine(row).length;
   }
 
-  //############
-  // structure #
-  //############
+  // structure
 
-  _getChildren(row, min=0, max=-1) {
+  private _getChildren(row, min = 0, max = -1) {
     const children = this.store.getChildren(row);
     if (children.length === 0) {
       return [];
@@ -135,40 +115,40 @@ export default class Document extends EventEmitter {
     });
   }
 
-  _setChildren(row, children) {
+  private _setChildren(row, children) {
     return this.store.setChildren(row, children);
   }
 
-  _childIndex(parent, child) {
+  public _childIndex(parent, child) {
     const children = this._getChildren(parent);
     return _.findIndex(children, row => row === child);
   }
 
-  _getParents(row) {
+  private _getParents(row) {
     return this.store.getParents(row);
   }
 
-  _setParents(row, children_rows) {
+  private _setParents(row, children_rows) {
     return this.store.setParents(row, children_rows);
   }
 
-  getChildren(parent_path) {
+  public getChildren(parent_path) {
     return this._getChildren(parent_path.row).map(row => parent_path.child(row));
   }
 
-  findChild(parent_path, row) {
+  public findChild(parent_path, row) {
     return _.find(this.getChildren(parent_path), x => x.row === row);
   }
 
-  hasChildren(row) {
+  public hasChildren(row) {
     return this._getChildren(row).length > 0;
   }
 
-  getSiblings(row) {
+  public getSiblings(row) {
     return this.getChildren(row.parent);
   }
 
-  nextClone(path) {
+  public nextClone(path) {
     const parents = this._getParents(path.row);
     let i = parents.indexOf(path.parent.row);
     errors.assert(i > -1);
@@ -185,21 +165,21 @@ export default class Document extends EventEmitter {
     return new_parent_path.child(path.row);
   }
 
-  indexOf(child) {
+  public indexOf(child) {
     const children = this.getSiblings(child);
     return _.findIndex(children, sib => sib.row === child.row);
   }
 
-  collapsed(row) {
+  public collapsed(row) {
     return this.store.getCollapsed(row);
   }
 
-  toggleCollapsed(row) {
+  public toggleCollapsed(row) {
     return this.store.setCollapsed(row, !this.collapsed(row));
   }
 
   // last thing visible nested within row
-  walkToLastVisible(row, pathsofar=[]) {
+  public walkToLastVisible(row, pathsofar = []) {
     if (this.collapsed(row)) {
       return pathsofar;
     }
@@ -213,7 +193,7 @@ export default class Document extends EventEmitter {
 
   // a node is cloned only if it has multiple parents.
   // note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
-  isClone(row) {
+  public isClone(row) {
     const parents = this._getParents(row);
     if (parents.length < 2) { // for efficiency reasons
       return false;
@@ -224,9 +204,9 @@ export default class Document extends EventEmitter {
 
   // Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   // NOTE: this is not very efficient, in the worst case, but probably doesn't matter
-  canonicalPath(row) { // Given an row, return a path with that row
+  public canonicalPath(row) { // Given an row, return a path with that row
     errors.assert(row !== undefined && row !== null, 'Empty row passed to canonicalPath');
-    if (row === constants.root_row) {
+    if (row === Path.rootRow()) {
       return this.root;
     }
     const parents = this._getParents(row);
@@ -243,7 +223,7 @@ export default class Document extends EventEmitter {
   // Return all ancestor rows, topologically sorted (root is *last*).
   // Excludes 'row' itself unless options.inclusive is specified
   // NOTE: includes possibly detached nodes
-  allAncestors(row, options) {
+  public allAncestors(row, options) {
     options = _.defaults({}, options, { inclusive: false });
     const visited = {};
     const ancestors = []; // 'visited' with preserved insert order
@@ -265,23 +245,23 @@ export default class Document extends EventEmitter {
   }
 
   // detach a block from the graph
-  detach(path) {
+  public detach(path) {
     const parent = path.parent;
     const index = this.indexOf(path);
     this._detach(path.row, parent.row);
     return {
       parent,
-      index
+      index,
     };
   }
 
-  _hasChild(parent_row, row) {
+  public _hasChild(parent_row, row) {
     const children = this._getChildren(parent_row);
     const ci = _.findIndex(children, sib => sib === row);
     return ci !== -1;
   }
 
-  _removeChild(parent_row, row) {
+  private _removeChild(parent_row, row) {
     const children = this._getChildren(parent_row);
     const ci = _.findIndex(children, sib => sib === row);
     errors.assert(ci !== -1);
@@ -303,7 +283,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  _addChild(parent_row, row, index) {
+  private _addChild(parent_row, row, index) {
     const children = this._getChildren(parent_row);
     errors.assert(index <= children.length);
     if (index === -1) {
@@ -326,7 +306,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  _detach(row, parent_row) {
+  private _detach(row, parent_row) {
     const wasLast = (this._getParents(row)).length === 1;
 
     this.emit('beforeDetach', { id: row, parent_id: parent_row, last: wasLast });
@@ -341,7 +321,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  _attach(child_row, parent_row, index = -1) {
+  private _attach(child_row, parent_row, index = -1) {
     const isFirst = this._getParents(child_row).length === 0;
     this.emit('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
     const info = this._addChild(parent_row, child_row, index);
@@ -359,7 +339,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  _move(child_row, old_parent_row, new_parent_row, index = -1) {
+  public _move(child_row, old_parent_row, new_parent_row, index = -1) {
     this.emit('beforeMove', { id: child_row, old_parent: old_parent_row, new_parent: new_parent_row });
 
     const remove_info = this._removeChild(old_parent_row, child_row);
@@ -372,24 +352,24 @@ export default class Document extends EventEmitter {
 
     return {
       old: remove_info,
-      new: add_info
+      new: add_info,
     };
   }
 
   // attaches a detached child to a parent
   // the child should not have a parent already
-  attachChild(parent, child, index = -1) {
+  public attachChild(parent, child, index = -1) {
     return this.attachChildren(parent, [child], index)[0];
   }
 
-  attachChildren(parent, new_children, index = -1) {
+  public attachChildren(parent, new_children, index = -1) {
     this._attachChildren(parent.row, new_children.map(x => x.row), index);
     // for child in new_children
     //   child.setParent parent
     return new_children;
   }
 
-  _attachChildren(parent, new_children, index = -1) {
+  private _attachChildren(parent, new_children, index = -1) {
     for (let i = 0; i < new_children.length; i++) {
       const child = new_children[i];
       this._attach(child, parent, index);
@@ -403,7 +383,7 @@ export default class Document extends EventEmitter {
   // returns an array representing the ancestry of a row,
   // up until the ancestor specified by the `stop` parameter
   // i.e. [stop, stop's child, ... , row's parent , row]
-  getAncestry(row, stop) {
+  public getAncestry(row, stop?): Array<Path> {
     if (stop === undefined) {
       stop = this.root;
     }
@@ -422,7 +402,7 @@ export default class Document extends EventEmitter {
   // 1. the common ancestor of the rows
   // 2. the array of ancestors between common ancestor and row1
   // 3. the array of ancestors between common ancestor and row2
-  getCommonAncestor(row1, row2) {
+  public getCommonAncestor(row1, row2) {
     const ancestors1 = this.getAncestry(row1);
     const ancestors2 = this.getAncestry(row2);
     const commonAncestry = _.takeWhile(
@@ -436,7 +416,7 @@ export default class Document extends EventEmitter {
   }
 
   // extends a path by a list of rows going downwards (used when moving blocks around)
-  combineAncestry(path, row_path) {
+  public combineAncestry(path, row_path) {
     for (let i = 0; i < row_path.length; i++) {
       const row = row_path[i];
       path = this.findChild(path, row);
@@ -449,28 +429,28 @@ export default class Document extends EventEmitter {
 
   // returns whether an row is actually reachable from the root node
   // if something is not detached, it will have a parent, but the parent wont mention it as a child
-  isAttached(row) {
+  public isAttached(row) {
     return this.allAncestors(row, {inclusive: true}).indexOf(this.root.row) !== -1;
   }
 
-  getSiblingBefore(path) {
+  public getSiblingBefore(path) {
     return this.getSiblingOffset(path, -1);
   }
 
-  getSiblingAfter(path) {
+  public getSiblingAfter(path) {
     return this.getSiblingOffset(path, 1);
   }
 
-  getSiblingOffset(path, offset) {
+  public getSiblingOffset(path, offset) {
     return this.getSiblingRange(path, offset, offset)[0];
   }
 
-  getSiblingRange(path, min_offset, max_offset) {
+  public getSiblingRange(path, min_offset, max_offset) {
     const index = this.indexOf(path);
     return this.getChildRange(path.parent, min_offset + index, max_offset + index);
   }
 
-  getChildRange(path, min, max) {
+  public getChildRange(path, min, max) {
     return this._getChildren(path.row, min, max).map(function(child_row) {
       if (child_row === null) {
         return null;
@@ -479,18 +459,18 @@ export default class Document extends EventEmitter {
     });
   }
 
-  _newChild(parent, index = -1) {
+  private _newChild(parent, index = -1) {
     const row = this.store.getNew();
     this._attach(row, parent, index);
     return row;
   }
 
-  addChild(path, index = -1) {
+  public addChild(path, index = -1) {
     const row = this._newChild(path.row, index);
     return path.child(row);
   }
 
-  orderedLines() {
+  public orderedLines() {
     // TODO: deal with clones
     const paths = [];
 
@@ -503,16 +483,12 @@ export default class Document extends EventEmitter {
     return paths;
   }
 
-  //################
-  // serialization #
-  //################
-
   // important: serialized automatically garbage collects
-  serializeRow(row = this.root.row) {
+  public serializeRow(row = this.root.row) {
     const line = this.getLine(row);
     const text = this.getText(row).join('');
-    const struct = {
-      text
+    const struct: SerializedLine = {
+      text,
     };
 
     constants.text_properties.forEach((property) => {
@@ -527,7 +503,9 @@ export default class Document extends EventEmitter {
     return this.applyHook('serializeRow', struct, {row});
   }
 
-  serialize(row = this.root.row, options={}, serialized={}) {
+  public serialize(
+    row = this.root.row, options: {pretty?: boolean} = {}, serialized = {}
+  ) {
     if (row in serialized) {
       const struct = serialized[row];
       struct.id = row;
@@ -554,7 +532,9 @@ export default class Document extends EventEmitter {
     return struct;
   }
 
-  loadTo(serialized, parent_path = this.root, index = -1, id_mapping = {}, replace_empty = false) {
+  public loadTo(
+    serialized, parent_path = this.root, index = -1, id_mapping = {}, replace_empty = false
+  ) {
     if (serialized.clone) {
       // NOTE: this assumes we load in the same order we serialize
       errors.assert(serialized.clone in id_mapping);
@@ -606,7 +586,7 @@ export default class Document extends EventEmitter {
     return path;
   }
 
-  load(serialized_rows) {
+  public load(serialized_rows) {
     const id_mapping = {};
     serialized_rows.forEach((serialized_row) => {
       this.loadTo(serialized_row, this.root, -1, id_mapping, true);
