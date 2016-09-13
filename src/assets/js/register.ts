@@ -4,15 +4,19 @@ either nothing, a set of characters, a set of row ids, or a set of serialized ro
 Implements pasting for each of the types
 */
 
+export enum RegisterTypes {
+  NONE = 0,
+  CHARS = 1,
+  SERIALIZED_ROWS = 2,
+  CLONED_ROWS = 3,
+}
 
-const TYPES = {
-  NONE: 0,
-  CHARS: 1,
-  SERIALIZED_ROWS: 2,
-  CLONED_ROWS: 3
-};
+type PasteOptions = {before?: boolean};
 
 export default class Register {
+  private session: any; // TODO
+  private type: RegisterTypes;
+  private saved: any; // TODO
 
   constructor(session) {
     this.session = session;
@@ -20,50 +24,48 @@ export default class Register {
     return this;
   }
 
-  saveNone() {
-    this.type = TYPES.NONE;
+  public saveNone() {
+    this.type = RegisterTypes.NONE;
     return this.saved = null;
   }
 
-  saveChars(save) {
-    this.type = TYPES.CHARS;
+  public saveChars(save) {
+    this.type = RegisterTypes.CHARS;
     return this.saved = save;
   }
 
-  saveSerializedRows(save) {
-    this.type = TYPES.SERIALIZED_ROWS;
+  public saveSerializedRows(save) {
+    this.type = RegisterTypes.SERIALIZED_ROWS;
     return this.saved = save;
   }
 
-  saveClonedRows(save) {
-    this.type = TYPES.CLONED_ROWS;
+  public saveClonedRows(save) {
+    this.type = RegisterTypes.CLONED_ROWS;
     return this.saved = save;
   }
 
-  serialize() {
+  public serialize() {
     return {type: this.type, saved: this.saved};
   }
 
-  deserialize(serialized) {
+  public deserialize(serialized) {
     this.type = serialized.type;
     return this.saved = serialized.saved;
   }
 
-  //##########
   // Pasting
-  //##########
 
-  async paste(options = {}) {
-    if (this.type === TYPES.CHARS) {
+  public async paste(options: PasteOptions = {}) {
+    if (this.type === RegisterTypes.CHARS) {
       return await this.pasteChars(options);
-    } else if (this.type === TYPES.SERIALIZED_ROWS) {
+    } else if (this.type === RegisterTypes.SERIALIZED_ROWS) {
       return await this.pasteSerializedRows(options);
-    } else if (this.type === TYPES.CLONED_ROWS) {
+    } else if (this.type === RegisterTypes.CLONED_ROWS) {
       return await this.pasteClonedRows(options);
     }
   }
 
-  async pasteChars(options = {}) {
+  public async pasteChars(options: PasteOptions = {}) {
     const chars = this.saved;
     if (options.before) {
       return this.session.addCharsAtCursor(chars);
@@ -73,7 +75,7 @@ export default class Register {
     }
   }
 
-  async pasteSerializedRows(options = {}) {
+  public async pasteSerializedRows(options: PasteOptions = {}) {
     const path = this.session.cursor.path;
     const parent = path.parent;
     const index = this.session.document.indexOf(path);
@@ -92,7 +94,7 @@ export default class Register {
     }
   }
 
-  async pasteClonedRows(options = {}) {
+  public async pasteClonedRows(options: PasteOptions = {}) {
     const path = this.session.cursor.path;
     const parent = path.parent;
     const index = this.session.document.indexOf(path);
@@ -111,5 +113,3 @@ export default class Register {
     }
   }
 }
-
-Register.TYPES = TYPES;

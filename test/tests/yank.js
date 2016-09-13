@@ -1,6 +1,6 @@
 /* globals describe, it */
 import TestCase from '../testcase';
-import Register from '../../src/assets/js/register';
+import { RegisterTypes } from '../../src/assets/js/register';
 
 describe('yank', function() {
   describe('characters', function() {
@@ -8,7 +8,7 @@ describe('yank', function() {
       let t = new TestCase(['px']);
       t.sendKeys('xp');
       t.expect(['xp']);
-      t.expectRegisterType(Register.TYPES.CHARS);
+      t.expectRegisterType(RegisterTypes.CHARS);
       t.sendKeys('xp');
       t.expect(['xp']);
       await t.done();
@@ -37,7 +37,7 @@ describe('yank', function() {
       // undo doesn't move cursor, and paste still has stuff in register
       t.sendKeys('u');
       // type hasnt changed
-      t.expectRegisterType(Register.TYPES.CHARS);
+      t.expectRegisterType(RegisterTypes.CHARS);
       t.sendKeys('p');
       t.expect(['two fish, one fish, red fish, blue fish']);
       await t.done();
@@ -108,10 +108,10 @@ describe('yank', function() {
     it('works in a basic case', async function() {
       let t = new TestCase(['humpty', 'dumpty']);
       t.sendKeys('dd');
-      t.expectRegisterType(Register.TYPES.CLONED_ROWS);
+      t.expectRegisterType(RegisterTypes.CLONED_ROWS);
       t.expect([ 'dumpty' ]);
       t.sendKeys('p');
-      t.expectRegisterType(Register.TYPES.CLONED_ROWS);
+      t.expectRegisterType(RegisterTypes.CLONED_ROWS);
       t.expect([ 'dumpty', 'humpty' ]);
       t.sendKeys('u');
       t.expect(['dumpty']);
@@ -350,7 +350,7 @@ describe('yank', function() {
           'up'
         ] }
       ]);
-      t.expectRegisterType(Register.TYPES.CLONED_ROWS);
+      t.expectRegisterType(RegisterTypes.CLONED_ROWS);
       t.sendKeys('P');
       t.expect([
         { text: 'hey', collapsed: true, children: [
@@ -398,7 +398,7 @@ describe('yank', function() {
         ] }
       ]);
       t.sendKeys('Vjy');
-      t.expectRegisterType(Register.TYPES.SERIALIZED_ROWS);
+      t.expectRegisterType(RegisterTypes.SERIALIZED_ROWS);
       t.sendKeys('gg');
       t.sendKeys('zryjrh');
       t.expect([

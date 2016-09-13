@@ -1,6 +1,6 @@
 /* globals describe, it */
 import TestCase from '../testcase';
-import Register from '../../src/assets/js/register';
+import { RegisterTypes } from '../../src/assets/js/register';
 
 describe('enter', function() {
   it('works in basic case', async function() {
@@ -47,7 +47,7 @@ describe('enter', function() {
 
   it('does not mess up registers', async function() {
     let t = new TestCase(['']);
-    t.setRegister({type: Register.TYPES.CHARS, saved: 'unchanged'});
+    t.setRegister({type: RegisterTypes.CHARS, saved: 'unchanged'});
     t.sendKey('i');
     t.sendKeys('helloworld');
     for (let i = 0; i < 5; i++) {
@@ -56,7 +56,7 @@ describe('enter', function() {
     t.sendKey('enter');
     t.sendKey('esc');
     t.expect(['hello', 'world']);
-    t.expectRegister({type: Register.TYPES.CHARS, saved: 'unchanged'});
+    t.expectRegister({type: RegisterTypes.CHARS, saved: 'unchanged'});
     await t.done();
   });
 
