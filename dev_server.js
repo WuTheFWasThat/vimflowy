@@ -10,6 +10,7 @@ const port = process.env.PORT || 3000;
 const server = new WebpackDevServer(webpack(config), {
   publicPath: config.output.publicPath,
   hot: true,
+  stats: false,
   historyApiFallback: true
 });
 
@@ -30,6 +31,12 @@ server.listen(port, 'localhost', err => {
 const spawn = require('child_process').spawn;
 spawn(
   'node_modules/.bin/mocha',
-  ['--compilers', 'js:babel-core/register', '--watch', 'test/tests'],
+  [
+    '--require', 'ts-babel-node/register',
+    '--require', 'babel-polyfill',
+    '--compilers', 'js:babel-core/register,ts:ts-node/register,tsx:ts-node/register',
+    '--reporter', 'dot',
+    '--watch', 'test/tests'
+  ],
   {stdio: 'inherit'}
 );
