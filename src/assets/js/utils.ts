@@ -1,17 +1,17 @@
-import $ from 'jquery';
-import _ from 'lodash';
-import tv4 from 'tv4';
+import * as $ from 'jquery';
+import * as _ from 'lodash';
+import * as tv4 from 'tv4';
 
 import * as errors from './errors';
 
 // TODO: is quite silly to consider undefined as whitespace
-export function isWhitespace(char) {
-  return (char === ' ') || (char === '\n') || (char === undefined);
+export function isWhitespace(chr) {
+  return (chr === ' ') || (chr === '\n') || (chr === undefined);
 }
 
 // NOTE: currently unused
-export function isPunctuation(char) {
-  return char === '.' || char === ',' || char === '!' || char === '?';
+export function isPunctuation(chr) {
+  return chr === '.' || chr === ',' || chr === '!' || chr === '?';
 }
 
 const urlRegex = /^https?:\/\/([^\s]+\.[^\s]+$|localhost)/;
@@ -25,7 +25,7 @@ export function mimetypeLookup(filename) {
   const extensionLookup = {
     'json': 'application/json',
     'txt': 'text/plain',
-    '': 'text/plain'
+    '': 'text/plain',
   };
   return extensionLookup[extension.toLowerCase()];
 }
@@ -51,7 +51,7 @@ export function isScrolledIntoView(elem, container) {
   return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
 
-export function tv4_validate(data, schema, object='data') {
+export function tv4_validate(data, schema, object = 'data') {
   // 3rd argument: checks recursive
   // 4th argument: bans unknown properties
   if (!tv4.validate(data, schema, true, true)) {
@@ -79,7 +79,7 @@ export function fill_tv4_defaults(data, schema) {
       if (!(prop in data)) {
         data[prop] = {};
       }
-      exports.fill_tv4_defaults(data[prop], prop_info);
+      fill_tv4_defaults(data[prop], prop_info);
     }
   }
   return null;

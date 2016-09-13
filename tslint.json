@@ -7,12 +7,11 @@
       "ban": false,
       "class-name": true,
       "comment-format": [true,
-              "check-space",
-              "check-lowercase"
+              "check-space"
           ],
       "curly": true,
       "eofline": true,
-      "forin": true,
+      "forin": false,
       "indent": [true, "spaces"],
       "interface-name": true,
       "jsdoc-format": true,
