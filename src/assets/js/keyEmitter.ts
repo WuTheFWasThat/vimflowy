@@ -126,7 +126,7 @@ export default class KeyEmitter extends EventEmitter {
   }
 
   public listen() {
-    return $(document).keydown(e => {
+    return $.default(document).keydown(e => {
       if (e.keyCode in ignoreMap) {
         return true;
       }

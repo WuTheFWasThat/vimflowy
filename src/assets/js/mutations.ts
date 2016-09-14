@@ -22,11 +22,15 @@ the mutation may also optionally implement
         takes a cursor, and moves it according to how the cursor should move
 */
 
-import _ from 'lodash';
+import * as _ from 'lodash';
 import * as errors from './errors';
+import { Row, Col, Char, SerializedLine, SerializedPath } from './types';
+import Path from './path';
 
 // validate inserting id as a child of parent_id
-const validateRowInsertion = function(session, parent_id, id, options={}) {
+const validateRowInsertion = function(
+  session, parent_id, id, options: {noSiblingCheck?: boolean} = {}
+) {
   // check that there won't be doubled siblings
   if (!options.noSiblingCheck) {
     if (session.document._hasChild(parent_id, id)) {
@@ -48,27 +52,31 @@ const validateRowInsertion = function(session, parent_id, id, options={}) {
 };
 
 export default class Mutation {
-  str() {
+  public str() {
     return '';
   }
-  validate(/* session */) {
+  public validate(session) {
     return true;
   }
-  mutate(/* session */) {
-
+  public mutate(session): void {
+    throw new errors.NotImplemented();
   }
-  rewind(/* session */) {
+  public rewind(session): Array<Mutation> {
     return [];
   }
-  remutate(session) {
+  public remutate(session): void {
     return this.mutate(session);
   }
-  moveCursor(/* cursor */) {
-
+  public moveCursor(cursor) {
+    return null;
   }
 }
 
 export class AddChars extends Mutation {
+  private row: Row;
+  private col: Col;
+  private chars: Array<string>;
+
   constructor(row, col, chars) {
     super();
     this.row = row;
@@ -76,23 +84,21 @@ export class AddChars extends Mutation {
     this.chars = chars;
   }
 
-  str() {
+  public str() {
     return `row ${this.row}, col ${this.col}, nchars ${this.chars.length}`;
   }
 
-  mutate(session) {
+  public mutate(session) {
     return session.document.writeChars(this.row, this.col, this.chars);
   }
 
-  rewind(/* session */) {
+  public rewind(session) {
     return [
-      /* eslint-disable no-use-before-define */
-      new DelChars(this.row, this.col, this.chars.length)
-      /* eslint-enable no-use-before-define */
+      new DelChars(this.row, this.col, this.chars.length),
     ];
   }
 
-  moveCursor(cursor) {
+  public moveCursor(cursor) {
     if (!(cursor.path.row === this.row)) {
       return;
     }
@@ -103,6 +109,11 @@ export class AddChars extends Mutation {
 }
 
 export class DelChars extends Mutation {
+  private row: Row;
+  private col: Col;
+  private nchars: number;
+  private deletedChars: Array<String>;
+
   constructor(row, col, nchars) {
     super();
     this.row = row;
@@ -110,21 +121,21 @@ export class DelChars extends Mutation {
     this.nchars = nchars;
   }
 
-  str() {
+  public str() {
     return `row ${this.row}, col ${this.col}, nchars ${this.nchars}`;
   }
 
-  mutate(session) {
+  public mutate(session) {
     return this.deletedChars = session.document.deleteChars(this.row, this.col, this.nchars);
   }
 
-  rewind(/* session */) {
+  public rewind(session) {
     return [
-      new AddChars(this.row, this.col, this.deletedChars)
+      new AddChars(this.row, this.col, this.deletedChars),
     ];
   }
 
-  moveCursor(cursor) {
+  public moveCursor(cursor) {
     if (cursor.row !== this.row) {
       return;
     }
@@ -139,6 +150,14 @@ export class DelChars extends Mutation {
 }
 
 export class ChangeChars extends Mutation {
+  private row: Row;
+  private col: Col;
+  private nchars: number;
+  private transform: (chars: Array<Char>) => Array<Char>;
+  private newChars: Array<Char>;
+  private deletedChars: Array<Char>;
+  private ncharsDeleted: number;
+
   constructor(row, col, nchars, transform, newChars) {
     super();
     this.row = row;
@@ -148,11 +167,11 @@ export class ChangeChars extends Mutation {
     this.newChars = newChars;
   }
 
-  str() {
+  public str() {
     return `change row ${this.row}, col ${this.col}, nchars ${this.nchars}`;
   }
 
-  mutate(session) {
+  public mutate(session) {
     this.deletedChars = session.document.deleteChars(this.row, this.col, this.nchars);
     this.ncharsDeleted = this.deletedChars.length;
     if (this.transform) {
@@ -162,13 +181,13 @@ export class ChangeChars extends Mutation {
     return session.document.writeChars(this.row, this.col, this.newChars);
   }
 
-  rewind(/* session */) {
+  public rewind(session) {
     return [
-      new ChangeChars(this.row, this.col, this.newChars.length, null, this.deletedChars)
+      new ChangeChars(this.row, this.col, this.newChars.length, null, this.deletedChars),
     ];
   }
 
-  remutate(session) {
+  public remutate(session) {
     session.document.deleteChars(this.row, this.col, this.ncharsDeleted);
     return session.document.writeChars(this.row, this.col, this.newChars);
   }
@@ -177,6 +196,12 @@ export class ChangeChars extends Mutation {
 }
 
 export class MoveBlock extends Mutation {
+  private path: Path;
+  private parent: Path;
+  private old_parent: Path;
+  private index: number;
+  private old_index: number;
+
   constructor(path, parent, index) {
     super();
     this.path = path;
@@ -189,29 +214,29 @@ export class MoveBlock extends Mutation {
     }
   }
 
-  str() {
+  public str() {
     return `move ${this.path.row} from ${this.path.parent.row} to ${this.parent.row}`;
   }
 
-  validate(session) {
+  public validate(session) {
     // if parent is the same, don't do sibling clone validation
     const sameParent = this.parent.row === this.old_parent.row;
     return (validateRowInsertion(session, this.parent.row, this.path.row, {noSiblingCheck: sameParent}));
   }
 
-  mutate(session) {
+  public mutate(session) {
     errors.assert((!this.path.isRoot()), 'Cannot detach root');
     const info = session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
     return this.old_index = info.old.childIndex;
   }
 
-  rewind(/* session */) {
+  public rewind(session) {
     return [
-      new MoveBlock((this.parent.extend([this.path.row])), this.old_parent, this.old_index)
+      new MoveBlock((this.parent.extend([this.path.row])), this.old_parent, this.old_index),
     ];
   }
 
-  moveCursor(cursor) {
+  public moveCursor(cursor) {
     const walk = cursor.path.walkFrom(this.path);
     if (walk === null) {
       return;
@@ -223,7 +248,12 @@ export class MoveBlock extends Mutation {
 }
 
 export class AttachBlocks extends Mutation {
-  constructor(parent, cloned_rows, index, options) {
+  private parent: Row;
+  private cloned_rows: Array<Row>;
+  private nrows: number;
+  private index: number;
+
+  constructor(parent, cloned_rows, index) {
     super();
     this.parent = parent;
     this.cloned_rows = cloned_rows;
@@ -233,14 +263,13 @@ export class AttachBlocks extends Mutation {
     } else {
       this.index = index;
     }
-    this.options = options || {};
   }
 
-  str() {
+  public str() {
     return `parent ${this.parent}, index ${this.index}`;
   }
 
-  validate(session) {
+  public validate(session) {
     for (let i = 0; i < this.cloned_rows.length; i++) {
       const row = this.cloned_rows[i];
       if (!(validateRowInsertion(session, this.parent, row))) {
@@ -250,21 +279,28 @@ export class AttachBlocks extends Mutation {
     return true;
   }
 
-  mutate(session) {
+  public mutate(session) {
     return session.document._attachChildren(this.parent, this.cloned_rows, this.index);
   }
 
-  rewind(/* session */) {
+  public rewind(session) {
     return [
-      /* eslint-disable no-use-before-define */
-      new DetachBlocks(this.parent, this.index, this.nrows)
-      /* eslint-enable no-use-before-define */
+      new DetachBlocks(this.parent, this.index, this.nrows),
     ];
   }
 }
 
 export class DetachBlocks extends Mutation {
-  constructor(parent, index, nrows, options) {
+  private parent: Row;
+  private index: number;
+  private nrows: number;
+  private deleted: Array<Row>;
+  private next: SerializedPath;
+  private created: Row;
+  private created_index: number;
+  private options: {addNew?: boolean, noNew?: boolean};
+
+  constructor(parent, index, nrows, options?) {
     super();
     this.parent = parent;
     this.index = index;
@@ -272,12 +308,12 @@ export class DetachBlocks extends Mutation {
     this.options = options || {};
   }
 
-  str() {
+  public str() {
     return `parent ${this.parent}, index ${this.index}, nrows ${this.nrows}`;
   }
 
-  mutate(session) {
-    this.deleted = session.document._getChildren(this.parent, this.index, ((this.index+this.nrows)-1))
+  public mutate(session) {
+    this.deleted = session.document._getChildren(this.parent, this.index, this.index + this.nrows - 1)
       .filter((sib => sib !== null));
 
     for (let i = 0; i < this.deleted.length; i++) {
@@ -318,7 +354,7 @@ export class DetachBlocks extends Mutation {
     return this.next = next;
   }
 
-  rewind(/* session */) {
+  public rewind(session) {
     const mutations = [];
     if (this.created !== null) {
       mutations.push(new DetachBlocks(this.parent, this.created_index, 1, {noNew: true}));
@@ -327,7 +363,7 @@ export class DetachBlocks extends Mutation {
     return mutations;
   }
 
-  remutate(session) {
+  public remutate(session) {
     this.deleted.forEach((row) => {
       session.document._detach(row, this.parent);
     });
@@ -336,7 +372,7 @@ export class DetachBlocks extends Mutation {
     }
   }
 
-  moveCursor(cursor) {
+  public moveCursor(cursor) {
     const [walk, ancestor] = cursor.path.shedUntil(this.parent);
     if (walk === null) {
       return;
@@ -354,6 +390,12 @@ export class DetachBlocks extends Mutation {
 
 // creates new blocks (as opposed to attaching ones that already exist)
 export class AddBlocks extends Mutation {
+  private parent: Path;
+  private serialized_rows: Array<SerializedLine>;
+  private index: number;
+  private nrows: number;
+  private added_rows: Array<Row>;
+
   constructor(parent, index, serialized_rows) {
     super();
     this.parent = parent;
@@ -366,11 +408,11 @@ export class AddBlocks extends Mutation {
     this.nrows = this.serialized_rows.length;
   }
 
-  str() {
+  public str() {
     return `parent ${this.parent.row}, index ${this.index}`;
   }
 
-  mutate(session) {
+  public mutate(session) {
     let index = this.index;
 
     const id_mapping = {};
@@ -383,13 +425,13 @@ export class AddBlocks extends Mutation {
     return null;
   }
 
-  rewind(/* session */) {
+  public rewind(session) {
     return [
-      new DetachBlocks(this.parent.row, this.index, this.nrows)
+      new DetachBlocks(this.parent.row, this.index, this.nrows),
     ];
   }
 
-  remutate(session) {
+  public remutate(session) {
     let index = this.index;
     this.added_rows.forEach((sib) => {
       session.document.attachChild(this.parent, sib, index);
@@ -400,19 +442,21 @@ export class AddBlocks extends Mutation {
 }
 
 export class ToggleBlock extends Mutation {
+  private row: Row;
+
   constructor(row) {
     super();
     this.row = row;
   }
-  str() {
+  public str() {
     return `row ${this.row}`;
   }
-  mutate(session) {
+  public mutate(session) {
     return session.document.toggleCollapsed(this.row);
   }
-  rewind(/* session */) {
+  public rewind(session) {
     return [
-      this
+      this,
     ];
   }
   // TODO: if a cursor is within the toggle block and their

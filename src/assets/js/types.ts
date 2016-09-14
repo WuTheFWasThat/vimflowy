@@ -26,6 +26,7 @@ export type SerializedLine = {
 };
 
 export type Row = number;
+export type Col = number;
 export type SerializedPath = Array<Row>;
 
 export type MacroMap = {[key: string]: string};
