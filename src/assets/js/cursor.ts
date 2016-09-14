@@ -4,10 +4,10 @@ import EventEmitter from './eventEmitter';
 import { Col, TextProperties, CursorOptions } from './types';
 import Path from './path';
 import Document from './document';
+import Session from './session';
 
 const wordRegex = /^[a-z0-9_]+$/i;
 
-type Session = any; // TODO
 // options for word movements, e.g. w/e/b/f/t
 type WordMovementOptions = {
   // whether the word should consider all non-whitespace characters
@@ -74,7 +74,7 @@ export default class Cursor extends EventEmitter {
     return this.setCol(col, cursorOptions);
   }
 
-  public async setPath(path, cursorOptions: CursorOptions) {
+  public async setPath(path, cursorOptions?: CursorOptions) {
     this._setPath(path);
     return this._fromMoveCol(cursorOptions);
   }

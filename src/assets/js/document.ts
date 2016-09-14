@@ -132,7 +132,7 @@ export default class Document extends EventEmitter {
     return this.store.setParents(row, children_rows);
   }
 
-  public getChildren(parent_path) {
+  public getChildren(parent_path): Array<Path> {
     return this._getChildren(parent_path.row).map(row => parent_path.child(row));
   }
 
@@ -402,7 +402,7 @@ export default class Document extends EventEmitter {
   // 1. the common ancestor of the rows
   // 2. the array of ancestors between common ancestor and row1
   // 3. the array of ancestors between common ancestor and row2
-  public getCommonAncestor(row1, row2) {
+  public getCommonAncestor(row1, row2): [Path, Array<Path>, Array<Path>] {
     const ancestors1 = this.getAncestry(row1);
     const ancestors2 = this.getAncestry(row2);
     const commonAncestry = _.takeWhile(

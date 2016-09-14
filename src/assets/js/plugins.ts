@@ -8,6 +8,7 @@ import * as errors from './errors';
 import EventEmitter from './eventEmitter';
 import Document from './document';
 import Cursor from './cursor';
+import Session from './session';
 
 type PluginMetadata = {
   name: string;
@@ -27,7 +28,6 @@ export enum STATUSES {
   ENABLED = 4,
 };
 
-type Session = any; // TODO
 type KeyBindings = any; // TODO
 type KeyDefinitions = any; // TODO
 type KeyCommands = any; // TODO
@@ -85,12 +85,13 @@ export class PluginApi {
   public registerMode(metadata) {
     const mode = Modes.registerMode(metadata);
     this.registrations.push({type: 'mode', args: [mode]});
-    return this._reapply_hotkeys();
+    this._reapply_hotkeys();
+    return mode;
   }
 
   public deregisterMode(mode) {
     Modes.deregisterMode(mode);
-    return this._reapply_hotkeys();
+    this._reapply_hotkeys();
   }
 
   public registerCommand(metadata) {
@@ -127,7 +128,7 @@ export class PluginApi {
     return this._reapply_hotkeys();
   }
 
-  private _getEmitter(who) {
+  private _getEmitter(who): Document | Session {
     if (who === 'document') {
       return this.document;
     } else if (who === 'session') {

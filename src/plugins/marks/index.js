@@ -105,7 +105,7 @@ class MarksPlugin {
       name: 'MARK',
       hotkey_type: Modes.HotkeyType.INSERT_MODE_TYPE,
       within_row: true,
-      enter: async (session) => {
+      enter: async (session /*, newMode?: ModeId */) => {
         // initialize marks stuff
         const doc = new Document(new DataStore.InMemory());
         doc.load(constants.empty_data);
@@ -113,7 +113,7 @@ class MarksPlugin {
         await this.marksession.setMode(MODES.INSERT);
         return this.marksessionpath = session.cursor.path;
       },
-      exit: async (/*session*/) => {
+      exit: async (/*session, newMode?: ModeId */) => {
         this.marksession = null;
         return this.marksessionpath = null;
       },

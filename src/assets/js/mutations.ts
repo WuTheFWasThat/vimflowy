@@ -112,7 +112,7 @@ export class DelChars extends Mutation {
   private row: Row;
   private col: Col;
   private nchars: number;
-  private deletedChars: Array<String>;
+  public deletedChars: Array<String>;
 
   constructor(row, col, nchars) {
     super();
@@ -156,9 +156,9 @@ export class ChangeChars extends Mutation {
   private transform: (chars: Array<Char>) => Array<Char>;
   private newChars: Array<Char>;
   private deletedChars: Array<Char>;
-  private ncharsDeleted: number;
+  public ncharsDeleted: number;
 
-  constructor(row, col, nchars, transform, newChars) {
+  constructor(row, col, nchars, transform?, newChars?) {
     super();
     this.row = row;
     this.col = col;
@@ -176,7 +176,7 @@ export class ChangeChars extends Mutation {
     this.ncharsDeleted = this.deletedChars.length;
     if (this.transform) {
       this.newChars = this.transform(this.deletedChars);
-      errors.assert((this.newChars.length === this.ncharsDeleted));
+      errors.assert(this.newChars.length === this.ncharsDeleted);
     }
     return session.document.writeChars(this.row, this.col, this.newChars);
   }
@@ -294,7 +294,7 @@ export class DetachBlocks extends Mutation {
   private parent: Row;
   private index: number;
   private nrows: number;
-  private deleted: Array<Row>;
+  public deleted: Array<Row>;
   private next: SerializedPath;
   private created: Row;
   private created_index: number;
@@ -394,7 +394,7 @@ export class AddBlocks extends Mutation {
   private serialized_rows: Array<SerializedLine>;
   private index: number;
   private nrows: number;
-  private added_rows: Array<Row>;
+  public added_rows: Array<Row>;
 
   constructor(parent, index, serialized_rows) {
     super();

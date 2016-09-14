@@ -3,16 +3,16 @@ import * as React from 'react';
 import * as constants from './constants';
 // import { Document } from './document';
 // import * as DataStore from './datastore';
-// import Session from './session';
+import Session from './session';
 // import { KeyStream } from './keyHandler';
 
+import { ModeId } from './types';
 export const PropType = React.PropTypes.number;
 
 enum HotkeyType {
   NORMAL_MODE_TYPE,
   INSERT_MODE_TYPE
 }
-type Session = any;
 type KeyStream = any;
 
 type ModeMetadata = {
@@ -31,12 +31,12 @@ type ModeMetadata = {
   key_transforms?: Array<(key: string, context: any) => [string, any]>;
 
   // function taking session, upon entering mode
-  enter?: (session: Session) => Promise<void>;
+  enter?: (session: Session, newMode?: ModeId) => Promise<void>;
   // function executed on every action, while in the mode.
   // takes session and keystream
   every?: (session: Session, keyStream: KeyStream) => Promise<void>;
   // function taking session, upon exiting mode
-  exit?: (session: Session) => Promise<void>;
+  exit?: (session: Session, oldMode?: ModeId) => Promise<void>;
 
   // a function taking a context and returning a new context
   // in which definition functions will be executed
@@ -47,16 +47,18 @@ type ModeMetadata = {
 export default class Mode {
   public metadata: ModeMetadata;
   public name: string;
+  public id: ModeId;
 
-  constructor(metadata) {
+  constructor(id, metadata) {
+    this.id = id;
     this.metadata = metadata;
     this.name = metadata.name;
   }
 
   // function taking session, upon entering mode
-  public async enter(session: Session): Promise<void> {
+  public async enter(session: Session, oldMode?: ModeId): Promise<void> {
     if (this.metadata.enter) {
-      return await this.metadata.enter(session);
+      return await this.metadata.enter(session, oldMode);
     }
   }
 
@@ -68,9 +70,9 @@ export default class Mode {
     }
   }
   // function taking session, upon exiting mode
-  public async exit(session: Session): Promise<void> {
+  public async exit(session: Session, newMode?: ModeId): Promise<void> {
     if (this.metadata.exit) {
-      return await this.metadata.exit(session);
+      return await this.metadata.exit(session, newMode);
     }
   }
   // a function taking a context and returning a new context
@@ -107,10 +109,11 @@ export default class Mode {
 
 };
 
-// an enum dictionary,
-const MODES_ENUM = {};
+// type should be {[key: string]: ModeId}, but dot notation is nice...
+// or would like to be enum, but modes can be registered dynamically..
+const MODES_ENUM: any = {};
 // mapping from mode name to the actual mode object
-const MODES = {};
+const MODES: {[key: string]: Mode} = {};
 const MODE_TYPES = {};
 MODE_TYPES[HotkeyType.NORMAL_MODE_TYPE] = {
   description:
@@ -125,7 +128,7 @@ MODE_TYPES[HotkeyType.INSERT_MODE_TYPE] = {
   modes: [],
 };
 
-let modeCounter = 1;
+let modeIdCounter: ModeId = 1;
 const registerMode = function(metadata) {
 
   // if (MODES_ENUM[metadata.name]) {
@@ -133,19 +136,19 @@ const registerMode = function(metadata) {
   //   // TODO figure this out better.  also tests shouldn't keep registering new modes anyways
   //   return MODES[MODES_ENUM[metadata.name]]
   // }
-  const mode = new Mode(metadata);
-  MODES_ENUM[metadata.name] = modeCounter;
-  MODES[modeCounter] = mode;
-  MODE_TYPES[metadata.hotkey_type].modes.push(modeCounter);
-  modeCounter += 1;
+  const mode = new Mode(modeIdCounter, metadata);
+  MODES_ENUM[metadata.name] = modeIdCounter;
+  MODES[modeIdCounter] = mode;
+  MODE_TYPES[metadata.hotkey_type].modes.push(modeIdCounter);
+  modeIdCounter += 1;
   return mode;
 };
 
 const deregisterMode = function(mode) {
-  modeCounter = MODES_ENUM[mode.name];
+  modeIdCounter = MODES_ENUM[mode.name];
   delete MODES_ENUM[mode.name];
-  delete MODES[modeCounter];
-  const index = MODE_TYPES[mode.metadata.hotkey_type].modes.indexOf(modeCounter);
+  delete MODES[modeIdCounter];
+  const index = MODE_TYPES[mode.metadata.hotkey_type].modes.indexOf(modeIdCounter);
   return MODE_TYPES[mode.metadata.hotkey_type].modes.splice(index, 1);
 };
 
@@ -161,7 +164,7 @@ const transform_insert_key = function(key) {
 registerMode({
   name: 'NORMAL',
   hotkey_type: HotkeyType.NORMAL_MODE_TYPE,
-  async enter(session) {
+  async enter(session, oldMode?: ModeId) {
     await session.cursor.backIfNeeded();
   },
   key_transforms: [
@@ -200,10 +203,10 @@ registerMode({
 registerMode({
   name: 'VISUAL',
   hotkey_type: HotkeyType.NORMAL_MODE_TYPE,
-  async enter(session) {
+  async enter(session, oldMode?: ModeId) {
     return session.anchor = session.cursor.clone();
   },
-  async exit(session) {
+  async exit(session, newMode?: ModeId) {
     return session.anchor = null;
   },
 });
@@ -211,11 +214,11 @@ registerMode({
 registerMode({
   name: 'VISUAL_LINE',
   hotkey_type: HotkeyType.NORMAL_MODE_TYPE,
-  async enter(session) {
+  async enter(session, oldMode?: ModeId) {
     session.anchor = session.cursor.clone();
     return session.lineSelect = true;
   },
-  async exit(session) {
+  async exit(session, newMode?: ModeId) {
     session.anchor = null;
     return session.lineSelect = false;
   },
@@ -246,7 +249,7 @@ registerMode({
     session.menu.update();
     return keyStream.forget();
   },
-  async exit(session) {
+  async exit(session, newMode?: ModeId) {
     session.menu = null;
   },
   key_transforms: [
@@ -263,7 +266,7 @@ registerMode({
   ],
 });
 
-const getMode = mode => MODES[mode];
+const getMode = (mode: ModeId) => MODES[mode];
 
 export {
   registerMode,

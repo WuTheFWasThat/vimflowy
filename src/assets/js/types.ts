@@ -52,3 +52,4 @@ export type SerializedPath = Array<Row>;
 
 export type MacroMap = {[key: string]: string};
 
+export type ModeId = number;
