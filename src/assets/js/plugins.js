@@ -39,7 +39,7 @@ const PLUGIN_SCHEMA = {
 // global set of registered plugins
 const PLUGINS = {};
 
-const STATUSES = {
+export const STATUSES = {
   UNREGISTERED: 'Unregistered',
   DISABLING: 'Disabling',
   ENABLING: 'Enabling',
@@ -314,4 +314,3 @@ export { registerPlugin as register };
 export function all() { return PLUGINS; }
 export function getPlugin(name) { return PLUGINS[name]; }
 export function names() { return (_.keys(PLUGINS)).sort(); }
-export { STATUSES };

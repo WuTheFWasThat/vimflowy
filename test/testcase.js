@@ -11,29 +11,24 @@ import KeyDefinitions from '../src/assets/js/keyDefinitions';
 import KeyBindings from '../src/assets/js/keyBindings';
 import KeyHandler from '../src/assets/js/keyHandler';
 import logger, * as Logger from '../src/assets/js/logger';
-import { PluginsManager } from '../src/assets/js/plugins';
+import { PluginsManager, STATUSES } from '../src/assets/js/plugins';
 import Cursor from '../src/assets/js/cursor';
 import Path from '../src/assets/js/path';
 
 logger.setStream(Logger.STREAM.QUEUE);
 afterEach('empty the queue', () => logger.empty());
 
-// will have default bindings
-let defaultKeyBindings = new KeyBindings(KeyDefinitions.clone());
+// share keybindings across tests, for efficiency
+// note that the bindings will change when plugins are enabled and disabled
+// thus, tests are not totally isolated
+let keyBindings = new KeyBindings(KeyDefinitions.clone());
 
 class TestCase {
   constructor(serialized = [''], options = {}) {
     this.store = new DataStore.InMemory();
     this.document = new Document(this.store);
 
-    let keyBindings;
-    if (options.plugins) {
-      // TODO: do this less hackily?
-      keyBindings = new KeyBindings(KeyDefinitions.clone());
-    } else {
-      // just share keybindings, for efficiency
-      keyBindings = defaultKeyBindings;
-    }
+    this.plugins = options.plugins;
     this.session = new Session(this.document, {
       bindings: keyBindings,
       viewRoot: Path.root(),
@@ -43,11 +38,8 @@ class TestCase {
     this.register = this.session.register;
 
     this.pluginManager = new PluginsManager(this.session);
-    if (options.plugins) {
-      for (let j = 0; j < options.plugins.length; j++) {
-        let pluginName = options.plugins[j];
-        this.pluginManager.enable(pluginName);
-      }
+    if (this.plugins) {
+      this.plugins.forEach((pluginName) => this.pluginManager.enable(pluginName));
     }
 
     // this must be *after* plugin loading because of plugins with state
@@ -68,6 +60,15 @@ class TestCase {
   }
 
   done() {
+    this.prom = this.prom.then(() => {
+      if (this.plugins) {
+        this.plugins.forEach((pluginName) => {
+          if (this.pluginManager.getStatus(pluginName) === STATUSES.ENABLED) {
+            this.pluginManager.disable(pluginName);
+          }
+        });
+      }
+    });
     return this.prom;
   }
 

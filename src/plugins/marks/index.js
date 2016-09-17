@@ -256,7 +256,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
       description: 'Delete character at the cursor (i.e. del key)',
     }, async function() {
-      return this.session.sarkvession.delCharsAfterCursor(1);
+      return this.session.marksession.delCharsAfterCursor(1);
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_HELP, {
