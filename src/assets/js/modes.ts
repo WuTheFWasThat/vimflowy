@@ -1,150 +1,140 @@
-import React from 'react';
+import * as React from 'react';
 
-import * as utils from './utils';
 import * as constants from './constants';
 // import { Document } from './document';
 // import * as DataStore from './datastore';
+// import Session from './session';
+// import { KeyStream } from './keyHandler';
 
 export const PropType = React.PropTypes.number;
 
-const NORMAL_MODE_TYPE = 'Normal-like modes';
-const INSERT_MODE_TYPE = 'Insert-like modes';
+enum HotkeyType {
+  NORMAL_MODE_TYPE,
+  INSERT_MODE_TYPE
+}
+type Session = any;
+type KeyStream = any;
 
-const MODE_SCHEMA = {
-  title: 'Mode metadata schema',
-  type: 'object',
-  required: [ 'name' ],
-  properties: {
-    name: {
-      description: 'Name of the mode',
-      pattern: '^[A-Z_]{2,32}$',
-      type: 'string'
-    },
-    description: {
-      description: 'Description of the mode',
-      type: 'string'
-    },
-    hotkey_type: { // TODO: get rid of this?
-      description: 'Either normal-like or insert-like',
-      type: 'string'
-    },
-    within_row: {
-      description: 'Only within-row motions are supported',
-      type: 'boolean'
-    },
-    enter: {
-      description: 'Function taking session, upon entering mode',
-      type: 'function'
-    },
-    every: {
-      description: 'Function executed on every action, while in the mode.  Takes session and keystream',
-      type: 'function'
-    },
-    exit: {
-      description: 'Function taking session, upon entering mode',
-      type: 'function'
-    },
+type ModeMetadata = {
+  name: string;
+  description: string;
+  hotkey_type: HotkeyType;
+  // whether only within-row motions are supported
+  within_row?: boolean;
 
-    key_transforms: {
-      description: `a list of functions taking a key and context
-  (key, context) -> [key, context]
-if the key should be ignored, return it as null (in which case
-other functions won't receive the key)
+  // a list of functions taking a key and context
+  //   (key, context) -> [key, context]
+  // if the key should be ignored, return it as null (in which case
+  // other functions won't receive the key)
+  //
+  // the functions are called in the order they're registered
+  key_transforms?: Array<(key: string, context: any) => [string, any]>;
 
-the functions are called in the order they're registered`,
-      type: 'array',
-      default: [],
-      items: {
-        type: 'function'
-      }
-    },
-    transform_context: {
-      description: `a functions taking a context and returning a new context
-in which definition functions will be executed
-(this is called right before execution)`,
-      type: 'function',
-      default(context) { return context; }
-    }
-  }
+  // function taking session, upon entering mode
+  enter?: (session: Session) => Promise<void>;
+  // function executed on every action, while in the mode.
+  // takes session and keystream
+  every?: (session: Session, keyStream: KeyStream) => Promise<void>;
+  // function taking session, upon exiting mode
+  exit?: (session: Session) => Promise<void>;
+
+  // a function taking a context and returning a new context
+  // in which definition functions will be executed
+  // (this is called right before execution)
+  transform_context?: (context: any) => any;
 };
-class Mode {
+
+export default class Mode {
+  public metadata: ModeMetadata;
+  public name: string;
+
   constructor(metadata) {
     this.metadata = metadata;
     this.name = metadata.name;
-    this.key_transforms = metadata.key_transforms;
-    this.transform_context = metadata.transform_context;
   }
 
-  async enter(session) {
+  // function taking session, upon entering mode
+  public async enter(session: Session): Promise<void> {
     if (this.metadata.enter) {
       return await this.metadata.enter(session);
     }
   }
 
-  async every(session, keyStream) {
+  // function executed on every action, while in the mode.
+  // takes session and keystream
+  public async every(session: Session, keyStream: KeyStream): Promise<void> {
     if (this.metadata.every) {
       return await this.metadata.every(session, keyStream);
     }
   }
-
-  async exit(session) {
+  // function taking session, upon exiting mode
+  public async exit(session: Session): Promise<void> {
     if (this.metadata.exit) {
       return await this.metadata.exit(session);
     }
   }
+  // a function taking a context and returning a new context
+  // in which definition functions will be executed
+  // (this is called right before execution)
+  public transform_context(context: any): any {
+    if (this.metadata.transform_context) {
+      return this.metadata.transform_context(context);
+    }
+    return context;
+  }
 
-  transform_key(key, context) {
-    for (let i = 0; i < this.key_transforms.length; i++) {
-      const key_transform = this.key_transforms[i];
-      [key, context] = key_transform(key, context);
-      if (key === null) {
-        break;
+  public transform_key(key, context) {
+    if (this.metadata.key_transforms) {
+      for (let i = 0; i < this.metadata.key_transforms.length; i++) {
+        const key_transform = this.metadata.key_transforms[i];
+        [key, context] = key_transform(key, context);
+        if (key === null) {
+          break;
+        }
       }
     }
     return [key, context];
   }
 
-  handle_bad_key(keyStream) {
+  public handle_bad_key(keyStream: KeyStream): void {
     // for normal mode types, single bad key -> forgotten sequence
-    if (this.metadata.hotkey_type === NORMAL_MODE_TYPE) {
+    if (this.metadata.hotkey_type === HotkeyType.NORMAL_MODE_TYPE) {
       return keyStream.forget();
     } else {
       return keyStream.forget(1);
     }
   }
-}
+
+};
 
 // an enum dictionary,
 const MODES_ENUM = {};
 // mapping from mode name to the actual mode object
 const MODES = {};
 const MODE_TYPES = {};
-MODE_TYPES[NORMAL_MODE_TYPE] = {
+MODE_TYPES[HotkeyType.NORMAL_MODE_TYPE] = {
   description:
     'Modes in which text is not being inserted, and all keys are configurable as commands.  ' +
     'NORMAL, VISUAL, and VISUAL_LINE modes fall under this category.',
-  modes: []
+  modes: [],
 };
-MODE_TYPES[INSERT_MODE_TYPE] = {
+MODE_TYPES[HotkeyType.INSERT_MODE_TYPE] = {
   description:
     'Modes in which most text is inserted, and available hotkeys are restricted to those with modifiers.  ' +
     'INSERT, SEARCH, and MARK modes fall under this category.',
-  modes: []
+  modes: [],
 };
 
 let modeCounter = 1;
 const registerMode = function(metadata) {
-  utils.tv4_validate(metadata, MODE_SCHEMA, 'mode');
-  utils.fill_tv4_defaults(metadata, MODE_SCHEMA);
 
-  const { name } = metadata;
-  // if name of MODES_ENUM
-  //   # NOTE: re-registration of the mode currently happens in unit tests
-  //   #       not sure why, but marks tests fail when not letting it re-register
-  //   # TODO figure this out better.  also tests shouldn't keep registering new modes anyways
-  //   return MODES[MODES_ENUM[name]]
+  // if (MODES_ENUM[metadata.name]) {
+  //   // NOTE: re-registration of the mode currently happens in unit tests
+  //   // TODO figure this out better.  also tests shouldn't keep registering new modes anyways
+  //   return MODES[MODES_ENUM[metadata.name]]
+  // }
   const mode = new Mode(metadata);
-  MODES_ENUM[name] = modeCounter;
+  MODES_ENUM[metadata.name] = modeCounter;
   MODES[modeCounter] = mode;
   MODE_TYPES[metadata.hotkey_type].modes.push(modeCounter);
   modeCounter += 1;
@@ -170,7 +160,7 @@ const transform_insert_key = function(key) {
 
 registerMode({
   name: 'NORMAL',
-  hotkey_type: NORMAL_MODE_TYPE,
+  hotkey_type: HotkeyType.NORMAL_MODE_TYPE,
   async enter(session) {
     await session.cursor.backIfNeeded();
   },
@@ -183,12 +173,12 @@ registerMode({
         context.keyStream.wait();
       }
       return [key, context];
-    }
-  ]
+    },
+  ],
 });
 registerMode({
   name: 'INSERT',
-  hotkey_type: INSERT_MODE_TYPE,
+  hotkey_type: HotkeyType.INSERT_MODE_TYPE,
   key_transforms: [
     function(key, context) {
       key = transform_insert_key(key);
@@ -203,24 +193,24 @@ registerMode({
         return [null, context];
       }
       return [key, context];
-    }
-  ]
+    },
+  ],
 });
 
 registerMode({
   name: 'VISUAL',
-  hotkey_type: NORMAL_MODE_TYPE,
+  hotkey_type: HotkeyType.NORMAL_MODE_TYPE,
   async enter(session) {
     return session.anchor = session.cursor.clone();
   },
   async exit(session) {
     return session.anchor = null;
-  }
+  },
 });
 
 registerMode({
   name: 'VISUAL_LINE',
-  hotkey_type: NORMAL_MODE_TYPE,
+  hotkey_type: HotkeyType.NORMAL_MODE_TYPE,
   async enter(session) {
     session.anchor = session.cursor.clone();
     return session.lineSelect = true;
@@ -239,18 +229,18 @@ registerMode({
     context.parent = parent;
     context.num_rows = (index2 - index1) + 1;
     return context;
-  }
+  },
 });
 
 registerMode({
   name: 'SETTINGS',
-  hotkey_type: NORMAL_MODE_TYPE,
+  hotkey_type: HotkeyType.NORMAL_MODE_TYPE,
   // TODO: exit settings on any bad key press?
 });
 
 registerMode({
   name: 'SEARCH',
-  hotkey_type: INSERT_MODE_TYPE,
+  hotkey_type: HotkeyType.INSERT_MODE_TYPE,
   within_row: true,
   async every(session, keyStream) {
     session.menu.update();
@@ -269,8 +259,8 @@ registerMode({
         return [null, context];
       }
       return [key, context];
-    }
-  ]
+    },
+  ],
 });
 
 const getMode = mode => MODES[mode];
@@ -281,6 +271,5 @@ export {
   MODES_ENUM as modes,
   MODE_TYPES as types,
   getMode,
-  NORMAL_MODE_TYPE,
-  INSERT_MODE_TYPE
+  HotkeyType,
 };

@@ -103,7 +103,7 @@ class MarksPlugin {
 
     this.api.registerMode({
       name: 'MARK',
-      hotkey_type: Modes.INSERT_MODE_TYPE,
+      hotkey_type: Modes.HotkeyType.INSERT_MODE_TYPE,
       within_row: true,
       enter: async (session) => {
         // initialize marks stuff

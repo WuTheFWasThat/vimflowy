@@ -176,7 +176,7 @@ export default class SessionComponent extends React.Component {
   render() {
     const session = this.props.session;
     const options = {
-      cursorBetween: Modes.getMode(session.mode).metadata.hotkey_type === Modes.INSERT_MODE_TYPE,
+      cursorBetween: Modes.getMode(session.mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE,
       rerender: (options = {}) => {
         this.setState({
           t: Date.now(),

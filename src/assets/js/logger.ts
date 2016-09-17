@@ -16,9 +16,9 @@ const LEVELS = [
 ];
 
 export enum STREAM {
-  STDOUT = 0,
-  STDERR = 1,
-  QUEUE = 2
+  STDOUT,
+  STDERR,
+  QUEUE,
 };
 
 export class Logger {

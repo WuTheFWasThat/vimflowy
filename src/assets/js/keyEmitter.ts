@@ -1,5 +1,5 @@
 /* globals document, window, navigator, alert, InstallTrigger */
-import * as $ from 'jquery';
+import $ from 'jquery';
 import * as _ from 'lodash';
 
 import logger from './logger';
@@ -126,7 +126,7 @@ export default class KeyEmitter extends EventEmitter {
   }
 
   public listen() {
-    return $.default(document).keydown(e => {
+    return $(document).keydown(e => {
       if (e.keyCode in ignoreMap) {
         return true;
       }

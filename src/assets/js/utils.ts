@@ -1,4 +1,4 @@
-import * as $ from 'jquery';
+import $ from 'jquery';
 import * as _ from 'lodash';
 import * as tv4 from 'tv4';
 

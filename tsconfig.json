@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES6",
+    "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true
   },
   "exclude": ["node_modules", "config", "dev_server.js"]

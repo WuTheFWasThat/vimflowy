@@ -115,9 +115,9 @@ class KeyDefinitions {
 
     this.defaultHotkeys = {};
     // key mappings for normal-like modes (normal, visual, visual-line)
-    this.defaultHotkeys[Modes.NORMAL_MODE_TYPE] = {};
+    this.defaultHotkeys[Modes.HotkeyType.NORMAL_MODE_TYPE] = {};
     // key mappings for insert-like modes (insert, mark, menu)
-    this.defaultHotkeys[Modes.INSERT_MODE_TYPE] = {};
+    this.defaultHotkeys[Modes.HotkeyType.INSERT_MODE_TYPE] = {};
 
     this.commands = {};
     // nested mapping with command names indexing, leaves are definitions
@@ -232,11 +232,11 @@ class KeyDefinitions {
     }
 
     this.commands[name] = command;
-    this.defaultHotkeys[Modes.NORMAL_MODE_TYPE][name] =
+    this.defaultHotkeys[Modes.HotkeyType.NORMAL_MODE_TYPE][name] =
       (_.cloneDeep(metadata.default_hotkeys.all)).concat(
         _.cloneDeep(metadata.default_hotkeys.normal_like)
       );
-    this.defaultHotkeys[Modes.INSERT_MODE_TYPE][name] =
+    this.defaultHotkeys[Modes.HotkeyType.INSERT_MODE_TYPE][name] =
       (_.cloneDeep(metadata.default_hotkeys.all)).concat(
         _.cloneDeep(metadata.default_hotkeys.insert_like)
       );
@@ -248,8 +248,8 @@ class KeyDefinitions {
       throw new errors.GenericError(`Command ${command.name} not found`);
     }
     delete this.commands[command.name];
-    delete this.defaultHotkeys[Modes.NORMAL_MODE_TYPE][command.name];
-    return delete this.defaultHotkeys[Modes.INSERT_MODE_TYPE][command.name];
+    delete this.defaultHotkeys[Modes.HotkeyType.NORMAL_MODE_TYPE][command.name];
+    return delete this.defaultHotkeys[Modes.HotkeyType.INSERT_MODE_TYPE][command.name];
   }
 
   registerMotion(commands, motion, definition) {

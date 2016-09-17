@@ -357,7 +357,7 @@ export default class Session extends EventEmitter {
   }
 
   async fixCursorForMode() {
-    if (Modes.getMode(this.mode).metadata.hotkey_type !== Modes.INSERT_MODE_TYPE) {
+    if (Modes.getMode(this.mode).metadata.hotkey_type !== Modes.HotkeyType.INSERT_MODE_TYPE) {
       await this.cursor.backIfNeeded();
     }
   }

@@ -10,8 +10,6 @@ import * as Modes from '../modes';
 import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
 
-const { NORMAL_MODE_TYPE } = Modes;
-const { INSERT_MODE_TYPE } = Modes;
 const MODE_TYPES = Modes.types;
 
 const TABS = {
@@ -199,8 +197,8 @@ export default class SettingsComponent extends React.Component {
                 {
                   (() => {
                     return [
-                      { mode_type: NORMAL_MODE_TYPE, id: 'hotkey-edit-normal' },
-                      { mode_type: INSERT_MODE_TYPE, id: 'hotkey-edit-insert' },
+                      { mode_type: Modes.HotkeyType.NORMAL_MODE_TYPE, id: 'hotkey-edit-normal' },
+                      { mode_type: Modes.HotkeyType.INSERT_MODE_TYPE, id: 'hotkey-edit-insert' },
                     ].map(({mode_type, id}) => {
                       const mode_defs = MODE_TYPES[mode_type].modes.map(
                         mode => keyBindings.definitions.actions_for_mode(mode)
