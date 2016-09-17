@@ -1,8 +1,21 @@
 import * as utils from './utils';
 import * as constants from './constants';
 import EventEmitter from './eventEmitter';
+import { Col, TextProperties, CursorOptions } from './types';
+import Path from './path';
+import Document from './document';
 
 const wordRegex = /^[a-z0-9_]+$/i;
+
+type Session = any; // TODO
+// options for word movements, e.g. w/e/b/f/t
+type WordMovementOptions = {
+  // whether the word should consider all non-whitespace characters
+  whitespaceWord?: boolean,
+  // whether to stop before the character found
+  beforeFound?: boolean,
+  cursor?: CursorOptions,
+};
 
 // TODO: make a view class which includes viewRoot and cursor
 /*
@@ -10,6 +23,14 @@ Cursor represents a cursor within a session
 it handles movement logic, insert mode line properties (e.g. bold/italic)
 */
 export default class Cursor extends EventEmitter {
+  public col: Col;
+  public path: Path;
+  public session: Session;
+  public document: Document;
+  public properties: TextProperties;
+
+  private moveCol: Col;
+
   constructor(session, path, col = 0, moveCol = null) {
     super();
     this.session = session;
@@ -27,46 +48,38 @@ export default class Cursor extends EventEmitter {
     return this.path.row;
   }
 
-  clone() {
+  public clone() {
     // paths are immutable so this is okay
     return new Cursor(this.session, this.path, this.col, this.moveCol);
   }
 
-  _setPath(path) {
+  public _setPath(path) {
     this.emit('rowChange', this.path, path);
     return this.path = path;
   }
 
-  _setCol(col) {
+  private _setCol(col) {
     this.emit('colChange', this.col, col);
     return this.col = col;
   }
 
-  from(other) {
+  public from(other) {
     this._setPath(other.path);
     this._setCol(other.col);
     return this.moveCol = other.moveCol;
   }
 
-  // cursorOptions:
-  //   - pastEnd:         means whether we're on the column or past it.
-  //                      generally true when in insert mode but not in normal mode
-  //                      effectively decides whether we can go past last column or not
-  //   - pastEndWord:     whether we consider the end of a word to be after the last letter
-  //                      is true in normal mode (for de), false in visual (for vex)
-  //   - keepProperties:  for movement, whether we should keep italic/bold state
-
-  setPosition(path, col, cursorOptions) {
+  public setPosition(path, col, cursorOptions?: CursorOptions) {
     this._setPath(path);
     return this.setCol(col, cursorOptions);
   }
 
-  async setPath(path, cursorOptions) {
+  public async setPath(path, cursorOptions: CursorOptions) {
     this._setPath(path);
     return this._fromMoveCol(cursorOptions);
   }
 
-  setCol(moveCol, cursorOptions = {pastEnd: true}) {
+  public setCol(moveCol, cursorOptions: CursorOptions = { pastEnd: true }) {
     this.moveCol = moveCol;
     this._fromMoveCol(cursorOptions);
     // if moveCol was too far, fix it
@@ -76,7 +89,7 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  _fromMoveCol(cursorOptions = {}) {
+  private _fromMoveCol(cursorOptions: CursorOptions = {}) {
     const len = this.document.getLength(this.path.row);
     const maxcol = len - (cursorOptions.pastEnd ? 0 : 1);
     let col;
@@ -91,28 +104,30 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  _left() {
+  private _left() {
     return this.setCol(this.col - 1);
   }
 
-  _right() {
+  private _right() {
     return this.setCol(this.col + 1);
   }
 
-  async left() {
+  public async left() {
     if (this.col > 0) {
       return this._left();
     }
   }
 
-  async right(cursorOptions = {}) {
+  public async right(
+    cursorOptions: {pastEnd?: boolean} = {}
+  ) {
     const shift = cursorOptions.pastEnd ? 0 : 1;
     if (this.col < this.document.getLength(this.path.row) - shift) {
       return this._right();
     }
   }
 
-  async backIfNeeded() {
+  public async backIfNeeded() {
     if (this.col > this.document.getLength(this.path.row) - 1) {
       await this.left();
       return true;
@@ -120,7 +135,7 @@ export default class Cursor extends EventEmitter {
     return false;
   }
 
-  async atVisibleEnd() {
+  public async atVisibleEnd() {
     if (this.col < this.document.getLength(this.path.row) - 1) {
       return false;
     } else {
@@ -132,7 +147,7 @@ export default class Cursor extends EventEmitter {
     return true;
   }
 
-  async _nextChar() {
+  private async _nextChar() {
     if (this.col < this.document.getLength(this.path.row) - 1) {
       this._right();
       return true;
@@ -146,7 +161,7 @@ export default class Cursor extends EventEmitter {
     return false;
   }
 
-  async atVisibleStart() {
+  public async atVisibleStart() {
     if (this.col > 0) {
       return false;
     } else {
@@ -158,7 +173,7 @@ export default class Cursor extends EventEmitter {
     return true;
   }
 
-  async _prevChar() {
+  private async _prevChar() {
     if (this.col > 0) {
       this._left();
       return true;
@@ -172,17 +187,17 @@ export default class Cursor extends EventEmitter {
     return false;
   }
 
-  async home() {
+  public async home() {
     this.setCol(0);
     return this;
   }
 
-  async end(cursorOptions = {cursor: {}}) {
+  public async end(cursorOptions: CursorOptions = {}) {
     this.setCol(cursorOptions.pastEnd ? -1 : -2);
     return this;
   }
 
-  async visibleHome() {
+  public async visibleHome() {
     let path;
     if (this.session.viewRoot.is(this.session.document.root)) {
       path = this.session.nextVisible(this.session.viewRoot);
@@ -193,18 +208,18 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  async visibleEnd() {
+  public async visibleEnd() {
     const path = this.session.lastVisible();
     this.setPosition(path, 0);
     return this;
   }
 
-  async isInWhitespace(path, col) {
+  public async isInWhitespace(path, col) {
     const char = this.document.getChar(path.row, col);
     return utils.isWhitespace(char);
   }
 
-  async isInWord(path, col, matchChar) {
+  public async isInWord(path, col, matchChar) {
     if (utils.isWhitespace(matchChar)) {
       return false;
     }
@@ -222,32 +237,34 @@ export default class Cursor extends EventEmitter {
   }
 
   // return function that sees whether we're still in the word
-  _getWordCheck(options, matchChar) {
+  private _getWordCheck(options: WordMovementOptions, matchChar) {
     if (options.whitespaceWord) {
-      return async (path, col) => !await this.isInWhitespace(path, col);
+      return async (path, col) => {
+        return !(await this.isInWhitespace(path, col));
+      };
     } else {
       return async (path, col) => await this.isInWord(path, col, matchChar);
     }
   }
 
-  async beginningWord(options = {}) {
+  public async beginningWord(options: WordMovementOptions = {}) {
     if (await this.atVisibleStart()) {
       return this;
     }
     await this._prevChar();
-    while ((!await this.atVisibleStart()) &&
-           await this.isInWhitespace(this.path, this.col)) {
+    while ((!(await this.atVisibleStart())) &&
+           (await this.isInWhitespace(this.path, this.col))) {
       await this._prevChar();
     }
 
     const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
-    while ((this.col > 0) && (await wordcheck(this.path, this.col-1))) {
+    while ((this.col > 0) && (await wordcheck(this.path, this.col - 1))) {
       this._left();
     }
     return this;
   }
 
-  async endWord(options = {}) {
+  public async endWord(options: WordMovementOptions = {}) {
     if (await this.atVisibleEnd()) {
       if (options.cursor.pastEnd) {
         this._right();
@@ -256,14 +273,14 @@ export default class Cursor extends EventEmitter {
     }
 
     await this._nextChar();
-    while ((! await this.atVisibleEnd()) &&
-            await this.isInWhitespace(this.path, this.col)) {
+    while ((!(await this.atVisibleEnd())) &&
+            (await this.isInWhitespace(this.path, this.col))) {
       await this._nextChar();
     }
 
     let end = this.document.getLength(this.path.row) - 1;
     const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
-    while (this.col < end && (await wordcheck(this.path, this.col+1))) {
+    while ((this.col < end) && (await wordcheck(this.path, this.col + 1))) {
       this._right();
     }
 
@@ -278,7 +295,7 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  async nextWord(options = {}) {
+  public async nextWord(options: WordMovementOptions = {}) {
     if (await this.atVisibleEnd()) {
       if (options.cursor.pastEnd) {
         this._right();
@@ -288,13 +305,13 @@ export default class Cursor extends EventEmitter {
 
     let end = this.document.getLength(this.path.row) - 1;
     const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
-    while (this.col < end && (await wordcheck(this.path, this.col+1))) {
+    while ((this.col < end) && (await wordcheck(this.path, this.col + 1))) {
       this._right();
     }
 
     await this._nextChar();
-    while ((!await this.atVisibleEnd()) &&
-            await this.isInWhitespace(this.path, this.col)) {
+    while ((!(await this.atVisibleEnd())) &&
+            (await this.isInWhitespace(this.path, this.col))) {
       await this._nextChar();
     }
 
@@ -305,7 +322,7 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  async findNextChar(char, options = {}) {
+  public async findNextChar(char, options: WordMovementOptions = {}) {
     const end = this.document.getLength(this.path.row) - 1;
     if (this.col === end) {
       return;
@@ -338,7 +355,7 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  async findPrevChar(char, options = {}) {
+  public async findPrevChar(char, options: WordMovementOptions = {}) {
     if (this.col === 0) {
       return;
     }
@@ -367,21 +384,21 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  async up(cursorOptions = {}) {
+  public async up(cursorOptions: CursorOptions = {}) {
     const path = this.session.prevVisible(this.path);
     if (path !== null) {
       return await this.setPath(path, cursorOptions);
     }
   }
 
-  async down(cursorOptions = {}) {
+  public async down(cursorOptions: CursorOptions = {}) {
     const path = this.session.nextVisible(this.path);
     if (path !== null) {
       return await this.setPath(path, cursorOptions);
     }
   }
 
-  async parent(cursorOptions = {}) {
+  public async parent(cursorOptions: CursorOptions = {}) {
     const path = this.path.parent;
     if (path.row === this.document.root.row) {
       return;
@@ -392,14 +409,14 @@ export default class Cursor extends EventEmitter {
     return await this.setPath(path, cursorOptions);
   }
 
-  async prevSibling(cursorOptions = {}) {
+  public async prevSibling(cursorOptions: CursorOptions = {}) {
     const prevsib = this.document.getSiblingBefore(this.path);
     if (prevsib !== null) {
       return await this.setPath(prevsib, cursorOptions);
     }
   }
 
-  async nextSibling(cursorOptions = {}) {
+  public async nextSibling(cursorOptions: CursorOptions = {}) {
     const nextsib = this.document.getSiblingAfter(this.path);
     if (nextsib !== null) {
       return await this.setPath(nextsib, cursorOptions);
@@ -408,21 +425,21 @@ export default class Cursor extends EventEmitter {
 
   // cursor properties
 
-  setProperty(property, value) {
+  public setProperty(property, value) {
     return this.properties[property] = value;
   }
 
-  getProperty(property) {
+  public getProperty(property) {
     return this.properties[property];
   }
 
-  toggleProperty(property) {
+  public toggleProperty(property) {
     return this.setProperty(property, !this.getProperty(property));
   }
 
   // get whether the cursor should be bold/italic based on surroundings
   // NOTE: only relevant for insert mode.
-  _getPropertiesFromContext() {
+  private _getPropertiesFromContext() {
     const line = this.document.getLine(this.path.row);
     let obj;
     if (line.length === 0) {
@@ -430,7 +447,7 @@ export default class Cursor extends EventEmitter {
     } else if (this.col === 0) {
       obj = line[this.col];
     } else {
-      obj = line[this.col-1];
+      obj = line[this.col - 1];
     }
     constants.text_properties.forEach((property) => {
       this.setProperty(property, obj[property]);
