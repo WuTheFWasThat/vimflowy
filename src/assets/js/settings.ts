@@ -4,13 +4,17 @@ Uses a datastore key which is agnostic to which document is being viewed
 (i.e. /blah and /blah2 have the same settings)
 */
 
+import DataStore from './datastore';
+
 const default_settings = {
   theme: 'default-theme',
   showKeyBindings: true,
-  hotkeys: {}
+  hotkeys: {},
 };
 
 export default class Settings {
+  private datastore: DataStore;
+
   constructor(datastore) {
     this.datastore = datastore;
 
@@ -22,11 +26,11 @@ export default class Settings {
     return null;
   }
 
-  async getSetting(setting, defaultValue = undefined) {
+  public async getSetting(setting, defaultValue = undefined) {
     return await this.datastore.getSetting(setting, defaultValue);
   }
 
-  async setSetting(setting, value) {
+  public async setSetting(setting, value) {
     return await this.datastore.setSetting(setting, value);
   }
 }
