@@ -36,7 +36,8 @@ spawn(
     '--require', 'babel-polyfill',
     '--compilers', 'js:babel-core/register,ts:ts-node/register,tsx:ts-node/register',
     '--reporter', 'dot',
-    '--watch', 'test/tests'
+    '--watch', 'test/tests',
+    '--watch-extensions tsx,ts'
   ],
   {stdio: 'inherit'}
 );
