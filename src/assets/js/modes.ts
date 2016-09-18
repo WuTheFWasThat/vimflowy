@@ -4,7 +4,7 @@ import * as constants from './constants';
 // import { Document } from './document';
 // import * as DataStore from './datastore';
 import Session from './session';
-// import { KeyStream } from './keyHandler';
+import { KeyStream } from './keyHandler';
 
 import { ModeId } from './types';
 export const PropType = React.PropTypes.number;
@@ -13,7 +13,6 @@ enum HotkeyType {
   NORMAL_MODE_TYPE,
   INSERT_MODE_TYPE
 }
-type KeyStream = any;
 
 type ModeMetadata = {
   name: string;
@@ -101,9 +100,9 @@ export default class Mode {
   public handle_bad_key(keyStream: KeyStream): void {
     // for normal mode types, single bad key -> forgotten sequence
     if (this.metadata.hotkey_type === HotkeyType.NORMAL_MODE_TYPE) {
-      return keyStream.forget();
+      keyStream.forget();
     } else {
-      return keyStream.forget(1);
+      keyStream.forget(1);
     }
   }
 

@@ -92,9 +92,9 @@ function getBindings(definitions, keyMap) {
 
 export default class KeyBindings extends EventEmitter {
   public definitions: KeyDefinitions;
-  private keyMaps: KeyMapping;
-  private bindings: KeyBindingsRaw;
-  private motion_bindings: MotionBindings;
+  public keyMaps: KeyMapping;
+  public bindings: KeyBindingsRaw;
+  public motion_bindings: MotionBindings;
 
   private hotkey_settings: HotkeySettings;
   private hotkeys: HotkeySettings; // includes defaults

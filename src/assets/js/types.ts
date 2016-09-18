@@ -1,3 +1,8 @@
+// keyboard key
+export type Key = string;
+
+export type Macro = Array<Key>;
+export type MacroMap = {[key: string]: Macro};
 
 // a character is represented by an object:
 // {
@@ -49,7 +54,5 @@ export type SerializedLine = {
 export type Row = number;
 export type Col = number;
 export type SerializedPath = Array<Row>;
-
-export type MacroMap = {[key: string]: string};
 
 export type ModeId = number;

@@ -16,10 +16,13 @@ the KeyStream class is a helper class which deals with queuing and checkpointing
 
 import EventEmitter from './eventEmitter';
 import * as errors from './errors';
+import Session from './session';
+import KeyBindings from './keyBindings';
 // import Menu from './menu';
 import * as Modes from './modes';
 // import * as constants from './constants';
 
+import { Key, MacroMap } from './types';
 import logger from './logger';
 
 // const MODES = Modes.modes;
@@ -30,6 +33,12 @@ import logger from './logger';
 // - flush sequences of keys
 // - save sequences of relevant keys
 export class KeyStream extends EventEmitter {
+  public queue: Array<Key>;
+  private lastSequence: Array<Key>;
+  private index: number;
+  private checkpoint_index: number;
+  private waiting: boolean;
+
   constructor(keys = []) {
     super();
 
@@ -42,59 +51,68 @@ export class KeyStream extends EventEmitter {
     keys.forEach((key) => this.enqueue(key));
   }
 
-  empty() {
+  public empty() {
     return this.queue.length === 0;
   }
 
-  done() {
+  public done() {
     return this.index === this.queue.length;
   }
 
-  rewind() {
+  public rewind() {
     return this.index = this.checkpoint_index;
   }
 
-  enqueue(key) {
+  public enqueue(key) {
     this.queue.push(key);
     return this.waiting = false;
   }
 
-  dequeue() {
+  public dequeue() {
     if (this.index === this.queue.length) { return null; }
     return this.queue[this.index++];
   }
 
-  checkpoint() {
+  public checkpoint() {
     return this.checkpoint_index = this.index;
   }
 
   // means we are waiting for another key before we can do things
-  wait() {
+  public wait() {
     this.waiting = true;
     return this.rewind();
   }
 
-  save() {
+  public save() {
     const processed = this.forget();
     this.lastSequence = processed;
     return this.emit('save');
   }
 
   // forgets the most recently processed n items
-  forget(n = null) {
+  public forget(n = null) {
     if (n === null) {
       // forget everything remembered, by default
       n = this.index;
     }
 
     errors.assert(this.index >= n);
-    const dropped = this.queue.splice(this.index-n, n);
+    const dropped = this.queue.splice(this.index - n, n);
     this.index = this.index - n;
     return dropped;
   }
 }
 
 export default class KeyHandler extends EventEmitter {
+  private session: Session;
+  private keyBindings: KeyBindings;
+  private macros: MacroMap;
+  private recording: {
+    stream?: KeyStream,
+    key?: Key,
+  };
+  private keyStream: KeyStream;
+  private processQueue: Promise<any>;
 
   constructor(session, keyBindings) {
     super();
@@ -108,7 +126,7 @@ export default class KeyHandler extends EventEmitter {
     });
     this.recording = {
       stream: null,
-      key: null
+      key: null,
     };
 
     this.keyStream = new KeyStream();
@@ -119,16 +137,14 @@ export default class KeyHandler extends EventEmitter {
     this.processQueue = Promise.resolve();
   }
 
-  //###########
   // for macros
-  //###########
 
-  beginRecording(key) {
+  public beginRecording(key) {
     this.recording.stream = new KeyStream();
     this.recording.key = key;
   }
 
-  async finishRecording() {
+  public async finishRecording() {
     const macro = this.recording.stream.queue;
     this.macros[this.recording.key] = macro;
     await this.session.document.store.setMacros(this.macros);
@@ -136,17 +152,15 @@ export default class KeyHandler extends EventEmitter {
     this.recording.key = null;
   }
 
-  async playRecording(recording) {
+  public async playRecording(recording) {
     // the recording shouldn't save, (i.e. no @session.save)
     const recordKeyStream = new KeyStream(recording);
     return await this._processKeys(recordKeyStream);
   }
 
-  //##################
   // general handling
-  //##################
 
-  async handleKey(key) {
+  public async handleKey(key) {
     logger.debug('Handling key:', key);
     this.keyStream.enqueue(key);
     if (this.recording.stream) {
@@ -155,7 +169,7 @@ export default class KeyHandler extends EventEmitter {
     return await this._processKeys(this.keyStream);
   }
 
-  async _processKeys(keyStream) {
+  private async _processKeys(keyStream) {
     while (!keyStream.done() && !keyStream.waiting) {
       keyStream.checkpoint();
       const { handled, command } = await this.getCommand(this.session.mode, keyStream);
@@ -171,7 +185,7 @@ export default class KeyHandler extends EventEmitter {
     }
   }
 
-  processKeys(keyStream) {
+  public processKeys(keyStream) {
     this.processQueue = this.processQueue.then(async () => {
       this._processKeys(keyStream);
     });
@@ -183,7 +197,7 @@ export default class KeyHandler extends EventEmitter {
   //   fn: a function to apply
   //   args: arguments to apply
   //   context: a context to execute the function in
-  async getCommand(mode, keyStream, bindings = null, repeat = 1) {
+  public async getCommand(mode, keyStream, bindings = null, repeat = 1) {
     if (bindings === null) {
       bindings = this.keyBindings.bindings[mode];
     }
@@ -193,7 +207,7 @@ export default class KeyHandler extends EventEmitter {
       session: this.session,
       repeat,
       keyStream,
-      keyHandler: this
+      keyHandler: this,
     };
 
     const mode_obj = Modes.getMode(mode);
@@ -207,7 +221,7 @@ export default class KeyHandler extends EventEmitter {
       // either key was already null, or
       // a transform acted (which, for now, we always consider not bad.  could change)
       return {
-        handled: true
+        handled: true,
       };
     }
 
@@ -217,7 +231,7 @@ export default class KeyHandler extends EventEmitter {
     } else {
       if (!('MOTION' in bindings)) {
         return {
-          handled: false
+          handled: false,
         };
       }
 
@@ -227,11 +241,12 @@ export default class KeyHandler extends EventEmitter {
       context.repeat = motionrepeat;
       if (motion === null) {
         return {
-          handled
+          handled,
         };
       }
 
       args.push(motion);
+      // tslint:disable-next-line:no-string-literal
       info = bindings['MOTION'];
     }
 
@@ -257,7 +272,7 @@ export default class KeyHandler extends EventEmitter {
   // NOTE: this should maybe be normal-mode specific
   //       but it would also need to be done for the motions
   // takes keyStream, key, returns repeat number and key
-  getRepeat(keyStream, key = null) {
+  public getRepeat(keyStream, key = null) {
     if (key === null) {
       key = keyStream.dequeue();
     }
@@ -274,11 +289,11 @@ export default class KeyHandler extends EventEmitter {
       key = keyStream.dequeue();
       if (key === null) { return [null, null]; }
     }
-    return [parseInt(numStr), key];
+    return [parseInt(numStr, 10), key];
   }
 
   // useful when you expect a motion
-  async getMotion(keyStream, motionKey, bindings, repeat) {
+  public async getMotion(keyStream, motionKey, bindings, repeat) {
     let motionRepeat;
     [motionRepeat, motionKey] = this.getRepeat(keyStream, motionKey);
     repeat = repeat * motionRepeat;
@@ -301,7 +316,7 @@ export default class KeyHandler extends EventEmitter {
         session: this.session,
         repeat,
         keyStream,
-        keyHandler: this
+        keyHandler: this,
       };
       const motion = await definition.apply(context, []);
       return [motion, repeat, true];
