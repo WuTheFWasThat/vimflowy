@@ -9,6 +9,7 @@ import EventEmitter from './eventEmitter';
 import Document from './document';
 import Cursor from './cursor';
 import Session from './session';
+import KeyBindings from './keyBindings';
 
 type PluginMetadata = {
   name: string;
@@ -28,7 +29,6 @@ export enum STATUSES {
   ENABLED = 4,
 };
 
-type KeyBindings = any; // TODO
 type KeyDefinitions = any; // TODO
 type KeyCommands = any; // TODO
 
