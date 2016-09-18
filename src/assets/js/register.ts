@@ -3,6 +3,7 @@ Represents a yank register.  Holds saved data of one of several types -
 either nothing, a set of characters, a set of row ids, or a set of serialized rows
 Implements pasting for each of the types
 */
+import Session from './session';
 
 export enum RegisterTypes {
   NONE = 0,
@@ -14,7 +15,7 @@ export enum RegisterTypes {
 type PasteOptions = {before?: boolean};
 
 export default class Register {
-  private session: any; // TODO
+  private session: Session;
   private type: RegisterTypes;
   private saved: any; // TODO
 
@@ -57,21 +58,21 @@ export default class Register {
 
   public async paste(options: PasteOptions = {}) {
     if (this.type === RegisterTypes.CHARS) {
-      return await this.pasteChars(options);
+      await this.pasteChars(options);
     } else if (this.type === RegisterTypes.SERIALIZED_ROWS) {
-      return await this.pasteSerializedRows(options);
+      await this.pasteSerializedRows(options);
     } else if (this.type === RegisterTypes.CLONED_ROWS) {
-      return await this.pasteClonedRows(options);
+      await this.pasteClonedRows(options);
     }
   }
 
   public async pasteChars(options: PasteOptions = {}) {
     const chars = this.saved;
     if (options.before) {
-      return this.session.addCharsAtCursor(chars);
+      this.session.addCharsAtCursor(chars);
     } else {
       this.session.addCharsAfterCursor(chars);
-      return this.session.cursor.setCol(this.session.cursor.col + chars.length);
+      this.session.cursor.setCol(this.session.cursor.col + chars.length);
     }
   }
 
@@ -83,13 +84,13 @@ export default class Register {
     const serialized_rows = this.saved;
 
     if (options.before) {
-      return this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
+      this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
     } else {
       const children = this.session.document.getChildren(path);
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
-        return this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
+        this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
       } else {
-        return this.session.addBlocks(parent, index + 1, serialized_rows, {setCursor: 'first'});
+        this.session.addBlocks(parent, index + 1, serialized_rows, {setCursor: 'first'});
       }
     }
   }
@@ -102,13 +103,13 @@ export default class Register {
     const cloned_rows = this.saved;
 
     if (options.before) {
-      return this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});
+      this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});
     } else {
       const children = this.session.document.getChildren(path);
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
-        return this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
+        this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
       } else {
-        return this.session.attachBlocks(parent, cloned_rows, index + 1, {setCursor: 'first'});
+        this.session.attachBlocks(parent, cloned_rows, index + 1, {setCursor: 'first'});
       }
     }
   }

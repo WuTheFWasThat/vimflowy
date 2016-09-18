@@ -10,11 +10,12 @@ import Document from './document';
 import Cursor from './cursor';
 import Session from './session';
 import KeyBindings from './keyBindings';
+import { KeyDefinitions, Command } from './keyDefinitions';
 
 type PluginMetadata = {
   name: string;
-  version?: number; // TODO default to 1
-  author?: string; // TODO default to unknown
+  version?: number;
+  author?: string;
   description?: string;
 };
 
@@ -29,9 +30,6 @@ export enum STATUSES {
   ENABLED = 4,
 };
 
-type KeyDefinitions = any; // TODO
-type KeyCommands = any; // TODO
-
 // class for exposing plugin API
 export class PluginApi {
   private session: Session;
@@ -43,7 +41,7 @@ export class PluginApi {
   private logger: Logger;
   private bindings: KeyBindings;
   private definitions: KeyDefinitions;
-  private commands: KeyCommands;
+  private commands: { [key: string]: Command };
 
   private registrations: Array<any>; // TODO
 

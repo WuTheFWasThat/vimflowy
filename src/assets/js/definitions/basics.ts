@@ -20,12 +20,12 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_MOTION, {
   for (let j = 0; j < this.repeat; j++) {
     await motion(this.session.cursor, {});
   }
-  return this.keyStream.forget();
+  this.keyStream.forget();
 });
 keyDefinitions.registerAction([MODES.INSERT], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
-  return await motion(this.session.cursor, {pastEnd: true});
+  await motion(this.session.cursor, {pastEnd: true});
 });
 keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
   description: 'Move the cursor',
@@ -37,9 +37,9 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
   }
 
   if (!tmp.path.is(this.session.cursor.path)) { // only allow same-row movement
-    return this.session.showMessage('Visual mode currently only works on one line', {text_class: 'error'});
+    this.session.showMessage('Visual mode currently only works on one line', {text_class: 'error'});
   } else {
-    return this.session.cursor.from(tmp);
+    this.session.cursor.from(tmp);
   }
 });
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOTION, {
@@ -48,12 +48,11 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOTION, {
   for (let j = 0; j < this.repeat; j++) {
     await motion(this.session.cursor, {pastEnd: true});
   }
-  return null;
 });
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
-  return await motion(this.session.menu.session.cursor, {pastEnd: true});
+  await motion(this.session.menu.session.cursor, {pastEnd: true});
 });
 
 const CMD_HELP = keyDefinitions.registerCommand({
@@ -67,7 +66,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.VISUAL, MODES.VISUAL_LINE, MO
   description: 'Show/hide key bindings (edit in settings)',
 }, async function() {
   this.session.toggleBindingsDiv();
-  return this.keyStream.forget(1);
+  this.keyStream.forget(1);
 });
 
 // TODO: flesh out settings menu commands (in separate file)
@@ -92,7 +91,7 @@ const CMD_INSERT = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT, {
   description: 'Insert at character',
 }, async function() {
-  return await this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
 });
 
 const CMD_INSERT_AFTER = keyDefinitions.registerCommand({
@@ -157,7 +156,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_LINE_ABOVE, {
   description: 'Insert on new line before current line',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  return await this.session.newLineAbove();
+  await this.session.newLineAbove();
 });
 
 const CMD_GO = keyDefinitions.registerCommand({
@@ -230,7 +229,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_LINK], {
   return async (cursor) => {
     const word = this.session.document.getWord(cursor.row, cursor.col);
     if (utils.isLink(word)) {
-      return window.open(word);
+      window.open(word);
     }
   };
 });
@@ -241,7 +240,7 @@ const visual_line_mode_delete_fn = () =>
   async function() {
     await this.session.delBlocks(this.parent.row, this.row_start_i, this.num_rows, {addNew: false});
     await this.session.setMode(MODES.NORMAL);
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 ;
 
@@ -250,7 +249,7 @@ const visual_mode_delete_fn = () =>
     const options = {includeEnd: true, yank: true};
     this.session.deleteBetween(this.session.cursor, this.session.anchor, options);
     await this.session.setMode(MODES.NORMAL);
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 ;
 
@@ -267,7 +266,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_TOGGLE_FOLD, {
 }, async function() {
   this.session.toggleCurBlockCollapsed();
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -286,7 +285,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLACE, {
   // TODO: refactor keys so this is unnecessary
   if (key === 'space') { key = ' '; }
   this.session.replaceCharsAfterCursor(key, this.repeat);
-  return this.keyStream.save();
+  this.keyStream.save();
 });
 
 const CMD_DELETE = keyDefinitions.registerCommand({
@@ -309,7 +308,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_DELETE], {
   description: 'Delete blocks',
 }, async function() {
   await this.session.delBlocksAtCursor(this.repeat, {addNew: false});
-  return this.keyStream.save();
+  this.keyStream.save();
 });
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
   description: 'Delete from cursor with motion',
@@ -320,7 +319,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
   }
 
   this.session.deleteBetween(this.session.cursor, cursor, { yank: true });
-  return this.keyStream.save();
+  this.keyStream.save();
 });
 
 const CMD_RECURSIVE = keyDefinitions.registerCommand({
@@ -344,14 +343,14 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_CHANGE, {
 }, async function() {
   const options = {includeEnd: true, yank: true};
   this.session.deleteBetween(this.session.cursor, this.session.anchor, options);
-  return await this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
 });
 
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_CHANGE, {
   description: 'Change',
 }, async function() {
   await this.session.delBlocks(this.parent.row, this.row_start_i, this.num_rows, {addNew: true});
-  return await this.session.setMode(MODES.INSERT);
+  await this.session.setMode(MODES.INSERT);
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], CMD_CHANGE, {
@@ -363,14 +362,14 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_CHANGE], {
   description: 'Delete row, and enter insert mode',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  return this.session.clearRowAtCursor({yank: true});
+  this.session.clearRowAtCursor({yank: true});
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_RECURSIVE], {
   description: 'Delete blocks, and enter insert mode',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  return await this.session.delBlocksAtCursor(this.repeat, {addNew: true});
+  await this.session.delBlocksAtCursor(this.repeat, {addNew: true});
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
@@ -381,7 +380,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
     await motion(cursor, {pastEnd: true, pastEndWord: true});
   }
   await this.session.setMode(MODES.INSERT);
-  return this.session.deleteBetween(this.session.cursor, cursor, {yank: true});
+  this.session.deleteBetween(this.session.cursor, cursor, {yank: true});
 });
 
 // yank
@@ -399,7 +398,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_YANK, {
   const options = {includeEnd: true};
   this.session.yankBetween(this.session.cursor, this.session.anchor, options);
   await this.session.setMode(MODES.NORMAL);
-  return this.keyStream.forget();
+  this.keyStream.forget();
 });
 
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_YANK, {
@@ -407,7 +406,7 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_YANK, {
 }, async function() {
   this.session.yankBlocks(this.row_start, this.num_rows);
   await this.session.setMode(MODES.NORMAL);
-  return this.keyStream.forget();
+  this.keyStream.forget();
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], CMD_YANK, {
@@ -419,14 +418,14 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_YANK], {
   description: 'Yank row',
 }, async function() {
   this.session.yankRowAtCursor();
-  return this.keyStream.forget();
+  this.keyStream.forget();
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_RECURSIVE], {
   description: 'Yank blocks',
 }, async function() {
   this.session.yankBlocksAtCursor(this.repeat);
-  return this.keyStream.forget();
+  this.keyStream.forget();
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
@@ -438,14 +437,14 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
   }
 
   this.session.yankBetween(this.session.cursor, cursor, {});
-  return this.keyStream.forget();
+  this.keyStream.forget();
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_CLONE], {
   description: 'Yank blocks as a clone',
 }, async function() {
   this.session.yankBlocksCloneAtCursor(this.repeat);
-  return this.keyStream.forget();
+  this.keyStream.forget();
 });
 
 // NOTE: c conflicts with change, so this doesn't work
@@ -471,7 +470,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, async function() {
   this.session.delCharsAfterCursor(this.repeat, {yank: true});
-  return this.keyStream.save();
+  this.keyStream.save();
 });
 
 keyDefinitions.registerAction([MODES.VISUAL], CMD_DELETE_CHAR, {
@@ -485,13 +484,13 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_DELETE_CHAR, {
 keyDefinitions.registerAction([MODES.INSERT], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, async function() {
-  return this.session.delCharsAfterCursor(1);
+  this.session.delCharsAfterCursor(1);
 });
 
 keyDefinitions.registerAction([MODES.SEARCH], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, async function() {
-  return this.session.menu.session.delCharsAfterCursor(1);
+  this.session.menu.session.delCharsAfterCursor(1);
 });
 
 const CMD_DELETE_LAST_CHAR = keyDefinitions.registerCommand({
@@ -509,7 +508,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_DELETE_LAST_CHAR, {
   if (num > 0) {
     this.session.delCharsBeforeCursor(num, {yank: true});
   }
-  return this.keyStream.save();
+  this.keyStream.save();
 });
 // behaves like row delete, in visual line
 
@@ -524,13 +523,13 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_DELETE_LAST_CHAR, {
 keyDefinitions.registerAction([MODES.INSERT], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, async function() {
-  return await this.session.deleteAtCursor();
+  await this.session.deleteAtCursor();
 });
 
 keyDefinitions.registerAction([MODES.SEARCH], CMD_DELETE_LAST_CHAR, {
   description: 'Delete last character (i.e. backspace key)',
 }, async function() {
-  return await this.session.menu.session.deleteAtCursor();
+  await this.session.menu.session.deleteAtCursor();
 });
 
 const CMD_CHANGE_CHAR = keyDefinitions.registerCommand({
@@ -544,7 +543,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_CHANGE_CHAR, {
   description: 'Change character',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  return this.session.delCharsAfterCursor(1, {yank: true});
+  this.session.delCharsAfterCursor(1, {yank: true});
 });
 
 const CMD_DELETE_TO_HOME = keyDefinitions.registerCommand({
@@ -575,7 +574,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_TO_HOME, 
     options
   );
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -608,7 +607,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_TO_END, {
     options
   );
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -641,7 +640,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_LAST_WORD
     options
   );
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -688,7 +687,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_JOIN_LINE, {
   description: 'Join current line with line below',
 }, async function() {
   await this.session.joinAtCursor();
-  return this.keyStream.save();
+  this.keyStream.save();
 });
 
 const CMD_SPLIT_LINE = keyDefinitions.registerCommand({
@@ -703,7 +702,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SPLIT_LINE, {
 }, async function() {
   await this.session.newLineAtCursor();
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -719,7 +718,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SCROLL_DOWN, {
   description: 'Scroll half window down',
 }, async function() {
   await this.session.scroll(0.5);
-  return this.keyStream.forget(1);
+  this.keyStream.forget(1);
 });
 
 const CMD_SCROLL_UP = keyDefinitions.registerCommand({
@@ -734,7 +733,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SCROLL_UP, {
   description: 'Scroll half window up',
 }, async function() {
   await this.session.scroll(-0.5);
-  return this.keyStream.forget(1);
+  this.keyStream.forget(1);
 });
 
 // for everything but normal mode
@@ -748,7 +747,7 @@ keyDefinitions.registerAction([MODES.VISUAL, MODES.VISUAL_LINE, MODES.SEARCH, MO
   description: 'Exit back to normal mode',
 }, async function() {
   await this.session.setMode(MODES.NORMAL);
-  return this.keyStream.forget();
+  this.keyStream.forget();
 });
 keyDefinitions.registerAction([MODES.INSERT], CMD_EXIT_MODE, {
   description: 'Exit back to normal mode',
@@ -756,7 +755,7 @@ keyDefinitions.registerAction([MODES.INSERT], CMD_EXIT_MODE, {
   await this.session.cursor.left();
   await this.session.setMode(MODES.NORMAL);
   // unlike other modes, esc in insert mode keeps changes
-  return this.keyStream.save();
+  this.keyStream.save();
 });
 
 // for visual and visual line mode
@@ -769,7 +768,7 @@ const CMD_ENTER_VISUAL = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_ENTER_VISUAL, {
   description: 'Enter visual mode',
 }, async function() {
-  return await this.session.setMode(MODES.VISUAL);
+  await this.session.setMode(MODES.VISUAL);
 });
 
 const CMD_ENTER_VISUAL_LINE = keyDefinitions.registerCommand({
@@ -781,7 +780,7 @@ const CMD_ENTER_VISUAL_LINE = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_ENTER_VISUAL_LINE, {
   description: 'Enter visual line mode',
 }, async function() {
-  return await this.session.setMode(MODES.VISUAL_LINE);
+  await this.session.setMode(MODES.VISUAL_LINE);
 });
 
 const CMD_SWAP_CURSOR = keyDefinitions.registerCommand({
@@ -796,7 +795,7 @@ keyDefinitions.registerAction([MODES.VISUAL, MODES.VISUAL_LINE], CMD_SWAP_CURSOR
   const tmp = this.session.anchor.clone();
   this.session.anchor.from(this.session.cursor);
   this.session.cursor.from(tmp);
-  return this.keyStream.save();
+  this.keyStream.save();
 });
 
 export { CMD_MOTION };

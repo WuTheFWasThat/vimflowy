@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 
 import * as errors from './errors';
 import * as Modes from './modes';
+import Cursor from './cursor';
+import { CursorOptions } from './types';
 
 type HotkeysEntry = {
   // Default hotkeys for all modes
@@ -21,9 +23,9 @@ type CommandMetadata = {
   default_hotkeys?: HotkeysEntry;
 };
 
-class Command {
-  private metadata: any; // TODO
-  public name: string; // TODO
+export class Command {
+  private metadata: CommandMetadata;
+  public name: string;
   constructor(metadata) {
     this.metadata = metadata;
     this.name = metadata.name;
@@ -44,11 +46,16 @@ const motionCommandName = 'MOTION';
 //     pastEnd: whether to allow going past the end of the line
 //     pastEndWord: whether we consider the end of a word to be after the last letter
 
+type Motion = (cursor: Cursor, options?: CursorOptions) => Promise<void>;
+
+type MotionDefinition =
+  (() => Promise<Motion>) | {[key: string]: MotionMetadata};
+
 type MotionMetadata = {
   // Description of the action, shows in HELP menu
   description: string;
   multirow?: boolean;
-  definition?: any; // TODO
+  definition?: MotionDefinition;
 };
 
 /*
@@ -62,10 +69,14 @@ It may also have, bindings:
     another (recursive) set of key definitions, i.e. a dictionary from command names to definitions
 */
 
+type ActionDefinition =
+  ((motion?: Motion) => Promise<void>)
+  | {[key: string]: ActionMetadata};
+
 type ActionMetadata = {
   // Description of the action, shows in HELP menu
   description: string;
-  definition?: any; // TODO
+  definition?: ActionDefinition;
 };
 
 export class KeyDefinitions {
@@ -84,9 +95,14 @@ export class KeyDefinitions {
   };
 
   public defaultHotkeys: any; // TODO
+  // keys are command names
   public commands: { [key: string]: Command };
-  public motions: any; // TODO
-  public actions: any; // TODO
+  // keys are command names
+  public motions: { [key: string]: MotionMetadata };
+  // keys are modes, then command names
+  public actions: { [key: string]: {
+    [key: string]: ActionMetadata
+  }};
 
   constructor() {
     // set of possible motions
@@ -231,7 +247,9 @@ export class KeyDefinitions {
     delete this.defaultHotkeys[Modes.HotkeyType.INSERT_MODE_TYPE][command.name];
   }
 
-  public registerMotion(commands, motion: MotionMetadata, definition) {
+  public registerMotion(
+    commands, motion: MotionMetadata, definition: MotionDefinition
+  ) {
     motion = _.cloneDeep(motion);
     motion.definition = definition;
 
@@ -240,7 +258,7 @@ export class KeyDefinitions {
       commands = [commands];
     }
 
-    let obj = this.motions;
+    let obj = this.motions as MotionDefinition;
     let command;
     for (let k = 0; k < commands.length - 1; k++) {
       command = commands[k];
@@ -268,7 +286,7 @@ export class KeyDefinitions {
       commands = [commands];
     }
 
-    let obj = this.motions;
+    let obj = this.motions as MotionDefinition;
     let command;
     for (let k = 0; k < commands.length - 1; k++) {
       command = commands[k];
@@ -290,7 +308,9 @@ export class KeyDefinitions {
     commands.forEach((cmd) => this._remove_motion(cmd, motion.multirow));
   }
 
-  public registerAction(modes, commands, action: ActionMetadata, definition) {
+  public registerAction(
+    modes, commands, action: ActionMetadata, definition: ActionDefinition
+  ) {
     action = _.cloneDeep(action);
     action.definition = definition;
 
@@ -303,7 +323,7 @@ export class KeyDefinitions {
       if (!this.actions[mode]) {
         this.actions[mode] = {};
       }
-      let obj = this.actions[mode];
+      let obj = this.actions[mode] as ActionDefinition;
 
       let command;
       for (let k = 0; k < commands.length - 1; k++) {
@@ -338,7 +358,7 @@ export class KeyDefinitions {
       if (!this.actions[mode]) {
         this.actions[mode] = {};
       }
-      let obj = this.actions[mode];
+      let obj = this.actions[mode] as ActionDefinition;
 
       let command;
       for (let k = 0; k < commands.length - 1; k++) {
