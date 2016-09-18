@@ -1,55 +1,52 @@
 /* globals alert */
 
-import _ from 'lodash';
+import * as _ from 'lodash';
 
-import * as utils from './utils';
 import * as Modes from './modes';
-import logger from './logger';
+import logger, { Logger } from './logger';
 import * as errors from './errors';
 import EventEmitter from './eventEmitter';
+import Document from './document';
+import Cursor from './cursor';
 
-const PLUGIN_SCHEMA = {
-  title: 'Plugin metadata schema',
-  type: 'object',
-  required: [ 'name' ],
-  properties: {
-    name: {
-      description: 'Name of the plugin',
-      pattern: '^[A-Za-z0-9_ ]{2,64}$',
-      type: 'string'
-    },
-    version: {
-      description: 'Version of the plugin',
-      type: 'number',
-      default: 1,
-      minimum: 1
-    },
-    author: {
-      description: 'Author of the plugin',
-      type: 'string',
-      default: 'Unknown'
-    },
-    description: {
-      description: 'Description of the plugin',
-      type: 'string'
-    }
-  }
+type PluginMetadata = {
+  name: string;
+  version?: number; // TODO default to 1
+  author?: string; // TODO default to unknown
+  description?: string;
 };
 
 // global set of registered plugins
 const PLUGINS = {};
 
-export const STATUSES = {
-  UNREGISTERED: 'Unregistered',
-  DISABLING: 'Disabling',
-  ENABLING: 'Enabling',
-  DISABLED: 'Disabled',
-  ENABLED: 'Enabled',
+export enum STATUSES {
+  UNREGISTERED = 0,
+  DISABLING = 1,
+  DISABLED = 2,
+  ENABLING = 3,
+  ENABLED = 4,
 };
 
+type Session = any; // TODO
+type KeyBindings = any; // TODO
+type KeyDefinitions = any; // TODO
+type KeyCommands = any; // TODO
 
 // class for exposing plugin API
-class PluginApi {
+export class PluginApi {
+  private session: Session;
+  private metadata: PluginMetadata;
+  private pluginManager: PluginsManager;
+  private name: string;
+  private document: Document;
+  private cursor: Cursor;
+  private logger: Logger;
+  private bindings: KeyBindings;
+  private definitions: KeyDefinitions;
+  private commands: KeyCommands;
+
+  private registrations: Array<any>; // TODO
+
   constructor(session, metadata, pluginManager) {
     this.session = session;
     this.metadata = metadata;
@@ -67,70 +64,70 @@ class PluginApi {
     this.registrations = [];
   }
 
-  setData(key, value) {
+  public setData(key, value) {
     return this.document.store.setPluginData(this.name, key, value);
   }
 
-  getData(key, default_value=null) {
+  public getData(key, default_value = null) {
     return this.document.store.getPluginData(this.name, key, default_value);
   }
 
   // TODO: have definitions be event emitter? have this be automatic somehow
   //       (first try combining bindings into definitions)
   //       should also re-render mode table
-  _reapply_hotkeys() {
+  private _reapply_hotkeys() {
     const err = this.session.bindings.reapply_hotkey_settings();
     if (err) {
       throw new errors.GenericError(`Error applying hotkeys: ${err}`);
     }
   }
 
-  registerMode(metadata) {
+  public registerMode(metadata) {
     const mode = Modes.registerMode(metadata);
     this.registrations.push({type: 'mode', args: [mode]});
     return this._reapply_hotkeys();
   }
 
-  deregisterMode(mode) {
+  public deregisterMode(mode) {
     Modes.deregisterMode(mode);
     return this._reapply_hotkeys();
   }
 
-  registerCommand(metadata) {
+  public registerCommand(metadata) {
     const cmd = this.definitions.registerCommand(metadata);
     this.registrations.push({type: 'command', args: [cmd]});
     this._reapply_hotkeys();
     return cmd;
   }
 
-  deregisterCommand(command) {
+  public deregisterCommand(command) {
     this.definitions.deregisterCommand(command);
     return this._reapply_hotkeys();
   }
 
-  registerMotion(commands, motion, definition) {
+  public registerMotion(commands, motion, definition) {
     this.definitions.registerMotion(commands, motion, definition);
     this.registrations.push({type: 'motion', args: [commands]});
     return this._reapply_hotkeys();
   }
 
-  deregisterMotion(commands) {
+  public deregisterMotion(commands) {
     this.definitions.deregisterMotion(commands);
     return this._reapply_hotkeys();
   }
 
-  registerAction(modes, commands, action, definition) {
+  public registerAction(modes, commands, action, definition) {
     this.definitions.registerAction(modes, commands, action, definition);
     this.registrations.push({type: 'action', args: [modes, commands]});
     return this._reapply_hotkeys();
   }
 
-  deregisterAction(modes, commands) {
+  public deregisterAction(modes, commands) {
     this.definitions.deregisterAction(modes, commands);
     return this._reapply_hotkeys();
   }
 
-  _getEmitter(who) {
+  private _getEmitter(who) {
     if (who === 'document') {
       return this.document;
     } else if (who === 'session') {
@@ -140,29 +137,29 @@ class PluginApi {
     }
   }
 
-  registerListener(who, event, listener) {
+  public registerListener(who, event, listener) {
     const emitter = this._getEmitter(who);
     emitter.on(event, listener);
     return this.registrations.push({type: 'listener', args: [who, event, listener]});
   }
 
-  deregisterListener(who, event, listener) {
+  public deregisterListener(who, event, listener) {
     const emitter = this._getEmitter(who);
     return emitter.off(event, listener);
   }
 
-  registerHook(who, event, transform) {
+  public registerHook(who, event, transform) {
     const emitter = this._getEmitter(who);
     emitter.addHook(event, transform);
     return this.registrations.push({type: 'hook', args: [who, event, transform]});
   }
 
-  deregisterHook(who, event, transform) {
+  public deregisterHook(who, event, transform) {
     const emitter = this._getEmitter(who);
     return emitter.removeHook(event, transform);
   }
 
-  deregisterAll() {
+  public deregisterAll() {
     this.registrations.reverse().forEach((registration) => {
       if (registration.type === 'mode') {
         this.deregisterMode.apply(this, registration.args);
@@ -183,13 +180,21 @@ class PluginApi {
     return this.registrations = [];
   }
 
-  panic() {
+  public panic() {
     alert(`Plugin '${this.name}' has encountered a major problem. Please report this problem to the plugin author.`);
     return this.pluginManager.disable(this.name);
   }
 }
 
-class PluginsManager extends EventEmitter {
+export class PluginsManager extends EventEmitter {
+  private session: Session;
+  private plugin_infos: {
+    [key: string]: {
+      api?: PluginApi,
+      value?: any,
+      status?: STATUSES,
+    }
+  };
 
   constructor(session) {
     super();
@@ -197,18 +202,18 @@ class PluginsManager extends EventEmitter {
     this.plugin_infos = {};
   }
 
-  getInfo(name) {
+  public getInfo(name) {
     return this.plugin_infos[name];
   }
 
-  getStatus(name) {
+  public getStatus(name) {
     if (!PLUGINS[name]) {
       return STATUSES.UNREGISTERED;
     }
     return (this.plugin_infos[name] && this.plugin_infos[name].status) || STATUSES.DISABLED;
   }
 
-  setStatus(name, status) {
+  public setStatus(name, status) {
     logger.info(`Plugin ${name} status: ${status}`);
     if (!PLUGINS[name]) {
       throw new Error(`Plugin ${name} was not registered`);
@@ -219,7 +224,7 @@ class PluginsManager extends EventEmitter {
     return this.emit('status');
   }
 
-  updateEnabledPlugins() {
+  public updateEnabledPlugins() {
     const enabled = [];
     for (const name in this.plugin_infos) {
       if ((this.getStatus(name)) === STATUSES.ENABLED) {
@@ -229,7 +234,7 @@ class PluginsManager extends EventEmitter {
     return this.emit('enabledPluginsChange', enabled);
   }
 
-  enable(name) {
+  public enable(name) {
     const status = this.getStatus(name);
     if (status === STATUSES.UNREGISTERED) {
       logger.error(`No plugin registered as ${name}`);
@@ -255,13 +260,13 @@ class PluginsManager extends EventEmitter {
 
     this.plugin_infos[name] = {
       api,
-      value
+      value,
     };
     this.setStatus(name, STATUSES.ENABLED);
     return this.updateEnabledPlugins();
   }
 
-  disable(name) {
+  public disable(name) {
     const status = this.getStatus(name);
     if (status === STATUSES.UNREGISTERED) {
       throw new errors.GenericError(`No plugin registered as ${name}`);
@@ -277,7 +282,7 @@ class PluginsManager extends EventEmitter {
     }
 
     // TODO: require that no other plugin has this as a dependency, notify user otherwise
-    errors.assert((status === STATUSES.ENABLED));
+    errors.assert(status === STATUSES.ENABLED);
     this.setStatus(name, STATUSES.DISABLING);
 
     const plugin_info = this.plugin_infos[name];
@@ -288,16 +293,18 @@ class PluginsManager extends EventEmitter {
   }
 }
 
-const registerPlugin = function(plugin_metadata, enable, disable) {
-  utils.tv4_validate(plugin_metadata, PLUGIN_SCHEMA, 'plugin');
-  utils.fill_tv4_defaults(plugin_metadata, PLUGIN_SCHEMA);
+const registerPlugin = function(
+  plugin_metadata: PluginMetadata, enable, disable
+) {
+  plugin_metadata.version = plugin_metadata.version || 1;
+  plugin_metadata.author = plugin_metadata.author || 'anonymous';
 
   errors.assert(enable, `Plugin ${plugin_metadata.name} needs to register with a callback`);
 
   // Create the plugin object
   // Plugin stores all data about a plugin, including metadata
   // plugin.value contains the actual resolved value
-  const plugin = _.cloneDeep(plugin_metadata);
+  const plugin: any = _.cloneDeep(plugin_metadata);
   PLUGINS[plugin.name] = plugin;
   plugin.enable = enable;
   return plugin.disable = disable || _.once(function(api) {
@@ -309,7 +316,6 @@ const registerPlugin = function(plugin_metadata, enable, disable) {
 };
 
 // exports
-export { PluginsManager };
 export { registerPlugin as register };
 export function all() { return PLUGINS; }
 export function getPlugin(name) { return PLUGINS[name]; }

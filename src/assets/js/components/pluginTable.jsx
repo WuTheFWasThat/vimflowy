@@ -74,6 +74,19 @@ export default class PluginsTableComponent extends React.Component {
                   color = 'red';
                 }
 
+                let statusText;
+                if (status === Plugins.STATUSES.ENABLED) {
+                  statusText = 'Enabled';
+                } else if (status === Plugins.STATUSES.ENABLING) {
+                  statusText = 'Enabling';
+                } else if (status === Plugins.STATUSES.DISABLED) {
+                  statusText = 'Disabled';
+                } else if (status === Plugins.STATUSES.DISABLING) {
+                  statusText = 'Disabling';
+                } else if (status === Plugins.STATUSES.UNREGISTERED) {
+                  statusText = 'Unregistered';
+                }
+
                 const plugin = Plugins.getPlugin(name) || {};
                 const tdStyle = { padding: 5};
                 return (
@@ -101,7 +114,7 @@ export default class PluginsTableComponent extends React.Component {
                     <td className='center theme-trim'
                       style={Object.assign({boxShadow: `inset 0px 0px 0px 2px ${color}`}, tdStyle)}
                     >
-                      {status}
+                      {statusText}
                     </td>
                     <td className='center theme-trim'
                       style={tdStyle}
