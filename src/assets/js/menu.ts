@@ -3,6 +3,7 @@ import Document from './document';
 import * as DataStore from './datastore';
 import * as Modes from './modes';
 import * as constants from './constants';
+import { Line } from './types';
 
 /*
 Represents the menu shown in menu mode.
@@ -10,7 +11,27 @@ Functions for paging through and selecting results, and for rendering.
 Internally uses an entire session object (this is sorta weird..)
 */
 
+type MenuResult = {
+  contents: Line;
+
+  // called when selected
+  fn: any; // TODO
+
+  // props for rendering LineComponent
+  renderOptions?: any; // TODO
+};
+
+type Query = Array<string>;
+
 export default class Menu {
+  private fn: (query: Query) => Array<MenuResult>;
+  public results: Array<MenuResult>;
+  public selection: number;
+
+  public session: Session;
+
+  private lastQuery: Query;
+
   constructor(fn) {
     this.fn = fn;
 
@@ -24,14 +45,10 @@ export default class Menu {
     this.session.setMode(Modes.modes.INSERT);
     this.selection = 1;
 
-    // list of results:
-    //   contents: a line of contents
-    //   renderOptions: props for rendering LineComponent
-    //   fn: call if selected
     this.results = [];
   }
 
-  up() {
+  public up() {
     if (!this.results.length) {
       return;
     }
@@ -42,7 +59,7 @@ export default class Menu {
     }
   }
 
-  down() {
+  public down() {
     if (!this.results.length) {
       return;
     }
@@ -53,16 +70,16 @@ export default class Menu {
     }
   }
 
-  update() {
+  public update() {
     const query = this.session.curText();
-    if ((JSON.stringify(query)) !== (JSON.stringify(this.lastquery))) {
-      this.lastquery = query;
+    if ((JSON.stringify(query)) !== (JSON.stringify(this.lastQuery))) {
+      this.lastQuery = query;
       this.results = this.fn(query);
       return this.selection = 0;
     }
   }
 
-  async select() {
+  public async select() {
     if (!this.results.length) {
       return;
     }
