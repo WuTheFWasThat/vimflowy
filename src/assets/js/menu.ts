@@ -53,9 +53,9 @@ export default class Menu {
       return;
     }
     if (this.selection <= 0) {
-      return this.selection = this.results.length - 1;
+      this.selection = this.results.length - 1;
     } else {
-      return this.selection = this.selection - 1;
+      this.selection = this.selection - 1;
     }
   }
 
@@ -64,9 +64,9 @@ export default class Menu {
       return;
     }
     if (this.selection + 1 >= this.results.length) {
-      return this.selection = 0;
+      this.selection = 0;
     } else {
-      return this.selection = this.selection + 1;
+      this.selection = this.selection + 1;
     }
   }
 
@@ -75,7 +75,7 @@ export default class Menu {
     if ((JSON.stringify(query)) !== (JSON.stringify(this.lastQuery))) {
       this.lastQuery = query;
       this.results = this.fn(query);
-      return this.selection = 0;
+      this.selection = 0;
     }
   }
 
@@ -84,6 +84,6 @@ export default class Menu {
       return;
     }
     const result = this.results[this.selection];
-    return await result.fn();
+    await result.fn();
   }
 }

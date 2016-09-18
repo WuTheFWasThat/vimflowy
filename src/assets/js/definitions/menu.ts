@@ -1,4 +1,6 @@
-import _ from 'lodash';
+// tslint:disable:align
+
+import * as _ from 'lodash';
 
 import Menu from '../menu';
 import * as Modes from '../modes';
@@ -9,15 +11,17 @@ const MODES = Modes.modes;
 const CMD_SEARCH = keyDefinitions.registerCommand({
   name: 'SEARCH',
   default_hotkeys: {
-    normal_like: ['/', 'ctrl+f']
-  }
+    normal_like: ['/', 'ctrl+f'],
+  },
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
   description: 'Search',
 }, async function() {
   await this.session.setMode(MODES.SEARCH);
-  return this.session.menu = new Menu(chars => {
-    const find = function(document, query, options = {}) {
+  this.session.menu = new Menu(chars => {
+    const find = function(
+      document, query, options: {nresults?: number, case_sensitive?: boolean} = {}
+    ) {
       const nresults = options.nresults || 10;
 
       const results = []; // list of (path, index) pairs
@@ -71,7 +75,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
           fn: async () => {
             await this.session.zoomInto(path);
             await this.session.cursor.setPath(path);
-          }
+          },
         };
       });
   });
@@ -80,8 +84,8 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
 const CMD_MENU_SELECT = keyDefinitions.registerCommand({
   name: 'MENU_SELECT',
   default_hotkeys: {
-    insert_like: ['enter']
-  }
+    insert_like: ['enter'],
+  },
 });
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_SELECT, {
   description: 'Select current menu selection',
@@ -93,8 +97,8 @@ keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_SELECT, {
 const CMD_MENU_UP = keyDefinitions.registerCommand({
   name: 'MENU_UP',
   default_hotkeys: {
-    insert_like: ['ctrl+k', 'up', 'tab']
-  }
+    insert_like: ['ctrl+k', 'up', 'tab'],
+  },
 });
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_UP, {
   description: 'Select previous menu selection',
@@ -105,8 +109,8 @@ keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_UP, {
 const CMD_MENU_DOWN = keyDefinitions.registerCommand({
   name: 'MENU_DOWN',
   default_hotkeys: {
-    insert_like: ['ctrl+j', 'down', 'shift+tab']
-  }
+    insert_like: ['ctrl+j', 'down', 'shift+tab'],
+  },
 });
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_DOWN, {
   description: 'Select next menu selection',
