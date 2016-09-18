@@ -22,8 +22,7 @@
     "jquery": "^3.1.0",
     "lodash": "^4.15.0",
     "react": "^15.3.1",
-    "react-dom": "^15.3.1",
-    "tv4": "^1.2.7"
+    "react-dom": "^15.3.1"
   },
   "devDependencies": {
     "babel-core": "6.4.5",

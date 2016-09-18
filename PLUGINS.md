@@ -22,7 +22,7 @@ A plugin registers using
 Plugins.register(metadata, enableCallback[, disableCallback])
 ```
 where
-- `metadata`:  For the detailed format, read the tv4 PLUGIN_SCHEMA in [plugins.js](assets/js/plugins.js)
+- `metadata`:  For the detailed format, read the type definitions in [plugins.js](assets/js/plugins.js)
   - name (required): string
     This will be displayed to the user in options. It should not be changed!
   - version (required): positive integer

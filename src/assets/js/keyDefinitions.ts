@@ -1,56 +1,34 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 
-import * as utils from './utils';
 import * as errors from './errors';
 import * as Modes from './modes';
 
+type HotkeysEntry = {
+  // Default hotkeys for all modes
+  all?: Array<string>;
+  // Default hotkey for normal-like modes
+  normal_like?: Array<string>;
+  // Default hotkey for insert-like modes
+  insert_like?: Array<string>;
+};
+
+type CommandMetadata = {
+  // Name of the command
+  name: string;
+  // Description of the command
+  description?: string;
+  // Default hotkeys for the command
+  default_hotkeys?: HotkeysEntry;
+};
+
 class Command {
+  private metadata: any; // TODO
+  public name: string; // TODO
   constructor(metadata) {
     this.metadata = metadata;
     this.name = metadata.name;
   }
 }
-
-const COMMAND_SCHEMA = {
-  title: 'Command metadata schema',
-  type: 'object',
-  required: [ 'name' ],
-  properties: {
-    name: {
-      description: 'Name of the command',
-      type: 'string',
-      pattern: '^[A-Z_]{2,32}$'
-    },
-    description: {
-      description: 'Description of the command',
-      type: 'string'
-    },
-    default_hotkeys: {
-      description: 'Default hotkeys for the command',
-      type: 'object',
-      properties: {
-        all: {
-          description: 'Default hotkeys for all modes',
-          type: 'array',
-          default: [],
-          items: { type: 'string' }
-        },
-        normal_like: {
-          description: 'Default hotkey for normal-like modes',
-          type: 'array',
-          default: [],
-          items: { type: 'string' }
-        },
-        insert_like: {
-          description: 'Default hotkey for insert-like modes',
-          type: 'array',
-          default: [],
-          items: { type: 'string' }
-        }
-      }
-    }
-  }
-};
 
 // NOTE: this is a special command, which causes definition functions
 // to always takes an extra cursor argument.
@@ -66,21 +44,11 @@ const motionCommandName = 'MOTION';
 //     pastEnd: whether to allow going past the end of the line
 //     pastEndWord: whether we consider the end of a word to be after the last letter
 
-const MOTION_SCHEMA = {
-  title: 'Motion metadata schema',
-  type: 'object',
-  required: [ 'description' ],
-  properties: {
-    description: {
-      description: 'Description of the motion, shows in HELP menu',
-      type: 'string'
-    },
-    multirow: {
-      description: 'Whether the motion is only for multi-row movements',
-      type: 'boolean',
-      default: false
-    }
-  }
+type MotionMetadata = {
+  // Description of the action, shows in HELP menu
+  description: string;
+  multirow?: boolean;
+  definition?: any; // TODO
 };
 
 /*
@@ -94,19 +62,32 @@ It may also have, bindings:
     another (recursive) set of key definitions, i.e. a dictionary from command names to definitions
 */
 
-const ACTION_SCHEMA = {
-  title: 'Action metadata schema',
-  type: 'object',
-  required: [ 'description' ],
-  properties: {
-    description: {
-      description: 'Description of the action, shows in HELP menu',
-      type: 'string'
-    }
-  }
+type ActionMetadata = {
+  // Description of the action, shows in HELP menu
+  description: string;
+  definition?: any; // TODO
 };
 
-class KeyDefinitions {
+export class KeyDefinitions {
+  // mapping from string motion name to count (number of times mapped)
+  private motion_command_counts: {
+    [key: string]: {
+      all?: number,
+      multirow?: number,
+    },
+  };
+  // mapping for each mode from string motion name to count (number of times mapped)
+  private action_command_counts_by_mode: {
+    [key: string]: {
+      [key: string]: number
+    },
+  };
+
+  public defaultHotkeys: any; // TODO
+  public commands: { [key: string]: Command };
+  public motions: any; // TODO
+  public actions: any; // TODO
+
   constructor() {
     // set of possible motions
     this.motion_command_counts = {};
@@ -127,12 +108,12 @@ class KeyDefinitions {
   }
 
   // currently used only for testing
-  clone() {
+  public clone() {
     const other = new KeyDefinitions();
     const keys = [
       'motion_command_counts', 'action_command_counts_by_mode',
       'defaultHotkeys',
-      'commands', 'motions', 'actions'
+      'commands', 'motions', 'actions',
     ];
     keys.forEach((key) => {
       other[key] = _.cloneDeep(this[key]);
@@ -140,18 +121,18 @@ class KeyDefinitions {
     return other;
   }
 
-  _add_command(mode, command) {
+  private _add_command(mode, command) {
     // for now, don't list the motion command
     if (command.name !== motionCommandName) {
       if (!this.action_command_counts_by_mode[mode]) {
         this.action_command_counts_by_mode[mode] = {};
       }
       const count = this.action_command_counts_by_mode[mode][command.name] || 0;
-      return this.action_command_counts_by_mode[mode][command.name] = count + 1;
+      this.action_command_counts_by_mode[mode][command.name] = count + 1;
     }
   }
 
-  _remove_command(mode, command) {
+  private _remove_command(mode, command) {
     // for now, don't list the motion command
     if (command.name !== motionCommandName) {
       if (!this.action_command_counts_by_mode[mode]) {
@@ -161,23 +142,23 @@ class KeyDefinitions {
       if (count === 0) {
         throw new errors.GenericError(`Cannot remove command ${command}`);
       } else if (count === 1) {
-        return delete this.action_command_counts_by_mode[mode][command.name];
+        delete this.action_command_counts_by_mode[mode][command.name];
       } else {
-        return this.action_command_counts_by_mode[mode][command.name] = count - 1;
+        this.action_command_counts_by_mode[mode][command.name] = count - 1;
       }
     }
   }
 
-  _add_motion(command, multirow) {
+  private _add_motion(command, multirow) {
     const counts = this.motion_command_counts[command.name] || {};
     if (multirow) {
       counts.multirow = (counts.multirow || 0) + 1;
     }
     counts.all = (counts.all || 0) + 1;
-    return this.motion_command_counts[command.name] = counts;
+    this.motion_command_counts[command.name] = counts;
   }
 
-  _remove_motion(command, multirow) {
+  private _remove_motion(command, multirow) {
     const counts = this.motion_command_counts[command.name] || {};
     if (multirow) {
       if (counts.multirow === 0) {
@@ -188,14 +169,14 @@ class KeyDefinitions {
     if (counts.all === 0) {
       throw new errors.GenericError(`Cannot remove motion ${command}`);
     } else if (counts.all === 1) {
-      return delete this.motion_command_counts[command.name];
+      delete this.motion_command_counts[command.name];
     } else {
       counts.all = (counts.all || 0) - 1;
-      return this.motion_command_counts[command.name] = counts;
+      this.motion_command_counts[command.name] = counts;
     }
   }
 
-  get_motions(multirow) {
+  public get_motions(multirow) {
     const result = [];
     for (const name in this.motion_command_counts) {
       const counts = this.motion_command_counts[name];
@@ -210,20 +191,18 @@ class KeyDefinitions {
     return result;
   }
 
-  commands_for_mode(mode) {
+  public commands_for_mode(mode) {
     if (!(mode in this.action_command_counts_by_mode)) {
       return [];
     }
     return Object.keys(this.action_command_counts_by_mode[mode]);
   }
 
-  actions_for_mode(mode) {
+  public actions_for_mode(mode) {
     return this.actions[mode] || {};
   }
 
-  registerCommand(metadata) {
-    utils.tv4_validate(metadata, COMMAND_SCHEMA, 'command');
-    utils.fill_tv4_defaults(metadata, COMMAND_SCHEMA);
+  public registerCommand(metadata: CommandMetadata) {
     const { name } = metadata;
     const command = new Command(metadata);
 
@@ -233,28 +212,27 @@ class KeyDefinitions {
 
     this.commands[name] = command;
     this.defaultHotkeys[Modes.HotkeyType.NORMAL_MODE_TYPE][name] =
-      (_.cloneDeep(metadata.default_hotkeys.all)).concat(
-        _.cloneDeep(metadata.default_hotkeys.normal_like)
+      _.cloneDeep(metadata.default_hotkeys.all || []).concat(
+        _.cloneDeep(metadata.default_hotkeys.normal_like || [])
       );
     this.defaultHotkeys[Modes.HotkeyType.INSERT_MODE_TYPE][name] =
-      (_.cloneDeep(metadata.default_hotkeys.all)).concat(
-        _.cloneDeep(metadata.default_hotkeys.insert_like)
+      _.cloneDeep(metadata.default_hotkeys.all || []).concat(
+        _.cloneDeep(metadata.default_hotkeys.insert_like || [])
       );
     return command;
   }
 
-  deregisterCommand(command) {
+  public deregisterCommand(command) {
     if (!(command.name in this.commands)) {
       throw new errors.GenericError(`Command ${command.name} not found`);
     }
     delete this.commands[command.name];
     delete this.defaultHotkeys[Modes.HotkeyType.NORMAL_MODE_TYPE][command.name];
-    return delete this.defaultHotkeys[Modes.HotkeyType.INSERT_MODE_TYPE][command.name];
+    delete this.defaultHotkeys[Modes.HotkeyType.INSERT_MODE_TYPE][command.name];
   }
 
-  registerMotion(commands, motion, definition) {
-    utils.tv4_validate(motion, MOTION_SCHEMA, 'motion');
-    utils.fill_tv4_defaults(motion, MOTION_SCHEMA);
+  public registerMotion(commands, motion: MotionMetadata, definition) {
+    motion = _.cloneDeep(motion);
     motion.definition = definition;
 
     if (!commands.slice) {
@@ -274,7 +252,7 @@ class KeyDefinitions {
       obj = obj[command.name].definition;
     }
 
-    command = commands[commands.length-1];
+    command = commands[commands.length - 1];
 
     // motion.name = command.name
     if (command.name in obj) {
@@ -282,10 +260,9 @@ class KeyDefinitions {
     }
     obj[command.name] = motion;
     commands.forEach((cmd) => this._add_motion(cmd, motion.multirow));
-    return null;
   }
 
-  deregisterMotion(commands) {
+  public deregisterMotion(commands) {
     if (!commands.slice) {
       // commands isn't an array
       commands = [commands];
@@ -303,7 +280,7 @@ class KeyDefinitions {
       obj = obj[command.name].definition;
     }
 
-    command = commands[commands.length-1];
+    command = commands[commands.length - 1];
     // motion.name = command.name
     if (!(command.name in obj)) {
       throw new errors.GenericError(`Motion ${command.name} not found`);
@@ -311,11 +288,9 @@ class KeyDefinitions {
     const motion = obj[command.name];
     delete obj[command.name];
     commands.forEach((cmd) => this._remove_motion(cmd, motion.multirow));
-    return null;
   }
 
-  registerAction(modes, commands, action, definition) {
-    utils.tv4_validate(action, ACTION_SCHEMA, 'action');
+  public registerAction(modes, commands, action: ActionMetadata, definition) {
     action = _.cloneDeep(action);
     action.definition = definition;
 
@@ -342,7 +317,7 @@ class KeyDefinitions {
         obj = obj[command.name].definition;
       }
 
-      command = commands[commands.length-1];
+      command = commands[commands.length - 1];
       // action.name = command.name
       if (command.name in obj) {
         throw new errors.GenericError(`Action ${command.name} has already been defined`);
@@ -351,10 +326,9 @@ class KeyDefinitions {
       obj[command.name] = action;
       commands.forEach((cmd) => this._add_command(mode, cmd));
     });
-    return null;
   }
 
-  deregisterAction(modes, commands) {
+  public deregisterAction(modes, commands) {
     if (!commands.slice) {
       // commands isn't an array
       commands = [commands];
@@ -378,7 +352,7 @@ class KeyDefinitions {
         obj = obj[command.name].definition;
       }
 
-      command = commands[commands.length-1];
+      command = commands[commands.length - 1];
       // action.name = command.name
       if (!(command.name in obj)) {
         throw new errors.GenericError(`Action ${command.name} not found`);
@@ -387,7 +361,6 @@ class KeyDefinitions {
       delete obj[command.name];
       commands.forEach((cmd) => this._remove_command(mode, cmd));
     });
-    return null;
   }
 }
 
