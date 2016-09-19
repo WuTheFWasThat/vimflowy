@@ -39,7 +39,7 @@ export default class Document extends EventEmitter {
     return this.getLine(row).map(obj => obj.char);
   }
 
-  public getChar(row, col) {
+  public async getChar(row, col) {
     const charInfo = this.getLine(row)[col];
     return charInfo && charInfo.char;
   }
@@ -50,7 +50,7 @@ export default class Document extends EventEmitter {
 
   // get word at this location
   // if on a whitespace character, return nothing
-  public getWord(row, col) {
+  public async getWord(row, col) {
     const text = this.getText(row);
 
     if (utils.isWhitespace(text[col])) {

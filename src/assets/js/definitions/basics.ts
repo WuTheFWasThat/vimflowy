@@ -227,7 +227,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_LINK], {
   description: 'Visit to the link indicated by the cursor, in a new tab',
 }, async function() {
   return async (cursor) => {
-    const word = this.session.document.getWord(cursor.row, cursor.col);
+    const word = await this.session.document.getWord(cursor.row, cursor.col);
     if (utils.isLink(word)) {
       window.open(word);
     }

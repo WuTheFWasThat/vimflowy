@@ -215,7 +215,7 @@ export default class Cursor extends EventEmitter {
   }
 
   public async isInWhitespace(path, col) {
-    const char = this.document.getChar(path.row, col);
+    const char = await this.document.getChar(path.row, col);
     return utils.isWhitespace(char);
   }
 
@@ -224,7 +224,7 @@ export default class Cursor extends EventEmitter {
       return false;
     }
 
-    const char = this.document.getChar(path.row, col);
+    const char = await this.document.getChar(path.row, col);
     if (utils.isWhitespace(char)) {
       return false;
     }
@@ -257,7 +257,10 @@ export default class Cursor extends EventEmitter {
       await this._prevChar();
     }
 
-    const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
+    const wordcheck = this._getWordCheck(
+      options,
+      await this.document.getChar(this.path.row, this.col)
+    );
     while ((this.col > 0) && (await wordcheck(this.path, this.col - 1))) {
       this._left();
     }
@@ -279,7 +282,10 @@ export default class Cursor extends EventEmitter {
     }
 
     let end = this.document.getLength(this.path.row) - 1;
-    const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
+    const wordcheck = this._getWordCheck(
+      options,
+      await this.document.getChar(this.path.row, this.col)
+    );
     while ((this.col < end) && (await wordcheck(this.path, this.col + 1))) {
       this._right();
     }
@@ -304,7 +310,10 @@ export default class Cursor extends EventEmitter {
     }
 
     let end = this.document.getLength(this.path.row) - 1;
-    const wordcheck = this._getWordCheck(options, this.document.getChar(this.path.row, this.col));
+    const wordcheck = this._getWordCheck(
+      options,
+      await this.document.getChar(this.path.row, this.col)
+    );
     while ((this.col < end) && (await wordcheck(this.path, this.col + 1))) {
       this._right();
     }
@@ -336,7 +345,7 @@ export default class Cursor extends EventEmitter {
     let found = null;
     while (col < end) {
       col += 1;
-      if (this.document.getChar(this.path.row, col) === char) {
+      if ((await this.document.getChar(this.path.row, col)) === char) {
         found = col;
         break;
       }
@@ -368,7 +377,7 @@ export default class Cursor extends EventEmitter {
     let found = null;
     while (col > 0) {
       col -= 1;
-      if (this.document.getChar(this.path.row, col) === char) {
+      if ((await this.document.getChar(this.path.row, col)) === char) {
         found = col;
         break;
       }

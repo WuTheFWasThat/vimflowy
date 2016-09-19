@@ -164,7 +164,7 @@ class MarksPlugin {
       description: 'Go to the mark indicated by the cursor, if it exists',
     }, async function() {
       return async cursor => {
-        const word = this.session.document.getWord(cursor.row, cursor.col);
+        const word = await this.session.document.getWord(cursor.row, cursor.col);
         if (word.length < 1 || word[0] !== '@') {
           return false;
         }
