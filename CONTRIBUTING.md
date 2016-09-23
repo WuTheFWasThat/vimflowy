@@ -22,9 +22,7 @@ With recent versions of node/npm
     npm install
 
     # Install typescript
-    npm install tslint typescript typings -g
-    # Install type definitions
-    typings install
+    npm install tslint typescript -g
 
 #### START: ####
 

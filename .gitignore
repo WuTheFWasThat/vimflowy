@@ -12,7 +12,4 @@ npm-debug.log
 # spacemacs files
 .#*
 
-# type definitions
-/typings
-
 todo
