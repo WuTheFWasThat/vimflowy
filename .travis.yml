@@ -3,4 +3,4 @@ node_js:
   - "6"
   - "6.1"
   - "5.11"
-install: npm install && node_modules/.bin/typings install
+install: npm install
