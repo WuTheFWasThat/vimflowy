@@ -3,7 +3,7 @@ const express = require('express');
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
 
-const config = require('./config/webpack.dev');
+const config = require('./webpack.dev');
 
 const port = process.env.PORT || 3000;
 

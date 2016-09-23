@@ -5,14 +5,14 @@ When/if it gets merged, we'll try not to break it.
 
 # Plugin API
 
-To make a plugin, import your javascript from [plugins/index.js](plugins/index.js).
+To make a plugin, import your javascript from [src/plugins/index.js](src/plugins/index.js).
 You can import CSS as well, from your javascript file.
-See the ["hello world" sample plugin](plugins/examples/example2.js) for an extremely minimal example.
+See the ["hello world" sample plugin](src/plugins/examples/index.js) for an extremely minimal example.
 
 You will have to rebuild vimflowy if using a static distribution.
 See [here](CONTRIBUTING.md) for details on development setup.
 
-Generally, this documentation may be less useful than just [looking at some example plugins](plugins).
+Generally, this documentation may be less useful than just [looking at some example plugins](src/plugins).
 
 ## Registering a plugin
 
@@ -22,7 +22,7 @@ A plugin registers using
 Plugins.register(metadata, enableCallback[, disableCallback])
 ```
 where
-- `metadata`:  For the detailed format, read the type definitions in [plugins.js](assets/js/plugins.js)
+- `metadata`:  For the detailed format, read the type definitions in [plugins.ts](src/assets/js/plugins.ts)
   - name (required): string
     This will be displayed to the user in options. It should not be changed!
   - version (required): positive integer
@@ -70,9 +70,9 @@ It is defined by associating a sequence of commands with a function (that mutate
 An **action** is a manipulation of the document/underlying data.
 It is defined by associating a sequence of commands with a function to perform the action, for a given set of modes.
 There is a special 'MOTION' command which lets an action use any motion as a subroutine.
-See the definitions of yank and delete, in [`assets/js/definitions/basics.js`](assets/js/definitions/basics.js), for an example.
+See the definitions of yank and delete, in [`src/assets/js/definitions/basics.ts`](src/assets/js/definitions/basics.ts), for an example.
 
-For other example usages, see the folder [`assets/js/definitions`](assets/js/definitions), and the easy-motion plugin.
+For other example usages, see the folder [`src/assets/js/definitions`](src/assets/js/definitions), and the easy-motion plugin.
 
 ```
     api.registerMode(metadata) -> mode
@@ -93,7 +93,7 @@ You can also manually call each deregister, but this is not recomended
     api.deregisterAction(modes, commands)
 ```
 
-See [`keyDefinitions.js`](assets/js/keyDefinitions.js) for detailed schema for the metadata of each of these.
+See [`keyDefinitions.ts`](src/assets/js/keyDefinitions.ts) for detailed schema for the metadata of each of these.
 
 #### vimflowy internals
 

@@ -1,12 +1,17 @@
-var path = require('path');
 var webpack = require('webpack');
+var path = require('path');
 var AsyncAwaitPlugin = require('webpack-async-await') ;
 
-var SRC_DIR = path.join(__dirname, '..', 'src');
+var SRC_DIR = path.join(__dirname, 'src');
 
 module.exports = {
-  devtool: 'source-map',
-  entry: './src/assets/js/app.jsx',
+  debug: true,
+  devtool: 'eval',
+  entry: [
+    'webpack-dev-server/client?http://localhost:3000',
+    'webpack/hot/only-dev-server',
+    './src/assets/js/app.jsx'
+  ],
   module: {
     preLoaders: [{
       test: /\.tsx?$/,
@@ -16,7 +21,7 @@ module.exports = {
     loaders: [
       {
         test: /\.jsx?$/,
-        loaders: ['babel'],
+        loaders: ['react-hot', 'babel'],
         include: SRC_DIR,
       },
       {
@@ -38,28 +43,15 @@ module.exports = {
   },
   output: {
     filename: 'app.js',
-    path: path.join(__dirname, '..', 'static', 'build'),
+    path: path.join(__dirname, 'static', 'build'),
     publicPath: '/build/'
   },
   plugins: [
     new AsyncAwaitPlugin({}),
-    new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.DefinePlugin({
-      'process.env': {
-        'NODE_ENV': JSON.stringify('production')
-      }
-    }),
-    new webpack.optimize.UglifyJsPlugin({
-      compressor: {
-        warnings: false
-      }
-    })
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoErrorsPlugin()
   ],
   resolve: {
     extensions: ['', '.jsx', '.js', '.tsx', '.ts']
-  },
-  tslint: {
-    emitErrors: true,
-    failOnHint: true
   }
 };
