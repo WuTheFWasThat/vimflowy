@@ -18,16 +18,11 @@ export default class Settings {
   constructor(datastore) {
     this.datastore = datastore;
 
-    for (const setting in default_settings) {
-      if (this.getSetting(setting) === null) {
-        this.setSetting(setting, default_settings[setting]);
-      }
-    }
     return null;
   }
 
-  public async getSetting(setting, defaultValue = undefined) {
-    return await this.datastore.getSetting(setting, defaultValue);
+  public async getSetting(setting) {
+    return await this.datastore.getSetting(setting, default_settings[setting]);
   }
 
   public async setSetting(setting, value) {

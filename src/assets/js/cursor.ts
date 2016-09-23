@@ -66,17 +66,17 @@ export default class Cursor extends EventEmitter {
   public from(other) {
     this._setPath(other.path);
     this._setCol(other.col);
-    return this.moveCol = other.moveCol;
+    this.moveCol = other.moveCol;
   }
 
   public setPosition(path, col, cursorOptions?: CursorOptions) {
     this._setPath(path);
-    return this.setCol(col, cursorOptions);
+    this.setCol(col, cursorOptions);
   }
 
   public async setPath(path, cursorOptions?: CursorOptions) {
     this._setPath(path);
-    return this._fromMoveCol(cursorOptions);
+    this._fromMoveCol(cursorOptions);
   }
 
   public setCol(moveCol, cursorOptions: CursorOptions = { pastEnd: true }) {
@@ -85,7 +85,7 @@ export default class Cursor extends EventEmitter {
     // if moveCol was too far, fix it
     // NOTE: this should happen for setting column, but not path
     if (this.moveCol >= 0) {
-      return this.moveCol = this.col;
+      this.moveCol = this.col;
     }
   }
 
@@ -100,21 +100,21 @@ export default class Cursor extends EventEmitter {
     }
     this._setCol(col);
     if (!cursorOptions.keepProperties) {
-      return this._getPropertiesFromContext();
+      this._getPropertiesFromContext();
     }
   }
 
   private _left() {
-    return this.setCol(this.col - 1);
+    this.setCol(this.col - 1);
   }
 
   private _right() {
-    return this.setCol(this.col + 1);
+    this.setCol(this.col + 1);
   }
 
   public async left() {
     if (this.col > 0) {
-      return this._left();
+      this._left();
     }
   }
 
@@ -123,7 +123,7 @@ export default class Cursor extends EventEmitter {
   ) {
     const shift = cursorOptions.pastEnd ? 0 : 1;
     if (this.col < this.document.getLength(this.path.row) - shift) {
-      return this._right();
+      this._right();
     }
   }
 

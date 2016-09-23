@@ -785,7 +785,7 @@ export default class Session extends EventEmitter {
       [cursor1, cursor2] = [cursor2, cursor1];
     }
     const offset = options.includeEnd ? 1 : 0;
-    return this.delChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset, options);
+    this.delChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset, options);
   }
 
   // TODO: fix a bunch of these to use rows (they're still actually paths)

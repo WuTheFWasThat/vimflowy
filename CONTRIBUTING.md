@@ -12,7 +12,7 @@ For development, you'll probably want to run a web version of vimflowy locally.
 
 #### INSTALL: ####
 
-Assuming you have (recent versions of) node and npm
+With recent versions of node (5.11.1 works) and npm (3.8.6)
 
     git clone https://github.com/WuTheFWasThat/vimflowy.git
     cd vimflowy
@@ -37,7 +37,7 @@ Note that you may make new documents simply by visiting `http://localhost:3000/s
 
 #### RUN TESTS: ####
 
-Tests are run automatically.  To get a more detailed report, run
+Tests are run automatically with `npm start`.  To get a more detailed report, run
 
     npm test
 

@@ -504,7 +504,9 @@ export default class Document extends EventEmitter {
   }
 
   public serialize(
-    row = this.root.row, options: {pretty?: boolean} = {}, serialized = {}
+    row = this.root.row,
+    options: {pretty?: boolean} = {},
+    serialized = {}
   ) {
     if (row in serialized) {
       const struct = serialized[row];
@@ -523,9 +525,13 @@ export default class Document extends EventEmitter {
     serialized[row] = struct;
 
     if (options.pretty) {
-      if ((children.length === 0) && (!this.isClone(row)) &&
-          _.every(Object.keys(struct), key => key === 'children' || key === 'text' || key === 'collapsed'
-          )) {
+      if ((children.length === 0) &&
+          (!this.isClone(row)) &&
+          _.every(
+            Object.keys(struct),
+            key => (key === 'children' || key === 'text' || key === 'collapsed')
+          )
+         ) {
         return struct.text;
       }
     }
@@ -533,7 +539,8 @@ export default class Document extends EventEmitter {
   }
 
   public loadTo(
-    serialized, parent_path = this.root, index = -1, id_mapping = {}, replace_empty = false
+    serialized, parent_path = this.root, index = -1,
+    id_mapping = {}, replace_empty = false
   ) {
     if (serialized.clone) {
       // NOTE: this assumes we load in the same order we serialize

@@ -176,7 +176,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_GO], {
   description: 'Go to the beginning of visible document',
   multirow: true,
 }, async function() {
-  return async (cursor, options) => await cursor.visibleHome(options);
+  return async (cursor, options) => await cursor.visibleHome();
 });
 
 const CMD_PARENT = keyDefinitions.registerCommand({

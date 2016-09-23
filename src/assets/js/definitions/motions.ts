@@ -12,7 +12,7 @@ const CMD_LEFT = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_LEFT, {
   description: 'Move cursor left',
 }, async function() {
-  return async (cursor, options) => await cursor.left(options);
+  return async (cursor, options) => await cursor.left();
 });
 
 const CMD_RIGHT = keyDefinitions.registerCommand({
@@ -67,7 +67,7 @@ const CMD_HOME = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_HOME, {
   description: 'Move cursor to beginning of line',
 }, async function() {
-  return async (cursor, options) => await cursor.home(options);
+  return async (cursor, options) => await cursor.home();
 });
 
 const CMD_END = keyDefinitions.registerCommand({
@@ -246,7 +246,7 @@ const CMD_GO_HOME = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_GO_HOME, {
   description: 'Go to beginning of visible document',
 }, async function() {
-  return async (cursor, options) => await cursor.visibleHome(options);
+  return async (cursor, options) => await cursor.visibleHome();
 });
 
 const CMD_GO_END = keyDefinitions.registerCommand({
@@ -259,7 +259,7 @@ const CMD_GO_END = keyDefinitions.registerCommand({
 keyDefinitions.registerMotion(CMD_GO_END, {
   description: 'Go to end of visible document',
 }, async function() {
-  return async (cursor, options) => await cursor.visibleEnd(options);
+  return async (cursor, options) => await cursor.visibleEnd();
 });
 
 const CMD_NEXT_SIBLING = keyDefinitions.registerCommand({
