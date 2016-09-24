@@ -410,9 +410,18 @@ export default class Session extends EventEmitter {
   // viewability
   ////////////////////////////////
 
-  // whether contents are currently viewable.  ASSUMES ROW IS WITHIN VIEWROOT
+  // whether contents are currently viewable (i.e. subtree is visible)
   public viewable(path) {
-    return (!this.document.collapsed(path.row)) || path.is(this.viewRoot);
+    return path.is(this.viewRoot) || (
+            path.isDescendant(this.viewRoot) &&
+            (!this.document.collapsed(path.row))
+           );
+  }
+
+  // whether a given path is visible
+  public isVisible(path) {
+    const visibleAncestor = this.youngestVisibleAncestor(path);
+    return (visibleAncestor !== null) && path.is(visibleAncestor);
   }
 
   public nextVisible(path) {
@@ -501,11 +510,6 @@ export default class Session extends EventEmitter {
       }
       cur = cur.parent;
     }
-  }
-
-  public isVisible(path) {
-    const visibleAncestor = this.youngestVisibleAncestor(path);
-    return (visibleAncestor !== null) && path.is(visibleAncestor);
   }
 
   ////////////////////////////////

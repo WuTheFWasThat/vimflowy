@@ -17,8 +17,12 @@ const CMD_MOTION = {name: 'MOTION'};
 keyDefinitions.registerAction([MODES.NORMAL], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
+  const tmp = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
-    await motion(this.session.cursor, {});
+    await motion(tmp, {});
+  }
+  if (this.session.isVisible(tmp.path)) {
+    this.session.cursor.from(tmp);
   }
   this.keyStream.forget();
 });

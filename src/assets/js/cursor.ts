@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import * as utils from './utils';
 import * as constants from './constants';
 import EventEmitter from './eventEmitter';
@@ -67,6 +69,7 @@ export default class Cursor extends EventEmitter {
     this._setPath(other.path);
     this._setCol(other.col);
     this.moveCol = other.moveCol;
+    this.properties = _.cloneDeep(other.properties);
   }
 
   public setPosition(path, col, cursorOptions?: CursorOptions) {
