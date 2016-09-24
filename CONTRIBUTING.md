@@ -12,15 +12,18 @@ For development, you'll probably want to run a web version of vimflowy locally.
 
 #### INSTALL: ####
 
-With recent versions of node (5.11.1 works) and npm (3.8.6)
+With recent versions of node/npm
 
+    # Install git repo
     git clone https://github.com/WuTheFWasThat/vimflowy.git
     cd vimflowy
+
+    # Install node modules
     npm install
 
-Install typescript (I've tested with version 1.8.10), then
-
+    # Install typescript
     npm install tslint typescript typings -g
+    # Install type definitions
     typings install
 
 #### START: ####
