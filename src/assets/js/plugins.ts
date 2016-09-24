@@ -139,23 +139,23 @@ export class PluginApi {
   public registerListener(who, event, listener) {
     const emitter = this._getEmitter(who);
     emitter.on(event, listener);
-    return this.registrations.push({type: 'listener', args: [who, event, listener]});
+    this.registrations.push({type: 'listener', args: [who, event, listener]});
   }
 
   public deregisterListener(who, event, listener) {
     const emitter = this._getEmitter(who);
-    return emitter.off(event, listener);
+    emitter.off(event, listener);
   }
 
   public registerHook(who, event, transform) {
     const emitter = this._getEmitter(who);
     emitter.addHook(event, transform);
-    return this.registrations.push({type: 'hook', args: [who, event, transform]});
+    this.registrations.push({type: 'hook', args: [who, event, transform]});
   }
 
   public deregisterHook(who, event, transform) {
     const emitter = this._getEmitter(who);
-    return emitter.removeHook(event, transform);
+    emitter.removeHook(event, transform);
   }
 
   public deregisterAll() {

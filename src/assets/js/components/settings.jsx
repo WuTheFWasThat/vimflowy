@@ -201,7 +201,9 @@ export default class SettingsComponent extends React.Component {
                       { mode_type: Modes.HotkeyType.INSERT_MODE_TYPE, id: 'hotkey-edit-insert' },
                     ].map(({mode_type, id}) => {
                       const mode_defs = MODE_TYPES[mode_type].modes.map(
-                        mode => keyBindings.definitions.actions_for_mode(mode)
+                        // NOTE: without cloneDeep, there is some bug where
+                        // stuff in definitions get mutated
+                        mode => _.cloneDeep(keyBindings.definitions.actions_for_mode(mode))
                       );
                       return (
                         <div id={id}>
