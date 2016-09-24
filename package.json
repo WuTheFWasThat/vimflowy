@@ -51,6 +51,7 @@
     "tslint": "^3.3.0",
     "tslint-loader": "^2.1.0",
     "typescript": "^2.0.3",
+    "typings": "^1.4.0",
     "webpack": "^1.12.15",
     "webpack-async-await": "^1.0.4",
     "webpack-dev-server": "^1.12.1"

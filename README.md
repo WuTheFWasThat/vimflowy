@@ -2,6 +2,8 @@
 
 [![Join Gitter chat](https://badges.gitter.im/WuTheFWasThat/vimflowy.svg)](https://gitter.im/WuTheFWasThat/vimflowy)
 
+[![Build Status](https://travis-ci.org/WuTheFWasThat/vimflowy.svg?branch=travis)](https://travis-ci.org/WuTheFWasThat/vimflowy)
+
 This is a productivity tool which draws great inspiration from workflowy and vim.
 
 Try it out!
