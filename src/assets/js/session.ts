@@ -673,7 +673,7 @@ export default class Session extends EventEmitter {
   // Text
   ////////////////////////////////
 
-  public curLine() {
+  public async curLine() {
     return this.document.getLine(this.cursor.row);
   }
 

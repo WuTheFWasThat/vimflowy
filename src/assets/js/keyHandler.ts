@@ -216,7 +216,7 @@ export default class KeyHandler extends EventEmitter {
 
     const args = [];
 
-    [key, context] = mode_obj.transform_key(key, context);
+    [key, context] = await mode_obj.transform_key(key, context);
     if (key === null) {
       // either key was already null, or
       // a transform acted (which, for now, we always consider not bad.  could change)

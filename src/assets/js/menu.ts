@@ -70,7 +70,7 @@ export default class Menu {
     }
   }
 
-  public update() {
+  public async update() {
     const query = this.session.curText();
     if ((JSON.stringify(query)) !== (JSON.stringify(this.lastQuery))) {
       this.lastQuery = query;

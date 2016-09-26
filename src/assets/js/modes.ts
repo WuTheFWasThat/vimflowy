@@ -27,7 +27,7 @@ type ModeMetadata = {
   // other functions won't receive the key)
   //
   // the functions are called in the order they're registered
-  key_transforms?: Array<(key: string, context: any) => [string, any]>;
+  key_transforms?: Array<(key: string, context: any) => Promise<[string, any]>>;
 
   // function taking session, upon entering mode
   enter?: (session: Session, newMode?: ModeId) => Promise<void>;
@@ -84,11 +84,11 @@ export default class Mode {
     return context;
   }
 
-  public transform_key(key, context) {
+  public async transform_key(key, context) {
     if (this.metadata.key_transforms) {
       for (let i = 0; i < this.metadata.key_transforms.length; i++) {
         const key_transform = this.metadata.key_transforms[i];
-        [key, context] = key_transform(key, context);
+        [key, context] = await key_transform(key, context);
         if (key === null) {
           break;
         }
@@ -167,7 +167,7 @@ registerMode({
     await session.cursor.backIfNeeded();
   },
   key_transforms: [
-    function(key, context) {
+    async function(key, context) {
       let newrepeat;
       [newrepeat, key] = context.keyHandler.getRepeat(context.keyStream, key);
       context.repeat = context.repeat * newrepeat;
@@ -182,7 +182,7 @@ registerMode({
   name: 'INSERT',
   hotkey_type: HotkeyType.INSERT_MODE_TYPE,
   key_transforms: [
-    function(key, context) {
+    async function(key, context) {
       key = transform_insert_key(key);
       if (key.length === 1) {
         // simply insert the key
@@ -245,18 +245,18 @@ registerMode({
   hotkey_type: HotkeyType.INSERT_MODE_TYPE,
   within_row: true,
   async every(session, keyStream) {
-    session.menu.update();
-    return keyStream.forget();
+    await session.menu.update();
+    keyStream.forget();
   },
   async exit(session, newMode?: ModeId) {
     session.menu = null;
   },
   key_transforms: [
-    function(key, context) {
+    async function(key, context) {
       key = transform_insert_key(key);
       if (key.length === 1) {
         context.session.menu.session.addCharsAtCursor([{char: key}]);
-        context.session.menu.update();
+        await context.session.menu.update();
         context.keyStream.forget();
         return [null, context];
       }
