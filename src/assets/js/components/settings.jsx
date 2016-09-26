@@ -144,6 +144,7 @@ export default class SettingsComponent extends React.Component {
             </div>
             <div className="settings-content">
               For more info, or to contact the maintainers, please visit
+              {' '}
               <a href="https://github.com/WuTheFWasThat/vimflowy" className="theme-text-link">
                 the github website
               </a>.

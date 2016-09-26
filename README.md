@@ -1,7 +1,7 @@
 # ![Vimflowy](/static/images/vimflowy-32.png?raw=true) Vimflowy
 
 [![Join Gitter chat](https://badges.gitter.im/WuTheFWasThat/vimflowy.svg)](https://gitter.im/WuTheFWasThat/vimflowy)
-[![Build Status](https://travis-ci.org/WuTheFWasThat/vimflowy.svg)](https://travis-ci.org/WuTheFWasThat/vimflowy)
+[![Build Status](https://travis-ci.org/WuTheFWasThat/vimflowy.svg?branch=master)](https://travis-ci.org/WuTheFWasThat/vimflowy)
 
 This is a productivity tool which draws great inspiration from workflowy and vim.
 
