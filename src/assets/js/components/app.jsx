@@ -36,9 +36,13 @@ export default class AppComponent extends React.Component {
           <div id="menu"
             className={session.mode === Modes.modes.SEARCH ? '' : 'hidden'}
           >
-            <MenuComponent
-              menu={session.menu}
-            />
+            {
+              (() => {
+                if (session.menu) {
+                  return <MenuComponent menu={session.menu} session={session}/>;
+                }
+              })()
+            }
           </div>
 
           <div id="view"

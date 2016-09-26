@@ -1,37 +1,60 @@
 import React from 'react';
 
-import LineComponent from './line.jsx';
+import LineComponent from './line';
+import SpinnerComponent from './spinner';
 
 export default class MenuComponent extends React.Component {
   static get propTypes() {
     return {
-      menu: React.PropTypes.any
+      session: React.PropTypes.any.isRequired,
+      menu: React.PropTypes.any.isRequired
     };
   }
 
   constructor(props) {
     super(props);
+    this.state = {
+      query: null
+    };
+  }
+
+  componentDidMount() {
+    const menu = this.props.menu;
+    this.updateFn = () => {
+      menu.session.curLine().then((query) => {
+        this.setState({ query });
+      });
+    };
+    this.props.session.on('handledKey', this.updateFn);
+    this.updateFn();
+  }
+
+  componentWillUnmount() {
+    this.props.session.off('handledKey', this.updateFn);
   }
 
   render() {
     const menu = this.props.menu;
-    if (!menu) {
-      return <div></div>;
-    }
 
     const searchBox = (
       <div className='searchBox theme-trim'>
         <i className='fa fa-search' style={{'marginRight': 10}}/>
         <span>
-          <LineComponent
-            lineData={
-              menu.session.document.getLine(menu.session.cursor.path.row)
-            }
-            cursors={{
-              [menu.session.cursor.col]: true
-            }}
-            cursorBetween={true}
-          />
+          {
+            (() => {
+              if (this.state.query === null) {
+                return <SpinnerComponent/>;
+              } else {
+                return <LineComponent
+                  lineData={this.state.query}
+                  cursors={{
+                    [menu.session.cursor.col]: true
+                  }}
+                  cursorBetween={true}
+                />;
+              }
+            })()
+          }
         </span>
       </div>
     );

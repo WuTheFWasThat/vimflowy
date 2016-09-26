@@ -60,12 +60,12 @@ export class KeyStream extends EventEmitter {
   }
 
   public rewind() {
-    return this.index = this.checkpoint_index;
+    this.index = this.checkpoint_index;
   }
 
   public enqueue(key) {
     this.queue.push(key);
-    return this.waiting = false;
+    this.waiting = false;
   }
 
   public dequeue() {
@@ -74,19 +74,19 @@ export class KeyStream extends EventEmitter {
   }
 
   public checkpoint() {
-    return this.checkpoint_index = this.index;
+    this.checkpoint_index = this.index;
   }
 
   // means we are waiting for another key before we can do things
   public wait() {
     this.waiting = true;
-    return this.rewind();
+    this.rewind();
   }
 
   public save() {
     const processed = this.forget();
     this.lastSequence = processed;
-    return this.emit('save');
+    this.emit('save');
   }
 
   // forgets the most recently processed n items
@@ -182,6 +182,7 @@ export default class KeyHandler extends EventEmitter {
         const mode_obj = Modes.getMode(this.session.mode);
         await mode_obj.every(this.session, this.keyStream);
       }
+      this.session.emit('handledKey');
     }
   }
 

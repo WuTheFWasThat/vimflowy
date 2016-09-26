@@ -267,6 +267,7 @@ $(document).ready(function() {
         const handled = !!keyBindings.bindings[session.mode][key];
 
         // fire and forget
+        // NOTE: could use handled_command event instead?
         keyHandler.handleKey(key).then(() => {
           renderMain();
         });
