@@ -3,7 +3,7 @@ import React from 'react';
 import * as Modes from '../modes';
 
 // import Spinner from './spinner';
-import { virtualRenderLine } from './session';
+import { virtualRenderLine } from './block';
 
 const MODES = Modes.modes;
 
@@ -80,7 +80,11 @@ export default class BreadcrumbsComponent extends React.Component {
       if (isLast) {
         return virtualRenderLine(session, path, options);
       } else {
-        return <CrumbComponent session={session} options={options} path={path}/>;
+        return (
+          <CrumbComponent key={path.row}
+            session={session} options={options} path={path}
+          />
+        );
       }
     };
 

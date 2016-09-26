@@ -220,7 +220,7 @@ $(document).ready(function() {
             initialTheme={initialTheme}
             onRender={(options) => {
               const $onto = $('#view');
-              logger.info('Render called: ', options);
+              logger.debug('Render called: ', options);
               setTimeout(() => {
                 const cursorDiv = $('.cursor', $onto)[0];
                 if (cursorDiv) {

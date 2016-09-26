@@ -213,7 +213,7 @@ export class PluginsManager extends EventEmitter {
   }
 
   public setStatus(name, status) {
-    logger.info(`Plugin ${name} status: ${status}`);
+    logger.debug(`Plugin ${name} status: ${status}`);
     if (!PLUGINS[name]) {
       throw new Error(`Plugin ${name} was not registered`);
     }

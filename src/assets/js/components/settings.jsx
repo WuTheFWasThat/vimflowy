@@ -206,7 +206,7 @@ export default class SettingsComponent extends React.Component {
                         mode => _.cloneDeep(keyBindings.definitions.actions_for_mode(mode))
                       );
                       return (
-                        <div id={id}>
+                        <div id={id} key={id}>
                           <div className='tooltip' title={MODE_TYPES[mode_type].description}>
                             {mode_type}
                           </div>
@@ -246,7 +246,7 @@ export default class SettingsComponent extends React.Component {
                 const isActive = info.tab === this.state.currentTab;
                 const className = `theme-trim theme-bg-secondary ${isActive ? 'active' : ''}`;
                 return (
-                  <li className={className}
+                  <li className={className} key={info.tab}
                       onClick={() => this.setState({currentTab: info.tab})}>
                     {info.heading}
                   </li>
@@ -260,7 +260,9 @@ export default class SettingsComponent extends React.Component {
             return _.map(tabs_info, (info) => {
               const isActive = info.tab === this.state.currentTab;
               return (
-                <div className={isActive ? '' : 'hidden'} style={{padding: 20}}>
+                <div key={info.tab}
+                  className={isActive ? '' : 'hidden'} style={{padding: 20}}
+                >
                   {info.div}
                 </div>
               );
