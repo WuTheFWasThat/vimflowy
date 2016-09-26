@@ -71,7 +71,7 @@ export default class Menu {
   }
 
   public async update() {
-    const query = this.session.curText();
+    const query = await this.session.curText();
     if ((JSON.stringify(query)) !== (JSON.stringify(this.lastQuery))) {
       this.lastQuery = query;
       this.results = this.fn(query);

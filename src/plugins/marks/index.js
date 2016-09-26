@@ -111,11 +111,11 @@ class MarksPlugin {
         doc.load(constants.empty_data);
         this.marksession = new Session(doc);
         await this.marksession.setMode(MODES.INSERT);
-        return this.marksessionpath = session.cursor.path;
+        this.marksessionpath = session.cursor.path;
       },
       exit: async (/*session, newMode?: ModeId */) => {
         this.marksession = null;
-        return this.marksessionpath = null;
+        this.marksessionpath = null;
       },
       key_transforms: [
         (key, context) => {
@@ -140,7 +140,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.NORMAL], CMD_MARK, {
       description: 'Mark a line',
     }, async function() {
-      return await this.session.setMode(MODES.MARK);
+      await this.session.setMode(MODES.MARK);
     });
 
     const CMD_FINISH_MARK = this.api.registerCommand({
@@ -152,11 +152,11 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], CMD_FINISH_MARK, {
       description: 'Finish typing mark',
     }, async function() {
-      const mark = (that.marksession.curText()).join('');
+      const mark = (await that.marksession.curText()).join('');
       const err = await that.updateMark(that.marksessionpath.row, mark);
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       await this.session.setMode(MODES.NORMAL);
-      return this.keyStream.save();
+      this.keyStream.save();
     });
 
     const CMD_GO = this.api.commands.GO;
@@ -187,7 +187,7 @@ class MarksPlugin {
     }, async function() {
       const err = await that.updateMark(this.session.cursor.row, '');
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
-      return this.keyStream.save();
+      this.keyStream.save();
     });
 
     const CMD_MARK_SEARCH = this.api.registerCommand({
@@ -200,7 +200,7 @@ class MarksPlugin {
       description: 'Go to (search for) a mark',
     }, async function() {
       await this.session.setMode(MODES.SEARCH);
-      return this.session.menu = new Menu(chars => {
+      this.session.menu = new Menu(chars => {
         // find marks that start with the prefix
         const findMarks = (document, prefix, nresults = 10) => {
           const marks = that.listMarks();
@@ -244,33 +244,33 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], basic_defs.CMD_MOTION, {
       description: 'Move the cursor',
     }, async function(motion) {
-      return motion(that.marksession.cursor, {pastEnd: true});
+      motion(that.marksession.cursor, {pastEnd: true});
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
       description: 'Delete last character (i.e. backspace key)',
     }, async function() {
-      return await that.marksession.deleteAtCursor();
+      await that.marksession.deleteAtCursor();
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
       description: 'Delete character at the cursor (i.e. del key)',
     }, async function() {
-      return this.session.marksession.delCharsAfterCursor(1);
+      this.session.marksession.delCharsAfterCursor(1);
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_HELP, {
       description: 'Show/hide key bindings (edit in settings)',
     }, async function() {
       this.session.toggleBindingsDiv();
-      return this.keyStream.forget(1);
+      this.keyStream.forget(1);
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_EXIT_MODE, {
       description: 'Exit back to normal mode',
     }, async function() {
       await this.session.setMode(MODES.NORMAL);
-      return this.keyStream.forget();
+      this.keyStream.forget();
     });
 
     this.api.registerHook('session', 'renderLineOptions', (options, info) => {
@@ -311,7 +311,7 @@ class MarksPlugin {
       return lineContents;
     });
 
-    return this.api.registerHook('session', 'renderLineWordHook', (line, word_info) => {
+    this.api.registerHook('session', 'renderLineWordHook', (line, word_info) => {
       if (this.session.mode === MODES.NORMAL) {
         if (word_info.word[0] === '@') {
           const mark = word_info.word.slice(1);
