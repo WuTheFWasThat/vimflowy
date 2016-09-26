@@ -93,5 +93,5 @@ export class Logger {
   }
 }
 
-const logger = new Logger(LEVEL.DEBUG);
+const logger = new Logger(LEVEL.INFO);
 export default logger;

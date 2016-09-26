@@ -3,13 +3,14 @@ import React from 'react';
 import logger from '../logger';
 import * as Modes from '../modes';
 
-import LineComponent from './line.jsx';
+import LineComponent from './line';
+import BreadcrumbsComponent from './breadcrumbs';
 
 const MODES = Modes.modes;
 
 // TODO: move mode-specific logic into mode render functions
 
-function virtualRenderLine(session, path, options = {}) {
+export function virtualRenderLine(session, path, options = {}) {
   const lineData = session.document.getLine(path.row);
   let cursors = {};
   const highlights = {};
@@ -157,6 +158,7 @@ function virtualRenderTree(session, parent, options = {}) {
   });
 }
 
+
 // TODO: add way to profile render time
 export default class SessionComponent extends React.Component {
   static get propTypes() {
@@ -187,60 +189,6 @@ export default class SessionComponent extends React.Component {
     };
     this.props.onRender(options);
 
-    const crumbs = [];
-    let path = session.viewRoot;
-    while (!path.is(session.document.root)) {
-      crumbs.push(path);
-      path = path.parent;
-    }
-
-    const makeCrumb = (path, isLast) => {
-      let className = '';
-      let onClick = null;
-      if (session.mode === MODES.NORMAL && !isLast) {
-        className = 'theme-text-link';
-        onClick = async () => {
-          await session.zoomInto(path);
-          session.save();
-          options.rerender();
-        };
-      }
-      return (
-        <span key={'crumb_' + path.row} className='crumb'>
-          <span className={className} onClick={onClick}>
-            {
-              (() => {
-                if (isLast) {
-                  return virtualRenderLine(session, path, options);
-                } else if (path.is(session.document.root)) {
-                  return <icon className='fa fa-home'/>;
-                } else {
-                  return session.document.getText(path.row).join('');
-                }
-              })()
-            }
-          </span>
-        </span>
-      );
-    };
-
-    const crumbNodes = [];
-    crumbNodes.push(makeCrumb(session.document.root));
-    for (let i = crumbs.length - 1; i >= 0; i--) {
-      path = crumbs[i];
-      crumbNodes.push(makeCrumb(path, i===0));
-    }
-
-    const breadcrumbsNode = (
-      <div key='breadcrumbs' className='breadcrumbs'
-        style={{
-          fontSize: 20,
-          marginBottom: 20,
-        }}
-      >
-        {crumbNodes}
-      </div>
-    );
 
     options.ignoreCollapse = true; // since we're the root, even if we're collapsed, we should render
 
@@ -275,7 +223,7 @@ export default class SessionComponent extends React.Component {
 
     return (
       <div>
-        {breadcrumbsNode}
+        <BreadcrumbsComponent session={session} options={options}/>
         {contentsNode}
       </div>
     );
