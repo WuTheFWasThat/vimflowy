@@ -268,7 +268,7 @@ const CMD_TOGGLE_FOLD = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_TOGGLE_FOLD, {
   description: 'Toggle whether a block is folded',
 }, async function() {
-  this.session.toggleCurBlockCollapsed();
+  await this.session.toggleCurBlockCollapsed();
   if (this.mode === MODES.NORMAL) {
     this.keyStream.save();
   }
@@ -408,7 +408,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_YANK, {
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_YANK, {
   description: 'Yank',
 }, async function() {
-  this.session.yankBlocks(this.row_start, this.num_rows);
+  await this.session.yankBlocks(this.row_start, this.num_rows);
   await this.session.setMode(MODES.NORMAL);
   this.keyStream.forget();
 });
@@ -428,7 +428,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_YANK], {
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_RECURSIVE], {
   description: 'Yank blocks',
 }, async function() {
-  this.session.yankBlocksAtCursor(this.repeat);
+  await this.session.yankBlocksAtCursor(this.repeat);
   this.keyStream.forget();
 });
 
@@ -447,7 +447,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_CLONE], {
   description: 'Yank blocks as a clone',
 }, async function() {
-  this.session.yankBlocksCloneAtCursor(this.repeat);
+  await this.session.yankBlocksCloneAtCursor(this.repeat);
   this.keyStream.forget();
 });
 
@@ -455,7 +455,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_CLONE], {
 // keyDefinitions.registerAction([MODES.VISUAL_LINE],  CMD_CLONE, {
 //   description: 'Yank blocks as a clone',
 // }, function() {
-//   this.session.yankBlocksClone(this.row_start, this.num_rows);
+//   await this.session.yankBlocksClone(this.row_start, this.num_rows);
 //   await this.session.setMode(MODES.NORMAL);
 //   this.keyStream.forget();
 // });

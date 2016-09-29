@@ -109,8 +109,8 @@ export default class BlockComponent extends React.Component {
     let onClick = null;
     if (session.document.hasChildren(path.row)) {
       style.cursor = 'pointer';
-      onClick = () => {
-        session.toggleBlockCollapsed(path.row);
+      onClick = async () => {
+        await session.toggleBlockCollapsed(path.row);
         session.save();
         options.rerender();
       };

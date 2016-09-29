@@ -685,12 +685,12 @@ export default class Session extends EventEmitter {
     return this.document.getLength(this.cursor.row);
   }
 
-  public addChars(row, col, chars) {
-    return this.do(new mutations.AddChars(row, col, chars));
+  private async addChars(row, col, chars) {
+    this.do(new mutations.AddChars(row, col, chars));
   }
 
   public async addCharsAtCursor(chars) {
-    return this.addChars(this.cursor.row, this.cursor.col, chars);
+    await this.addChars(this.cursor.row, this.cursor.col, chars);
   }
 
   public async addCharsAfterCursor(chars) {
@@ -698,7 +698,7 @@ export default class Session extends EventEmitter {
     if (col < this.document.getLength(this.cursor.row)) {
       col += 1;
     }
-    return this.addChars(this.cursor.row, col, chars);
+    await this.addChars(this.cursor.row, col, chars);
   }
 
   private async delChars(path, col, nchars, options: {yank?: boolean} = {}) {
@@ -850,7 +850,7 @@ export default class Session extends EventEmitter {
     if (this.cursor.path.is(this.viewRoot)) {
       if (!this.document.hasChildren(this.cursor.row)) {
         if (!this.document.collapsed(this.cursor.row)) {
-          this.toggleBlockCollapsed(this.cursor.row);
+          await this.toggleBlockCollapsed(this.cursor.row);
         }
       }
 
@@ -1017,26 +1017,26 @@ export default class Session extends EventEmitter {
     }
   }
 
-  public yankBlocks(path, nrows) {
+  public async yankBlocks(path, nrows) {
     const siblings = this.document.getSiblingRange(path, 0, nrows - 1).filter(x => x !== null);
     const serialized = siblings.map(x => this.document.serialize(x.row));
-    return this.register.saveSerializedRows(serialized);
+    this.register.saveSerializedRows(serialized);
   }
 
-  public yankBlocksAtCursor(nrows) {
-    return this.yankBlocks(this.cursor.path, nrows);
+  public async yankBlocksAtCursor(nrows) {
+    await this.yankBlocks(this.cursor.path, nrows);
   }
 
-  public yankBlocksClone(row, nrows) {
+  public async yankBlocksClone(row, nrows) {
     const siblings = this.document.getSiblingRange(row, 0, nrows - 1).filter(x => x !== null);
-    return this.register.saveClonedRows(siblings.map(sibling => sibling.row));
+    this.register.saveClonedRows(siblings.map(sibling => sibling.row));
   }
 
-  public yankBlocksCloneAtCursor(nrows) {
-    return this.yankBlocksClone(this.cursor.path, nrows);
+  public async yankBlocksCloneAtCursor(nrows) {
+    await this.yankBlocksClone(this.cursor.path, nrows);
   }
 
-  public attachBlocks(
+  public async attachBlocks(
     parent, ids, index = -1, options: {setCursor?: string} = {}
   ) {
     const mutation = new mutations.AttachBlocks(parent.row, ids, index);
@@ -1053,11 +1053,11 @@ export default class Session extends EventEmitter {
     }
   }
 
-  private moveBlock(path, parent_path, index = -1) {
+  private async moveBlock(path, parent_path, index = -1) {
     return this.do(new mutations.MoveBlock(path, parent_path, index));
   }
 
-  public indentBlocks(row, numblocks = 1) {
+  public async indentBlocks(row, numblocks = 1) {
     if (row.is(this.viewRoot)) {
       this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
@@ -1069,17 +1069,18 @@ export default class Session extends EventEmitter {
     }
 
     if (this.document.collapsed(newparent.row)) {
-      this.toggleBlockCollapsed(newparent.row);
+      await this.toggleBlockCollapsed(newparent.row);
     }
 
     const siblings = this.document.getSiblingRange(row, 0, numblocks - 1).filter(sib => sib !== null);
-    siblings.forEach((sib) => {
-      this.moveBlock(sib, newparent, -1);
-    });
+    for (let i = 0; i < siblings.length; i++) {
+      const sib = siblings[i];
+      await this.moveBlock(sib, newparent, -1);
+    }
     return newparent;
   }
 
-  public unindentBlocks(row, numblocks = 1) {
+  public async unindentBlocks(row, numblocks = 1) {
     if (row.is(this.viewRoot)) {
       this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
@@ -1095,40 +1096,44 @@ export default class Session extends EventEmitter {
     const newparent = parent.parent;
     let pp_i = this.document.indexOf(parent);
 
-    siblings.forEach((sib) => {
+    for (let i = 0; i < siblings.length; i++) {
+      const sib = siblings[i];
       pp_i += 1;
-      this.moveBlock(sib, newparent, pp_i);
-    });
+      await this.moveBlock(sib, newparent, pp_i);
+    }
     return newparent;
   }
 
-  public indent(path = this.cursor.path) {
+  public async indent(path = this.cursor.path) {
     if (path.is(this.viewRoot)) {
       this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
     }
     if (this.document.collapsed(path.row)) {
-      return this.indentBlocks(path);
+      return await this.indentBlocks(path);
     }
 
     const sib = this.document.getSiblingBefore(path);
 
-    const newparent = this.indentBlocks(path);
+    const newparent = await this.indentBlocks(path);
     if (newparent === null) {
       return;
     }
-    this.document.getChildren(path).forEach((child) => {
-      this.moveBlock(child, sib, -1);
-    });
+
+    const children = this.document.getChildren(path);
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      await this.moveBlock(child, sib, -1);
+    }
   }
 
-  public unindent(path = this.cursor.path) {
+  public async unindent(path = this.cursor.path) {
     if (path.is(this.viewRoot)) {
       this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
     }
     if (this.document.collapsed(path.row)) {
-      return this.unindentBlocks(path);
+      return await this.unindentBlocks(path);
     }
 
     if (this.document.hasChildren(path.row)) {
@@ -1139,18 +1144,19 @@ export default class Session extends EventEmitter {
     const parent = path.parent;
     const p_i = this.document.indexOf(path);
 
-    const newparent = this.unindentBlocks(path);
+    const newparent = await this.unindentBlocks(path);
     if (newparent === null) {
       return;
     }
 
-    const p_children = this.document.getChildren(parent);
-    p_children.slice(p_i).forEach((child) => {
-      this.moveBlock(child, path, -1);
-    });
+    const later_siblings = this.document.getChildren(parent).slice(p_i);
+    for (let i = 0; i < later_siblings.length; i++) {
+      const sib = later_siblings[i];
+      await this.moveBlock(sib, path, -1);
+    }
   }
 
-  public swapDown(path = this.cursor.path) {
+  public async swapDown(path = this.cursor.path) {
     const next = this.nextVisible(this.lastVisible(path));
     if (next === null) {
       return;
@@ -1158,16 +1164,16 @@ export default class Session extends EventEmitter {
 
     if (this.document.hasChildren(next.row) && !this.document.collapsed(next.row)) {
       // make it the first child
-      return this.moveBlock(path, next, 0);
+      return await this.moveBlock(path, next, 0);
     } else {
       // make it the next sibling
       const parent = next.parent;
       const p_i = this.document.indexOf(next);
-      return this.moveBlock(path, parent, p_i + 1);
+      return await this.moveBlock(path, parent, p_i + 1);
     }
   }
 
-  public swapUp(path = this.cursor.path) {
+  public async swapUp(path = this.cursor.path) {
     const prev = this.prevVisible(path);
     if (prev === null) {
       return;
@@ -1176,14 +1182,14 @@ export default class Session extends EventEmitter {
     // make it the previous sibling
     const parent = prev.parent;
     const p_i = this.document.indexOf(prev);
-    return this.moveBlock(path, parent, p_i);
+    return await this.moveBlock(path, parent, p_i);
   }
 
-  public toggleCurBlockCollapsed() {
-    return this.toggleBlockCollapsed(this.cursor.row);
+  public async toggleCurBlockCollapsed() {
+    return await this.toggleBlockCollapsed(this.cursor.row);
   }
 
-  public toggleBlockCollapsed(row) {
+  public async toggleBlockCollapsed(row) {
     return this.do(new mutations.ToggleBlock(row));
   }
 
@@ -1197,6 +1203,7 @@ export default class Session extends EventEmitter {
 
   // given an anchor and cursor, figures out the right blocks to be deleting
   // returns a parent, minindex, and maxindex
+  // TODO ASYNC
   public getVisualLineSelections() {
     const [common, ancestors1, ancestors2] = this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
     if (ancestors1.length === 0) {

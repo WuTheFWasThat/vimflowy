@@ -27,22 +27,22 @@ export default class Register {
 
   public saveNone() {
     this.type = RegisterTypes.NONE;
-    return this.saved = null;
+    this.saved = null;
   }
 
   public saveChars(save) {
     this.type = RegisterTypes.CHARS;
-    return this.saved = save;
+    this.saved = save;
   }
 
   public saveSerializedRows(save) {
     this.type = RegisterTypes.SERIALIZED_ROWS;
-    return this.saved = save;
+    this.saved = save;
   }
 
   public saveClonedRows(save) {
     this.type = RegisterTypes.CLONED_ROWS;
-    return this.saved = save;
+    this.saved = save;
   }
 
   public serialize() {
@@ -103,13 +103,13 @@ export default class Register {
     const cloned_rows = this.saved;
 
     if (options.before) {
-      this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});
+      await this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});
     } else {
       const children = this.session.document.getChildren(path);
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
-        this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
+        await this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
       } else {
-        this.session.attachBlocks(parent, cloned_rows, index + 1, {setCursor: 'first'});
+        await this.session.attachBlocks(parent, cloned_rows, index + 1, {setCursor: 'first'});
       }
     }
   }
