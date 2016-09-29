@@ -32,7 +32,7 @@ const CMD_STRIKETHROUGH = keyDefinitions.registerCommand({
 
 const text_format_normal = (property) => {
   return async function() {
-    this.session.toggleRowProperty(property);
+    await this.session.toggleRowProperty(property);
     this.keyStream.save();
   };
 };
@@ -48,7 +48,7 @@ const text_format_visual_line = property =>
     const paths = this.session.document.getChildRange(this.parent, this.row_start_i, this.row_end_i);
     const rows = paths.map(path => path.row);
     // TODO: dedup rows to avoid double toggle
-    this.session.toggleRowsProperty(property, rows);
+    await this.session.toggleRowsProperty(property, rows);
     await this.session.setMode(MODES.NORMAL);
     this.keyStream.save();
   }
@@ -56,7 +56,7 @@ const text_format_visual_line = property =>
 
 const text_format_visual = property =>
   async function() {
-    this.session.toggleRowPropertyBetween(property, this.session.cursor, this.session.anchor, {includeEnd: true});
+    await this.session.toggleRowPropertyBetween(property, this.session.cursor, this.session.anchor, {includeEnd: true});
     await this.session.setMode(MODES.NORMAL);
     this.keyStream.save();
   }

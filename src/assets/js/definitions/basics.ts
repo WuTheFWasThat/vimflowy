@@ -251,7 +251,7 @@ const visual_line_mode_delete_fn = () =>
 const visual_mode_delete_fn = () =>
   async function() {
     const options = {includeEnd: true, yank: true};
-    this.session.deleteBetween(this.session.cursor, this.session.anchor, options);
+    await this.session.deleteBetween(this.session.cursor, this.session.anchor, options);
     await this.session.setMode(MODES.NORMAL);
     this.keyStream.save();
   }
@@ -288,7 +288,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLACE, {
   if (key === null) { return this.keyStream.wait(); }
   // TODO: refactor keys so this is unnecessary
   if (key === 'space') { key = ' '; }
-  this.session.replaceCharsAfterCursor(key, this.repeat);
+  await this.session.replaceCharsAfterCursor(key, this.repeat);
   this.keyStream.save();
 });
 
@@ -322,7 +322,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
     await motion(cursor, {pastEnd: true, pastEndWord: true});
   }
 
-  this.session.deleteBetween(this.session.cursor, cursor, { yank: true });
+  await this.session.deleteBetween(this.session.cursor, cursor, { yank: true });
   this.keyStream.save();
 });
 
@@ -346,7 +346,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_CHANGE, {
   description: 'Change',
 }, async function() {
   const options = {includeEnd: true, yank: true};
-  this.session.deleteBetween(this.session.cursor, this.session.anchor, options);
+  await this.session.deleteBetween(this.session.cursor, this.session.anchor, options);
   await this.session.setMode(MODES.INSERT);
 });
 
@@ -366,7 +366,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_CHANGE], {
   description: 'Delete row, and enter insert mode',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  this.session.clearRowAtCursor({yank: true});
+  await this.session.clearRowAtCursor({yank: true});
 });
 
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_RECURSIVE], {
@@ -384,7 +384,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
     await motion(cursor, {pastEnd: true, pastEndWord: true});
   }
   await this.session.setMode(MODES.INSERT);
-  this.session.deleteBetween(this.session.cursor, cursor, {yank: true});
+  await this.session.deleteBetween(this.session.cursor, cursor, {yank: true});
 });
 
 // yank
@@ -400,7 +400,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_YANK, {
   description: 'Yank',
 }, async function() {
   const options = {includeEnd: true};
-  this.session.yankBetween(this.session.cursor, this.session.anchor, options);
+  await this.session.yankBetween(this.session.cursor, this.session.anchor, options);
   await this.session.setMode(MODES.NORMAL);
   this.keyStream.forget();
 });
@@ -421,7 +421,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_YANK, {
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_YANK], {
   description: 'Yank row',
 }, async function() {
-  this.session.yankRowAtCursor();
+  await this.session.yankRowAtCursor();
   this.keyStream.forget();
 });
 
@@ -440,7 +440,7 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
     await motion(cursor, {pastEnd: true, pastEndWord: true});
   }
 
-  this.session.yankBetween(this.session.cursor, cursor, {});
+  await this.session.yankBetween(this.session.cursor, cursor, {});
   this.keyStream.forget();
 });
 
@@ -473,7 +473,7 @@ const CMD_DELETE_CHAR = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, async function() {
-  this.session.delCharsAfterCursor(this.repeat, {yank: true});
+  await this.session.delCharsAfterCursor(this.repeat, {yank: true});
   this.keyStream.save();
 });
 
@@ -488,13 +488,13 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_DELETE_CHAR, {
 keyDefinitions.registerAction([MODES.INSERT], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, async function() {
-  this.session.delCharsAfterCursor(1);
+  await this.session.delCharsAfterCursor(1);
 });
 
 keyDefinitions.registerAction([MODES.SEARCH], CMD_DELETE_CHAR, {
   description: 'Delete character at the cursor (i.e. del key)',
 }, async function() {
-  this.session.menu.session.delCharsAfterCursor(1);
+  await this.session.menu.session.delCharsAfterCursor(1);
 });
 
 const CMD_DELETE_LAST_CHAR = keyDefinitions.registerCommand({
@@ -510,7 +510,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_DELETE_LAST_CHAR, {
 }, async function() {
   const num = Math.min(this.session.cursor.col, this.repeat);
   if (num > 0) {
-    this.session.delCharsBeforeCursor(num, {yank: true});
+    await this.session.delCharsBeforeCursor(num, {yank: true});
   }
   this.keyStream.save();
 });
@@ -547,7 +547,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_CHANGE_CHAR, {
   description: 'Change character',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  this.session.delCharsAfterCursor(1, {yank: true});
+  await this.session.delCharsAfterCursor(1, {yank: true});
 });
 
 const CMD_DELETE_TO_HOME = keyDefinitions.registerCommand({
@@ -572,7 +572,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_TO_HOME, 
   if (this.mode === MODES.INSERT) {
     options.cursor.pastEnd = true;
   }
-  this.session.deleteBetween(
+  await this.session.deleteBetween(
     this.session.cursor,
     await this.session.cursor.clone().home(options.cursor),
     options
@@ -605,7 +605,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_TO_END, {
   if (this.mode === MODES.INSERT) {
     options.cursor.pastEnd = true;
   }
-  this.session.deleteBetween(
+  await this.session.deleteBetween(
     this.session.cursor,
     await this.session.cursor.clone().end(options.cursor),
     options
@@ -638,7 +638,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_DELETE_LAST_WORD
   if (this.mode === MODES.INSERT) {
     options.cursor.pastEnd = true;
   }
-  this.session.deleteBetween(
+  await this.session.deleteBetween(
     this.session.cursor,
     await this.session.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}),
     options

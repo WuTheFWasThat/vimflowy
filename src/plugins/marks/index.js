@@ -244,7 +244,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], basic_defs.CMD_MOTION, {
       description: 'Move the cursor',
     }, async function(motion) {
-      motion(that.marksession.cursor, {pastEnd: true});
+      await motion(that.marksession.cursor, {pastEnd: true});
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
@@ -256,7 +256,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
       description: 'Delete character at the cursor (i.e. del key)',
     }, async function() {
-      this.session.marksession.delCharsAfterCursor(1);
+      await this.session.marksession.delCharsAfterCursor(1);
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_HELP, {

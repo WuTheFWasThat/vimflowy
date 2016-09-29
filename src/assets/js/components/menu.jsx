@@ -35,6 +35,7 @@ export default class MenuComponent extends React.Component {
 
   render() {
     const menu = this.props.menu;
+    const query = this.state.query;
 
     const searchBox = (
       <div className='searchBox theme-trim'>
@@ -42,11 +43,11 @@ export default class MenuComponent extends React.Component {
         <span>
           {
             (() => {
-              if (this.state.query === null) {
+              if (query === null) {
                 return <SpinnerComponent/>;
               } else {
                 return <LineComponent
-                  lineData={this.state.query}
+                  lineData={query}
                   cursors={{
                     [menu.session.cursor.col]: true
                   }}
@@ -63,7 +64,7 @@ export default class MenuComponent extends React.Component {
 
     if (menu.results.length === 0) {
       let message = '';
-      if (menu.session.curLineLength() === 0) {
+      if (query.length === 0) {
         message = 'Type something to search!';
       } else {
         message = 'No results!  Try typing something else';

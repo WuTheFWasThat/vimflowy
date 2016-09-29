@@ -681,7 +681,7 @@ export default class Session extends EventEmitter {
     return this.document.getText(this.cursor.row);
   }
 
-  public curLineLength() {
+  public async curLineLength() {
     return this.document.getLength(this.cursor.row);
   }
 
@@ -701,7 +701,7 @@ export default class Session extends EventEmitter {
     return this.addChars(this.cursor.row, col, chars);
   }
 
-  public delChars(path, col, nchars, options: {yank?: boolean} = {}) {
+  private async delChars(path, col, nchars, options: {yank?: boolean} = {}) {
     const n = this.document.getLength(path.row);
     let deleted = [];
     if ((n > 0) && (nchars > 0) && (col < n)) {
@@ -715,23 +715,23 @@ export default class Session extends EventEmitter {
     return deleted;
   }
 
-  public delCharsBeforeCursor(nchars, options) {
+  public async delCharsBeforeCursor(nchars, options) {
     nchars = Math.min(this.cursor.col, nchars);
-    return this.delChars(this.cursor.path, this.cursor.col - nchars, nchars, options);
+    return await this.delChars(this.cursor.path, this.cursor.col - nchars, nchars, options);
   }
 
-  public delCharsAfterCursor(nchars, options) {
-    return this.delChars(this.cursor.path, this.cursor.col, nchars, options);
+  public async delCharsAfterCursor(nchars, options) {
+    return await this.delChars(this.cursor.path, this.cursor.col, nchars, options);
   }
 
-  private changeChars(row, col, nchars, change_fn) {
+  private async changeChars(row, col, nchars, change_fn) {
     const mutation = new mutations.ChangeChars(row, col, nchars, change_fn);
     this.do(mutation);
     return mutation.ncharsDeleted;
   }
 
-  public replaceCharsAfterCursor(char, nchars) {
-    const ndeleted = this.changeChars(this.cursor.row, this.cursor.col, nchars, (chars =>
+  public async replaceCharsAfterCursor(char, nchars) {
+    const ndeleted = await this.changeChars(this.cursor.row, this.cursor.col, nchars, (chars =>
       chars.map(function(char_obj) {
         const new_obj = _.clone(char_obj);
         new_obj.char = char;
@@ -741,24 +741,24 @@ export default class Session extends EventEmitter {
     return this.cursor.setCol(this.cursor.col + ndeleted - 1);
   }
 
-  public clearRowAtCursor(options) {
+  public async clearRowAtCursor(options) {
     if (options.yank) {
       // yank as a row, not chars
-      this.yankRowAtCursor();
+      await this.yankRowAtCursor();
     }
-    return this.delChars(this.cursor.path, 0, this.curLineLength());
+    return await this.delChars(this.cursor.path, 0, await this.curLineLength());
   }
 
-  public yankChars(path, col, nchars) {
+  public async yankChars(path, col, nchars) {
     const line = this.document.getLine(path.row);
     if (line.length > 0) {
-      return this.register.saveChars(line.slice(col, col + nchars));
+      this.register.saveChars(line.slice(col, col + nchars));
     }
   }
 
   // options:
   //   - includeEnd says whether to also delete cursor2 location
-  public yankBetween(cursor1, cursor2, options: {includeEnd?: boolean} = {}) {
+  public async yankBetween(cursor1, cursor2, options: {includeEnd?: boolean} = {}) {
     if (!cursor2.path.is(cursor1.path)) {
       logger.warn('Not yet implemented');
       return;
@@ -769,17 +769,17 @@ export default class Session extends EventEmitter {
     }
 
     const offset = options.includeEnd ? 1 : 0;
-    return this.yankChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset);
+    await this.yankChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset);
   }
 
-  public yankRowAtCursor() {
+  public async yankRowAtCursor() {
     const serialized_row = this.document.serializeRow(this.cursor.row);
     return this.register.saveSerializedRows([serialized_row]);
   }
 
   // options:
   //   - includeEnd says whether to also delete cursor2 location
-  public deleteBetween(cursor1, cursor2, options: {includeEnd?: boolean} = {}) {
+  public async deleteBetween(cursor1, cursor2, options: {includeEnd?: boolean} = {}) {
     if (!cursor2.path.is(cursor1.path)) {
       logger.warn('Not yet implemented');
       return;
@@ -789,15 +789,15 @@ export default class Session extends EventEmitter {
       [cursor1, cursor2] = [cursor2, cursor1];
     }
     const offset = options.includeEnd ? 1 : 0;
-    this.delChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset, options);
+    await this.delChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset, options);
   }
 
   // TODO: fix a bunch of these to use rows (they're still actually paths)
 
   // toggling text properties
   // if new_value is null, should be inferred based on old values
-  private toggleProperty(property, new_value, row, col, n) {
-    return this.changeChars(row, col, n, function(deleted) {
+  private async toggleProperty(property, new_value, row, col, n) {
+    return await this.changeChars(row, col, n, function(deleted) {
       if (new_value === null) {
         const all_were_true = _.every(deleted.map(obj => obj[property]));
         new_value = !all_were_true;
@@ -811,22 +811,24 @@ export default class Session extends EventEmitter {
     });
   }
 
-  public toggleRowsProperty(property, rows) {
+  public async toggleRowsProperty(property, rows) {
     const all_were_true = _.every(rows.map(row => {
       return _.every(this.document.getLine(row).map(obj => obj[property]));
     }));
     const new_value = !all_were_true;
-    rows.forEach((row) => {
-      this.toggleProperty(property, new_value, row, 0, this.document.getLength(row));
-    });
+    await Promise.all(
+      rows.map(async (row) => {
+        await this.toggleProperty(property, new_value, row, 0, this.document.getLength(row));
+      })
+    );
     return null;
   }
 
-  public toggleRowProperty(property, row = this.cursor.row) {
-    return this.toggleProperty(property, null, row, 0, this.document.getLength(row));
+  public async toggleRowProperty(property, row = this.cursor.row) {
+    return await this.toggleProperty(property, null, row, 0, this.document.getLength(row));
   }
 
-  public toggleRowPropertyBetween(property, cursor1, cursor2, options: {includeEnd?: boolean}) {
+  public async toggleRowPropertyBetween(property, cursor1, cursor2, options: {includeEnd?: boolean}) {
     if (!(cursor2.path.is(cursor1.path))) {
       logger.warn('Not yet implemented');
       return;
@@ -837,7 +839,7 @@ export default class Session extends EventEmitter {
     }
 
     const offset = options.includeEnd ? 1 : 0;
-    return this.toggleProperty(property, null, cursor1.row, cursor1.col, cursor2.col - cursor1.col + offset);
+    return await this.toggleProperty(property, null, cursor1.row, cursor1.col, cursor2.col - cursor1.col + offset);
   }
 
   public async newLineBelow(
@@ -963,7 +965,7 @@ export default class Session extends EventEmitter {
   // implements proper "backspace" behavior
   public async deleteAtCursor() {
     if (this.cursor.col > 0) {
-      this.delCharsBeforeCursor(1, {cursor: {pastEnd: true}});
+      await this.delCharsBeforeCursor(1, {cursor: {pastEnd: true}});
       return true;
     }
 
