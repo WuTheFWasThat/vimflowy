@@ -319,7 +319,7 @@ $(document).ready(function() {
               await session.newLineAtCursor();
             }
             const chars = line.split('');
-            session.addCharsAtCursor(chars);
+            await session.addCharsAtCursor(chars);
           }
           session.save();
           renderMain();

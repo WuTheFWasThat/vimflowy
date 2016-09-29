@@ -69,9 +69,9 @@ export default class Register {
   public async pasteChars(options: PasteOptions = {}) {
     const chars = this.saved;
     if (options.before) {
-      this.session.addCharsAtCursor(chars);
+      await this.session.addCharsAtCursor(chars);
     } else {
-      this.session.addCharsAfterCursor(chars);
+      await this.session.addCharsAfterCursor(chars);
       this.session.cursor.setCol(this.session.cursor.col + chars.length);
     }
   }

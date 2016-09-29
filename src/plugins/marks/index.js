@@ -118,11 +118,11 @@ class MarksPlugin {
         this.marksessionpath = null;
       },
       key_transforms: [
-        (key, context) => {
+        async (key, context) => {
           // must be non-whitespace
           if (key.length === 1) {
             if (/^\S*$/.test(key)) {
-              this.marksession.addCharsAtCursor([{char: key}]);
+              await this.marksession.addCharsAtCursor([{char: key}]);
               return [null, context];
             }
           }

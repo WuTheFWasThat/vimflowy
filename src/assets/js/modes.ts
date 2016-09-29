@@ -191,7 +191,7 @@ registerMode({
           const property = constants.text_properties[i];
           if (context.session.cursor.getProperty(property)) { obj[property] = true; }
         }
-        context.session.addCharsAtCursor([obj]);
+        await context.session.addCharsAtCursor([obj]);
         return [null, context];
       }
       return [key, context];
@@ -255,7 +255,7 @@ registerMode({
     async function(key, context) {
       key = transform_insert_key(key);
       if (key.length === 1) {
-        context.session.menu.session.addCharsAtCursor([{char: key}]);
+        await context.session.menu.session.addCharsAtCursor([{char: key}]);
         await context.session.menu.update();
         context.keyStream.forget();
         return [null, context];

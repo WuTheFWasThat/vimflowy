@@ -689,11 +689,11 @@ export default class Session extends EventEmitter {
     return this.do(new mutations.AddChars(row, col, chars));
   }
 
-  public addCharsAtCursor(chars) {
+  public async addCharsAtCursor(chars) {
     return this.addChars(this.cursor.row, this.cursor.col, chars);
   }
 
-  public addCharsAfterCursor(chars) {
+  public async addCharsAfterCursor(chars) {
     let col = this.cursor.col;
     if (col < this.document.getLength(this.cursor.row)) {
       col += 1;
@@ -890,7 +890,7 @@ export default class Session extends EventEmitter {
 
       await this.newLineAbove();
       // cursor now is at inserted path, add the characters
-      this.addCharsAfterCursor(mutation.deletedChars);
+      await this.addCharsAfterCursor(mutation.deletedChars);
       // restore cursor
       return this.cursor.setPosition(path, 0, {keepProperties: true});
     }
