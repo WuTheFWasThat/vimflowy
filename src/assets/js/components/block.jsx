@@ -124,18 +124,6 @@ export default class BlockComponent extends React.Component {
 
     const pathElements = [];
 
-    if (session.document.isClone(path.row)) {
-      const cloneIcon = (
-        <i key='clone' className='fa fa-clone bullet clone-icon' title='Cloned'/>
-      );
-      pathElements.push(cloneIcon);
-    }
-
-    let icon = 'fa-circle';
-    if (session.document.hasChildren(path.row)) {
-      icon = session.document.collapsed(path.row) ? 'fa-plus-circle' : 'fa-minus-circle';
-    }
-
     const style = {};
     let onClick = null;
     if (session.document.hasChildren(path.row)) {
@@ -147,30 +135,48 @@ export default class BlockComponent extends React.Component {
       };
     }
 
-    let bullet = (
-      <i className={`fa ${icon} bullet`} key='bullet'
-        style={style} onClick={onClick}
-        data-ancestry={JSON.stringify(path.getAncestry())}
-      >
-      </i>
-    );
-    bullet = session.applyHook('renderBullet', bullet, { path });
+    if (!path.isRoot()) {
+      const elLine = (
+        <RowComponent key='row' session={session} path={path} options={options}/>
+      );
+      pathElements.push(elLine);
+    }
 
-    pathElements.push(bullet);
-
-    const elLine = (
-      <RowComponent key='row' session={session} path={path} options={options}/>
-    );
-    pathElements.push(elLine);
-    if (!session.document.collapsed(path.row)) {
+    if (session.viewable(path)) {
       const children = session.document.getChildren(path);
       pathElements.push(
-        <div key='children'>
+        <div key='children' className='block'>
           {
             children.map((child) => {
+
+              let cloneIcon = null;
+              if (session.document.isClone(child.row)) {
+                cloneIcon = (
+                  <i key='clone' className='fa fa-clone bullet clone-icon' title='Cloned'/>
+                );
+              }
+
+              let icon = 'fa-circle';
+              if (session.document.hasChildren(child.row)) {
+                icon = session.document.collapsed(child.row) ? 'fa-plus-circle' : 'fa-minus-circle';
+              }
+
+              let bullet = (
+                <i className={`fa ${icon} bullet`} key='bullet'
+                  style={style} onClick={onClick}
+                  data-ancestry={JSON.stringify(child.getAncestry())}
+                >
+                </i>
+              );
+              bullet = session.applyHook('renderBullet', bullet, { path: child });
+
               return (
-                <BlockComponent key={child.row}
-                 session={session} path={child} options={options}/>
+                <div key={child.row}>
+                  {cloneIcon}
+                  {bullet}
+                  <BlockComponent key='block'
+                   session={session} path={child} options={options}/>
+                </div>
               );
             })
           }

@@ -48,38 +48,31 @@ export default class SessionComponent extends React.Component {
       });
     }
 
-    let contentsNode;
     const children = session.document.getChildren(session.viewRoot);
-    if (children.length) {
-      contentsNode = (
-        <div key='contents'>
-          {
-            children.map((child) => {
-              return (
-                <BlockComponent key={child.row}
-                 session={session} path={child} options={options}/>
-              );
-            })
-          }
-        </div>
-      );
-    } else {
-      let message = 'Nothing here yet.';
-      if (session.mode === MODES.NORMAL) {
-        message += ' Press o to start adding content!';
-      }
-      contentsNode = (
-        <div key='contents' className='center'
-             style={{padding: 20, fontSize: 20, opacity: 0.5}}>
-          { message }
-        </div>
-      );
-    }
 
     return (
       <div>
         <BreadcrumbsComponent session={session} options={options}/>
-        {contentsNode}
+        <div key='contents'>
+          <BlockComponent
+           session={session} path={session.viewRoot} options={options}/>
+        </div>
+        {
+          (() => {
+            if (!children.length) {
+              let message = 'Nothing here yet.';
+              if (session.mode === MODES.NORMAL) {
+                message += ' Press o to start adding content!';
+              }
+              return (
+                <div key='message' className='center'
+                     style={{padding: 20, fontSize: 20, opacity: 0.5}}>
+                  { message }
+                </div>
+              );
+            }
+          })()
+        }
       </div>
     );
   }

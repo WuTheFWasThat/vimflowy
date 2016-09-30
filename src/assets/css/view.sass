@@ -1,12 +1,6 @@
-.node
-    $node-padding: 50px
-    $node-min-height: 25px
-
-    padding-left: $node-padding
-
-    // min height should be at least font size
-    min-height: $node-min-height
-    font-size: 14px
+.block
+    $indent-padding: 50px
+    padding-left: $indent-padding
 
     .bullet
         float: left
@@ -14,10 +8,18 @@
         display: inline-block
         // hack!
         margin-top: 2px
-        margin-left: - $node-padding / 2 - 5
+        margin-left: - $indent-padding / 2 - 5
 
         &.clone-icon
-            margin-left: - $node-padding - 5
+            margin-left: - $indent-padding - 5
+
+
+.node
+    $node-min-height: 25px
+
+    // min height should be at least font size
+    min-height: $node-min-height
+    font-size: 14px
 
     .node-text
         margin-left: 10px

@@ -76,33 +76,24 @@ export default class BreadcrumbsComponent extends React.Component {
       path = path.parent;
     }
 
-    const makeCrumb = (path, isLast) => {
-      if (isLast) {
-        return (
-          <RowComponent key='last' session={session} path={path} options={options}/>
-        );
-      } else {
-        return (
-          <CrumbComponent key={path.row}
-            session={session} options={options} path={path}
-          />
-        );
-      }
+    const makeCrumb = (path) => {
+      return (
+        <CrumbComponent key={path.row}
+          session={session} options={options} path={path}
+        />
+      );
     };
 
     const crumbNodes = [];
     crumbNodes.push(makeCrumb(session.document.root));
-    for (let i = crumbs.length - 1; i >= 0; i--) {
+    for (let i = crumbs.length - 1; i > 0; i--) {
       path = crumbs[i];
-      crumbNodes.push(makeCrumb(path, i===0));
+      crumbNodes.push(makeCrumb(path));
     }
 
     return (
       <div key='breadcrumbs' className='breadcrumbs'
-        style={{
-          fontSize: 20,
-          marginBottom: 20,
-        }}
+        style={{ fontSize: 20, marginBottom: 10 }}
       >
         {crumbNodes}
       </div>
