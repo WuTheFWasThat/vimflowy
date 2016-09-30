@@ -15,6 +15,7 @@ export class RowComponent extends React.Component {
       session: React.PropTypes.any.isRequired,
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
+      line: React.PropTypes.any.isRequired,
     };
   }
 
@@ -26,8 +27,7 @@ export class RowComponent extends React.Component {
     const session = this.props.session;
     const path = this.props.path;
     const options = this.props.options;
-
-    const lineData = session.document.getLine(path.row);
+    const lineData = this.props.line;
 
     let cursors = {};
     const highlights = {};
@@ -114,68 +114,72 @@ export default class BlockComponent extends React.Component {
       session: React.PropTypes.any.isRequired,
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
+      contents: React.PropTypes.any.isRequired,
     };
   }
 
   render() {
     const session = this.props.session;
-    const path = this.props.path;
+    const parent = this.props.path;
     const options = this.props.options;
+    const parentContents = this.props.contents;
 
     const pathElements = [];
 
-    const style = {};
-    let onClick = null;
-    if (session.document.hasChildren(path.row)) {
-      style.cursor = 'pointer';
-      onClick = async () => {
-        await session.toggleBlockCollapsed(path.row);
-        session.save();
-        options.rerender();
-      };
-    }
-
-    if (!path.isRoot()) {
+    if (!parent.isRoot()) {
       const elLine = (
-        <RowComponent key='row' session={session} path={path} options={options}/>
+        <RowComponent key='row'
+          session={session} path={parent} options={options}
+          line={parentContents.line}
+        />
       );
       pathElements.push(elLine);
     }
 
-    if (session.viewable(path)) {
-      const children = session.document.getChildren(path);
+    if (parentContents.children) {
       pathElements.push(
         <div key='children' className='block'>
           {
-            children.map((child) => {
+            parentContents.children.map((contents) => {
+              const path = parent.child(contents.row);
 
               let cloneIcon = null;
-              if (session.document.isClone(child.row)) {
+              if (contents.isClone) {
                 cloneIcon = (
                   <i key='clone' className='fa fa-clone bullet clone-icon' title='Cloned'/>
                 );
               }
 
+              let onClick = null;
+              const style = {};
+
               let icon = 'fa-circle';
-              if (session.document.hasChildren(child.row)) {
-                icon = session.document.collapsed(child.row) ? 'fa-plus-circle' : 'fa-minus-circle';
+              if (contents.hasChildren) {
+                icon = contents.collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
+                style.cursor = 'pointer';
+                onClick = async () => {
+                  await session.toggleBlockCollapsed(path.row);
+                  session.save();
+                  options.rerender();
+                };
               }
 
               let bullet = (
                 <i className={`fa ${icon} bullet`} key='bullet'
                   style={style} onClick={onClick}
-                  data-ancestry={JSON.stringify(child.getAncestry())}
+                  data-ancestry={JSON.stringify(path.getAncestry())}
                 >
                 </i>
               );
-              bullet = session.applyHook('renderBullet', bullet, { path: child });
+              bullet = session.applyHook('renderBullet', bullet, { path });
 
               return (
-                <div key={child.row}>
+                <div key={path.row}>
                   {cloneIcon}
                   {bullet}
                   <BlockComponent key='block'
-                   session={session} path={child} options={options}/>
+                   contents={contents}
+                   session={session} path={path} options={options}/>
                 </div>
               );
             })
@@ -185,7 +189,7 @@ export default class BlockComponent extends React.Component {
     }
 
     let className = 'node';
-    if (path.row in options.highlight_blocks) {
+    if (parent.row in options.highlight_blocks) {
       className += ' theme-bg-highlight';
     }
     return (

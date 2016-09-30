@@ -511,6 +511,24 @@ export default class Document extends EventEmitter {
     return struct;
   }
 
+  public getViewContents(viewRow = this.root.row) {
+
+    const helper = (row, isFirst = false) => {
+      const struct: any = {
+        row: row,
+        line: this.getLine(row),
+        collapsed: this.collapsed(row),
+        isClone: this.isClone(row),
+        hasChildren: this.hasChildren(row),
+      };
+      if (isFirst || (!struct.collapsed)) {
+        struct.children = this._getChildren(row).map((child) => helper(child));
+      }
+      return struct;
+    };
+    return helper(viewRow, true);
+  }
+
   public serialize(
     row = this.root.row,
     options: {pretty?: boolean} = {},

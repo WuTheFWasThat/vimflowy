@@ -48,18 +48,20 @@ export default class SessionComponent extends React.Component {
       });
     }
 
-    const children = session.document.getChildren(session.viewRoot);
+    const viewContents = session.document.getViewContents(session.viewRoot.row);
 
     return (
       <div>
         <BreadcrumbsComponent session={session} options={options}/>
         <div key='contents'>
           <BlockComponent
-           session={session} path={session.viewRoot} options={options}/>
+            session={session} path={session.viewRoot} options={options}
+            contents={viewContents}
+          />
         </div>
         {
           (() => {
-            if (!children.length) {
+            if (!viewContents.children.length) {
               let message = 'Nothing here yet.';
               if (session.mode === MODES.NORMAL) {
                 message += ' Press o to start adding content!';

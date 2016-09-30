@@ -3,7 +3,6 @@ import React from 'react';
 import * as Modes from '../modes';
 
 // import Spinner from './spinner';
-import { RowComponent } from './block';
 
 const MODES = Modes.modes;
 
