@@ -488,7 +488,7 @@ export default class Document extends EventEmitter {
   }
 
   // important: serialized automatically garbage collects
-  public serializeRow(row = this.root.row) {
+  public serializeRow(row = this.root.row): SerializedLine {
     const line = this.getLine(row);
     const text = this.getText(row).join('');
     const struct: SerializedLine = {
@@ -503,8 +503,12 @@ export default class Document extends EventEmitter {
     if (this.collapsed(row)) {
       struct.collapsed = true;
     }
+    const plugins = this.applyHook('serializeRow', {}, {row});
+    if (Object.keys(plugins).length > 0) {
+      struct.plugins = plugins;
+    }
 
-    return this.applyHook('serializeRow', struct, {row});
+    return struct;
   }
 
   public serialize(
@@ -518,7 +522,7 @@ export default class Document extends EventEmitter {
       return { clone: row };
     }
 
-    const struct = this.serializeRow(row);
+    const struct: any = this.serializeRow(row);
     const children = this._getChildren(row).map(
       (childrow) => this.serialize(childrow, options, serialized)
     );
@@ -592,7 +596,7 @@ export default class Document extends EventEmitter {
       }
     }
 
-    this.emit('loadRow', path, serialized);
+    this.emit('loadRow', path, serialized.plugins || {});
 
     return path;
   }

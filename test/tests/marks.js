@@ -22,7 +22,7 @@ describe('marks', function() {
     t.sendKey('enter');
     t.expectMarks({'marktest': 1});
     t.expect([
-      { text: 'a line', mark: 'marktest' },
+      { text: 'a line', plugins: {mark: 'marktest'} },
       'another line'
     ]);
 
@@ -30,8 +30,8 @@ describe('marks', function() {
     t.sendKey('enter');
     t.expectMarks({'marktest': 1, 'test2': 2});
     t.expect([
-      { text: 'a line', mark: 'marktest' },
-      { text: 'another line', mark: 'test2' }
+      { text: 'a line', plugins: {mark: 'marktest'} },
+      { text: 'another line', plugins: {mark: 'test2'} }
     ]);
 
     // unmark
@@ -40,7 +40,7 @@ describe('marks', function() {
     t.expectMarks({'test2': 2});
     t.expect([
       'a line',
-      { text: 'another line', mark: 'test2' }
+      { text: 'another line', plugins: {mark: 'test2'} }
     ]);
 
     t.sendKeys('jm');
@@ -61,20 +61,20 @@ describe('marks', function() {
     t.expectMarks({'test2': 2});
     t.expect([
       'a line',
-      { text: 'another line', mark: 'test2' }
+      { text: 'another line', plugins: {mark: 'test2'} }
     ]);
 
     t.sendKeys('u');
     t.expectMarks({'marktest': 1, 'test2': 2});
     t.expect([
-      { text: 'a line', mark: 'marktest' },
-      { text: 'another line', mark: 'test2' }
+      { text: 'a line', plugins: {mark: 'marktest'} },
+      { text: 'another line', plugins: {mark: 'test2'} }
     ]);
 
     t.sendKeys('u');
     t.expectMarks({'marktest': 1});
     t.expect([
-      { text: 'a line', mark: 'marktest' },
+      { text: 'a line', plugins: {mark: 'marktest'} },
       'another line'
     ]);
 
@@ -82,8 +82,8 @@ describe('marks', function() {
     t.sendKey('ctrl+r');
     t.expectMarks({'marktest': 1, 'test2': 2});
     t.expect([
-      { text: 'a line', mark: 'marktest' },
-      { text: 'another line', mark: 'test2' }
+      { text: 'a line', plugins: {mark: 'marktest'} },
+      { text: 'another line', plugins: {mark: 'test2'} }
     ]);
 
     // backspace and left and right work
@@ -93,8 +93,8 @@ describe('marks', function() {
     t.sendKey('enter');
     t.expectMarks({'marktest': 1, 'halo': 2});
     t.expect([
-      { text: 'a line', mark: 'marktest' },
-      { text: 'another line', mark: 'halo' }
+      { text: 'a line', plugins: {mark: 'marktest'} },
+      { text: 'another line', plugins: {mark: 'halo'} }
     ]);
 
     // cancel works
@@ -102,27 +102,27 @@ describe('marks', function() {
     t.sendKey('esc');
     t.expectMarks({'marktest': 1, 'halo': 2});
     t.expect([
-      { text: 'a line', mark: 'marktest' },
-      { text: 'another line', mark: 'halo' }
+      { text: 'a line', plugins: {mark: 'marktest'} },
+      { text: 'another line', plugins: {mark: 'halo'} }
     ]);
     await t.done();
   });
 
   it('works with paste', async function() {
     let t = new TestCase([
-      { text: 'line 1', mark: 'mark1' },
-      { text: 'line 2', mark: 'mark2' }
+      { text: 'line 1', plugins: {mark: 'mark1'} },
+      { text: 'line 2', plugins: {mark: 'mark2'} }
     ], {plugins: [Marks.pluginName]});
     t.expectMarks({'mark1': 1, 'mark2': 2});
     t.sendKeys('dd');
     t.expect([
-      { text: 'line 2', mark: 'mark2' }
+      { text: 'line 2', plugins: {mark: 'mark2'} }
     ]);
     t.expectMarks({'mark2': 2});
     t.sendKeys('p');
     t.expect([
-      { text: 'line 2', mark: 'mark2' },
-      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 2', plugins: {mark: 'mark2'} },
+      { text: 'line 1', plugins: {mark: 'mark1'} }
     ]);
     t.expectMarks({'mark2': 2, 'mark1': 1});
     await t.done();
@@ -130,36 +130,36 @@ describe('marks', function() {
 
   it('doesnt mark when the mark exists, from delete', async function() {
     let t = new TestCase([
-      { text: 'line 1', mark: 'mark1' },
-      { text: 'line 2', mark: 'mark2' }
+      { text: 'line 1', plugins: {mark: 'mark1'} },
+      { text: 'line 2', plugins: {mark: 'mark2'} },
     ], {plugins: [Marks.pluginName]});
     t.sendKeys('mmark2');
     t.sendKey('enter');
     // does nothing due to mark2 being taken
     t.expect([
-      { text: 'line 1', mark: 'mark1' },
-      { text: 'line 2', mark: 'mark2' }
+      { text: 'line 1', plugins: {mark: 'mark1'} },
+      { text: 'line 2', plugins: {mark: 'mark2'} },
     ]);
     t.expectMarks({'mark1': 1, 'mark2': 2});
 
     // once line is deleted, we can mark though
     t.sendKeys('jdd');
     t.expect([
-      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 1', plugins: {mark: 'mark1'} },
     ]);
     t.expectMarks({'mark1': 1});
 
     t.sendKeys('mmark2');
     t.sendKey('enter');
     t.expect([
-      { text: 'line 1', mark: 'mark2' }
+      { text: 'line 1', plugins: {mark: 'mark2'} },
     ]);
     t.expectMarks({'mark2': 1});
 
     // paste can't reapply the mark
     t.sendKeys('p');
     t.expect([
-      { text: 'line 1', mark: 'mark2' },
+      { text: 'line 1', plugins: {mark: 'mark2'} },
       'line 2'
     ]);
     t.expectMarks({'mark2': 1});
@@ -167,7 +167,7 @@ describe('marks', function() {
     t.sendKeys('kmmark3');
     t.sendKey('enter');
     t.expect([
-      { text: 'line 1', mark: 'mark3' },
+      { text: 'line 1', plugins: {mark: 'mark3'} },
       'line 2'
     ]);
     t.expectMarks({'mark3': 1});
@@ -176,7 +176,7 @@ describe('marks', function() {
 
   it('doesnt mark when the mark exists, from yank', async function() {
     let t = new TestCase([
-      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 1', plugins: {mark: 'mark1'} },
     ], {plugins: [Marks.pluginName]});
 
     t.sendKeys('yy');
@@ -188,14 +188,14 @@ describe('marks', function() {
 
     t.sendKeys('u');
     t.expect([
-      { text: 'line 1', mark: 'mark1' }
+      { text: 'line 1', plugins: {mark: 'mark1'} },
     ]);
     t.expectMarks({'mark1': 1});
 
     // paste can't reapply the mark
     t.sendKeys('p');
     t.expect([
-      { text: 'line 1', mark: 'mark1' },
+      { text: 'line 1', plugins: {mark: 'mark1'} },
       'line 1'
     ]);
     t.expectMarks({'mark1': 1});
@@ -203,7 +203,7 @@ describe('marks', function() {
     t.sendKeys('kmmark2');
     t.sendKey('enter');
     t.expect([
-      { text: 'line 1', mark: 'mark2' },
+      { text: 'line 1', plugins: {mark: 'mark2'} },
       'line 1'
     ]);
     t.expectMarks({'mark2': 1});
@@ -211,8 +211,8 @@ describe('marks', function() {
     // paste can now reapply the mark
     t.sendKeys('p');
     t.expect([
-      { text: 'line 1', mark: 'mark2' },
-      { text: 'line 1', mark: 'mark1' },
+      { text: 'line 1', plugins: {mark: 'mark2'} },
+      { text: 'line 1', plugins: {mark: 'mark1'} },
       'line 1'
     ]);
     t.expectMarks({'mark2': 1, 'mark1': 3});
@@ -223,9 +223,9 @@ describe('marks', function() {
     let t = new TestCase([
       { text: '@mark2 @mark3', children: [
         'line',
-        { text: 'line', mark: 'mark3' }
+        { text: 'line', plugins: {mark: 'mark3'} },
       ] },
-      { text: 'stuff', mark: 'mark2', children: [
+      { text: 'stuff', plugins: {mark: 'mark2'}, children: [
         'more stuff'
       ] }
     ], {plugins: [Marks.pluginName]});
@@ -234,9 +234,9 @@ describe('marks', function() {
     t.expect([
       { text: '@mark2 @mark3', children: [
         'line',
-        { text: 'line', mark: 'mark3' }
+        { text: 'line', plugins: {mark: 'mark3'} }
       ] },
-      { text: 'tuff', mark: 'mark2', children: [
+      { text: 'tuff', plugins: {mark: 'mark2'}, children: [
         'more stuff'
       ] }
     ]);
@@ -245,9 +245,9 @@ describe('marks', function() {
     t.expect([
       { text: '@mark2 @mark3', children: [
         'line',
-        { text: 'line', mark: 'mark3' }
+        { text: 'line', plugins: {mark: 'mark3'} }
       ] },
-      { text: 'tuf', mark: 'mark2', children: [
+      { text: 'tuf', plugins: {mark: 'mark2'}, children: [
         'more stuff'
       ] }
     ]);
@@ -262,9 +262,9 @@ describe('marks', function() {
     t.expect([
       { text: '@mark2 @mark3', children: [
         'line',
-        { text: 'lin', mark: 'mark3' }
+        { text: 'lin', plugins: {mark: 'mark3'} }
       ] },
-      { text: 'tuf', mark: 'mark2', children: [
+      { text: 'tuf', plugins: {mark: 'mark2'}, children: [
         'more stuff'
       ] }
     ]);
@@ -273,25 +273,25 @@ describe('marks', function() {
 
   it('can be searched for', async function() {
     let t = new TestCase([
-      { text: 'whoo', mark: 'hip' },
-      { text: 'yay', mark: 'hooray', children: [
+      { text: 'whoo', plugins: {mark: 'hip'} },
+      { text: 'yay', plugins: {mark: 'hooray'}, children: [
         'hip',
         'hip',
-        { text: 'hooray', mark: 'yay' }
+        { text: 'hooray', plugins: {mark: 'yay'} }
       ] },
-      { text: 'awesome', mark: 'whoo' }
+      { text: 'awesome', plugins: {mark: 'whoo'} }
     ], {plugins: [Marks.pluginName]});
     t.sendKeys('`w');
     t.sendKey('enter');
     t.sendKeys('x');
     t.expect([
-      { text: 'whoo', mark: 'hip' },
-      { text: 'yay', mark: 'hooray', children: [
+      { text: 'whoo', plugins: {mark: 'hip'} },
+      { text: 'yay', plugins: {mark: 'hooray'}, children: [
         'hip',
         'hip',
-        { text: 'hooray', mark: 'yay' }
+        { text: 'hooray', plugins: {mark: 'yay'} }
       ] },
-      { text: 'wesome', mark: 'whoo' }
+      { text: 'wesome', plugins: {mark: 'whoo'} }
     ]);
 
     t.sendKeys('`r');
@@ -299,49 +299,49 @@ describe('marks', function() {
     t.sendKeys('x');
     // goes nowhere
     t.expect([
-      { text: 'whoo', mark: 'hip' },
-      { text: 'yay', mark: 'hooray', children: [
+      { text: 'whoo', plugins: {mark: 'hip'} },
+      { text: 'yay', plugins: {mark: 'hooray'}, children: [
         'hip',
         'hip',
-        { text: 'hooray', mark: 'yay' }
+        { text: 'hooray', plugins: {mark: 'yay'} }
       ] },
-      { text: 'esome', mark: 'whoo' }
+      { text: 'esome', plugins: {mark: 'whoo'} }
     ]);
 
     t.sendKeys('`ho');
     t.sendKey('enter');
     t.sendKeys('x');
     t.expect([
-      { text: 'whoo', mark: 'hip' },
-      { text: 'ay', mark: 'hooray', children: [
+      { text: 'whoo', plugins: {mark: 'hip'} },
+      { text: 'ay', plugins: {mark: 'hooray'}, children: [
         'hip',
         'hip',
-        { text: 'hooray', mark: 'yay' }
+        { text: 'hooray', plugins: {mark: 'yay'} }
       ] },
-      { text: 'esome', mark: 'whoo' }
+      { text: 'esome', plugins: {mark: 'whoo'} }
     ]);
     t.sendKeys('`hi');
     t.sendKey('enter');
     t.sendKeys('x');
     t.expect([
-      { text: 'hoo', mark: 'hip' },
-      { text: 'ay', mark: 'hooray', children: [
+      { text: 'hoo', plugins: {mark: 'hip'} },
+      { text: 'ay', plugins: {mark: 'hooray'}, children: [
         'hip',
         'hip',
-        { text: 'hooray', mark: 'yay' }
+        { text: 'hooray', plugins: {mark: 'yay'} }
       ] },
-      { text: 'esome', mark: 'whoo' }
+      { text: 'esome', plugins: {mark: 'whoo'} }
     ]);
     await t.done();
   });
 
   it('works with deletion', async function() {
     let t = new TestCase([
-      { text: 'row', mark: 'row', children: [
+      { text: 'row', plugins: {mark: 'row'}, children: [
         { text: 'child', children: [
           { text: 'grandchild', children: [
-            { text: 'grandgrandchild', mark: 'too' },
-            { text: 'grandgrandchild', mark: 'deep' }
+            { text: 'grandgrandchild', plugins: {mark: 'too'} },
+            { text: 'grandgrandchild', plugins: {mark: 'deep'} },
           ] }
         ] }
       ] },
@@ -373,13 +373,13 @@ describe('marks', function() {
     // and marks can fail to apply
     t.sendKeys('p');
     t.expect([
-      { text: 'random', mark: 'row' },
-      { text: 'random', mark: 'too' },
+      { text: 'random', plugins: {mark: 'row'} },
+      { text: 'random', plugins: {mark: 'too'} },
       { text: 'row', children: [
         { text: 'child', children: [
           { text: 'grandchild', children: [
             'grandgrandchild',
-            { text: 'grandgrandchild', mark: 'deep' }
+            { text: 'grandgrandchild', plugins: {mark: 'deep'} },
           ] }
         ] }
       ] }
@@ -390,11 +390,11 @@ describe('marks', function() {
 
   it('works with deletion and paste of nested stuff', async function() {
     let t = new TestCase([
-      { text: 'row', mark: 'row', children: [
+      { text: 'row', plugins: {mark: 'row'}, children: [
         { text: 'child', children: [
           { text: 'grandchild', children: [
-            { text: 'grandgrandchild', mark: 'too' },
-            { text: 'grandgrandchild', mark: 'deep' }
+            { text: 'grandgrandchild', plugins: {mark: 'too'} },
+            { text: 'grandgrandchild', plugins: {mark: 'deep'} },
           ] }
         ] }
       ] },
@@ -409,11 +409,11 @@ describe('marks', function() {
     t.sendKeys('p');
     t.expect([
       'random',
-      { text: 'row', mark: 'row', children: [
+      { text: 'row', plugins: {mark: 'row'}, children: [
         { text: 'child', children: [
           { text: 'grandchild', children: [
-            { text: 'grandgrandchild', mark: 'too' },
-            { text: 'grandgrandchild', mark: 'deep' }
+            { text: 'grandgrandchild', plugins: {mark: 'too'} },
+            { text: 'grandgrandchild', plugins: {mark: 'deep'} },
           ] }
         ] }
       ] }
@@ -431,12 +431,12 @@ describe('marks', function() {
     // and marks can fail to apply
     t.sendKeys('p');
     t.expect([
-      { text: 'random', mark: 'too' },
-      { text: 'row', mark: 'row', children: [
+      { text: 'random', plugins: {mark: 'too'} },
+      { text: 'row', plugins: {mark: 'row'}, children: [
         { text: 'child', children: [
           { text: 'grandchild', children: [
             'grandgrandchild',
-            { text: 'grandgrandchild', mark: 'deep' }
+            { text: 'grandgrandchild', plugins: {mark: 'deep'} }
           ] }
         ] }
       ] }
@@ -448,8 +448,8 @@ describe('marks', function() {
 
   it('can be cloned and pasted', async function() {
     let t = new TestCase([
-      { text: 'line 1', mark: 'mark1' },
-      { text: 'line 2', mark: 'mark2', children: [
+      { text: 'line 1', plugins: {mark: 'mark1'} },
+      { text: 'line 2', plugins: {mark: 'mark2'}, children: [
         'line 2.1'
       ] }
     ], {plugins: [Marks.pluginName]});
@@ -459,8 +459,8 @@ describe('marks', function() {
     t.sendKeys('jj');
     t.sendKeys('p');
     t.expect([
-      { text: 'line 1', mark: 'mark1', id: 1 },
-      { text: 'line 2', mark: 'mark2', children: [
+      { text: 'line 1', plugins: {mark: 'mark1'}, id: 1 },
+      { text: 'line 2', plugins: {mark: 'mark2'}, children: [
         'line 2.1',
         { clone: 1 }
       ] }
@@ -469,9 +469,9 @@ describe('marks', function() {
 
     t.sendKeys('ggdd');
     t.expect([
-      { text: 'line 2', mark: 'mark2', children: [
+      { text: 'line 2', plugins: {mark: 'mark2'}, children: [
         'line 2.1',
-        { text: 'line 1', mark: 'mark1' }
+        { text: 'line 1', plugins: {mark: 'mark1'} }
       ] }
     ]);
     t.expectMarks({'mark1': 1, 'mark2': 2});
@@ -480,8 +480,8 @@ describe('marks', function() {
 
   it('deletes marks only on last clone delete', async function() {
     let t = new TestCase([
-      { text: 'line 1', mark: 'mark1' },
-      { text: 'line 2', mark: 'mark2', children: [
+      { text: 'line 1', plugins: {mark: 'mark1'} },
+      { text: 'line 2', plugins: {mark: 'mark2'}, children: [
         'line 2.1'
       ] }
     ], {plugins: [Marks.pluginName]});
@@ -492,8 +492,8 @@ describe('marks', function() {
     t.sendKeys('p');
     t.sendKeys('dd');
     t.expect([
-      { text: 'line 1', mark: 'mark1' },
-      { text: 'line 2', mark: 'mark2', children: [
+      { text: 'line 1', plugins: {mark: 'mark1'} },
+      { text: 'line 2', plugins: {mark: 'mark2'}, children: [
         'line 2.1',
       ] }
     ]);
@@ -501,7 +501,7 @@ describe('marks', function() {
     t.sendKeys('kk');
     t.sendKeys('dd');
     t.expect([
-      { text: 'line 2', mark: 'mark2', children: [
+      { text: 'line 2', plugins: {mark: 'mark2'}, children: [
         'line 2.1',
       ] }
     ]);
@@ -511,7 +511,7 @@ describe('marks', function() {
 
   it('survives transferring to different clone', async function() {
     let t = new TestCase([
-      { text: 'Marked clone', mark: 'mark', children: [
+      { text: 'Marked clone', plugins: {mark: 'mark'}, children: [
         'Clone child'
       ] },
       { text: 'Not a clone', children: [
@@ -522,7 +522,7 @@ describe('marks', function() {
 
     t.sendKeys('ycjjp');
     t.expect([
-      { text: 'Marked clone', mark: 'mark', id: 1, children: [
+      { text: 'Marked clone', plugins: {mark: 'mark'}, id: 1, children: [
         'Clone child'
       ] },
       { text: 'Not a clone', children: [
@@ -534,7 +534,7 @@ describe('marks', function() {
     t.sendKeys('ggdd');
     t.expect([
       { text: 'Not a clone', children: [
-        { text: 'Marked clone', mark: 'mark', children: [
+        { text: 'Marked clone', plugins: {mark: 'mark'}, children: [
           'Clone child'
         ] },
         'Not a clone'
@@ -552,7 +552,7 @@ describe('marks', function() {
     let t = new TestCase([
       { text: 'parent', children: [
         { text: 'Will be cloned', children: [
-          { text: 'Marked child', mark: 'mark' }
+          { text: 'Marked child', plugins: {mark: 'mark'} }
         ] },
         { text: 'blah', children: [
           'blah'
@@ -565,7 +565,7 @@ describe('marks', function() {
     t.expect([
       { text: 'parent', children: [
         { text: 'Will be cloned', id: 2, children: [
-          { text: 'Marked child', mark: 'mark' }
+          { text: 'Marked child', plugins: {mark: 'mark'} }
         ] },
         { text: 'blah', children: [
           'blah',
@@ -614,7 +614,7 @@ describe('marks', function() {
     t.expect([
       { text: 'parent', children: [
         { text: 'Will be cloned', id: 2, children: [
-          { text: 'Marked child', mark: 'mark' }
+          { text: 'Marked child', plugins: {mark: 'mark'} }
         ] },
         { text: 'blah', children: [
           'blah',
@@ -636,7 +636,7 @@ describe('marks', function() {
     let t = new TestCase([
       { text: 'parent', children: [
         { text: 'Will be cloned', children: [
-          { text: 'Marked child', mark: 'mark' }
+          { text: 'Marked child', plugins: {mark: 'mark'} }
         ] },
         { text: 'blah', children: [
           'blah'
@@ -649,7 +649,7 @@ describe('marks', function() {
     t.expect([
       { text: 'parent', children: [
         { text: 'Will be cloned', id: 2, children: [
-          { text: 'Marked child', mark: 'mark' }
+          { text: 'Marked child', plugins: {mark: 'mark'} }
         ] },
         { text: 'blah', children: [
           'blah',
@@ -675,7 +675,7 @@ describe('marks', function() {
 
   it('works with jumps', async function() {
     let t = new TestCase([
-      { text: 'okay', mark: 'goto', children: [
+      { text: 'okay', plugins: {mark: 'goto'}, children: [
         'stuff'
       ] },
       'third'
@@ -699,7 +699,7 @@ describe('marks', function() {
     let t = new TestCase([
       { text: 'parent', children: [
         { text: 'Will be cloned', children: [
-          { text: 'Marked child', mark: 'mark' }
+          { text: 'Marked child', plugins: {mark: 'mark'} }
         ] },
         { text: 'blah', children: [
           'blah'
@@ -712,7 +712,7 @@ describe('marks', function() {
     t.expect([
       { text: 'parent', children: [
         { text: 'Will be cloned', id: 2, children: [
-          { text: 'Marked child', mark: 'mark' }
+          { text: 'Marked child', plugins: {mark: 'mark'} }
         ] },
         { text: 'blah', children: [
           'blah',
@@ -726,7 +726,7 @@ describe('marks', function() {
     t.expect([
       { text: 'parent', children: [
         { text: 'Will be cloned', children: [
-          { text: 'Marked child', mark: 'mark' }
+          { text: 'Marked child', plugins: {mark: 'mark'} }
         ] }
       ] }
     ]);
@@ -736,7 +736,7 @@ describe('marks', function() {
 
   it('works with tricky failed re-attach undo case', async function() {
     let t = new TestCase([
-      { text: 'row', mark: 'mark', children: [
+      { text: 'row', plugins: {mark: 'mark'}, children: [
         'blah'
       ] },
       'random'
@@ -748,18 +748,18 @@ describe('marks', function() {
     t.sendKeys('mmark');
     t.sendKey('enter');
     t.expect([
-      { text: 'random', mark: 'mark' }
+      { text: 'random', plugins: {mark: 'mark'} }
     ]);
     t.sendKeys('p');
     t.expect([
-      { text: 'random', mark: 'mark' },
+      { text: 'random', plugins: {mark: 'mark'} },
       { text: 'row', children: [
         'blah'
       ] }
     ]);
     t.sendKeys('uuu');
     t.expect([
-      { text: 'row', mark: 'mark', children: [
+      { text: 'row', plugins: {mark: 'mark'}, children: [
         'blah'
       ] },
       'random'
@@ -770,7 +770,7 @@ describe('marks', function() {
   it('canonical instance handles non-trivial case, i.e. first parent detached', async function() {
     let t = new TestCase([
       { text: 'parent1', children: [
-        { text: 'row', mark: 'mark' }
+        { text: 'row', plugins: {mark: 'mark'} }
       ] },
       { text: 'parent2', children: [
         'blah'
@@ -779,7 +779,7 @@ describe('marks', function() {
     t.sendKeys('jycjp');
     t.expect([
       { text: 'parent1', children: [
-        { text: 'row', mark: 'mark', id: 2 }
+        { text: 'row', plugins: {mark: 'mark'}, id: 2 }
       ] },
       { text: 'parent2', children: [
         { clone: 2 },
@@ -789,7 +789,7 @@ describe('marks', function() {
     t.sendKeys('ggdd');
     t.expect([
       { text: 'parent2', children: [
-        { text: 'row', mark: 'mark' },
+        { text: 'row', plugins: {mark: 'mark'} },
         'blah'
       ] }
     ]);
@@ -806,9 +806,9 @@ describe('marks', function() {
     let t = new TestCase([
       { text: '@mark2 @mark3', children: [
         'line',
-        { text: 'line', mark: 'mark3' }
+        { text: 'line', plugins: {mark: 'mark3'} }
       ] },
-      { text: 'stuff', mark: 'mark2', children: [
+      { text: 'stuff', plugins: {mark: 'mark2'}, children: [
         'more stuff'
       ] }
     ], {plugins: [Marks.pluginName]});
@@ -848,14 +848,14 @@ describe('marks', function() {
     // RE-ENABLE WORKS
     t.enablePlugin(Marks.pluginName);
     t.expect([
-      { text: 'stuff', mark: 'mark2', children: [
+      { text: 'stuff', plugins: {mark: 'mark2'}, children: [
         'more stuff'
       ] }
     ]);
     t.sendKeys('mdd');
     t.sendKey('enter');
     t.expect([
-      { text: 'stuff', mark: 'dd', children: [
+      { text: 'stuff', plugins: {mark: 'dd'}, children: [
         'more stuff'
       ] }
     ]);

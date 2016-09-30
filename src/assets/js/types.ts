@@ -50,6 +50,7 @@ export type SerializedLine = {
   underline?: boolean,
   strikethrough?: boolean,
   collapsed?: boolean,
+  plugins?: any,
 };
 
 export type Row = number;

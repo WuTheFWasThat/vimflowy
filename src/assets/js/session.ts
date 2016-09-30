@@ -239,7 +239,6 @@ export default class Session extends EventEmitter {
   public async exportContent(mimetype) {
     const jsonContent = this.document.serialize();
     if (mimetype === 'application/json') {
-      delete jsonContent.viewRoot;
       return JSON.stringify(jsonContent, undefined, 2);
     } else if (mimetype === 'text/plain') {
       // Workflowy compatible plaintext export
