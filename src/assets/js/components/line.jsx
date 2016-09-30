@@ -19,9 +19,8 @@ export default class LineComponent extends React.Component {
       highlights: React.PropTypes.any,
       wordHook: React.PropTypes.func,
       lineHook: React.PropTypes.func,
-      charclick: React.PropTypes.func,
+      onCharClick: React.PropTypes.func,
       cursorBetween: React.PropTypes.bool,
-      linemouseover: React.PropTypes.func,
     };
   }
 
@@ -130,11 +129,11 @@ export default class LineComponent extends React.Component {
     // Normally, we collect things of the same type and render them in one div
     // If there are column-specific handlers, however, we must break up the div to handle
     // separate click events
-    if (this.props.charclick) {
+    if (this.props.onCharClick) {
       line.forEach((x) => {
         x.renderOptions.text = x.char;
         if (!x.renderOptions.href) {
-          x.renderOptions.onClick = this.props.charclick.bind(this, x.column);
+          x.renderOptions.onClick = this.props.onCharClick.bind(this, x.column);
         }
         renderSpec.push(x.renderOptions);
         if (x.break) {
@@ -199,7 +198,6 @@ export default class LineComponent extends React.Component {
           key: index,
           className: classes.join(' '),
           href: spec.href,
-          onMouseOver: this.props.linemouseover,
           onClick: spec.onClick,
         }, spec.text)
       );

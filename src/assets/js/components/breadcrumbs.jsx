@@ -1,39 +1,27 @@
 import React from 'react';
 
-import * as Modes from '../modes';
-
 // import Spinner from './spinner';
-
-const MODES = Modes.modes;
 
 class CrumbComponent extends React.Component {
   static get propTypes() {
     return {
       session: React.PropTypes.any.isRequired,
-      options: React.PropTypes.any,
+      onClick: React.PropTypes.func,
       path: React.PropTypes.any,
     };
   }
 
   render() {
     const session = this.props.session;
-    const options = this.props.options;
     const path = this.props.path;
 
     let className = '';
-    let onClick = null;
-    // TODO: move this logic into mode render functions?
-    if (session.mode === MODES.NORMAL) {
+    if (this.props.onClick) {
       className = 'theme-text-link';
-      onClick = async () => {
-        await session.zoomInto(path);
-        session.save();
-        options.rerender();
-      };
     }
     return (
       <span key={'crumb_' + path.row} className='crumb'>
-        <span className={className} onClick={onClick}>
+        <span className={className} onClick={this.props.onClick}>
           {
             (() => {
               if (path.is(session.document.root)) {
@@ -53,7 +41,7 @@ export default class BreadcrumbsComponent extends React.Component {
   static get propTypes() {
     return {
       session: React.PropTypes.any.isRequired,
-      options: React.PropTypes.any,
+      onCrumbClick: React.PropTypes.func,
     };
   }
 
@@ -66,7 +54,6 @@ export default class BreadcrumbsComponent extends React.Component {
 
   render() {
     const session = this.props.session;
-    const options = this.props.options;
 
     const crumbs = [];
     let path = session.viewRoot;
@@ -78,7 +65,8 @@ export default class BreadcrumbsComponent extends React.Component {
     const makeCrumb = (path) => {
       return (
         <CrumbComponent key={path.row}
-          session={session} options={options} path={path}
+          session={session} path={path}
+          onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
         />
       );
     };

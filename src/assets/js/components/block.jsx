@@ -1,13 +1,8 @@
 import React from 'react';
 
 import logger from '../logger';
-import * as Modes from '../modes';
 
 import LineComponent from './line';
-
-const MODES = Modes.modes;
-
-// TODO: move mode-specific logic into mode render functions
 
 export class RowComponent extends React.Component {
   static get propTypes() {
@@ -16,6 +11,9 @@ export class RowComponent extends React.Component {
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
       line: React.PropTypes.any.isRequired,
+      onLineMouseOver: React.PropTypes.func,
+      onCharClick: React.PropTypes.func,
+      onClick: React.PropTypes.func,
     };
   }
 
@@ -56,27 +54,13 @@ export class RowComponent extends React.Component {
       cursorBetween: options.cursorBetween
     };
 
-    if (options.handle_clicks) {
-      if (session.mode === MODES.NORMAL || session.mode === MODES.INSERT) {
-        lineoptions.charclick = function(column, e) {
-          session.cursor.setPosition(path, column);
-          // assume they might click again
-          options.rerender({handle_clicks: true});
-          // prevent overall path click
-          e.stopPropagation();
-          return false;
-        };
-      }
-    } else {
-      lineoptions.linemouseover = () => options.rerender({handle_clicks: true});
-    }
-
     lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
 
     lineoptions = session.applyHook('renderLineOptions', lineoptions, { path });
     let lineContents = [
       <LineComponent key='line'
         lineData={lineData}
+        onCharClick={this.props.onCharClick && this.props.onCharClick.bind(this, path)}
         {...lineoptions}
       />
     ];
@@ -94,13 +78,8 @@ export class RowComponent extends React.Component {
 
     return (
       <div key='text' className='node-text'
-           onClick={() => {
-             // if clicking outside of text, but on the row,
-             // move cursor to the end of the row
-             let col = options.cursorBetween ? -1 : -2;
-             session.cursor.setPosition(path, col);
-             options.rerender();
-           }}
+        onMouseOver={this.props.onLineMouseOver}
+        onClick={this.props.onClick && this.props.onClick.bind(this, path)}
       >
         {session.applyHook('renderLineElements', results, { path })}
       </div>
@@ -115,6 +94,10 @@ export default class BlockComponent extends React.Component {
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
       contents: React.PropTypes.any.isRequired,
+      onLineMouseOver: React.PropTypes.func,
+      onCharClick: React.PropTypes.func,
+      onLineClick: React.PropTypes.func,
+      onBulletClick: React.PropTypes.func,
     };
   }
 
@@ -130,7 +113,10 @@ export default class BlockComponent extends React.Component {
       const elLine = (
         <RowComponent key='row'
           session={session} path={parent} options={options}
+          onLineMouseOver={this.props.onLineMouseOver}
+          onCharClick={this.props.onCharClick}
           line={parentContents.line}
+          onClick={this.props.onLineClick}
         />
       );
       pathElements.push(elLine);
@@ -150,23 +136,21 @@ export default class BlockComponent extends React.Component {
                 );
               }
 
-              let onClick = null;
+              let onBulletClick = null;
               const style = {};
 
               let icon = 'fa-circle';
               if (contents.hasChildren) {
                 icon = contents.collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
-                style.cursor = 'pointer';
-                onClick = async () => {
-                  await session.toggleBlockCollapsed(path.row);
-                  session.save();
-                  options.rerender();
-                };
+                if (this.props.onBulletClick) {
+                  style.cursor = 'pointer';
+                  onBulletClick = this.props.onBulletClick.bind(this, path);
+                }
               }
 
               let bullet = (
                 <i className={`fa ${icon} bullet`} key='bullet'
-                  style={style} onClick={onClick}
+                  style={style} onClick={onBulletClick}
                   data-ancestry={JSON.stringify(path.getAncestry())}
                 >
                 </i>
@@ -179,6 +163,10 @@ export default class BlockComponent extends React.Component {
                   {bullet}
                   <BlockComponent key='block'
                    contents={contents}
+                   onLineMouseOver={this.props.onLineMouseOver}
+                   onCharClick={this.props.onCharClick}
+                   onLineClick={this.props.onLineClick}
+                   onBulletClick={this.props.onBulletClick}
                    session={session} path={path} options={options}/>
                 </div>
               );
