@@ -268,4 +268,23 @@ describe('zoom', function() {
     t.expectCursor(6, 0);
     await t.done();
   });
+
+  it('cant zoom up or down from root', async function() {
+    let t = new TestCase(['blah']);
+    t.expectViewRoot(0);
+    t.expectJumpIndex(0);
+    t.expectCursor(1, 0);
+
+    // fails we're at view root
+    t.sendKey(zoomUpKey);
+    t.expectViewRoot(0);
+    t.expectJumpIndex(0);
+    t.expectCursor(1, 0);
+
+    t.sendKey(zoomDownKey);
+    t.expectViewRoot(0);
+    t.expectJumpIndex(0);
+    t.expectCursor(1, 0);
+    await t.done();
+  });
 });

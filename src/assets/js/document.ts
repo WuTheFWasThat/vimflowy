@@ -92,25 +92,26 @@ export default class Document extends EventEmitter {
 
   // structure
 
-  private _getChildren(row, min = 0, max = -1) {
-    const children = this.store.getChildren(row);
-    if (children.length === 0) {
+  public _getChildren(row, min = 0, max = -1) {
+    return this._getSlice(this.store.getChildren(row), min, max);
+  }
+
+  private _getSlice(array, min, max) {
+    if (array.length === 0) {
       return [];
     }
-    if (max === -1) {
-      max = children.length - 1;
-    }
+    if (max === -1) { max = array.length - 1; }
     const indices = [];
     for (let i = min; i <= max; i++) {
       indices.push(i);
     }
     return indices.map(function(index) {
-      if (index >= children.length) {
+      if (index >= array.length) {
         return null;
       } else if (index < 0) {
         return null;
       } else {
-        return children[index];
+        return array[index];
       }
     });
   }
@@ -144,8 +145,11 @@ export default class Document extends EventEmitter {
     return this._getChildren(row).length > 0;
   }
 
-  public getSiblings(row) {
-    return this.getChildren(row.parent);
+  public getSiblings(path) {
+    if (path.isRoot()) {
+      return [path];
+    }
+    return this.getChildren(path.parent);
   }
 
   public nextClone(path) {
@@ -447,7 +451,7 @@ export default class Document extends EventEmitter {
 
   public getSiblingRange(path, min_offset, max_offset) {
     const index = this.indexOf(path);
-    return this.getChildRange(path.parent, min_offset + index, max_offset + index);
+    return this._getSlice(this.getSiblings(path), min_offset + index, max_offset + index);
   }
 
   public getChildRange(path, min, max) {
