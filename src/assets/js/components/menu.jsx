@@ -20,10 +20,9 @@ export default class MenuComponent extends React.Component {
 
   componentDidMount() {
     const menu = this.props.menu;
-    this.updateFn = () => {
-      menu.session.curLine().then((query) => {
-        this.setState({ query });
-      });
+    this.updateFn = async () => {
+      const query = await menu.session.curLine();
+      this.setState({ query });
     };
     this.props.session.on('handledKey', this.updateFn);
     this.updateFn();
@@ -64,7 +63,7 @@ export default class MenuComponent extends React.Component {
 
     if (menu.results.length === 0) {
       let message = '';
-      if (query.length === 0) {
+      if (!(query && query.length)) {
         message = 'Type something to search!';
       } else {
         message = 'No results!  Try typing something else';

@@ -285,7 +285,7 @@ class MarksPlugin {
       const marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
       if (marking) {
         lineContents.unshift(
-          <span style={markStyle}
+          <span style={markStyle} key='mark'
                 className='theme-bg-secondary theme-trim-accent'>
             <LineComponent
               lineData={
@@ -302,7 +302,7 @@ class MarksPlugin {
         const mark = this._getMark(info.path.row);
         if (mark) {
           lineContents.unshift(
-            <span style={markStyle} className='theme-bg-secondary theme-trim'>
+            <span style={markStyle} key='mark' className='theme-bg-secondary theme-trim'>
               {mark}
             </span>
           );
