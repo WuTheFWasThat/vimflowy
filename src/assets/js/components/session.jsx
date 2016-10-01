@@ -40,7 +40,8 @@ export default class SessionComponent extends React.Component {
       if (session.lineSelect) {
         // mirrors logic of finishes_visual_line in keyHandler.js
         const [parent, index1, index2] = await session.getVisualLineSelections();
-        session.document.getChildRange(parent, index1, index2).forEach((child) => {
+        const children = await session.document.getChildRange(parent, index1, index2);
+        children.forEach((child) => {
           highlight_blocks[child.row] = true;
         });
       }

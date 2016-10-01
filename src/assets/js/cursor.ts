@@ -422,14 +422,14 @@ export default class Cursor extends EventEmitter {
   }
 
   public async prevSibling(cursorOptions: CursorOptions = {}) {
-    const prevsib = this.document.getSiblingBefore(this.path);
+    const prevsib = await this.document.getSiblingBefore(this.path);
     if (prevsib !== null) {
       return await this.setPath(prevsib, cursorOptions);
     }
   }
 
   public async nextSibling(cursorOptions: CursorOptions = {}) {
-    const nextsib = this.document.getSiblingAfter(this.path);
+    const nextsib = await this.document.getSiblingAfter(this.path);
     if (nextsib !== null) {
       return await this.setPath(nextsib, cursorOptions);
     }

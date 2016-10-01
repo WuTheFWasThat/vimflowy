@@ -437,24 +437,26 @@ export default class Document extends EventEmitter {
     return this.allAncestors(row, {inclusive: true}).indexOf(this.root.row) !== -1;
   }
 
-  public getSiblingBefore(path) {
-    return this.getSiblingOffset(path, -1);
+  public async getSiblingBefore(path) {
+    return await this.getSiblingOffset(path, -1);
   }
 
-  public getSiblingAfter(path) {
-    return this.getSiblingOffset(path, 1);
+  public async getSiblingAfter(path) {
+    return await this.getSiblingOffset(path, 1);
   }
 
-  public getSiblingOffset(path, offset) {
-    return this.getSiblingRange(path, offset, offset)[0];
+  public async getSiblingOffset(path, offset) {
+    return (await this.getSiblingRange(path, offset, offset, true))[0];
   }
 
-  public getSiblingRange(path, min_offset, max_offset) {
+  public async getSiblingRange(path, min_offset, max_offset, includeNull = false) {
     const index = this.indexOf(path);
-    return this._getSlice(this.getSiblings(path), min_offset + index, max_offset + index);
+    return this._getSlice(
+      this.getSiblings(path), min_offset + index, max_offset + index
+    ).filter(x => includeNull || (x !== null));
   }
 
-  public getChildRange(path, min, max) {
+  public async getChildRange(path, min, max) {
     return this._getChildren(path.row, min, max).map(function(child_row) {
       if (child_row === null) {
         return null;
@@ -469,7 +471,7 @@ export default class Document extends EventEmitter {
     return row;
   }
 
-  public addChild(path, index = -1) {
+  public async addChild(path, index = -1) {
     const row = this._newChild(path.row, index);
     return path.child(row);
   }
@@ -591,7 +593,7 @@ export default class Document extends EventEmitter {
     if (replace_empty && children.length === 1 && (this.getLine(children[0].row).length === 0)) {
       path = children[0];
     } else {
-      path = this.addChild(parent_path, index);
+      path = await this.addChild(parent_path, index);
     }
 
     if (typeof serialized === 'string') {

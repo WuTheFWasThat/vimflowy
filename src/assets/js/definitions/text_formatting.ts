@@ -45,7 +45,9 @@ const text_format_insert = (property) => {
 
 const text_format_visual_line = property =>
   async function() {
-    const paths = this.session.document.getChildRange(this.parent, this.row_start_i, this.row_end_i);
+    const paths = await this.session.document.getChildRange(
+      this.parent, this.row_start_i, this.row_end_i
+    );
     const rows = paths.map(path => path.row);
     // TODO: dedup rows to avoid double toggle
     await this.session.toggleRowsProperty(property, rows);

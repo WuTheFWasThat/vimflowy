@@ -435,7 +435,7 @@ export default class Session extends EventEmitter {
       return null;
     }
     while (true) {
-      const nextsib = this.document.getSiblingAfter(path);
+      const nextsib = await this.document.getSiblingAfter(path);
       if (nextsib !== null) {
         return nextsib;
       }
@@ -462,7 +462,7 @@ export default class Session extends EventEmitter {
     if (path.is(this.viewRoot)) {
       return null;
     }
-    const prevsib = this.document.getSiblingBefore(path);
+    const prevsib = await this.document.getSiblingBefore(path);
     if (prevsib !== null) {
       return await this.lastVisible(prevsib);
     }
@@ -652,7 +652,7 @@ export default class Session extends EventEmitter {
   }
 
   public async zoomDown() {
-    const sib = this.document.getSiblingAfter(this.viewRoot);
+    const sib = await this.document.getSiblingAfter(this.viewRoot);
     if (sib === null) {
       this.showMessage('No next sibling to zoom down to', {text_class: 'error'});
       return;
@@ -661,7 +661,7 @@ export default class Session extends EventEmitter {
   }
 
   public async zoomUp() {
-    const sib = this.document.getSiblingBefore(this.viewRoot);
+    const sib = await this.document.getSiblingBefore(this.viewRoot);
     if (sib === null) {
       this.showMessage('No previous sibling to zoom up to', {text_class: 'error'});
       return;
@@ -1018,7 +1018,7 @@ export default class Session extends EventEmitter {
   }
 
   public async yankBlocks(path, nrows) {
-    const siblings = this.document.getSiblingRange(path, 0, nrows - 1).filter(x => x !== null);
+    const siblings = await this.document.getSiblingRange(path, 0, nrows - 1);
     const serialized = await Promise.all(siblings.map(
       async (x) => await this.document.serialize(x.row)
     ));
@@ -1030,7 +1030,7 @@ export default class Session extends EventEmitter {
   }
 
   public async yankBlocksClone(row, nrows) {
-    const siblings = this.document.getSiblingRange(row, 0, nrows - 1).filter(x => x !== null);
+    const siblings = await this.document.getSiblingRange(row, 0, nrows - 1);
     this.register.saveClonedRows(siblings.map(sibling => sibling.row));
   }
 
@@ -1064,7 +1064,7 @@ export default class Session extends EventEmitter {
       this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
     }
-    const newparent = this.document.getSiblingBefore(row);
+    const newparent = await this.document.getSiblingBefore(row);
     if (newparent === null) {
       this.showMessage('Cannot indent without higher sibling', {text_class: 'error'});
       return null; // cannot indent
@@ -1074,7 +1074,7 @@ export default class Session extends EventEmitter {
       await this.toggleBlockCollapsed(newparent.row);
     }
 
-    const siblings = this.document.getSiblingRange(row, 0, numblocks - 1).filter(sib => sib !== null);
+    const siblings = await this.document.getSiblingRange(row, 0, numblocks - 1);
     for (let i = 0; i < siblings.length; i++) {
       const sib = siblings[i];
       await this.moveBlock(sib, newparent, -1);
@@ -1093,7 +1093,7 @@ export default class Session extends EventEmitter {
       return null;
     }
 
-    const siblings = this.document.getSiblingRange(row, 0, numblocks - 1).filter(sib => sib !== null);
+    const siblings = await this.document.getSiblingRange(row, 0, numblocks - 1);
 
     const newparent = parent.parent;
     let pp_i = this.document.indexOf(parent);
@@ -1115,7 +1115,7 @@ export default class Session extends EventEmitter {
       return await this.indentBlocks(path);
     }
 
-    const sib = this.document.getSiblingBefore(path);
+    const sib = await this.document.getSiblingBefore(path);
 
     const newparent = await this.indentBlocks(path);
     if (newparent === null) {
