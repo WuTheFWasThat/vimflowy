@@ -84,13 +84,13 @@ export default class Register {
     const serialized_rows = this.saved;
 
     if (options.before) {
-      this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
+      await this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
     } else {
       const children = this.session.document.getChildren(path);
       if ((!this.session.document.collapsed(path.row)) && (children.length > 0)) {
-        this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
+        await this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
       } else {
-        this.session.addBlocks(parent, index + 1, serialized_rows, {setCursor: 'first'});
+        await this.session.addBlocks(parent, index + 1, serialized_rows, {setCursor: 'first'});
       }
     }
   }

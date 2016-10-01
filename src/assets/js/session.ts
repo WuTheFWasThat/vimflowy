@@ -227,9 +227,9 @@ export default class Session extends EventEmitter {
     if (!root) { return false; }
     const { path } = this.cursor;
     if (root.text === '' && root.children) { // Complete export, not one node
-      this.addBlocks(path, 0, root.children);
+      await this.addBlocks(path, 0, root.children);
     } else {
-      this.addBlocks(path, 0, [root]);
+      await this.addBlocks(path, 0, [root]);
     }
     this.save();
     this.emit('importFinished');
@@ -362,7 +362,7 @@ export default class Session extends EventEmitter {
     }
   }
 
-  public do(mutation) {
+  public async do(mutation) {
     if (!this.history) {
       // NOTE: we let mutations through since some plugins may apply mutations on load
       // these mutations won't be undoable, which is desired
@@ -410,7 +410,7 @@ export default class Session extends EventEmitter {
   ////////////////////////////////
 
   // whether contents are currently viewable (i.e. subtree is visible)
-  public viewable(path) {
+  public async viewable(path) {
     return path.is(this.viewRoot) || (
             path.isDescendant(this.viewRoot) &&
             (!this.document.collapsed(path.row))
@@ -418,13 +418,13 @@ export default class Session extends EventEmitter {
   }
 
   // whether a given path is visible
-  public isVisible(path) {
-    const visibleAncestor = this.youngestVisibleAncestor(path);
+  public async isVisible(path) {
+    const visibleAncestor = await this.youngestVisibleAncestor(path);
     return (visibleAncestor !== null) && path.is(visibleAncestor);
   }
 
-  public nextVisible(path) {
-    if (this.viewable(path)) {
+  public async nextVisible(path) {
+    if (await this.viewable(path)) {
       const children = this.document.getChildren(path);
       if (children.length > 0) {
         return children[0];
@@ -446,24 +446,24 @@ export default class Session extends EventEmitter {
   }
 
   // last thing visible nested within id
-  public lastVisible(path = this.viewRoot) {
-    if (!this.viewable(path)) {
+  public async lastVisible(path = this.viewRoot) {
+    if (!(await this.viewable(path))) {
       return path;
     }
     const children = this.document.getChildren(path);
     if (children.length > 0) {
-      return this.lastVisible(children[children.length - 1]);
+      return await this.lastVisible(children[children.length - 1]);
     }
     return path;
   }
 
-  public prevVisible(path) {
+  public async prevVisible(path) {
     if (path.is(this.viewRoot)) {
       return null;
     }
     const prevsib = this.document.getSiblingBefore(path);
     if (prevsib !== null) {
-      return this.lastVisible(prevsib);
+      return await this.lastVisible(prevsib);
     }
     const { parent } = path;
     if (parent.is(this.viewRoot)) {
@@ -478,7 +478,7 @@ export default class Session extends EventEmitter {
 
   // finds oldest ancestor that is visible *besides viewRoot*
   // returns null if there is no visible ancestor (i.e. path is not under viewroot)
-  public oldestVisibleAncestor(path) {
+  public async oldestVisibleAncestor(path) {
     let last = path;
     while (true) {
       const cur = last.parent;
@@ -494,7 +494,7 @@ export default class Session extends EventEmitter {
 
   // finds closest ancestor that is visible
   // returns null if there is no visible ancestor (i.e. path is not under viewroot)
-  public youngestVisibleAncestor(path) {
+  public async youngestVisibleAncestor(path) {
     let answer = path;
     let cur = path;
     while (true) {
@@ -564,7 +564,7 @@ export default class Session extends EventEmitter {
 
     if (this.document.isAttached(jump.cursor_after.row)) {
       // if the row is attached and under the view root, switch to it
-      const cursor_path = this.youngestVisibleAncestor(jump.cursor_after.path);
+      const cursor_path = await this.youngestVisibleAncestor(jump.cursor_after.path);
       if (cursor_path !== null) {
         await this.cursor.setPath(cursor_path);
       }
@@ -625,7 +625,7 @@ export default class Session extends EventEmitter {
   // try to zoom into newroot, updating the cursor
   public async zoomInto(newroot) {
     await this.changeView(newroot);
-    let newrow = this.youngestVisibleAncestor(this.cursor.path);
+    let newrow = await this.youngestVisibleAncestor(this.cursor.path);
     if (newrow === null) { // not visible, need to reset cursor
       newrow = newroot;
     }
@@ -643,7 +643,7 @@ export default class Session extends EventEmitter {
     if (this.cursor.path.is(this.viewRoot)) {
       return false;
     }
-    const newroot = this.oldestVisibleAncestor(this.cursor.path);
+    const newroot = await this.oldestVisibleAncestor(this.cursor.path);
     if (await this.zoomInto(newroot)) {
       return true;
     }
@@ -685,7 +685,7 @@ export default class Session extends EventEmitter {
   }
 
   private async addChars(row, col, chars) {
-    this.do(new mutations.AddChars(row, col, chars));
+    await this.do(new mutations.AddChars(row, col, chars));
   }
 
   public async addCharsAtCursor(chars) {
@@ -705,7 +705,7 @@ export default class Session extends EventEmitter {
     let deleted = [];
     if ((n > 0) && (nchars > 0) && (col < n)) {
       const mutation = new mutations.DelChars(path.row, col, nchars);
-      this.do(mutation);
+      await this.do(mutation);
       deleted = mutation.deletedChars;
       if (options.yank) {
         this.register.saveChars(deleted);
@@ -725,7 +725,7 @@ export default class Session extends EventEmitter {
 
   private async changeChars(row, col, nchars, change_fn) {
     const mutation = new mutations.ChangeChars(row, col, nchars, change_fn);
-    this.do(mutation);
+    await this.do(mutation);
     return mutation.ncharsDeleted;
   }
 
@@ -853,13 +853,13 @@ export default class Session extends EventEmitter {
         }
       }
 
-      return this.addBlocks(this.cursor.path, 0, [''], options);
+      await this.addBlocks(this.cursor.path, 0, [''], options);
     } else if ((!this.document.collapsed(this.cursor.row)) && this.document.hasChildren(this.cursor.row)) {
-      return this.addBlocks(this.cursor.path, 0, [''], options);
+      await this.addBlocks(this.cursor.path, 0, [''], options);
     } else {
       const parent = this.cursor.path.parent;
       const index = this.document.indexOf(this.cursor.path);
-      return this.addBlocks(parent, index + 1, [''], options);
+      await this.addBlocks(parent, index + 1, [''], options);
     }
   }
 
@@ -869,7 +869,7 @@ export default class Session extends EventEmitter {
     }
     const parent = this.cursor.path.parent;
     const index = this.document.indexOf(this.cursor.path);
-    return this.addBlocks(parent, index, [''], {setCursor: 'first'});
+    await this.addBlocks(parent, index, [''], {setCursor: 'first'});
   }
 
   // behavior of "enter", splitting a line
@@ -884,7 +884,7 @@ export default class Session extends EventEmitter {
       return await this.newLineBelow({cursorOptions: {keepProperties: true}});
     } else {
       const mutation = new mutations.DelChars(this.cursor.row, 0, this.cursor.col);
-      this.do(mutation);
+      await this.do(mutation);
       const path = this.cursor.path;
 
       await this.newLineAbove();
@@ -918,11 +918,11 @@ export default class Session extends EventEmitter {
       if (addDelimiter) {
         const mutation = new mutations.AddChars(
           first.row, firstLine.length, [{ char: options.delimiter }]);
-        this.do(mutation);
+        await this.do(mutation);
       }
       const mutation = new mutations.AddChars(
         first.row, firstLine.length + (addDelimiter ? 1 : 0), secondLine);
-      this.do(mutation);
+      await this.do(mutation);
       this.cursor.setPosition(first, firstLine.length);
       return true;
     }
@@ -941,10 +941,10 @@ export default class Session extends EventEmitter {
     await this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter) {
       const mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
-      this.do(mutation);
+      await this.do(mutation);
     }
     const mutation = new mutations.AddChars(second.row, 0, firstLine);
-    this.do(mutation);
+    await this.do(mutation);
 
     if (addDelimiter) {
       await this.cursor.left();
@@ -955,7 +955,7 @@ export default class Session extends EventEmitter {
 
   public async joinAtCursor() {
     const path = this.cursor.path;
-    const sib = this.nextVisible(path);
+    const sib = await this.nextVisible(path);
     if (sib !== null) {
       return await this._joinRows(path, sib, {delimiter: ' '});
     }
@@ -969,7 +969,7 @@ export default class Session extends EventEmitter {
     }
 
     const path = this.cursor.path;
-    const sib = this.prevVisible(path);
+    const sib = await this.prevVisible(path);
     if (sib === null) {
       return false;
     }
@@ -987,13 +987,13 @@ export default class Session extends EventEmitter {
 
   public async delBlocks(parent, index, nrows, options: {noSave?: boolean} = {}) {
     const mutation = new mutations.DetachBlocks(parent, index, nrows, options);
-    this.do(mutation);
+    await this.do(mutation);
     if (!options.noSave) {
       this.register.saveClonedRows(mutation.deleted);
     }
-    if (!this.isVisible(this.cursor.path)) {
+    if (!(await this.isVisible(this.cursor.path))) {
       // view root got deleted
-      return await this.zoomOut();
+      await this.zoomOut();
     }
   }
 
@@ -1003,16 +1003,16 @@ export default class Session extends EventEmitter {
     return await this.delBlocks(parent.row, index, nrows, options);
   }
 
-  public addBlocks(
+  public async addBlocks(
     parent, index = -1, serialized_rows,
     options: {cursorOptions?: CursorOptions, setCursor?: string} = {}
   ) {
     const mutation = new mutations.AddBlocks(parent, index, serialized_rows);
-    this.do(mutation);
+    await this.do(mutation);
     if (options.setCursor === 'first') {
-      return this.cursor.setPosition(mutation.added_rows[0], 0, options.cursorOptions);
+      this.cursor.setPosition(mutation.added_rows[0], 0, options.cursorOptions);
     } else if (options.setCursor === 'last') {
-      return this.cursor.setPosition(mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions);
+      this.cursor.setPosition(mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions);
     }
   }
 
@@ -1040,7 +1040,7 @@ export default class Session extends EventEmitter {
   ) {
     const mutation = new mutations.AttachBlocks(parent.row, ids, index);
     const will_work = mutation.validate(this);
-    this.do(mutation);
+    await this.do(mutation);
 
     // TODO: do this more elegantly
     if (will_work) {
@@ -1053,7 +1053,7 @@ export default class Session extends EventEmitter {
   }
 
   private async moveBlock(path, parent_path, index = -1) {
-    return this.do(new mutations.MoveBlock(path, parent_path, index));
+    return await this.do(new mutations.MoveBlock(path, parent_path, index));
   }
 
   public async indentBlocks(row, numblocks = 1) {
@@ -1156,7 +1156,7 @@ export default class Session extends EventEmitter {
   }
 
   public async swapDown(path = this.cursor.path) {
-    const next = this.nextVisible(this.lastVisible(path));
+    const next = await this.nextVisible(await this.lastVisible(path));
     if (next === null) {
       return;
     }
@@ -1173,7 +1173,7 @@ export default class Session extends EventEmitter {
   }
 
   public async swapUp(path = this.cursor.path) {
-    const prev = this.prevVisible(path);
+    const prev = await this.prevVisible(path);
     if (prev === null) {
       return;
     }
@@ -1189,7 +1189,7 @@ export default class Session extends EventEmitter {
   }
 
   public async toggleBlockCollapsed(row) {
-    return this.do(new mutations.ToggleBlock(row));
+    return await this.do(new mutations.ToggleBlock(row));
   }
 
   public async pasteBefore() {

@@ -142,7 +142,7 @@ export default class Cursor extends EventEmitter {
     if (this.col < this.document.getLength(this.path.row) - 1) {
       return false;
     } else {
-      const nextpath = this.session.nextVisible(this.path);
+      const nextpath = await this.session.nextVisible(this.path);
       if (nextpath !== null) {
         return false;
       }
@@ -155,7 +155,7 @@ export default class Cursor extends EventEmitter {
       this._right();
       return true;
     } else {
-      const nextpath = this.session.nextVisible(this.path);
+      const nextpath = await this.session.nextVisible(this.path);
       if (nextpath !== null) {
         this.setPosition(nextpath, 0);
         return true;
@@ -168,7 +168,7 @@ export default class Cursor extends EventEmitter {
     if (this.col > 0) {
       return false;
     } else {
-      const prevpath = this.session.prevVisible(this.path);
+      const prevpath = await this.session.prevVisible(this.path);
       if (prevpath !== null) {
         return false;
       }
@@ -181,7 +181,7 @@ export default class Cursor extends EventEmitter {
       this._left();
       return true;
     } else {
-      const prevpath = this.session.prevVisible(this.path);
+      const prevpath = await this.session.prevVisible(this.path);
       if (prevpath !== null) {
         this.setPosition(prevpath, -1);
         return true;
@@ -203,7 +203,7 @@ export default class Cursor extends EventEmitter {
   public async visibleHome() {
     let path;
     if (this.session.viewRoot.is(this.session.document.root)) {
-      path = this.session.nextVisible(this.session.viewRoot);
+      path = await this.session.nextVisible(this.session.viewRoot);
     } else {
       path = this.session.viewRoot;
     }
@@ -212,7 +212,7 @@ export default class Cursor extends EventEmitter {
   }
 
   public async visibleEnd() {
-    const path = this.session.lastVisible();
+    const path = await this.session.lastVisible();
     this.setPosition(path, 0);
     return this;
   }
@@ -397,14 +397,14 @@ export default class Cursor extends EventEmitter {
   }
 
   public async up(cursorOptions: CursorOptions = {}) {
-    const path = this.session.prevVisible(this.path);
+    const path = await this.session.prevVisible(this.path);
     if (path !== null) {
       return await this.setPath(path, cursorOptions);
     }
   }
 
   public async down(cursorOptions: CursorOptions = {}) {
-    const path = this.session.nextVisible(this.path);
+    const path = await this.session.nextVisible(this.path);
     if (path !== null) {
       return await this.setPath(path, cursorOptions);
     }

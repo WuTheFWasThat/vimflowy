@@ -21,7 +21,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_MOTION, {
   for (let j = 0; j < this.repeat; j++) {
     await motion(tmp, {});
   }
-  if (this.session.isVisible(tmp.path)) {
+  if (await this.session.isVisible(tmp.path)) {
     this.session.cursor.from(tmp);
   }
   this.keyStream.forget();
@@ -214,7 +214,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_CLONE], {
     }
     const newPath = this.session.document.nextClone(cursor.path);
     await cursor.setPath(newPath);
-    if (!this.session.isVisible(newPath)) {
+    if (!(await this.session.isVisible(newPath))) {
       await this.session.zoomInto(newPath);
     }
   };
