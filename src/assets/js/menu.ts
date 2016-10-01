@@ -36,7 +36,7 @@ export default class Menu {
     this.fn = fn;
 
     const doc = new Document(new DataStore.InMemory());
-    doc.load(constants.empty_data);
+    doc.load(constants.empty_data); // NOTE: should be async but is okay since in-memory
 
     // a bit of a overkill-y hack, use an entire session object internally
     this.session = new Session(doc);

@@ -237,7 +237,7 @@ export default class Session extends EventEmitter {
   }
 
   public async exportContent(mimetype) {
-    const jsonContent = this.document.serialize();
+    const jsonContent = await this.document.serialize();
     if (mimetype === 'application/json') {
       return JSON.stringify(jsonContent, undefined, 2);
     } else if (mimetype === 'text/plain') {
@@ -1018,7 +1018,9 @@ export default class Session extends EventEmitter {
 
   public async yankBlocks(path, nrows) {
     const siblings = this.document.getSiblingRange(path, 0, nrows - 1).filter(x => x !== null);
-    const serialized = siblings.map(x => this.document.serialize(x.row));
+    const serialized = await Promise.all(siblings.map(
+      async (x) => await this.document.serialize(x.row)
+    ));
     this.register.saveSerializedRows(serialized);
   }
 

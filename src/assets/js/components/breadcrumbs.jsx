@@ -1,7 +1,5 @@
 import React from 'react';
 
-// import Spinner from './spinner';
-
 class CrumbComponent extends React.Component {
   static get propTypes() {
     return {

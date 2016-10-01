@@ -108,7 +108,7 @@ class MarksPlugin {
       enter: async (session /*, newMode?: ModeId */) => {
         // initialize marks stuff
         const doc = new Document(new DataStore.InMemory());
-        doc.load(constants.empty_data);
+        await doc.load(constants.empty_data);
         this.marksession = new Session(doc);
         await this.marksession.setMode(MODES.INSERT);
         this.marksessionpath = session.cursor.path;

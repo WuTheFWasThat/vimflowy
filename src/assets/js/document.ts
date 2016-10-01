@@ -529,7 +529,7 @@ export default class Document extends EventEmitter {
     return helper(viewRow, true);
   }
 
-  public serialize(
+  public async serialize(
     row = this.root.row,
     options: {pretty?: boolean} = {},
     serialized = {}
@@ -541,9 +541,17 @@ export default class Document extends EventEmitter {
     }
 
     const struct: any = this.serializeRow(row);
-    const children = this._getChildren(row).map(
-      (childrow) => this.serialize(childrow, options, serialized)
-    );
+    // NOTE: this must be done in order due to cloning
+    // const children = await Promise.all(this._getChildren(row).map(
+    //   async (childrow) => await this.serialize(childrow, options, serialized)
+    // ));
+    const childRows = this._getChildren(row);
+    let children = [];
+    for (let i = 0; i < childRows.length; i++) {
+      children.push(
+        await this.serialize(childRows[i], options, serialized)
+      );
+    }
     if (children.length) {
       struct.children = children;
     }
@@ -619,7 +627,7 @@ export default class Document extends EventEmitter {
     return path;
   }
 
-  public load(serialized_rows) {
+  public async load(serialized_rows) {
     const id_mapping = {};
     serialized_rows.forEach((serialized_row) => {
       this.loadTo(serialized_row, this.root, -1, id_mapping, true);

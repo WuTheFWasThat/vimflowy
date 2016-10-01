@@ -103,7 +103,7 @@ $(document).ready(function() {
     // session
     if (!doc.hasChildren(doc.root.row)) {
       // HACKY: should load the actual data now, but since plugins aren't enabled...
-      doc.load(constants.empty_data);
+      await doc.load(constants.empty_data);
     }
     const viewRoot = Path.loadFromAncestry(doc.store.getLastViewRoot());
     // TODO: if we ever support multi-user case, ensure last view root is valid
@@ -191,7 +191,7 @@ $(document).ready(function() {
     // load data
 
     if (to_load !== null) {
-      doc.load(to_load);
+      await doc.load(to_load);
       // a bit hack.  without this, you can undo initial marks, for example
       session.reset_history();
       session.reset_jump_history();
