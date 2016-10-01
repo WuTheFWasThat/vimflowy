@@ -14,6 +14,7 @@ export class RowComponent extends React.Component {
       onLineMouseOver: React.PropTypes.func,
       onCharClick: React.PropTypes.func,
       onClick: React.PropTypes.func,
+      style: React.PropTypes.any,
     };
   }
 
@@ -80,6 +81,7 @@ export class RowComponent extends React.Component {
       <div key='text' className='node-text'
         onMouseOver={this.props.onLineMouseOver}
         onClick={this.props.onClick && this.props.onClick.bind(this, path)}
+        style={this.props.style}
       >
         {session.applyHook('renderLineElements', results, { path })}
       </div>
@@ -98,6 +100,7 @@ export default class BlockComponent extends React.Component {
       onCharClick: React.PropTypes.func,
       onLineClick: React.PropTypes.func,
       onBulletClick: React.PropTypes.func,
+      topLevel: React.PropTypes.bool,
     };
   }
 
@@ -112,6 +115,10 @@ export default class BlockComponent extends React.Component {
     if (!parent.isRoot()) {
       const elLine = (
         <RowComponent key='row'
+          style={{
+            fontSize: this.props.topLevel ? 20 : null,
+            marginBottom: this.props.topLevel ? 10 : null,
+          }}
           session={session} path={parent} options={options}
           onLineMouseOver={this.props.onLineMouseOver}
           onCharClick={this.props.onCharClick}
@@ -163,6 +170,7 @@ export default class BlockComponent extends React.Component {
                   {bullet}
                   <BlockComponent key='block'
                    contents={contents}
+                   topLevel={false}
                    onLineMouseOver={this.props.onLineMouseOver}
                    onCharClick={this.props.onCharClick}
                    onLineClick={this.props.onLineClick}

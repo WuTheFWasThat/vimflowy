@@ -130,13 +130,23 @@ export default class SessionComponent extends React.Component {
     // TODO: have an extra breadcrumb indicator when not at viewRoot?
     return (
       <div>
-        <BreadcrumbsComponent
-          viewRoot={session.viewRoot}
-          onCrumbClick={onCrumbClick}
-          crumbContents={this.state.crumbContents}
-        />
+        {
+          (() => {
+            if (!session.viewRoot.isRoot()) {
+              return [
+                <BreadcrumbsComponent key='crumbs'
+                  viewRoot={session.viewRoot}
+                  onCrumbClick={onCrumbClick}
+                  crumbContents={this.state.crumbContents}
+                />,
+                <hr key='bar' style={{opacity: 0.5, marginBottom: 20}}/>
+              ];
+            }
+          })()
+        }
         <BlockComponent
           session={session} path={session.viewRoot} options={options}
+          topLevel={true}
           contents={viewContents}
           onCharClick={onCharClick}
           onLineClick={onLineClick}

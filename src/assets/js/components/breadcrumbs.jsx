@@ -11,13 +11,17 @@ class CrumbComponent extends React.Component {
   }
 
   render() {
-    let className = 'crumb';
+    let className = '';
     if (this.props.onClick) {
-      className += ' theme-text-link';
+      className = 'theme-text-link';
     }
     return (
-      <span className={className} onClick={this.props.onClick}>
-        {this.props.children}
+      <span>
+        <span className={className} onClick={this.props.onClick}>
+          {this.props.children}
+        </span>
+        <icon className='fa fa-angle-right'
+          style={{marginRight: 15, marginLeft: 15}}/>
       </span>
     );
   }
@@ -42,38 +46,28 @@ export default class BreadcrumbsComponent extends React.Component {
   render() {
     const crumbNodes = [];
     let path = this.props.viewRoot;
-    if (path.isRoot()) {
-      crumbNodes.push(
-        <CrumbComponent key={path.row}>
-          <icon className='fa fa-home'/>
-        </CrumbComponent>
-      );
-    } else {
-      path = path.parent;
-      while (!path.isRoot()) {
-        crumbNodes.push(
-          <CrumbComponent key={path.row}
-            onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
-          >
-            {this.props.crumbContents[path.row]}
-          </CrumbComponent>
-        );
-        path = path.parent;
-      }
+    path = path.parent;
+    while (!path.isRoot()) {
       crumbNodes.push(
         <CrumbComponent key={path.row}
           onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
         >
-          <icon className='fa fa-home'/>
+          {this.props.crumbContents[path.row]}
         </CrumbComponent>
       );
-      crumbNodes.reverse();
+      path = path.parent;
     }
+    crumbNodes.push(
+      <CrumbComponent key={path.row}
+        onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
+      >
+        <icon className='fa fa-home'/>
+      </CrumbComponent>
+    );
+    crumbNodes.reverse();
 
     return (
-      <div key='breadcrumbs' className='breadcrumbs'
-        style={{ fontSize: 20, marginBottom: 10 }}
-      >
+      <div key='breadcrumbs' style={{ fontSize: 20, marginBottom: 10 }} >
         {crumbNodes}
       </div>
     );
