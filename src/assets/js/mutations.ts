@@ -89,7 +89,7 @@ export class AddChars extends Mutation {
   }
 
   public async mutate(session) {
-    session.document.writeChars(this.row, this.col, this.chars);
+    await session.document.writeChars(this.row, this.col, this.chars);
   }
 
   public async rewind(session) {
@@ -126,7 +126,7 @@ export class DelChars extends Mutation {
   }
 
   public async mutate(session) {
-    this.deletedChars = session.document.deleteChars(this.row, this.col, this.nchars);
+    this.deletedChars = await session.document.deleteChars(this.row, this.col, this.nchars);
   }
 
   public async rewind(session) {
@@ -172,13 +172,13 @@ export class ChangeChars extends Mutation {
   }
 
   public async mutate(session) {
-    this.deletedChars = session.document.deleteChars(this.row, this.col, this.nchars);
+    this.deletedChars = await session.document.deleteChars(this.row, this.col, this.nchars);
     this.ncharsDeleted = this.deletedChars.length;
     if (this.transform) {
       this.newChars = this.transform(this.deletedChars);
       errors.assert(this.newChars.length === this.ncharsDeleted);
     }
-    session.document.writeChars(this.row, this.col, this.newChars);
+    await session.document.writeChars(this.row, this.col, this.newChars);
   }
 
   public async rewind(session) {
@@ -188,8 +188,8 @@ export class ChangeChars extends Mutation {
   }
 
   public async remutate(session) {
-    session.document.deleteChars(this.row, this.col, this.ncharsDeleted);
-    session.document.writeChars(this.row, this.col, this.newChars);
+    await session.document.deleteChars(this.row, this.col, this.ncharsDeleted);
+    await session.document.writeChars(this.row, this.col, this.newChars);
   }
 
   // doesn't move cursors
@@ -323,7 +323,7 @@ export class DetachBlocks extends Mutation {
 
     this.created = null;
     if (this.options.addNew) {
-      this.created = session.document._newChild(this.parent, this.index);
+      this.created = await session.document._newChild(this.parent, this.index);
       this.created_index = session.document._childIndex(this.parent, this.created);
     }
 
@@ -339,7 +339,7 @@ export class DetachBlocks extends Mutation {
         next = [];
         if (this.parent === session.document.root.row) {
           if (!this.options.noNew) {
-            this.created = session.document._newChild(this.parent);
+            this.created = await session.document._newChild(this.parent);
             this.created_index = session.document._childIndex(this.parent, this.created);
             next = [this.created];
           }
@@ -451,7 +451,7 @@ export class ToggleBlock extends Mutation {
     return `row ${this.row}`;
   }
   public async mutate(session) {
-    session.document.toggleCollapsed(this.row);
+    await session.document.toggleCollapsed(this.row);
   }
   public async rewind(session) {
     return [

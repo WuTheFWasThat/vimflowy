@@ -1206,7 +1206,8 @@ export default class Session extends EventEmitter {
   // given an anchor and cursor, figures out the right blocks to be deleting
   // returns a parent, minindex, and maxindex
   public async getVisualLineSelections() {
-    const [common, ancestors1, ancestors2] = this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
+    const [common, ancestors1, ancestors2] =
+      await this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
     if (ancestors1.length === 0) {
       // anchor is underneath cursor
       const parent = common.parent;

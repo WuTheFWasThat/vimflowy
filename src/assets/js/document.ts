@@ -72,14 +72,14 @@ export default class Document extends EventEmitter {
     return word;
   }
 
-  public writeChars(row, col, chars) {
+  public async writeChars(row, col, chars) {
     const args = [col, 0].concat(chars);
     const line = this.getLine(row);
     [].splice.apply(line, args);
     return this.setLine(row, line);
   }
 
-  public deleteChars(row, col, num) {
+  public async deleteChars(row, col, num) {
     const line = this.getLine(row);
     const deleted = line.splice(col, num);
     this.setLine(row, line);
@@ -152,7 +152,7 @@ export default class Document extends EventEmitter {
     return this.getChildren(path.parent);
   }
 
-  public nextClone(path) {
+  public async nextClone(path) {
     const parents = this._getParents(path.row);
     let i = parents.indexOf(path.parent.row);
     errors.assert(i > -1);
@@ -178,7 +178,7 @@ export default class Document extends EventEmitter {
     return this.store.getCollapsed(row);
   }
 
-  public toggleCollapsed(row) {
+  public async toggleCollapsed(row) {
     return this.store.setCollapsed(row, !this.collapsed(row));
   }
 
@@ -197,7 +197,7 @@ export default class Document extends EventEmitter {
 
   // a node is cloned only if it has multiple parents.
   // note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
-  public isClone(row) {
+  public async isClone(row) {
     const parents = this._getParents(row);
     if (parents.length < 2) { // for efficiency reasons
       return false;
@@ -406,7 +406,7 @@ export default class Document extends EventEmitter {
   // 1. the common ancestor of the rows
   // 2. the array of ancestors between common ancestor and row1
   // 3. the array of ancestors between common ancestor and row2
-  public getCommonAncestor(row1, row2): [Path, Array<Path>, Array<Path>] {
+  public async getCommonAncestor(row1, row2): Promise<[Path, Array<Path>, Array<Path>]> {
     const ancestors1 = this.getAncestry(row1);
     const ancestors2 = this.getAncestry(row2);
     const commonAncestry = _.takeWhile(
@@ -417,18 +417,6 @@ export default class Document extends EventEmitter {
     const common = _.last(commonAncestry)[0];
     const firstDifference = commonAncestry.length;
     return [common, ancestors1.slice(firstDifference), ancestors2.slice(firstDifference)];
-  }
-
-  // extends a path by a list of rows going downwards (used when moving blocks around)
-  public combineAncestry(path, row_path) {
-    for (let i = 0; i < row_path.length; i++) {
-      const row = row_path[i];
-      path = this.findChild(path, row);
-      if (path === undefined) {
-        return null;
-      }
-    }
-    return path;
   }
 
   // returns whether an row is actually reachable from the root node
@@ -465,14 +453,14 @@ export default class Document extends EventEmitter {
     });
   }
 
-  private _newChild(parent, index = -1) {
+  private async _newChild(parent, index = -1) {
     const row = this.store.getNew();
     this._attach(row, parent, index);
     return row;
   }
 
-  public async addChild(path, index = -1) {
-    const row = this._newChild(path.row, index);
+  public async newChild(path, index = -1) {
+    const row = await this._newChild(path.row, index);
     return path.child(row);
   }
 
@@ -515,20 +503,22 @@ export default class Document extends EventEmitter {
 
   public async getViewContents(viewRow = this.root.row) {
 
-    const helper = (row, isFirst = false) => {
+    const helper = async (row, isFirst = false) => {
       const struct: any = {
         row: row,
         line: this.getLine(row),
         collapsed: this.collapsed(row),
-        isClone: this.isClone(row),
+        isClone: await this.isClone(row),
         hasChildren: this.hasChildren(row),
       };
       if (isFirst || (!struct.collapsed)) {
-        struct.children = this._getChildren(row).map((child) => helper(child));
+        struct.children = await Promise.all(
+          this._getChildren(row).map(async (child) => await helper(child))
+        );
       }
       return struct;
     };
-    return helper(viewRow, true);
+    return await helper(viewRow, true);
   }
 
   public async serialize(
@@ -562,7 +552,7 @@ export default class Document extends EventEmitter {
 
     if (options.pretty) {
       if ((children.length === 0) &&
-          (!this.isClone(row)) &&
+          (!await this.isClone(row)) &&
           _.every(
             Object.keys(struct),
             key => (key === 'children' || key === 'text' || key === 'collapsed')
@@ -593,7 +583,7 @@ export default class Document extends EventEmitter {
     if (replace_empty && children.length === 1 && (this.getLine(children[0].row).length === 0)) {
       path = children[0];
     } else {
-      path = await this.addChild(parent_path, index);
+      path = await this.newChild(parent_path, index);
     }
 
     if (typeof serialized === 'string') {

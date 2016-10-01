@@ -212,7 +212,7 @@ keyDefinitions.registerMotion([CMD_GO, CMD_CLONE], {
       // doesn't work for visual_line mode due to zoomInto
       return;
     }
-    const newPath = this.session.document.nextClone(cursor.path);
+    const newPath = await this.session.document.nextClone(cursor.path);
     await cursor.setPath(newPath);
     if (!(await this.session.isVisible(newPath))) {
       await this.session.zoomInto(newPath);
