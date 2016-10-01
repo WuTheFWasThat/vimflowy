@@ -24,7 +24,7 @@ type MenuResult = {
 type Query = Array<string>;
 
 export default class Menu {
-  private fn: (query: Query) => Array<MenuResult>;
+  private searchFn: (query: Query) => Promise<Array<MenuResult>>;
   public results: Array<MenuResult>;
   public selection: number;
 
@@ -32,8 +32,8 @@ export default class Menu {
 
   private lastQuery: Query;
 
-  constructor(fn) {
-    this.fn = fn;
+  constructor(searchFn) {
+    this.searchFn = searchFn;
 
     const doc = new Document(new DataStore.InMemory());
     doc.load(constants.empty_data); // NOTE: should be async but is okay since in-memory
@@ -74,7 +74,7 @@ export default class Menu {
     const query = await this.session.curText();
     if ((JSON.stringify(query)) !== (JSON.stringify(this.lastQuery))) {
       this.lastQuery = query;
-      this.results = this.fn(query);
+      this.results = await this.searchFn(query);
       this.selection = 0;
     }
   }

@@ -18,6 +18,9 @@ also deals with loading the initial document from the datastore, and serializing
 
 Currently, the separation between the Session and Document classes is not very good.  (see session.js)
 */
+
+type SearchOptions = {nresults?: number, case_sensitive?: boolean};
+
 export default class Document extends EventEmitter {
   public store: DataStore;
   public name: string;
@@ -464,18 +467,61 @@ export default class Document extends EventEmitter {
     return path.child(row);
   }
 
-  public orderedLines() {
+  private async allLines() {
     // TODO: deal with clones
     const paths = [];
 
-    const helper = path => {
+    const helper = async (path) => {
       paths.push(path);
-      this.getChildren(path).forEach(child => helper(child));
-      return null;
+      await Promise.all(
+        this.getChildren(path).map(
+          async (child) => await helper(child)
+        )
+      );
     };
-    helper(this.root);
+    await helper(this.root);
     return paths;
   }
+
+  public async search(query, options: SearchOptions = {}) {
+    const { nresults = 10, case_sensitive = false } = options;
+    const results = []; // list of (path, index) pairs
+
+    const canonicalize = x => case_sensitive ? x : x.toLowerCase();
+
+    const get_words = char_array => {
+      return char_array.join('')
+        .split(/\s/g)
+        .filter(x => x.length)
+        .map(canonicalize);
+    };
+
+    const query_words = get_words(query);
+    if (query.length === 0) {
+      return results;
+    }
+
+    const paths = await this.allLines();
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i];
+      const line = canonicalize(this.getText(path.row).join(''));
+      const matches = [];
+      if (_.every(query_words.map((word) => {
+        const index = line.indexOf(word);
+        if (index === -1) { return false; }
+        for (let j = index; j < index + word.length; j++) {
+          matches.push(j);
+        }
+        return true;
+      }))) {
+        results.push({ path, matches });
+      }
+      if (nresults > 0 && results.length === nresults) {
+        break;
+      }
+    }
+    return results;
+  };
 
   // important: serialized automatically garbage collects
   public async serializeRow(row = this.root.row): Promise<SerializedLine> {

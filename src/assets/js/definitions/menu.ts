@@ -1,7 +1,5 @@
 // tslint:disable:align
 
-import * as _ from 'lodash';
-
 import Menu from '../menu';
 import * as Modes from '../modes';
 import keyDefinitions from '../keyDefinitions';
@@ -18,53 +16,9 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
   description: 'Search',
 }, async function() {
   await this.session.setMode(MODES.SEARCH);
-  this.session.menu = new Menu(chars => {
-    const find = function(
-      document, query, options: {nresults?: number, case_sensitive?: boolean} = {}
-    ) {
-      const nresults = options.nresults || 10;
-
-      const results = []; // list of (path, index) pairs
-
-      const canonicalize = x => options.case_sensitive ? x : x.toLowerCase();
-
-      const get_words = char_array =>
-        char_array.join('')
-          .split(/\s/g)
-          .filter(x => x.length)
-          .map(canonicalize)
-      ;
-
-      const query_words = get_words(query);
-      if (query.length === 0) {
-        return results;
-      }
-
-      const paths = document.orderedLines();
-      for (let i = 0; i < paths.length; i++) {
-        const path = paths[i];
-        const line = canonicalize(document.getText(path.row).join(''));
-        const matches = [];
-        if (_.every(query_words.map((word) => {
-          const index = line.indexOf(word);
-          if (index === -1) { return false; }
-          for (let j = index; j < index + word.length; j++) {
-            matches.push(j);
-          }
-          return true;
-        }))) {
-          results.push({ path, matches });
-        }
-        if (nresults > 0 && results.length === nresults) {
-          break;
-        }
-      }
-      return results;
-    };
-
-    return _.map(
-      find(this.session.document, chars),
-      ({ path, matches }) => {
+  this.session.menu = new Menu(async (chars) => {
+    return (await this.session.document.search(chars))
+      .map(({ path, matches }) => {
         const highlights = {};
         matches.forEach((i) => {
           highlights[i] = true;

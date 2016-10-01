@@ -200,7 +200,7 @@ class MarksPlugin {
       description: 'Go to (search for) a mark',
     }, async function() {
       await this.session.setMode(MODES.SEARCH);
-      this.session.menu = new Menu(chars => {
+      this.session.menu = new Menu(async (chars) => {
         // find marks that start with the prefix
         const findMarks = (document, prefix, nresults = 10) => {
           const marks = that.listMarks();
@@ -226,7 +226,7 @@ class MarksPlugin {
               contents: this.session.document.getLine(path.row),
               renderHook(line) {
                 return [
-                  <span key='mark' style={markStyle}
+                  <span key={`mark_${mark}`} style={markStyle}
                         className='theme-bg-secondary theme-trim'>
                     {mark}
                   </span>
@@ -261,7 +261,7 @@ class MarksPlugin {
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_HELP, {
       description: 'Show/hide key bindings (edit in settings)',
-    }, async function() {
+    }, async function() { // eslint-disable-line require-yield
       this.session.toggleBindingsDiv();
       this.keyStream.forget(1);
     });

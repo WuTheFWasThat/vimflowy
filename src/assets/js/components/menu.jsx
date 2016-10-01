@@ -79,7 +79,7 @@ export default class MenuComponent extends React.Component {
 
         const renderOptions = result.renderOptions || {};
         let contents = (
-          <LineComponent
+          <LineComponent key={`line_${i}`}
             lineData={result.contents}
             {...renderOptions}
           />
