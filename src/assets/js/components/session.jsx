@@ -4,6 +4,7 @@ import * as Modes from '../modes';
 
 import BreadcrumbsComponent from './breadcrumbs';
 import BlockComponent from './block';
+import SpinnerComponent from './spinner';
 
 const MODES = Modes.modes;
 
@@ -22,7 +23,36 @@ export default class SessionComponent extends React.Component {
     super(props);
     this.state = {
       handleCharClicks: false,
+      viewContents: null,
     };
+  }
+
+  componentDidMount() {
+    const session = this.props.session;
+    this.updateFn = async () => {
+      const viewContents = session.document.getViewContents(session.viewRoot.row);
+
+      const highlight_blocks = {};
+      if (session.lineSelect) {
+        // mirrors logic of finishes_visual_line in keyHandler.js
+        const [parent, index1, index2] = session.getVisualLineSelections();
+        session.document.getChildRange(parent, index1, index2).forEach((child) => {
+          highlight_blocks[child.row] = true;
+        });
+      }
+
+      this.setState({
+        handleCharClicks: false,
+        highlight_blocks,
+        viewContents,
+      });
+    };
+    this.props.session.on('handledKey', this.updateFn);
+    this.updateFn();
+  }
+
+  componentWillUnmount() {
+    this.props.session.off('handledKey', this.updateFn);
   }
 
   rerender(options = {}) {
@@ -36,22 +66,21 @@ export default class SessionComponent extends React.Component {
   render() {
     const session = this.props.session;
 
+    const viewContents = this.state.viewContents;
+    if (viewContents === null) {
+      return <div className='center'>
+        <SpinnerComponent/>
+      </div>;
+    }
+
     const options = {
       cursorBetween: Modes.getMode(session.mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE,
       handleCharClicks: this.state.handleCharClicks,
     };
     this.props.onRender(options);
 
-    options.highlight_blocks = {};
-    if (session.lineSelect) {
-      // mirrors logic of finishes_visual_line in keyHandler.js
-      const [parent, index1, index2] = session.getVisualLineSelections();
-      session.document.getChildRange(parent, index1, index2).forEach((child) => {
-        options.highlight_blocks[child.row] = true;
-      });
-    }
+    options.highlight_blocks = this.state.highlight_blocks || {};
 
-    const viewContents = session.document.getViewContents(session.viewRoot.row);
     let onLineMouseOver = null;
     let onCharClick = null;
     let onLineClick = null;
