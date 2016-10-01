@@ -226,7 +226,7 @@ export class MoveBlock extends Mutation {
 
   public async mutate(session) {
     errors.assert((!this.path.isRoot()), 'Cannot detach root');
-    const info = session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
+    const info = await session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
     this.old_index = info.old.childIndex;
   }
 
@@ -280,7 +280,7 @@ export class AttachBlocks extends Mutation {
   }
 
   public async mutate(session) {
-    session.document._attachChildren(this.parent, this.cloned_rows, this.index);
+    await session.document._attachChildren(this.parent, this.cloned_rows, this.index);
   }
 
   public async rewind(session) {
@@ -318,7 +318,7 @@ export class DetachBlocks extends Mutation {
 
     for (let i = 0; i < this.deleted.length; i++) {
       const row = this.deleted[i];
-      session.document._detach(row, this.parent);
+      await session.document._detach(row, this.parent);
     }
 
     this.created = null;
@@ -364,11 +364,12 @@ export class DetachBlocks extends Mutation {
   }
 
   public async remutate(session) {
-    this.deleted.forEach((row) => {
-      session.document._detach(row, this.parent);
-    });
+    for (let i = 0; i < this.deleted.length; i++) {
+      const row = this.deleted[i];
+      await session.document._detach(row, this.parent);
+    }
     if (this.created !== null) {
-      session.document._attach(this.created, this.parent, this.created_index);
+      await session.document._attach(this.created, this.parent, this.created_index);
     }
   }
 
@@ -433,10 +434,11 @@ export class AddBlocks extends Mutation {
 
   public async remutate(session) {
     let index = this.index;
-    this.added_rows.forEach((sib) => {
-      session.document.attachChild(this.parent, sib, index);
+    for (let i = 0; i < this.added_rows.length; i++) {
+      const sib = this.added_rows[i];
+      await session.document.attachChild(this.parent, sib, index);
       index += 1;
-    });
+    }
   }
 }
 

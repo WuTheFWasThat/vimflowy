@@ -60,24 +60,24 @@ class TimeTrackingPlugin {
       return elements;
     });
 
-    this.api.registerListener('document', 'afterMove', info => {
+    this.api.registerListener('document', 'afterMove', async (info) => {
       this._rebuildTreeTime(info.id);
-      return this._rebuildTreeTime(info.old_parent, true);
+      this._rebuildTreeTime(info.old_parent, true);
     });
 
-    this.api.registerListener('document', 'afterAttach', info => {
+    this.api.registerListener('document', 'afterAttach', async (info) => {
       this._rebuildTreeTime(info.id);
       if (info.old_detached_parent) {
-        return this._rebuildTreeTime(info.old_detached_parent, true);
+        this._rebuildTreeTime(info.old_detached_parent, true);
       }
     });
 
-    this.api.registerListener('document', 'afterDetach', info => {
-      return this._rebuildTreeTime(info.id);
+    this.api.registerListener('document', 'afterDetach', async (info) => {
+      this._rebuildTreeTime(info.id);
     });
 
     this.api.registerListener('session', 'exit', () => {
-      return this.onRowChange(this.currentRow, null);
+      this.onRowChange(this.currentRow, null);
     });
 
     let CMD_TOGGLE = this.api.registerCommand({
@@ -115,23 +115,23 @@ class TimeTrackingPlugin {
     }, {});
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
       description: 'Toggle whether time is being logged',
-    }, () => {
+    }, async () => {
       return this.toggleLogging();
     });
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_CLEAR_TIME], {
       description: 'Clear current row time',
-    }, () => {
+    }, async () => {
       return this.resetCurrentRow();
     });
     let me = this;
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_ADD_TIME], {
       description: 'Add time to current row (in minutes)',
-    }, function() {
+    }, async () => {
       return me.changeTimeCurrentRow(this.repeat);
     });
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_SUBTRACT_TIME], {
       description: 'Subtract time from current row (in minutes)',
-    }, function() {
+    }, async () => {
       return me.changeTimeCurrentRow(-this.repeat);
     });
 

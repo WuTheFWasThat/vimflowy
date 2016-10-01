@@ -255,17 +255,6 @@ export default class Document extends EventEmitter {
     return ancestors;
   }
 
-  // detach a block from the graph
-  public detach(path) {
-    const parent = path.parent;
-    const index = this.indexOf(path);
-    this._detach(path.row, parent.row);
-    return {
-      parent,
-      index,
-    };
-  }
-
   public _hasChild(parent_row, row) {
     const children = this._getChildren(parent_row);
     const ci = _.findIndex(children, sib => sib === row);
@@ -317,10 +306,10 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  private _detach(row, parent_row) {
+  public async _detach(row, parent_row) {
     const wasLast = (this._getParents(row)).length === 1;
 
-    this.emit('beforeDetach', { id: row, parent_id: parent_row, last: wasLast });
+    await this.emitAsync('beforeDetach', { id: row, parent_id: parent_row, last: wasLast });
     const info = this._removeChild(parent_row, row);
     if (wasLast) {
       this.store.setDetachedParent(row, parent_row);
@@ -328,13 +317,13 @@ export default class Document extends EventEmitter {
       detached_children.push(row);
       this.store.setDetachedChildren(parent_row, detached_children);
     }
-    this.emit('afterDetach', { id: row, parent_id: parent_row, last: wasLast });
+    await this.emitAsync('afterDetach', { id: row, parent_id: parent_row, last: wasLast });
     return info;
   }
 
-  private _attach(child_row, parent_row, index = -1) {
+  public async _attach(child_row, parent_row, index = -1) {
     const isFirst = this._getParents(child_row).length === 0;
-    this.emit('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
+    await this.emitAsync('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
     const info = this._addChild(parent_row, child_row, index);
     const old_detached_parent = this.store.getDetachedParent(child_row);
     if (old_detached_parent !== null) {
@@ -346,12 +335,14 @@ export default class Document extends EventEmitter {
       detached_children.splice(ci, 1);
       this.store.setDetachedChildren(old_detached_parent, detached_children);
     }
-    this.emit('afterAttach', { id: child_row, parent_id: parent_row, first: isFirst, old_detached_parent});
+    await this.emitAsync('afterAttach', { id: child_row, parent_id: parent_row, first: isFirst, old_detached_parent});
     return info;
   }
 
-  public _move(child_row, old_parent_row, new_parent_row, index = -1) {
-    this.emit('beforeMove', { id: child_row, old_parent: old_parent_row, new_parent: new_parent_row });
+  public async _move(child_row, old_parent_row, new_parent_row, index = -1) {
+    await this.emitAsync('beforeMove', {
+      id: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
+    });
 
     const remove_info = this._removeChild(old_parent_row, child_row);
     if ((old_parent_row === new_parent_row) && (index > remove_info.childIndex)) {
@@ -359,7 +350,9 @@ export default class Document extends EventEmitter {
     }
     const add_info = this._addChild(new_parent_row, child_row, index);
 
-    this.emit('afterMove', { id: child_row, old_parent: old_parent_row, new_parent: new_parent_row });
+    await this.emitAsync('afterMove', {
+      id: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
+    });
 
     return {
       old: remove_info,
@@ -369,21 +362,21 @@ export default class Document extends EventEmitter {
 
   // attaches a detached child to a parent
   // the child should not have a parent already
-  public attachChild(parent, child, index = -1) {
-    return this.attachChildren(parent, [child], index)[0];
+  public async attachChild(parent, child, index = -1) {
+    return await this.attachChildren(parent, [child], index)[0];
   }
 
-  public attachChildren(parent, new_children, index = -1) {
-    this._attachChildren(parent.row, new_children.map(x => x.row), index);
+  public async attachChildren(parent, new_children, index = -1) {
+    await this._attachChildren(parent.row, new_children.map(x => x.row), index);
     // for child in new_children
     //   child.setParent parent
     return new_children;
   }
 
-  private _attachChildren(parent, new_children, index = -1) {
+  private async _attachChildren(parent, new_children, index = -1) {
     for (let i = 0; i < new_children.length; i++) {
       const child = new_children[i];
-      this._attach(child, parent, index);
+      await this._attach(child, parent, index);
       if (index >= 0) {
         index += 1;
       }
@@ -462,7 +455,7 @@ export default class Document extends EventEmitter {
 
   private async _newChild(parent, index = -1) {
     const row = await this.store.getNew();
-    this._attach(row, parent, index);
+    await this._attach(row, parent, index);
     return row;
   }
 
@@ -618,7 +611,7 @@ export default class Document extends EventEmitter {
       errors.assert(serialized.clone in id_mapping);
       const row = id_mapping[serialized.clone];
       const path = parent_path.child(row);
-      this.attachChild(parent_path, path, index);
+      await this.attachChild(parent_path, path, index);
       return path;
     }
 
