@@ -15,6 +15,15 @@ However, in the case of a key-value store, one can simply implement `get` and `s
 Currently, DataStore has a synchronous API.  This may need to change eventually...  :(
 */
 
+const timeout = (ns) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ns);
+  });
+};
+// const simulateDelay = 30;
+// const simulateDelay = 1;
+const simulateDelay = 0;
+
 export default class DataStore {
   protected prefix: string;
 
@@ -71,7 +80,10 @@ export default class DataStore {
   }
 
   // get and set values for a given row
-  public getLine(row: Row): Line {
+  public async getLine(row: Row): Promise<Line> {
+    if (simulateDelay) {
+      await timeout(simulateDelay * Math.random());
+    }
     return this._get(this._lineKey_(row), []).map(function(obj) {
       if (typeof obj === 'string') {
         obj = {
@@ -81,7 +93,10 @@ export default class DataStore {
       return obj;
     });
   }
-  public setLine(row: Row, line: Line): void {
+  public async setLine(row: Row, line: Line): Promise<void> {
+    if (simulateDelay) {
+      await timeout(simulateDelay * Math.random());
+    }
     return this._set(this._lineKey_(row), line.map(function(obj) {
       // if no properties are true, serialize just the character to save space
       if (_.every(constants.text_properties.map(property => !obj[property]))) {
@@ -152,10 +167,10 @@ export default class DataStore {
   }
 
   // get last view (for page reload)
-  public setLastViewRoot(ancestry: SerializedPath): void {
+  public async setLastViewRoot(ancestry: SerializedPath): Promise<void> {
     this._set(this._lastViewrootKey_(), ancestry);
   }
-  public getLastViewRoot(): SerializedPath {
+  public async getLastViewRoot(): Promise<SerializedPath> {
     return this._get(this._lastViewrootKey_(), []);
   }
 
@@ -180,9 +195,9 @@ export default class DataStore {
     return id;
   }
 
-  public getNew() {
+  public async getNew() {
     const id = this.getId();
-    this.setLine(id, []);
+    await this.setLine(id, []);
     this.setChildren(id, []);
     return id;
   }

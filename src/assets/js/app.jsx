@@ -105,7 +105,7 @@ $(document).ready(function() {
       // HACKY: should load the actual data now, but since plugins aren't enabled...
       await doc.load(constants.empty_data);
     }
-    const viewRoot = Path.loadFromAncestry(doc.store.getLastViewRoot());
+    const viewRoot = Path.loadFromAncestry(await doc.store.getLastViewRoot());
     // TODO: if we ever support multi-user case, ensure last view root is valid
     let cursorPath;
     if (viewRoot.isRoot()) {

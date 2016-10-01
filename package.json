@@ -10,7 +10,7 @@
     "build": "NODE_ENV=production webpack --config webpack.prod.js",
     "coverage": "multi='spec=- html-cov=public/coverage.html' node_modules/.bin/mocha  --compilers js:babel-core/register test/tests --require blanket --reporter mocha-multi test/tests/*",
     "start": "node dev_server.js",
-    "test": "mocha --require ts-babel-node/register --require babel-polyfill --compilers js:babel-core/register,ts:ts-node/register,tsx:ts-node/register test/tests",
+    "test": "mocha  --timeout 60000 --require ts-babel-node/register --require babel-polyfill --compilers js:babel-core/register,ts:ts-node/register,tsx:ts-node/register test/tests",
     "typecheck": "tsc -p . --noEmit"
   },
   "config": {

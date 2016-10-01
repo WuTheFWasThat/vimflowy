@@ -35,7 +35,7 @@ export default class Document extends EventEmitter {
   }
 
   public async getLine(row) {
-    return this.store.getLine(row);
+    return await this.store.getLine(row);
   }
 
   public async getChars(row) {
@@ -52,7 +52,7 @@ export default class Document extends EventEmitter {
   }
 
   public async setLine(row, line) {
-    return this.store.setLine(row, line);
+    await this.store.setLine(row, line);
   }
 
   // get word at this location
@@ -461,7 +461,7 @@ export default class Document extends EventEmitter {
   }
 
   private async _newChild(parent, index = -1) {
-    const row = this.store.getNew();
+    const row = await this.store.getNew();
     this._attach(row, parent, index);
     return row;
   }

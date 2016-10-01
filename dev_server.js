@@ -32,6 +32,7 @@ const spawn = require('child_process').spawn;
 spawn(
   'node_modules/.bin/mocha',
   [
+    '--timeout', '60000',
     '--require', 'ts-babel-node/register',
     '--require', 'babel-polyfill',
     '--compilers', 'js:babel-core/register,ts:ts-node/register,tsx:ts-node/register',
