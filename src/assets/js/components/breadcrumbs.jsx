@@ -24,7 +24,7 @@ class CrumbComponent extends React.Component {
         <span className={className} onClick={this.props.onClick}>
           {
             (() => {
-              if (path.is(session.document.root)) {
+              if (path.isRoot()) {
                 return <icon className='fa fa-home'/>;
               } else {
                 return session.document.getText(path.row).join('');
@@ -55,27 +55,25 @@ export default class BreadcrumbsComponent extends React.Component {
   render() {
     const session = this.props.session;
 
-    const crumbs = [];
+    const crumbNodes = [];
     let path = session.viewRoot;
-    while (!path.is(session.document.root)) {
-      crumbs.push(path);
-      path = path.parent;
-    }
-
-    const makeCrumb = (path) => {
-      return (
+    if (path.isRoot()) {
+      crumbNodes.push(
         <CrumbComponent key={path.row}
           session={session} path={path}
-          onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
         />
       );
-    };
-
-    const crumbNodes = [];
-    crumbNodes.push(makeCrumb(session.document.root));
-    for (let i = crumbs.length - 1; i > 0; i--) {
-      path = crumbs[i];
-      crumbNodes.push(makeCrumb(path));
+    } else {
+      while (!path.isRoot()) {
+        path = path.parent;
+        crumbNodes.push(
+          <CrumbComponent key={path.row}
+            session={session} path={path}
+            onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
+          />
+        );
+      }
+      crumbNodes.reverse();
     }
 
     return (

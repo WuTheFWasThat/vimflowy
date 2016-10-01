@@ -27,6 +27,10 @@ export default class SessionComponent extends React.Component {
     };
   }
 
+  update() {
+    this.updateFn && this.updateFn();
+  }
+
   componentDidMount() {
     const session = this.props.session;
     this.updateFn = async () => {
@@ -55,13 +59,6 @@ export default class SessionComponent extends React.Component {
     this.props.session.off('handledKey', this.updateFn);
   }
 
-  rerender(options = {}) {
-    this.setState({
-      t: Date.now(),
-      handleCharClicks: options.handleCharClicks,
-    });
-  }
-
   // TODO: render without handleCharClicks when session changes?
   render() {
     const session = this.props.session;
@@ -85,14 +82,14 @@ export default class SessionComponent extends React.Component {
     let onCharClick = null;
     let onLineClick = null;
     if (!this.state.handleCharClicks) {
-      onLineMouseOver = () => this.rerender({handleCharClicks: true});
+      onLineMouseOver = () => this.setState({ handleCharClicks: true });
     }
     if (session.mode === MODES.NORMAL || session.mode === MODES.INSERT) {
       if (this.state.handleCharClicks) {
         onCharClick = (path, column, e) => {
           session.cursor.setPosition(path, column);
           // assume they might click again
-          this.rerender({handleCharClicks: true});
+          this.setState({handleCharClicks: true});
           // prevent overall path click
           e.stopPropagation();
           return false;
@@ -103,14 +100,14 @@ export default class SessionComponent extends React.Component {
         // move cursor to the end of the row
         let col = options.cursorBetween ? -1 : -2;
         session.cursor.setPosition(path, col);
-        this.rerender();
+        this.update();
       };
     }
 
     const onBulletClick = async (path) => {
       await session.toggleBlockCollapsed(path.row);
       session.save();
-      this.rerender();
+      this.update();
     };
 
     let onCrumbClick = null;
@@ -118,7 +115,7 @@ export default class SessionComponent extends React.Component {
       onCrumbClick = async (path) => {
         await session.zoomInto(path);
         session.save();
-        this.rerender();
+        this.update();
       };
     }
 
@@ -142,7 +139,7 @@ export default class SessionComponent extends React.Component {
                 message += ' Press o to start adding content!';
               }
               return (
-                <div key='message' className='center'
+                <div className='center'
                      style={{padding: 20, fontSize: 20, opacity: 0.5}}>
                   { message }
                 </div>
