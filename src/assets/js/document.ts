@@ -38,8 +38,12 @@ export default class Document extends EventEmitter {
     return this.store.getLine(row);
   }
 
-  public getText(row) {
+  public async getChars(row) {
     return this.getLine(row).map(obj => obj.char);
+  }
+
+  public async getText(row): Promise<string> {
+    return (await this.getChars(row)).join('');
   }
 
   public async getChar(row, col) {
@@ -47,14 +51,14 @@ export default class Document extends EventEmitter {
     return charInfo && charInfo.char;
   }
 
-  public setLine(row, line) {
+  public async setLine(row, line) {
     return this.store.setLine(row, line);
   }
 
   // get word at this location
   // if on a whitespace character, return nothing
   public async getWord(row, col) {
-    const text = this.getText(row);
+    const text = await this.getChars(row);
 
     if (utils.isWhitespace(text[col])) {
       return '';
@@ -79,13 +83,13 @@ export default class Document extends EventEmitter {
     const args = [col, 0].concat(chars);
     const line = this.getLine(row);
     [].splice.apply(line, args);
-    return this.setLine(row, line);
+    return await this.setLine(row, line);
   }
 
   public async deleteChars(row, col, num) {
     const line = this.getLine(row);
     const deleted = line.splice(col, num);
-    this.setLine(row, line);
+    await this.setLine(row, line);
     return deleted;
   }
 
@@ -487,24 +491,19 @@ export default class Document extends EventEmitter {
     const { nresults = 10, case_sensitive = false } = options;
     const results = []; // list of (path, index) pairs
 
-    const canonicalize = x => case_sensitive ? x : x.toLowerCase();
-
-    const get_words = char_array => {
-      return char_array.join('')
-        .split(/\s/g)
-        .filter(x => x.length)
-        .map(canonicalize);
-    };
-
-    const query_words = get_words(query);
     if (query.length === 0) {
       return results;
     }
 
+    const canonicalize = x => case_sensitive ? x : x.toLowerCase();
+    const query_words =
+      query.split(/\s/g).filter(x => x.length).map(canonicalize);
+
     const paths = await this.allLines();
     for (let i = 0; i < paths.length; i++) {
       const path = paths[i];
-      const line = canonicalize(this.getText(path.row).join(''));
+      const text = await this.getText(path.row);
+      const line = canonicalize(text);
       const matches = [];
       if (_.every(query_words.map((word) => {
         const index = line.indexOf(word);
@@ -526,7 +525,7 @@ export default class Document extends EventEmitter {
   // important: serialized automatically garbage collects
   public async serializeRow(row = this.root.row): Promise<SerializedLine> {
     const line = this.getLine(row);
-    const text = this.getText(row).join('');
+    const text = await this.getText(row);
     const struct: SerializedLine = {
       text,
     };
@@ -633,7 +632,7 @@ export default class Document extends EventEmitter {
     }
 
     if (typeof serialized === 'string') {
-      this.setLine(path.row, serialized.split(''));
+      await this.setLine(path.row, serialized.split(''));
     } else {
       if (serialized.id) {
         id_mapping[serialized.id] = path.row;
@@ -650,7 +649,7 @@ export default class Document extends EventEmitter {
         }
       });
 
-      this.setLine(path.row, line);
+      await this.setLine(path.row, line);
       this.store.setCollapsed(path.row, serialized.collapsed);
 
       if (serialized.children) {

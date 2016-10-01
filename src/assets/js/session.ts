@@ -678,7 +678,7 @@ export default class Session extends EventEmitter {
   }
 
   public async curText() {
-    return this.document.getText(this.cursor.row);
+    return await this.document.getText(this.cursor.row);
   }
 
   public async curLineLength() {

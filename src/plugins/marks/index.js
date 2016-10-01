@@ -152,7 +152,7 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], CMD_FINISH_MARK, {
       description: 'Finish typing mark',
     }, async function() {
-      const mark = (await that.marksession.curText()).join('');
+      const mark = await that.marksession.curText();
       const err = await that.updateMark(that.marksessionpath.row, mark);
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       await this.session.setMode(MODES.NORMAL);
@@ -200,7 +200,7 @@ class MarksPlugin {
       description: 'Go to (search for) a mark',
     }, async function() {
       await this.session.setMode(MODES.SEARCH);
-      this.session.menu = new Menu(async (chars) => {
+      this.session.menu = new Menu(async (text) => {
         // find marks that start with the prefix
         const findMarks = (document, prefix, nresults = 10) => {
           const marks = that.listMarks();
@@ -218,7 +218,6 @@ class MarksPlugin {
           return results;
         };
 
-        const text = chars.join('');
         return _.map(
           findMarks(this.session.document, text),
           ({ path, mark }) => {

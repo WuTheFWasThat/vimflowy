@@ -21,7 +21,7 @@ type MenuResult = {
   renderOptions?: any; // TODO
 };
 
-type Query = Array<string>;
+type Query = string;
 
 export default class Menu {
   private searchFn: (query: Query) => Promise<Array<MenuResult>>;

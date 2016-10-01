@@ -16,8 +16,8 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
   description: 'Search',
 }, async function() {
   await this.session.setMode(MODES.SEARCH);
-  this.session.menu = new Menu(async (chars) => {
-    return (await this.session.document.search(chars))
+  this.session.menu = new Menu(async (text) => {
+    return (await this.session.document.search(text))
       .map(({ path, matches }) => {
         const highlights = {};
         matches.forEach((i) => {
