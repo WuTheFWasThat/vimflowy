@@ -34,12 +34,12 @@ export default class Document extends EventEmitter {
     return this;
   }
 
-  public getLine(row) {
+  public async getLine(row) {
     return this.store.getLine(row);
   }
 
   public async getChars(row) {
-    return this.getLine(row).map(obj => obj.char);
+    return (await this.getLine(row)).map(obj => obj.char);
   }
 
   public async getText(row): Promise<string> {
@@ -47,7 +47,7 @@ export default class Document extends EventEmitter {
   }
 
   public async getChar(row, col) {
-    const charInfo = this.getLine(row)[col];
+    const charInfo = (await this.getLine(row))[col];
     return charInfo && charInfo.char;
   }
 
@@ -81,20 +81,20 @@ export default class Document extends EventEmitter {
 
   public async writeChars(row, col, chars) {
     const args = [col, 0].concat(chars);
-    const line = this.getLine(row);
+    const line = await this.getLine(row);
     [].splice.apply(line, args);
     return await this.setLine(row, line);
   }
 
   public async deleteChars(row, col, num) {
-    const line = this.getLine(row);
+    const line = await this.getLine(row);
     const deleted = line.splice(col, num);
     await this.setLine(row, line);
     return deleted;
   }
 
-  public getLength(row) {
-    return this.getLine(row).length;
+  public async getLength(row) {
+    return (await this.getLine(row)).length;
   }
 
   // structure
@@ -524,7 +524,7 @@ export default class Document extends EventEmitter {
 
   // important: serialized automatically garbage collects
   public async serializeRow(row = this.root.row): Promise<SerializedLine> {
-    const line = this.getLine(row);
+    const line = await this.getLine(row);
     const text = await this.getText(row);
     const struct: SerializedLine = {
       text,
@@ -550,7 +550,7 @@ export default class Document extends EventEmitter {
 
     const struct: any = {
       path: path,
-      line: this.getLine(path.row),
+      line: await this.getLine(path.row),
       collapsed: this.collapsed(path.row),
       isClone: await this.isClone(path.row),
       hasChildren: this.hasChildren(path.row),
@@ -625,7 +625,8 @@ export default class Document extends EventEmitter {
     const children = this.getChildren(parent_path);
     // if parent_path has only one child and it's empty, delete it
     let path;
-    if (replace_empty && children.length === 1 && (this.getLine(children[0].row).length === 0)) {
+    if (replace_empty && children.length === 1 &&
+        ((await this.getLine(children[0].row)).length === 0)) {
       path = children[0];
     } else {
       path = await this.newChild(parent_path, index);

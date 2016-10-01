@@ -17,21 +17,23 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
 }, async function() {
   await this.session.setMode(MODES.SEARCH);
   this.session.menu = new Menu(async (text) => {
-    return (await this.session.document.search(text))
-      .map(({ path, matches }) => {
+    const results = await this.session.document.search(text);
+    return Promise.all(
+      results.map(async ({ path, matches }) => {
         const highlights = {};
         matches.forEach((i) => {
           highlights[i] = true;
         });
         return {
-          contents: this.session.document.getLine(path.row),
+          contents: await this.session.document.getLine(path.row),
           renderOptions: { highlights },
           fn: async () => {
             await this.session.zoomInto(path);
             await this.session.cursor.setPath(path);
           },
         };
-      });
+      })
+    );
   });
 });
 

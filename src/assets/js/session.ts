@@ -672,7 +672,7 @@ export default class Session extends EventEmitter {
   ////////////////////////////////
 
   public async curLine() {
-    return this.document.getLine(this.cursor.row);
+    return await this.document.getLine(this.cursor.row);
   }
 
   public async curText() {
@@ -748,7 +748,7 @@ export default class Session extends EventEmitter {
   }
 
   public async yankChars(path, col, nchars) {
-    const line = this.document.getLine(path.row);
+    const line = await this.document.getLine(path.row);
     if (line.length > 0) {
       this.register.saveChars(line.slice(col, col + nchars));
     }
@@ -810,9 +810,15 @@ export default class Session extends EventEmitter {
   }
 
   public async toggleRowsProperty(property, rows) {
-    const all_were_true = _.every(rows.map(row => {
-      return _.every(this.document.getLine(row).map(obj => obj[property]));
-    }));
+    const all_were_true = _.every(
+      await Promise.all(
+        rows.map(async (row) => {
+          return _.every(
+            (await this.document.getLine(row)).map(obj => obj[property])
+          );
+        })
+      )
+    );
     const new_value = !all_were_true;
     await Promise.all(
       rows.map(async (row) => {
@@ -905,8 +911,8 @@ export default class Session extends EventEmitter {
   // - second is first child of first, AND has no children
   private async _joinRows(first, second, options: {delimiter?: string} = {}) {
     let addDelimiter = false;
-    const firstLine = this.document.getLine(first.row);
-    const secondLine = this.document.getLine(second.row);
+    const firstLine = await this.document.getLine(first.row);
+    const secondLine = await this.document.getLine(second.row);
     if (options.delimiter) {
       if (firstLine.length && secondLine.length) {
         if (firstLine[firstLine.length - 1].char !== options.delimiter) {

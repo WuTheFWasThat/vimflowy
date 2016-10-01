@@ -452,7 +452,7 @@ export default class Cursor extends EventEmitter {
   // get whether the cursor should be bold/italic based on surroundings
   // NOTE: only relevant for insert mode.
   private async _getPropertiesFromContext() {
-    const line = this.document.getLine(this.path.row);
+    const line = await this.document.getLine(this.path.row);
     let obj;
     if (line.length === 0) {
       obj = {};

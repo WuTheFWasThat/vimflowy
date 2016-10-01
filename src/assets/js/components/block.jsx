@@ -58,7 +58,12 @@ export class RowComponent extends React.Component {
 
     lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
 
-    lineoptions = session.applyHook('renderLineOptions', lineoptions, { path });
+    const hooksInfo = {
+      path,
+      pluginData: this.props.pluginData
+    };
+
+    lineoptions = session.applyHook('renderLineOptions', lineoptions, hooksInfo);
     let lineContents = [
       <LineComponent key='line'
         lineData={lineData}
@@ -66,13 +71,10 @@ export class RowComponent extends React.Component {
         {...lineoptions}
       />
     ];
-    lineContents = session.applyHook('renderLineContents', lineContents, { path });
+    lineContents = session.applyHook('renderLineContents', lineContents, hooksInfo);
     [].push.apply(results, lineContents);
 
-    const infoChildren = session.applyHook('renderAfterLine', [], {
-      path,
-      pluginData: this.props.pluginData
-    });
+    const infoChildren = session.applyHook('renderAfterLine', [], hooksInfo);
 
     return (
       <div key='text' className='node-text'

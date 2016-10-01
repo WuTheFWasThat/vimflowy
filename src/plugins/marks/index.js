@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 import * as Plugins from '../../assets/js/plugins';
@@ -218,24 +217,26 @@ class MarksPlugin {
           return results;
         };
 
-        return _.map(
-          findMarks(this.session.document, text),
-          ({ path, mark }) => {
-            return {
-              contents: this.session.document.getLine(path.row),
-              renderHook(line) {
-                return [
-                  <span key={`mark_${mark}`} style={markStyle}
-                        className='theme-bg-secondary theme-trim'>
-                    {mark}
-                  </span>
-                  ,
-                  line
-                ];
-              },
-              fn: async () => await this.session.zoomInto(path)
-            };
-          }
+        return await Promise.all(
+          findMarks(this.session.document, text).map(
+            async ({ path, mark }) => {
+              const line = await this.session.document.getLine(path.row);
+              return {
+                contents: line,
+                renderHook(line) {
+                  return [
+                    <span key={`mark_${mark}`} style={markStyle}
+                          className='theme-bg-secondary theme-trim'>
+                      {mark}
+                    </span>
+                    ,
+                    line
+                  ];
+                },
+                fn: async () => await this.session.zoomInto(path)
+              };
+            }
+          )
         );
       });
     });
@@ -272,33 +273,42 @@ class MarksPlugin {
       this.keyStream.forget();
     });
 
-    this.api.registerHook('session', 'renderLineOptions', (options, info) => {
-      const marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
+    this.api.registerHook('document', 'pluginPathContents', async (obj, { path }) => {
+      obj.mark = this._getMark(path.row);
+
+      const marking = this.marksessionpath && this.marksessionpath.is(path);
       if (marking) {
-        options.cursors = {};
+        obj.marking = true;
+        obj.markText = await this.marksession.document.getLine(
+          this.marksession.cursor.path.row
+        );
+        obj.markCol = this.marksession.cursor.col;
       }
+      return obj;
+    });
+
+    this.api.registerHook('session', 'renderLineOptions', (options, info) => {
+      if (info.pluginData.marking) { options.cursors = {}; }
       return options;
     });
 
     this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
-      const marking = (this.marksessionpath !== null) && this.marksessionpath.is(info.path);
-      if (marking) {
+      const { pluginData } = info;
+      if (pluginData.marking) {
         lineContents.unshift(
           <span style={markStyle} key='mark'
                 className='theme-bg-secondary theme-trim-accent'>
             <LineComponent
-              lineData={
-                this.marksession.document.getLine(this.marksession.cursor.path.row)
-              }
+              lineData={pluginData.markText}
               cursors={{
-                [this.marksession.cursor.col]: true
+                [pluginData.markCol]: true
               }}
               cursorBetween={true}
             />
           </span>
         );
       } else {
-        const mark = this._getMark(info.path.row);
+        const mark = pluginData.mark;
         if (mark) {
           lineContents.unshift(
             <span style={markStyle} key='mark' className='theme-bg-secondary theme-trim'>
