@@ -8,10 +8,10 @@ Plugins.register({
   description: 'Display internal IDs for each node (for debugging for developers)',
   version: 1
 }, (api =>
-  api.registerHook('session', 'renderInfoElements', function(pathElements, info) {
-    pathElements.unshift(
-      <span style={{ position: 'relative', fontWeight: 'bold'}}>
-        {' ' + info.path.getAncestry().join(', ')}
+  api.registerHook('session', 'renderAfterLine', function(pathElements, { path }) {
+    pathElements.push(
+      <span key='debug' style={{ position: 'relative', fontWeight: 'bold'}}>
+        {' ' + path.getAncestry().join(', ')}
       </span>
     );
 

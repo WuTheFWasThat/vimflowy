@@ -11,6 +11,7 @@ export class RowComponent extends React.Component {
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
       line: React.PropTypes.any.isRequired,
+      pluginData: React.PropTypes.any,
       onLineMouseOver: React.PropTypes.func,
       onCharClick: React.PropTypes.func,
       onClick: React.PropTypes.func,
@@ -68,14 +69,10 @@ export class RowComponent extends React.Component {
     lineContents = session.applyHook('renderLineContents', lineContents, { path });
     [].push.apply(results, lineContents);
 
-    const infoChildren = session.applyHook('renderInfoElements', [], { path });
-
-    const info = (
-      <span key='info' className='node-info'>
-        {infoChildren}
-      </span>
-    );
-    results.push(info);
+    const infoChildren = session.applyHook('renderAfterLine', [], {
+      path,
+      pluginData: this.props.pluginData
+    });
 
     return (
       <div key='text' className='node-text'
@@ -83,7 +80,8 @@ export class RowComponent extends React.Component {
         onClick={this.props.onClick && this.props.onClick.bind(this, path)}
         style={this.props.style}
       >
-        {session.applyHook('renderLineElements', results, { path })}
+        {results}
+        {infoChildren}
       </div>
     );
   }
@@ -123,6 +121,7 @@ export default class BlockComponent extends React.Component {
           onLineMouseOver={this.props.onLineMouseOver}
           onCharClick={this.props.onCharClick}
           line={parentContents.line}
+          pluginData={parentContents.plugins}
           onClick={this.props.onLineClick}
         />
       );
@@ -134,7 +133,7 @@ export default class BlockComponent extends React.Component {
         <div key='children' className='block'>
           {
             parentContents.children.map((contents) => {
-              const path = parent.child(contents.row);
+              const path = contents.path;
 
               let cloneIcon = null;
               if (contents.isClone) {

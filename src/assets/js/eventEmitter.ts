@@ -83,4 +83,13 @@ export default class EventEmitter {
     });
     return obj;
   }
+
+  public async applyHookAsync(event, obj, info) {
+    const hooks = (this.hooks[event] || []);
+    for (let i = 0; i < hooks.length; i++) {
+      const transform = hooks[i];
+      obj = await transform(obj, info);
+    }
+    return obj;
+  }
 }

@@ -28,10 +28,15 @@ class TimeTrackingPlugin {
     this.currentRow = null;
     this.onRowChange(null, this.api.cursor.path); // Initial setup
 
-    this.api.registerHook('session', 'renderInfoElements', (elements, renderData) => {
-      let time = this.rowTime(renderData.path);
+    this.api.registerHook('document', 'pluginPathContents', async (obj, { path }) => {
+      obj.timeTracked = this.rowTime(path);
+      return obj;
+    });
 
-      let isCurRow = renderData.path.row === (this.currentRow && this.currentRow.row);
+    this.api.registerHook('session', 'renderAfterLine', (elements, renderData) => {
+      const { path, pluginData } = renderData;
+      const time = pluginData.timeTracked;
+      let isCurRow = path.row === (this.currentRow && this.currentRow.row);
 
       if (isCurRow || time > 1000) {
         let timeStr = ' ';
