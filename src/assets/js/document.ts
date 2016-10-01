@@ -572,7 +572,7 @@ export default class Document extends EventEmitter {
     return struct;
   }
 
-  public loadTo(
+  public async loadTo(
     serialized, parent_path = this.root, index = -1,
     id_mapping = {}, replace_empty = false
   ) {
@@ -616,21 +616,23 @@ export default class Document extends EventEmitter {
       this.store.setCollapsed(path.row, serialized.collapsed);
 
       if (serialized.children) {
-        serialized.children.forEach((serialized_child) => {
-          this.loadTo(serialized_child, path, -1, id_mapping);
-        });
+        for (let i = 0; i < serialized.children.length; i++) {
+          const serialized_child = serialized.children[i];
+          await this.loadTo(serialized_child, path, -1, id_mapping);
+        }
       }
     }
 
-    this.emit('loadRow', path, serialized.plugins || {});
+    await this.emitAsync('loadRow', path, serialized.plugins || {});
 
     return path;
   }
 
   public async load(serialized_rows) {
     const id_mapping = {};
-    serialized_rows.forEach((serialized_row) => {
-      this.loadTo(serialized_row, this.root, -1, id_mapping, true);
-    });
+    for (let i = 0; i < serialized_rows.length; i++) {
+      const serialized_row = serialized_rows[i];
+      await this.loadTo(serialized_row, this.root, -1, id_mapping, true);
+    }
   }
 }

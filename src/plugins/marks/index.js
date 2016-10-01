@@ -44,10 +44,10 @@ class MarksPlugin {
       str() {
         return `row ${this.row}, mark ${this.mark}`;
       }
-      mutate(/* session */) {
+      async mutate(/* session */) {
         return that._setMark(this.row, this.mark);
       }
-      rewind(/* session */) {
+      async rewind(/* session */) {
         return [
           /* eslint-disable no-use-before-define */
           new UnsetMark(this.row)
@@ -65,11 +65,11 @@ class MarksPlugin {
       str() {
         return `row ${this.row}`;
       }
-      mutate(/* session */) {
+      async mutate(/* session */) {
         this.mark = that._getMark(this.row);
         return that._unsetMark(this.row, this.mark);
       }
-      rewind(/* session */) {
+      async rewind(/* session */) {
         return [
           new SetMark(this.row, this.mark)
         ];

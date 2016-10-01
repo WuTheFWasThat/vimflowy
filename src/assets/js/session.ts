@@ -103,7 +103,7 @@ export default class Session extends EventEmitter {
   }
 
   public exit() {
-    return this.emit('exit');
+    this.emit('exit');
   }
 
   public async setMode(newmode: ModeId) {
@@ -119,7 +119,7 @@ export default class Session extends EventEmitter {
     this.mode = newmode;
     await Modes.getMode(this.mode).enter(this, oldmode);
 
-    return this.emit('modeChange', oldmode, newmode);
+    this.emit('modeChange', oldmode, newmode);
   }
 
   ////////////////////////////////
@@ -327,12 +327,13 @@ export default class Session extends EventEmitter {
       for (let j = oldState.index - 1; j > newState.index - 1; j--) {
         const mutation = this.mutations[j];
         logger.debug(`  Undoing mutation ${mutation.constructor.name}(${mutation.str()})`);
-        const undo_mutations = mutation.rewind(this);
-        undo_mutations.forEach((undo_mutation) => {
+        const undo_mutations = await mutation.rewind(this);
+        for (let k = 0; k < undo_mutations.length; k++) {
+          const undo_mutation = undo_mutations[k];
           logger.debug(`  Undo mutation ${undo_mutation.constructor.name}(${undo_mutation.str()})`);
-          undo_mutation.mutate(this);
-          undo_mutation.moveCursor(this.cursor);
-        });
+          await undo_mutation.mutate(this);
+          await undo_mutation.moveCursor(this.cursor);
+        }
       }
 
       logger.debug('> END UNDO');
@@ -350,12 +351,12 @@ export default class Session extends EventEmitter {
       for (let j = oldState.index; j < newState.index; j++) {
         const mutation = this.mutations[j];
         logger.debug(`  Redoing mutation ${mutation.constructor.name}(${mutation.str()})`);
-        if (!mutation.validate(this)) {
+        if (!await mutation.validate(this)) {
           // this should not happen, since the state should be the same as before
           throw new errors.GenericError(`Failed to redo mutation: ${mutation.str()}`);
         }
-        mutation.remutate(this);
-        mutation.moveCursor(this.cursor);
+        await mutation.remutate(this);
+        await mutation.moveCursor(this.cursor);
       }
       logger.debug('> END REDO');
       await this._restoreViewState(oldState.after);
@@ -367,7 +368,7 @@ export default class Session extends EventEmitter {
       // NOTE: we let mutations through since some plugins may apply mutations on load
       // these mutations won't be undoable, which is desired
       logger.warn(`Tried mutation ${mutation} before init!`);
-      mutation.mutate(this);
+      await mutation.mutate(this);
       return true;
     }
 
@@ -385,11 +386,11 @@ export default class Session extends EventEmitter {
     }
 
     logger.debug(`Applying mutation ${mutation.constructor.name}(${mutation.str()})`);
-    if (!mutation.validate(this)) {
+    if (!await mutation.validate(this)) {
       return false;
     }
-    mutation.mutate(this);
-    mutation.moveCursor(this.cursor);
+    await mutation.mutate(this);
+    await mutation.moveCursor(this.cursor);
     // TODO: do this elsewhere
     // TODO this is fire and forget.  should await this
     this.fixCursorForMode();
@@ -1041,7 +1042,7 @@ export default class Session extends EventEmitter {
     parent, ids, index = -1, options: {setCursor?: string} = {}
   ) {
     const mutation = new mutations.AttachBlocks(parent.row, ids, index);
-    const will_work = mutation.validate(this);
+    const will_work = await mutation.validate(this);
     await this.do(mutation);
 
     // TODO: do this more elegantly
@@ -1240,7 +1241,7 @@ export default class Session extends EventEmitter {
       }
     }
 
-    return this.emit('scroll', numlines);
+    this.emit('scroll', numlines);
   }
 
 }

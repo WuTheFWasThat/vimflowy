@@ -220,7 +220,7 @@ export class PluginsManager extends EventEmitter {
     const plugin_info = this.plugin_infos[name] || {};
     plugin_info.status = status;
     this.plugin_infos[name] = plugin_info;
-    return this.emit('status');
+    this.emit('status');
   }
 
   public updateEnabledPlugins() {
@@ -230,7 +230,7 @@ export class PluginsManager extends EventEmitter {
         enabled.push(name);
       }
     }
-    return this.emit('enabledPluginsChange', enabled);
+    this.emit('enabledPluginsChange', enabled);
   }
 
   public enable(name) {

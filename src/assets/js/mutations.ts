@@ -4,21 +4,21 @@ each mutation should implement a constructor, as well as the following methods:
 
     str: () -> string
         prints itself
-    mutate: (session) -> void
+    async mutate: (session) -> void
         takes a session and acts on it (mutates the session)
-    rewind: (session) -> void
+    async rewind: (session) -> void
         takes a session, assumed be in the state right after the mutation was applied,
         and returns a list of mutations for undoing it
 
 the mutation may also optionally implement
 
-    validate: (session) -> bool
+    async validate: (session) -> bool
         returns whether this action is valid at the time (i.e. whether it is okay to call mutate)
-    remutate: (session) -> void
+    async remutate: (session) -> void
         takes a session, and acts on it.  assumes that mutate has been called once already
         by default, remutate is the same as mutate.
         it should be implemented only if it is more efficient than the mutate implementation
-    moveCursor: (cursor) -> void
+    async moveCursor: (cursor) -> void
         takes a cursor, and moves it according to how the cursor should move
 */
 
@@ -55,19 +55,19 @@ export default class Mutation {
   public str() {
     return '';
   }
-  public validate(session) {
+  public async validate(session): Promise<boolean> {
     return true;
   }
-  public mutate(session): void {
+  public async mutate(session): Promise<void> {
     throw new errors.NotImplemented();
   }
-  public rewind(session): Array<Mutation> {
+  public async rewind(session): Promise<Array<Mutation>> {
     return [];
   }
-  public remutate(session): void {
+  public async remutate(session): Promise<void> {
     return this.mutate(session);
   }
-  public moveCursor(cursor) {
+  public async moveCursor(cursor): Promise<void> {
     return null;
   }
 }
@@ -88,22 +88,22 @@ export class AddChars extends Mutation {
     return `row ${this.row}, col ${this.col}, nchars ${this.chars.length}`;
   }
 
-  public mutate(session) {
-    return session.document.writeChars(this.row, this.col, this.chars);
+  public async mutate(session) {
+    session.document.writeChars(this.row, this.col, this.chars);
   }
 
-  public rewind(session) {
+  public async rewind(session) {
     return [
       new DelChars(this.row, this.col, this.chars.length),
     ];
   }
 
-  public moveCursor(cursor) {
+  public async moveCursor(cursor) {
     if (!(cursor.path.row === this.row)) {
       return;
     }
     if (cursor.col >= this.col) {
-      return cursor.setCol(cursor.col + this.chars.length);
+      cursor.setCol(cursor.col + this.chars.length);
     }
   }
 }
@@ -125,26 +125,26 @@ export class DelChars extends Mutation {
     return `row ${this.row}, col ${this.col}, nchars ${this.nchars}`;
   }
 
-  public mutate(session) {
-    return this.deletedChars = session.document.deleteChars(this.row, this.col, this.nchars);
+  public async mutate(session) {
+    this.deletedChars = session.document.deleteChars(this.row, this.col, this.nchars);
   }
 
-  public rewind(session) {
+  public async rewind(session) {
     return [
       new AddChars(this.row, this.col, this.deletedChars),
     ];
   }
 
-  public moveCursor(cursor) {
+  public async moveCursor(cursor) {
     if (cursor.row !== this.row) {
       return;
     }
     if (cursor.col < this.col) {
       return;
     } else if (cursor.col < this.col + this.nchars) {
-      return cursor.setCol(this.col);
+      cursor.setCol(this.col);
     } else {
-      return cursor.setCol(cursor.col - this.nchars);
+      cursor.setCol(cursor.col - this.nchars);
     }
   }
 }
@@ -171,25 +171,25 @@ export class ChangeChars extends Mutation {
     return `change row ${this.row}, col ${this.col}, nchars ${this.nchars}`;
   }
 
-  public mutate(session) {
+  public async mutate(session) {
     this.deletedChars = session.document.deleteChars(this.row, this.col, this.nchars);
     this.ncharsDeleted = this.deletedChars.length;
     if (this.transform) {
       this.newChars = this.transform(this.deletedChars);
       errors.assert(this.newChars.length === this.ncharsDeleted);
     }
-    return session.document.writeChars(this.row, this.col, this.newChars);
+    session.document.writeChars(this.row, this.col, this.newChars);
   }
 
-  public rewind(session) {
+  public async rewind(session) {
     return [
       new ChangeChars(this.row, this.col, this.newChars.length, null, this.deletedChars),
     ];
   }
 
-  public remutate(session) {
+  public async remutate(session) {
     session.document.deleteChars(this.row, this.col, this.ncharsDeleted);
-    return session.document.writeChars(this.row, this.col, this.newChars);
+    session.document.writeChars(this.row, this.col, this.newChars);
   }
 
   // doesn't move cursors
@@ -218,32 +218,32 @@ export class MoveBlock extends Mutation {
     return `move ${this.path.row} from ${this.path.parent.row} to ${this.parent.row}`;
   }
 
-  public validate(session) {
+  public async validate(session) {
     // if parent is the same, don't do sibling clone validation
     const sameParent = this.parent.row === this.old_parent.row;
     return (validateRowInsertion(session, this.parent.row, this.path.row, {noSiblingCheck: sameParent}));
   }
 
-  public mutate(session) {
+  public async mutate(session) {
     errors.assert((!this.path.isRoot()), 'Cannot detach root');
     const info = session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
-    return this.old_index = info.old.childIndex;
+    this.old_index = info.old.childIndex;
   }
 
-  public rewind(session) {
+  public async rewind(session) {
     return [
       new MoveBlock((this.parent.extend([this.path.row])), this.old_parent, this.old_index),
     ];
   }
 
-  public moveCursor(cursor) {
+  public async moveCursor(cursor) {
     const walk = cursor.path.walkFrom(this.path);
     if (walk === null) {
       return;
     }
     // TODO: other cursors could also
     // be on a relevant path..
-    return cursor._setPath((this.parent.extend([this.path.row])).extend(walk));
+    cursor._setPath((this.parent.extend([this.path.row])).extend(walk));
   }
 }
 
@@ -269,7 +269,7 @@ export class AttachBlocks extends Mutation {
     return `parent ${this.parent}, index ${this.index}`;
   }
 
-  public validate(session) {
+  public async validate(session) {
     for (let i = 0; i < this.cloned_rows.length; i++) {
       const row = this.cloned_rows[i];
       if (!(validateRowInsertion(session, this.parent, row))) {
@@ -279,11 +279,11 @@ export class AttachBlocks extends Mutation {
     return true;
   }
 
-  public mutate(session) {
-    return session.document._attachChildren(this.parent, this.cloned_rows, this.index);
+  public async mutate(session) {
+    session.document._attachChildren(this.parent, this.cloned_rows, this.index);
   }
 
-  public rewind(session) {
+  public async rewind(session) {
     return [
       new DetachBlocks(this.parent, this.index, this.nrows),
     ];
@@ -312,7 +312,7 @@ export class DetachBlocks extends Mutation {
     return `parent ${this.parent}, index ${this.index}, nrows ${this.nrows}`;
   }
 
-  public mutate(session) {
+  public async mutate(session) {
     this.deleted = session.document._getChildren(this.parent, this.index, this.index + this.nrows - 1)
       .filter((sib => sib !== null));
 
@@ -351,10 +351,10 @@ export class DetachBlocks extends Mutation {
       }
     }
 
-    return this.next = next;
+    this.next = next;
   }
 
-  public rewind(session) {
+  public async rewind(session) {
     const mutations = [];
     if (this.created !== null) {
       mutations.push(new DetachBlocks(this.parent, this.created_index, 1, {noNew: true}));
@@ -363,16 +363,16 @@ export class DetachBlocks extends Mutation {
     return mutations;
   }
 
-  public remutate(session) {
+  public async remutate(session) {
     this.deleted.forEach((row) => {
       session.document._detach(row, this.parent);
     });
     if (this.created !== null) {
-      return session.document._attach(this.created, this.parent, this.created_index);
+      session.document._attach(this.created, this.parent, this.created_index);
     }
   }
 
-  public moveCursor(cursor) {
+  public async moveCursor(cursor) {
     const [walk, ancestor] = cursor.path.shedUntil(this.parent);
     if (walk === null) {
       return;
@@ -384,7 +384,7 @@ export class DetachBlocks extends Mutation {
     if ((this.deleted.indexOf(child)) === -1) {
       return;
     }
-    return cursor.setPosition(ancestor.extend(this.next), 0);
+    cursor.setPosition(ancestor.extend(this.next), 0);
   }
 }
 
@@ -412,32 +412,31 @@ export class AddBlocks extends Mutation {
     return `parent ${this.parent.row}, index ${this.index}`;
   }
 
-  public mutate(session) {
+  public async mutate(session) {
     let index = this.index;
 
     const id_mapping = {};
     this.added_rows = [];
-    this.serialized_rows.forEach((serialized_row) => {
-      const row = session.document.loadTo(serialized_row, this.parent, index, id_mapping);
+    for (let i = 0; i < this.serialized_rows.length; i++) {
+      const serialized_row = this.serialized_rows[i];
+      const row = await session.document.loadTo(serialized_row, this.parent, index, id_mapping);
       this.added_rows.push(row);
       index += 1;
-    });
-    return null;
+    }
   }
 
-  public rewind(session) {
+  public async rewind(session) {
     return [
       new DetachBlocks(this.parent.row, this.index, this.nrows),
     ];
   }
 
-  public remutate(session) {
+  public async remutate(session) {
     let index = this.index;
     this.added_rows.forEach((sib) => {
       session.document.attachChild(this.parent, sib, index);
       index += 1;
     });
-    return null;
   }
 }
 
@@ -451,10 +450,10 @@ export class ToggleBlock extends Mutation {
   public str() {
     return `row ${this.row}`;
   }
-  public mutate(session) {
-    return session.document.toggleCollapsed(this.row);
+  public async mutate(session) {
+    session.document.toggleCollapsed(this.row);
   }
-  public rewind(session) {
+  public async rewind(session) {
     return [
       this,
     ];

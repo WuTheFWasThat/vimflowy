@@ -17,6 +17,12 @@ export default class EventEmitter {
     });
   }
 
+  public emitAsync(event, ...args) {
+    return Promise.all((this.listeners[event] || []).map(async (listener) => {
+      return await listener.apply(listener, args);
+    }));
+  }
+
   public addListener(event, listener) {
     this.emit('newListener', event, listener);
     if (!this.listeners[event]) {
