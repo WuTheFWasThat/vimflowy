@@ -5,33 +5,19 @@ import React from 'react';
 class CrumbComponent extends React.Component {
   static get propTypes() {
     return {
-      session: React.PropTypes.any.isRequired,
       onClick: React.PropTypes.func,
-      path: React.PropTypes.any,
+      children: React.PropTypes.any,
     };
   }
 
   render() {
-    const session = this.props.session;
-    const path = this.props.path;
-
-    let className = '';
+    let className = 'crumb';
     if (this.props.onClick) {
-      className = 'theme-text-link';
+      className += ' theme-text-link';
     }
     return (
-      <span key={'crumb_' + path.row} className='crumb'>
-        <span className={className} onClick={this.props.onClick}>
-          {
-            (() => {
-              if (path.isRoot()) {
-                return <icon className='fa fa-home'/>;
-              } else {
-                return session.document.getText(path.row).join('');
-              }
-            })()
-          }
-        </span>
+      <span className={className} onClick={this.props.onClick}>
+        {this.props.children}
       </span>
     );
   }
@@ -40,7 +26,8 @@ class CrumbComponent extends React.Component {
 export default class BreadcrumbsComponent extends React.Component {
   static get propTypes() {
     return {
-      session: React.PropTypes.any.isRequired,
+      viewRoot: React.PropTypes.any.isRequired,
+      crumbContents: React.PropTypes.any.isRequired,
       onCrumbClick: React.PropTypes.func,
     };
   }
@@ -53,26 +40,33 @@ export default class BreadcrumbsComponent extends React.Component {
   }
 
   render() {
-    const session = this.props.session;
-
     const crumbNodes = [];
-    let path = session.viewRoot;
+    let path = this.props.viewRoot;
     if (path.isRoot()) {
       crumbNodes.push(
-        <CrumbComponent key={path.row}
-          session={session} path={path}
-        />
+        <CrumbComponent key={path.row}>
+          <icon className='fa fa-home'/>
+        </CrumbComponent>
       );
     } else {
+      path = path.parent;
       while (!path.isRoot()) {
-        path = path.parent;
         crumbNodes.push(
           <CrumbComponent key={path.row}
-            session={session} path={path}
             onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
-          />
+          >
+            {this.props.crumbContents[path.row]}
+          </CrumbComponent>
         );
+        path = path.parent;
       }
+      crumbNodes.push(
+        <CrumbComponent key={path.row}
+          onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
+        >
+          <icon className='fa fa-home'/>
+        </CrumbComponent>
+      );
       crumbNodes.reverse();
     }
 
