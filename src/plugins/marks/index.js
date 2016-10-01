@@ -44,7 +44,7 @@ class MarksPlugin {
         return `row ${this.row}, mark ${this.mark}`;
       }
       async mutate(/* session */) {
-        return that._setMark(this.row, this.mark);
+        return await that._setMark(this.row, this.mark);
       }
       async rewind(/* session */) {
         return [
@@ -65,8 +65,8 @@ class MarksPlugin {
         return `row ${this.row}`;
       }
       async mutate(/* session */) {
-        this.mark = that._getMark(this.row);
-        return that._unsetMark(this.row, this.mark);
+        this.mark = await that._getMark(this.row);
+        return await that._unsetMark(this.row, this.mark);
       }
       async rewind(/* session */) {
         return [
@@ -78,8 +78,8 @@ class MarksPlugin {
 
     // Serialization #
 
-    this.api.registerHook('document', 'serializeRow', (struct, info) => {
-      const mark = this._getMark(info.row);
+    this.api.registerHook('document', 'serializeRow', async (struct, info) => {
+      const mark = await this._getMark(info.row);
       if (mark) {
         struct.mark = mark;
       }
@@ -168,7 +168,7 @@ class MarksPlugin {
           return false;
         }
         const mark = word.slice(1);
-        const allMarks = that.listMarks();
+        const allMarks = await that.listMarks();
         if (mark in allMarks) {
           const row = allMarks[mark];
           const path = this.session.document.canonicalPath(row);
@@ -201,8 +201,8 @@ class MarksPlugin {
       await this.session.setMode(MODES.SEARCH);
       this.session.menu = new Menu(async (text) => {
         // find marks that start with the prefix
-        const findMarks = (document, prefix, nresults = 10) => {
-          const marks = that.listMarks();
+        const findMarks = async (document, prefix, nresults = 10) => {
+          const marks = await that.listMarks();
           const results = []; // list of paths
           for (const mark in marks) {
             const row = marks[mark];
@@ -218,7 +218,7 @@ class MarksPlugin {
         };
 
         return await Promise.all(
-          findMarks(this.session.document, text).map(
+          (await findMarks(this.session.document, text)).map(
             async ({ path, mark }) => {
               const line = await this.session.document.getLine(path.row);
               return {
@@ -274,7 +274,7 @@ class MarksPlugin {
     });
 
     this.api.registerHook('document', 'pluginPathContents', async (obj, { path }) => {
-      obj.mark = this._getMark(path.row);
+      obj.mark = await this._getMark(path.row);
 
       const marking = this.marksessionpath && this.marksessionpath.is(path);
       if (marking) {
@@ -370,12 +370,12 @@ class MarksPlugin {
   }
 
   // get mark for an row, '' if it doesn't exist
-  _getMark(row) {
+  async _getMark(row) {
     const marks = this._getRowsToMarks();
     return marks[row] || '';
   }
 
-  _setMark(row, mark) {
+  async _setMark(row, mark) {
     this._sanityCheckMarks();
     const marks_to_rows = this._getMarksToRows();
     const rows_to_marks = this._getRowsToMarks();
@@ -388,7 +388,7 @@ class MarksPlugin {
     return this._sanityCheckMarks();
   }
 
-  _unsetMark(row, mark) {
+  async _unsetMark(row, mark) {
     this._sanityCheckMarks();
     const marks_to_rows = this._getMarksToRows();
     const rows_to_marks = this._getRowsToMarks();
@@ -414,7 +414,7 @@ class MarksPlugin {
     return null;
   }
 
-  listMarks() {
+  async listMarks() {
     this._sanityCheckMarks();
     const marks_to_rows = this._getMarksToRows();
 

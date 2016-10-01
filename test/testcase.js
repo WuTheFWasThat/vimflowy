@@ -104,8 +104,8 @@ class TestCase {
       keys = keys.split('');
     }
     keys.forEach((key) => {
-      this._chain(() =>  {
-        return this.keyhandler.handleKey(key);
+      this._chain(async () =>  {
+        await this.keyhandler.handleKey(key);
       });
     });
     return this;
@@ -134,12 +134,9 @@ class TestCase {
   }
 
   expect(expected) {
-    return this._chain(() => {
-      return this.document.serialize(
-        this.document.root.row, {pretty: true}
-      ).then((serialized) => {
-        this._expectDeepEqual(serialized.children, expected, 'Unexpected serialized content');
-      });
+    return this._chain(async () => {
+      const serialized = await this.document.serialize(this.document.root.row, {pretty: true});
+      this._expectDeepEqual(serialized.children, expected, 'Unexpected serialized content');
     });
   }
 

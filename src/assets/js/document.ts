@@ -531,7 +531,7 @@ export default class Document extends EventEmitter {
     if (this.collapsed(row)) {
       struct.collapsed = true;
     }
-    const plugins = this.applyHook('serializeRow', {}, {row});
+    const plugins = await this.applyHookAsync('serializeRow', {}, {row});
     if (Object.keys(plugins).length > 0) {
       struct.plugins = plugins;
     }
