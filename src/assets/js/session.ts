@@ -773,7 +773,7 @@ export default class Session extends EventEmitter {
   }
 
   public async yankRowAtCursor() {
-    const serialized_row = this.document.serializeRow(this.cursor.row);
+    const serialized_row = await this.document.serializeRow(this.cursor.row);
     return this.register.saveSerializedRows([serialized_row]);
   }
 

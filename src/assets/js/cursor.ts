@@ -202,7 +202,7 @@ export default class Cursor extends EventEmitter {
 
   public async visibleHome() {
     let path;
-    if (this.session.viewRoot.is(this.session.document.root)) {
+    if (this.session.viewRoot.isRoot()) {
       path = await this.session.nextVisible(this.session.viewRoot);
     } else {
       path = this.session.viewRoot;

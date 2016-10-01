@@ -34,7 +34,7 @@ export default class SessionComponent extends React.Component {
   componentDidMount() {
     const session = this.props.session;
     this.updateFn = async () => {
-      const viewContents = session.document.getViewContents(session.viewRoot.row);
+      const viewContents = await session.document.getViewContents(session.viewRoot.row);
 
       const highlight_blocks = {};
       if (session.lineSelect) {

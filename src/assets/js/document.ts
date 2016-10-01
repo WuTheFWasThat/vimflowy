@@ -488,7 +488,7 @@ export default class Document extends EventEmitter {
   }
 
   // important: serialized automatically garbage collects
-  public serializeRow(row = this.root.row): SerializedLine {
+  public async serializeRow(row = this.root.row): Promise<SerializedLine> {
     const line = this.getLine(row);
     const text = this.getText(row).join('');
     const struct: SerializedLine = {
@@ -511,7 +511,7 @@ export default class Document extends EventEmitter {
     return struct;
   }
 
-  public getViewContents(viewRow = this.root.row) {
+  public async getViewContents(viewRow = this.root.row) {
 
     const helper = (row, isFirst = false) => {
       const struct: any = {
@@ -540,7 +540,7 @@ export default class Document extends EventEmitter {
       return { clone: row };
     }
 
-    const struct: any = this.serializeRow(row);
+    const struct: any = await this.serializeRow(row);
     // NOTE: this must be done in order due to cloning
     // const children = await Promise.all(this._getChildren(row).map(
     //   async (childrow) => await this.serialize(childrow, options, serialized)
