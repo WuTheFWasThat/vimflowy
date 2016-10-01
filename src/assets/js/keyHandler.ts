@@ -256,7 +256,7 @@ export default class KeyHandler extends EventEmitter {
       // recursive definition
       return await this.getCommand(mode, keyStream, info.definition, context.repeat);
     } else if (typeof definition === 'function') {
-      context = mode_obj.transform_context(context);
+      context = await mode_obj.transform_context(context);
       return {
         handled: true,
         command: {

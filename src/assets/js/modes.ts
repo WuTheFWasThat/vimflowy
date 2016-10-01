@@ -40,7 +40,7 @@ type ModeMetadata = {
   // a function taking a context and returning a new context
   // in which definition functions will be executed
   // (this is called right before execution)
-  transform_context?: (context: any) => any;
+  transform_context?: (context: any) => Promise<any>;
 };
 
 export default class Mode {
@@ -77,9 +77,9 @@ export default class Mode {
   // a function taking a context and returning a new context
   // in which definition functions will be executed
   // (this is called right before execution)
-  public transform_context(context: any): any {
+  public async transform_context(context: any): Promise<any> {
     if (this.metadata.transform_context) {
-      return this.metadata.transform_context(context);
+      return await this.metadata.transform_context(context);
     }
     return context;
   }
@@ -221,9 +221,9 @@ registerMode({
     session.anchor = null;
     return session.lineSelect = false;
   },
-  transform_context(context) {
+  async transform_context(context) {
     const { session } = context;
-    const [parent, index1, index2] = session.getVisualLineSelections();
+    const [parent, index1, index2] = await session.getVisualLineSelections();
     context.row_start_i = index1;
     context.row_end_i = index2;
     context.row_start = (session.document.getChildren(parent))[index1];
