@@ -69,7 +69,7 @@ Plugins.register({
       return async function(cursor /*, options */) {
         if (key in EASY_MOTION_MAPPINGS.key_to_path) {
           let path = EASY_MOTION_MAPPINGS.key_to_path[key];
-          cursor.setPosition(path, 0);
+          await cursor.setPosition(path, 0);
         }
         EASY_MOTION_MAPPINGS = null;
       };

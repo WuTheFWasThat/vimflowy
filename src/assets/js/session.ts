@@ -312,7 +312,7 @@ export default class Session extends EventEmitter {
   }
 
   private async _restoreViewState(state) {
-    this.cursor.from(state.cursor);
+    await this.cursor.from(state.cursor);
     await this.fixCursorForMode();
     await this.changeView(state.viewRoot);
   }
@@ -391,9 +391,7 @@ export default class Session extends EventEmitter {
     }
     await mutation.mutate(this);
     await mutation.moveCursor(this.cursor);
-    // TODO: do this elsewhere
-    // TODO this is fire and forget.  should await this
-    this.fixCursorForMode();
+    await this.fixCursorForMode();
 
     this.mutations.push(mutation);
     return true;
@@ -738,7 +736,7 @@ export default class Session extends EventEmitter {
         return new_obj;
       })
     ));
-    return this.cursor.setCol(this.cursor.col + ndeleted - 1);
+    await this.cursor.setCol(this.cursor.col + ndeleted - 1);
   }
 
   public async clearRowAtCursor(options) {
@@ -892,7 +890,7 @@ export default class Session extends EventEmitter {
       // cursor now is at inserted path, add the characters
       await this.addCharsAfterCursor(mutation.deletedChars);
       // restore cursor
-      return this.cursor.setPosition(path, 0, {keepProperties: true});
+      await this.cursor.setPosition(path, 0, {keepProperties: true});
     }
   }
 
@@ -914,7 +912,7 @@ export default class Session extends EventEmitter {
     }
 
     if (!this.document.hasChildren(second.row)) {
-      this.cursor.setPosition(first, -1);
+      await this.cursor.setPosition(first, -1);
       await this.delBlock(second, {noNew: true, noSave: true});
       if (addDelimiter) {
         const mutation = new mutations.AddChars(
@@ -924,7 +922,7 @@ export default class Session extends EventEmitter {
       const mutation = new mutations.AddChars(
         first.row, firstLine.length + (addDelimiter ? 1 : 0), secondLine);
       await this.do(mutation);
-      this.cursor.setPosition(first, firstLine.length);
+      await this.cursor.setPosition(first, firstLine.length);
       return true;
     }
 
@@ -938,7 +936,7 @@ export default class Session extends EventEmitter {
       return false;
     }
 
-    this.cursor.setPosition(second, 0);
+    await this.cursor.setPosition(second, 0);
     await this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter) {
       const mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
@@ -1011,9 +1009,9 @@ export default class Session extends EventEmitter {
     const mutation = new mutations.AddBlocks(parent, index, serialized_rows);
     await this.do(mutation);
     if (options.setCursor === 'first') {
-      this.cursor.setPosition(mutation.added_rows[0], 0, options.cursorOptions);
+      await this.cursor.setPosition(mutation.added_rows[0], 0, options.cursorOptions);
     } else if (options.setCursor === 'last') {
-      this.cursor.setPosition(mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions);
+      await this.cursor.setPosition(mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions);
     }
   }
 
@@ -1048,9 +1046,9 @@ export default class Session extends EventEmitter {
     // TODO: do this more elegantly
     if (will_work) {
       if (options.setCursor === 'first') {
-        return this.cursor.setPosition(this.document.findChild(parent, ids[0]), 0);
+        await this.cursor.setPosition(this.document.findChild(parent, ids[0]), 0);
       } else if (options.setCursor === 'last') {
-        return this.cursor.setPosition(this.document.findChild(parent, ids[ids.length - 1]), 0);
+        await this.cursor.setPosition(this.document.findChild(parent, ids[ids.length - 1]), 0);
       }
     }
   }

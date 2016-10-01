@@ -72,7 +72,7 @@ export default class Register {
       await this.session.addCharsAtCursor(chars);
     } else {
       await this.session.addCharsAfterCursor(chars);
-      this.session.cursor.setCol(this.session.cursor.col + chars.length);
+      await this.session.cursor.setCol(this.session.cursor.col + chars.length);
     }
   }
 

@@ -103,7 +103,7 @@ export class AddChars extends Mutation {
       return;
     }
     if (cursor.col >= this.col) {
-      cursor.setCol(cursor.col + this.chars.length);
+      await cursor.setCol(cursor.col + this.chars.length);
     }
   }
 }
@@ -142,9 +142,9 @@ export class DelChars extends Mutation {
     if (cursor.col < this.col) {
       return;
     } else if (cursor.col < this.col + this.nchars) {
-      cursor.setCol(this.col);
+      await cursor.setCol(this.col);
     } else {
-      cursor.setCol(cursor.col - this.nchars);
+      await cursor.setCol(cursor.col - this.nchars);
     }
   }
 }
@@ -384,7 +384,7 @@ export class DetachBlocks extends Mutation {
     if ((this.deleted.indexOf(child)) === -1) {
       return;
     }
-    cursor.setPosition(ancestor.extend(this.next), 0);
+    await cursor.setPosition(ancestor.extend(this.next), 0);
   }
 }
 

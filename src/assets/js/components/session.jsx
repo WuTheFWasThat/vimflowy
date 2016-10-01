@@ -99,19 +99,22 @@ export default class SessionComponent extends React.Component {
     if (mode === MODES.NORMAL || mode === MODES.INSERT) {
       if (this.state.handleCharClicks) {
         onCharClick = (path, column, e) => {
-          session.cursor.setPosition(path, column);
-          // assume they might click again
-          this.setState({handleCharClicks: true});
+          // NOTE: this is fire and forget
+          session.cursor.setPosition(path, column).then(() => {
+            // assume they might click again
+            this.setState({handleCharClicks: true});
+          });
+
           // prevent overall path click
           e.stopPropagation();
           return false;
         };
       }
-      onLineClick = (path) => {
+      onLineClick = async (path) => {
         // if clicking outside of text, but on the row,
         // move cursor to the end of the row
         let col = options.cursorBetween ? -1 : -2;
-        session.cursor.setPosition(path, col);
+        await session.cursor.setPosition(path, col);
         this.update();
       };
     }

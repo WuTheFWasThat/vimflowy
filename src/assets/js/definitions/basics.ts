@@ -22,7 +22,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_MOTION, {
     await motion(tmp, {});
   }
   if (await this.session.isVisible(tmp.path)) {
-    this.session.cursor.from(tmp);
+    await this.session.cursor.from(tmp);
   }
   this.keyStream.forget();
 });
@@ -43,7 +43,7 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
   if (!tmp.path.is(this.session.cursor.path)) { // only allow same-row movement
     this.session.showMessage('Visual mode currently only works on one line', {text_class: 'error'});
   } else {
-    this.session.cursor.from(tmp);
+    await this.session.cursor.from(tmp);
   }
 });
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOTION, {
@@ -797,8 +797,8 @@ keyDefinitions.registerAction([MODES.VISUAL, MODES.VISUAL_LINE], CMD_SWAP_CURSOR
   description: 'Swap cursor to other end of selection, in visual and visual line mode',
 }, async function() {
   const tmp = this.session.anchor.clone();
-  this.session.anchor.from(this.session.cursor);
-  this.session.cursor.from(tmp);
+  await this.session.anchor.from(this.session.cursor);
+  await this.session.cursor.from(tmp);
   this.keyStream.save();
 });
 

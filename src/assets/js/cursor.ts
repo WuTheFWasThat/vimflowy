@@ -40,7 +40,7 @@ export default class Cursor extends EventEmitter {
     this.path = path;
     this.col = col;
     this.properties = {};
-    this._getPropertiesFromContext();
+    this._getPropertiesFromContext(); // TODO: this is fire and forget...
 
     // -1 means last col
     this.moveCol = moveCol !== null ? moveCol : col;
@@ -57,34 +57,34 @@ export default class Cursor extends EventEmitter {
 
   public _setPath(path) {
     this.emit('rowChange', this.path, path);
-    return this.path = path;
+    this.path = path;
   }
 
   private _setCol(col) {
     this.emit('colChange', this.col, col);
-    return this.col = col;
+    this.col = col;
   }
 
-  public from(other) {
+  public async from(other) {
     this._setPath(other.path);
     this._setCol(other.col);
     this.moveCol = other.moveCol;
     this.properties = _.cloneDeep(other.properties);
   }
 
-  public setPosition(path, col, cursorOptions?: CursorOptions) {
+  public async setPosition(path, col, cursorOptions?: CursorOptions) {
     this._setPath(path);
-    this.setCol(col, cursorOptions);
+    await this.setCol(col, cursorOptions);
   }
 
   public async setPath(path, cursorOptions?: CursorOptions) {
     this._setPath(path);
-    this._fromMoveCol(cursorOptions);
+    await this._fromMoveCol(cursorOptions);
   }
 
-  public setCol(moveCol, cursorOptions: CursorOptions = { pastEnd: true }) {
+  public async setCol(moveCol, cursorOptions: CursorOptions = { pastEnd: true }) {
     this.moveCol = moveCol;
-    this._fromMoveCol(cursorOptions);
+    await this._fromMoveCol(cursorOptions);
     // if moveCol was too far, fix it
     // NOTE: this should happen for setting column, but not path
     if (this.moveCol >= 0) {
@@ -92,7 +92,7 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  private _fromMoveCol(cursorOptions: CursorOptions = {}) {
+  private async _fromMoveCol(cursorOptions: CursorOptions = {}) {
     const len = this.document.getLength(this.path.row);
     const maxcol = len - (cursorOptions.pastEnd ? 0 : 1);
     let col;
@@ -103,21 +103,21 @@ export default class Cursor extends EventEmitter {
     }
     this._setCol(col);
     if (!cursorOptions.keepProperties) {
-      this._getPropertiesFromContext();
+      await this._getPropertiesFromContext();
     }
   }
 
-  private _left() {
-    this.setCol(this.col - 1);
+  private async _left() {
+    await this.setCol(this.col - 1);
   }
 
-  private _right() {
-    this.setCol(this.col + 1);
+  private async _right() {
+    await this.setCol(this.col + 1);
   }
 
   public async left() {
     if (this.col > 0) {
-      this._left();
+      await this._left();
     }
   }
 
@@ -126,7 +126,7 @@ export default class Cursor extends EventEmitter {
   ) {
     const shift = cursorOptions.pastEnd ? 0 : 1;
     if (this.col < this.document.getLength(this.path.row) - shift) {
-      this._right();
+      await this._right();
     }
   }
 
@@ -152,12 +152,12 @@ export default class Cursor extends EventEmitter {
 
   private async _nextChar() {
     if (this.col < this.document.getLength(this.path.row) - 1) {
-      this._right();
+      await this._right();
       return true;
     } else {
       const nextpath = await this.session.nextVisible(this.path);
       if (nextpath !== null) {
-        this.setPosition(nextpath, 0);
+        await this.setPosition(nextpath, 0);
         return true;
       }
     }
@@ -178,12 +178,12 @@ export default class Cursor extends EventEmitter {
 
   private async _prevChar() {
     if (this.col > 0) {
-      this._left();
+      await this._left();
       return true;
     } else {
       const prevpath = await this.session.prevVisible(this.path);
       if (prevpath !== null) {
-        this.setPosition(prevpath, -1);
+        await this.setPosition(prevpath, -1);
         return true;
       }
     }
@@ -191,12 +191,12 @@ export default class Cursor extends EventEmitter {
   }
 
   public async home() {
-    this.setCol(0);
+    await this.setCol(0);
     return this;
   }
 
   public async end(cursorOptions: CursorOptions = {}) {
-    this.setCol(cursorOptions.pastEnd ? -1 : -2);
+    await this.setCol(cursorOptions.pastEnd ? -1 : -2);
     return this;
   }
 
@@ -207,13 +207,13 @@ export default class Cursor extends EventEmitter {
     } else {
       path = this.session.viewRoot;
     }
-    this.setPosition(path, 0);
+    await this.setPosition(path, 0);
     return this;
   }
 
   public async visibleEnd() {
     const path = await this.session.lastVisible();
-    this.setPosition(path, 0);
+    await this.setPosition(path, 0);
     return this;
   }
 
@@ -265,7 +265,7 @@ export default class Cursor extends EventEmitter {
       await this.document.getChar(this.path.row, this.col)
     );
     while ((this.col > 0) && (await wordcheck(this.path, this.col - 1))) {
-      this._left();
+      await this._left();
     }
     return this;
   }
@@ -273,7 +273,7 @@ export default class Cursor extends EventEmitter {
   public async endWord(options: WordMovementOptions = {}) {
     if (await this.atVisibleEnd()) {
       if (options.cursor.pastEnd) {
-        this._right();
+        await this._right();
       }
       return this;
     }
@@ -290,16 +290,16 @@ export default class Cursor extends EventEmitter {
       await this.document.getChar(this.path.row, this.col)
     );
     while ((this.col < end) && (await wordcheck(this.path, this.col + 1))) {
-      this._right();
+      await this._right();
     }
 
     if (options.cursor.pastEndWord) {
-      this._right();
+      await this._right();
     }
 
     end = (this.document.getLength(this.path.row)) - 1;
     if (this.col === end && options.cursor.pastEnd) {
-      this._right();
+      await this._right();
     }
     return this;
   }
@@ -307,7 +307,7 @@ export default class Cursor extends EventEmitter {
   public async nextWord(options: WordMovementOptions = {}) {
     if (await this.atVisibleEnd()) {
       if (options.cursor.pastEnd) {
-        this._right();
+        await this._right();
       }
       return this;
     }
@@ -318,7 +318,7 @@ export default class Cursor extends EventEmitter {
       await this.document.getChar(this.path.row, this.col)
     );
     while ((this.col < end) && (await wordcheck(this.path, this.col + 1))) {
-      this._right();
+      await this._right();
     }
 
     await this._nextChar();
@@ -329,7 +329,7 @@ export default class Cursor extends EventEmitter {
 
     end = (this.document.getLength(this.path.row)) - 1;
     if (this.col === end && options.cursor.pastEnd) {
-      this._right();
+      await this._right();
     }
     return this;
   }
@@ -358,12 +358,12 @@ export default class Cursor extends EventEmitter {
       return;
     }
 
-    this.setCol(found);
+    await this.setCol(found);
     if (options.cursor.pastEnd) {
-      this._right();
+      await this._right();
     }
     if (options.beforeFound) {
-      return this._left();
+      return await this._left();
     }
   }
 
@@ -390,9 +390,9 @@ export default class Cursor extends EventEmitter {
       return;
     }
 
-    this.setCol(found);
+    await this.setCol(found);
     if (options.beforeFound) {
-      return this._right();
+      await this._right();
     }
   }
 
@@ -451,7 +451,7 @@ export default class Cursor extends EventEmitter {
 
   // get whether the cursor should be bold/italic based on surroundings
   // NOTE: only relevant for insert mode.
-  private _getPropertiesFromContext() {
+  private async _getPropertiesFromContext() {
     const line = this.document.getLine(this.path.row);
     let obj;
     if (line.length === 0) {
