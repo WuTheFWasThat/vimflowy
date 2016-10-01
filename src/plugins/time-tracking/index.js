@@ -1,7 +1,6 @@
 // Time-tracking keeps track of the amount of time spent in each subtree.
 // Clones are double-counted. This is a known bug and will not be fixed.
 
-import _ from 'lodash';
 import $ from 'jquery';
 import React from 'react';
 
@@ -24,12 +23,15 @@ class TimeTrackingPlugin {
   enableAPI() {
     this.logger = this.api.logger;
     this.logger.info('Loading time tracking');
-    this.api.cursor.on('rowChange', (this.onRowChange.bind(this)));
     this.currentRow = null;
-    this.onRowChange(null, this.api.cursor.path); // Initial setup
+
+    // TODO: sequence onRowChange?
+    this.onRowChange(null, this.api.cursor.path); // Initial setup, fire and forget
+    // NOTE: all these are fire and forget
+    this.api.cursor.on('rowChange', this.onRowChange.bind(this));
 
     this.api.registerHook('document', 'pluginPathContents', async (obj, { path }) => {
-      obj.timeTracked = this.rowTime(path);
+      obj.timeTracked = await this.rowTime(path);
       return obj;
     });
 
@@ -61,23 +63,23 @@ class TimeTrackingPlugin {
     });
 
     this.api.registerListener('document', 'afterMove', async (info) => {
-      this._rebuildTreeTime(info.id);
-      this._rebuildTreeTime(info.old_parent, true);
+      await this._rebuildTreeTime(info.id);
+      await this._rebuildTreeTime(info.old_parent, true);
     });
 
     this.api.registerListener('document', 'afterAttach', async (info) => {
-      this._rebuildTreeTime(info.id);
+      await this._rebuildTreeTime(info.id);
       if (info.old_detached_parent) {
-        this._rebuildTreeTime(info.old_detached_parent, true);
+        await this._rebuildTreeTime(info.old_detached_parent, true);
       }
     });
 
     this.api.registerListener('document', 'afterDetach', async (info) => {
-      this._rebuildTreeTime(info.id);
+      await this._rebuildTreeTime(info.id);
     });
 
-    this.api.registerListener('session', 'exit', () => {
-      this.onRowChange(this.currentRow, null);
+    this.api.registerListener('session', 'exit', async () => {
+      await this.onRowChange(this.currentRow, null);
     });
 
     let CMD_TOGGLE = this.api.registerCommand({
@@ -116,23 +118,22 @@ class TimeTrackingPlugin {
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
       description: 'Toggle whether time is being logged',
     }, async () => {
-      return this.toggleLogging();
+      return await this.toggleLogging();
     });
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_CLEAR_TIME], {
       description: 'Clear current row time',
     }, async () => {
-      return this.resetCurrentRow();
+      return await this.resetCurrentRow();
     });
-    let me = this;
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_ADD_TIME], {
       description: 'Add time to current row (in minutes)',
     }, async () => {
-      return me.changeTimeCurrentRow(this.repeat);
+      return await this.changeTimeCurrentRow(this.repeat);
     });
     this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_SUBTRACT_TIME], {
       description: 'Subtract time from current row (in minutes)',
     }, async () => {
-      return me.changeTimeCurrentRow(-this.repeat);
+      return await this.changeTimeCurrentRow(-this.repeat);
     });
 
     return setInterval(() => {
@@ -143,58 +144,58 @@ class TimeTrackingPlugin {
     }, 1000);
   }
 
-  changeTimeCurrentRow(delta_minutes) {
+  async changeTimeCurrentRow(delta_minutes) {
     if (this.currentRow !== null) {
       let curTime = new Date() - this.currentRow.time;
       curTime += delta_minutes * 60 * 1000;
       if (curTime < 0) {
         this.currentRow.time = new Date();
-        return this.modifyTimeForId(this.currentRow.row, curTime);
+        await this.modifyTimeForId(this.currentRow.row, curTime);
       } else {
-        return this.currentRow.time = new Date() - curTime;
+        this.currentRow.time = new Date() - curTime;
       }
     }
   }
 
-  getRowData(id, keytype, default_value=null) {
+  async getRowData(id, keytype, default_value=null) {
     let key = `${id}:${keytype}`;
     return this.api.getData(key, default_value);
   }
 
-  setRowData(id, keytype, value) {
+  async setRowData(id, keytype, value) {
     let key = `${id}:${keytype}`;
-    return this.api.setData(key, value);
+    this.api.setData(key, value);
   }
 
-  transformRowData(id, keytype, transform) {
-    return this.setRowData(id, keytype, transform(this.getRowData(id, keytype)));
+  async transformRowData(id, keytype, transform) {
+    await this.setRowData(id, keytype, transform(await this.getRowData(id, keytype)));
   }
 
-  isLogging() {
+  async isLogging() {
     return this.api.getData('isLogging', true);
   }
 
-  toggleLogging() {
-    let isLogging = this.isLogging();
+  async toggleLogging() {
+    let isLogging = await this.isLogging();
     if (isLogging) {
       this.logger.info('Turning logging off');
-      this.onRowChange(this.api.cursor.row, null); // Final close
-      return this.api.setData('isLogging', false);
+      await this.onRowChange(this.api.cursor.row, null); // Final close
+      this.api.setData('isLogging', false);
     } else {
       this.logger.info('Turning logging on');
       this.api.setData('isLogging', true);
-      return this.onRowChange(null, this.api.cursor.row); // Initial setup
+      await this.onRowChange(null, this.api.cursor.row); // Initial setup
     }
   }
 
-  onRowChange(from, to) {
+  async onRowChange(from, to) {
     this.logger.debug(`Switching from row ${from && from.row} to row ${to && to.row}`);
-    if (!this.isLogging()) {
+    if (!(await this.isLogging())) {
       return;
     }
     let time = new Date();
     if (this.currentRow && this.currentRow.row !== (to && to.row)) {
-      this.modifyTimeForId(from.row, (time - this.currentRow.time));
+      await this.modifyTimeForId(from.row, (time - this.currentRow.time));
       this.currentRow = null;
     }
     if (to !== null) {
@@ -202,38 +203,43 @@ class TimeTrackingPlugin {
     }
   }
 
-  resetCurrentRow() {
+  async resetCurrentRow() {
     if (this.currentRow) {
-      return this.currentRow.time = new Date();
+      this.currentRow.time = new Date();
     }
   }
 
-  modifyTimeForId(id, delta) {
-    this.transformRowData(id, 'rowTotalTime', current => (current || 0) + delta);
-    return this._rebuildTreeTime(id, true);
+  async modifyTimeForId(id, delta) {
+    await this.transformRowData(id, 'rowTotalTime', current => (current || 0) + delta);
+    await this._rebuildTreeTime(id, true);
   }
 
-  _rebuildTotalTime(id) {
+  async _rebuildTotalTime(id) {
     let children = this.api.session.document._getChildren(id);
     let detached_children = this.api.session.document.store.getDetachedChildren(id);
 
-    let childTotalTimes = _.map(
-      children.concat(detached_children),
-      child_id => this.getRowData(child_id, 'treeTotalTime', 0)
+    let childTotalTimes = await Promise.all(
+      children.concat(detached_children).map(
+        async (child_id) => {
+          return await this.getRowData(child_id, 'treeTotalTime', 0);
+        }
+      )
     );
-    let rowTime = this.getRowData(id, 'rowTotalTime', 0);
+    let rowTime = await this.getRowData(id, 'rowTotalTime', 0);
     let totalTime = childTotalTimes.reduce((a,b) => a+b, rowTime);
-    return this.setRowData(id, 'treeTotalTime', totalTime);
+    await this.setRowData(id, 'treeTotalTime', totalTime);
   }
 
-  _rebuildTreeTime(id, inclusive = false) {
-    this.api.session.document.allAncestors(id, { inclusive }).forEach((ancestor_id) => {
-      this._rebuildTotalTime(ancestor_id);
-    });
+  async _rebuildTreeTime(id, inclusive = false) {
+    const ancestors = this.api.session.document.allAncestors(id, { inclusive });
+    for (let i = 0; i < ancestors.length; i++) {
+      const ancestor_id = ancestors[i];
+      await this._rebuildTotalTime(ancestor_id);
+    }
   }
 
-  rowTime(row) {
-    return this.getRowData(row.row, 'treeTotalTime', 0);
+  async rowTime(row) {
+    return await this.getRowData(row.row, 'treeTotalTime', 0);
   }
 
   printTime(ms) {

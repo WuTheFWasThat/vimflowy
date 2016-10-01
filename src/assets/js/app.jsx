@@ -327,7 +327,10 @@ $(document).ready(function() {
       });
     });
 
-    return $(window).on('unload', () => session.exit());
+    return $(window).on('unload', () => {
+      session.exit();
+      // NOTE: this is fire and forget
+    });
   }
 
   let datastore;
