@@ -132,7 +132,7 @@ export default class LineComponent extends React.Component {
     if (this.props.onCharClick) {
       line.forEach((x) => {
         x.renderOptions.text = x.char;
-        if (!x.renderOptions.href) {
+        if (!(x.renderOptions.href || x.renderOptions.onClick)) {
           x.renderOptions.onClick = this.props.onCharClick.bind(this, x.column);
         }
         renderSpec.push(x.renderOptions);

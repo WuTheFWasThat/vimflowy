@@ -318,13 +318,12 @@ class MarksPlugin {
           const row = this.getRowForMark(mark);
           if (row !== null) {
             const markpath = this.document.canonicalPath(row);
-            errors.assert((markpath !== null));
+            errors.assert(markpath !== null);
             for (let i = word_info.start; i <= word_info.end; i++) {
               line[i].renderOptions.type = 'a';
-              line[i].renderOptions.onclick = async () => {
+              line[i].renderOptions.onClick = async () => {
                 await this.session.zoomInto(markpath);
                 this.session.save();
-                this.session.render();
               };
             }
           }
