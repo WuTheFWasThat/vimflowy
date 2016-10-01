@@ -58,6 +58,8 @@ export default class SessionComponent extends React.Component {
         highlight_blocks,
         viewContents,
         crumbContents,
+        mode: session.mode,
+        viewRoot: session.viewRoot,
       });
     };
     this.props.session.on('handledKey', this.updateFn);
@@ -68,10 +70,11 @@ export default class SessionComponent extends React.Component {
     this.props.session.off('handledKey', this.updateFn);
   }
 
-  // TODO: render without handleCharClicks when session changes?
   render() {
     const session = this.props.session;
+    const mode = this.state.mode;
 
+    const viewRoot = this.state.viewRoot;
     const viewContents = this.state.viewContents;
     if (viewContents === null) {
       return <div className='center'>
@@ -80,7 +83,7 @@ export default class SessionComponent extends React.Component {
     }
 
     const options = {
-      cursorBetween: Modes.getMode(session.mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE,
+      cursorBetween: Modes.getMode(mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE,
       handleCharClicks: this.state.handleCharClicks,
     };
     this.props.onRender(options);
@@ -93,7 +96,7 @@ export default class SessionComponent extends React.Component {
     if (!this.state.handleCharClicks) {
       onLineMouseOver = () => this.setState({ handleCharClicks: true });
     }
-    if (session.mode === MODES.NORMAL || session.mode === MODES.INSERT) {
+    if (mode === MODES.NORMAL || mode === MODES.INSERT) {
       if (this.state.handleCharClicks) {
         onCharClick = (path, column, e) => {
           session.cursor.setPosition(path, column);
@@ -120,7 +123,7 @@ export default class SessionComponent extends React.Component {
     };
 
     let onCrumbClick = null;
-    if (session.mode === MODES.NORMAL) {
+    if (mode === MODES.NORMAL) {
       onCrumbClick = async (path) => {
         await session.zoomInto(path);
         session.save();
@@ -133,10 +136,10 @@ export default class SessionComponent extends React.Component {
       <div>
         {
           (() => {
-            if (!session.viewRoot.isRoot()) {
+            if (!viewRoot.isRoot()) {
               return [
                 <BreadcrumbsComponent key='crumbs'
-                  viewRoot={session.viewRoot}
+                  viewRoot={viewRoot}
                   onCrumbClick={onCrumbClick}
                   crumbContents={this.state.crumbContents}
                 />,
@@ -146,7 +149,7 @@ export default class SessionComponent extends React.Component {
           })()
         }
         <BlockComponent
-          session={session} path={session.viewRoot} options={options}
+          session={session} path={viewRoot} options={options}
           topLevel={true}
           contents={viewContents}
           onCharClick={onCharClick}
@@ -158,7 +161,7 @@ export default class SessionComponent extends React.Component {
           (() => {
             if (!viewContents.children.length) {
               let message = 'Nothing here yet.';
-              if (session.mode === MODES.NORMAL) {
+              if (mode === MODES.NORMAL) {
                 message += ' Press o to start adding content!';
               }
               return (

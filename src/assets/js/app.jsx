@@ -350,9 +350,13 @@ $(document).ready(function() {
     create_session(doc, constants.default_data);
   }
 
+  Promise.onPossiblyUnhandledRejection(function(error) {
+    throw error;
+  });
+
   window.onerror = function(msg, url, line, col, err) {
     logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
-    if (err !== undefined) {
+    if (err) {
       logger.error('Error: ', err, err.stack);
     }
 
@@ -370,7 +374,7 @@ $(document).ready(function() {
       ERROR:\n\n
       ${msg}\n\n
       ${err}\n\n
-      ${err.stack}
+      ${err && err.stack}
     `
     );
   };
