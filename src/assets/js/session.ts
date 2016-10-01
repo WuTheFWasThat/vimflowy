@@ -680,7 +680,7 @@ export default class Session extends EventEmitter {
   }
 
   public async curLineLength() {
-    return this.document.getLength(this.cursor.row);
+    return await this.document.getLength(this.cursor.row);
   }
 
   private async addChars(row, col, chars) {
@@ -693,14 +693,14 @@ export default class Session extends EventEmitter {
 
   public async addCharsAfterCursor(chars) {
     let col = this.cursor.col;
-    if (col < this.document.getLength(this.cursor.row)) {
+    if (col < (await this.document.getLength(this.cursor.row))) {
       col += 1;
     }
     await this.addChars(this.cursor.row, col, chars);
   }
 
   private async delChars(path, col, nchars, options: {yank?: boolean} = {}) {
-    const n = this.document.getLength(path.row);
+    const n = await this.document.getLength(path.row);
     let deleted = [];
     if ((n > 0) && (nchars > 0) && (col < n)) {
       const mutation = new mutations.DelChars(path.row, col, nchars);
@@ -816,14 +816,20 @@ export default class Session extends EventEmitter {
     const new_value = !all_were_true;
     await Promise.all(
       rows.map(async (row) => {
-        await this.toggleProperty(property, new_value, row, 0, this.document.getLength(row));
+        await this.toggleProperty(
+          property, new_value, row, 0,
+          await this.document.getLength(row)
+        );
       })
     );
     return null;
   }
 
   public async toggleRowProperty(property, row = this.cursor.row) {
-    return await this.toggleProperty(property, null, row, 0, this.document.getLength(row));
+    return await this.toggleProperty(
+      property, null, row, 0,
+      await this.document.getLength(row)
+    );
   }
 
   public async toggleRowPropertyBetween(property, cursor1, cursor2, options: {includeEnd?: boolean}) {
@@ -879,7 +885,7 @@ export default class Session extends EventEmitter {
   //     insert a new node after
   //     if the node has children, this is the new first child
   public async newLineAtCursor() {
-    if (this.cursor.col === this.document.getLength(this.cursor.row)) {
+    if (this.cursor.col === (await this.document.getLength(this.cursor.row))) {
       return await this.newLineBelow({cursorOptions: {keepProperties: true}});
     } else {
       const mutation = new mutations.DelChars(this.cursor.row, 0, this.cursor.col);

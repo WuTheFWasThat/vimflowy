@@ -93,7 +93,7 @@ export default class Cursor extends EventEmitter {
   }
 
   private async _fromMoveCol(cursorOptions: CursorOptions = {}) {
-    const len = this.document.getLength(this.path.row);
+    const len = await this.document.getLength(this.path.row);
     const maxcol = len - (cursorOptions.pastEnd ? 0 : 1);
     let col;
     if (this.moveCol < 0) {
@@ -125,13 +125,13 @@ export default class Cursor extends EventEmitter {
     cursorOptions: {pastEnd?: boolean} = {}
   ) {
     const shift = cursorOptions.pastEnd ? 0 : 1;
-    if (this.col < this.document.getLength(this.path.row) - shift) {
+    if (this.col < (await this.document.getLength(this.path.row)) - shift) {
       await this._right();
     }
   }
 
   public async backIfNeeded() {
-    if (this.col > this.document.getLength(this.path.row) - 1) {
+    if (this.col > (await this.document.getLength(this.path.row)) - 1) {
       await this.left();
       return true;
     }
@@ -139,7 +139,7 @@ export default class Cursor extends EventEmitter {
   }
 
   public async atVisibleEnd() {
-    if (this.col < this.document.getLength(this.path.row) - 1) {
+    if (this.col < (await this.document.getLength(this.path.row)) - 1) {
       return false;
     } else {
       const nextpath = await this.session.nextVisible(this.path);
@@ -151,7 +151,7 @@ export default class Cursor extends EventEmitter {
   }
 
   private async _nextChar() {
-    if (this.col < this.document.getLength(this.path.row) - 1) {
+    if (this.col < (await this.document.getLength(this.path.row)) - 1) {
       await this._right();
       return true;
     } else {
@@ -284,7 +284,7 @@ export default class Cursor extends EventEmitter {
       await this._nextChar();
     }
 
-    let end = this.document.getLength(this.path.row) - 1;
+    let end = (await this.document.getLength(this.path.row)) - 1;
     const wordcheck = this._getWordCheck(
       options,
       await this.document.getChar(this.path.row, this.col)
@@ -297,7 +297,7 @@ export default class Cursor extends EventEmitter {
       await this._right();
     }
 
-    end = (this.document.getLength(this.path.row)) - 1;
+    end = (await this.document.getLength(this.path.row)) - 1;
     if (this.col === end && options.cursor.pastEnd) {
       await this._right();
     }
@@ -312,7 +312,7 @@ export default class Cursor extends EventEmitter {
       return this;
     }
 
-    let end = this.document.getLength(this.path.row) - 1;
+    let end = (await this.document.getLength(this.path.row)) - 1;
     const wordcheck = this._getWordCheck(
       options,
       await this.document.getChar(this.path.row, this.col)
@@ -327,7 +327,7 @@ export default class Cursor extends EventEmitter {
       await this._nextChar();
     }
 
-    end = (this.document.getLength(this.path.row)) - 1;
+    end = (await this.document.getLength(this.path.row)) - 1;
     if (this.col === end && options.cursor.pastEnd) {
       await this._right();
     }
@@ -335,7 +335,7 @@ export default class Cursor extends EventEmitter {
   }
 
   public async findNextChar(char, options: WordMovementOptions = {}) {
-    const end = this.document.getLength(this.path.row) - 1;
+    const end = (await this.document.getLength(this.path.row)) - 1;
     if (this.col === end) {
       return;
     }
