@@ -20,9 +20,9 @@ const timeout = (ns) => {
     setTimeout(resolve, ns);
   });
 };
-// const simulateDelay = 30;
+const simulateDelay = 10;
 // const simulateDelay = 1;
-const simulateDelay = 0;
+// const simulateDelay = 0;
 
 export default class DataStore {
   protected prefix: string;
@@ -103,14 +103,16 @@ export default class DataStore {
     }));
   }
 
-  public getParents(row: Row): Array<Row> {
+  public async getParents(row: Row): Promise<Array<Row>> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     let parents = this._get(this._parentsKey_(row), []);
     if (typeof parents === 'number') {
       parents = [ parents ];
     }
     return parents;
   }
-  public setParents(row: Row, parents: Array<Row>): void {
+  public async setParents(row: Row, parents: Array<Row>): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._set(this._parentsKey_(row), parents);
   }
 
@@ -118,7 +120,8 @@ export default class DataStore {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._childrenKey_(row), []);
   }
-  public setChildren(row: Row, children: Array<Row>): void {
+  public async setChildren(row: Row, children: Array<Row>): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._set(this._childrenKey_(row), children);
   }
 
@@ -151,11 +154,13 @@ export default class DataStore {
 
   // get mapping of macro_key -> macro
   public async getMacros(): Promise<MacroMap> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._macrosKey_(), {});
   }
 
   // set mapping of macro_key -> macro
   public async setMacros(macros: MacroMap): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._set(this._macrosKey_(), macros);
   }
 
@@ -163,17 +168,21 @@ export default class DataStore {
   public async getSetting(
     setting: string, default_value: any = undefined
   ): Promise<any> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._settingKey_(setting), default_value);
   }
   public async setSetting(setting: string, value: any): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._set(this._settingKey_(setting), value);
   }
 
   // get last view (for page reload)
   public async setLastViewRoot(ancestry: SerializedPath): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     this._set(this._lastViewrootKey_(), ancestry);
   }
   public async getLastViewRoot(): Promise<SerializedPath> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._lastViewrootKey_(), []);
   }
 
@@ -192,6 +201,7 @@ export default class DataStore {
 
   // get next row ID
   protected async getId(): Promise<number> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     // suggest to override this for efficiency
     let id = 1;
     while (this._get(this._lineKey_(id), null) !== null) {

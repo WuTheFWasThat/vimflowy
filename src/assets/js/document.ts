@@ -123,8 +123,8 @@ export default class Document extends EventEmitter {
     });
   }
 
-  private _setChildren(row, children) {
-    return this.store.setChildren(row, children);
+  private async _setChildren(row, children) {
+    return await this.store.setChildren(row, children);
   }
 
   public async _childIndex(parent, child) {
@@ -132,12 +132,12 @@ export default class Document extends EventEmitter {
     return _.findIndex(children, row => row === child);
   }
 
-  private _getParents(row) {
-    return this.store.getParents(row);
+  private async _getParents(row) {
+    return await this.store.getParents(row);
   }
 
-  private _setParents(row, children_rows) {
-    return this.store.setParents(row, children_rows);
+  private async _setParents(row, children_rows) {
+    return await this.store.setParents(row, children_rows);
   }
 
   public async getChildren(parent_path): Promise<Array<Path>> {
@@ -160,7 +160,7 @@ export default class Document extends EventEmitter {
   }
 
   public async nextClone(path) {
-    const parents = this._getParents(path.row);
+    const parents = await this._getParents(path.row);
     let i = parents.indexOf(path.parent.row);
     errors.assert(i > -1);
     let new_parent_path;
@@ -205,7 +205,7 @@ export default class Document extends EventEmitter {
   // a node is cloned only if it has multiple parents.
   // note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
   public async isClone(row) {
-    const parents = this._getParents(row);
+    const parents = await this._getParents(row);
     if (parents.length < 2) { // for efficiency reasons
       return false;
     }
@@ -220,7 +220,7 @@ export default class Document extends EventEmitter {
     if (row === Path.rootRow()) {
       return this.root;
     }
-    const parents = this._getParents(row);
+    const parents = await this._getParents(row);
     for (let i = 0; i < parents.length; i++) {
       const parentRow = parents[i];
       const canonicalParent = await this.canonicalPath(parentRow);
@@ -241,17 +241,19 @@ export default class Document extends EventEmitter {
     if (options.inclusive) {
       ancestors.push(row);
     }
-    const visit = n => { // DFS
+    const visit = async (n) => { // DFS
       visited[n] = true;
-      this._getParents(n).forEach((parent) => {
+      const parents = await this._getParents(n);
+      for (let i = 0; i < parents.length; i++) {
+        const parent = parents[i];
         if (!(parent in visited)) {
           ancestors.push(parent);
-          visit(parent);
+          await visit(parent);
         }
-      });
+      }
       return null;
     };
-    visit(row);
+    await visit(row);
     return ancestors;
   }
 
@@ -266,12 +268,12 @@ export default class Document extends EventEmitter {
     const ci = _.findIndex(children, sib => sib === row);
     errors.assert(ci !== -1);
     children.splice(ci, 1);
-    this._setChildren(parent_row, children);
+    await this._setChildren(parent_row, children);
 
-    const parents = this._getParents(row);
+    const parents = await this._getParents(row);
     const pi = _.findIndex(parents, par => par === parent_row);
     parents.splice(pi, 1);
-    this._setParents(row, parents);
+    await this._setParents(row, parents);
 
     const info = {
       parentId: parent_row,
@@ -291,11 +293,11 @@ export default class Document extends EventEmitter {
     } else {
       children.splice(index, 0, row);
     }
-    this._setChildren(parent_row, children);
+    await this._setChildren(parent_row, children);
 
-    const parents = this._getParents(row);
+    const parents = await this._getParents(row);
     parents.push(parent_row);
-    this._setParents(row, parents);
+    await this._setParents(row, parents);
     const info = {
       parentId: parent_row,
       parentIndex: parents.length - 1,
@@ -307,7 +309,7 @@ export default class Document extends EventEmitter {
   }
 
   public async _detach(row, parent_row) {
-    const wasLast = (this._getParents(row)).length === 1;
+    const wasLast = (await this._getParents(row)).length === 1;
 
     await this.emitAsync('beforeDetach', { id: row, parent_id: parent_row, last: wasLast });
     const info = await this._removeChild(parent_row, row);
@@ -322,7 +324,7 @@ export default class Document extends EventEmitter {
   }
 
   public async _attach(child_row, parent_row, index = -1) {
-    const isFirst = this._getParents(child_row).length === 0;
+    const isFirst = (await this._getParents(child_row)).length === 0;
     await this.emitAsync('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
     const info = await this._addChild(parent_row, child_row, index);
     const old_detached_parent = await this.store.getDetachedParent(child_row);
