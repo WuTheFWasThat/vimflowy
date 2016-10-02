@@ -25,10 +25,9 @@ const markStyle = {
 class MarksPlugin {
   constructor(api) {
     this.api = api;
-    this.enableAPI();
   }
 
-  enableAPI() {
+  async enable() {
     this.logger = this.api.logger;
     this.session = this.api.session;
     this.document = this.session.document;
@@ -468,13 +467,22 @@ class MarksPlugin {
 
 const pluginName = 'Marks';
 
-Plugins.register({
-  name: pluginName,
-  author: 'Jeff Wu',
-  description:
-    `Lets you tag a row with a string, and then reference that row with @markname.
-Fast search for marked rows, using '.`
-}, (api => new MarksPlugin(api)), (api => api.deregisterAll())
+Plugins.register(
+  {
+    name: pluginName,
+    author: 'Jeff Wu',
+    description:
+      `Lets you tag a row with a string, and then reference that row with @markname.
+  Fast search for marked rows, using '.`
+  },
+  async (api) => {
+    const marksPlugin = new MarksPlugin(api);
+    await marksPlugin.enable();
+    return marksPlugin;
+  },
+  async (api) => {
+    api.deregisterAll();
+  },
 );
 
 export { pluginName };

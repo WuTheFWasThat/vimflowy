@@ -261,13 +261,16 @@ class TimeTrackingPlugin {
   }
 }
 
-Plugins.register({
-  name: 'Time Tracking',
-  author: 'Zachary Vance',
-  description: 'Keeps track of how much time has been spent in each row (including its descendants)',
-  version: 3
-}, (function(api) {
-  return new TimeTrackingPlugin(api);
-}), (api => api.deregisterAll())
+Plugins.register(
+  {
+    name: 'Time Tracking',
+    author: 'Zachary Vance',
+    description: 'Keeps track of how much time has been spent in each row (including its descendants)',
+    version: 3
+  },
+  async (api) => {
+    return new TimeTrackingPlugin(api);
+  },
+  (api => api.deregisterAll())
 );
 

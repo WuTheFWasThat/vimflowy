@@ -6,7 +6,7 @@ import '../../src/assets/js/plugins';
 // Testing
 TestCase.prototype.expectMarks = function(expected) {
   return this._chain(async () => {
-    let marksApi = this.pluginManager.getInfo(Marks.pluginName).value;
+    const marksApi = this.pluginManager.getInfo(Marks.pluginName).value;
     this._expectDeepEqual(await marksApi.listMarks(), expected, 'Wrong marks');
   });
 };

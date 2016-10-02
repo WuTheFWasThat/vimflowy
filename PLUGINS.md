@@ -19,7 +19,7 @@ Generally, this documentation may be less useful than just [looking at some exam
 A plugin registers using
 
 ````
-Plugins.register(metadata, enableCallback[, disableCallback])
+Plugins.register(metadata, enable: fn, disable: ?fn)
 ```
 where
 - `metadata`:  For the detailed format, read the type definitions in [plugins.ts](src/assets/js/plugins.ts)
@@ -29,10 +29,10 @@ where
   - author: string
   - description: string
     names of other plugins you depend on.
-- `enableCallback(api)`:
+- `async enable(api)`:
   Called when the plugin is enabled
   Can optionally return a value, in which case other plugins that depend on yours will get access to it.
-- `disableCallback(api)`:
+- `async disable(api)`:
   Called if the plugin is ever disabled by the user.
   If unimplemented, disabling will simply advise the user to refresh the page.
   If implemented, make sure that the plugin can be disabled and re-enabled multiple times (i.e. enable followed by disabled should not leave state).
@@ -108,7 +108,7 @@ This section will be documented better in the future, when the API is better and
 
 #### helpers
 ```
-    api.panic(message):  Report a fatal problem in the plugin
+    async api.panic(message):  Report a fatal problem in the plugin
       Shows a message to the user, then unloads and disables the plugin.
     api.logger:  Log message from your plugin using methods on this object
       Call one of: api.logger.debug, api.logger.info, api.logger.warn, api.logger.error, api.logger.fatal

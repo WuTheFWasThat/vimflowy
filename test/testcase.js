@@ -38,11 +38,17 @@ class TestCase {
     this.register = this.session.register;
 
     this.pluginManager = new PluginsManager(this.session);
+
+    this.prom = Promise.resolve();
     if (this.plugins) {
-      this.plugins.forEach((pluginName) => this.pluginManager.enable(pluginName));
+      this.plugins.forEach((pluginName) => {
+        this.enablePlugin(pluginName);
+      });
     }
 
-    this.prom = this.document.load(serialized).then(() => {
+    this._chain(async () => {
+      await this.document.load(serialized);
+
       // this must be *after* plugin loading because of plugins with state
       // e.g. marks needs the database to have the marks loaded
       this.session.cursor =
@@ -59,13 +65,14 @@ class TestCase {
   }
 
   done() {
-    this.prom = this.prom.then(() => {
+    this.prom = this.prom.then(async () => {
       if (this.plugins) {
-        this.plugins.forEach((pluginName) => {
+        for (let i = 0; i < this.plugins.length; i++) {
+          const pluginName = this.plugins[i];
           if (this.pluginManager.getStatus(pluginName) === STATUSES.ENABLED) {
-            this.pluginManager.disable(pluginName);
+            await this.pluginManager.disable(pluginName);
           }
-        });
+        }
       }
     });
     return this.prom;
@@ -122,14 +129,14 @@ class TestCase {
   }
 
   enablePlugin(pluginName) {
-    return this._chain(() => {
-      return this.pluginManager.enable(pluginName);
+    return this._chain(async () => {
+      return await this.pluginManager.enable(pluginName);
     });
   }
 
   disablePlugin(pluginName) {
-    return this._chain(() => {
-      return this.pluginManager.disable(pluginName);
+    return this._chain(async () => {
+      return await this.pluginManager.disable(pluginName);
     });
   }
 

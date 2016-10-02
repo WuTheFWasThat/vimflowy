@@ -48,10 +48,14 @@ export default class PluginsTableComponent extends React.Component {
                 let btnClick;
                 let btnText;
                 if (status === Plugins.STATUSES.ENABLED) {
-                  btnClick = () => { return pluginManager.disable(name); };
+                  btnClick = async () => {
+                    return await pluginManager.disable(name);
+                  };
                   btnText = 'Disable';
                 } else if (status === Plugins.STATUSES.DISABLED) {
-                  btnClick= () => { return pluginManager.enable(name); };
+                  btnClick= async () => {
+                    return await pluginManager.enable(name);
+                  };
                   btnText = 'Enable';
                 }
                 if (btnText) {

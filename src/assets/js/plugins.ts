@@ -101,29 +101,29 @@ export class PluginApi {
 
   public deregisterCommand(command) {
     this.definitions.deregisterCommand(command);
-    return this._reapply_hotkeys();
+    this._reapply_hotkeys();
   }
 
   public registerMotion(commands, motion, definition) {
     this.definitions.registerMotion(commands, motion, definition);
     this.registrations.push({type: 'motion', args: [commands]});
-    return this._reapply_hotkeys();
+    this._reapply_hotkeys();
   }
 
   public deregisterMotion(commands) {
     this.definitions.deregisterMotion(commands);
-    return this._reapply_hotkeys();
+    this._reapply_hotkeys();
   }
 
   public registerAction(modes, commands, action, definition) {
     this.definitions.registerAction(modes, commands, action, definition);
     this.registrations.push({type: 'action', args: [modes, commands]});
-    return this._reapply_hotkeys();
+    this._reapply_hotkeys();
   }
 
   public deregisterAction(modes, commands) {
     this.definitions.deregisterAction(modes, commands);
-    return this._reapply_hotkeys();
+    this._reapply_hotkeys();
   }
 
   private _getEmitter(who): Document | Session {
@@ -176,12 +176,12 @@ export class PluginApi {
         throw new errors.GenericError `Unknown registration type ${registration.type}`;
       }
     });
-    return this.registrations = [];
+    this.registrations = [];
   }
 
-  public panic() {
+  public async panic() {
     alert(`Plugin '${this.name}' has encountered a major problem. Please report this problem to the plugin author.`);
-    return this.pluginManager.disable(this.name);
+    await this.pluginManager.disable(this.name);
   }
 }
 
@@ -233,7 +233,7 @@ export class PluginsManager extends EventEmitter {
     this.emit('enabledPluginsChange', enabled);
   }
 
-  public enable(name) {
+  public async enable(name) {
     const status = this.getStatus(name);
     if (status === STATUSES.UNREGISTERED) {
       logger.error(`No plugin registered as ${name}`);
@@ -250,22 +250,19 @@ export class PluginsManager extends EventEmitter {
       throw new errors.GenericError(`Plugin ${name} is already enabled`);
     }
 
-    errors.assert((status === STATUSES.DISABLED));
+    errors.assert(status === STATUSES.DISABLED);
     this.setStatus(name, STATUSES.ENABLING);
 
     const plugin = PLUGINS[name];
     const api = new PluginApi(this.session, plugin, this);
-    const value = plugin.enable(api);
+    const value = await plugin.enable(api);
 
-    this.plugin_infos[name] = {
-      api,
-      value,
-    };
+    this.plugin_infos[name] = { api, value };
     this.setStatus(name, STATUSES.ENABLED);
-    return this.updateEnabledPlugins();
+    this.updateEnabledPlugins();
   }
 
-  public disable(name) {
+  public async disable(name) {
     const status = this.getStatus(name);
     if (status === STATUSES.UNREGISTERED) {
       throw new errors.GenericError(`No plugin registered as ${name}`);
@@ -286,9 +283,9 @@ export class PluginsManager extends EventEmitter {
 
     const plugin_info = this.plugin_infos[name];
     const plugin = PLUGINS[name];
-    plugin.disable(plugin_info.api, plugin_info.value);
+    await plugin.disable(plugin_info.api, plugin_info.value);
     delete this.plugin_infos[name];
-    return this.updateEnabledPlugins();
+    this.updateEnabledPlugins();
   }
 }
 
@@ -306,9 +303,9 @@ const registerPlugin = function(
   const plugin: any = _.cloneDeep(plugin_metadata);
   PLUGINS[plugin.name] = plugin;
   plugin.enable = enable;
-  return plugin.disable = disable || _.once(function(api) {
+  plugin.disable = disable || _.once(function(api) {
     api.deregisterAll();
-    return alert(
+    alert(
       `The plugin '${plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable.`
     );
   });

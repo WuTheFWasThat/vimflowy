@@ -186,7 +186,10 @@ $(document).ready(function() {
     if (typeof enabledPlugins.slice === 'undefined') { // for backwards compatibility
       enabledPlugins = Object.keys(enabledPlugins);
     }
-    enabledPlugins.forEach((plugin_name) => pluginManager.enable(plugin_name));
+    for (var i = 0; i < enabledPlugins.length; i++) {
+      const plugin_name = enabledPlugins[i];
+      await pluginManager.enable(plugin_name);
+    }
 
     // load data
 
