@@ -346,7 +346,7 @@ export class DetachBlocks extends Mutation {
         }
       } else {
         const child = children[this.index - 1];
-        const walk = session.document.walkToLastVisible(child);
+        const walk = await session.document.walkToLastVisible(child);
         next = [child].concat(walk);
       }
     }

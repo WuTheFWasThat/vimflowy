@@ -181,17 +181,17 @@ export default class Document extends EventEmitter {
     return _.findIndex(children, sib => sib.row === child.row);
   }
 
-  public collapsed(row) {
-    return this.store.getCollapsed(row);
+  public async collapsed(row) {
+    return await this.store.getCollapsed(row);
   }
 
   public async toggleCollapsed(row) {
-    return this.store.setCollapsed(row, !this.collapsed(row));
+    return await this.store.setCollapsed(row, !await this.collapsed(row));
   }
 
   // last thing visible nested within row
-  public walkToLastVisible(row, pathsofar = []) {
-    if (this.collapsed(row)) {
+  public async walkToLastVisible(row, pathsofar = []) {
+    if (await this.collapsed(row)) {
       return pathsofar;
     }
     const children = this._getChildren(row);
@@ -199,7 +199,7 @@ export default class Document extends EventEmitter {
       return pathsofar;
     }
     const child = children[children.length - 1];
-    return [child].concat(this.walkToLastVisible(child));
+    return [child].concat(await this.walkToLastVisible(child));
   }
 
   // a node is cloned only if it has multiple parents.
@@ -312,10 +312,10 @@ export default class Document extends EventEmitter {
     await this.emitAsync('beforeDetach', { id: row, parent_id: parent_row, last: wasLast });
     const info = this._removeChild(parent_row, row);
     if (wasLast) {
-      this.store.setDetachedParent(row, parent_row);
-      const detached_children = this.store.getDetachedChildren(parent_row);
+      await this.store.setDetachedParent(row, parent_row);
+      const detached_children = await this.store.getDetachedChildren(parent_row);
       detached_children.push(row);
-      this.store.setDetachedChildren(parent_row, detached_children);
+      await this.store.setDetachedChildren(parent_row, detached_children);
     }
     await this.emitAsync('afterDetach', { id: row, parent_id: parent_row, last: wasLast });
     return info;
@@ -325,15 +325,15 @@ export default class Document extends EventEmitter {
     const isFirst = this._getParents(child_row).length === 0;
     await this.emitAsync('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
     const info = this._addChild(parent_row, child_row, index);
-    const old_detached_parent = this.store.getDetachedParent(child_row);
+    const old_detached_parent = await this.store.getDetachedParent(child_row);
     if (old_detached_parent !== null) {
       errors.assert(isFirst);
-      this.store.setDetachedParent(child_row, null);
-      const detached_children = this.store.getDetachedChildren(old_detached_parent);
+      await this.store.setDetachedParent(child_row, null);
+      const detached_children = await this.store.getDetachedChildren(old_detached_parent);
       const ci = _.findIndex(detached_children, sib => sib === child_row);
       errors.assert(ci !== -1);
       detached_children.splice(ci, 1);
-      this.store.setDetachedChildren(old_detached_parent, detached_children);
+      await this.store.setDetachedChildren(old_detached_parent, detached_children);
     }
     await this.emitAsync('afterAttach', { id: child_row, parent_id: parent_row, first: isFirst, old_detached_parent});
     return info;
@@ -528,7 +528,7 @@ export default class Document extends EventEmitter {
         struct[property] = line.map(obj => obj[property] ? '.' : ' ').join('');
       }
     });
-    if (this.collapsed(row)) {
+    if (await this.collapsed(row)) {
       struct.collapsed = true;
     }
     const plugins = await this.applyHookAsync('serializeRow', {}, {row});
@@ -544,7 +544,7 @@ export default class Document extends EventEmitter {
     const struct: any = {
       path: path,
       line: await this.getLine(path.row),
-      collapsed: this.collapsed(path.row),
+      collapsed: await this.collapsed(path.row),
       isClone: await this.isClone(path.row),
       hasChildren: this.hasChildren(path.row),
     };
@@ -644,7 +644,7 @@ export default class Document extends EventEmitter {
       });
 
       await this.setLine(path.row, line);
-      this.store.setCollapsed(path.row, serialized.collapsed);
+      await this.store.setCollapsed(path.row, serialized.collapsed);
 
       if (serialized.children) {
         for (let i = 0; i < serialized.children.length; i++) {

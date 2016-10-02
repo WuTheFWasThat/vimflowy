@@ -216,7 +216,7 @@ class TimeTrackingPlugin {
 
   async _rebuildTotalTime(id) {
     let children = this.api.session.document._getChildren(id);
-    let detached_children = this.api.session.document.store.getDetachedChildren(id);
+    let detached_children = await this.api.session.document.store.getDetachedChildren(id);
 
     let childTotalTimes = await Promise.all(
       children.concat(detached_children).map(

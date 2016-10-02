@@ -412,7 +412,7 @@ export default class Session extends EventEmitter {
   public async viewable(path) {
     return path.is(this.viewRoot) || (
             path.isDescendant(this.viewRoot) &&
-            (!this.document.collapsed(path.row))
+            (!await this.document.collapsed(path.row))
            );
   }
 
@@ -503,7 +503,7 @@ export default class Session extends EventEmitter {
       if (cur.isRoot()) {
         return null;
       }
-      if (this.document.collapsed(cur.row)) {
+      if (await this.document.collapsed(cur.row)) {
         answer = cur;
       }
       cur = cur.parent;
@@ -860,13 +860,13 @@ export default class Session extends EventEmitter {
 
     if (this.cursor.path.is(this.viewRoot)) {
       if (!this.document.hasChildren(this.cursor.row)) {
-        if (!this.document.collapsed(this.cursor.row)) {
+        if (!await this.document.collapsed(this.cursor.row)) {
           await this.toggleBlockCollapsed(this.cursor.row);
         }
       }
 
       await this.addBlocks(this.cursor.path, 0, [''], options);
-    } else if ((!this.document.collapsed(this.cursor.row)) && this.document.hasChildren(this.cursor.row)) {
+    } else if ((!await this.document.collapsed(this.cursor.row)) && this.document.hasChildren(this.cursor.row)) {
       await this.addBlocks(this.cursor.path, 0, [''], options);
     } else {
       const parent = this.cursor.path.parent;
@@ -1081,7 +1081,7 @@ export default class Session extends EventEmitter {
       return null; // cannot indent
     }
 
-    if (this.document.collapsed(newparent.row)) {
+    if (await this.document.collapsed(newparent.row)) {
       await this.toggleBlockCollapsed(newparent.row);
     }
 
@@ -1122,7 +1122,7 @@ export default class Session extends EventEmitter {
       this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
     }
-    if (this.document.collapsed(path.row)) {
+    if (await this.document.collapsed(path.row)) {
       return await this.indentBlocks(path);
     }
 
@@ -1145,7 +1145,7 @@ export default class Session extends EventEmitter {
       this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
     }
-    if (this.document.collapsed(path.row)) {
+    if (await this.document.collapsed(path.row)) {
       return await this.unindentBlocks(path);
     }
 
@@ -1175,7 +1175,7 @@ export default class Session extends EventEmitter {
       return;
     }
 
-    if (this.document.hasChildren(next.row) && !this.document.collapsed(next.row)) {
+    if (this.document.hasChildren(next.row) && (!await this.document.collapsed(next.row))) {
       // make it the first child
       return await this.moveBlock(path, next, 0);
     } else {

@@ -81,9 +81,7 @@ export default class DataStore {
 
   // get and set values for a given row
   public async getLine(row: Row): Promise<Line> {
-    if (simulateDelay) {
-      await timeout(simulateDelay * Math.random());
-    }
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._lineKey_(row), []).map(function(obj) {
       if (typeof obj === 'string') {
         obj = {
@@ -94,9 +92,7 @@ export default class DataStore {
     });
   }
   public async setLine(row: Row, line: Line): Promise<void> {
-    if (simulateDelay) {
-      await timeout(simulateDelay * Math.random());
-    }
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._set(this._lineKey_(row), line.map(function(obj) {
       // if no properties are true, serialize just the character to save space
       if (_.every(constants.text_properties.map(property => !obj[property]))) {
@@ -125,24 +121,30 @@ export default class DataStore {
     return this._set(this._childrenKey_(row), children);
   }
 
-  public getDetachedParent(row: Row): Row {
+  public async getDetachedParent(row: Row): Promise<Row> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._detachedParentKey_(row), null);
   }
-  public setDetachedParent(row: Row, parent: Row): void {
+  public async setDetachedParent(row: Row, parent: Row): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._set(this._detachedParentKey_(row), parent);
   }
 
-  public getDetachedChildren(row: Row): Array<Row> {
+  public async getDetachedChildren(row: Row): Promise<Array<Row>> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._detachedChildrenKey_(row), []);
   }
-  public setDetachedChildren(row: Row, children: Array<Row>): void {
+  public async setDetachedChildren(row: Row, children: Array<Row>): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._set(this._detachedChildrenKey_(row), children);
   }
 
-  public getCollapsed(row: Row): boolean {
+  public async getCollapsed(row: Row): Promise<boolean> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._collapsedKey_(row));
   }
-  public setCollapsed(row: Row, collapsed: boolean): void {
+  public async setCollapsed(row: Row, collapsed: boolean): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._set(this._collapsedKey_(row), collapsed);
   }
 
@@ -177,22 +179,18 @@ export default class DataStore {
   public async setPluginData(
     plugin: string, key: string, data: any
   ): Promise<void> {
-    if (simulateDelay) {
-      await timeout(simulateDelay * Math.random());
-    }
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     this._set(this._pluginDataKey_(plugin, key), data);
   }
   public async getPluginData(
     plugin: string, key: string, default_value: any = undefined
   ): Promise<any> {
-    if (simulateDelay) {
-      await timeout(simulateDelay * Math.random());
-    }
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._pluginDataKey_(plugin, key), default_value);
   }
 
   // get next row ID
-  protected getId(): number {
+  protected async getId(): Promise<number> {
     // suggest to override this for efficiency
     let id = 1;
     while (this._get(this._lineKey_(id), null) !== null) {
@@ -202,7 +200,7 @@ export default class DataStore {
   }
 
   public async getNew() {
-    const id = this.getId();
+    const id = await this.getId();
     await this.setLine(id, []);
     this.setChildren(id, []);
     return id;
@@ -298,7 +296,7 @@ export class LocalStorageLazy extends DataStore {
     return this._getLocalStorage_(this._lastSaveKey_(), 0);
   }
 
-  protected getId(): number {
+  protected async getId(): Promise<number> {
     let id: number = this._getLocalStorage_(this._IDKey_(), 1);
     while (this._getLocalStorage_(this._lineKey_(id), null) !== null) {
       id++;
