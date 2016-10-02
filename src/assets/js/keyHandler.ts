@@ -166,7 +166,7 @@ export default class KeyHandler extends EventEmitter {
     if (this.recording.stream) {
       this.recording.stream.enqueue(key);
     }
-    return await this._processKeys(this.keyStream);
+    return await this.processKeys(this.keyStream);
   }
 
   private async _processKeys(keyStream) {
@@ -188,7 +188,7 @@ export default class KeyHandler extends EventEmitter {
 
   public processKeys(keyStream) {
     this.processQueue = this.processQueue.then(async () => {
-      this._processKeys(keyStream);
+      await this._processKeys(keyStream);
     });
     return this.processQueue;
   }

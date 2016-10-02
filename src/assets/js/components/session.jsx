@@ -27,7 +27,32 @@ export default class SessionComponent extends React.Component {
     };
 
     const session = this.props.session;
-    this.updateFn = async () => {
+
+    function promiseDebounce(fn) {
+      let running = false;
+      let pending = false;
+      const run = () => {
+        running = true;
+        fn.apply(fn, arguments).then(() => {
+          if (pending) {
+            pending = false;
+            run();
+          } else {
+            running = false;
+          }
+        });
+      };
+      return () => {
+        if (!running) {
+          run();
+        } else {
+          pending = true;
+        }
+      };
+    }
+
+    this.updateFn = promiseDebounce(async () => {
+      const t = Date.now();
       const viewContents = await session.document.getViewContents(session.viewRoot, true);
 
       const highlight_blocks = {};
@@ -55,7 +80,8 @@ export default class SessionComponent extends React.Component {
         mode: session.mode,
         viewRoot: session.viewRoot,
       });
-    };
+      console.log('Took time', Date.now() - t); // eslint-disable-line no-console
+    });
   }
 
   update() {

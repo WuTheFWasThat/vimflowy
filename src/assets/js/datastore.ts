@@ -1,4 +1,4 @@
-/* globals alert, localStorage */
+/* globals alert, localStorage, firebase */
 
 import * as _ from 'lodash';
 
@@ -137,7 +137,7 @@ export default class DataStore {
     return await this._get(this._collapsedKey_(row));
   }
   public async setCollapsed(row: Row, collapsed: boolean): Promise<void> {
-    return await this._set(this._collapsedKey_(row), collapsed);
+    return await this._set(this._collapsedKey_(row), collapsed || false);
   }
 
   // get mapping of macro_key -> macro
@@ -294,6 +294,96 @@ export class LocalStorageLazy extends DataStore {
       id++;
     }
     this._setLocalStorage_(this._IDKey_(), id + 1);
+    return id;
+  }
+}
+
+export class FirebaseStore extends DataStore {
+  private cache: {[key: string]: any};
+  private lastSave: number;
+  private fbase: any;
+  // private fbase: Firebase;
+
+  constructor(prefix = '', url, apiKey) {
+    super(prefix);
+    this.cache = {};
+    this.fbase = firebase.initializeApp({
+      apiKey: apiKey,
+      databaseURL: `https://${url}`,
+    }).database();
+    // this.fbase.authWithCustomToken(token, (err, authdata) => {})
+    this.lastSave = Date.now();
+  }
+
+  private _IDKey_() {
+    return `${this.prefix}:lastID`;
+  }
+
+  protected _get(key: string, default_value: any = undefined): Promise<any> {
+    if (key in this.cache) {
+      return Promise.resolve(this.cache[key]);
+    }
+    return new Promise((resolve, reject) => {
+      this.fbase.ref(key).once(
+        'value',
+        (data) => {
+          const exists = data.exists();
+          let value = data.val();
+          if ((!exists) || (value === null)) {
+            value = default_value;
+          }
+          // default_value
+          this.cache[key] = value;
+          return resolve(value);
+        },
+        (err) => {
+          return reject(err);
+        }
+      );
+    });
+  }
+
+  protected _set(key: string, value: any): Promise<void> {
+    this.cache[key] = value;
+    this.fbase.ref(key).set(
+      value,
+      (err) => {
+        if (err) { throw err; }
+        // else put in promise queue, and notify properly when synced
+      }
+    );
+    return Promise.resolve();
+  }
+
+  // NOTE: safe version that doesn't assume caching
+  //       it's slow but could possibly be used for multi-user in the future
+  // protected _set(key: string, value: any): Promise<void> {
+  //   return new Promise((resolve, reject) => {
+  //     this.fbase.ref(key).set(
+  //       value,
+  //       (err) => {
+  //         if (err) {
+  //           return reject(err);
+  //         }
+  //         this.cache[key] = value;
+  //         return resolve();
+  //       }
+  //     );
+  //   });
+  // }
+
+  // determine last time saved (for multiple tab detection)
+  // doesn't cache!
+  public getLastSave(): number {
+    return 1;
+  }
+
+  protected async getId(): Promise<number> {
+    let id: number = await this._get(this._IDKey_(), 1);
+    while ((await this._get(this._lineKey_(id), null)) !== null) {
+      id++;
+    }
+    await this._set(this._IDKey_(), id + 1);
     return id;
   }
 }

@@ -14,6 +14,9 @@ import $ from 'jquery';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import * as firebase from 'firebase';
+window.firebase = firebase;
+
 import 'font-awesome/css/font-awesome.css';
 import '../css/utils.sass';
 import '../css/index.sass';
@@ -341,6 +344,9 @@ $(document).ready(function() {
 
   if (typeof localStorage !== 'undefined' && localStorage !== null) {
     datastore = new DataStore.LocalStorageLazy(docname);
+    // const firebaseUrl = 'blinding-torch-1915.firebaseio.com';
+    // const firebaseApiKey = '';
+    // datastore = new DataStore.FirebaseStore(docname, firebaseUrl, firebaseApiKey);
     doc = new Document(datastore, docname);
 
     let to_load = null;
