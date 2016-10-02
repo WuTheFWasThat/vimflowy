@@ -52,7 +52,7 @@ class TestCase {
       // this must be *after* plugin loading because of plugins with state
       // e.g. marks needs the database to have the marks loaded
       this.session.cursor =
-        new Cursor(this.session, this.document.getChildren(Path.root())[0], 0);
+        new Cursor(this.session, (await this.document.getChildren(Path.root()))[0], 0);
       this.session.reset_history();
       this.session.reset_jump_history();
       // NOTE: HACKY

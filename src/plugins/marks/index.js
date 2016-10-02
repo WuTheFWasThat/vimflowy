@@ -205,7 +205,7 @@ class MarksPlugin {
           const results = []; // list of paths
           for (const mark in marks) {
             const row = marks[mark];
-            if ((mark.indexOf(prefix)) === 0) {
+            if (mark.indexOf(prefix) === 0) {
               const path = await this.session.document.canonicalPath(row);
               results.push({ path, mark });
               if (nresults > 0 && results.length === nresults) {

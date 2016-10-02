@@ -114,7 +114,8 @@ export default class DataStore {
     return this._set(this._parentsKey_(row), parents);
   }
 
-  public getChildren(row: Row): Array<Row> {
+  public async getChildren(row: Row): Promise<Array<Row>> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     return this._get(this._childrenKey_(row), []);
   }
   public setChildren(row: Row, children: Array<Row>): void {

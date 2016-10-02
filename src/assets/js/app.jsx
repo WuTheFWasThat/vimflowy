@@ -101,7 +101,7 @@ $(document).ready(function() {
     const keyBindings = new KeyBindings(keyDefinitions, initial_hotkey_settings);
 
     // session
-    if (!doc.hasChildren(doc.root.row)) {
+    if (!await doc.hasChildren(doc.root.row)) {
       // HACKY: should load the actual data now, but since plugins aren't enabled...
       await doc.load(constants.empty_data);
     }
@@ -109,7 +109,7 @@ $(document).ready(function() {
     // TODO: if we ever support multi-user case, ensure last view root is valid
     let cursorPath;
     if (viewRoot.isRoot()) {
-      cursorPath = doc.getChildren(viewRoot)[0];
+      cursorPath = (await doc.getChildren(viewRoot))[0];
     } else {
       cursorPath = viewRoot;
     }

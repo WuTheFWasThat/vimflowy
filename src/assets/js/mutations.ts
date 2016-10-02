@@ -33,7 +33,7 @@ const validateRowInsertion = async function(
 ) {
   // check that there won't be doubled siblings
   if (!options.noSiblingCheck) {
-    if (session.document._hasChild(parent_id, id)) {
+    if (await session.document._hasChild(parent_id, id)) {
       session.showMessage('Cloned rows cannot be inserted as siblings', {text_class: 'error'});
       return false;
     }
@@ -313,7 +313,7 @@ export class DetachBlocks extends Mutation {
   }
 
   public async mutate(session) {
-    this.deleted = session.document._getChildren(this.parent, this.index, this.index + this.nrows - 1)
+    this.deleted = (await session.document._getChildren(this.parent, this.index, this.index + this.nrows - 1))
       .filter((sib => sib !== null));
 
     for (let i = 0; i < this.deleted.length; i++) {
@@ -327,7 +327,7 @@ export class DetachBlocks extends Mutation {
       this.created_index = await session.document._childIndex(this.parent, this.created);
     }
 
-    const children = session.document._getChildren(this.parent);
+    const children = await session.document._getChildren(this.parent);
 
     // note: next is a path, relative to the parent
 

@@ -424,7 +424,7 @@ export default class Session extends EventEmitter {
 
   public async nextVisible(path) {
     if (await this.viewable(path)) {
-      const children = this.document.getChildren(path);
+      const children = await this.document.getChildren(path);
       if (children.length > 0) {
         return children[0];
       }
@@ -449,7 +449,7 @@ export default class Session extends EventEmitter {
     if (!(await this.viewable(path))) {
       return path;
     }
-    const children = this.document.getChildren(path);
+    const children = await this.document.getChildren(path);
     if (children.length > 0) {
       return await this.lastVisible(children[children.length - 1]);
     }
@@ -553,7 +553,7 @@ export default class Session extends EventEmitter {
       return false; // invalid location
     }
 
-    const children = this.document.getChildren(jump.viewRoot);
+    const children = await this.document.getChildren(jump.viewRoot);
 
     await this.changeViewRoot(jump.viewRoot);
     if (children.length) {
@@ -859,18 +859,18 @@ export default class Session extends EventEmitter {
     options.setCursor = 'first';
 
     if (this.cursor.path.is(this.viewRoot)) {
-      if (!this.document.hasChildren(this.cursor.row)) {
+      if (!await this.document.hasChildren(this.cursor.row)) {
         if (!await this.document.collapsed(this.cursor.row)) {
           await this.toggleBlockCollapsed(this.cursor.row);
         }
       }
 
       await this.addBlocks(this.cursor.path, 0, [''], options);
-    } else if ((!await this.document.collapsed(this.cursor.row)) && this.document.hasChildren(this.cursor.row)) {
+    } else if ((!await this.document.collapsed(this.cursor.row)) && (await this.document.hasChildren(this.cursor.row))) {
       await this.addBlocks(this.cursor.path, 0, [''], options);
     } else {
       const parent = this.cursor.path.parent;
-      const index = this.document.indexOf(this.cursor.path);
+      const index = await this.document.indexInParent(this.cursor.path);
       await this.addBlocks(parent, index + 1, [''], options);
     }
   }
@@ -880,7 +880,7 @@ export default class Session extends EventEmitter {
       return;
     }
     const parent = this.cursor.path.parent;
-    const index = this.document.indexOf(this.cursor.path);
+    const index = await this.document.indexInParent(this.cursor.path);
     await this.addBlocks(parent, index, [''], {setCursor: 'first'});
   }
 
@@ -924,7 +924,7 @@ export default class Session extends EventEmitter {
       }
     }
 
-    if (!this.document.hasChildren(second.row)) {
+    if (!await this.document.hasChildren(second.row)) {
       await this.cursor.setPosition(first, -1);
       await this.delBlock(second, {noNew: true, noSave: true});
       if (addDelimiter) {
@@ -939,7 +939,7 @@ export default class Session extends EventEmitter {
       return true;
     }
 
-    if (this.document.hasChildren(first.row)) {
+    if (await this.document.hasChildren(first.row)) {
       this.showMessage('Cannot join when both rows have children', {text_class: 'error'});
       return false;
     }
@@ -994,7 +994,7 @@ export default class Session extends EventEmitter {
   }
 
   private async delBlock(path, options) {
-    return await this.delBlocks(path.parent.row, this.document.indexOf(path), 1, options);
+    return await this.delBlocks(path.parent.row, await this.document.indexInParent(path), 1, options);
   }
 
   public async delBlocks(parent, index, nrows, options: {noSave?: boolean} = {}) {
@@ -1011,7 +1011,7 @@ export default class Session extends EventEmitter {
 
   public async delBlocksAtCursor(nrows, options = {}) {
     const parent = this.cursor.path.parent;
-    const index = this.document.indexOf(this.cursor.path);
+    const index = await this.document.indexInParent(this.cursor.path);
     return await this.delBlocks(parent.row, index, nrows, options);
   }
 
@@ -1059,9 +1059,9 @@ export default class Session extends EventEmitter {
     // TODO: do this more elegantly
     if (will_work) {
       if (options.setCursor === 'first') {
-        await this.cursor.setPosition(this.document.findChild(parent, ids[0]), 0);
+        await this.cursor.setPosition(await this.document.findChild(parent, ids[0]), 0);
       } else if (options.setCursor === 'last') {
-        await this.cursor.setPosition(this.document.findChild(parent, ids[ids.length - 1]), 0);
+        await this.cursor.setPosition(await this.document.findChild(parent, ids[ids.length - 1]), 0);
       }
     }
   }
@@ -1107,7 +1107,7 @@ export default class Session extends EventEmitter {
     const siblings = await this.document.getSiblingRange(row, 0, numblocks - 1);
 
     const newparent = parent.parent;
-    let pp_i = this.document.indexOf(parent);
+    let pp_i = await this.document.indexInParent(parent);
 
     for (let i = 0; i < siblings.length; i++) {
       const sib = siblings[i];
@@ -1133,7 +1133,7 @@ export default class Session extends EventEmitter {
       return;
     }
 
-    const children = this.document.getChildren(path);
+    const children = await this.document.getChildren(path);
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       await this.moveBlock(child, sib, -1);
@@ -1149,20 +1149,20 @@ export default class Session extends EventEmitter {
       return await this.unindentBlocks(path);
     }
 
-    if (this.document.hasChildren(path.row)) {
+    if (await this.document.hasChildren(path.row)) {
       this.showMessage('Cannot unindent line with children', {text_class: 'error'});
       return;
     }
 
     const parent = path.parent;
-    const p_i = this.document.indexOf(path);
+    const p_i = await this.document.indexInParent(path);
 
     const newparent = await this.unindentBlocks(path);
     if (newparent === null) {
       return;
     }
 
-    const later_siblings = this.document.getChildren(parent).slice(p_i);
+    const later_siblings = (await this.document.getChildren(parent)).slice(p_i);
     for (let i = 0; i < later_siblings.length; i++) {
       const sib = later_siblings[i];
       await this.moveBlock(sib, path, -1);
@@ -1175,13 +1175,13 @@ export default class Session extends EventEmitter {
       return;
     }
 
-    if (this.document.hasChildren(next.row) && (!await this.document.collapsed(next.row))) {
+    if ((await this.document.hasChildren(next.row)) && (!await this.document.collapsed(next.row))) {
       // make it the first child
       return await this.moveBlock(path, next, 0);
     } else {
       // make it the next sibling
       const parent = next.parent;
-      const p_i = this.document.indexOf(next);
+      const p_i = await this.document.indexInParent(next);
       return await this.moveBlock(path, parent, p_i + 1);
     }
   }
@@ -1194,7 +1194,7 @@ export default class Session extends EventEmitter {
 
     // make it the previous sibling
     const parent = prev.parent;
-    const p_i = this.document.indexOf(prev);
+    const p_i = await this.document.indexInParent(prev);
     return await this.moveBlock(path, parent, p_i);
   }
 
@@ -1222,16 +1222,16 @@ export default class Session extends EventEmitter {
     if (ancestors1.length === 0) {
       // anchor is underneath cursor
       const parent = common.parent;
-      const index = this.document.indexOf(this.cursor.path);
+      const index = await this.document.indexInParent(this.cursor.path);
       return [parent, index, index];
     } else if (ancestors2.length === 0) {
       // cursor is underneath anchor
       const parent = common.parent;
-      const index = this.document.indexOf(this.anchor.path);
+      const index = await this.document.indexInParent(this.anchor.path);
       return [parent, index, index];
     } else {
-      let index1 = this.document.indexOf(ancestors1[0] || this.cursor.path);
-      let index2 = this.document.indexOf(ancestors2[0] || this.anchor.path);
+      let index1 = await this.document.indexInParent(ancestors1[0] || this.cursor.path);
+      let index2 = await this.document.indexInParent(ancestors2[0] || this.anchor.path);
       if (index2 < index1) {
         [index1, index2] = [index2, index1];
       }

@@ -99,8 +99,8 @@ export default class Document extends EventEmitter {
 
   // structure
 
-  public _getChildren(row, min = 0, max = -1) {
-    return this._getSlice(this.store.getChildren(row), min, max);
+  public async _getChildren(row, min = 0, max = -1) {
+    return this._getSlice(await this.store.getChildren(row), min, max);
   }
 
   private _getSlice(array, min, max) {
@@ -128,7 +128,7 @@ export default class Document extends EventEmitter {
   }
 
   public async _childIndex(parent, child) {
-    const children = this._getChildren(parent);
+    const children = await this._getChildren(parent);
     return _.findIndex(children, row => row === child);
   }
 
@@ -140,23 +140,23 @@ export default class Document extends EventEmitter {
     return this.store.setParents(row, children_rows);
   }
 
-  public getChildren(parent_path): Array<Path> {
-    return this._getChildren(parent_path.row).map(row => parent_path.child(row));
+  public async getChildren(parent_path): Promise<Array<Path>> {
+    return (await this._getChildren(parent_path.row)).map(row => parent_path.child(row));
   }
 
-  public findChild(parent_path, row) {
-    return _.find(this.getChildren(parent_path), x => x.row === row);
+  public async findChild(parent_path, row) {
+    return _.find(await this.getChildren(parent_path), x => x.row === row);
   }
 
-  public hasChildren(row) {
-    return this._getChildren(row).length > 0;
+  public async hasChildren(row) {
+    return (await this._getChildren(row)).length > 0;
   }
 
-  public getSiblings(path) {
+  public async getSiblings(path) {
     if (path.isRoot()) {
       return [path];
     }
-    return this.getChildren(path.parent);
+    return await this.getChildren(path.parent);
   }
 
   public async nextClone(path) {
@@ -176,8 +176,8 @@ export default class Document extends EventEmitter {
     return new_parent_path.child(path.row);
   }
 
-  public indexOf(child) {
-    const children = this.getSiblings(child);
+  public async indexInParent(child) {
+    const children = await this.getSiblings(child);
     return _.findIndex(children, sib => sib.row === child.row);
   }
 
@@ -194,7 +194,7 @@ export default class Document extends EventEmitter {
     if (await this.collapsed(row)) {
       return pathsofar;
     }
-    const children = this._getChildren(row);
+    const children = await this._getChildren(row);
     if (children.length === 0) {
       return pathsofar;
     }
@@ -225,7 +225,7 @@ export default class Document extends EventEmitter {
       const parentRow = parents[i];
       const canonicalParent = await this.canonicalPath(parentRow);
       if (canonicalParent !== null) {
-        return this.findChild(canonicalParent, row);
+        return await this.findChild(canonicalParent, row);
       }
     }
     return null;
@@ -255,14 +255,14 @@ export default class Document extends EventEmitter {
     return ancestors;
   }
 
-  public _hasChild(parent_row, row) {
-    const children = this._getChildren(parent_row);
+  public async _hasChild(parent_row, row) {
+    const children = await this._getChildren(parent_row);
     const ci = _.findIndex(children, sib => sib === row);
     return ci !== -1;
   }
 
-  private _removeChild(parent_row, row) {
-    const children = this._getChildren(parent_row);
+  private async _removeChild(parent_row, row) {
+    const children = await this._getChildren(parent_row);
     const ci = _.findIndex(children, sib => sib === row);
     errors.assert(ci !== -1);
     children.splice(ci, 1);
@@ -283,8 +283,8 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  private _addChild(parent_row, row, index) {
-    const children = this._getChildren(parent_row);
+  private async _addChild(parent_row, row, index) {
+    const children = await this._getChildren(parent_row);
     errors.assert(index <= children.length);
     if (index === -1) {
       children.push(row);
@@ -310,7 +310,7 @@ export default class Document extends EventEmitter {
     const wasLast = (this._getParents(row)).length === 1;
 
     await this.emitAsync('beforeDetach', { id: row, parent_id: parent_row, last: wasLast });
-    const info = this._removeChild(parent_row, row);
+    const info = await this._removeChild(parent_row, row);
     if (wasLast) {
       await this.store.setDetachedParent(row, parent_row);
       const detached_children = await this.store.getDetachedChildren(parent_row);
@@ -324,7 +324,7 @@ export default class Document extends EventEmitter {
   public async _attach(child_row, parent_row, index = -1) {
     const isFirst = this._getParents(child_row).length === 0;
     await this.emitAsync('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
-    const info = this._addChild(parent_row, child_row, index);
+    const info = await this._addChild(parent_row, child_row, index);
     const old_detached_parent = await this.store.getDetachedParent(child_row);
     if (old_detached_parent !== null) {
       errors.assert(isFirst);
@@ -344,11 +344,11 @@ export default class Document extends EventEmitter {
       id: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
     });
 
-    const remove_info = this._removeChild(old_parent_row, child_row);
+    const remove_info = await this._removeChild(old_parent_row, child_row);
     if ((old_parent_row === new_parent_row) && (index > remove_info.childIndex)) {
       index = index - 1;
     }
-    const add_info = this._addChild(new_parent_row, child_row, index);
+    const add_info = await this._addChild(new_parent_row, child_row, index);
 
     await this.emitAsync('afterMove', {
       id: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
@@ -419,14 +419,14 @@ export default class Document extends EventEmitter {
   }
 
   public async getSiblingRange(path, min_offset, max_offset, includeNull = false) {
-    const index = this.indexOf(path);
+    const index = await this.indexInParent(path);
     return this._getSlice(
-      this.getSiblings(path), min_offset + index, max_offset + index
+      await this.getSiblings(path), min_offset + index, max_offset + index
     ).filter(x => includeNull || (x !== null));
   }
 
   public async getChildRange(path, min, max) {
-    return this._getChildren(path.row, min, max).map(function(child_row) {
+    return (await this._getChildren(path.row, min, max)).map(function(child_row) {
       if (child_row === null) {
         return null;
       }
@@ -452,7 +452,7 @@ export default class Document extends EventEmitter {
     const helper = async (path) => {
       paths.push(path);
       await Promise.all(
-        this.getChildren(path).map(
+        (await this.getChildren(path)).map(
           async (child) => await helper(child)
         )
       );
@@ -527,12 +527,12 @@ export default class Document extends EventEmitter {
       line: await this.getLine(path.row),
       collapsed: await this.collapsed(path.row),
       isClone: await this.isClone(path.row),
-      hasChildren: this.hasChildren(path.row),
+      hasChildren: await this.hasChildren(path.row),
     };
     struct.plugins = await this.applyHookAsync('pluginPathContents', {}, { path });
     if (isFirst || (!struct.collapsed)) {
       struct.children = await Promise.all(
-        this._getChildren(path.row).map(
+        (await this._getChildren(path.row)).map(
           async (child) => await this.getViewContents(path.child(child))
         )
       );
@@ -553,10 +553,10 @@ export default class Document extends EventEmitter {
 
     const struct: any = await this.serializeRow(row);
     // NOTE: this must be done in order due to cloning
-    // const children = await Promise.all(this._getChildren(row).map(
+    // const children = await Promise.all((await this._getChildren(row)).map(
     //   async (childrow) => await this.serialize(childrow, options, serialized)
     // ));
-    const childRows = this._getChildren(row);
+    const childRows = await this._getChildren(row);
     let children = [];
     for (let i = 0; i < childRows.length; i++) {
       children.push(
@@ -596,7 +596,7 @@ export default class Document extends EventEmitter {
       return path;
     }
 
-    const children = this.getChildren(parent_path);
+    const children = await this.getChildren(parent_path);
     // if parent_path has only one child and it's empty, delete it
     let path;
     if (replace_empty && children.length === 1 &&

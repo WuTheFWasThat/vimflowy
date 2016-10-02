@@ -226,8 +226,8 @@ registerMode({
     const [parent, index1, index2] = await session.getVisualLineSelections();
     context.row_start_i = index1;
     context.row_end_i = index2;
-    context.row_start = (session.document.getChildren(parent))[index1];
-    context.row_end = (session.document.getChildren(parent))[index2];
+    context.row_start = (await session.document.getChildren(parent))[index1];
+    context.row_end = (await session.document.getChildren(parent))[index2];
     context.parent = parent;
     context.num_rows = (index2 - index1) + 1;
     return context;

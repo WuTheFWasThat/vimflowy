@@ -79,14 +79,14 @@ export default class Register {
   public async pasteSerializedRows(options: PasteOptions = {}) {
     const path = this.session.cursor.path;
     const parent = path.parent;
-    const index = this.session.document.indexOf(path);
+    const index = await this.session.document.indexInParent(path);
 
     const serialized_rows = this.saved;
 
     if (options.before) {
       await this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
     } else {
-      const children = this.session.document.getChildren(path);
+      const children = await this.session.document.getChildren(path);
       if ((!await this.session.document.collapsed(path.row)) && (children.length > 0)) {
         await this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
       } else {
@@ -98,14 +98,14 @@ export default class Register {
   public async pasteClonedRows(options: PasteOptions = {}) {
     const path = this.session.cursor.path;
     const parent = path.parent;
-    const index = this.session.document.indexOf(path);
+    const index = await this.session.document.indexInParent(path);
 
     const cloned_rows = this.saved;
 
     if (options.before) {
       await this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});
     } else {
-      const children = this.session.document.getChildren(path);
+      const children = await this.session.document.getChildren(path);
       if ((!await this.session.document.collapsed(path.row)) && (children.length > 0)) {
         await this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
       } else {
