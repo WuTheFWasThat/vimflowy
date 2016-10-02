@@ -18,17 +18,16 @@ Generally, this documentation may be less useful than just [looking at some exam
 
 A plugin registers using
 
-````
+```
 Plugins.register(metadata, enable: fn, disable: ?fn)
 ```
 where
 - `metadata`:  For the detailed format, read the type definitions in [plugins.ts](src/assets/js/plugins.ts)
-  - name (required): string
+  - name: string
     This will be displayed to the user in options. It should not be changed!
-  - version (required): positive integer
-  - author: string
-  - description: string
-    names of other plugins you depend on.
+  - version: number
+  - author: ?string
+  - description: ?string
 - `async enable(api)`:
   Called when the plugin is enabled
   Can optionally return a value, in which case other plugins that depend on yours will get access to it.

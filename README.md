@@ -8,8 +8,6 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 Try it out!
 - [online] (https://vimflowy.bitballoon.com)
 - [local/dev](CONTRIBUTING.md)
-- [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei)
-  *This will no longer be maintained, as [Chrome apps are getting essentially deprecated](https://blog.chromium.org/2016/08/from-chrome-apps-to-web.html).*
 
 (Video coming eventually...)
 
@@ -39,10 +37,12 @@ Try it out!
 
 - The app is entirely local. The online version uses localStorage, so it should be used in only one browser.
   If you're going to have a large document, use a browser with large localStorage limits
-- Currently, there is no simultaneous editing
+- Currently, you can only edit from one tab at a time.
 - Tested mostly in Chrome and Firefox
 - There are [known inconsistencies with vim](vim_inconsistencies.md)
 - Contributions are very welcome!  See [CONTRIBUTING.md](CONTRIBUTING.md) if you're interested
+- The [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei) exists but will no longer be maintained.
+  [Chrome apps are getting essentially deprecated](https://blog.chromium.org/2016/08/from-chrome-apps-to-web.html).
 
 ### LICENSE ###
 
