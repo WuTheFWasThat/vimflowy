@@ -20,9 +20,9 @@ const timeout = (ns) => {
     setTimeout(resolve, ns);
   });
 };
-const simulateDelay = 10;
+// const simulateDelay = 10;
 // const simulateDelay = 1;
-// const simulateDelay = 0;
+const simulateDelay = 0;
 
 export default class DataStore {
   protected prefix: string;
@@ -69,20 +69,19 @@ export default class DataStore {
     return `${this.prefix}:macros`;
   }
 
-  protected _get(key: string, default_value: any = undefined): any {
+  protected async _get(key: string, default_value: any = undefined): Promise<any> {
     console.log('GET key', key, 'default value', default_value);
     throw new errors.NotImplemented();
   }
 
-  protected _set(key: string, value: any): void {
+  protected async _set(key: string, value: any): Promise<void> {
     console.log('SET key', key, 'value', value);
     throw new errors.NotImplemented();
   }
 
   // get and set values for a given row
   public async getLine(row: Row): Promise<Line> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._lineKey_(row), []).map(function(obj) {
+    return (await this._get(this._lineKey_(row), [])).map(function(obj) {
       if (typeof obj === 'string') {
         obj = {
           char: obj,
@@ -92,8 +91,7 @@ export default class DataStore {
     });
   }
   public async setLine(row: Row, line: Line): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._set(this._lineKey_(row), line.map(function(obj) {
+    return await this._set(this._lineKey_(row), line.map(function(obj) {
       // if no properties are true, serialize just the character to save space
       if (_.every(constants.text_properties.map(property => !obj[property]))) {
         return obj.char;
@@ -104,107 +102,88 @@ export default class DataStore {
   }
 
   public async getParents(row: Row): Promise<Array<Row>> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    let parents = this._get(this._parentsKey_(row), []);
+    let parents = await this._get(this._parentsKey_(row), []);
     if (typeof parents === 'number') {
       parents = [ parents ];
     }
     return parents;
   }
   public async setParents(row: Row, parents: Array<Row>): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._set(this._parentsKey_(row), parents);
+    return await this._set(this._parentsKey_(row), parents);
   }
 
   public async getChildren(row: Row): Promise<Array<Row>> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._childrenKey_(row), []);
+    return await this._get(this._childrenKey_(row), []);
   }
   public async setChildren(row: Row, children: Array<Row>): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._set(this._childrenKey_(row), children);
+    return await this._set(this._childrenKey_(row), children);
   }
 
   public async getDetachedParent(row: Row): Promise<Row> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._detachedParentKey_(row), null);
+    return await this._get(this._detachedParentKey_(row), null);
   }
   public async setDetachedParent(row: Row, parent: Row): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._set(this._detachedParentKey_(row), parent);
+    return await this._set(this._detachedParentKey_(row), parent);
   }
 
   public async getDetachedChildren(row: Row): Promise<Array<Row>> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._detachedChildrenKey_(row), []);
+    return await this._get(this._detachedChildrenKey_(row), []);
   }
   public async setDetachedChildren(row: Row, children: Array<Row>): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._set(this._detachedChildrenKey_(row), children);
+    return await this._set(this._detachedChildrenKey_(row), children);
   }
 
   public async getCollapsed(row: Row): Promise<boolean> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._collapsedKey_(row));
+    return await this._get(this._collapsedKey_(row));
   }
   public async setCollapsed(row: Row, collapsed: boolean): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._set(this._collapsedKey_(row), collapsed);
+    return await this._set(this._collapsedKey_(row), collapsed);
   }
 
   // get mapping of macro_key -> macro
   public async getMacros(): Promise<MacroMap> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._macrosKey_(), {});
+    return await this._get(this._macrosKey_(), {});
   }
 
   // set mapping of macro_key -> macro
   public async setMacros(macros: MacroMap): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._set(this._macrosKey_(), macros);
+    return await this._set(this._macrosKey_(), macros);
   }
 
   // get global settings (data not specific to a document)
   public async getSetting(
     setting: string, default_value: any = undefined
   ): Promise<any> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._settingKey_(setting), default_value);
+    return await this._get(this._settingKey_(setting), default_value);
   }
   public async setSetting(setting: string, value: any): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._set(this._settingKey_(setting), value);
+    return await this._set(this._settingKey_(setting), value);
   }
 
   // get last view (for page reload)
   public async setLastViewRoot(ancestry: SerializedPath): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    this._set(this._lastViewrootKey_(), ancestry);
+    await this._set(this._lastViewrootKey_(), ancestry);
   }
   public async getLastViewRoot(): Promise<SerializedPath> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._lastViewrootKey_(), []);
+    return await this._get(this._lastViewrootKey_(), []);
   }
 
   public async setPluginData(
     plugin: string, key: string, data: any
   ): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    this._set(this._pluginDataKey_(plugin, key), data);
+    await this._set(this._pluginDataKey_(plugin, key), data);
   }
   public async getPluginData(
     plugin: string, key: string, default_value: any = undefined
   ): Promise<any> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    return this._get(this._pluginDataKey_(plugin, key), default_value);
+    return await this._get(this._pluginDataKey_(plugin, key), default_value);
   }
 
   // get next row ID
   protected async getId(): Promise<number> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     // suggest to override this for efficiency
     let id = 1;
-    while (this._get(this._lineKey_(id), null) !== null) {
+    while ((await this._get(this._lineKey_(id), null)) !== null) {
       id++;
     }
     return id;
@@ -226,7 +205,8 @@ export class InMemory extends DataStore {
     this.cache = {};
   }
 
-  protected _get(key: string, default_value: any = undefined): any {
+  protected async _get(key: string, default_value: any = undefined): Promise<any> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     if (key in this.cache) {
       return _.cloneDeep(this.cache[key]);
     } else {
@@ -234,8 +214,9 @@ export class InMemory extends DataStore {
     }
   }
 
-  protected _set(key: string, value: any): void {
-    return this.cache[key] = value;
+  protected async _set(key: string, value: any): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
+    this.cache[key] = value;
   }
 }
 
@@ -253,14 +234,14 @@ export class LocalStorageLazy extends DataStore {
     return `${this.prefix}:lastID`;
   }
 
-  protected _get(key: string, default_value: any = undefined): any {
+  protected async _get(key: string, default_value: any = undefined): Promise<any> {
     if (!(key in this.cache)) {
       this.cache[key] = this._getLocalStorage_(key, default_value);
     }
     return this.cache[key];
   }
 
-  protected _set(key: string, value: any): void {
+  protected async _set(key: string, value: any): Promise<void> {
     this.cache[key] = value;
     return this._setLocalStorage_(key, value);
   }
