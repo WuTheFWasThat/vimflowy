@@ -549,7 +549,7 @@ export default class Session extends EventEmitter {
       return false; // not moving, don't jump
     }
 
-    if (!this.document.isAttached(jump.viewRoot.row)) {
+    if (!await this.document.isAttached(jump.viewRoot.row)) {
       return false; // invalid location
     }
 
@@ -562,7 +562,7 @@ export default class Session extends EventEmitter {
       await this.cursor.setPath(jump.viewRoot);
     }
 
-    if (this.document.isAttached(jump.cursor_after.row)) {
+    if (await this.document.isAttached(jump.cursor_after.row)) {
       // if the row is attached and under the view root, switch to it
       const cursor_path = await this.youngestVisibleAncestor(jump.cursor_after.path);
       if (cursor_path !== null) {

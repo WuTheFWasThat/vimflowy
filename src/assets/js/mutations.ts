@@ -28,7 +28,7 @@ import { Row, Col, Char, SerializedLine, SerializedPath } from './types';
 import Path from './path';
 
 // validate inserting id as a child of parent_id
-const validateRowInsertion = function(
+const validateRowInsertion = async function(
   session, parent_id, id, options: {noSiblingCheck?: boolean} = {}
 ) {
   // check that there won't be doubled siblings
@@ -44,7 +44,7 @@ const validateRowInsertion = function(
   // It is sufficient to check if the row is an ancestor of the new parent,
   // because if there was a clone underneath the row which was an ancestor of 'parent',
   // then 'row' would also be an ancestor of 'parent'.
-  if (_.includes((session.document.allAncestors(parent_id, { inclusive: true })), id)) {
+  if (_.includes(await session.document.allAncestors(parent_id, { inclusive: true }), id)) {
     session.showMessage('Cloned rows cannot be nested under themselves', {text_class: 'error'});
     return false;
   }
@@ -221,7 +221,7 @@ export class MoveBlock extends Mutation {
   public async validate(session) {
     // if parent is the same, don't do sibling clone validation
     const sameParent = this.parent.row === this.old_parent.row;
-    return (validateRowInsertion(session, this.parent.row, this.path.row, {noSiblingCheck: sameParent}));
+    return await validateRowInsertion(session, this.parent.row, this.path.row, {noSiblingCheck: sameParent});
   }
 
   public async mutate(session) {
@@ -272,7 +272,7 @@ export class AttachBlocks extends Mutation {
   public async validate(session) {
     for (let i = 0; i < this.cloned_rows.length; i++) {
       const row = this.cloned_rows[i];
-      if (!(validateRowInsertion(session, this.parent, row))) {
+      if (!await validateRowInsertion(session, this.parent, row)) {
         return false;
       }
     }
@@ -324,7 +324,7 @@ export class DetachBlocks extends Mutation {
     this.created = null;
     if (this.options.addNew) {
       this.created = await session.document._newChild(this.parent, this.index);
-      this.created_index = session.document._childIndex(this.parent, this.created);
+      this.created_index = await session.document._childIndex(this.parent, this.created);
     }
 
     const children = session.document._getChildren(this.parent);
@@ -340,7 +340,7 @@ export class DetachBlocks extends Mutation {
         if (this.parent === session.document.root.row) {
           if (!this.options.noNew) {
             this.created = await session.document._newChild(this.parent);
-            this.created_index = session.document._childIndex(this.parent, this.created);
+            this.created_index = await session.document._childIndex(this.parent, this.created);
             next = [this.created];
           }
         }

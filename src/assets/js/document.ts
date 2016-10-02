@@ -127,7 +127,7 @@ export default class Document extends EventEmitter {
     return this.store.setChildren(row, children);
   }
 
-  public _childIndex(parent, child) {
+  public async _childIndex(parent, child) {
     const children = this._getChildren(parent);
     return _.findIndex(children, row => row === child);
   }
@@ -167,7 +167,7 @@ export default class Document extends EventEmitter {
     while (true) {
       i = (i + 1) % parents.length;
       let new_parent = parents[i];
-      new_parent_path = this.canonicalPath(new_parent);
+      new_parent_path = await this.canonicalPath(new_parent);
       // this happens if the parent got detached
       if (new_parent_path !== null) {
         break;
@@ -215,15 +215,15 @@ export default class Document extends EventEmitter {
 
   // Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   // NOTE: this is not very efficient, in the worst case, but probably doesn't matter
-  public canonicalPath(row) { // Given an row, return a path with that row
-    errors.assert(row !== undefined && row !== null, 'Empty row passed to canonicalPath');
+  public async canonicalPath(row) { // Given an row, return a path with that row
+    errors.assert(row !== null, 'Empty row passed to canonicalPath');
     if (row === Path.rootRow()) {
       return this.root;
     }
     const parents = this._getParents(row);
     for (let i = 0; i < parents.length; i++) {
       const parentRow = parents[i];
-      const canonicalParent = this.canonicalPath(parentRow);
+      const canonicalParent = await this.canonicalPath(parentRow);
       if (canonicalParent !== null) {
         return this.findChild(canonicalParent, row);
       }
@@ -234,7 +234,7 @@ export default class Document extends EventEmitter {
   // Return all ancestor rows, topologically sorted (root is *last*).
   // Excludes 'row' itself unless options.inclusive is specified
   // NOTE: includes possibly detached nodes
-  public allAncestors(row, options) {
+  public async allAncestors(row, options) {
     options = _.defaults({}, options, { inclusive: false });
     const visited = {};
     const ancestors = []; // 'visited' with preserved insert order
@@ -384,35 +384,16 @@ export default class Document extends EventEmitter {
     return null;
   }
 
-  // returns an array representing the ancestry of a row,
-  // up until the ancestor specified by the `stop` parameter
-  // i.e. [stop, stop's child, ... , row's parent , row]
-  public getAncestry(row, stop?): Array<Path> {
-    if (stop === undefined) {
-      stop = this.root;
-    }
-    const ancestors = [];
-    while (!row.is(stop)) {
-      errors.assert(!row.isRoot(), `Failed to get ancestry for ${row} going up until ${stop}`);
-      ancestors.push(row);
-      row = row.parent;
-    }
-    ancestors.push(stop);
-    ancestors.reverse();
-    return ancestors;
-  }
-
-  // given two rows, returns
-  // 1. the common ancestor of the rows
-  // 2. the array of ancestors between common ancestor and row1
-  // 3. the array of ancestors between common ancestor and row2
-  public async getCommonAncestor(row1, row2): Promise<[Path, Array<Path>, Array<Path>]> {
-    const ancestors1 = this.getAncestry(row1);
-    const ancestors2 = this.getAncestry(row2);
+  // given two paths, returns
+  // 1. the common ancestor of the paths
+  // 2. the array of ancestors between common ancestor and path1
+  // 3. the array of ancestors between common ancestor and path2
+  public async getCommonAncestor(path1, path2): Promise<[Path, Array<Path>, Array<Path>]> {
+    const ancestors1: Array<Path> = path1.getAncestryPaths();
+    const ancestors2: Array<Path> = path2.getAncestryPaths();
     const commonAncestry = _.takeWhile(
       _.zip(ancestors1, ancestors2),
-      pair =>
-        (pair[0] !== undefined) && (pair[1] !== undefined) && pair[0].is(pair[1])
+      pair => (pair[0] && pair[1] && pair[0].is(pair[1]))
     );
     const common = _.last(commonAncestry)[0];
     const firstDifference = commonAncestry.length;
@@ -421,8 +402,8 @@ export default class Document extends EventEmitter {
 
   // returns whether an row is actually reachable from the root node
   // if something is not detached, it will have a parent, but the parent wont mention it as a child
-  public isAttached(row) {
-    return this.allAncestors(row, {inclusive: true}).indexOf(this.root.row) !== -1;
+  public async isAttached(row) {
+    return (await this.allAncestors(row, {inclusive: true})).indexOf(this.root.row) !== -1;
   }
 
   public async getSiblingBefore(path) {

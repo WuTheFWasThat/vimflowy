@@ -42,6 +42,25 @@ export default class Path {
     return ancestors;
   }
 
+  // returns an array representing the ancestry of a row,
+  // up until the ancestor specified by the `stop` parameter
+  // i.e. [stop, stop's child, ... , row's parent , row]
+  public getAncestryPaths(stop?): Array<Path> {
+    if (!stop) {
+      stop = Path.root();
+    }
+    const ancestors = [];
+    let path: Path = this;
+    while (!path.is(stop)) {
+      errors.assert(!path.isRoot(), `Failed to get ancestry for ${this} going up until ${stop}`);
+      ancestors.push(path);
+      path = path.parent;
+    }
+    ancestors.push(stop);
+    ancestors.reverse();
+    return ancestors;
+  }
+
   // length() {
   //   if this.parent === null {
   //     return 0;

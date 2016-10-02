@@ -17,7 +17,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_UP, {
 }, async function() {
   await this.session.zoomUp();
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -33,7 +33,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_DOWN, {
 }, async function() {
   await this.session.zoomDown();
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -49,7 +49,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN, {
 }, async function() {
   await this.session.zoomIn();
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -63,9 +63,9 @@ const CMD_ZOOM_OUT = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT, {
   description: 'Zoom out by one level',
 }, async function() {
-  this.session.zoomOut();
+  await this.session.zoomOut();
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -81,7 +81,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_IN_ALL, {
 }, async function() {
   await this.session.zoomInto(this.session.cursor.path);
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -97,7 +97,7 @@ keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_ZOOM_OUT_ALL, {
 }, async function() {
   await this.session.zoomInto(this.session.document.root);
   if (this.mode === MODES.NORMAL) {
-    return this.keyStream.save();
+    this.keyStream.save();
   }
 });
 
@@ -111,7 +111,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_JUMP_PREVIOUS, {
   description: 'Jump to previous location',
 }, async function() {
   await this.session.jumpPrevious();
-  return this.keyStream.forget(1);
+  this.keyStream.forget(1);
 });
 
 const CMD_JUMP_NEXT = keyDefinitions.registerCommand({
@@ -124,5 +124,5 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_JUMP_NEXT, {
   description: 'Jump to next location',
 }, async function() {
   await this.session.jumpNext();
-  return this.keyStream.forget(1);
+  this.keyStream.forget(1);
 });

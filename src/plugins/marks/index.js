@@ -170,7 +170,7 @@ class MarksPlugin {
         const allMarks = await that.listMarks();
         if (mark in allMarks) {
           const row = allMarks[mark];
-          const path = this.session.document.canonicalPath(row);
+          const path = await this.session.document.canonicalPath(row);
           await this.session.zoomInto(path);
           return true;
         } else {
@@ -206,7 +206,7 @@ class MarksPlugin {
           for (const mark in marks) {
             const row = marks[mark];
             if ((mark.indexOf(prefix)) === 0) {
-              const path = this.session.document.canonicalPath(row);
+              const path = await this.session.document.canonicalPath(row);
               results.push({ path, mark });
               if (nresults > 0 && results.length === nresults) {
                 break;
@@ -412,8 +412,8 @@ class MarksPlugin {
     const marks_to_paths = {};
     for (const mark in marks_to_rows) {
       const row = marks_to_rows[mark];
-      if (this.document.isAttached(row)) {
-        const path = this.session.document.canonicalPath(row);
+      if (await this.document.isAttached(row)) {
+        const path = await this.session.document.canonicalPath(row);
         errors.assert(path !== null);
         marks_to_paths[mark] = path;
       }
@@ -428,7 +428,7 @@ class MarksPlugin {
     const all_marks = {};
     for (const mark in marks_to_rows) {
       const row = marks_to_rows[mark];
-      if (this.document.isAttached(row)) {
+      if (await this.document.isAttached(row)) {
         all_marks[mark] = row;
       }
     }
@@ -452,7 +452,7 @@ class MarksPlugin {
       }
 
       const other_row = marks_to_rows[mark];
-      if (this.document.isAttached(other_row)) {
+      if (await this.document.isAttached(other_row)) {
         return `Mark '${mark}' was already taken!`;
       } else {
         await this.session.do(new this.UnsetMark(other_row, mark));

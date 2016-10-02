@@ -231,7 +231,7 @@ class TimeTrackingPlugin {
   }
 
   async _rebuildTreeTime(id, inclusive = false) {
-    const ancestors = this.api.session.document.allAncestors(id, { inclusive });
+    const ancestors = await this.api.session.document.allAncestors(id, { inclusive });
     for (let i = 0; i < ancestors.length; i++) {
       const ancestor_id = ancestors[i];
       await this._rebuildTotalTime(ancestor_id);
