@@ -174,14 +174,20 @@ export default class DataStore {
     return this._get(this._lastViewrootKey_(), []);
   }
 
-  public setPluginData(
+  public async setPluginData(
     plugin: string, key: string, data: any
-  ): void {
+  ): Promise<void> {
+    if (simulateDelay) {
+      await timeout(simulateDelay * Math.random());
+    }
     this._set(this._pluginDataKey_(plugin, key), data);
   }
-  public getPluginData(
+  public async getPluginData(
     plugin: string, key: string, default_value: any = undefined
-  ): any {
+  ): Promise<any> {
+    if (simulateDelay) {
+      await timeout(simulateDelay * Math.random());
+    }
     return this._get(this._pluginDataKey_(plugin, key), default_value);
   }
 

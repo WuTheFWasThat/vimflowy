@@ -159,12 +159,12 @@ class TimeTrackingPlugin {
 
   async getRowData(id, keytype, default_value=null) {
     let key = `${id}:${keytype}`;
-    return this.api.getData(key, default_value);
+    return await this.api.getData(key, default_value);
   }
 
   async setRowData(id, keytype, value) {
     let key = `${id}:${keytype}`;
-    this.api.setData(key, value);
+    await this.api.setData(key, value);
   }
 
   async transformRowData(id, keytype, transform) {
@@ -172,7 +172,7 @@ class TimeTrackingPlugin {
   }
 
   async isLogging() {
-    return this.api.getData('isLogging', true);
+    return await this.api.getData('isLogging', true);
   }
 
   async toggleLogging() {
@@ -180,10 +180,10 @@ class TimeTrackingPlugin {
     if (isLogging) {
       this.logger.info('Turning logging off');
       await this.onRowChange(this.api.cursor.row, null); // Final close
-      this.api.setData('isLogging', false);
+      await this.api.setData('isLogging', false);
     } else {
       this.logger.info('Turning logging on');
-      this.api.setData('isLogging', true);
+      await this.api.setData('isLogging', true);
       await this.onRowChange(null, this.api.cursor.row); // Initial setup
     }
   }

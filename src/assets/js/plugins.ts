@@ -62,12 +62,12 @@ export class PluginApi {
     this.registrations = [];
   }
 
-  public setData(key, value) {
-    return this.document.store.setPluginData(this.name, key, value);
+  public async setData(key, value) {
+    return await this.document.store.setPluginData(this.name, key, value);
   }
 
-  public getData(key, default_value = null) {
-    return this.document.store.getPluginData(this.name, key, default_value);
+  public async getData(key, default_value = null) {
+    return await this.document.store.getPluginData(this.name, key, default_value);
   }
 
   // TODO: have definitions be event emitter? have this be automatic somehow

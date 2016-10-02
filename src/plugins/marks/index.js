@@ -286,6 +286,11 @@ class MarksPlugin {
       return obj;
     });
 
+    this.api.registerHook('session', 'pluginGlobalContents', async (obj) => {
+      obj.marksToPaths = await this.marksToPaths();
+      return obj;
+    });
+
     this.api.registerHook('session', 'renderLineOptions', (options, info) => {
       if (info.pluginData.marking) { options.cursors = {}; }
       return options;
@@ -319,18 +324,18 @@ class MarksPlugin {
       return lineContents;
     });
 
-    this.api.registerHook('session', 'renderLineWordHook', (line, word_info) => {
+    this.api.registerHook('session', 'renderLineWordHook', (line, info) => {
+      const { pluginGlobalContents, wordInfo } = info;
+      const { marksToPaths } = pluginGlobalContents;
       if (this.session.mode === MODES.NORMAL) {
-        if (word_info.word[0] === '@') {
-          const mark = word_info.word.slice(1);
-          const row = this.getRowForMark(mark);
-          if (row !== null) {
-            const markpath = this.document.canonicalPath(row);
-            errors.assert(markpath !== null);
-            for (let i = word_info.start; i <= word_info.end; i++) {
+        if (wordInfo.word[0] === '@') {
+          const mark = wordInfo.word.slice(1);
+          const path = marksToPaths[mark];
+          if (path) {
+            for (let i = wordInfo.start; i <= wordInfo.end; i++) {
               line[i].renderOptions.type = 'a';
               line[i].renderOptions.onClick = async () => {
-                await this.session.zoomInto(markpath);
+                await this.session.zoomInto(path);
                 this.session.save();
               };
             }
@@ -344,78 +349,81 @@ class MarksPlugin {
   // maintain global marks data structures
   //   a map: row -> mark
   //   and a second map: mark -> row
-  _getRowsToMarks() {
-    return this.api.getData('ids_to_marks', {});
+  async _getRowsToMarks() {
+    return await this.api.getData('ids_to_marks', {});
   }
-  _setRowsToMarks(rows_to_marks) {
-    return this.api.setData('ids_to_marks', rows_to_marks);
+  async _setRowsToMarks(rows_to_marks) {
+    return await this.api.setData('ids_to_marks', rows_to_marks);
   }
-  _getMarksToRows() {
-    return this.api.getData('marks_to_ids', {});
+  async _getMarksToRows() {
+    return await this.api.getData('marks_to_ids', {});
   }
-  _setMarksToRows(mark_to_rows) {
-    return this.api.setData('marks_to_ids', mark_to_rows);
+  async _setMarksToRows(mark_to_rows) {
+    return await this.api.setData('marks_to_ids', mark_to_rows);
   }
 
-  _sanityCheckMarks() {
-    const marks_to_rows = this._getMarksToRows();
-    const rows_to_marks = this._getRowsToMarks();
+  async _sanityCheckMarks() {
+    const marks_to_rows = await this._getMarksToRows();
+    const rows_to_marks = await this._getRowsToMarks();
     const marks_to_rows2 = {};
     for (const row in rows_to_marks) {
       const mark = rows_to_marks[row];
       marks_to_rows2[mark] = parseInt(row);
     }
-    return errors.assert_deep_equals(marks_to_rows, marks_to_rows2, 'Inconsistent rows_to_marks');
+    errors.assert_deep_equals(marks_to_rows, marks_to_rows2, 'Inconsistent rows_to_marks');
   }
 
   // get mark for an row, '' if it doesn't exist
   async _getMark(row) {
-    const marks = this._getRowsToMarks();
+    const marks = await this._getRowsToMarks();
     return marks[row] || '';
   }
 
   async _setMark(row, mark) {
-    this._sanityCheckMarks();
-    const marks_to_rows = this._getMarksToRows();
-    const rows_to_marks = this._getRowsToMarks();
+    await this._sanityCheckMarks();
+    const marks_to_rows = await this._getMarksToRows();
+    const rows_to_marks = await this._getRowsToMarks();
     errors.assert(!marks_to_rows.hasOwnProperty(mark));
     errors.assert(!rows_to_marks.hasOwnProperty(row));
     marks_to_rows[mark] = row;
     rows_to_marks[row] = mark;
-    this._setMarksToRows(marks_to_rows);
-    this._setRowsToMarks(rows_to_marks);
-    return this._sanityCheckMarks();
+    await this._setMarksToRows(marks_to_rows);
+    await this._setRowsToMarks(rows_to_marks);
+    await this._sanityCheckMarks();
   }
 
   async _unsetMark(row, mark) {
-    this._sanityCheckMarks();
-    const marks_to_rows = this._getMarksToRows();
-    const rows_to_marks = this._getRowsToMarks();
+    await this._sanityCheckMarks();
+    const marks_to_rows = await this._getMarksToRows();
+    const rows_to_marks = await this._getRowsToMarks();
     errors.assert_equals(marks_to_rows[mark], row);
     errors.assert_equals(rows_to_marks[row], mark);
     delete marks_to_rows[mark];
     delete rows_to_marks[row];
-    this._setMarksToRows(marks_to_rows);
-    this._setRowsToMarks(rows_to_marks);
-    return this._sanityCheckMarks();
+    await this._setMarksToRows(marks_to_rows);
+    await this._setRowsToMarks(rows_to_marks);
+    await this._sanityCheckMarks();
   }
 
-  getRowForMark(mark) {
-    this._sanityCheckMarks();
-    const marks_to_rows = this._getMarksToRows();
-    if (!(mark in marks_to_rows)) {
-      return null;
+  async marksToPaths() {
+    await this._sanityCheckMarks();
+    // note: some of these may be detached
+    const marks_to_rows = await this._getMarksToRows();
+    const marks_to_paths = {};
+    for (const mark in marks_to_rows) {
+      const row = marks_to_rows[mark];
+      if (this.document.isAttached(row)) {
+        const path = this.session.document.canonicalPath(row);
+        errors.assert(path !== null);
+        marks_to_paths[mark] = path;
+      }
     }
-    const row = marks_to_rows[mark];
-    if (this.document.isAttached(row)) {
-      return row;
-    }
-    return null;
+    return marks_to_paths;
   }
 
   async listMarks() {
-    this._sanityCheckMarks();
-    const marks_to_rows = this._getMarksToRows();
+    await this._sanityCheckMarks();
+    const marks_to_rows = await this._getMarksToRows();
 
     const all_marks = {};
     for (const mark in marks_to_rows) {
@@ -430,8 +438,8 @@ class MarksPlugin {
   // Set the mark for row
   // Returns whether setting mark succeeded
   async updateMark(row, mark = '') {
-    const marks_to_rows = this._getMarksToRows();
-    const rows_to_marks = this._getRowsToMarks();
+    const marks_to_rows = await this._getMarksToRows();
+    const rows_to_marks = await this._getRowsToMarks();
     const oldmark = rows_to_marks[row];
 
     if (!(oldmark || mark)) {

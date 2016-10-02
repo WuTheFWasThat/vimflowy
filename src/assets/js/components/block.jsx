@@ -12,6 +12,7 @@ export class RowComponent extends React.Component {
       path: React.PropTypes.any.isRequired,
       line: React.PropTypes.any.isRequired,
       pluginData: React.PropTypes.any,
+      pluginGlobalContents: React.PropTypes.any.isRequired,
       onLineMouseOver: React.PropTypes.func,
       onCharClick: React.PropTypes.func,
       onClick: React.PropTypes.func,
@@ -56,11 +57,17 @@ export class RowComponent extends React.Component {
       cursorBetween: options.cursorBetween
     };
 
-    lineoptions.wordHook = session.applyHook.bind(session, 'renderLineWordHook');
-
     const hooksInfo = {
       path,
-      pluginData: this.props.pluginData
+      pluginData: this.props.pluginData,
+      pluginGlobalContents: this.props.pluginGlobalContents,
+    };
+
+    lineoptions.wordHook = (line, wordInfo) => {
+      return session.applyHook('renderLineWordHook', line, {
+        ...hooksInfo,
+        wordInfo,
+      });
     };
 
     lineoptions = session.applyHook('renderLineOptions', lineoptions, hooksInfo);
@@ -96,6 +103,7 @@ export default class BlockComponent extends React.Component {
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
       contents: React.PropTypes.any.isRequired,
+      pluginGlobalContents: React.PropTypes.any.isRequired,
       onLineMouseOver: React.PropTypes.func,
       onCharClick: React.PropTypes.func,
       onLineClick: React.PropTypes.func,
@@ -124,6 +132,7 @@ export default class BlockComponent extends React.Component {
           onCharClick={this.props.onCharClick}
           line={parentContents.line}
           pluginData={parentContents.plugins}
+          pluginGlobalContents={this.props.pluginGlobalContents}
           onClick={this.props.onLineClick}
         />
       );
@@ -170,8 +179,9 @@ export default class BlockComponent extends React.Component {
                   {cloneIcon}
                   {bullet}
                   <BlockComponent key='block'
-                   contents={contents}
                    topLevel={false}
+                   contents={contents}
+                   pluginGlobalContents={this.props.pluginGlobalContents}
                    onLineMouseOver={this.props.onLineMouseOver}
                    onCharClick={this.props.onCharClick}
                    onLineClick={this.props.onLineClick}

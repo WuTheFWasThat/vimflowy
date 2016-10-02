@@ -102,8 +102,8 @@ export default class Session extends EventEmitter {
     return this;
   }
 
-  public exit() {
-    this.emit('exit');
+  public async exit() {
+    await this.emitAsync('exit');
   }
 
   public async setMode(newmode: ModeId) {

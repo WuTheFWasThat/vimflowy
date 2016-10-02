@@ -145,10 +145,10 @@ For hooks:
 
 The data API is a simple key-value store:
 ```
-    api.getData(key: string, default_value: T = null) -> Promise<T>:
+    async api.getData(key: string, default_value: T = null) -> Promise<T>:
         Gets value for a key.
         Default value is returned if key doesn't exist
-    api.setData(key: string, value: T) -> Promise<void>
+    async api.setData(key: string, value: T) -> Promise<void>
         Sets value for a key.
 ```
 

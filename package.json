@@ -29,6 +29,7 @@
     "babel-core": "6.4.5",
     "babel-eslint": "^6.1.2",
     "babel-loader": "6.2.1",
+    "babel-plugin-transform-object-rest-spread": "^6.8.0",
     "babel-plugin-transform-promise-to-bluebird": "^1.1.0",
     "babel-plugin-transform-runtime": "^6.15.0",
     "babel-polyfill": "^6.13.0",
