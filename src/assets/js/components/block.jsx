@@ -12,7 +12,6 @@ export class RowComponent extends React.Component {
       path: React.PropTypes.any.isRequired,
       line: React.PropTypes.any.isRequired,
       pluginData: React.PropTypes.any,
-      pluginGlobalContents: React.PropTypes.any.isRequired,
       onLineMouseOver: React.PropTypes.func,
       onCharClick: React.PropTypes.func,
       onClick: React.PropTypes.func,
@@ -60,7 +59,6 @@ export class RowComponent extends React.Component {
     const hooksInfo = {
       path,
       pluginData: this.props.pluginData,
-      pluginGlobalContents: this.props.pluginGlobalContents,
     };
 
     lineoptions.wordHook = (line, wordInfo) => {
@@ -103,7 +101,6 @@ export default class BlockComponent extends React.Component {
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
       contents: React.PropTypes.any.isRequired,
-      pluginGlobalContents: React.PropTypes.any.isRequired,
       onLineMouseOver: React.PropTypes.func,
       onCharClick: React.PropTypes.func,
       onLineClick: React.PropTypes.func,
@@ -132,7 +129,6 @@ export default class BlockComponent extends React.Component {
           onCharClick={this.props.onCharClick}
           line={parentContents.line}
           pluginData={parentContents.plugins}
-          pluginGlobalContents={this.props.pluginGlobalContents}
           onClick={this.props.onLineClick}
         />
       );
@@ -181,7 +177,6 @@ export default class BlockComponent extends React.Component {
                   <BlockComponent key='block'
                    topLevel={false}
                    contents={contents}
-                   pluginGlobalContents={this.props.pluginGlobalContents}
                    onLineMouseOver={this.props.onLineMouseOver}
                    onCharClick={this.props.onCharClick}
                    onLineClick={this.props.onLineClick}

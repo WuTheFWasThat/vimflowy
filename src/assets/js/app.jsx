@@ -360,6 +360,7 @@ $(document).ready(function() {
     throw error;
   });
 
+  let shown_error_time = 0;
   window.onerror = function(msg, url, line, col, err) {
     logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
     if (err) {
@@ -369,6 +370,13 @@ $(document).ready(function() {
     if (err instanceof errors.DataPoisoned) {
       // no need to alert, already alerted
       return;
+    }
+
+    const t = Date.now();
+    if (t - shown_error_time < 60000) {
+      return;
+    } else {
+      shown_error_time = t;
     }
 
     return alert(`

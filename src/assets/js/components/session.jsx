@@ -53,14 +53,11 @@ export default class SessionComponent extends React.Component {
         crumbContents[path.row] = await session.document.getText(path.row);
       }
 
-      const pluginGlobalContents = await session.applyHookAsync('pluginGlobalContents', {});
-
       this.setState({
         handleCharClicks: false,
         highlight_blocks,
         viewContents,
         crumbContents,
-        pluginGlobalContents,
         mode: session.mode,
         viewRoot: session.viewRoot,
       });
@@ -158,7 +155,6 @@ export default class SessionComponent extends React.Component {
           session={session} path={viewRoot} options={options}
           topLevel={true}
           contents={viewContents}
-          pluginGlobalContents={this.state.pluginGlobalContents}
           onCharClick={onCharClick}
           onLineClick={onLineClick}
           onLineMouseOver={onLineMouseOver}

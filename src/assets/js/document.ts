@@ -524,22 +524,36 @@ export default class Document extends EventEmitter {
 
   public async getViewContents(path = this.root, isFirst = false) {
 
-    const struct: any = {
-      path: path,
-      line: await this.getLine(path.row),
-      collapsed: await this.collapsed(path.row),
-      isClone: await this.isClone(path.row),
-      hasChildren: await this.hasChildren(path.row),
-    };
-    struct.plugins = await this.applyHookAsync('pluginPathContents', {}, { path });
-    if (isFirst || (!struct.collapsed)) {
-      struct.children = await Promise.all(
-        (await this._getChildren(path.row)).map(
+    const [ collapsed, children ] = await Promise.all([
+      this.collapsed(path.row),
+      this._getChildren(path.row),
+    ]);
+
+    let childProm = Promise.resolve(null);
+    if (isFirst || !collapsed) {
+      childProm = Promise.all(
+        children.map(
           async (child) => await this.getViewContents(path.child(child))
         )
       );
     }
-    return struct;
+
+    const [ pluginContents, childrenContents, line, isClone ] = await Promise.all([
+      this.applyHookAsync('pluginPathContents', {}, { path }),
+      childProm,
+      this.getLine(path.row),
+      this.isClone(path.row),
+    ]);
+
+    return {
+      path: path,
+      line: line,
+      collapsed: collapsed,
+      isClone: isClone,
+      plugins: pluginContents,
+      hasChildren: children.length > 0,
+      children: childrenContents,
+    };
   }
 
   public async serialize(

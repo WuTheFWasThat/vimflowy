@@ -286,11 +286,6 @@ class MarksPlugin {
       return obj;
     });
 
-    this.api.registerHook('session', 'pluginGlobalContents', async (obj) => {
-      obj.marksToPaths = await this.marksToPaths();
-      return obj;
-    });
-
     this.api.registerHook('session', 'renderLineOptions', (options, info) => {
       if (info.pluginData.marking) { options.cursors = {}; }
       return options;
@@ -325,12 +320,12 @@ class MarksPlugin {
     });
 
     this.api.registerHook('session', 'renderLineWordHook', (line, info) => {
-      const { pluginGlobalContents, wordInfo } = info;
-      const { marksToPaths } = pluginGlobalContents;
+      const { wordInfo } = info;
+
       if (this.session.mode === MODES.NORMAL) {
         if (wordInfo.word[0] === '@') {
           const mark = wordInfo.word.slice(1);
-          const path = marksToPaths[mark];
+          const path = this.marks_to_paths[mark];
           if (path) {
             for (let i = wordInfo.start; i <= wordInfo.end; i++) {
               line[i].renderOptions.type = 'a';
@@ -344,6 +339,12 @@ class MarksPlugin {
       }
       return line;
     });
+
+    this.api.registerListener('document', 'afterDetach', async () => {
+      await this.computeMarksToPaths();
+    });
+    await this.computeMarksToPaths();
+
   }
 
   // maintain global marks data structures
@@ -390,6 +391,7 @@ class MarksPlugin {
     await this._setMarksToRows(marks_to_rows);
     await this._setRowsToMarks(rows_to_marks);
     await this._sanityCheckMarks();
+    await this.computeMarksToPaths();
   }
 
   async _unsetMark(row, mark) {
@@ -403,22 +405,26 @@ class MarksPlugin {
     await this._setMarksToRows(marks_to_rows);
     await this._setRowsToMarks(rows_to_marks);
     await this._sanityCheckMarks();
+    await this.computeMarksToPaths();
   }
 
-  async marksToPaths() {
+  // compute set of paths, used for rendering
+  async computeMarksToPaths() {
     await this._sanityCheckMarks();
     // note: some of these may be detached
     const marks_to_rows = await this._getMarksToRows();
     const marks_to_paths = {};
     for (const mark in marks_to_rows) {
       const row = marks_to_rows[mark];
-      if (await this.document.isAttached(row)) {
-        const path = await this.session.document.canonicalPath(row);
-        errors.assert(path !== null);
-        marks_to_paths[mark] = path;
+      // if (await this.document.isAttached(row)) {
+      const path = await this.session.document.canonicalPath(row);
+      if (path == null) {
+        continue;
       }
+      // errors.assert(path !== null);
+      marks_to_paths[mark] = path;
     }
-    return marks_to_paths;
+    this.marks_to_paths = marks_to_paths;
   }
 
   async listMarks() {
