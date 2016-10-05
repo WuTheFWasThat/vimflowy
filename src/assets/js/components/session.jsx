@@ -25,13 +25,7 @@ export default class SessionComponent extends React.Component {
       handleCharClicks: false,
       viewContents: null,
     };
-  }
 
-  update() {
-    this.updateFn && this.updateFn();
-  }
-
-  componentDidMount() {
     const session = this.props.session;
     this.updateFn = async () => {
       const viewContents = await session.document.getViewContents(session.viewRoot, true);
@@ -62,8 +56,19 @@ export default class SessionComponent extends React.Component {
         viewRoot: session.viewRoot,
       });
     };
+  }
+
+  update() {
+    this.updateFn && this.updateFn();
+  }
+
+  componentWillReceiveProps() {
+    this.update();
+  }
+
+  componentDidMount() {
     this.props.session.on('handledKey', this.updateFn);
-    this.updateFn();
+    this.update();
   }
 
   componentWillUnmount() {
