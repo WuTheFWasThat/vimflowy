@@ -26,6 +26,7 @@ export default class SettingsComponent extends React.Component {
       pluginManager: React.PropTypes.any.isRequired,
 
       initialTheme: React.PropTypes.string.isRequired,
+      initialDataSource: React.PropTypes.string.isRequired,
       onThemeChange: React.PropTypes.func.isRequired,
       onExport: React.PropTypes.func.isRequired,
     };
@@ -34,7 +35,8 @@ export default class SettingsComponent extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      currentTab: TABS.MAIN
+      currentTab: TABS.MAIN,
+      dataSource: props.initialDataSource,
     };
   }
 
@@ -66,6 +68,20 @@ export default class SettingsComponent extends React.Component {
         heading: 'Settings',
         div: (
           <div>
+            {/*
+            <div className="settings-header theme-bg-secondary theme-trim">
+              Data storage
+            </div>
+            <div className="settings-content">
+              <input type="radio" name="dataSource" value="local" checked={}/>
+              {" "} <b> Local: </b>
+              {" "} Stores data in localStorage. Can only be accessed from this browser. Not backed up.
+              <br/>
+              <input type="radio" name="dataSource" value="firebase"/>
+              {" "} <b> Firebase: </b>
+              <br/>
+            </div>
+              */ }
             <div className="settings-header theme-bg-secondary theme-trim">
               Visual Theme
             </div>

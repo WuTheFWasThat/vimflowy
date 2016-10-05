@@ -223,11 +223,15 @@ export class InMemory extends DataStore {
 export class LocalStorageLazy extends DataStore {
   private cache: {[key: string]: any};
   private lastSave: number;
+  private trackSaves: boolean;
 
-  constructor(prefix = '') {
+  constructor(prefix = '', trackSaves = false) {
     super(prefix);
     this.cache = {};
-    this.lastSave = Date.now();
+    this.trackSaves = trackSaves;
+    if (this.trackSaves) {
+      this.lastSave = Date.now();
+    }
   }
 
   private _IDKey_() {
@@ -250,15 +254,17 @@ export class LocalStorageLazy extends DataStore {
     key: string, value: any,
     options: {doesNotAffectLastSave?: boolean} = {}
   ): void {
-    if (this.getLastSave() > this.lastSave) {
-      alert('This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
-      );
-      throw new errors.DataPoisoned('Last save disagrees with cache');
-    }
+    if (this.trackSaves) {
+      if (this.getLastSave() > this.lastSave) {
+        alert('This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
+        );
+        throw new errors.DataPoisoned('Last save disagrees with cache');
+      }
 
-    if (!options.doesNotAffectLastSave) {
-      this.lastSave = Date.now();
-      localStorage.setItem(this._lastSaveKey_(), this.lastSave + '');
+      if (!options.doesNotAffectLastSave) {
+        this.lastSave = Date.now();
+        localStorage.setItem(this._lastSaveKey_(), this.lastSave + '');
+      }
     }
 
     logger.debug('setting local storage', key, value);

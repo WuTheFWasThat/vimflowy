@@ -15,6 +15,7 @@ export default class AppComponent extends React.Component {
       showingKeyBindings: React.PropTypes.bool.isRequired,
       keyBindings: React.PropTypes.any.isRequired,
       initialTheme: React.PropTypes.string.isRequired,
+      initialDataSource: React.PropTypes.string.isRequired,
       onThemeChange: React.PropTypes.func.isRequired,
       onRender: React.PropTypes.func.isRequired,
       onExport: React.PropTypes.func.isRequired,
@@ -91,6 +92,7 @@ export default class AppComponent extends React.Component {
               keyBindings={keyBindings}
               pluginManager={pluginManager}
               initialTheme={this.props.initialTheme}
+              initialDataSource={this.props.initialDataSource}
               onThemeChange={(theme) => {
                 this.props.onThemeChange(theme);
               }}

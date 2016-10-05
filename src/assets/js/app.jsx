@@ -78,7 +78,7 @@ function downloadFile(filename, mimetype, content) {
 }
 
 
-$(document).ready(function() {
+$(document).ready(async () => {
 
   const getMessageDiv = () => $('#message');
   const getMainDiv = () => $('#view');
@@ -86,10 +86,32 @@ $(document).ready(function() {
   const docname = window.location.pathname.split('/')[1];
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
 
+  const noLocalStorage = (typeof localStorage === 'undefined' || localStorage === null);
+  let settings;
+  let dataSource;
+  let datastore;
+  let doc;
+
+  if (noLocalStorage) {
+    alert('You need local storage support for data to be persisted!');
+    settings = new Settings(new DataStore.InMemory());
+    dataSource = 'inmemory';
+  } else {
+    settings = new Settings(new DataStore.LocalStorageLazy());
+    dataSource = await settings.getSetting('dataSource', 'local');
+  }
+
+  if (dataSource === 'firebase') {
+    const firebaseUrl = await settings.getSetting('firebaseUrl');
+    const firebaseApiKey = await settings.getSetting('firebaseApiKey');
+    datastore = new DataStore.FirebaseStore(docname, firebaseUrl, firebaseApiKey);
+  } else if (dataSource === 'inmemory') {
+    datastore = new DataStore.InMemory();
+  } else {
+    datastore = new DataStore.LocalStorageLazy(docname, true);
+  }
+
   async function create_session(doc, to_load) {
-
-    const settings = new Settings(doc.store);
-
     const changeStyle = (theme) => {
       // $('body').removeClass().addClass(theme);
       $('body').attr('id', theme);
@@ -223,6 +245,7 @@ $(document).ready(function() {
             pluginManager={pluginManager}
             showingKeyBindings={showingKeyBindings}
             keyBindings={keyBindings}
+            initialDataSource={dataSource}
             initialTheme={initialTheme}
             onRender={(options) => {
               const $onto = $('#view');
@@ -339,28 +362,14 @@ $(document).ready(function() {
     });
   }
 
-  let datastore;
-  let doc;
+  doc = new Document(datastore, docname);
 
-  if (typeof localStorage !== 'undefined' && localStorage !== null) {
-    datastore = new DataStore.LocalStorageLazy(docname);
-    // const firebaseUrl = 'blinding-torch-1915.firebaseio.com';
-    // const firebaseApiKey = '';
-    // datastore = new DataStore.FirebaseStore(docname, firebaseUrl, firebaseApiKey);
-    doc = new Document(datastore, docname);
-
-    let to_load = null;
-    if (datastore.getLastSave() === 0) {
-      to_load = constants.default_data;
-    }
-
-    create_session(doc, to_load);
-  } else {
-    alert('You need local storage support for data to be persisted!');
-    datastore = new DataStore.InMemory;
-    doc = new Document(datastore, docname);
-    create_session(doc, constants.default_data);
+  let to_load = null;
+  if (datastore.getLastSave() === 0) {
+    to_load = constants.default_data;
   }
+
+  create_session(doc, to_load);
 
   Promise.onPossiblyUnhandledRejection(function(error) {
     throw error;
