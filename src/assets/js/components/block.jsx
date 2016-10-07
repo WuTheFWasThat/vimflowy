@@ -3,6 +3,7 @@ import React from 'react';
 import logger from '../logger';
 
 import LineComponent from './line';
+import Spinner from './spinner.jsx';
 
 export class RowComponent extends React.Component {
   static get propTypes() {
@@ -100,12 +101,12 @@ export default class BlockComponent extends React.Component {
       session: React.PropTypes.any.isRequired,
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
-      contents: React.PropTypes.any.isRequired,
       onLineMouseOver: React.PropTypes.func,
       onCharClick: React.PropTypes.func,
       onLineClick: React.PropTypes.func,
       onBulletClick: React.PropTypes.func,
       topLevel: React.PropTypes.bool,
+      fetchData: React.PropTypes.func,
     };
   }
 
@@ -113,11 +114,16 @@ export default class BlockComponent extends React.Component {
     const session = this.props.session;
     const parent = this.props.path;
     const options = this.props.options;
-    const parentContents = this.props.contents;
 
     const pathElements = [];
 
     if (!parent.isRoot()) {
+      const line = session.document.store.getLineSync(parent.row);
+      if (line === null) {
+        this.props.fetchData();
+        return <Spinner/>;
+      }
+
       const elLine = (
         <RowComponent key='row'
           style={{
@@ -127,23 +133,35 @@ export default class BlockComponent extends React.Component {
           session={session} path={parent} options={options}
           onLineMouseOver={this.props.onLineMouseOver}
           onCharClick={this.props.onCharClick}
-          line={parentContents.line}
-          pluginData={parentContents.plugins}
+          line={line}
+          pluginData={{} /* TODO parentContents.plugins */}
           onClick={this.props.onLineClick}
         />
       );
       pathElements.push(elLine);
     }
 
-    if (parentContents.children) {
+    const children = session.document.store.getChildrenSync(parent.row);
+    if (children === null) {
+      this.props.fetchData();
+      return <Spinner/>;
+    }
+
+    const collapsed = session.document.store.getCollapsedSync(parent.row);
+    if (collapsed === null) {
+      this.props.fetchData();
+      return <Spinner/>;
+    }
+
+    if (children.length && ((!collapsed) || this.props.topLevel)) {
       pathElements.push(
         <div key='children' className='block'>
           {
-            parentContents.children.map((contents) => {
-              const path = contents.path;
+            children.map((row) => {
+              const path = parent.child(row);
 
               let cloneIcon = null;
-              if (contents.isClone) {
+              if (false /* TODO contents.isClone */) {
                 cloneIcon = (
                   <i key='clone' className='fa fa-clone bullet clone-icon' title='Cloned'/>
                 );
@@ -153,8 +171,21 @@ export default class BlockComponent extends React.Component {
               const style = {};
 
               let icon = 'fa-circle';
-              if (contents.hasChildren) {
-                icon = contents.collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
+
+              const children = session.document.store.getChildrenSync(path.row);
+              if (children === null) {
+                this.props.fetchData();
+                return <Spinner/>;
+              }
+
+              const collapsed = session.document.store.getCollapsedSync(path.row);
+              if (collapsed === null) {
+                this.props.fetchData();
+                return <Spinner/>;
+              }
+
+              if (children.length) {
+                icon = collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
                 if (this.props.onBulletClick) {
                   style.cursor = 'pointer';
                   onBulletClick = this.props.onBulletClick.bind(this, path);
@@ -176,12 +207,13 @@ export default class BlockComponent extends React.Component {
                   {bullet}
                   <BlockComponent key='block'
                    topLevel={false}
-                   contents={contents}
                    onLineMouseOver={this.props.onLineMouseOver}
                    onCharClick={this.props.onCharClick}
                    onLineClick={this.props.onLineClick}
                    onBulletClick={this.props.onBulletClick}
-                   session={session} path={path} options={options}/>
+                   session={session} path={path} options={options}
+                   fetchData={this.props.fetchData}
+                 />
                 </div>
               );
             })

@@ -4,7 +4,7 @@ import * as Modes from '../modes';
 
 import BreadcrumbsComponent from './breadcrumbs';
 import BlockComponent from './block';
-import SpinnerComponent from './spinner';
+import Spinner from './spinner.jsx';
 
 const MODES = Modes.modes;
 
@@ -23,7 +23,8 @@ export default class SessionComponent extends React.Component {
     super(props);
     this.state = {
       handleCharClicks: false,
-      viewContents: null,
+      loaded: false,
+      t: Date.now(),
     };
 
     const session = this.props.session;
@@ -53,7 +54,6 @@ export default class SessionComponent extends React.Component {
 
     this.updateFn = promiseDebounce(async () => {
       const t = Date.now();
-      const viewContents = await session.document.getViewContents(session.viewRoot, true);
 
       const highlight_blocks = {};
       if (session.lineSelect) {
@@ -75,13 +75,23 @@ export default class SessionComponent extends React.Component {
       this.setState({
         handleCharClicks: false,
         highlight_blocks,
-        viewContents,
         crumbContents,
         mode: session.mode,
         viewRoot: session.viewRoot,
+        t: Date.now(), // to force rerendering
+        loaded: true,
       });
       console.log('Took time', Date.now() - t); // eslint-disable-line no-console
     });
+  }
+
+  async fetchAndRerender() {
+    const session = this.props.session;
+    // await (new Promise((resolve) => {
+    //   setTimeout(resolve, 5000);
+    // }));
+    await session.document.getViewContents(session.viewRoot, true);
+    this.update();
   }
 
   update() {
@@ -103,15 +113,10 @@ export default class SessionComponent extends React.Component {
 
   render() {
     const session = this.props.session;
+    if (!this.state.loaded) { return <Spinner/>; }
     const mode = this.state.mode;
 
     const viewRoot = this.state.viewRoot;
-    const viewContents = this.state.viewContents;
-    if (viewContents === null) {
-      return <div className='center'>
-        <SpinnerComponent/>
-      </div>;
-    }
 
     const options = {
       cursorBetween: Modes.getMode(mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE,
@@ -165,6 +170,12 @@ export default class SessionComponent extends React.Component {
       };
     }
 
+    const children = session.document.store.getChildrenSync(viewRoot.row);
+    if (children === null) {
+      this.fetchAndRerender();
+      return <Spinner/>;
+    }
+
     // TODO: have an extra breadcrumb indicator when not at viewRoot?
     return (
       <div>
@@ -185,15 +196,15 @@ export default class SessionComponent extends React.Component {
         <BlockComponent
           session={session} path={viewRoot} options={options}
           topLevel={true}
-          contents={viewContents}
           onCharClick={onCharClick}
           onLineClick={onLineClick}
           onLineMouseOver={onLineMouseOver}
           onBulletClick={onBulletClick}
+          fetchData={() => this.fetchAndRerender()}
         />
         {
           (() => {
-            if (!viewContents.children.length) {
+            if (children.length) {
               let message = 'Nothing here yet.';
               if (mode === MODES.NORMAL) {
                 message += ' Press o to start adding content!';

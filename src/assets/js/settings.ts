@@ -10,6 +10,7 @@ const default_settings = {
   theme: 'default-theme',
   showKeyBindings: true,
   hotkeys: {},
+  dataSource: 'local',
 };
 
 export default class Settings {
@@ -17,8 +18,6 @@ export default class Settings {
 
   constructor(datastore) {
     this.datastore = datastore;
-
-    return null;
   }
 
   public async getSetting(setting) {

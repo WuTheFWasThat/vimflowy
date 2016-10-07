@@ -98,7 +98,7 @@ $(document).ready(async () => {
     dataSource = 'inmemory';
   } else {
     settings = new Settings(new DataStore.LocalStorageLazy());
-    dataSource = await settings.getSetting('dataSource', 'local');
+    dataSource = await settings.getSetting('dataSource');
   }
 
   if (dataSource === 'firebase') {

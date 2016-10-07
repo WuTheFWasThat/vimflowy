@@ -233,6 +233,36 @@ export class CachingDataStore extends DataStore {
     throw new errors.NotImplemented();
   }
 
+  public getLineSync(row: Row): Line {
+    if (!this.cache.has(this._lineKey_(row))) {
+      return null;
+    }
+
+    return this.cache.get(this._lineKey_(row)).map(function(obj) {
+      if (typeof obj === 'string') {
+        obj = {
+          char: obj,
+        };
+      }
+      return obj;
+    });
+  }
+
+  public getChildrenSync(row: Row): Array<Row> {
+    if (!this.cache.has(this._childrenKey_(row))) {
+      return null;
+    }
+
+    return this.cache.get(this._childrenKey_(row));
+  }
+
+  public getCollapsedSync(row: Row): Boolean {
+    if (!this.cache.has(this._collapsedKey_(row))) {
+      return null;
+    }
+
+    return this.cache.get(this._collapsedKey_(row));
+  }
 }
 
 export class InMemory extends CachingDataStore {
@@ -248,6 +278,7 @@ export class InMemory extends CachingDataStore {
   protected async _setUncached(key: string, value: any): Promise<void> {
     // do nothing
   }
+
 }
 
 export class LocalStorageLazy extends CachingDataStore {
