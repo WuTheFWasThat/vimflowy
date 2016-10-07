@@ -1,6 +1,7 @@
 /* globals alert, localStorage, firebase */
 
 import * as _ from 'lodash';
+import * as Immutable from 'immutable';
 
 import * as constants from './constants';
 import * as errors from './errors';
@@ -197,37 +198,64 @@ export default class DataStore {
   }
 }
 
-export class InMemory extends DataStore {
-  private cache: {[key: string]: string};
+export class CachingDataStore extends DataStore {
+  private cache: Immutable.Map<string, any>;
 
-  constructor() {
-    super('');
-    this.cache = {};
+  constructor(prefix = '') {
+    super(prefix);
+    this.cache = Immutable.Map({});
   }
 
   protected async _get(key: string, default_value: any = undefined): Promise<any> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    if (key in this.cache) {
-      return _.cloneDeep(this.cache[key]);
+    if (this.cache.has(key)) {
+      return _.cloneDeep(this.cache.get(key));
     } else {
-      return default_value;
+      const value = await this._getUncached(key, default_value);
+      this.cache = this.cache.set(key, value);
+      return value;
     }
   }
 
   protected async _set(key: string, value: any): Promise<void> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    this.cache[key] = value;
+    await this._setUncached(key, value);
+    this.cache = this.cache.set(key, value);
+  }
+
+  protected async _getUncached(key: string, default_value: any = undefined): Promise<any> {
+    console.log('GET key', key, 'default value', default_value);
+    throw new errors.NotImplemented();
+  }
+
+  protected async _setUncached(key: string, value: any): Promise<void> {
+    console.log('SET key', key, 'value', value);
+    throw new errors.NotImplemented();
+  }
+
+}
+
+export class InMemory extends CachingDataStore {
+  constructor() {
+    super('');
+  }
+
+  protected async _getUncached(key: string, default_value: any = undefined): Promise<any> {
+    // no backing store
+    return default_value;
+  }
+
+  protected async _setUncached(key: string, value: any): Promise<void> {
+    // do nothing
   }
 }
 
-export class LocalStorageLazy extends DataStore {
-  private cache: {[key: string]: any};
+export class LocalStorageLazy extends CachingDataStore {
   private lastSave: number;
   private trackSaves: boolean;
 
   constructor(prefix = '', trackSaves = false) {
     super(prefix);
-    this.cache = {};
     this.trackSaves = trackSaves;
     if (this.trackSaves) {
       this.lastSave = Date.now();
@@ -238,15 +266,11 @@ export class LocalStorageLazy extends DataStore {
     return `${this.prefix}:lastID`;
   }
 
-  protected async _get(key: string, default_value: any = undefined): Promise<any> {
-    if (!(key in this.cache)) {
-      this.cache[key] = this._getLocalStorage_(key, default_value);
-    }
-    return this.cache[key];
+  protected async _getUncached(key: string, default_value: any = undefined): Promise<any> {
+    return this._getLocalStorage_(key, default_value);
   }
 
-  protected async _set(key: string, value: any): Promise<void> {
-    this.cache[key] = value;
+  protected async _setUncached(key: string, value: any): Promise<void> {
     return this._setLocalStorage_(key, value);
   }
 
@@ -289,7 +313,7 @@ export class LocalStorageLazy extends DataStore {
   }
 
   // determine last time saved (for multiple tab detection)
-  // doesn't cache!
+  // note that this doesn't cache!
   public getLastSave(): number {
     return this._getLocalStorage_(this._lastSaveKey_(), 0);
   }
@@ -305,14 +329,12 @@ export class LocalStorageLazy extends DataStore {
 }
 
 export class FirebaseStore extends DataStore {
-  private cache: {[key: string]: any};
   private lastSave: number;
   private fbase: any;
   // private fbase: Firebase;
 
   constructor(prefix = '', url, apiKey) {
     super(prefix);
-    this.cache = {};
     this.fbase = firebase.initializeApp({
       apiKey: apiKey,
       databaseURL: `https://${url}`,
@@ -325,10 +347,7 @@ export class FirebaseStore extends DataStore {
     return `${this.prefix}:lastID`;
   }
 
-  protected _get(key: string, default_value: any = undefined): Promise<any> {
-    if (key in this.cache) {
-      return Promise.resolve(this.cache[key]);
-    }
+  protected _getUncached(key: string, default_value: any = undefined): Promise<any> {
     return new Promise((resolve, reject) => {
       this.fbase.ref(key).once(
         'value',
@@ -339,7 +358,6 @@ export class FirebaseStore extends DataStore {
             value = default_value;
           }
           // default_value
-          this.cache[key] = value;
           return resolve(value);
         },
         (err) => {
@@ -349,8 +367,7 @@ export class FirebaseStore extends DataStore {
     });
   }
 
-  protected _set(key: string, value: any): Promise<void> {
-    this.cache[key] = value;
+  protected _setUncached(key: string, value: any): Promise<void> {
     this.fbase.ref(key).set(
       value,
       (err) => {
@@ -371,7 +388,6 @@ export class FirebaseStore extends DataStore {
   //         if (err) {
   //           return reject(err);
   //         }
-  //         this.cache[key] = value;
   //         return resolve();
   //       }
   //     );

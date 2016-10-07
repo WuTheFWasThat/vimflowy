@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "font-awesome": "^4.6.3",
+    "immutable": "^3.8.1",
     "jquery": "^3.1.0",
     "lodash": "^4.15.0",
     "react": "^15.3.1",
