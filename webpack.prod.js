@@ -22,7 +22,7 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loaders: [
-          'babel', 'ts'
+          'babel', 'awesome-typescript-loader',
         ],
         include: SRC_DIR
       },

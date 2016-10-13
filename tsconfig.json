@@ -5,5 +5,5 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true
   },
-  "exclude": ["node_modules", "config", "dev_server.js"]
+  "exclude": ["node_modules"]
 }

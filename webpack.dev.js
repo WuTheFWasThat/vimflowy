@@ -27,7 +27,7 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loaders: [
-          'babel', 'ts'
+          'react-hot', 'babel', 'awesome-typescript-loader',
         ],
         include: SRC_DIR
       },
@@ -53,5 +53,9 @@ module.exports = {
   ],
   resolve: {
     extensions: ['', '.jsx', '.js', '.tsx', '.ts']
+  },
+  tslint: {
+    emitErrors: true,
+    failOnHint: true
   }
 };
