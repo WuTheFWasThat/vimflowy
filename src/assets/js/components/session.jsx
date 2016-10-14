@@ -88,7 +88,7 @@ export default class SessionComponent extends React.Component {
   async fetchAndRerender() {
     const session = this.props.session;
     // await (new Promise((resolve) => {
-    //   setTimeout(resolve, 5000);
+    //   setTimeout(resolve, 2000);
     // }));
     await session.document.getViewContents(session.viewRoot, true);
     this.update();
@@ -202,22 +202,6 @@ export default class SessionComponent extends React.Component {
           onBulletClick={onBulletClick}
           fetchData={() => this.fetchAndRerender()}
         />
-        {
-          (() => {
-            if (children.length) {
-              let message = 'Nothing here yet.';
-              if (mode === MODES.NORMAL) {
-                message += ' Press o to start adding content!';
-              }
-              return (
-                <div className='center'
-                     style={{padding: 20, fontSize: 20, opacity: 0.5}}>
-                  { message }
-                </div>
-              );
-            }
-          })()
-        }
       </div>
     );
   }

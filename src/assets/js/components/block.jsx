@@ -5,6 +5,9 @@ import logger from '../logger';
 import LineComponent from './line';
 import Spinner from './spinner.jsx';
 
+import * as Modes from '../modes';
+const MODES = Modes.modes;
+
 export class RowComponent extends React.Component {
   static get propTypes() {
     return {
@@ -153,71 +156,91 @@ export default class BlockComponent extends React.Component {
       return <Spinner/>;
     }
 
-    if (children.length && ((!collapsed) || this.props.topLevel)) {
+    if (this.props.topLevel && !children.length) {
+      let message = 'Nothing here yet.';
+      if (session.mode === MODES.NORMAL) {
+        // TODO move this
+        message += ' Press `o` to start adding content!';
+      }
+      pathElements.push(
+        <div className='center'
+             style={{padding: 20, fontSize: 20, opacity: 0.5}}>
+          { message }
+        </div>
+      );
+    } else if (children.length && ((!collapsed) || this.props.topLevel)) {
+      let childrenLoaded = true;
+      let childrenDivs = children.map((row) => {
+        const path = parent.child(row);
+
+        let cloneIcon = null;
+        // NOTE: this is not actually correct!
+        // should use isClone, which is different since a parent may be detached
+        if (false) {
+          cloneIcon = (
+            <i key='clone' className='fa fa-clone bullet clone-icon' title='Cloned'/>
+          );
+        }
+
+        let onBulletClick = null;
+        const style = {};
+
+        let icon = 'fa-circle';
+
+        const children = session.document.store.getChildrenSync(path.row);
+        if (children === null) {
+          childrenLoaded = false;
+          return null;
+        }
+
+        const collapsed = session.document.store.getCollapsedSync(path.row);
+        if (collapsed === null) {
+          childrenLoaded = false;
+          return null;
+        }
+
+        if (children.length) {
+          icon = collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
+          if (this.props.onBulletClick) {
+            style.cursor = 'pointer';
+            onBulletClick = this.props.onBulletClick.bind(this, path);
+          }
+        }
+
+        let bullet = (
+          <i className={`fa ${icon} bullet`} key='bullet'
+            style={style} onClick={onBulletClick}
+            data-ancestry={JSON.stringify(path.getAncestry())}
+          >
+          </i>
+        );
+        bullet = session.applyHook('renderBullet', bullet, { path });
+
+        return (
+          <div key={path.row}>
+            {cloneIcon}
+            {bullet}
+            <BlockComponent key='block'
+             topLevel={false}
+             onLineMouseOver={this.props.onLineMouseOver}
+             onCharClick={this.props.onCharClick}
+             onLineClick={this.props.onLineClick}
+             onBulletClick={this.props.onBulletClick}
+             session={session} path={path} options={options}
+             fetchData={this.props.fetchData}
+           />
+          </div>
+        );
+      });
+
+      if (!childrenLoaded) {
+        this.props.fetchData();
+        childrenDivs = <Spinner/>;
+      }
+
       pathElements.push(
         <div key='children' className='block'>
-          {
-            children.map((row) => {
-              const path = parent.child(row);
-
-              let cloneIcon = null;
-              if (false /* TODO contents.isClone */) {
-                cloneIcon = (
-                  <i key='clone' className='fa fa-clone bullet clone-icon' title='Cloned'/>
-                );
-              }
-
-              let onBulletClick = null;
-              const style = {};
-
-              let icon = 'fa-circle';
-
-              const children = session.document.store.getChildrenSync(path.row);
-              if (children === null) {
-                this.props.fetchData();
-                return <Spinner/>;
-              }
-
-              const collapsed = session.document.store.getCollapsedSync(path.row);
-              if (collapsed === null) {
-                this.props.fetchData();
-                return <Spinner/>;
-              }
-
-              if (children.length) {
-                icon = collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
-                if (this.props.onBulletClick) {
-                  style.cursor = 'pointer';
-                  onBulletClick = this.props.onBulletClick.bind(this, path);
-                }
-              }
-
-              let bullet = (
-                <i className={`fa ${icon} bullet`} key='bullet'
-                  style={style} onClick={onBulletClick}
-                  data-ancestry={JSON.stringify(path.getAncestry())}
-                >
-                </i>
-              );
-              bullet = session.applyHook('renderBullet', bullet, { path });
-
-              return (
-                <div key={path.row}>
-                  {cloneIcon}
-                  {bullet}
-                  <BlockComponent key='block'
-                   topLevel={false}
-                   onLineMouseOver={this.props.onLineMouseOver}
-                   onCharClick={this.props.onCharClick}
-                   onLineClick={this.props.onLineClick}
-                   onBulletClick={this.props.onBulletClick}
-                   session={session} path={path} options={options}
-                   fetchData={this.props.fetchData}
-                 />
-                </div>
-              );
-            })
-          }
+          {childrenDivs}
         </div>
       );
     }
