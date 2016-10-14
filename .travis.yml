@@ -3,4 +3,9 @@ node_js:
   - "6"
   - "6.1"
   - "5.11"
-install: npm install
+install:
+- npm install
+script:
+- npm run typecheck
+- npm test
+- npm run build
