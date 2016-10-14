@@ -70,6 +70,10 @@ export class PluginApi {
     return await this.document.store.getPluginData(this.name, key, default_value);
   }
 
+  public getDataSync(key) {
+    return this.document.store.getPluginDataSync(this.name, key);
+  }
+
   // TODO: have definitions be event emitter? have this be automatic somehow
   //       (first try combining bindings into definitions)
   //       should also re-render mode table

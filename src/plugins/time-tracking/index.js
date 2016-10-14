@@ -35,28 +35,39 @@ class TimeTrackingPlugin {
       return obj;
     });
 
+    this.api.registerHook('document', 'pluginPathContentsSync', (obj, { path }) => {
+      obj.timeTracked = this.rowTimeSync(path);
+      return obj;
+    });
+
     this.api.registerHook('session', 'renderAfterLine', (elements, renderData) => {
       const { path, pluginData } = renderData;
       const time = pluginData.timeTracked;
-      let isCurRow = path.row === (this.currentRow && this.currentRow.row);
-
-      if (isCurRow || time > 1000) {
-        let timeStr = ' ';
-        timeStr += (this.printTime(time));
-        if (isCurRow) {
-          timeStr += ' + ';
-        }
+      if (time === null) {
         elements.push(
-          <span key='time' style={{color: 'lightgray'}}>{timeStr}</span>
+          <span key='time' style={{color: 'lightgray'}}>Loading...</span>
         );
+      } else {
+        let isCurRow = path.row === (this.currentRow && this.currentRow.row);
 
-        if (isCurRow) {
-          let curTime = new Date() - this.currentRow.time;
+        if (isCurRow || time > 1000) {
+          let timeStr = ' ';
+          timeStr += (this.printTime(time));
+          if (isCurRow) {
+            timeStr += ' + ';
+          }
           elements.push(
-            <span key='curtime' style={{color: 'lightgray'}} className='curtime'>
-              {this.printTime(curTime)}
-            </span>
+            <span key='time' style={{color: 'lightgray'}}>{timeStr}</span>
           );
+
+          if (isCurRow) {
+            let curTime = new Date() - this.currentRow.time;
+            elements.push(
+              <span key='curtime' style={{color: 'lightgray'}} className='curtime'>
+                {this.printTime(curTime)}
+              </span>
+            );
+          }
         }
       }
       return elements;
@@ -162,6 +173,11 @@ class TimeTrackingPlugin {
     return await this.api.getData(key, default_value);
   }
 
+  getRowDataSync(id, keytype) {
+    let key = `${id}:${keytype}`;
+    return this.api.getDataSync(key);
+  }
+
   async setRowData(id, keytype, value) {
     let key = `${id}:${keytype}`;
     await this.api.setData(key, value);
@@ -240,6 +256,10 @@ class TimeTrackingPlugin {
 
   async rowTime(row) {
     return await this.getRowData(row.row, 'treeTotalTime', 0);
+  }
+
+  rowTimeSync(row) {
+    return this.getRowDataSync(row.row, 'treeTotalTime');
   }
 
   printTime(ms) {

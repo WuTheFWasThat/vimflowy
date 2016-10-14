@@ -15,7 +15,6 @@ export class RowComponent extends React.Component {
       options: React.PropTypes.any.isRequired,
       path: React.PropTypes.any.isRequired,
       line: React.PropTypes.any.isRequired,
-      pluginData: React.PropTypes.any,
       onLineMouseOver: React.PropTypes.func,
       onCharClick: React.PropTypes.func,
       onClick: React.PropTypes.func,
@@ -60,10 +59,8 @@ export class RowComponent extends React.Component {
       cursorBetween: options.cursorBetween
     };
 
-    const hooksInfo = {
-      path,
-      pluginData: this.props.pluginData,
-    };
+    const pluginData = session.document.applyHook('pluginPathContentsSync', {}, { path });
+    const hooksInfo = { path, pluginData };
 
     lineoptions.wordHook = (line, wordInfo) => {
       return session.applyHook('renderLineWordHook', line, {
@@ -137,7 +134,6 @@ export default class BlockComponent extends React.Component {
           onLineMouseOver={this.props.onLineMouseOver}
           onCharClick={this.props.onCharClick}
           line={line}
-          pluginData={{} /* TODO parentContents.plugins */}
           onClick={this.props.onLineClick}
         />
       );

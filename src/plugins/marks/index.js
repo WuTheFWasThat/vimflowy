@@ -273,47 +273,62 @@ class MarksPlugin {
     });
 
     this.api.registerHook('document', 'pluginPathContents', async (obj, { path }) => {
-      obj.mark = await this._getMark(path.row);
+      const mark = await this._getMark(path.row);
 
       const marking = this.marksessionpath && this.marksessionpath.is(path);
+
+      obj.marks = {
+        mark,
+        marking,
+      };
+
       if (marking) {
-        obj.marking = true;
-        obj.markText = await this.marksession.document.getLine(
+        obj.marks.markText = await this.marksession.document.getLine(
           this.marksession.cursor.path.row
         );
-        obj.markCol = this.marksession.cursor.col;
+        obj.marks.markCol = this.marksession.cursor.col;
       }
       return obj;
     });
 
+    this.api.registerHook('document', 'pluginPathContentsSync', (obj, /* { path } */) => {
+      // TODO
+      obj.marks = null;
+      return obj;
+    });
+
     this.api.registerHook('session', 'renderLineOptions', (options, info) => {
-      if (info.pluginData.marking) { options.cursors = {}; }
+      if (info.pluginData.marks && info.pluginData.marks.marking) {
+        options.cursors = {};
+      }
       return options;
     });
 
     this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
       const { pluginData } = info;
-      if (pluginData.marking) {
-        lineContents.unshift(
-          <span style={markStyle} key='mark'
-                className='theme-bg-secondary theme-trim-accent'>
-            <LineComponent
-              lineData={pluginData.markText}
-              cursors={{
-                [pluginData.markCol]: true
-              }}
-              cursorBetween={true}
-            />
-          </span>
-        );
-      } else {
-        const mark = pluginData.mark;
-        if (mark) {
+      if (pluginData.marks) {
+        if (pluginData.marks.marking) {
           lineContents.unshift(
-            <span style={markStyle} key='mark' className='theme-bg-secondary theme-trim'>
-              {mark}
+            <span style={markStyle} key='mark'
+                  className='theme-bg-secondary theme-trim-accent'>
+              <LineComponent
+                lineData={pluginData.marks.markText}
+                cursors={{
+                  [pluginData.marks.markCol]: true
+                }}
+                cursorBetween={true}
+              />
             </span>
           );
+        } else {
+          const mark = pluginData.marks.mark;
+          if (mark) {
+            lineContents.unshift(
+              <span style={markStyle} key='mark' className='theme-bg-secondary theme-trim'>
+                {mark}
+              </span>
+            );
+          }
         }
       }
       return lineContents;

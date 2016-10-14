@@ -276,6 +276,14 @@ export class CachingDataStore extends DataStore {
     return this.cache.get(this._collapsedKey_(row));
   }
 
+  public getPluginDataSync(
+    plugin: string, key: string
+  ): any {
+    if (!this.cache.has(this._pluginDataKey_(plugin, key))) {
+      return null;
+    }
+    return this.cache.get(this._pluginDataKey_(plugin, key));
+  }
 }
 
 export class InMemory extends CachingDataStore {

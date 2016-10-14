@@ -6,7 +6,7 @@ import * as constants from './constants';
 // import logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
-import DataStore from './datastore';
+import { CachingDataStore } from './datastore';
 import { SerializedLine } from './types';
 
 /*
@@ -22,7 +22,7 @@ Currently, the separation between the Session and Document classes is not very g
 type SearchOptions = {nresults?: number, case_sensitive?: boolean};
 
 export default class Document extends EventEmitter {
-  public store: DataStore;
+  public store: CachingDataStore;
   public name: string;
   public root: Path;
 
