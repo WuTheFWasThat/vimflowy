@@ -49,7 +49,7 @@ module.exports = {
   plugins: [
     new AsyncAwaitPlugin({}),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoErrorsPlugin()
+    // new webpack.NoErrorsPlugin()
   ],
   resolve: {
     extensions: ['', '.jsx', '.js', '.tsx', '.ts']

@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "ES6",
     "jsx": "react",
+    "types": [],
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true
   },
