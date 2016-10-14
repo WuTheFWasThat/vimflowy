@@ -169,8 +169,7 @@ class MarksPlugin {
         const mark = word.slice(1);
         const allMarks = await that.listMarks();
         if (mark in allMarks) {
-          const row = allMarks[mark];
-          const path = await this.session.document.canonicalPath(row);
+          const path = allMarks[mark];
           await this.session.zoomInto(path);
           return true;
         } else {
@@ -204,9 +203,8 @@ class MarksPlugin {
           const marks = await that.listMarks();
           const results = []; // list of paths
           for (const mark in marks) {
-            const row = marks[mark];
+            const path = marks[mark];
             if (mark.indexOf(prefix) === 0) {
-              const path = await this.session.document.canonicalPath(row);
               results.push({ path, mark });
               if (nresults > 0 && results.length === nresults) {
                 break;
@@ -472,8 +470,9 @@ class MarksPlugin {
     const all_marks = {};
     for (const mark in marks_to_rows) {
       const row = marks_to_rows[mark];
-      if (await this.document.isAttached(row)) {
-        all_marks[mark] = row;
+      const path = await this.document.canonicalPath(row);
+      if (path !== null) {
+        all_marks[mark] = path;
       }
     }
     return all_marks;

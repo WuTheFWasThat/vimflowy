@@ -7,7 +7,12 @@ import '../../src/assets/js/plugins';
 TestCase.prototype.expectMarks = function(expected) {
   return this._chain(async () => {
     const marksApi = this.pluginManager.getInfo(Marks.pluginName).value;
-    this._expectDeepEqual(await marksApi.listMarks(), expected, 'Wrong marks');
+    const marksToPaths = await marksApi.listMarks();
+    const marksToRows = {};
+    for (const mark in marksToPaths) {
+      marksToRows[mark] = marksToPaths[mark].row;
+    }
+    this._expectDeepEqual(marksToRows, expected, 'Wrong marks');
   });
 };
 
