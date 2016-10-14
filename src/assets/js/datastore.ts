@@ -256,6 +256,18 @@ export class CachingDataStore extends DataStore {
     return this.cache.get(this._childrenKey_(row));
   }
 
+  public getParentsSync(row: Row): Array<Row> {
+    if (!this.cache.has(this._parentsKey_(row))) {
+      return null;
+    }
+
+    let parents = this.cache.get(this._parentsKey_(row));
+    if (typeof parents === 'number') {
+      parents = [ parents ];
+    }
+    return parents;
+  }
+
   public getCollapsedSync(row: Row): Boolean {
     if (!this.cache.has(this._collapsedKey_(row))) {
       return null;
@@ -263,6 +275,7 @@ export class CachingDataStore extends DataStore {
 
     return this.cache.get(this._collapsedKey_(row));
   }
+
 }
 
 export class InMemory extends CachingDataStore {

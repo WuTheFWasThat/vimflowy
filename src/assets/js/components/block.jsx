@@ -163,7 +163,7 @@ export default class BlockComponent extends React.Component {
         message += ' Press `o` to start adding content!';
       }
       pathElements.push(
-        <div className='center'
+        <div key='nothing' className='center'
              style={{padding: 20, fontSize: 20, opacity: 0.5}}>
           { message }
         </div>
@@ -174,9 +174,15 @@ export default class BlockComponent extends React.Component {
         const path = parent.child(row);
 
         let cloneIcon = null;
+
+        const parents = session.document.store.getParentsSync(path.row);
+        if (parents === null) {
+          childrenLoaded = false;
+          return null;
+        }
         // NOTE: this is not actually correct!
         // should use isClone, which is different since a parent may be detached
-        if (false) {
+        if (parents.length > 1) {
           cloneIcon = (
             <i key='clone' className='fa fa-clone bullet clone-icon' title='Cloned'/>
           );
