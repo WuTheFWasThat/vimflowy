@@ -52,8 +52,14 @@ export default class SessionComponent extends React.Component {
       };
     }
 
+    // make true to output time taken to get render contents
+    const timeRender = false;
+
     this.updateFn = promiseDebounce(async () => {
-      const t = Date.now();
+      let t;
+      if (timeRender) {
+        t = Date.now();
+      }
 
       const highlight_blocks = {};
       if (session.lineSelect) {
@@ -81,7 +87,10 @@ export default class SessionComponent extends React.Component {
         t: Date.now(), // to force rerendering
         loaded: true,
       });
-      console.log('Took time', Date.now() - t); // eslint-disable-line no-console
+
+      if (timeRender) {
+        console.log('Took time', Date.now() - t); // eslint-disable-line no-console
+      }
     });
   }
 
