@@ -84,9 +84,7 @@ export default class DataStore {
   public async getLine(row: Row): Promise<Line> {
     return (await this._get(this._lineKey_(row), [])).map(function(obj) {
       if (typeof obj === 'string') {
-        obj = {
-          char: obj,
-        };
+        obj = { char: obj };
       }
       return obj;
     });
@@ -233,56 +231,47 @@ export class CachingDataStore extends DataStore {
     throw new errors.NotImplemented();
   }
 
-  public getLineSync(row: Row): Line {
-    if (!this.cache.has(this._lineKey_(row))) {
-      return null;
-    }
+  // private _getSync<T>(key: string, transform?: (value: any) => T): T {
+  private _getSync(key: string, transform?: (value: any) => any): any {
+    if (!this.cache.has(key)) { return null; }
 
-    return this.cache.get(this._lineKey_(row)).map(function(obj) {
-      if (typeof obj === 'string') {
-        obj = {
-          char: obj,
-        };
-      }
-      return obj;
+    let value = this.cache.get(key);
+    if (transform) {
+      value = transform(value);
+    }
+    return value;
+  }
+
+  public getLineSync(row: Row): Line {
+    return this._getSync(this._lineKey_(row), (line) => {
+      return line.map(function(obj) {
+        if (typeof obj === 'string') {
+          obj = { char: obj };
+        }
+        return obj;
+      });
     });
   }
 
   public getChildrenSync(row: Row): Array<Row> {
-    if (!this.cache.has(this._childrenKey_(row))) {
-      return null;
-    }
-
-    return this.cache.get(this._childrenKey_(row));
+    return this._getSync(this._childrenKey_(row));
   }
 
   public getParentsSync(row: Row): Array<Row> {
-    if (!this.cache.has(this._parentsKey_(row))) {
-      return null;
-    }
-
-    let parents = this.cache.get(this._parentsKey_(row));
-    if (typeof parents === 'number') {
-      parents = [ parents ];
-    }
-    return parents;
+    return this._getSync(this._parentsKey_(row), (parents) => {
+      if (typeof parents === 'number') {
+        parents = [ parents ];
+      }
+      return parents;
+    });
   }
 
   public getCollapsedSync(row: Row): Boolean {
-    if (!this.cache.has(this._collapsedKey_(row))) {
-      return null;
-    }
-
-    return this.cache.get(this._collapsedKey_(row));
+    return this._getSync(this._collapsedKey_(row));
   }
 
-  public getPluginDataSync(
-    plugin: string, key: string
-  ): any {
-    if (!this.cache.has(this._pluginDataKey_(plugin, key))) {
-      return null;
-    }
-    return this.cache.get(this._pluginDataKey_(plugin, key));
+  public getPluginDataSync(plugin: string, key: string): any {
+    return this._getSync(this._pluginDataKey_(plugin, key));
   }
 }
 
