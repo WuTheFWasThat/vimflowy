@@ -468,13 +468,15 @@ class MarksPlugin {
     const marks_to_rows = await this._getMarksToRows();
 
     const all_marks = {};
-    for (const mark in marks_to_rows) {
-      const row = marks_to_rows[mark];
-      const path = await this.document.canonicalPath(row);
-      if (path !== null) {
-        all_marks[mark] = path;
-      }
-    }
+    await Promise.all(
+      Object.keys(marks_to_rows).map(async (mark) => {
+        const row = marks_to_rows[mark];
+        const path = await this.document.canonicalPath(row);
+        if (path !== null) {
+          all_marks[mark] = path;
+        }
+      })
+    );
     return all_marks;
   }
 

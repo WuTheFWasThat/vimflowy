@@ -144,10 +144,6 @@ export default class Document extends EventEmitter {
     return (await this._getChildren(parent_path.row)).map(row => parent_path.child(row));
   }
 
-  public async findChild(parent_path, row) {
-    return _.find(await this.getChildren(parent_path), x => x.row === row);
-  }
-
   public async hasChildren(row) {
     return (await this._getChildren(row)).length > 0;
   }
@@ -225,7 +221,7 @@ export default class Document extends EventEmitter {
       const parentRow = parents[i];
       const canonicalParent = await this.canonicalPath(parentRow);
       if (canonicalParent !== null) {
-        return await this.findChild(canonicalParent, row);
+        return canonicalParent.child(row);
       }
     }
     return null;

@@ -1059,9 +1059,9 @@ export default class Session extends EventEmitter {
     // TODO: do this more elegantly
     if (will_work) {
       if (options.setCursor === 'first') {
-        await this.cursor.setPosition(await this.document.findChild(parent, ids[0]), 0);
+        await this.cursor.setPosition(parent.child(ids[0]), 0);
       } else if (options.setCursor === 'last') {
-        await this.cursor.setPosition(await this.document.findChild(parent, ids[ids.length - 1]), 0);
+        await this.cursor.setPosition(parent.child(ids[ids.length - 1]), 0);
       }
     }
   }
