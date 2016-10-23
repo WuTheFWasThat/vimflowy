@@ -4,7 +4,7 @@ import * as Modes from '../modes';
 
 import BreadcrumbsComponent from './breadcrumbs';
 import BlockComponent from './block';
-import Spinner from './spinner.jsx';
+import Spinner from './spinner';
 
 const MODES = Modes.modes;
 

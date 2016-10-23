@@ -2,6 +2,7 @@ import React from 'react';
 
 import * as constants from '../constants';
 import * as utils from '../utils';
+import { Col } from '../types';
 
 function getCursorClass(cursorBetween) {
   if (cursorBetween) {
@@ -11,24 +12,40 @@ function getCursorClass(cursorBetween) {
   }
 }
 
-export default class LineComponent extends React.Component {
-  static get propTypes() {
-    return {
-      lineData: React.PropTypes.any.isRequired,
-      cursors: React.PropTypes.any,
-      highlights: React.PropTypes.any,
-      wordHook: React.PropTypes.func,
-      lineHook: React.PropTypes.func,
-      onCharClick: React.PropTypes.func,
-      cursorBetween: React.PropTypes.bool,
-    };
-  }
+type Line = any; // TODO
+type LineData = any; // TODO
+type WordInfo = any; // TODO
+type RenderOptions = {
+  cursor?: boolean,
+  highlight?: boolean,
+  text?: string,
+  type?: string,
+  href?: string,
+}
+type LineInfo = {
+  column: number,
+  char: string,
+  break: boolean,
+  renderOptions: RenderOptions,
+};
+
+type Props = {
+  lineData: LineData;
+  cursors?: {[key: number]: boolean};
+  highlights?: {[key: number]: boolean};
+  wordHook?: (line: Line, word_info: WordInfo) => Line;
+  lineHook?: (line: Line) => Line;
+  onCharClick?: (col: Col) => void;
+  cursorBetween?: boolean;
+}
+
+export default class LineComponent extends React.PureComponent<Props, {}> {
 
   constructor(props) {
     super(props);
   }
 
-  render() {
+  public render() {
     const lineData = this.props.lineData;
     const cursors = this.props.cursors || {};
     const highlights = this.props.highlights || {};
@@ -52,10 +69,7 @@ export default class LineComponent extends React.Component {
 
     for (let i = 0; i < lineData.length; i++) {
       const obj = lineData[i];
-      const info = {
-        column: i
-      };
-      const renderOptions = {};
+      const renderOptions: RenderOptions = {};
 
       constants.text_properties.forEach((property) => {
         if (obj[property]) {
@@ -65,11 +79,12 @@ export default class LineComponent extends React.Component {
 
       let x = obj.char;
 
+      let isBreak = false;
       if (obj.char === '\n') {
         // tricky logic for rendering new lines within a bullet
         // (copies correctly, works when cursor is on the newline itself)
         x = '';
-        info.break = true;
+        isBreak = true;
         if (i in cursors) {
           x = cursorChar + x;
         }
@@ -81,8 +96,12 @@ export default class LineComponent extends React.Component {
         renderOptions.highlight = true;
       }
 
-      info.char = x;
-      info.renderOptions = renderOptions;
+      const info: LineInfo = {
+        column: i,
+        char: x,
+        break: isBreak,
+        renderOptions: renderOptions,
+      };
 
       line.push(info);
     }
@@ -102,7 +121,7 @@ export default class LineComponent extends React.Component {
           const word_info = {
             word: word_chars.join(''),
             start: word_start,
-            end: i - 1
+            end: i - 1,
           };
           if (this.props.wordHook) {
             line = this.props.wordHook(line, word_info);
@@ -142,7 +161,7 @@ export default class LineComponent extends React.Component {
       });
     } else {
       let acc = [];
-      let renderOptions = {};
+      let renderOptions: RenderOptions = {};
 
       const flush = function() {
         if (acc.length) {
@@ -194,12 +213,16 @@ export default class LineComponent extends React.Component {
       }
 
       results.push(
-        React.createElement(type, {
-          key: index,
-          className: classes.join(' '),
-          href: spec.href,
-          onClick: spec.onClick,
-        }, spec.text)
+        React.createElement(
+          type,
+          {
+            key: index,
+            className: classes.join(' '),
+            href: spec.href,
+            onClick: spec.onClick,
+          },
+          spec.text
+        )
       );
     });
 

@@ -3,7 +3,7 @@ import React from 'react';
 import logger from '../logger';
 
 import LineComponent from './line';
-import Spinner from './spinner.jsx';
+import Spinner from './spinner';
 
 import * as Modes from '../modes';
 const MODES = Modes.modes;
