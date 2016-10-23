@@ -2,31 +2,31 @@ import React from 'react';
 
 import logger from '../logger';
 
-import LineComponent from './line';
-import Spinner from './spinner';
+import LineComponent, { LineProps } from './line';
+import Spinner from './spinner.jsx';
+import { Line } from '../types';
 
+import Session from '../session';
+import Path from '../path';
 import * as Modes from '../modes';
 const MODES = Modes.modes;
 
-export class RowComponent extends React.Component {
-  static get propTypes() {
-    return {
-      session: React.PropTypes.any.isRequired,
-      options: React.PropTypes.any.isRequired,
-      path: React.PropTypes.any.isRequired,
-      line: React.PropTypes.any.isRequired,
-      onLineMouseOver: React.PropTypes.func,
-      onCharClick: React.PropTypes.func,
-      onClick: React.PropTypes.func,
-      style: React.PropTypes.any,
-    };
-  }
-
+type RowProps = {
+  session: Session;
+  options: any; // TODO
+  path: Path;
+  line: Line;
+  onLineMouseOver: () => void;
+  onCharClick: (path: Path) => void;
+  onClick: (path: Path) => void;
+  style: React.CSSProperties;
+}
+export class RowComponent extends React.Component<RowProps, {}> {
   constructor(props) {
     super(props);
   }
 
-  render() {
+  public render() {
     const session = this.props.session;
     const path = this.props.path;
     const options = this.props.options;
@@ -38,7 +38,7 @@ export class RowComponent extends React.Component {
     if (path.is(session.cursor.path)) {
       cursors[session.cursor.col] = true;
 
-      if (session.anchor && !session.lineSelect) {
+      if (session.anchor && (session.mode !== MODES.VISUAL_LINE)) {
         if (session.anchor.path && path.is(session.anchor.path)) {
           const start = Math.min(session.cursor.col, session.anchor.col);
           const end = Math.max(session.cursor.col, session.anchor.col);
@@ -53,29 +53,26 @@ export class RowComponent extends React.Component {
 
     const results = [];
 
-    let lineoptions = {
+    let lineoptions: LineProps = {
+      lineData,
       cursors,
       highlights,
-      cursorBetween: options.cursorBetween
+      cursorBetween: options.cursorBetween,
     };
 
     const pluginData = session.document.applyHook('pluginPathContentsSync', {}, { path });
     const hooksInfo = { path, pluginData };
 
     lineoptions.wordHook = (line, wordInfo) => {
-      return session.applyHook('renderLineWordHook', line, {
-        ...hooksInfo,
-        wordInfo,
-      });
+      return session.applyHook('renderLineWordHook', line, Object.assign({ wordInfo }, hooksInfo));
     };
 
     lineoptions = session.applyHook('renderLineOptions', lineoptions, hooksInfo);
     let lineContents = [
       <LineComponent key='line'
-        lineData={lineData}
         onCharClick={this.props.onCharClick && this.props.onCharClick.bind(this, path)}
         {...lineoptions}
-      />
+      />,
     ];
     lineContents = session.applyHook('renderLineContents', lineContents, hooksInfo);
     [].push.apply(results, lineContents);
@@ -95,22 +92,20 @@ export class RowComponent extends React.Component {
   }
 }
 
-export default class BlockComponent extends React.Component {
-  static get propTypes() {
-    return {
-      session: React.PropTypes.any.isRequired,
-      options: React.PropTypes.any.isRequired,
-      path: React.PropTypes.any.isRequired,
-      onLineMouseOver: React.PropTypes.func,
-      onCharClick: React.PropTypes.func,
-      onLineClick: React.PropTypes.func,
-      onBulletClick: React.PropTypes.func,
-      topLevel: React.PropTypes.bool,
-      fetchData: React.PropTypes.func,
-    };
-  }
+type BlockProps = {
+  session: Session;
+  options: any; // TODO
+  path: Path;
 
-  render() {
+  onLineMouseOver: () => void;
+  onCharClick: (path: Path) => void;
+  onLineClick: (path: Path) => void;
+  onBulletClick: (path: Path) => void;
+  topLevel: boolean;
+  fetchData: () => void;
+}
+export default class BlockComponent extends React.Component<BlockProps, {}> {
+  public render() {
     const session = this.props.session;
     const parent = this.props.path;
     const options = this.props.options;
@@ -185,24 +180,24 @@ export default class BlockComponent extends React.Component {
         }
 
         let onBulletClick = null;
-        const style = {};
+        const style: React.CSSProperties = {};
 
         let icon = 'fa-circle';
 
-        const children = session.document.store.getChildrenSync(path.row);
-        if (children === null) {
+        const child_children = session.document.store.getChildrenSync(path.row);
+        if (child_children === null) {
           childrenLoaded = false;
           return null;
         }
 
-        const collapsed = session.document.store.getCollapsedSync(path.row);
-        if (collapsed === null) {
+        const child_collapsed = session.document.store.getCollapsedSync(path.row);
+        if (child_collapsed === null) {
           childrenLoaded = false;
           return null;
         }
 
-        if (children.length) {
-          icon = collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
+        if (child_children.length) {
+          icon = child_collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
           if (this.props.onBulletClick) {
             style.cursor = 'pointer';
             onBulletClick = this.props.onBulletClick.bind(this, path);
@@ -237,7 +232,7 @@ export default class BlockComponent extends React.Component {
 
       if (!childrenLoaded) {
         this.props.fetchData();
-        childrenDivs = <Spinner/>;
+        childrenDivs = [<Spinner key='spinner'/>];
       }
 
       pathElements.push(

@@ -215,11 +215,9 @@ registerMode({
   hotkey_type: HotkeyType.NORMAL_MODE_TYPE,
   async enter(session, oldMode?: ModeId) {
     session.anchor = session.cursor.clone();
-    return session.lineSelect = true;
   },
   async exit(session, newMode?: ModeId) {
     session.anchor = null;
-    return session.lineSelect = false;
   },
   async transform_context(context) {
     const { session } = context;

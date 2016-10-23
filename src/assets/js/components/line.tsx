@@ -2,7 +2,7 @@ import React from 'react';
 
 import * as constants from '../constants';
 import * as utils from '../utils';
-import { Col } from '../types';
+import { Col, Line } from '../types';
 
 function getCursorClass(cursorBetween) {
   if (cursorBetween) {
@@ -12,8 +12,6 @@ function getCursorClass(cursorBetween) {
   }
 }
 
-type Line = any; // TODO
-type LineData = any; // TODO
 type WordInfo = any; // TODO
 type RenderOptions = {
   cursor?: boolean,
@@ -29,17 +27,17 @@ type LineInfo = {
   renderOptions: RenderOptions,
 };
 
-type Props = {
-  lineData: LineData;
+export type LineProps = {
+  lineData: Line;
   cursors?: {[key: number]: boolean};
   highlights?: {[key: number]: boolean};
-  wordHook?: (line: Line, word_info: WordInfo) => Line;
-  lineHook?: (line: Line) => Line;
+  wordHook?: (line: Array<LineInfo>, word_info: WordInfo) => Array<LineInfo>;
+  lineHook?: (line: Array<LineInfo>) => Array<LineInfo>;
   onCharClick?: (col: Col) => void;
   cursorBetween?: boolean;
 }
 
-export default class LineComponent extends React.PureComponent<Props, {}> {
+export default class LineComponent extends React.PureComponent<LineProps, {}> {
 
   constructor(props) {
     super(props);

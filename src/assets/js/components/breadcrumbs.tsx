@@ -1,14 +1,12 @@
 import React from 'react';
 
-class CrumbComponent extends React.Component {
-  static get propTypes() {
-    return {
-      onClick: React.PropTypes.func,
-      children: React.PropTypes.any,
-    };
-  }
+import Path from '../path';
 
-  render() {
+type CrumbProps = {
+  onClick: (...args: any[]) => void,
+}
+class CrumbComponent extends React.PureComponent<CrumbProps, {}> {
+  public render() {
     let className = '';
     if (this.props.onClick) {
       className = 'theme-text-link';
@@ -18,22 +16,22 @@ class CrumbComponent extends React.Component {
         <span className={className} onClick={this.props.onClick}>
           {this.props.children}
         </span>
-        <icon className='fa fa-angle-right'
+        <i className='fa fa-angle-right'
           style={{marginRight: 15, marginLeft: 15}}/>
       </span>
     );
   }
 }
 
-export default class BreadcrumbsComponent extends React.Component {
-  static get propTypes() {
-    return {
-      viewRoot: React.PropTypes.any.isRequired,
-      crumbContents: React.PropTypes.any.isRequired,
-      onCrumbClick: React.PropTypes.func,
-    };
-  }
-
+type BreadcrumbsProps = {
+  viewRoot: Path;
+  crumbContents: {[row: number]: string};
+  onCrumbClick: (...args: any[]) => void;
+}
+type BreadcrumbsState = {
+  loaded: boolean;
+}
+export default class BreadcrumbsComponent extends React.Component<BreadcrumbsProps, BreadcrumbsState> {
   constructor(props) {
     super(props);
     this.state = {
@@ -41,7 +39,7 @@ export default class BreadcrumbsComponent extends React.Component {
     };
   }
 
-  render() {
+  public render() {
     const crumbNodes = [];
     let path = this.props.viewRoot;
     path = path.parent;
@@ -59,7 +57,7 @@ export default class BreadcrumbsComponent extends React.Component {
       <CrumbComponent key={path.row}
         onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
       >
-        <icon className='fa fa-home'/>
+        <i className='fa fa-home'/>
       </CrumbComponent>
     );
     crumbNodes.reverse();
