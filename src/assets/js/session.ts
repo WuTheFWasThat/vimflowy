@@ -11,6 +11,7 @@ import Path from './path';
 import Document from './document';
 import Settings from './settings';
 import Mutation from './mutations';
+import Menu from './menu';
 
 import * as Modes from './modes';
 const MODES = Modes.modes;
@@ -56,6 +57,8 @@ export default class Session extends EventEmitter {
   public anchor: Cursor;
 
   public viewRoot: Path;
+
+  public menu?: Menu;
 
   private mutations: Array<Mutation>;
   private history: Array<HistoryLogEntry>;

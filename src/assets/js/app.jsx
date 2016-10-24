@@ -48,7 +48,7 @@ import './definitions';
 import '../../plugins';
 import KeyBindings from './keyBindings';
 
-import AppComponent from './components/app.jsx';
+import AppComponent from './components/app';
 
 function scrollIntoView(el, $within) {
   const elemTop = el.getBoundingClientRect().top;

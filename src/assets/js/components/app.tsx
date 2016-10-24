@@ -3,26 +3,26 @@ import React from 'react';
 import * as Modes from '../modes';
 
 import SettingsComponent from './settings';
-import SessionComponent from './session';
+import SessionComponent, { RenderOptions } from './session';
 import MenuComponent from './menu';
 import { ModeHotkeysTableComponent } from './hotkeysTable';
+import { PluginsManager } from '../plugins';
+import Session from '../session';
+import KeyBindings from '../keyBindings';
 
-export default class AppComponent extends React.Component {
-  static get propTypes() {
-    return {
-      pluginManager: React.PropTypes.any.isRequired,
-      session: React.PropTypes.any.isRequired,
-      showingKeyBindings: React.PropTypes.bool.isRequired,
-      keyBindings: React.PropTypes.any.isRequired,
-      initialTheme: React.PropTypes.string.isRequired,
-      initialDataSource: React.PropTypes.string.isRequired,
-      onThemeChange: React.PropTypes.func.isRequired,
-      onRender: React.PropTypes.func.isRequired,
-      onExport: React.PropTypes.func.isRequired,
-    };
-  }
-
-  render() {
+type Props = {
+  pluginManager: PluginsManager;
+  session: Session;
+  showingKeyBindings: boolean;
+  keyBindings: KeyBindings;
+  initialTheme: string;
+  initialDataSource: string;
+  onThemeChange: (theme: string) => void;
+  onRender: (opts: RenderOptions) => void;
+  onExport: () => void;
+}
+export default class AppComponent extends React.Component<Props, {}> {
+  public render() {
     const pluginManager = this.props.pluginManager;
     const session = this.props.session;
     const keyBindings = this.props.keyBindings;
@@ -30,11 +30,11 @@ export default class AppComponent extends React.Component {
     return (
       <div>
         {/* hack for firefox paste */}
-        <div id="paste-hack" contentEditable="true" className="offscreen">
+        <div id='paste-hack' contentEditable={true} className='offscreen'>
         </div>
 
-        <div id="contents">
-          <div id="menu"
+        <div id='contents'>
+          <div id='menu'
             className={session.mode === Modes.modes.SEARCH ? '' : 'hidden'}
           >
             {
@@ -46,7 +46,7 @@ export default class AppComponent extends React.Component {
             }
           </div>
 
-          <div id="view"
+          <div id='view'
             style={{flex: '1 1 auto', fontSize: 10}}
             className={session.mode === Modes.modes.SEARCH ? 'hidden' : ''}
           >
@@ -64,7 +64,7 @@ export default class AppComponent extends React.Component {
               className={'theme-bg-secondary transition-ease-width'}
               style={
                 (() => {
-                  const style = {
+                  const style: React.CSSProperties = {
                     overflowY: 'auto',
                     height: '100%',
                     flex: '0 1 auto',
@@ -86,7 +86,7 @@ export default class AppComponent extends React.Component {
             </div>
           </div>
 
-          <div id="settings" className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
+          <div id='settings' className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
             <SettingsComponent
               session={session}
               keyBindings={keyBindings}
@@ -100,10 +100,10 @@ export default class AppComponent extends React.Component {
             />
           </div>
 
-          <div id="bottom-bar" className="theme-bg-primary theme-trim"
+          <div id='bottom-bar' className='theme-bg-primary theme-trim'
             style={{ display: 'flex' }}
           >
-            <a className="center theme-bg-secondary"
+            <a className='center theme-bg-secondary'
               onClick={async () => {
                 if (settingsMode) {
                   await session.setMode(Modes.modes.NORMAL);
@@ -113,36 +113,36 @@ export default class AppComponent extends React.Component {
               }}
               style={{
                 flexBasis: 100, flexGrow: 0,
-                cursor: 'pointer', textDecoration: 'none'
+                cursor: 'pointer', textDecoration: 'none',
               }}
             >
               <div className={settingsMode ? 'hidden' : ''}>
-                <span style={{marginRight:10}} className="fa fa-cog">
+                <span style={{marginRight:10}} className='fa fa-cog'>
                 </span>
                 <span>Settings
                 </span>
               </div>
               <div className={settingsMode ? '' : 'hidden'}>
-                <span style={{marginRight:10}} className="fa fa-arrow-left">
+                <span style={{marginRight:10}} className='fa fa-arrow-left'>
                 </span>
                 <span>
                   Back
                 </span>
               </div>
             </a>
-            <div id="message"
+            <div id='message'
               style={{flexBasis: 0, flexGrow: 1}}
             >
             </div>
             {/* should be wide enough to fit the words 'VISUAL LINE'*/}
-            <div className="center theme-bg-secondary"
+            <div className='center theme-bg-secondary'
               style={{flexBasis: 80, flexGrow: 0}}
             >
               {Modes.getMode(session.mode).name}
             </div>
           </div>
 
-          <a id="export" className="hidden"> </a>
+          <a id='export' className='hidden'> </a>
         </div>
     );
   }

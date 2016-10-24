@@ -5,13 +5,38 @@ import * as Modes from '../modes';
 import BreadcrumbsComponent from './breadcrumbs';
 import BlockComponent from './block';
 import Spinner from './spinner';
+import Session from '../session';
+import { ModeId } from '../types';
+import Path from '../path';
 
 const MODES = Modes.modes;
 
 // TODO: move mode-specific logic into mode render functions
 
 // TODO: add way to profile render time
-export default class SessionComponent extends React.Component {
+export type RenderOptions = {
+  cursorBetween:  boolean;
+  handleCharClicks: boolean;
+  highlight_blocks?: {[row: number]: boolean};
+}
+type Props = {
+  session: Session;
+  onRender: (opts: RenderOptions) => void;
+}
+type State = {
+  handleCharClicks: boolean;
+  loaded: boolean;
+  t: number;
+
+  // set after data is loaded
+  highlight_blocks?: {[row: number]: boolean};
+  crumbContents?: {[row: number]: string };
+  mode?: ModeId;
+  viewRoot?: Path;
+}
+export default class SessionComponent extends React.Component<Props, State> {
+  private updateFn: () => void; // this is promise debounced
+
   static get propTypes() {
     return {
       session: React.PropTypes.any.isRequired,
@@ -94,7 +119,7 @@ export default class SessionComponent extends React.Component {
     });
   }
 
-  async fetchAndRerender() {
+  private async fetchAndRerender() {
     const session = this.props.session;
     // await (new Promise((resolve) => {
     //   setTimeout(resolve, 2000);
@@ -103,31 +128,33 @@ export default class SessionComponent extends React.Component {
     this.update();
   }
 
-  update() {
-    this.updateFn && this.updateFn();
+  private update() {
+    if (this.updateFn) {
+      this.updateFn();
+    }
   }
 
-  componentWillReceiveProps() {
+  public componentWillReceiveProps() {
     this.update();
   }
 
-  componentDidMount() {
+  public componentDidMount() {
     this.props.session.on('handledKey', this.updateFn);
     this.update();
   }
 
-  componentWillUnmount() {
+  public componentWillUnmount() {
     this.props.session.off('handledKey', this.updateFn);
   }
 
-  render() {
+  public render() {
     const session = this.props.session;
     if (!this.state.loaded) { return <Spinner/>; }
     const mode = this.state.mode;
 
     const viewRoot = this.state.viewRoot;
 
-    const options = {
+    const options: RenderOptions = {
       cursorBetween: Modes.getMode(mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE,
       handleCharClicks: this.state.handleCharClicks,
     };
@@ -139,7 +166,7 @@ export default class SessionComponent extends React.Component {
     let onCharClick = null;
     let onLineClick = null;
     if (!this.state.handleCharClicks) {
-      onLineMouseOver = () => this.setState({ handleCharClicks: true });
+      onLineMouseOver = () => this.setState({ handleCharClicks: true } as State);
     }
     if (mode === MODES.NORMAL || mode === MODES.INSERT) {
       if (this.state.handleCharClicks) {
@@ -147,7 +174,7 @@ export default class SessionComponent extends React.Component {
           // NOTE: this is fire and forget
           session.cursor.setPosition(path, column).then(() => {
             // assume they might click again
-            this.setState({handleCharClicks: true});
+            this.setState({handleCharClicks: true} as State);
           });
 
           // prevent overall path click
@@ -197,7 +224,7 @@ export default class SessionComponent extends React.Component {
                   onCrumbClick={onCrumbClick}
                   crumbContents={this.state.crumbContents}
                 />,
-                <hr key='bar' style={{opacity: 0.5, marginBottom: 20}}/>
+                <hr key='bar' style={{opacity: 0.5, marginBottom: 20}}/>,
               ];
             }
           })()
