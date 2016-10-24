@@ -11,7 +11,7 @@ Functions for paging through and selecting results, and for rendering.
 Internally uses an entire session object (this is sorta weird..)
 */
 
-type MenuResult = {
+export type MenuResult = {
   contents: Line;
 
   // called when selected
@@ -19,6 +19,9 @@ type MenuResult = {
 
   // props for rendering LineComponent
   renderOptions?: any; // TODO
+
+  // hook for rendering search result contents
+  renderHook?: (line: any) => any; // TODO
 };
 
 type Query = string;

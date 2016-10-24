@@ -2,23 +2,27 @@ import React from 'react';
 
 import LineComponent from './line';
 import SpinnerComponent from './spinner';
+import Session from '../session';
+import Menu from '../menu';
+import { Line } from '../types';
 
-export default class MenuComponent extends React.Component {
-  static get propTypes() {
-    return {
-      session: React.PropTypes.any.isRequired,
-      menu: React.PropTypes.any.isRequired
-    };
-  }
-
+type Props = {
+  session: Session;
+  menu: Menu;
+}
+type State = {
+  query: Line;
+}
+export default class MenuComponent extends React.Component<Props, State> {
+  private updateFn: () => Promise<void>;
   constructor(props) {
     super(props);
     this.state = {
-      query: null
+      query: null,
     };
   }
 
-  componentDidMount() {
+  public componentDidMount() {
     const menu = this.props.menu;
     this.updateFn = async () => {
       const query = await menu.session.curLine();
@@ -28,11 +32,11 @@ export default class MenuComponent extends React.Component {
     this.updateFn();
   }
 
-  componentWillUnmount() {
+  public componentWillUnmount() {
     this.props.session.off('handledKey', this.updateFn);
   }
 
-  render() {
+  public render() {
     const menu = this.props.menu;
     const query = this.state.query;
 
@@ -48,7 +52,7 @@ export default class MenuComponent extends React.Component {
                 return <LineComponent
                   lineData={query}
                   cursors={{
-                    [menu.session.cursor.col]: true
+                    [menu.session.cursor.col]: true,
                   }}
                   cursorBetween={true}
                 />;

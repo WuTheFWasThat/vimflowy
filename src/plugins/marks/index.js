@@ -221,14 +221,15 @@ class MarksPlugin {
               return {
                 contents: line,
                 renderHook(line) {
-                  return [
-                    <span key={`mark_${mark}`} style={markStyle}
-                          className='theme-bg-secondary theme-trim'>
-                      {mark}
+                  return (
+                    <span>
+                      <span key={`mark_${mark}`} style={markStyle}
+                            className='theme-bg-secondary theme-trim'>
+                        {mark}
+                      </span>
+                      {line}
                     </span>
-                    ,
-                    line
-                  ];
+                  );
                 },
                 fn: async () => await this.session.zoomInto(path)
               };

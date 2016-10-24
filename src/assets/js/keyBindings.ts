@@ -98,7 +98,7 @@ export default class KeyBindings extends EventEmitter {
   public motion_bindings: MotionBindings;
 
   private hotkey_settings: HotkeySettings;
-  private hotkeys: HotkeySettings; // includes defaults
+  public hotkeys: HotkeySettings; // includes defaults
 
   constructor(definitions, hotkey_settings: HotkeySettings) {
     super();

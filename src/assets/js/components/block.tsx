@@ -3,7 +3,7 @@ import React from 'react';
 import logger from '../logger';
 
 import LineComponent, { LineProps } from './line';
-import Spinner from './spinner.jsx';
+import Spinner from './spinner';
 import { Line } from '../types';
 
 import Session from '../session';

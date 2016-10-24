@@ -65,7 +65,7 @@ export default class Session extends EventEmitter {
 
   private getLinesPerPage: () => number;
   private getVisiblePaths: () => Array<Path>;
-  private showMessage: (message: string, options?: any) => void;
+  public showMessage: (message: string, options?: any) => void;
   private toggleBindingsDiv: () => void;
   private downloadFile: (filename: string, mimetype: string, content: any) => void;
 

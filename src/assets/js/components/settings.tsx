@@ -1,4 +1,3 @@
-/* globals FileReader */
 import React from 'react';
 import $ from 'jquery';
 import _ from 'lodash';
@@ -7,40 +6,44 @@ import * as utils from '../utils';
 import logger from '../logger';
 import * as Modes from '../modes';
 
+import Session from '../session';
+import KeyBindings from '../keyBindings';
+import { PluginsManager } from '../plugins';
+
 import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
 
 const MODE_TYPES = Modes.types;
 
-const TABS = {
-  MAIN: 'MAIN',
-  HOTKEYS: 'HOTKEYS',
-  PLUGIN: 'PLUGIN',
+enum TABS {
+  MAIN,
+  HOTKEYS,
+  PLUGIN,
 };
 
-export default class SettingsComponent extends React.Component {
-  static get propTypes() {
-    return {
-      session: React.PropTypes.any.isRequired,
-      keyBindings: React.PropTypes.any.isRequired,
-      pluginManager: React.PropTypes.any.isRequired,
-
-      initialTheme: React.PropTypes.string.isRequired,
-      initialDataSource: React.PropTypes.string.isRequired,
-      onThemeChange: React.PropTypes.func.isRequired,
-      onExport: React.PropTypes.func.isRequired,
-    };
-  }
-
+type Props = {
+  session: Session;
+  keyBindings: KeyBindings;
+  pluginManager: PluginsManager;
+  initialTheme: string;
+  initialDataSource: string;
+  onThemeChange: (theme: string) => void;
+  onExport: () => void;
+}
+type State = {
+  currentTab: TABS,
+  // dataSource:
+}
+export default class SettingsComponent extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
       currentTab: TABS.MAIN,
-      dataSource: props.initialDataSource,
+      // dataSource: props.initialDataSource,
     };
   }
 
-  render() {
+  public render() {
     const session = this.props.session;
     const keyBindings = this.props.keyBindings;
 
@@ -53,7 +56,7 @@ export default class SettingsComponent extends React.Component {
       const reader = new FileReader();
       reader.readAsText(file, 'UTF-8');
       reader.onload = function(evt) {
-        const content = evt.target.result;
+        const content = (evt.target as any).result;
         return cb(null, content, file.name);
       };
       return reader.onerror = function(evt) {
@@ -82,35 +85,35 @@ export default class SettingsComponent extends React.Component {
               <br/>
             </div>
               */ }
-            <div className="settings-header theme-bg-secondary theme-trim">
+            <div className='settings-header theme-bg-secondary theme-trim'>
               Visual Theme
             </div>
-            <div className="settings-content">
+            <div className='settings-content'>
               <select defaultValue={this.props.initialTheme}
-                onChange={(e) => this.props.onThemeChange(e.target.value)}
+                onChange={(e) => this.props.onThemeChange((e.target as HTMLSelectElement).value)}
               >
-                <option value="default-theme">
+                <option value='default-theme'>
                   Default
                 </option>
-                <option value="dark-theme">
+                <option value='dark-theme'>
                   Dark
                 </option>
-                <option value="solarized_dark-theme">
+                <option value='solarized_dark-theme'>
                   Solarized Dark
                 </option>
-                <option value="solarized_light-theme">
+                <option value='solarized_light-theme'>
                   Solarized Light
                 </option>
               </select>
             </div>
-            <div className="settings-header theme-bg-secondary theme-trim">
+            <div className='settings-header theme-bg-secondary theme-trim'>
               Export
             </div>
-            <div className="settings-content">
+            <div className='settings-content'>
               <table>
                 <tr>
                   <td>
-                    <div className="btn theme-bg-secondary theme-trim"
+                    <div className='btn theme-bg-secondary theme-trim'
                       onClick={() => session.exportFile('json')} >
                       Export as JSON
                     </div>
@@ -121,7 +124,7 @@ export default class SettingsComponent extends React.Component {
                 </tr>
                 <tr>
                   <td>
-                    <div className="btn theme-bg-secondary theme-trim"
+                    <div className='btn theme-bg-secondary theme-trim'
                       onClick={() => session.exportFile('txt')}>
                       Export as plaintext
                     </div>
@@ -132,13 +135,13 @@ export default class SettingsComponent extends React.Component {
                 </tr>
               </table>
             </div>
-            <div className="settings-header theme-bg-secondary theme-trim">
+            <div className='settings-header theme-bg-secondary theme-trim'>
               Import
             </div>
-            <div className="settings-content">
-              <div id="import-file">
-                <input type="file" name="import-file" style={{maxWidth:'75%'}}/>
-                <div style={{float:'right'}} className="btn theme-bg-secondary theme-trim"
+            <div className='settings-content'>
+              <div id='import-file'>
+                <input type='file' name='import-file' style={{maxWidth:'75%'}}/>
+                <div style={{float:'right'}} className='btn theme-bg-secondary theme-trim'
                   onClick={() => {
                     load_file($('#import-file :file')[0], async (err, content, filename) => {
                       if (err) { return session.showMessage(err, {text_class: 'error'}); }
@@ -155,31 +158,31 @@ export default class SettingsComponent extends React.Component {
                 </div>
               </div>
             </div>
-            <div className="settings-header theme-bg-secondary theme-trim">
+            <div className='settings-header theme-bg-secondary theme-trim'>
               Info
             </div>
-            <div className="settings-content">
+            <div className='settings-content'>
               For more info, or to contact the maintainers, please visit
               {' '}
-              <a href="https://github.com/WuTheFWasThat/vimflowy" className="theme-text-link">
+              <a href='https://github.com/WuTheFWasThat/vimflowy' className='theme-text-link'>
                 the github website
               </a>.
             </div>
           </div>
-        )
+        ),
       },
       {
         tab: TABS.HOTKEYS,
         heading: 'Hotkeys',
         div: (
           <div>
-            <div className="settings-content">
-              <div className="clearfix" style={{marginBottom: 10}}>
-                <div style={{float:'left'}} className="btn theme-bg-secondary theme-trim"
+            <div className='settings-content'>
+              <div className='clearfix' style={{marginBottom: 10}}>
+                <div style={{float:'left'}} className='btn theme-bg-secondary theme-trim'
                   onClick={this.props.onExport} >
                   Export as file
                 </div>
-                <div style={{float:'left'}} className="btn theme-bg-secondary theme-trim"
+                <div style={{float:'left'}} className='btn theme-bg-secondary theme-trim'
                   onClick={() => {
                     keyBindings.apply_default_hotkey_settings();
                     return session.showMessage('Loaded defaults!', {text_class: 'success'});
@@ -187,7 +190,7 @@ export default class SettingsComponent extends React.Component {
 
                   Load defaults
                 </div>
-                <div style={{float:'left'}} className="btn theme-bg-secondary theme-trim"
+                <div style={{float:'left'}} className='btn theme-bg-secondary theme-trim'
                   onClick={() => {
                     load_file($('#hotkeys_file_input')[0], function(err, content) {
                       if (err) { return session.showMessage(err, {text_class: 'error'}); }
@@ -208,7 +211,7 @@ export default class SettingsComponent extends React.Component {
 
                   Import from file
                 </div>
-                <input id="hotkeys_file_input" type="file" style={{float:'left'}}/>
+                <input id='hotkeys_file_input' type='file' style={{float:'left'}}/>
               </div>
               <div>
                 {
@@ -240,7 +243,7 @@ export default class SettingsComponent extends React.Component {
               </div>
             </div>
           </div>
-        )
+        ),
       },
       {
         tab: TABS.PLUGIN,
@@ -249,14 +252,14 @@ export default class SettingsComponent extends React.Component {
           <PluginsTableComponent
             pluginManager={this.props.pluginManager}
           />
-        )
+        ),
       },
     ];
 
     return (
       <div>
         {/* NOTE: must have theme as well so that inherit works for tabs*/}
-        <ul className="tabs theme-bg-primary" style={{margin: 20}}>
+        <ul className='tabs theme-bg-primary' style={{margin: 20}}>
           {
             (() => {
               return _.map(tabs_info, (info) => {

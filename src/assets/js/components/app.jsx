@@ -2,10 +2,10 @@ import React from 'react';
 
 import * as Modes from '../modes';
 
-import SettingsComponent from './settings.jsx';
-import SessionComponent from './session.jsx';
-import MenuComponent from './menu.jsx';
-import { ModeHotkeysTableComponent } from './hotkeysTable.jsx';
+import SettingsComponent from './settings';
+import SessionComponent from './session';
+import MenuComponent from './menu';
+import { ModeHotkeysTableComponent } from './hotkeysTable';
 
 export default class AppComponent extends React.Component {
   static get propTypes() {
