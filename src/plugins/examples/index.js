@@ -6,7 +6,7 @@ Plugins.register({
   author: 'Jeff Wu',
   description: 'Prints \'Hello World\' when the plugin is loaded',
 }, function (/* api */) {
-  console.log('Example plugin: Hello world!');
+  console.log('Example plugin: Hello world!'); // eslint-disable-line no-console
 }, function (/* api */) {
-  console.log('Example plugin: Goodbye world!');
+  console.log('Example plugin: Goodbye world!'); // eslint-disable-line no-console
 });

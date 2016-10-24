@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "NODE_ENV=production webpack --config webpack.prod.js --progress",
-    "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx'",
+    "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx' && eslint --ignore-path .gitignore .",
     "start": "node dev_server.js",
     "test": "mocha --opts mocha.opts",
     "typecheck": "tsc -p . --noEmit"
@@ -43,6 +43,8 @@
     "babel-preset-stage-3": "^6.11.0",
     "babel-runtime": "^6.11.6",
     "css-loader": "^0.23.1",
+    "eslint": "^3.8.1",
+    "eslint-plugin-react": "^6.4.1",
     "express": "^4.14.0",
     "file-loader": "^0.9.0",
     "mocha": "^3.0.2",
