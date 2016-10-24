@@ -1,4 +1,3 @@
-// tslint:disable:align
 import React from 'react'; // tslint:disable-line no-unused-variable
 
 import * as Plugins from '../../assets/js/plugins';

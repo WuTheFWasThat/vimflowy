@@ -2,7 +2,6 @@
   "rules": {
     "align": [true,
             "parameters",
-            "arguments",
             "statements"],
       "ban": false,
       "class-name": true,

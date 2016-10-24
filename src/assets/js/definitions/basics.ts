@@ -1,7 +1,5 @@
 /* globals window */
 
-// tslint:disable:align
-
 import * as Modes from '../modes';
 import * as utils from '../utils';
 import keyDefinitions from '../keyDefinitions';

@@ -1,5 +1,3 @@
-// tslint:disable:align
-
 import keyDefinitions from '../keyDefinitions';
 
 const CMD_LEFT = keyDefinitions.registerCommand({

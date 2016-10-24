@@ -23,6 +23,7 @@
     "@types/jquery": "^2.0.32",
     "@types/lodash": "^4.14.36",
     "@types/react": "^0.14.36",
+    "@types/react-dom": "^0.14.18",
     "bluebird": "^3.4.6",
     "font-awesome": "^4.6.3",
     "immutable": "^3.8.1",

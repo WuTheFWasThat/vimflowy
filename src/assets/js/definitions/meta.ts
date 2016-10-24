@@ -1,5 +1,3 @@
-// tslint:disable:align
-
 import * as Modes from '../modes';
 import keyDefinitions from '../keyDefinitions';
 

@@ -6,7 +6,7 @@ var SRC_DIR = path.join(__dirname, 'src');
 
 module.exports = {
   devtool: 'source-map',
-  entry: './src/assets/js/app.jsx',
+  entry: './src/assets/js/app.tsx',
   module: {
     preLoaders: [{
       test: /\.tsx?$/,

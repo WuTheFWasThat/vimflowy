@@ -1,4 +1,5 @@
-/* globals alert, localStorage, firebase */
+/* globals alert, localStorage */
+import * as firebase from 'firebase';
 
 import * as _ from 'lodash';
 import * as Immutable from 'immutable';
