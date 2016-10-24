@@ -1,11 +1,13 @@
 /* globals afterEach */
 
+import 'mocha';
 import 'blanket';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
-import * as DataStore from '../src/assets/js/datastore';
+import DataStore, { InMemory } from '../src/assets/js/datastore';
 import Document from '../src/assets/js/document';
 import Session from '../src/assets/js/session';
+import Register from '../src/assets/js/register';
 import '../src/assets/js/definitions';
 import KeyDefinitions from '../src/assets/js/keyDefinitions';
 import KeyBindings from '../src/assets/js/keyBindings';
@@ -23,9 +25,24 @@ afterEach('empty the queue', () => logger.empty());
 // thus, tests are not totally isolated
 let keyBindings = new KeyBindings(KeyDefinitions.clone());
 
+type Serialized = any; // TODO
+
+type TestCaseOptions = {
+  plugins?: Array<string>
+}
+
 class TestCase {
-  constructor(serialized = [''], options = {}) {
-    this.store = new DataStore.InMemory();
+  private store: DataStore;
+  private document: Document;
+  private plugins: Array<string>;
+  private session: Session;
+  private keyhandler: KeyHandler;
+  private register: Register;
+  private pluginManager: PluginsManager;
+  private prom: Promise<void>;
+
+  constructor(serialized: Serialized = [''], options: TestCaseOptions = {}) {
+    this.store = new InMemory();
     this.document = new Document(this.store);
 
     this.plugins = options.plugins;
@@ -59,12 +76,12 @@ class TestCase {
     });
   }
 
-  _chain(next) {
+  private _chain(next) {
     this.prom = this.prom.then(next);
     return this;
   }
 
-  done() {
+  public done() {
     this.prom = this.prom.then(async () => {
       if (this.plugins) {
         for (let i = 0; i < this.plugins.length; i++) {
@@ -78,7 +95,7 @@ class TestCase {
     return this.prom;
   }
 
-  _expectDeepEqual(actual, expected, message) {
+  private _expectDeepEqual(actual, expected, message) {
     if (!_.isEqual(actual, expected)) {
       logger.flush();
       console.error(`
@@ -92,7 +109,7 @@ class TestCase {
     }
   }
 
-  _expectEqual(actual, expected, message) {
+  private _expectEqual(actual, expected, message) {
     if (actual !== expected) {
       logger.flush();
       console.error(`
@@ -106,7 +123,7 @@ class TestCase {
     }
   }
 
-  sendKeys(keys) {
+  public sendKeys(keys) {
     if (typeof keys === 'string') {
       keys = keys.split('');
     }
@@ -118,43 +135,43 @@ class TestCase {
     return this;
   }
 
-  sendKey(key) {
+  public sendKey(key) {
     return this.sendKeys([key]);
   }
 
-  import(content, mimetype) {
+  public import(content, mimetype) {
     return this._chain(() => {
       return this.session.importContent(content, mimetype);
     });
   }
 
-  enablePlugin(pluginName) {
+  public enablePlugin(pluginName) {
     return this._chain(async () => {
       return await this.pluginManager.enable(pluginName);
     });
   }
 
-  disablePlugin(pluginName) {
+  public disablePlugin(pluginName) {
     return this._chain(async () => {
       return await this.pluginManager.disable(pluginName);
     });
   }
 
-  expect(expected) {
+  public expect(expected) {
     return this._chain(async () => {
       const serialized = await this.document.serialize(this.document.root.row, {pretty: true});
       this._expectDeepEqual(serialized.children, expected, 'Unexpected serialized content');
     });
   }
 
-  expectViewRoot(expected) {
+  public expectViewRoot(expected) {
     return this._chain(() => {
       this._expectEqual(this.session.viewRoot.row, expected,
                         'Unexpected view root');
     });
   }
 
-  expectCursor(row, col) {
+  public expectCursor(row, col) {
     return this._chain(() => {
       this._expectEqual(this.session.cursor.row, row,
                         'Unexpected cursor row');
@@ -163,7 +180,7 @@ class TestCase {
     });
   }
 
-  expectJumpIndex(index, historyLength = null) {
+  public expectJumpIndex(index, historyLength = null) {
     return this._chain(() => {
       this._expectEqual(this.session.jumpIndex, index,
                         'Unexpected jump index');
@@ -174,19 +191,19 @@ class TestCase {
     });
   }
 
-  expectNumMenuResults(num_results) {
+  public expectNumMenuResults(num_results) {
     return this._chain(() => {
       this._expectEqual(this.session.menu.results.length, num_results,
                         'Unexpected number of results');
     });
   }
 
-  setRegister(value) {
+  public setRegister(value) {
     this.register.deserialize(value);
     return this;
   }
 
-  expectRegister(expected) {
+  public expectRegister(expected) {
     return this._chain(() => {
       let current = this.register.serialize();
       this._expectDeepEqual(current, expected,
@@ -194,7 +211,7 @@ class TestCase {
     });
   }
 
-  expectRegisterType(expected) {
+  public expectRegisterType(expected) {
     return this._chain(() => {
       let current = this.register.serialize();
       this._expectDeepEqual(current.type, expected,
@@ -202,7 +219,7 @@ class TestCase {
     });
   }
 
-  expectExport(fileExtension, expected) {
+  public expectExport(fileExtension, expected) {
     return this._chain(async () => {
       let content = await this.session.exportContent(fileExtension);
       this._expectEqual(content, expected,

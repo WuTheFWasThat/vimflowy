@@ -63,8 +63,8 @@ export default class Session extends EventEmitter {
   private mutations: Array<Mutation>;
   private history: Array<HistoryLogEntry>;
   private historyIndex: number;
-  private jumpHistory: Array<JumpLogEntry>;
-  private jumpIndex: number;
+  public jumpHistory: Array<JumpLogEntry>;
+  public jumpIndex: number;
 
   private getLinesPerPage: () => number;
   private getVisiblePaths: () => Array<Path>;

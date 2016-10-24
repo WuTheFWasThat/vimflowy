@@ -3,6 +3,7 @@
     "target": "ES6",
     "jsx": "react",
     "moduleResolution": "node",
+    "types": [],
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true
   },

@@ -100,7 +100,7 @@ export default class KeyBindings extends EventEmitter {
   private hotkey_settings: HotkeySettings;
   public hotkeys: HotkeySettings; // includes defaults
 
-  constructor(definitions, hotkey_settings: HotkeySettings) {
+  constructor(definitions, hotkey_settings?: HotkeySettings) {
     super();
 
     this.definitions = definitions;

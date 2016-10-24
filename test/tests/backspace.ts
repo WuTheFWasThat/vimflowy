@@ -1,4 +1,5 @@
 /* globals describe, it */
+import 'mocha';
 import TestCase from '../testcase';
 
 describe('backspace', function() {
@@ -48,36 +49,36 @@ describe('backspace', function() {
   it('works from children', async function() {
     let t = new TestCase([
       { text: 'ab', children: [
-        'bc'
+        'bc',
       ] },
       { text: 'cd', children: [
-        'de'
-      ] }
+        'de',
+      ] },
     ]);
     t.sendKeys('jji');
     t.sendKey('backspace');
     // did nothing due to child of 'ab'
     t.expect([
       { text: 'ab', children: [
-        'bc'
+        'bc',
       ] },
       { text: 'cd', children: [
-        'de'
-      ] }
+        'de',
+      ] },
     ]);
     t.sendKey('esc');
     t.sendKeys('kddj');
     t.expect([
       'ab',
       { text: 'cd', children: [
-        'de'
-      ] }
+        'de',
+      ] },
     ]);
     t.sendKeys('i');
     t.sendKey('backspace');
     t.expect([
       { text: 'abcd', children: [
-        'de'
+        'de',
       ] },
     ]);
     t.sendKey('backspace');
@@ -85,13 +86,13 @@ describe('backspace', function() {
     t.sendKey('backspace');
     t.expect([
       { text: 'cd', children: [
-        'de'
+        'de',
       ] },
     ]);
     t.sendKey('backspace');
     t.expect([
       { text: 'cd', children: [
-        'de'
+        'de',
       ] },
     ]);
     await t.done();
@@ -100,13 +101,13 @@ describe('backspace', function() {
   it('works with undo/redo', async function() {
     let t = new TestCase([
       { text: 'ab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     t.sendKeys('ji');
     t.sendKey('backspace');
     t.expect([
-      'abcd'
+      'abcd',
     ]);
     // t.sendKey('backspace');
     // t.expect([
@@ -116,16 +117,16 @@ describe('backspace', function() {
     t.sendKeys('u');
     t.expect([
       { text: 'ab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     t.sendKey('ctrl+r');
     t.expect([
-      'abcd'
+      'abcd',
     ]);
     t.sendKey('x');
     t.expect([
-      'acd'
+      'acd',
     ]);
     await t.done();
   });
@@ -133,50 +134,50 @@ describe('backspace', function() {
   it('fails when both rows have children', async function() {
     let t = new TestCase([
       { text: 'ab', children: [
-        'cd'
+        'cd',
       ] },
       { text: 'ab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     t.sendKeys('jji');
     t.sendKey('backspace');
     t.expect([
       { text: 'ab', children: [
-        'cd'
+        'cd',
       ] },
       { text: 'ab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     t.sendKey('esc');
     t.sendKeys('kdd');
     t.expect([
       'ab',
       { text: 'ab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     t.sendKeys('ji');
     t.sendKey('backspace');
     t.expect([
       { text: 'abab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     t.sendKey('backspace');
     t.expect([
       { text: 'aab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     t.sendKey('esc');
     t.sendKeys('u');
     t.expect([
       'ab',
       { text: 'ab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     await t.done();
   });
