@@ -4,7 +4,7 @@ import 'mocha';
 import 'blanket';
 import * as _ from 'lodash';
 
-import DataStore, { InMemory } from '../src/assets/js/datastore';
+import { InMemory } from '../src/assets/js/datastore';
 import Document from '../src/assets/js/document';
 import Session from '../src/assets/js/session';
 import Register from '../src/assets/js/register';
@@ -32,7 +32,7 @@ type TestCaseOptions = {
 }
 
 class TestCase {
-  private store: DataStore;
+  public store: InMemory;
   private document: Document;
   private plugins: Array<string>;
   private session: Session;

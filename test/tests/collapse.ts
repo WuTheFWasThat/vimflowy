@@ -5,30 +5,30 @@ describe('collapse', () =>
   it('works in basic case', async function() {
     let t = new TestCase([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.sendKeys('z');
     t.expect([
       { text: 'first', collapsed: true, children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.sendKeys('jx');
     t.expect([
       { text: 'first', collapsed: true, children: [
-        'second'
+        'second',
       ] },
-      'hird'
+      'hird',
     ]);
     t.sendKeys('uu');
     t.expect([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     await t.done();
   })

@@ -1,5 +1,4 @@
 /* globals describe, it */
-import 'mocha';
 import TestCase from '../testcase';
 
 describe('backspace', function() {

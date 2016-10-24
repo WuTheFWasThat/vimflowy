@@ -180,7 +180,8 @@ export default class DataStore {
   }
 
   // get next row ID
-  protected async getId(): Promise<number> {
+  // public so test case can override
+  public async getId(): Promise<number> {
     // suggest to override this for efficiency
     let id = 1;
     while ((await this._get(this._lineKey_(id), null)) !== null) {
@@ -360,7 +361,7 @@ export class LocalStorageLazy extends CachingDataStore {
     return this._getLocalStorage_(this._lastSaveKey_(), 0);
   }
 
-  protected async getId(): Promise<number> {
+  public async getId(): Promise<number> {
     let id: number = this._getLocalStorage_(this._IDKey_(), 1);
     while (this._getLocalStorage_(this._lineKey_(id), null) !== null) {
       id++;
@@ -442,7 +443,7 @@ export class FirebaseStore extends DataStore {
     return 1;
   }
 
-  protected async getId(): Promise<number> {
+  public async getId(): Promise<number> {
     let id: number = await this._get(this._IDKey_(), 1);
     while ((await this._get(this._lineKey_(id), null)) !== null) {
       id++;

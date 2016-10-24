@@ -76,7 +76,7 @@ describe('basic multiline tests', function() {
     let threeRows = [
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ];
@@ -87,7 +87,7 @@ describe('basic multiline tests', function() {
       'o',
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -99,7 +99,7 @@ describe('basic multiline tests', function() {
       'o',
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -111,7 +111,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         'O',
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -123,7 +123,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         'O',
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -135,7 +135,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         'o',
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -147,7 +147,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         'o',
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -159,7 +159,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'O',
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -171,7 +171,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'O',
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -183,7 +183,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'o',
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -195,7 +195,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'o',
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -207,7 +207,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'O'
+          'O',
         ] },
       ] },
     ]);
@@ -219,7 +219,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'O'
+          'O',
         ] },
       ] },
     ]);
@@ -229,17 +229,17 @@ describe('basic multiline tests', function() {
   it('skips collapsed children', async function() {
     let t = new TestCase([
       { text: 'a', collapsed: true, children: [
-        's', 'd'
+        's', 'd',
       ] },
-      'f'
+      'f',
     ]);
     t.sendKeys('oo');
     t.expect([
       { text: 'a', collapsed: true, children: [
-        's', 'd'
+        's', 'd',
       ] },
       'o',
-      'f'
+      'f',
     ]);
     await t.done();
   });
@@ -248,19 +248,19 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       'a row',
       'another row',
-      'a third row'
+      'a third row',
     ]);
     t.sendKeys('$jx');
     t.expect([
       'a row',
       'another ro',
-      'a third row'
+      'a third row',
     ]);
     t.sendKeys('d0x');
     t.expect([
       'a row',
       '',
-      'a third row'
+      'a third row',
     ]);
     // tricky -1 on empty row case
     t.sendKeys('j$k');
@@ -268,7 +268,7 @@ describe('basic multiline tests', function() {
     t.expect([
       'a row',
       'ab',
-      'a third row'
+      'a third row',
     ]);
     await t.done();
   });
@@ -277,16 +277,16 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       'a row',
       'another row',
-      'a third row'
+      'a third row',
     ]);
     t.sendKeys('ddjdd');
     t.expect([
-      'another row'
+      'another row',
     ]);
     t.sendKeys('ux');
     t.expect([
       'another row',
-      ' third row'
+      ' third row',
     ]);
     await t.done();
   });
@@ -295,10 +295,10 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       { text: 'here', children: [
         { text: 'and', children: [
-          'there'
+          'there',
         ] },
       ] },
-      'down here'
+      'down here',
     ]);
     t.sendKeys('G');
     t.expectCursor(4, 0);
@@ -309,10 +309,10 @@ describe('basic multiline tests', function() {
     t = new TestCase([
       { text: 'here', children: [
         { text: 'and', collapsed: true, children: [
-          'there'
+          'there',
         ] },
       ] },
-      'down here'
+      'down here',
     ]);
     t.sendKeys('G');
     t.expectCursor(4, 0);
@@ -326,38 +326,38 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('3jdd');
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('x');
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('2u');
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     await t.done();
   });
@@ -367,38 +367,38 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('2jdd');
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('x');
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'ottomest row'
+          'ottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('2u');
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     await t.done();
   });
@@ -408,10 +408,10 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('dd');
     t.expect([ 'another row' ]);
@@ -428,10 +428,10 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     await t.done();
   });
@@ -450,10 +450,10 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('cc');
     t.sendKeys('a row');
@@ -462,10 +462,10 @@ describe('basic multiline tests', function() {
       { text: 'a row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     // should paste properly
     t.sendKeys('p');
@@ -474,10 +474,10 @@ describe('basic multiline tests', function() {
         'top row',
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     await t.done();
   });
@@ -487,10 +487,10 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('cr');
     t.sendKeys('a row');
@@ -505,7 +505,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
     ]);
@@ -518,7 +518,7 @@ describe('basic multiline tests', function() {
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'bottom row',
-          'bottomest row'
+          'bottomest row',
         ] },
       ] },
     ]);
@@ -529,7 +529,7 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       { text: 'top row', children: [
         'middle row',
-        'bottom row'
+        'bottom row',
       ] },
     ]);
     t.sendKeys('jcr');
@@ -538,7 +538,7 @@ describe('basic multiline tests', function() {
     t.expect([
       { text: 'top row', children: [
         'a row',
-        'bottom row'
+        'bottom row',
       ] },
     ]);
     t.sendKey('u');
@@ -548,7 +548,7 @@ describe('basic multiline tests', function() {
     t.expect([
       { text: 'top row', children: [
         'middle row',
-        'a row'
+        'a row',
       ] },
     ]);
     await t.done();
@@ -558,7 +558,7 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       'top row',
       'middle row',
-      'bottom row'
+      'bottom row',
     ]);
     t.sendKeys('dd');
     t.sendKeys('jj');
@@ -575,7 +575,7 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       'top row',
       'middle row',
-      'bottom row'
+      'bottom row',
     ]);
     t.sendKeys('dd');
     t.sendKeys('jj');
@@ -613,8 +613,8 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children: [
-          'bottom row'
-        ] }
+          'bottom row',
+        ] },
       ] },
     ]);
     t.sendKeys('jjcr');
@@ -623,7 +623,7 @@ describe('basic multiline tests', function() {
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children: [
-          'a row'
+          'a row',
         ] },
       ] },
     ]);
@@ -634,7 +634,7 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children: [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -644,7 +644,7 @@ describe('basic multiline tests', function() {
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children: [
-          'a row'
+          'a row',
         ] },
       ] },
     ]);
@@ -655,7 +655,7 @@ describe('basic multiline tests', function() {
     let t = new TestCase([
       { text: 'parent row', children: [
         'child row 1',
-        'child row 2'
+        'child row 2',
       ] },
     ]);
     t.sendKeys('j3dd');
@@ -664,7 +664,7 @@ describe('basic multiline tests', function() {
     t.expect([
       { text: 'parent row', children: [
         'child row 1',
-        'child row 2'
+        'child row 2',
       ] },
     ]);
     await t.done();
@@ -677,7 +677,7 @@ describe('basic multiline tests', function() {
         { text: 'child row 2', children: [
           'baby 1',
           'baby 2',
-          'baby 3'
+          'baby 3',
         ] },
       ] },
     ]);
@@ -687,7 +687,7 @@ describe('basic multiline tests', function() {
     t.expect([
       { text: 'parent row', children: [
         'child row 1',
-        'deleted'
+        'deleted',
       ] },
     ]);
     t.sendKeys('u');
@@ -697,7 +697,7 @@ describe('basic multiline tests', function() {
         { text: 'child row 2', children: [
           'baby 1',
           'baby 2',
-          'baby 3'
+          'baby 3',
         ] },
       ] },
     ]);
@@ -717,13 +717,13 @@ describe('basic multiline tests', function() {
     t.sendKeys('uu');
     t.expect([ 'a row' ]);
     // to demonstrate we're not relying on getId behavior
-    t.document.getId = function() {
+    t.store.getId = (() => {
       let id = 100;
-      while (this.lines[id]) {
+      return async function() {
         id++;
-      }
-      return id+1;
-    };
+        return id;
+      };
+    })();
     t.sendKey('ctrl+r');
     t.expect([ 'new row' ]);
     t.sendKey('ctrl+r');
@@ -736,34 +736,34 @@ describe('basic multiline tests', function() {
     t.sendKeys('yyp');
     t.expect([
       'a row',
-      'a row'
+      'a row',
     ]);
     t.sendKeys('u');
     t.sendKey('ctrl+r');
     t.sendKeys('x');
     t.expect([
       'a row',
-      ' row'
+      ' row',
     ]);
     t.sendKeys('uu');
     t.expect([ 'a row' ]);
     // to demonstrate we're not relying on getId behavior
-    t.document.getId = function() {
+    t.store.getId = (() => {
       let id = 100;
-      while (this.lines[id]) {
+      return async function() {
         id++;
-      }
-      return id+1;
-    };
+        return id;
+      };
+    })();
     t.sendKey('ctrl+r');
     t.expect([
       'a row',
-      'a row'
+      'a row',
     ]);
     t.sendKey('ctrl+r');
     t.expect([
       'a row',
-      ' row'
+      ' row',
     ]);
     await t.done();
   });
@@ -771,7 +771,7 @@ describe('basic multiline tests', function() {
   it('tests deleting viewroot', async function() {
     let t = new TestCase([
       { text: 'here', children: [
-        'there'
+        'there',
       ] },
     ]);
     t.sendKeys('j');
@@ -785,7 +785,7 @@ describe('basic multiline tests', function() {
   it('tests editing viewroot', async function() {
     let t = new TestCase([
       { text: 'here', children: [
-        'there'
+        'there',
       ] },
     ]);
     t.sendKeys('j');
@@ -799,7 +799,7 @@ describe('basic multiline tests', function() {
   it('cannot do new line above at view root', async function() {
     let t = new TestCase([
       { text: 'here', children: [
-        'there'
+        'there',
       ] },
     ]);
     t.sendKeys('j');
@@ -807,7 +807,7 @@ describe('basic multiline tests', function() {
     t.sendKeys('O');
     t.expect([
       { text: 'here', children: [
-        'there'
+        'there',
       ] },
     ]);
     await t.done();
