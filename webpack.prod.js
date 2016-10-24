@@ -8,21 +8,16 @@ module.exports = {
   devtool: 'source-map',
   entry: './src/assets/js/app.tsx',
   module: {
-    preLoaders: [{
-      test: /\.tsx?$/,
-      loader: 'tslint',
-      include: SRC_DIR
-    }],
     loaders: [
       {
         test: /\.jsx?$/,
-        loaders: ['babel'],
+        loaders: ['babel', 'eslint-loader'],
         include: SRC_DIR,
       },
       {
         test: /\.tsx?$/,
         loaders: [
-          'babel', 'awesome-typescript-loader',
+          'babel', 'awesome-typescript-loader', 'tslint',
         ],
         include: SRC_DIR
       },
@@ -61,5 +56,8 @@ module.exports = {
   tslint: {
     emitErrors: true,
     failOnHint: true
+  },
+  eslint: {
+    configFile: '.eslintrc'
   }
 };

@@ -72,12 +72,10 @@ export default class DataStore {
   }
 
   protected async _get(key: string, default_value: any = undefined): Promise<any> {
-    console.log('GET key', key, 'default value', default_value);
     throw new errors.NotImplemented();
   }
 
   protected async _set(key: string, value: any): Promise<void> {
-    console.log('SET key', key, 'value', value);
     throw new errors.NotImplemented();
   }
 
@@ -227,12 +225,10 @@ export class CachingDataStore extends DataStore {
   }
 
   protected async _getUncached(key: string, default_value: any = undefined): Promise<any> {
-    console.log('GET key', key, 'default value', default_value);
     throw new errors.NotImplemented();
   }
 
   protected async _setUncached(key: string, value: any): Promise<void> {
-    console.log('SET key', key, 'value', value);
     throw new errors.NotImplemented();
   }
 

@@ -63,9 +63,7 @@ class MarksPlugin {
       }
       public async rewind(/* session */) {
         return [
-          /* eslint-disable no-use-before-define */
           new UnsetMark(this.row),
-          /* eslint-enable no-use-before-define */
         ];
       }
     }
@@ -278,7 +276,7 @@ class MarksPlugin {
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_HELP, {
       description: 'Show/hide key bindings (edit in settings)',
-    }, async function() { // eslint-disable-line require-yield
+    }, async function() {
       this.session.toggleBindingsDiv();
       this.keyStream.forget(1);
     });

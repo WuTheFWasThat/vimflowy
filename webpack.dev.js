@@ -13,21 +13,16 @@ module.exports = {
     './src/assets/js/app.tsx'
   ],
   module: {
-    preLoaders: [{
-      test: /\.tsx?$/,
-      loader: 'tslint',
-      include: SRC_DIR
-    }],
     loaders: [
       {
         test: /\.jsx?$/,
-        loaders: ['react-hot', 'babel'],
+        loaders: ['react-hot', 'babel', 'eslint-loader'],
         include: SRC_DIR,
       },
       {
         test: /\.tsx?$/,
         loaders: [
-          'react-hot', 'babel', 'awesome-typescript-loader',
+          'react-hot', 'babel', 'awesome-typescript-loader', 'tslint',
         ],
         include: SRC_DIR
       },
@@ -56,6 +51,9 @@ module.exports = {
   },
   tslint: {
     emitErrors: true,
-    failOnHint: true
+    failOnHint: false
+  },
+  eslint: {
+    configFile: '.eslintrc'
   }
 };

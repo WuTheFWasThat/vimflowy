@@ -51,7 +51,7 @@ export class Logger {
     });
   }
 
-  // tslint:disable-next-line:no-unused-variable
+  // tslint:disable-next-line no-unused-variable
   private log() {
     if (this.stream === STREAM.STDOUT) {
       return console.log.apply(console, arguments);

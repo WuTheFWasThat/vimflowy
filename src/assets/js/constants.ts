@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 type TextProperty = 'bold' | 'italic' | 'underline' | 'strikethrough';
 export const text_properties: Array<TextProperty> = ['bold', 'italic', 'underline', 'strikethrough'];
 

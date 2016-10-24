@@ -29,6 +29,7 @@
       "no-conditional-assignment": true,
       "no-console": [true,
               "debug",
+              "log",
               "info",
               "time",
               "timeEnd",
