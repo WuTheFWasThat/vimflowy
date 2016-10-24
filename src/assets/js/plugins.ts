@@ -37,7 +37,7 @@ export class PluginApi {
   private pluginManager: PluginsManager;
   private name: string;
   private document: Document;
-  private cursor: Cursor;
+  public cursor: Cursor;
   public logger: Logger;
   private bindings: KeyBindings;
   private definitions: KeyDefinitions;
