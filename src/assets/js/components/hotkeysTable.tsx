@@ -1,28 +1,24 @@
 import React from 'react';
 
-import * as Modes from '../modes';
+import KeyBindings, { KeyMapping } from '../keyBindings';
+import { Motions, ActionsForMode } from '../keyDefinitions';
+import { ModeId } from '../types';
 
-export default class HotkeysTableComponent extends React.Component {
-  static get propTypes() {
-    return {
-      keyMap: React.PropTypes.any.isRequired,
-      motions: React.PropTypes.any.isRequired,
-      actions: React.PropTypes.any.isRequired,
-      ignoreEmpty: React.PropTypes.bool,
-    };
-  }
+type HotkeysTableProps = {
+  keyMap: KeyMapping;
+  motions: Motions;
+  actions: ActionsForMode;
+  ignoreEmpty?: boolean;
+}
 
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
+export default class HotkeysTableComponent extends React.Component<HotkeysTableProps, {}> {
+  public render() {
     const keyMap = this.props.keyMap;
     const motions = this.props.motions;
     const actions = this.props.actions;
     const ignoreEmpty = this.props.ignoreEmpty;
 
-    const buildTableContents = function(bindings, recursed=false) {
+    const buildTableContents = function(bindings, recursed = false) {
       const result = [];
       for (const k in bindings) {
         const v = bindings[k];
@@ -78,17 +74,17 @@ export default class HotkeysTableComponent extends React.Component {
               {label: 'Actions', definitions: actions},
             ].map(({label, definitions}) => {
               return [
-                <h5 key={label+'_header'} style={{margin: '5px 10px'}}>
+                <h5 key={label + '_header'} style={{margin: '5px 10px'}}>
                   {label}
                 </h5>
                 ,
-                <table key={label+'_table'} className='theme-bg-secondary'
+                <table key={label + '_table'} className='theme-bg-secondary'
                        style={{width: '100%'}}
                 >
                   <tbody>
                     {buildTableContents(definitions)}
                   </tbody>
-                </table>
+                </table>,
               ];
             });
           })()
@@ -98,19 +94,12 @@ export default class HotkeysTableComponent extends React.Component {
   }
 }
 
-export class ModeHotkeysTableComponent extends React.Component {
-  static get propTypes() {
-    return {
-      keyBindings: React.PropTypes.any.isRequired,
-      mode: Modes.PropType.isRequired,
-    };
-  }
-
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
+type ModeHotkeysTableProps = {
+  keyBindings: KeyBindings;
+  mode: ModeId;
+}
+export class ModeHotkeysTableComponent extends React.Component<ModeHotkeysTableProps, {}> {
+  public render() {
     const keyBindings = this.props.keyBindings;
     const mode = this.props.mode;
     return <HotkeysTableComponent

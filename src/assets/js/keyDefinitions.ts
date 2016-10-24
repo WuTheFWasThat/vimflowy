@@ -79,6 +79,11 @@ type ActionMetadata = {
   definition?: ActionDefinition;
 };
 
+export type Commands = { [command_name: string]: Command };
+export type Motions = { [command_name: string]: MotionMetadata };
+export type ActionsForMode = { [command_name: string]: ActionMetadata };
+export type Actions = { [mode: number]: ActionsForMode };
+
 export class KeyDefinitions {
   // mapping from string motion name to count (number of times mapped)
   private motion_command_counts: {
@@ -95,14 +100,9 @@ export class KeyDefinitions {
   };
 
   public defaultHotkeys: any; // TODO
-  // keys are command names
-  public commands: { [key: string]: Command };
-  // keys are command names
-  public motions: { [key: string]: MotionMetadata };
-  // keys are modes, then command names
-  public actions: { [key: string]: {
-    [key: string]: ActionMetadata
-  }};
+  public commands: Commands;
+  public motions: Motions;
+  public actions: Actions;
 
   constructor() {
     // set of possible motions

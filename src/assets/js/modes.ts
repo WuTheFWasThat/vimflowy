@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 import * as constants from './constants';
 // import { Document } from './document';
 // import * as DataStore from './datastore';
@@ -7,7 +5,6 @@ import Session from './session';
 import { KeyStream } from './keyHandler';
 
 import { ModeId } from './types';
-export const PropType = React.PropTypes.number;
 
 enum HotkeyType {
   NORMAL_MODE_TYPE,

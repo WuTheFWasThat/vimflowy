@@ -2,18 +2,11 @@ import React from 'react';
 
 import * as Plugins from '../plugins';
 
-export default class PluginsTableComponent extends React.Component {
-  static get propTypes() {
-    return {
-      pluginManager: React.PropTypes.any.isRequired,
-    };
-  }
-
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
+type Props = {
+  pluginManager: Plugins.PluginsManager;
+}
+export default class PluginsTableComponent extends React.Component<Props, {}> {
+  public render() {
     const pluginManager = this.props.pluginManager;
     return (
       <table style={{width: '100%', borderCollapse: 'collapse'}}>
@@ -53,7 +46,7 @@ export default class PluginsTableComponent extends React.Component {
                   };
                   btnText = 'Disable';
                 } else if (status === Plugins.STATUSES.DISABLED) {
-                  btnClick= async () => {
+                  btnClick = async () => {
                     return await pluginManager.enable(name);
                   };
                   btnText = 'Enable';

@@ -6,6 +6,7 @@ import * as Modes from './modes';
 import * as errors from './errors';
 import logger from './logger';
 import EventEmitter from './eventEmitter';
+import { KeyDefinitions } from './keyDefinitions';
 
 /*
 Terminology:
@@ -44,8 +45,8 @@ It also internally maintains
 const MODES = Modes.modes;
 const MODE_TYPES = Modes.types;
 
-type KeyDefinitions = any; // TODO
-type KeyMapping = any; // TODO
+export type KeyMapping = any; // TODO
+export type KeyMappings = {[mode: number]: KeyMapping};
 type KeyBindingsRaw = any; // TODO
 
 type HotkeySettingsForMode = any; // TODO
@@ -92,7 +93,7 @@ function getBindings(definitions, keyMap) {
 
 export default class KeyBindings extends EventEmitter {
   public definitions: KeyDefinitions;
-  public keyMaps: KeyMapping;
+  public keyMaps: KeyMappings;
   public bindings: KeyBindingsRaw;
   public motion_bindings: MotionBindings;
 
