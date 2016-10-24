@@ -1,4 +1,5 @@
-import React from 'react';
+// tslint:disable:align
+import React from 'react'; // tslint:disable-line no-unused-variable
 
 import * as Plugins from '../../assets/js/plugins';
 import Menu from '../../assets/js/menu';
@@ -10,6 +11,9 @@ import LineComponent from '../../assets/js/components/line';
 import Mutation from '../../assets/js/mutations';
 import * as errors from '../../assets/js/errors';
 import * as constants from '../../assets/js/constants';
+import { Logger } from '../../assets/js/logger';
+import Path from '../../assets/js/path';
+import { Row } from '../../assets/js/types';
 
 import * as basic_defs from '../../assets/js/definitions/basics';
 
@@ -23,32 +27,45 @@ const markStyle = {
 };
 
 class MarksPlugin {
+  private api: Plugins.PluginApi;
+  private logger: Logger;
+  private session: Session;
+  private document: Document;
+  private marksession?: Session;
+  private marksessionpath?: Path;
+  public SetMark: new(row: Row, mark: string) => Mutation;
+  public UnsetMark: new(row: Row) => Mutation;
+  private marks_to_paths: {[mark: string]: Path};
+
   constructor(api) {
     this.api = api;
   }
 
-  async enable() {
+  public async enable() {
     this.logger = this.api.logger;
     this.session = this.api.session;
     this.document = this.session.document;
     const that = this;
 
     class SetMark extends Mutation {
+      private row: Row;
+      private mark: string;
+
       constructor(row, mark) {
         super();
         this.row = row;
         this.mark = mark;
       }
-      str() {
+      public str() {
         return `row ${this.row}, mark ${this.mark}`;
       }
-      async mutate(/* session */) {
+      public async mutate(/* session */) {
         return await that._setMark(this.row, this.mark);
       }
-      async rewind(/* session */) {
+      public async rewind(/* session */) {
         return [
           /* eslint-disable no-use-before-define */
-          new UnsetMark(this.row)
+          new UnsetMark(this.row),
           /* eslint-enable no-use-before-define */
         ];
       }
@@ -56,20 +73,23 @@ class MarksPlugin {
     this.SetMark = SetMark;
 
     class UnsetMark extends Mutation {
+      private row: Row;
+      private mark: string;
+
       constructor(row) {
         super();
         this.row = row;
       }
-      str() {
+      public str() {
         return `row ${this.row}`;
       }
-      async mutate(/* session */) {
+      public async mutate(/* session */) {
         this.mark = await that._getMark(this.row);
         return await that._unsetMark(this.row, this.mark);
       }
-      async rewind(/* session */) {
+      public async rewind(/* session */) {
         return [
-          new SetMark(this.row, this.mark)
+          new SetMark(this.row, this.mark),
         ];
       }
     }
@@ -125,15 +145,15 @@ class MarksPlugin {
             }
           }
           return [key, context];
-        }
-      ]
+        },
+      ],
     });
 
     const CMD_MARK = this.api.registerCommand({
       name: 'MARK',
       default_hotkeys: {
-        normal_like: ['m']
-      }
+        normal_like: ['m'],
+      },
     });
     this.api.registerAction([MODES.NORMAL], CMD_MARK, {
       description: 'Mark a line',
@@ -144,8 +164,8 @@ class MarksPlugin {
     const CMD_FINISH_MARK = this.api.registerCommand({
       name: 'FINISH_MARK',
       default_hotkeys: {
-        insert_like: ['enter']
-      }
+        insert_like: ['enter'],
+      },
     });
     this.api.registerAction([MODES.MARK], CMD_FINISH_MARK, {
       description: 'Finish typing mark',
@@ -157,7 +177,7 @@ class MarksPlugin {
       this.keyStream.save();
     });
 
-    const CMD_GO = this.api.commands.GO;
+    const CMD_GO = (this.api.commands as any).GO;
     this.api.registerMotion([CMD_GO, CMD_MARK], {
       description: 'Go to the mark indicated by the cursor, if it exists',
     }, async function() {
@@ -178,9 +198,9 @@ class MarksPlugin {
       };
     });
 
-    const CMD_DELETE = this.api.commands.DELETE;
+    const CMD_DELETE = (this.api.commands as any).DELETE;
     this.api.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MARK], {
-      description: 'Delete mark at cursor'
+      description: 'Delete mark at cursor',
     }, async function() {
       const err = await that.updateMark(this.session.cursor.row, '');
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
@@ -190,8 +210,8 @@ class MarksPlugin {
     const CMD_MARK_SEARCH = this.api.registerCommand({
       name: 'MARK_SEARCH',
       default_hotkeys: {
-        normal_like: ['\'', '`']
-      }
+        normal_like: ['\'', '`'],
+      },
     });
     this.api.registerAction([MODES.NORMAL], CMD_MARK_SEARCH, {
       description: 'Go to (search for) a mark',
@@ -220,18 +240,18 @@ class MarksPlugin {
               const line = await this.session.document.getLine(path.row);
               return {
                 contents: line,
-                renderHook(line) {
+                renderHook(lineDiv) {
                   return (
                     <span>
                       <span key={`mark_${mark}`} style={markStyle}
                             className='theme-bg-secondary theme-trim'>
                         {mark}
                       </span>
-                      {line}
+                      {lineDiv}
                     </span>
                   );
                 },
-                fn: async () => await this.session.zoomInto(path)
+                fn: async () => await this.session.zoomInto(path),
               };
             }
           )
@@ -325,7 +345,7 @@ class MarksPlugin {
               <LineComponent
                 lineData={pluginData.marks.markText}
                 cursors={{
-                  [pluginData.marks.markCol]: true
+                  [pluginData.marks.markCol]: true,
                 }}
                 cursorBetween={true}
               />
@@ -376,40 +396,40 @@ class MarksPlugin {
   // maintain global marks data structures
   //   a map: row -> mark
   //   and a second map: mark -> row
-  async _getRowsToMarks() {
+  private async _getRowsToMarks() {
     return await this.api.getData('ids_to_marks', {});
   }
-  _getRowsToMarksSync() {
+  private _getRowsToMarksSync() {
     return this.api.getDataSync('ids_to_marks');
   }
-  async _setRowsToMarks(rows_to_marks) {
+  private async _setRowsToMarks(rows_to_marks) {
     return await this.api.setData('ids_to_marks', rows_to_marks);
   }
-  async _getMarksToRows() {
+  private async _getMarksToRows() {
     return await this.api.getData('marks_to_ids', {});
   }
-  async _setMarksToRows(mark_to_rows) {
+  private async _setMarksToRows(mark_to_rows) {
     return await this.api.setData('marks_to_ids', mark_to_rows);
   }
 
-  async _sanityCheckMarks() {
+  private async _sanityCheckMarks() {
     const marks_to_rows = await this._getMarksToRows();
     const rows_to_marks = await this._getRowsToMarks();
     const marks_to_rows2 = {};
     for (const row in rows_to_marks) {
       const mark = rows_to_marks[row];
-      marks_to_rows2[mark] = parseInt(row);
+      marks_to_rows2[mark] = parseInt(row, 10);
     }
     errors.assert_deep_equals(marks_to_rows, marks_to_rows2, 'Inconsistent rows_to_marks');
   }
 
   // get mark for an row, '' if it doesn't exist
-  async _getMark(row) {
+  private async _getMark(row) {
     const marks = await this._getRowsToMarks();
     return marks[row] || '';
   }
 
-  _getMarkSync(row) {
+  private _getMarkSync(row) {
     const marks = this._getRowsToMarksSync();
     if (marks === null) {
       return null;
@@ -417,7 +437,7 @@ class MarksPlugin {
     return marks[row] || '';
   }
 
-  async _setMark(row, mark) {
+  private async _setMark(row, mark) {
     await this._sanityCheckMarks();
     const marks_to_rows = await this._getMarksToRows();
     const rows_to_marks = await this._getRowsToMarks();
@@ -431,7 +451,7 @@ class MarksPlugin {
     await this.computeMarksToPaths();
   }
 
-  async _unsetMark(row, mark) {
+  private async _unsetMark(row, mark) {
     await this._sanityCheckMarks();
     const marks_to_rows = await this._getMarksToRows();
     const rows_to_marks = await this._getRowsToMarks();
@@ -446,7 +466,7 @@ class MarksPlugin {
   }
 
   // compute set of paths, used for rendering
-  async computeMarksToPaths() {
+  private async computeMarksToPaths() {
     await this._sanityCheckMarks();
     // note: some of these may be detached
     const marks_to_rows = await this._getMarksToRows();
@@ -464,7 +484,7 @@ class MarksPlugin {
     this.marks_to_paths = marks_to_paths;
   }
 
-  async listMarks() {
+  private async listMarks() {
     await this._sanityCheckMarks();
     const marks_to_rows = await this._getMarksToRows();
 
@@ -483,7 +503,7 @@ class MarksPlugin {
 
   // Set the mark for row
   // Returns whether setting mark succeeded
-  async updateMark(row, mark = '') {
+  private async updateMark(row, mark = '') {
     const marks_to_rows = await this._getMarksToRows();
     const rows_to_marks = await this._getRowsToMarks();
     const oldmark = rows_to_marks[row];
@@ -501,12 +521,12 @@ class MarksPlugin {
       if (await this.document.isAttached(other_row)) {
         return `Mark '${mark}' was already taken!`;
       } else {
-        await this.session.do(new this.UnsetMark(other_row, mark));
+        await this.session.do(new this.UnsetMark(other_row));
       }
     }
 
     if (oldmark) {
-      await this.session.do(new this.UnsetMark(row, oldmark));
+      await this.session.do(new this.UnsetMark(row));
     }
 
     if (mark) {
@@ -527,7 +547,7 @@ Plugins.register(
     author: 'Jeff Wu',
     description:
       `Lets you tag a row with a string, and then reference that row with @markname.
-  Fast search for marked rows, using '.`
+  Fast search for marked rows, using '.`,
   },
   async (api) => {
     const marksPlugin = new MarksPlugin(api);

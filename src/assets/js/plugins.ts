@@ -32,16 +32,16 @@ export enum STATUSES {
 
 // class for exposing plugin API
 export class PluginApi {
-  private session: Session;
+  public session: Session;
   private metadata: PluginMetadata;
   private pluginManager: PluginsManager;
   private name: string;
   private document: Document;
   private cursor: Cursor;
-  private logger: Logger;
+  public logger: Logger;
   private bindings: KeyBindings;
   private definitions: KeyDefinitions;
-  private commands: { [key: string]: Command };
+  public commands: { [key: string]: Command };
 
   private registrations: Array<any>; // TODO
 
