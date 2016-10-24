@@ -123,7 +123,7 @@ export const default_data = [
           'Marks is actually written as a plugin, too!  It\'s on by default, but you can turn it off from the settings menu.',
         ] },
         'You can write your own plugins too!  ' +
-        'See here for documentation: https://github.com/WuTheFWasThat/vimflowy/blob/master/PLUGINS.md (visit links with gx)',
+        'See here for documentation: https://github.com/WuTheFWasThat/vimflowy/blob/master/docs/plugins.md (visit links with gx)',
       ] },
       'Customizable hotkeys (via downloading/uploading a json file)',
       'Different color themes (see Settings)',

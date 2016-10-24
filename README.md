@@ -28,21 +28,36 @@ Try it out!
   - search (not like vim's)
   - cloning (bullets with multiple parents)
   - different visual themes
-- Plugins system (see [PLUGINS.md](PLUGINS.md))
+- Plugins system (see [plugins.md](docs/plugins.md))
   - marks (not like vim's)
   - easy-motion for moving between bullets quickly
   - time-tracking
 
-## NOTES ##
+## LIMITATIONS ##
 
-- The app is entirely local. The online version uses localStorage, so it should be used in only one browser.
-  If you're going to have a large document, use a browser with large localStorage limits
 - Currently, you can only edit from one tab at a time.
-- Tested mostly in Chrome and Firefox
-- There are [known inconsistencies with vim](vim_inconsistencies.md)
-- Contributions are very welcome!  See [CONTRIBUTING.md](CONTRIBUTING.md) if you're interested
-- The [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei) exists but will no longer be maintained.
-  [Chrome apps are getting essentially deprecated](https://blog.chromium.org/2016/08/from-chrome-apps-to-web.html).
+  There will likely never be collaboration features.
+- There are [known inconsistencies with vim](docs/vim_inconsistencies.md)
+- Tested mostly in recent Chrome and Firefox.  You may need a relatively modern browser.
+- Currently essentially non-functional on mobile
+
+## DATA STORAGE ##
+
+Vimflowy is entirely local, and uses localStorage.
+So each browser would have its own Vimflowy document.
+Since data is local, offline editing is supported.
+If you're going to have a very large document, use a browser with large localStorage limits (Firefox, for example).
+
+Remote data storage is in an experimental stage and will soon be supported.
+Feel free to contact us if you wish to try it out.
+
+## NOTES FOR DEVELOPERS ##
+
+Contributions are very welcome!
+See [CONTRIBUTING.md](CONTRIBUTING.md) if you're interested
+
+The [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei) exists but will no longer be maintained.
+[Chrome apps are getting essentially deprecated](https://blog.chromium.org/2016/08/from-chrome-apps-to-web.html).
 
 ### LICENSE ###
 

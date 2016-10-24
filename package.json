@@ -10,7 +10,7 @@
     "build": "NODE_ENV=production webpack --config webpack.prod.js --progress",
     "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx' && eslint --ignore-path .gitignore .",
     "start": "node dev_server.js",
-    "test": "mocha --opts mocha.opts",
+    "test": "mocha --opts test/mocha.opts",
     "typecheck": "tsc -p . --noEmit"
   },
   "dependencies": {

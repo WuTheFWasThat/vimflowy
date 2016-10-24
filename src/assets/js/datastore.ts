@@ -374,7 +374,7 @@ export class LocalStorageLazy extends CachingDataStore {
   }
 }
 
-export class FirebaseStore extends DataStore {
+export class FirebaseStore extends CachingDataStore {
   private lastSave: number;
   private fbase: any;
   // private fbase: Firebase;

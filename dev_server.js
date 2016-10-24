@@ -32,7 +32,7 @@ const spawn = require('child_process').spawn;
 spawn(
   'node_modules/.bin/mocha',
   [
-    '--opts', 'mocha.opts',
+    '--opts', 'test/mocha.opts',
     '--reporter', 'dot',
     '--watch',
   ],

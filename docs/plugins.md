@@ -1,18 +1,23 @@
-NOTE: *PLUGINS IS A WORK IN PROGRESS.  THE API IS INCOMPLETE AND UNSTABLE*
+NOTE: *Plugins is currently a work in progress.  The API is unstable.*
 
-Nevertheless, if you think you've written a useful plugin, please make a PR!
-When/if it gets merged, we'll try not to break it.
+However, once a plugin is on the master branch, it'll continue to be maintained.
+Please feel free to contact the maintainers of this repository if you're thinking about making a plugin.
+
+# Getting started
+
+First, see [here](CONTRIBUTING.md) for details on development setup.
+
+To make a plugin, make a directory `src/plugins/[YOUR_PLUGIN_NAME]`, with a `index.js` or `index.ts` file.
+Then add an import of your directory to [src/plugins/index.js](../src/plugins/index.js).
+
+In general, you should be making minimal changes outside your plugin folder.
+You may write your plugin in either Javascript or Typescript.
+For styles, you can simply import a CSS or SASS stylesheet from your index file.
+
+See the ["hello world" sample plugin](../src/plugins/examples/index.js) for an extremely minimal example.
+More involved examples can be found [here](../src/plugins).
 
 # Plugin API
-
-To make a plugin, import your javascript from [src/plugins/index.js](src/plugins/index.js).
-You can import CSS as well, from your javascript file.
-See the ["hello world" sample plugin](src/plugins/examples/index.js) for an extremely minimal example.
-
-You will have to rebuild vimflowy if using a static distribution.
-See [here](CONTRIBUTING.md) for details on development setup.
-
-Generally, this documentation may be less useful than just [looking at some example plugins](src/plugins).
 
 ## Registering a plugin
 
@@ -22,7 +27,7 @@ A plugin registers using
 Plugins.register(metadata, enable: fn, disable: ?fn)
 ```
 where
-- `metadata`:  For the detailed format, read the type definitions in [plugins.ts](src/assets/js/plugins.ts)
+- `metadata`:  For the detailed format, read the type definitions in [plugins.ts](../src/assets/js/plugins.ts)
   - name: string
     This will be displayed to the user in options. It should not be changed!
   - version: number
@@ -69,9 +74,9 @@ It is defined by associating a sequence of commands with a function (that mutate
 An **action** is a manipulation of the document/underlying data.
 It is defined by associating a sequence of commands with a function to perform the action, for a given set of modes.
 There is a special 'MOTION' command which lets an action use any motion as a subroutine.
-See the definitions of yank and delete, in [`src/assets/js/definitions/basics.ts`](src/assets/js/definitions/basics.ts), for an example.
+See the definitions of yank and delete, in [`src/assets/js/definitions/basics.ts`](../src/assets/js/definitions/basics.ts), for an example.
 
-For other example usages, see the folder [`src/assets/js/definitions`](src/assets/js/definitions), and the easy-motion plugin.
+For other example usages, see the folder [`src/assets/js/definitions`](../src/assets/js/definitions), and the easy-motion plugin.
 
 ```
     api.registerMode(metadata) -> mode
@@ -92,7 +97,7 @@ You can also manually call each deregister, but this is not recomended
     api.deregisterAction(modes, commands)
 ```
 
-See [`keyDefinitions.ts`](src/assets/js/keyDefinitions.ts) for detailed schema for the metadata of each of these.
+See [`keyDefinitions.ts`](../src/assets/js/keyDefinitions.ts) for detailed schema for the metadata of each of these.
 
 #### vimflowy internals
 
