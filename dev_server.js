@@ -34,8 +34,7 @@ spawn(
   [
     '--opts', 'mocha.opts',
     '--reporter', 'dot',
-    '--watch', 'test/tests',
-    '--watch-extensions tsx,ts'
+    '--watch',
   ],
   {stdio: 'inherit'}
 );

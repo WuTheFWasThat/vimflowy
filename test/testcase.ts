@@ -1,7 +1,6 @@
 /* globals afterEach */
 
 import 'mocha';
-import 'blanket';
 import * as _ from 'lodash';
 
 import { InMemory } from '../src/assets/js/datastore';

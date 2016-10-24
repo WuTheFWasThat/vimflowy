@@ -12,7 +12,7 @@ For development, you'll probably want to run a web version of vimflowy locally.
 
 #### INSTALL: ####
 
-With recent versions of node/npm
+With recent versions of node (6.x) and npm
 
     # Install git repo
     git clone https://github.com/WuTheFWasThat/vimflowy.git

@@ -8,16 +8,10 @@
   },
   "scripts": {
     "build": "NODE_ENV=production webpack --config webpack.prod.js --progress",
-    "coverage": "multi='spec=- html-cov=public/coverage.html' node_modules/.bin/mocha  --compilers js:babel-core/register test/tests --require blanket --reporter mocha-multi test/tests/*",
     "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx'",
     "start": "node dev_server.js",
     "test": "mocha --opts mocha.opts",
     "typecheck": "tsc -p . --noEmit"
-  },
-  "config": {
-    "blanket": {
-      "pattern": "//assets/js/.*\\.js$/"
-    }
   },
   "dependencies": {
     "@types/immutable": "^3.8.4",
@@ -48,12 +42,10 @@
     "babel-preset-react": "^6.11.1",
     "babel-preset-stage-3": "^6.11.0",
     "babel-runtime": "^6.11.6",
-    "blanket": "^1.2.3",
     "css-loader": "^0.23.1",
     "express": "^4.14.0",
     "file-loader": "^0.9.0",
     "mocha": "^3.0.2",
-    "mocha-multi": "^0.9.1",
     "node-sass": "^3.8.0",
     "react-hot-loader": "^1.3.0",
     "sass-loader": "^4.0.0",
