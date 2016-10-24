@@ -1,5 +1,4 @@
 --require ts-node/register
---require babel-polyfill
 --watch-extensions tsx,ts
 --timeout 60000
 test/tests/*.ts
