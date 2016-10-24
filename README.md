@@ -5,9 +5,7 @@
 
 This is a productivity tool which draws great inspiration from workflowy and vim.
 
-Try it out!
-- [online] (https://vimflowy.bitballoon.com)
-- [local/dev](CONTRIBUTING.md)
+[Try it out!](https://vimflowy.bitballoon.com)
 
 (Video coming eventually...)
 
@@ -54,7 +52,7 @@ Feel free to contact us if you wish to try it out.
 ## NOTES FOR DEVELOPERS ##
 
 Contributions are very welcome!
-See [CONTRIBUTING.md](CONTRIBUTING.md) if you're interested
+See [dev_setup.md](docs/dev_setup.md) to see how to get started with a development setup.
 
 The [chrome app](https://chrome.google.com/webstore/detail/vimflowy/dkdhbejgjplkmbiglmjobppakgmiimei) exists but will no longer be maintained.
 [Chrome apps are getting essentially deprecated](https://blog.chromium.org/2016/08/from-chrome-apps-to-web.html).

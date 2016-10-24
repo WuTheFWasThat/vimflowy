@@ -5,7 +5,7 @@ Please feel free to contact the maintainers of this repository if you're thinkin
 
 # Getting started
 
-First, see [here](CONTRIBUTING.md) for details on development setup.
+First, see [here](./dev_setup.md) for details on development setup.
 
 To make a plugin, make a directory `src/plugins/[YOUR_PLUGIN_NAME]`, with a `index.js` or `index.ts` file.
 Then add an import of your directory to [src/plugins/index.js](../src/plugins/index.js).

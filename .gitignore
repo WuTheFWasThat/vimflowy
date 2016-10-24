@@ -5,7 +5,6 @@
 
 node_modules/
 npm-debug.log
-*-v8.log
 
 # vim swap files
 *.sw*
