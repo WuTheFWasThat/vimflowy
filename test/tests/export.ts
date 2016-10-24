@@ -5,19 +5,19 @@ describe('export', function() {
   it('works in basic case', async function() {
     let t = new TestCase([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.expectExport('text/plain', '- \n  - first\n    - second\n  - third');
     t.expectExport('application/json',
       (JSON.stringify({
         text: '', children: [
           { text: 'first', children: [
-            { text: 'second' }
+            { text: 'second' },
           ] },
-          { text: 'third' }
-        ]
+          { text: 'third' },
+        ],
       }, null, 2))
     );
     await t.done();
@@ -26,9 +26,9 @@ describe('export', function() {
   it('doesnt care about zoom', async function() {
     let t = new TestCase([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.sendKey('down');
     t.sendKey('alt+l');
@@ -37,9 +37,9 @@ describe('export', function() {
       (JSON.stringify({
         text: '', children: [
           { text: 'first', children: [
-            { text: 'second' }
+            { text: 'second' },
           ] },
-          { text: 'third' }
+          { text: 'third' },
         ]}, null, 2))
     );
     await t.done();
@@ -70,13 +70,13 @@ describe('import', function() {
             { text: 'Line 2', collapsed: true, children: [
                 { text: 'Line 2.1' },
                 { text: 'Line 2.2', collapsed: true, children: [
-                    { text: 'Line 2.2.1' }
+                    { text: 'Line 2.2.1' },
                 ] },
                 { text: 'Line 2.3', collapsed: true, children: [
-                    { text: 'Line 2.3.1' }
-                ] }
+                    { text: 'Line 2.3.1' },
+                ] },
             ] },
-            { text: 'Line 3' }
+            { text: 'Line 3' },
         ] }, null, 2))
     );
     await t.done();
@@ -88,36 +88,36 @@ describe('import', function() {
       'text': '',
       'children': [
         {
-          'text': 'Line 1'
+          'text': 'Line 1',
         },
         {
           'text': 'Line 2',
           'children': [
             {
-              'text': 'Line 2.1'
+              'text': 'Line 2.1',
             },
             {
               'text': 'Line 2.2',
               'children': [
                 {
-                  'text': 'Line 2.2.1'
-                }
-              ]
+                  'text': 'Line 2.2.1',
+                },
+              ],
             },
             {
               'text': 'Line 2.3',
               'children': [
                 {
-                  'text': 'Line 2.3.1'
-                }
-              ]
-            }
-          ]
+                  'text': 'Line 2.3.1',
+                },
+              ],
+            },
+          ],
         },
         {
-          'text': 'Line 3'
-        }
-      ]
+          'text': 'Line 3',
+        },
+      ],
     })), 'application/json');
 
     // move the imported text out to the root
@@ -133,14 +133,14 @@ describe('import', function() {
             { text: 'Line 2', children: [
                 { text: 'Line 2.1' },
                 { text: 'Line 2.2', children: [
-                    { text: 'Line 2.2.1' }
+                    { text: 'Line 2.2.1' },
                 ] },
                 { text: 'Line 2.3', children: [
-                    { text: 'Line 2.3.1' }
-                ] }
+                    { text: 'Line 2.3.1' },
+                ] },
             ] },
-            { text: 'Line 3' }
-        ]
+            { text: 'Line 3' },
+        ],
       }, null, 2))
     );
     await t.done();
@@ -167,11 +167,11 @@ describe('import', function() {
         text: '', children: [
             { text: 'Line 1', collapsed: true, children: [
                 { text: 'Subpart 1', collapsed: true, children: [
-                    { text: 'Title line for subpart 1' }
-                ] }
+                    { text: 'Title line for subpart 1' },
+                ] },
             ] },
             { text: 'Line 2' },
-            { text: 'Line 3' }
+            { text: 'Line 3' },
         ] }, null, 2))
     );
     await t.done();
@@ -187,14 +187,14 @@ describe('import', function() {
           'children': [
             {
               'text': 'clone',
-              'id': 94
-            }
-          ]
+              'id': 94,
+            },
+          ],
         },
         {
-          'clone': 94
-        }
-      ]
+          'clone': 94,
+        },
+      ],
     })), 'application/json');
 
     t.expect([
@@ -206,15 +206,15 @@ describe('import', function() {
             'children': [
               {
                 'text': 'clone',
-                'id': 3
-              }
-            ]
+                'id': 3,
+              },
+            ],
           },
           {
-            'clone': 3
-          }
-        ]
-      }
+            'clone': 3,
+          },
+        ],
+      },
     ]);
 
     t.expectExport('application/json', (JSON.stringify({
@@ -228,16 +228,16 @@ describe('import', function() {
               'children': [
                 {
                   'text': 'clone',
-                  'id': 3
-                }
-              ]
+                  'id': 3,
+                },
+              ],
             },
             {
-              'clone': 3
-            }
-          ]
-        }
-      ]
+              'clone': 3,
+            },
+          ],
+        },
+      ],
     }, null, 2)));
     await t.done();
   });

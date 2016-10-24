@@ -23,21 +23,21 @@ describe('go visible end/beginning', function() {
     let t = new TestCase([
       'ab',
       { text: 'bc', children: [
-        'cd'
+        'cd',
       ] },
     ]);
     t.sendKeys('Gx');
     t.expect([
       'ab',
       { text: 'bc', children: [
-        'd'
+        'd',
       ] },
     ]);
     t.sendKeys('ggx');
     t.expect([
       'b',
       { text: 'bc', children: [
-        'd'
+        'd',
       ] },
     ]);
     await t.done();
@@ -54,14 +54,14 @@ describe('go visible end/beginning', function() {
     let t = new TestCase([
       'ab',
       { text: 'bc', collapsed: true, children: [
-        'cd'
+        'cd',
       ] },
     ]);
     t.sendKeys('Gx');
     t.expect([
       'ab',
       { text: 'c', collapsed: true, children: [
-        'cd'
+        'cd',
       ] },
     ]);
     await t.done();
@@ -72,27 +72,27 @@ describe('go visible end/beginning', function() {
       'ab',
       { text: 'bc', children: [
         'dc',
-        'cd'
+        'cd',
       ] },
-      'de'
+      'de',
     ]);
     t.sendKeys('j]Gx');
     t.expect([
       'ab',
       { text: 'bc', children: [
         'dc',
-        'd'
+        'd',
       ] },
-      'de'
+      'de',
     ]);
     t.sendKeys('ggx');
     t.expect([
       'ab',
       { text: 'c', children: [
         'dc',
-        'd'
+        'd',
       ] },
-      'de'
+      'de',
     ]);
     await t.done();
   });
@@ -102,45 +102,45 @@ describe('go visible end/beginning', function() {
       'ab',
       { text: 'bc', collapsed: true, children: [
         'dc',
-        'cd'
+        'cd',
       ] },
-      'de'
+      'de',
     ]);
     t.sendKeys('j]Gx');
     t.expect([
       'ab',
       { text: 'bc', collapsed: true, children: [
         'dc',
-        'd'
+        'd',
       ] },
-      'de'
+      'de',
     ]);
     t.sendKeys('ggx');
     t.expect([
       'ab',
       { text: 'c', collapsed: true, children: [
         'dc',
-        'd'
+        'd',
       ] },
-      'de'
+      'de',
     ]);
     t.sendKeys('j]Gx');
     t.expect([
       'ab',
       { text: 'c', collapsed: true, children: [
         'c',
-        'd'
+        'd',
       ] },
-      'de'
+      'de',
     ]);
     t.sendKeys('ggx');
     t.expect([
       'ab',
       { text: 'c', collapsed: true, children: [
         '',
-        'd'
+        'd',
       ] },
-      'de'
+      'de',
     ]);
     await t.done();
   });

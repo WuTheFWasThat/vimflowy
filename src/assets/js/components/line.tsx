@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 import * as constants from '../constants';
 import * as utils from '../utils';

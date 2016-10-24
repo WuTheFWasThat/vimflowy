@@ -12,39 +12,39 @@ describe('zoom', function() {
   it('works in basic cases', async function() {
     let t = new TestCase([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.sendKey(zoomInKey);
     t.expect([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.sendKeys('jjx');
     t.expect([
       { text: 'first', children: [
-        'econd'
+        'econd',
       ] },
-      'third'
+      'third',
     ]);
     // zoom out stays on same line
     t.sendKey(zoomOutKey);
     t.sendKeys('x');
     t.expect([
       { text: 'first', children: [
-        'cond'
+        'cond',
       ] },
-      'third'
+      'third',
     ]);
     t.sendKeys('jx');
     t.expect([
       { text: 'first', children: [
-        'cond'
+        'cond',
       ] },
-      'hird'
+      'hird',
     ]);
     await t.done();
   });
@@ -53,7 +53,7 @@ describe('zoom', function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -61,7 +61,7 @@ describe('zoom', function() {
     t.expect([
       { text: 'irst', collapsed: true, children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -70,7 +70,7 @@ describe('zoom', function() {
     t.expect([
       { text: 'irst', collapsed: true, children: [
         { text: 'econd', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -80,7 +80,7 @@ describe('zoom', function() {
     t.expect([
       { text: 'rst', collapsed: true, children: [
         { text: 'econd', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -92,7 +92,7 @@ describe('zoom', function() {
       { text: 'first', children: [
         { text: 'second', children: [
           { text: 'third', children: [
-            'fourth'
+            'fourth',
           ] },
         ] },
       ] },
@@ -104,7 +104,7 @@ describe('zoom', function() {
       { text: 'first', children: [
         { text: 'second', children: [
           { text: 'third', children: [
-            'ourth'
+            'ourth',
           ] },
         ] },
       ] },
@@ -117,7 +117,7 @@ describe('zoom', function() {
       { text: 'first', children: [
         { text: 'second', children: [
           { text: 'third', children: [
-            'fourth'
+            'fourth',
           ] },
         ] },
       ] },
@@ -127,7 +127,7 @@ describe('zoom', function() {
       { text: 'firs', children: [
         { text: 'second', children: [
           { text: 'third', children: [
-            'fourth'
+            'fourth',
           ] },
         ] },
       ] },
@@ -140,7 +140,7 @@ describe('zoom', function() {
       { text: 'firs', children: [
         { text: 'second', children: [
           { text: 'third', children: [
-            'fourt'
+            'fourt',
           ] },
         ] },
       ] },
@@ -152,7 +152,7 @@ describe('zoom', function() {
       { text: 'firs', children: [
         { text: 'second', children: [
           { text: 'third', children: [
-            'four'
+            'four',
           ] },
         ] },
       ] },
@@ -162,7 +162,7 @@ describe('zoom', function() {
       { text: 'fir', children: [
         { text: 'second', children: [
           { text: 'third', children: [
-            'four'
+            'four',
           ] },
         ] },
       ] },
@@ -174,7 +174,7 @@ describe('zoom', function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -183,7 +183,7 @@ describe('zoom', function() {
     t.expect([
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -192,14 +192,14 @@ describe('zoom', function() {
     t.expect([
       { text: 'first', children: [
         'second',
-        'third'
+        'third',
       ] },
     ]);
     t.sendKey('u');
     t.expect([
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -208,7 +208,7 @@ describe('zoom', function() {
     t.expect([
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -219,14 +219,14 @@ describe('zoom', function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', collapsed: true, children: [
-          'third'
+          'third',
         ] },
         { text: 'four', children: [
-          'five'
+          'five',
         ] },
         'six',
         { text: 'seven', children: [
-          'eight, appreciate'
+          'eight, appreciate',
         ] },
       ] },
     ]);

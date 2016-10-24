@@ -33,13 +33,13 @@ type TestCaseOptions = {
 
 class TestCase {
   public store: InMemory;
-  private document: Document;
-  private plugins: Array<string>;
-  private session: Session;
-  private keyhandler: KeyHandler;
-  private register: Register;
-  private pluginManager: PluginsManager;
-  private prom: Promise<void>;
+  protected document: Document;
+  protected plugins: Array<string>;
+  protected session: Session;
+  protected keyhandler: KeyHandler;
+  protected register: Register;
+  protected pluginManager: PluginsManager;
+  protected prom: Promise<void>;
 
   constructor(serialized: Serialized = [''], options: TestCaseOptions = {}) {
     this.store = new InMemory();
@@ -76,7 +76,7 @@ class TestCase {
     });
   }
 
-  private _chain(next) {
+  protected _chain(next) {
     this.prom = this.prom.then(next);
     return this;
   }
@@ -95,7 +95,7 @@ class TestCase {
     return this.prom;
   }
 
-  private _expectDeepEqual(actual, expected, message) {
+  protected _expectDeepEqual(actual, expected, message) {
     if (!_.isEqual(actual, expected)) {
       logger.flush();
       console.error(`
@@ -109,7 +109,7 @@ class TestCase {
     }
   }
 
-  private _expectEqual(actual, expected, message) {
+  protected _expectEqual(actual, expected, message) {
     if (actual !== expected) {
       logger.flush();
       console.error(`

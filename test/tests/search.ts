@@ -14,7 +14,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(5);
@@ -30,7 +30,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(4);
@@ -49,7 +49,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(5);
@@ -66,7 +66,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(4);
@@ -83,7 +83,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(5);
@@ -101,7 +101,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(4);
@@ -153,7 +153,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(5);
@@ -169,7 +169,7 @@ describe('search', function() {
       { text: 'blahsearch', children: [
         'blah',
       ] },
-      'blah'
+      'blah',
     ]);
     t.sendKeys('/search');
     t.expectNumMenuResults(4);
@@ -188,7 +188,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     t.sendKeys('/search');
     t.sendKey('esc');
@@ -203,7 +203,7 @@ describe('search', function() {
       ] },
       { text: 'blah', children: [
         'search',
-      ] }
+      ] },
     ]);
     await t.done();
   });
@@ -245,7 +245,7 @@ describe('search', function() {
     let t = new TestCase([
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);

@@ -24,8 +24,8 @@ describe('text formatting', function() {
       {
         text:          'underline strikethrough',
         underline:     '.........              ',
-        strikethrough: '          .............'
-      }
+        strikethrough: '          .............',
+      },
     ]);
     t.sendKeys('u');
     t.expect(['']);
@@ -35,8 +35,8 @@ describe('text formatting', function() {
       {
         text:          'underline strikethrough',
         underline:     '.........              ',
-        strikethrough: '          .............'
-      }
+        strikethrough: '          .............',
+      },
     ]);
     await t.done();
   });
@@ -55,8 +55,8 @@ describe('text formatting', function() {
       {
         text:   'normal, italic, bold italic, bold',
         bold:   '                .................',
-        italic: '        .....................    '
-      }
+        italic: '        .....................    ',
+      },
     ]);
     t.sendKey('esc');
     // beginning of line, gets cursor correctly
@@ -66,8 +66,8 @@ describe('text formatting', function() {
       {
         text:   'abnormal, italic, bold italic, bold',
         bold:   '                  .................',
-        italic: '          .....................    '
-      }
+        italic: '          .....................    ',
+      },
     ]);
     t.sendKeys('0cWv');
     t.sendKey('esc');
@@ -75,8 +75,8 @@ describe('text formatting', function() {
       {
         text:   'vitalic, bold italic, bold',
         bold:   '         .................',
-        italic: '......................    '
-      }
+        italic: '......................    ',
+      },
     ]);
     // uses style left of cursor
     t.sendKeys('Wia');
@@ -87,8 +87,8 @@ describe('text formatting', function() {
       {
         text:   'vitalic, abrold italic, bold',
         bold:   '          ..................',
-        italic: '........................    '
-      }
+        italic: '........................    ',
+      },
     ]);
 
     t.sendKeys('yy');
@@ -99,8 +99,8 @@ describe('text formatting', function() {
       {
         text:   'vitalic, abroad italic, bald',
         bold:   '          ..................',
-        italic: '........................    '
-      }
+        italic: '........................    ',
+      },
     ]);
 
     // pastes properly
@@ -109,13 +109,13 @@ describe('text formatting', function() {
       {
         text:   'vitalic, abroad italic, bald',
         bold:   '          ..................',
-        italic: '........................    '
+        italic: '........................    ',
       },
       {
         text:   'vitalic, abrold italic, bold',
         bold:   '          ..................',
-        italic: '........................    '
-      }
+        italic: '........................    ',
+      },
     ]);
     await t.done();
   });
@@ -133,35 +133,35 @@ describe('text formatting', function() {
     t.expect([
       {
         text:   'this',
-        bold:   '....'
+        bold:   '....',
       },
       {
         text:   'is',
-        bold:   '..'
+        bold:   '..',
       },
       {
         text:   'bold',
         bold:   '....',
-        italic: '....'
-      }
+        italic: '....',
+      },
     ]);
     t.sendKey('esc');
     t.sendKeys('onormal');
     t.expect([
       {
         text:   'this',
-        bold:   '....'
+        bold:   '....',
       },
       {
         text:   'is',
-        bold:   '..'
+        bold:   '..',
       },
       {
         text:   'bold',
         bold:   '....',
-        italic: '....'
+        italic: '....',
       },
-      'normal'
+      'normal',
     ]);
     t.sendKey('esc');
     await t.done();
@@ -172,83 +172,83 @@ describe('text formatting', function() {
       {
         text:   'bim',
         bold:   '. .',
-        italic: ' ..'
-      }
+        italic: ' ..',
+      },
     ]);
     t.sendKeys('xp');
     t.expect([
       {
         text:   'ibm',
         bold:   ' ..',
-        italic: '. .'
-      }
+        italic: '. .',
+      },
     ]);
     await t.done();
   });
 
   it('works in normal mode', async function() {
     let t = new TestCase([
-      'test'
+      'test',
     ]);
     t.sendKey(strikethroughKey);
     t.expect([
       {
         text:          'test',
-        strikethrough: '....'
-      }
+        strikethrough: '....',
+      },
     ]);
     t.sendKey(strikethroughKey);
     t.expect([
-      'test'
+      'test',
     ]);
     await t.done();
 
     t = new TestCase([
       {
         text:   'test',
-        bold:   '... '
-      }
+        bold:   '... ',
+      },
     ]);
     t.sendKeys('ll');
     t.sendKey(boldKey);
     t.expect([
       {
         text:   'test',
-        bold:   '....'
-      }
+        bold:   '....',
+      },
     ]);
     t.sendKey(boldKey);
     t.expect([
-      'test'
+      'test',
     ]);
     t.sendKeys('u');
     t.expect([
       {
         text:   'test',
-        bold:   '....'
-      }
+        bold:   '....',
+      },
     ]);
     t.sendKeys('u');
     t.expect([
       {
         text:   'test',
-        bold:   '... '
-      }
+        bold:   '... ',
+      },
     ]);
     // cursor ends up where it was
     t.sendKeys('x');
     t.expect([
       {
         text:   'tet',
-        bold:   '.. '
-      }
+        bold:   '.. ',
+      },
     ]);
     await t.done();
   });
 
   it('preserves cursor in normal mode', async function() {
     let t = new TestCase([
-      'test'
+      'test',
     ]);
     t.sendKey('l');
     t.expectCursor(1, 1);
@@ -257,8 +257,8 @@ describe('text formatting', function() {
     t.expect([
       {
         text:          'test',
-        strikethrough: '....'
-      }
+        strikethrough: '....',
+      },
     ]);
     await t.done();
   });
@@ -270,15 +270,15 @@ describe('text formatting', function() {
     t.expect([
       {
         text: 'hello world',
-        bold: '.....      '
-      }
+        bold: '.....      ',
+      },
     ]);
     t.sendKey('x');
     t.expect([
       {
         text: 'hell world',
-        bold: '....      '
-      }
+        bold: '....      ',
+      },
     ]);
     t.sendKeys('v$');
     t.sendKey(strikethroughKey);
@@ -286,16 +286,16 @@ describe('text formatting', function() {
       {
         text:          'hell world',
         bold:          '....      ',
-        strikethrough: '    ......'
-      }
+        strikethrough: '    ......',
+      },
     ]);
     t.sendKeys('x');
     t.expect([
       {
         text:          'hell worl',
         bold:          '....     ',
-        strikethrough: '    .....'
-      }
+        strikethrough: '    .....',
+      },
     ]);
     t.sendKeys('vb');
     t.sendKey(strikethroughKey);
@@ -303,8 +303,8 @@ describe('text formatting', function() {
       {
         text:          'hell worl',
         bold:          '....     ',
-        strikethrough: '    .    '
-      }
+        strikethrough: '    .    ',
+      },
     ]);
     t.sendKeys('hvb');
     t.sendKey(boldKey);
@@ -312,8 +312,8 @@ describe('text formatting', function() {
       {
         text:          'hell worl',
         bold:          '.....    ',
-        strikethrough: '    .    '
-      }
+        strikethrough: '    .    ',
+      },
     ]);
     t.sendKeys('v');
     t.sendKey(boldKey);
@@ -321,8 +321,8 @@ describe('text formatting', function() {
       {
         text:          'hell worl',
         bold:          ' ....    ',
-        strikethrough: '    .    '
-      }
+        strikethrough: '    .    ',
+      },
     ]);
     t.sendKeys('v$');
     t.sendKey(strikethroughKey);
@@ -330,32 +330,32 @@ describe('text formatting', function() {
       {
         text:          'hell worl',
         bold:          ' ....    ',
-        strikethrough: '.........'
-      }
+        strikethrough: '.........',
+      },
     ]);
     t.sendKeys('v0');
     t.sendKey(strikethroughKey);
     t.expect([
       {
         text:          'hell worl',
-        bold:          ' ....    '
-      }
+        bold:          ' ....    ',
+      },
     ]);
     t.sendKeys('u');
     t.expect([
       {
         text:          'hell worl',
         bold:          ' ....    ',
-        strikethrough: '.........'
-      }
+        strikethrough: '.........',
+      },
     ]);
     t.sendKeys('u');
     t.expect([
       {
         text:          'hell worl',
         bold:          ' ....    ',
-        strikethrough: '    .    '
-      }
+        strikethrough: '    .    ',
+      },
     ]);
     await t.done();
   });
@@ -367,16 +367,16 @@ describe('text formatting', function() {
     t.expect([
       {
         text: 'blah',
-        bold: '....'
+        bold: '....',
       },
       {
         text: 'blah',
-        bold: '....'
+        bold: '....',
       },
       {
         text: 'blah',
-        bold: '....'
-      }
+        bold: '....',
+      },
     ]);
     t.sendKeys('ggVjj');
     t.sendKey(boldKey);
@@ -387,107 +387,107 @@ describe('text formatting', function() {
       {
         text: 'blah',
         bold: '... ',
-        children: [{text: 'fee', bold: '. .'}, 'fi']
+        children: [{text: 'fee', bold: '. .'}, 'fi'],
       },
       {
         text: 'blah',
         bold: '    ',
-        children: ['fo', 'fum']
+        children: ['fo', 'fum'],
       },
       {
         text: 'blah',
-        bold: '   .'
-      }
+        bold: '   .',
+      },
     ]);
     t.sendKeys(['V', siblingDownKey, siblingDownKey, boldKey]);
     t.expect([
       {
         text: 'blah',
         bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi']
+        children: [{text: 'fee', bold: '. .'}, 'fi'],
       },
       {
         text: 'blah',
         bold: '....',
-        children: ['fo', 'fum']
+        children: ['fo', 'fum'],
       },
       {
         text: 'blah',
-        bold: '....'
-      }
+        bold: '....',
+      },
     ]);
     t.sendKeys(['G', 'V', siblingUpKey, boldKey]);
     t.expect([
       {
         text: 'blah',
         bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi']
+        children: [{text: 'fee', bold: '. .'}, 'fi'],
       },
       {
         text: 'blah',
-        children: ['fo', 'fum']
+        children: ['fo', 'fum'],
       },
-      'blah'
+      'blah',
     ]);
     t.sendKeys(['V', siblingUpKey, boldKey]);
     t.expect([
       {
         text: 'blah',
         bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi']
+        children: [{text: 'fee', bold: '. .'}, 'fi'],
       },
       {
         text: 'blah',
         bold: '....',
-        children: ['fo', 'fum']
+        children: ['fo', 'fum'],
       },
-      'blah'
+      'blah',
     ]);
     t.sendKeys('u');
     t.expect([
       {
         text: 'blah',
         bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi']
+        children: [{text: 'fee', bold: '. .'}, 'fi'],
       },
       {
         text: 'blah',
-        children: ['fo', 'fum']
+        children: ['fo', 'fum'],
       },
-      'blah'
+      'blah',
     ]);
     t.sendKeys('u');
     t.expect([
       {
         text: 'blah',
         bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi']
+        children: [{text: 'fee', bold: '. .'}, 'fi'],
       },
       {
         text: 'blah',
         bold: '....',
-        children: ['fo', 'fum']
+        children: ['fo', 'fum'],
       },
       {
         text: 'blah',
-        bold: '....'
-      }
+        bold: '....',
+      },
     ]);
     t.sendKeys('u');
     t.expect([
       {
         text: 'blah',
         bold: '... ',
-        children: [{text: 'fee', bold: '. .'}, 'fi']
+        children: [{text: 'fee', bold: '. .'}, 'fi'],
       },
       {
         text: 'blah',
-        children: ['fo', 'fum']
+        children: ['fo', 'fum'],
       },
       {
         text: 'blah',
-        bold: '   .'
-      }
+        bold: '   .',
+      },
     ]);
     await t.done();
   });

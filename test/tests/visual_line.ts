@@ -59,67 +59,67 @@ describe('visual line mode', function() {
   it('works with deleting children', async function() {
     let t = new TestCase([
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
-        'egg 2'
+        'egg 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     t.sendKeys(['V', siblingDownKey, 'x']);
     t.expect([
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     t.sendKeys('p');
     t.expect([
       { text: 'nest 3', children: [
         { text: 'nest', children: [
-          'egg'
+          'egg',
         ] },
         { text: 'nest 2', children: [
-          'egg 2'
+          'egg 2',
         ] },
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     // ends up on row 2
     t.sendKeys(['V', siblingDownKey, siblingDownKey, 'd', 'p']);
     t.expect([
       'nest 3',
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
-        'egg 2'
+        'egg 2',
       ] },
-      'egg 3'
+      'egg 3',
     ]);
     // ends up on row 2
     t.sendKeys('x');
     t.expect([
       'nest 3',
       { text: 'est', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
-        'egg 2'
+        'egg 2',
       ] },
-      'egg 3'
+      'egg 3',
     ]);
     t.sendKeys('u');
     t.expect([
       'nest 3',
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
-        'egg 2'
+        'egg 2',
       ] },
-      'egg 3'
+      'egg 3',
     ]);
     t.sendKeys('u');
     t.expect([ 'nest 3' ]);
@@ -127,31 +127,31 @@ describe('visual line mode', function() {
     t.expect([
       { text: 'nest 3', children: [
         { text: 'nest', children: [
-          'egg'
+          'egg',
         ] },
         { text: 'nest 2', children: [
-          'egg 2'
+          'egg 2',
         ] },
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     t.sendKeys('u');
     t.expect([
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     t.sendKeys('u');
     t.expect([
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
-        'egg 2'
+        'egg 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     await t.done();
   });
@@ -159,29 +159,29 @@ describe('visual line mode', function() {
   it('works with indent', async function() {
     let t = new TestCase([
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
         'egg 2',
-        'egg 2 2'
+        'egg 2 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     // does nothing when can't indent
     t.sendKeys(['j', 'V', '>']);
     t.expect([
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
         'egg 2',
-        'egg 2 2'
+        'egg 2 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     // now can indent
     t.sendKeys(['j', 'V', siblingDownKey, '>']);
@@ -190,12 +190,12 @@ describe('visual line mode', function() {
         'egg',
         { text: 'nest 2', children: [
           'egg 2',
-          'egg 2 2'
+          'egg 2 2',
         ] },
         { text: 'nest 3', children: [
-          'egg 3'
-        ] }
-      ] }
+          'egg 3',
+        ] },
+      ] },
     ]);
     // does nothing again
     t.sendKeys([siblingUpKey]);
@@ -205,12 +205,12 @@ describe('visual line mode', function() {
         'egg',
         { text: 'nest 2', children: [
           'egg 2',
-          'egg 2 2'
+          'egg 2 2',
         ] },
         { text: 'nest 3', children: [
-          'egg 3'
-        ] }
-      ] }
+          'egg 3',
+        ] },
+      ] },
     ]);
     // unindent
     t.sendKeys('V<');
@@ -218,13 +218,13 @@ describe('visual line mode', function() {
       { text: 'nest', children: [
         'egg',
         { text: 'nest 2', children: [
-          'egg 2 2'
+          'egg 2 2',
         ] },
         'egg 2',
         { text: 'nest 3', children: [
-          'egg 3'
-        ] }
-      ] }
+          'egg 3',
+        ] },
+      ] },
     ]);
     // undo ignores things that didn't happen
     t.sendKeys('u');
@@ -233,25 +233,25 @@ describe('visual line mode', function() {
         'egg',
         { text: 'nest 2', children: [
           'egg 2',
-          'egg 2 2'
+          'egg 2 2',
         ] },
         { text: 'nest 3', children: [
-          'egg 3'
-        ] }
-      ] }
+          'egg 3',
+        ] },
+      ] },
     ]);
     t.sendKeys('u');
     t.expect([
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
         'egg 2',
-        'egg 2 2'
+        'egg 2 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     await t.done();
   });
@@ -259,31 +259,31 @@ describe('visual line mode', function() {
   it('works when cursor/anchor are ancestors of each other', async function() {
     let t = new TestCase([
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
         'egg 2',
-        'egg 2 2'
+        'egg 2 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     t.sendKeys('Vjd');
     t.expect([
       { text: 'nest 2', children: [
         'egg 2',
-        'egg 2 2'
+        'egg 2 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     t.sendKeys('jVkd');
     t.expect([
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     await t.done();
   });
@@ -291,41 +291,41 @@ describe('visual line mode', function() {
   it('has LCA behavior', async function() {
     let t = new TestCase([
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
         'egg 2',
-        'egg 2 2'
+        'egg 2 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     t.sendKeys('jVjd');
     t.expect([
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     await t.done();
 
     t = new TestCase([
       { text: 'nest', children: [
-        'egg'
+        'egg',
       ] },
       { text: 'nest 2', children: [
         'egg 2',
-        'egg 2 2'
+        'egg 2 2',
       ] },
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     t.sendKeys('jVjjd');
     t.expect([
       { text: 'nest 3', children: [
-        'egg 3'
-      ] }
+        'egg 3',
+      ] },
     ]);
     await t.done();
 
@@ -333,16 +333,16 @@ describe('visual line mode', function() {
       { text: 'this case', children: [
         { text: 'broke in ', children: [
           'real',
-          'life'
+          'life',
         ] },
-        'whoops!'
-      ] }
+        'whoops!',
+      ] },
     ]);
     t.sendKeys('jjjVkkd');
     t.expect([
       { text: 'this case', children: [
-        'whoops!'
-      ] }
+        'whoops!',
+      ] },
     ]);
     await t.done();
   });
@@ -352,10 +352,10 @@ describe('visual line mode', function() {
       'yay',
       { text: 'hip', children: [
         { text: 'hop', children: [
-          'hoop'
-        ] }
+          'hoop',
+        ] },
       ] },
-      'hooray!'
+      'hooray!',
     ]);
     t.sendKeys('VGd');
     t.expect([ '' ]);
@@ -364,10 +364,10 @@ describe('visual line mode', function() {
       'yay',
       { text: 'hip', children: [
         { text: 'hop', children: [
-          'hoop'
-        ] }
+          'hoop',
+        ] },
       ] },
-      'hooray!'
+      'hooray!',
     ]);
     await t.done();
   });

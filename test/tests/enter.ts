@@ -26,16 +26,16 @@ describe('enter', function() {
     t.sendKey('esc');
     t.expect([
       { text: 'hello', children: [
-        'world'
-      ] }
+        'world',
+      ] },
     ]);
     t.sendKey('u');
     t.expect(['']);
     t.sendKey('ctrl+r');
     t.expect([
       { text: 'hello', children: [
-        'world'
-      ] }
+        'world',
+      ] },
     ]);
     t.sendKeys('a of');
     t.sendKey('shift+tab');
@@ -94,8 +94,8 @@ describe('enter', function() {
     t.sendKey('tab');
     t.expect([
       { text: 'helloworld', children: [
-        'of goo'
-      ] }
+        'of goo',
+      ] },
     ]);
     t.sendKey('up');
     t.sendKey('I');
@@ -107,8 +107,8 @@ describe('enter', function() {
     t.expect([
       'hello',
       { text: 'world', children: [
-        'of goo'
-      ] }
+        'of goo',
+      ] },
     ]);
     await t.done();
   });
@@ -117,7 +117,7 @@ describe('enter', function() {
     let t = new TestCase([
       { text: 'hey', id: 1 },
       'you',
-      { clone: 1 }
+      { clone: 1 },
     ]);
     t.sendKey('A');
     t.sendKey('enter');
@@ -126,7 +126,7 @@ describe('enter', function() {
       { text: 'hey', id: 1 },
       'i like',
       'you',
-      { clone: 1 }
+      { clone: 1 },
     ]);
     await t.done();
   });
@@ -135,7 +135,7 @@ describe('enter', function() {
     let t = new TestCase([
       { text: 'hey', id: 1 },
       'you',
-      { clone: 1 }
+      { clone: 1 },
     ]);
     t.sendKey('$');
     t.sendKey('i');
@@ -145,7 +145,7 @@ describe('enter', function() {
       'he',
       { text: 'yay', id: 1 },
       'you',
-      { clone: 1 }
+      { clone: 1 },
     ]);
     await t.done();
   });
@@ -153,10 +153,10 @@ describe('enter', function() {
   it('handles case with children at end of line', async function() {
     let t = new TestCase([
       { text: 'hey', id: 1, children: [
-        'like'
+        'like',
       ] },
       'you',
-      { clone: 1 }
+      { clone: 1 },
     ]);
     t.sendKey('A');
     t.sendKey('enter');
@@ -164,10 +164,10 @@ describe('enter', function() {
     t.expect([
       { text: 'hey', id: 1, children: [
         'i',
-        'like'
+        'like',
       ] },
       'you',
-      { clone: 1 }
+      { clone: 1 },
     ]);
     await t.done();
   });
@@ -175,21 +175,21 @@ describe('enter', function() {
   it('handles collapsed case at end of line', async function() {
     let t = new TestCase([
       { text: 'hey', id: 1, collapsed: true, children: [
-        'like'
+        'like',
       ] },
       'you',
-      { clone: 1 }
+      { clone: 1 },
     ]);
     t.sendKey('A');
     t.sendKey('enter');
     t.sendKeys('i');
     t.expect([
       { text: 'hey', id: 1, collapsed: true, children: [
-        'like'
+        'like',
       ] },
       'i',
       'you',
-      { clone: 1 }
+      { clone: 1 },
     ]);
     await t.done();
   });
@@ -197,8 +197,8 @@ describe('enter', function() {
   it('when using o on a blank bullet, collapses parent', async function() {
     let t = new TestCase([
       { text: 'hey', children: [
-        'you'
-      ] }
+        'you',
+      ] },
     ]);
     t.sendKey('j');
     t.sendKey('enter');
@@ -207,15 +207,15 @@ describe('enter', function() {
     t.expect([
       { text: 'hey', children: [
         { text: 'you', collapsed: true, children: [
-          'ok'
-        ] }
-      ] }
+          'ok',
+        ] },
+      ] },
     ]);
     t.sendKey('u');
     t.expect([
       { text: 'hey', children: [
-        'you'
-      ] }
+        'you',
+      ] },
     ]);
     await t.done();
   });

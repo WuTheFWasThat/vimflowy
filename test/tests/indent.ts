@@ -10,7 +10,7 @@ describe('block indent/unindent', function() {
   let threeRows = [
     { text: 'top row', children: [
       { text: 'middle row', children : [
-        'bottom row'
+        'bottom row',
       ] },
     ] },
   ];
@@ -30,7 +30,7 @@ describe('block indent/unindent', function() {
       { text: 'top row', children: [
         'middle row',
         'bottom row',
-      ] }
+      ] },
     ]);
     t.sendKeys('u');
     t.expect(threeRows);
@@ -41,10 +41,10 @@ describe('block indent/unindent', function() {
     let t = new TestCase([
       { text: 'a', children: [
         { text: 'ab', children : [
-          'abc'
+          'abc',
         ] },
         { text: 'ad', children : [
-          'ade'
+          'ade',
         ] },
       ] },
     ]);
@@ -53,7 +53,7 @@ describe('block indent/unindent', function() {
     t.expect([
       { text: 'a', children : [
         { text: 'ad', children : [
-          'ade'
+          'ade',
         ] },
       ] },
       { text: 'ab', children: [
@@ -64,18 +64,18 @@ describe('block indent/unindent', function() {
     t.expect([
       { text: 'a', children: [
         { text: 'ad', children : [
-          'ade'
+          'ade',
         ] },
         { text: 'ab', children: [
           'abc',
         ] },
-      ] }
+      ] },
     ]);
     t.sendKeys('u');
     t.expect([
       { text: 'a', children : [
         { text: 'ad', children : [
-          'ade'
+          'ade',
         ] },
       ] },
       { text: 'ab', children: [
@@ -86,10 +86,10 @@ describe('block indent/unindent', function() {
     t.expect([
       { text: 'a', children: [
         { text: 'ab', children : [
-          'abc'
+          'abc',
         ] },
         { text: 'ad', children : [
-          'ade'
+          'ade',
         ] },
       ] },
     ]);
@@ -99,10 +99,10 @@ describe('block indent/unindent', function() {
   it('uncollapses if indenting into collapsed', async function() {
     let t = new TestCase([
       { text: '1', collapsed: true, children: [
-        '2'
+        '2',
       ] },
       { text: '3', children: [
-        '4'
+        '4',
       ] },
     ]);
     t.sendKeys('j');
@@ -111,7 +111,7 @@ describe('block indent/unindent', function() {
       { text: '1', children: [
         '2',
         { text: '3', children: [
-          '4'
+          '4',
         ] },
       ] },
     ]);
@@ -121,10 +121,10 @@ describe('block indent/unindent', function() {
   it('works with something with children', async function() {
     let t = new TestCase([
       { text: '1', collapsed: true, children: [
-        '2'
+        '2',
       ] },
       { text: '3', children: [
-        '4'
+        '4',
       ] },
     ]);
     t.sendKeys('j');
@@ -133,7 +133,7 @@ describe('block indent/unindent', function() {
       { text: '1', children: [
         '2',
         { text: '3', children: [
-          '4'
+          '4',
         ] },
       ] },
     ]);
@@ -144,10 +144,10 @@ describe('block indent/unindent', function() {
     let t = new TestCase([
       { text: 'mama', children: [
         { text: 'oldest kid', children : [
-          'grandkid'
+          'grandkid',
         ] },
         'middle kid',
-        'young kid'
+        'young kid',
       ] },
     ]);
     t.sendKeys('jjj2');
@@ -157,7 +157,7 @@ describe('block indent/unindent', function() {
         { text: 'oldest kid', children : [
           'grandkid',
           'middle kid',
-          'young kid'
+          'young kid',
         ] },
       ] },
     ]);
@@ -168,12 +168,12 @@ describe('block indent/unindent', function() {
     let t = new TestCase([
       { text: 'mama', children: [
         { text: 'oldest kid', collapsed: true, children : [
-          'grandkid'
+          'grandkid',
         ] },
         { text: 'middle kid', children : [
-          'grandkid 2'
+          'grandkid 2',
         ] },
-        'young kid'
+        'young kid',
       ] },
     ]);
     t.sendKeys('jj2');
@@ -183,9 +183,9 @@ describe('block indent/unindent', function() {
         { text: 'oldest kid', children : [
           'grandkid',
           { text: 'middle kid', children : [
-            'grandkid 2'
+            'grandkid 2',
           ] },
-          'young kid'
+          'young kid',
         ] },
       ] },
     ]);
@@ -193,25 +193,25 @@ describe('block indent/unindent', function() {
     t.expect([
       { text: 'mama', children: [
         { text: 'oldest kid', collapsed: true, children : [
-          'grandkid'
+          'grandkid',
         ] },
         { text: 'middle kid', children : [
-          'grandkid 2'
+          'grandkid 2',
         ] },
-        'young kid'
+        'young kid',
       ] },
     ]);
     t.sendKeys('k2');
     t.sendKey(unindentBlockKey);
     t.expect([
       { text: 'mama', children : [
-        'young kid'
+        'young kid',
       ] },
       { text: 'oldest kid', collapsed: true, children : [
-        'grandkid'
+        'grandkid',
       ] },
       { text: 'middle kid', children : [
-        'grandkid 2'
+        'grandkid 2',
       ] },
     ]);
     await t.done();
@@ -223,28 +223,28 @@ describe('random tests', () =>
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('2jx');
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
-      'another row'
+      'another row',
     ]);
     t.sendKeys('jx');
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
-      'nother row'
+      'nother row',
     ]);
     t.sendKey(indentBlockKey);
     t.sendKey(indentBlockKey);
@@ -252,7 +252,7 @@ describe('random tests', () =>
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'ottom row',
-          'nother row'
+          'nother row',
         ] },
       ] },
     ]);
@@ -260,10 +260,10 @@ describe('random tests', () =>
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
-      'nother row'
+      'nother row',
     ]);
     t.sendKey('ctrl+r');
     t.sendKey('ctrl+r');
@@ -271,7 +271,7 @@ describe('random tests', () =>
       { text: 'top row', children: [
         { text: 'middle row', children : [
           'ottom row',
-          'nother row'
+          'nother row',
         ] },
       ] },
     ]);
@@ -281,7 +281,7 @@ describe('random tests', () =>
       { text: 'top row', children: [
         'middle row',
         { text: 'ottom row', children : [
-          'nother row'
+          'nother row',
         ] },
       ] },
     ]);
@@ -290,7 +290,7 @@ describe('random tests', () =>
       { text: 'top row', children: [
         'middle row',
         { text: 'ottom row', children : [
-          'nother row'
+          'nother row',
         ] },
       ] },
     ]);
@@ -300,7 +300,7 @@ describe('random tests', () =>
       'top row',
       { text: 'middle row', children: [
         { text: 'ottom row', children : [
-          'nother row'
+          'nother row',
         ] },
       ] },
     ]);
@@ -309,7 +309,7 @@ describe('random tests', () =>
       { text: 'top row', children: [
         { text: 'middle row', children: [
           { text: 'ottom row', children : [
-            'nother row'
+            'nother row',
           ] },
         ] },
       ] },
@@ -319,7 +319,7 @@ describe('random tests', () =>
       'top row',
       { text: 'middle row', children: [
         { text: 'ottom row', children : [
-          'nother row'
+          'nother row',
         ] },
       ] },
     ]);
@@ -328,7 +328,7 @@ describe('random tests', () =>
       { text: 'top row', children: [
         'middle row',
         { text: 'ottom row', children : [
-          'nother row'
+          'nother row',
         ] },
       ] },
     ]);
@@ -336,10 +336,10 @@ describe('random tests', () =>
     t.sendKey('ctrl+h');
     t.expect([
       { text: 'top row', children: [
-        'middle row'
+        'middle row',
       ] },
       { text: 'ottom row', children : [
-        'nother row'
+        'nother row',
       ] },
     ]);
     t.sendKeys('u');
@@ -347,7 +347,7 @@ describe('random tests', () =>
       { text: 'top row', children: [
         'middle row',
         { text: 'ottom row', children : [
-          'nother row'
+          'nother row',
         ] },
       ] },
     ]);
@@ -360,7 +360,7 @@ describe('row indent/unindent', function() {
     let t = new TestCase([
       '0',
       { text: '1', children: [
-        '2'
+        '2',
       ] },
     ]);
     t.sendKeys('j');
@@ -368,7 +368,7 @@ describe('row indent/unindent', function() {
     t.expect([
       { text: '0', children: [
         '1',
-        '2'
+        '2',
       ] },
     ]);
     await t.done();
@@ -378,7 +378,7 @@ describe('row indent/unindent', function() {
     let t = new TestCase([
       { text: 'grandmama', children: [
         { text: 'mama', collapsed: true, children : [
-          'me'
+          'me',
         ] },
       ] },
     ]);
@@ -386,15 +386,15 @@ describe('row indent/unindent', function() {
     t.expect([
       'grandmama',
       { text: 'mama', collapsed: true, children : [
-        'me'
-      ] }
+        'me',
+      ] },
     ]);
 
     t.sendKey(indentRowKey);
     t.expect([
       { text: 'grandmama', children: [
         { text: 'mama', collapsed: true, children : [
-          'me'
+          'me',
         ] },
       ] },
     ]);
@@ -407,7 +407,7 @@ describe('row indent/unindent', function() {
       'blah',
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -419,7 +419,7 @@ describe('row indent/unindent', function() {
       'blah',
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -429,7 +429,7 @@ describe('row indent/unindent', function() {
       'blah',
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
+          'third',
         ] },
       ] },
     ]);
@@ -440,7 +440,7 @@ describe('row indent/unindent', function() {
   it("can't unindent the viewroot", async function() {
     let t = new TestCase([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
     ]);
     t.expectViewRoot(0);
@@ -449,14 +449,14 @@ describe('row indent/unindent', function() {
     t.sendKey(unindentRowKey);
     t.expect([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
     ]);
     t.expectViewRoot(1);
     t.sendKey(indentBlockKey);
     t.expect([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
     ]);
     t.expectViewRoot(1);
@@ -467,7 +467,7 @@ describe('row indent/unindent', function() {
     let t = new TestCase([
       'first',
       'second',
-      'third'
+      'third',
     ]);
     t.sendKey('j');
     t.sendKey('3');
@@ -475,7 +475,7 @@ describe('row indent/unindent', function() {
     t.expect([
       { text: 'first', children: [
         'second',
-        'third'
+        'third',
       ] },
     ]);
     t.sendKey('3');
@@ -483,7 +483,7 @@ describe('row indent/unindent', function() {
     t.expect([
       'first',
       'second',
-      'third'
+      'third',
     ]);
     await t.done();
   });

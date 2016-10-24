@@ -25,8 +25,8 @@ describe('join', function() {
   it('works with child', async function() {
     let t = new TestCase([
       { text: 'ab', children: [
-        'cd'
-      ] }
+        'cd',
+      ] },
     ]);
     t.sendKeys(joinKey);
     t.expect(['ab cd']);
@@ -40,21 +40,21 @@ describe('join', function() {
       'ab',
       { text: 'cd', children: [
         'ef',
-        'gh'
-      ] }
+        'gh',
+      ] },
     ]);
     t.sendKeys(joinKey);
     t.expect([
       { text: 'ab cd', children: [
         'ef',
-        'gh'
+        'gh',
       ] },
     ]);
     t.sendKeys('x');
     t.expect([
       { text: 'abcd', children: [
         'ef',
-        'gh'
+        'gh',
       ] },
     ]);
     await t.done();
@@ -64,32 +64,32 @@ describe('join', function() {
     let t = new TestCase([
       'ab',
       { text: 'cd', children: [
-        'ef'
-      ] }
+        'ef',
+      ] },
     ]);
     t.sendKeys(joinKey);
     t.expect([
       { text: 'ab cd', children: [
-        'ef'
+        'ef',
       ] },
     ]);
     t.sendKeys('x');
     t.expect([
       { text: 'abcd', children: [
-        'ef'
+        'ef',
       ] },
     ]);
     t.sendKeys('uu');
     t.expect([
       'ab',
       { text: 'cd', children: [
-        'ef'
+        'ef',
       ] },
     ]);
     t.sendKey('ctrl+r');
     t.expect([
       { text: 'ab cd', children: [
-        'ef'
+        'ef',
       ] },
     ]);
     await t.done();

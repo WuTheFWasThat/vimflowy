@@ -31,7 +31,7 @@ describe('macros', function() {
       '00000000',
       '00000000',
       '00000000',
-      '00000000'
+      '00000000',
     ]);
     // does nothing since nothing has been recorded
     t.sendKeys('qmr1lr2jq');
@@ -44,7 +44,7 @@ describe('macros', function() {
       '00001200',
       '00000120',
       '00000012',
-      '00000002'
+      '00000002',
     ]);
     t.sendKeys('qmxxq');
     t.expect([
@@ -55,7 +55,7 @@ describe('macros', function() {
       '00001200',
       '00000120',
       '00000012',
-      '000000'
+      '000000',
     ]);
     // overrides old macro
     t.sendKeys('@m');
@@ -67,7 +67,7 @@ describe('macros', function() {
       '00001200',
       '00000120',
       '00000012',
-      '0000'
+      '0000',
     ]);
     // should it only do one delete?  (just need to enable save on recorded keystream)
     t.sendKeys('.');
@@ -79,7 +79,7 @@ describe('macros', function() {
       '00001200',
       '00000120',
       '00000012',
-      '00'
+      '00',
     ]);
     await t.done();
   });
@@ -94,7 +94,7 @@ describe('macros', function() {
       '00000000',
       '00000000',
       '00000000',
-      '00000000'
+      '00000000',
     ]);
     // does nothing since nothing has been recorded
     t.sendKeys('qqr1llq');
@@ -106,7 +106,7 @@ describe('macros', function() {
       '00000000',
       '00000000',
       '00000000',
-      '00000000'
+      '00000000',
     ]);
     t.sendKeys('0');
     t.sendKeys('qo4@qj0l4@qj0q');
@@ -118,7 +118,7 @@ describe('macros', function() {
       '00000000',
       '00000000',
       '00000000',
-      '00000000'
+      '00000000',
     ]);
     t.sendKeys('3@o');
     t.expect([
@@ -129,26 +129,26 @@ describe('macros', function() {
       '10101010',
       '01010101',
       '10101010',
-      '01010101'
+      '01010101',
     ]);
     await t.done();
   });
 
   it('works even if sequence contains q', async function() {
     let t = new TestCase([
-      'a q b q c q d q'
+      'a q b q c q d q',
     ]);
     t.sendKeys('qxfqxq');
     t.expect([
-      'a  b q c q d q'
+      'a  b q c q d q',
     ]);
     t.sendKeys('@x');
     t.expect([
-      'a  b  c q d q'
+      'a  b  c q d q',
     ]);
     t.sendKeys('2@x');
     t.expect([
-      'a  b  c  d '
+      'a  b  c  d ',
     ]);
     await t.done();
   });

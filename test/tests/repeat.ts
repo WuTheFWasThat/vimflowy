@@ -71,18 +71,18 @@ describe('tricky cases for repeat', function() {
   it('repeat of change', async function() {
     let t = new TestCase([
       'oh say can you see',
-      'and the home of the brave'
+      'and the home of the brave',
     ]);
     t.sendKeys('ceme');
     t.sendKey('esc');
     t.expect([
       'me say can you see',
-      'and the home of the brave'
+      'and the home of the brave',
     ]);
     t.sendKeys('j$b.');
     t.expect([
       'me say can you see',
-      'and the home of the me'
+      'and the home of the me',
     ]);
     await t.done();
   });

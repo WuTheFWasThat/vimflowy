@@ -8,9 +8,9 @@ describe('jumps', function() {
   it('basically works', async function() {
     let t = new TestCase([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.expectViewRoot(0);
     t.expectCursor(1, 0);
@@ -38,7 +38,7 @@ describe('jumps', function() {
     t.expectViewRoot(0);
     t.sendKeys('dd');
     t.expect([
-      'third'
+      'third',
     ]);
     t.sendKey(jumpNextKey); // fails
     t.expectViewRoot(0);
@@ -46,7 +46,7 @@ describe('jumps', function() {
     t.expect([
       'third',
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
     ]);
     t.sendKey(jumpNextKey); // succeeds
@@ -55,7 +55,7 @@ describe('jumps', function() {
     t.expect([
       'third',
       { text: 'first', children: [
-        'econd'
+        'econd',
       ] },
     ]);
     await t.done();
@@ -64,10 +64,10 @@ describe('jumps', function() {
   it('erases history properly', async function() {
     let t = new TestCase([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
       { text: 'third', children: [
-        'fourth'
+        'fourth',
       ] },
     ]);
     t.expectViewRoot(0);
@@ -95,7 +95,7 @@ describe('jumps', function() {
     t.sendKeys('dd');
     t.expect([
       { text: 'third', children: [
-        'fourth'
+        'fourth',
       ] },
     ]);
 
@@ -120,9 +120,9 @@ describe('jumps', function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second',
-        'cursor'
+        'cursor',
       ] },
-      'third'
+      'third',
     ]);
     t.expectViewRoot(0);
     t.expectCursor(1, 0);
@@ -148,9 +148,9 @@ describe('jumps', function() {
     t.expect([
       { text: 'first', children: [
         'cursor',
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.expectViewRoot(1);
     t.expectCursor(3, 0);
@@ -169,9 +169,9 @@ describe('jumps', function() {
     t.sendKeys('dd');
     t.expect([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.expectViewRoot(1);
     t.expectCursor(2, 0);
@@ -180,9 +180,9 @@ describe('jumps', function() {
     t.sendKeys('G');
     t.expect([
       { text: 'first', children: [
-        'second'
+        'second',
       ] },
-      'third'
+      'third',
     ]);
     t.expectViewRoot(0);
     t.expectCursor(4, 0);
@@ -208,7 +208,7 @@ describe('jumps', function() {
     t.sendKeys('kdd');
     t.expect([
       'first',
-      'third'
+      'third',
     ]);
 
     // succeeds despite no children
@@ -223,9 +223,9 @@ describe('jumps', function() {
     t.sendKey('esc');
     t.expect([
       { text: 'first', children: [
-        'ok'
+        'ok',
       ] },
-      'third'
+      'third',
     ]);
 
     t.sendKey(jumpNextKey);
@@ -237,7 +237,7 @@ describe('jumps', function() {
     t.expectJumpIndex(4);
     t.expect([
       'first',
-      'third'
+      'third',
     ]);
     t.expectViewRoot(0);
     t.expectCursor(1, 0);
@@ -252,9 +252,9 @@ describe('jumps', function() {
     let t = new TestCase([
       { text: 'first', children: [
         'second',
-        'cursor'
+        'cursor',
       ] },
-      'third'
+      'third',
     ]);
     t.expectViewRoot(0);
     t.expectCursor(1, 0);
@@ -287,8 +287,8 @@ describe('jumps', function() {
       'third',
       { text: 'first', children: [
         'second',
-        'cursor'
-      ] }
+        'cursor',
+      ] },
     ]);
     // now able to jump to clone
     t.sendKey(jumpNextKey);
@@ -306,8 +306,8 @@ describe('jumps', function() {
       'cursor',
       { text: 'first', children: [
         { text: 'second', children: [
-          'third'
-        ] }
+          'third',
+        ] },
       ] },
     ]);
     t.expectViewRoot(0);

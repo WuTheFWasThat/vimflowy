@@ -15,7 +15,7 @@ describe('move siblings', function() {
       ] },
       { text: 'tacos', children: [
         'tacos',
-      ] }
+      ] },
     ]);
     t.sendKeys('x');
     t.sendKey(nextSiblingKey);
@@ -29,7 +29,7 @@ describe('move siblings', function() {
       ] },
       { text: 'tacos', children: [
         'tacos',
-      ] }
+      ] },
     ]);
     t.sendKey(nextSiblingKey);
     t.sendKeys('x');
@@ -44,7 +44,7 @@ describe('move siblings', function() {
       ] },
       { text: 'cos', children: [
         'tacos',
-      ] }
+      ] },
     ]);
     t.sendKey(prevSiblingKey);
     t.sendKeys('x');
@@ -57,7 +57,7 @@ describe('move siblings', function() {
       ] },
       { text: 'cos', children: [
         'tacos',
-      ] }
+      ] },
     ]);
     t.sendKey(prevSiblingKey);
     t.sendKeys('x');
@@ -70,7 +70,7 @@ describe('move siblings', function() {
       ] },
       { text: 'cos', children: [
         'tacos',
-      ] }
+      ] },
     ]);
     t.sendKey(prevSiblingKey);
     t.sendKeys('x');
@@ -83,7 +83,7 @@ describe('move siblings', function() {
       ] },
       { text: 'cos', children: [
         'tacos',
-      ] }
+      ] },
     ]);
     await t.done();
   });
@@ -98,7 +98,7 @@ describe('move siblings', function() {
       ] },
       { text: 'tacos', children: [
         'tacos',
-      ] }
+      ] },
     ]);
     t.sendKey(nextSiblingKey);
     t.sendKey('enter');

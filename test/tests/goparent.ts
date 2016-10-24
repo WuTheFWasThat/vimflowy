@@ -6,7 +6,7 @@ describe('go parent', function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -14,7 +14,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
     ]);
@@ -22,7 +22,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'top row', children: [
         { text: 'iddle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
     ]);
@@ -30,7 +30,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'op row', children: [
         { text: 'iddle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
     ]);
@@ -39,7 +39,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'p row', children: [
         { text: 'iddle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
     ]);
@@ -50,7 +50,7 @@ describe('go parent', function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -59,7 +59,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
     ]);
@@ -68,7 +68,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'top row', children: [
         { text: 'iddle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
     ]);
@@ -77,7 +77,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'op row', children: [
         { text: 'iddle row', children : [
-          'ottom row'
+          'ottom row',
         ] },
       ] },
     ]);
@@ -85,7 +85,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'op row', children: [
         { text: 'iddle row', children : [
-          'ttom row'
+          'ttom row',
         ] },
       ] },
     ]);
@@ -93,7 +93,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'p row', children: [
         { text: 'iddle row', children : [
-          'ttom row'
+          'ttom row',
         ] },
       ] },
     ]);
@@ -104,7 +104,7 @@ describe('go parent', function() {
     let t = new TestCase([
       { text: 'top row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -113,7 +113,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'op row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
@@ -122,7 +122,7 @@ describe('go parent', function() {
     t.expect([
       { text: 'p row', children: [
         { text: 'middle row', children : [
-          'bottom row'
+          'bottom row',
         ] },
       ] },
     ]);
