@@ -896,7 +896,7 @@ export default class Session extends EventEmitter {
   //     if the node has children, this is the new first child
   public async newLineAtCursor() {
     if (this.cursor.col === (await this.document.getLength(this.cursor.row))) {
-      return await this.newLineBelow({cursorOptions: {keepProperties: true}});
+      await this.newLineBelow({cursorOptions: {keepProperties: true}});
     } else {
       const mutation = new mutations.DelChars(this.cursor.row, 0, this.cursor.col);
       await this.do(mutation);

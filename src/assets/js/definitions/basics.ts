@@ -145,7 +145,7 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_INSERT_LINE_BELOW, {
   description: 'Insert on new line after current line',
 }, async function() {
   await this.session.setMode(MODES.INSERT);
-  return await this.session.newLineBelow();
+  await this.session.newLineBelow();
 });
 
 const CMD_INSERT_LINE_ABOVE = keyDefinitions.registerCommand({

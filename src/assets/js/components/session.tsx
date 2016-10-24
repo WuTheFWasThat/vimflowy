@@ -35,7 +35,9 @@ type State = {
   viewRoot?: Path;
 }
 export default class SessionComponent extends React.Component<Props, State> {
-  private updateFn: () => void; // this is promise debounced
+  private update: () => void; // this is promise debounced
+
+  private profileRender: boolean; // for debugging
 
   static get propTypes() {
     return {
@@ -51,6 +53,9 @@ export default class SessionComponent extends React.Component<Props, State> {
       loaded: false,
       t: Date.now(),
     };
+
+    // make true to output time taken to get render contents
+    this.profileRender = false;
 
     const session = this.props.session;
 
@@ -77,12 +82,9 @@ export default class SessionComponent extends React.Component<Props, State> {
       };
     }
 
-    // make true to output time taken to get render contents
-    const timeRender = false;
-
-    this.updateFn = promiseDebounce(async () => {
+    this.update = promiseDebounce(async () => {
       let t;
-      if (timeRender) {
+      if (this.profileRender) {
         t = Date.now();
       }
 
@@ -113,7 +115,7 @@ export default class SessionComponent extends React.Component<Props, State> {
         loaded: true,
       });
 
-      if (timeRender) {
+      if (this.profileRender) {
         console.log('Took time', Date.now() - t); // eslint-disable-line no-console
       }
     });
@@ -124,14 +126,16 @@ export default class SessionComponent extends React.Component<Props, State> {
     // await (new Promise((resolve) => {
     //   setTimeout(resolve, 2000);
     // }));
-    await session.document.getViewContents(session.viewRoot, true);
-    this.update();
-  }
-
-  private update() {
-    if (this.updateFn) {
-      this.updateFn();
+    let t;
+    if (this.profileRender) {
+      t = Date.now();
+      console.log('Starting getViewContents'); // eslint-disable-line no-console
     }
+    await session.document.getViewContents(session.viewRoot, true);
+    if (this.profileRender) {
+      console.log('getViewContents took time', Date.now() - t); // eslint-disable-line no-console
+    }
+    this.update();
   }
 
   public componentWillReceiveProps() {
@@ -139,12 +143,12 @@ export default class SessionComponent extends React.Component<Props, State> {
   }
 
   public componentDidMount() {
-    this.props.session.on('handledKey', this.updateFn);
+    this.props.session.on('handledKey', this.update);
     this.update();
   }
 
   public componentWillUnmount() {
-    this.props.session.off('handledKey', this.updateFn);
+    this.props.session.off('handledKey', this.update);
   }
 
   public render() {

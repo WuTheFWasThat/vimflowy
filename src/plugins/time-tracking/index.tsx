@@ -189,8 +189,11 @@ class TimeTrackingPlugin {
     await this.api.setData(key, value);
   }
 
-  private async transformRowData(row, keytype, transform) {
-    await this.setRowData(row, keytype, transform(await this.getRowData(row, keytype)));
+  private async transformRowData(row, keytype, transform, default_value = null) {
+    await this.setRowData(
+      row, keytype,
+      transform(await this.getRowData(row, keytype, default_value))
+    );
   }
 
   private async isLogging() {
@@ -211,17 +214,19 @@ class TimeTrackingPlugin {
   }
 
   private async onRowChange(from, to) {
-    this.logger.debug(`Switching from row ${from && from.row} to row ${to && to.row}`);
     if (!(await this.isLogging())) {
       return;
     }
+    this.logger.debug(`Switching from row ${from && from.row} to row ${to && to.row}`);
     let time = Date.now();
     if (this.currentPath && this.currentPath.row !== (to && to.row)) {
       await this.modifyTimeForRow(from.row, (time - this.currentPath.time));
       this.currentPath = null;
     }
     if (to !== null) {
-      return this.currentPath !== null ? this.currentPath : (this.currentPath = { row: to.row, time });
+      if (this.currentPath === null) {
+        this.currentPath = { row: to.row, time };
+      }
     }
   }
 
@@ -232,7 +237,7 @@ class TimeTrackingPlugin {
   }
 
   private async modifyTimeForRow(row, delta) {
-    await this.transformRowData(row, 'rowTotalTime', current => (current || 0) + delta);
+    await this.transformRowData(row, 'rowTotalTime', current => (current + delta), 0);
     await this._rebuildTreeTime(row, true);
   }
 

@@ -192,8 +192,11 @@ export default class DataStore {
 
   public async getNew() {
     const id = await this.getId();
-    await this.setLine(id, []);
-    this.setChildren(id, []);
+    await Promise.all([
+      this.setLine(id, []),
+      this.setChildren(id, []),
+      this.setCollapsed(id, false),
+    ]);
     return id;
   }
 }
