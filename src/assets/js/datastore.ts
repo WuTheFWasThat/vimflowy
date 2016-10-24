@@ -375,14 +375,18 @@ export class FirebaseStore extends CachingDataStore {
   private fbase: any;
   // private fbase: Firebase;
 
-  constructor(prefix = '', url, apiKey) {
+  constructor(prefix = '', dbName, apiKey) {
     super(prefix);
     this.fbase = firebase.initializeApp({
       apiKey: apiKey,
-      databaseURL: `https://${url}`,
+      databaseURL: `https://${dbName}.firebaseio.com`,
     }).database();
     // this.fbase.authWithCustomToken(token, (err, authdata) => {})
     this.lastSave = Date.now();
+  }
+
+  public async auth(email, password) {
+    return await firebase.auth().signInWithEmailAndPassword(email, password);
   }
 
   private _IDKey_() {

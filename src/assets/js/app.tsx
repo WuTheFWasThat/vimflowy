@@ -359,9 +359,13 @@ $(document).ready(async () => {
   }
 
   if (dataSource === 'firebase') {
-    const firebaseUrl = await settings.getSetting('firebaseUrl');
+    const firebaseId = await settings.getSetting('firebaseId');
     const firebaseApiKey = await settings.getSetting('firebaseApiKey');
-    datastore = new DataStore.FirebaseStore(docname, firebaseUrl, firebaseApiKey);
+    const firebaseUserEmail = await settings.getSetting('firebaseUserEmail');
+    const firebaseUserPassword = await settings.getSetting('firebaseUserPassword');
+
+    datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
+    await datastore.auth(firebaseUserEmail, firebaseUserPassword);
   } else if (dataSource === 'inmemory') {
     datastore = new DataStore.InMemory();
   } else {
