@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "engines": {
-    "node": "0.10.x",
-    "npm": "1.2.x"
+    "node": "6.x",
+    "npm": "3.10.x"
   },
   "scripts": {
     "build": "NODE_ENV=production webpack --config webpack.prod.js --progress",
