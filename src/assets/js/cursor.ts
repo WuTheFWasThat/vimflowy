@@ -33,7 +33,7 @@ export default class Cursor extends EventEmitter {
 
   private moveCol: Col;
 
-  constructor(session, path, col = 0, moveCol = null) {
+  constructor(session, path, col = 0, moveCol: number | null = null) {
     super();
     this.session = session;
     this.document = session.document;
@@ -272,7 +272,7 @@ export default class Cursor extends EventEmitter {
 
   public async endWord(options: WordMovementOptions = {}) {
     if (await this.atVisibleEnd()) {
-      if (options.cursor.pastEnd) {
+      if (options.cursor && options.cursor.pastEnd) {
         await this._right();
       }
       return this;
@@ -293,12 +293,12 @@ export default class Cursor extends EventEmitter {
       await this._right();
     }
 
-    if (options.cursor.pastEndWord) {
+    if (options.cursor && options.cursor.pastEndWord) {
       await this._right();
     }
 
     end = (await this.document.getLength(this.path.row)) - 1;
-    if (this.col === end && options.cursor.pastEnd) {
+    if (this.col === end && options.cursor && options.cursor.pastEnd) {
       await this._right();
     }
     return this;
@@ -306,7 +306,7 @@ export default class Cursor extends EventEmitter {
 
   public async nextWord(options: WordMovementOptions = {}) {
     if (await this.atVisibleEnd()) {
-      if (options.cursor.pastEnd) {
+      if (options.cursor && options.cursor.pastEnd) {
         await this._right();
       }
       return this;
@@ -328,7 +328,7 @@ export default class Cursor extends EventEmitter {
     }
 
     end = (await this.document.getLength(this.path.row)) - 1;
-    if (this.col === end && options.cursor.pastEnd) {
+    if (this.col === end && options.cursor && options.cursor.pastEnd) {
       await this._right();
     }
     return this;
@@ -345,7 +345,7 @@ export default class Cursor extends EventEmitter {
       col += 1;
     }
 
-    let found = null;
+    let found: number | null = null;
     while (col < end) {
       col += 1;
       if ((await this.document.getChar(this.path.row, col)) === char) {
@@ -359,7 +359,7 @@ export default class Cursor extends EventEmitter {
     }
 
     await this.setCol(found);
-    if (options.cursor.pastEnd) {
+    if (options.cursor && options.cursor.pastEnd) {
       await this._right();
     }
     if (options.beforeFound) {
@@ -377,7 +377,7 @@ export default class Cursor extends EventEmitter {
       col -= 1;
     }
 
-    let found = null;
+    let found: number | null  = null;
     while (col > 0) {
       col -= 1;
       if ((await this.document.getChar(this.path.row, col)) === char) {

@@ -16,7 +16,7 @@ Plugins.register(
     description: 'Lets you easily jump between rows.  Based on https://github.com/easymotion/vim-easymotion',
   },
   function(api) {
-    let EASY_MOTION_MAPPINGS: EasyMotionMappings = null;
+    let EASY_MOTION_MAPPINGS: EasyMotionMappings | null = null;
 
     let CMD_EASY_MOTION = api.registerCommand({
       name: 'EASY_MOTION',
@@ -76,6 +76,9 @@ Plugins.register(
         return null;
       } else {
         return async function(cursor /*, options */) {
+          if (EASY_MOTION_MAPPINGS === null) {
+            throw new Error('Easy motion mappings were not set, as expected');
+          }
           if (key in EASY_MOTION_MAPPINGS.key_to_path) {
             let path = EASY_MOTION_MAPPINGS.key_to_path[key];
             await cursor.setPosition(path, 0);
@@ -87,13 +90,15 @@ Plugins.register(
 
     return api.registerHook('session', 'renderBullet', function(bullet, info) {
       let ancestry_str = JSON.stringify(info.path.getAncestry());
-      if (EASY_MOTION_MAPPINGS && ancestry_str in EASY_MOTION_MAPPINGS.path_to_key) {
-        bullet = (
-          <span key='easymotion' style={{fontWeight: 'bold'}}
-                className='bullet theme-text-accent'>
-            {EASY_MOTION_MAPPINGS.path_to_key[ancestry_str]}
-          </span>
-        );
+      if (EASY_MOTION_MAPPINGS !== null) {
+        if (ancestry_str in EASY_MOTION_MAPPINGS.path_to_key) {
+          bullet = (
+            <span key='easymotion' style={{fontWeight: 'bold'}}
+                  className='bullet theme-text-accent'>
+              {EASY_MOTION_MAPPINGS.path_to_key[ancestry_str]}
+            </span>
+          );
+        }
       }
       return bullet;
     });

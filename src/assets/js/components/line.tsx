@@ -14,11 +14,13 @@ function getCursorClass(cursorBetween) {
 
 type WordInfo = any; // TODO
 type RenderOptions = {
-  cursor?: boolean,
-  highlight?: boolean,
-  text?: string,
-  type?: string,
-  href?: string,
+  cursor?: boolean;
+  highlight?: boolean;
+  text?: string;
+  type?: string;
+  href?: string;
+  onClick?: (e: Event) => void;
+  classes?: Array<string>;
 }
 type LineInfo = {
   column: number,
@@ -33,7 +35,7 @@ export type LineProps = {
   highlights?: {[key: number]: boolean};
   wordHook?: (line: Array<LineInfo>, word_info: WordInfo) => Array<LineInfo>;
   lineHook?: (line: Array<LineInfo>) => Array<LineInfo>;
-  onCharClick?: (col: Col) => void;
+  onCharClick?: (col: Col, e: Event) => void;
   cursorBetween?: boolean;
 }
 
@@ -48,12 +50,12 @@ export default class LineComponent extends React.PureComponent<LineProps, {}> {
     const cursors = this.props.cursors || {};
     const highlights = this.props.highlights || {};
 
-    const results = [];
+    const results: Array<React.ReactNode> = [];
 
     // ideally this takes up space but is unselectable (uncopyable)
     const cursorChar = ' ';
 
-    let line = [];
+    let line: Array<LineInfo> = [];
 
     // add cursor if at end
     // NOTE: this doesn't seem to work for the breadcrumbs, e.g. try visual selecting word at end
@@ -105,7 +107,7 @@ export default class LineComponent extends React.PureComponent<LineProps, {}> {
     }
 
     // collect set of words, { word: word, start: start, end: end }
-    let word_chars = [];
+    let word_chars: Array<string> = [];
     let word_start = 0;
 
 
@@ -142,14 +144,14 @@ export default class LineComponent extends React.PureComponent<LineProps, {}> {
       line = this.props.lineHook(line);
     }
 
-    const renderSpec = [];
+    const renderSpec: Array<RenderOptions> = [];
     // Normally, we collect things of the same type and render them in one div
     // If there are column-specific handlers, however, we must break up the div to handle
     // separate click events
     if (this.props.onCharClick) {
       line.forEach((x) => {
         x.renderOptions.text = x.char;
-        if (!(x.renderOptions.href || x.renderOptions.onClick)) {
+        if ((!x.renderOptions.href) && (!x.renderOptions.onClick) && this.props.onCharClick) {
           x.renderOptions.onClick = this.props.onCharClick.bind(this, x.column);
         }
         renderSpec.push(x.renderOptions);
@@ -158,7 +160,7 @@ export default class LineComponent extends React.PureComponent<LineProps, {}> {
         }
       });
     } else {
-      let acc = [];
+      let acc: Array<string> = [];
       let renderOptions: RenderOptions = {};
 
       const flush = function() {
@@ -190,8 +192,8 @@ export default class LineComponent extends React.PureComponent<LineProps, {}> {
 
     renderSpec.forEach((spec, index) => {
       const classes = spec.classes || [];
-      const type = spec.type || 'span';
-      if (type === 'a') {
+      const divType = spec.type || 'span';
+      if (divType === 'a') {
         classes.push('theme-text-link');
       }
 
@@ -212,14 +214,14 @@ export default class LineComponent extends React.PureComponent<LineProps, {}> {
 
       results.push(
         React.createElement(
-          type,
+          divType,
           {
             key: index,
             className: classes.join(' '),
             href: spec.href,
             onClick: spec.onClick,
-          },
-          spec.text
+          } as React.DOMAttributes<any>,
+          spec.text as React.ReactNode
         )
       );
     });

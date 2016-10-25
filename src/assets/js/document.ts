@@ -7,7 +7,7 @@ import * as constants from './constants';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 import { CachingDataStore } from './datastore';
-import { SerializedLine } from './types';
+import { Row, SerializedLine } from './types';
 
 /*
 Document is a wrapper class around the actual datastore, providing methods to manipulate the document
@@ -108,7 +108,7 @@ export default class Document extends EventEmitter {
       return [];
     }
     if (max === -1) { max = array.length - 1; }
-    const indices = [];
+    const indices: Array<number> = [];
     for (let i = min; i <= max; i++) {
       indices.push(i);
     }
@@ -233,7 +233,7 @@ export default class Document extends EventEmitter {
   public async allAncestors(row, options) {
     options = _.defaults({}, options, { inclusive: false });
     const visited = {};
-    const ancestors = []; // 'visited' with preserved insert order
+    const ancestors: Array<Row> = []; // 'visited' with preserved insert order
     if (options.inclusive) {
       ancestors.push(row);
     }
@@ -445,7 +445,7 @@ export default class Document extends EventEmitter {
 
   private async allLines() {
     // TODO: deal with clones
-    const paths = [];
+    const paths: Array<Path> = [];
 
     const helper = async (path) => {
       paths.push(path);
@@ -461,7 +461,10 @@ export default class Document extends EventEmitter {
 
   public async search(query, options: SearchOptions = {}) {
     const { nresults = 10, case_sensitive = false } = options;
-    const results = []; // list of (path, index) pairs
+    const results: Array<{
+      path: Path,
+      matches: Array<number>,
+    }> = []; // list of (path, index) pairs
 
     if (query.length === 0) {
       return results;
@@ -476,7 +479,7 @@ export default class Document extends EventEmitter {
       const path = paths[i];
       const text = await this.getText(path.row);
       const line = canonicalize(text);
-      const matches = [];
+      const matches: Array<number> = [];
       if (_.every(query_words.map((word) => {
         const index = line.indexOf(word);
         if (index === -1) { return false; }
@@ -569,7 +572,7 @@ export default class Document extends EventEmitter {
     //   async (childrow) => await this.serialize(childrow, options, serialized)
     // ));
     const childRows = await this._getChildren(row);
-    let children = [];
+    let children: Array<any> = [];
     for (let i = 0; i < childRows.length; i++) {
       children.push(
         await this.serialize(childRows[i], options, serialized)

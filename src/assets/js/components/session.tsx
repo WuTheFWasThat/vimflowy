@@ -155,8 +155,19 @@ export default class SessionComponent extends React.Component<Props, State> {
     const session = this.props.session;
     if (!this.state.loaded) { return <Spinner/>; }
     const mode = this.state.mode;
+    if (mode == null) {
+      throw new Error('mode should have been loaded');
+    }
 
     const viewRoot = this.state.viewRoot;
+    if (viewRoot == null) {
+      throw new Error('viewToot should have been loaded');
+    }
+
+    const crumbContents = this.state.crumbContents;
+    if (crumbContents == null) {
+      throw new Error('crumbContents should have been loaded');
+    }
 
     const options: RenderOptions = {
       cursorBetween: Modes.getMode(mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE,
@@ -166,9 +177,9 @@ export default class SessionComponent extends React.Component<Props, State> {
 
     options.highlight_blocks = this.state.highlight_blocks || {};
 
-    let onLineMouseOver = null;
-    let onCharClick = null;
-    let onLineClick = null;
+    let onLineMouseOver: (() => void) | undefined = undefined;
+    let onCharClick: ((path: Path, column: number, e: Event) => void) | null = null;
+    let onLineClick: ((path: Path) => void) | null = null;
     if (!this.state.handleCharClicks) {
       onLineMouseOver = () => this.setState({ handleCharClicks: true } as State);
     }
@@ -201,7 +212,7 @@ export default class SessionComponent extends React.Component<Props, State> {
       this.update();
     };
 
-    let onCrumbClick = null;
+    let onCrumbClick: ((...args: any[]) => void) | null = null;
     if (mode === MODES.NORMAL) {
       onCrumbClick = async (path) => {
         await session.zoomInto(path);
@@ -226,7 +237,7 @@ export default class SessionComponent extends React.Component<Props, State> {
                 <BreadcrumbsComponent key='crumbs'
                   viewRoot={viewRoot}
                   onCrumbClick={onCrumbClick}
-                  crumbContents={this.state.crumbContents}
+                  crumbContents={crumbContents}
                 />,
                 <hr key='bar' style={{opacity: 0.5, marginBottom: 20}}/>,
               ];
@@ -234,7 +245,9 @@ export default class SessionComponent extends React.Component<Props, State> {
           })()
         }
         <BlockComponent
-          session={session} path={viewRoot} options={options}
+          session={session}
+          path={viewRoot}
+          options={options}
           topLevel={true}
           onCharClick={onCharClick}
           onLineClick={onLineClick}

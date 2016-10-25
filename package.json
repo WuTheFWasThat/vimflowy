@@ -30,7 +30,6 @@
   },
   "devDependencies": {
     "@types/mocha": "^2.2.32",
-    "acorn": "^4.0.3",
     "awesome-typescript-loader": "^2.2.4",
     "babel-core": "6.4.5",
     "babel-eslint": "^6.1.2",

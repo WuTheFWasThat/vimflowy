@@ -72,8 +72,8 @@ function downloadFile(filename, mimetype, content) {
   exportDiv.attr('download', filename);
   exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
   exportDiv[0].click();
-  exportDiv.attr('download', null);
-  return exportDiv.attr('href', null);
+  exportDiv.attr('download', null as any);
+  exportDiv.attr('href', null as any);
 }
 
 const getMessageDiv = () => $('#message');
@@ -119,7 +119,7 @@ async function create_session(dataSource, settings, doc, to_load) {
     viewRoot: viewRoot,
     cursorPath: cursorPath,
     showMessage: (() => {
-      let messageDivTimeout = null;
+      let messageDivTimeout: null | number = null;
       return (message, options: {time?: number, text_class?: string} = {}) => {
 
         const { time = 5000 } = options;
@@ -127,7 +127,9 @@ async function create_session(dataSource, settings, doc, to_load) {
         const $messageDiv = getMessageDiv();
         logger.info(`Showing message: ${message}`);
         if ($messageDiv) {
-          clearTimeout(messageDivTimeout);
+          if (messageDivTimeout !== null) {
+            clearTimeout(messageDivTimeout);
+          }
 
           $messageDiv.text(message);
           if (options.text_class) {
@@ -142,7 +144,7 @@ async function create_session(dataSource, settings, doc, to_load) {
       };
     })(),
     getVisiblePaths: async () => {
-      const paths = [];
+      const paths: Array<Path> = [];
       $.makeArray($('.bullet')).forEach((bullet) => {
         if (!utils.isScrolledIntoView($(bullet), getMainDiv())) {
           return;
@@ -206,7 +208,7 @@ async function create_session(dataSource, settings, doc, to_load) {
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;
 
-  let cursorBlinkTimeout = null;
+  let cursorBlinkTimeout: number | null = null;
   function renderMain() {
 
     return new Promise((resolve) => {
@@ -228,7 +230,9 @@ async function create_session(dataSource, settings, doc, to_load) {
                 scrollIntoView(cursorDiv, $onto);
               }
 
-              clearTimeout(cursorBlinkTimeout);
+              if (cursorBlinkTimeout !== null) {
+                clearTimeout(cursorBlinkTimeout);
+              }
               $onto.removeClass('animate-blink-cursor');
               cursorBlinkTimeout = setTimeout(
                 () => $onto.addClass('animate-blink-cursor'), 500);
@@ -308,7 +312,7 @@ async function create_session(dataSource, settings, doc, to_load) {
 
       $(document).on('paste', async (e) => {
         e.preventDefault();
-        const text = (e.originalEvent || e as any).clipboardData.getData('text/plain');
+        const text = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
         // TODO: deal with this better when there are multiple lines
         // maybe put in insert mode?
         const lines = text.split('\n');
@@ -364,7 +368,7 @@ $(document).ready(async () => {
 
   doc = new Document(datastore, docname);
 
-  let to_load = null;
+  let to_load: any = null;
   if (datastore.getLastSave() === 0) {
     to_load = constants.default_data;
   }

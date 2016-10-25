@@ -62,11 +62,11 @@ export class PluginApi {
     this.registrations = [];
   }
 
-  public async setData(key, value) {
+  public async setData(key: string, value: any) {
     return await this.document.store.setPluginData(this.name, key, value);
   }
 
-  public async getData(key, default_value = null) {
+  public async getData(key: string, default_value: any = null) {
     return await this.document.store.getPluginData(this.name, key, default_value);
   }
 
@@ -228,7 +228,7 @@ export class PluginsManager extends EventEmitter {
   }
 
   public updateEnabledPlugins() {
-    const enabled = [];
+    const enabled: Array<string> = [];
     for (const name in this.plugin_infos) {
       if ((this.getStatus(name)) === STATUSES.ENABLED) {
         enabled.push(name);

@@ -93,8 +93,12 @@ function getBindings(definitions, keyMap) {
 
 export default class KeyBindings extends EventEmitter {
   public definitions: KeyDefinitions;
+
+  // a mapping from commands to keys
   public keyMaps: KeyMappings;
+  // a recursive mapping from keys to commands
   public bindings: KeyBindingsRaw;
+
   public motion_bindings: MotionBindings;
 
   private hotkey_settings: HotkeySettings;
@@ -104,14 +108,9 @@ export default class KeyBindings extends EventEmitter {
     super();
 
     this.definitions = definitions;
-    // a mapping from commands to keys
-    this.keyMaps = null;
-    // a recursive mapping from keys to commands
-    this.bindings = null;
 
-    this.hotkey_settings = null;
+    // initialization mostly happens inside apply_hotkey_settings
     const err = this.apply_hotkey_settings(hotkey_settings);
-
     if (err) {
       logger.error(`Failed to apply desired hotkeys ${hotkey_settings}`);
       logger.error(err);

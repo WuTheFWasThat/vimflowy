@@ -19,7 +19,7 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
     const ignoreEmpty = this.props.ignoreEmpty;
 
     const buildTableContents = function(bindings, recursed = false) {
-      const result = [];
+      const result: Array<React.ReactNode> = [];
       for (const k in bindings) {
         const v = bindings[k];
         let keys;

@@ -30,8 +30,10 @@ class MarksPlugin {
   private logger: Logger;
   private session: Session;
   private document: Document;
-  private marksession?: Session;
-  private marksessionpath?: Path;
+  private markstate: {
+    session: Session,
+    path: Path,
+  } | null;
   public SetMark: new(row: Row, mark: string) => Mutation;
   public UnsetMark: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
@@ -113,8 +115,7 @@ class MarksPlugin {
 
     const MODES = Modes.modes;
 
-    this.marksession = null;
-    this.marksessionpath = null;
+    this.markstate = null;
 
     this.api.registerMode({
       name: 'MARK',
@@ -124,20 +125,24 @@ class MarksPlugin {
         // initialize marks stuff
         const doc = new Document(new DataStore.InMemory());
         await doc.load(constants.empty_data);
-        this.marksession = new Session(doc);
-        await this.marksession.setMode(MODES.INSERT);
-        this.marksessionpath = session.cursor.path;
+        this.markstate = {
+          session: new Session(doc),
+          path: session.cursor.path,
+        };
+        await this.markstate.session.setMode(MODES.INSERT);
       },
       exit: async (/*session, newMode?: ModeId */) => {
-        this.marksession = null;
-        this.marksessionpath = null;
+        this.markstate = null;
       },
       key_transforms: [
         async (key, context) => {
           // must be non-whitespace
           if (key.length === 1) {
             if (/^\S*$/.test(key)) {
-              await this.marksession.addCharsAtCursor([{char: key}]);
+              if (this.markstate === null) {
+                throw new Error('Mark state null during key transform');
+              }
+              await this.markstate.session.addCharsAtCursor([{char: key}]);
               return [null, context];
             }
           }
@@ -167,8 +172,11 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], CMD_FINISH_MARK, {
       description: 'Finish typing mark',
     }, async function() {
-      const mark = await that.marksession.curText();
-      const err = await that.updateMark(that.marksessionpath.row, mark);
+      if (that.markstate === null) {
+        throw new Error('Mark state null in mark mode');
+      }
+      const mark = await that.markstate.session.curText();
+      const err = await that.updateMark(that.markstate.path.row, mark);
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       await this.session.setMode(MODES.NORMAL);
       this.keyStream.save();
@@ -218,7 +226,9 @@ class MarksPlugin {
         // find marks that start with the prefix
         const findMarks = async (document, prefix, nresults = 10) => {
           const marks = await that.listMarks();
-          const results = []; // list of paths
+          const results: Array<{
+            path: Path, mark: string,
+          }> = []; // list of paths
           for (const mark in marks) {
             const path = marks[mark];
             if (mark.indexOf(prefix) === 0) {
@@ -259,19 +269,28 @@ class MarksPlugin {
     this.api.registerAction([MODES.MARK], basic_defs.CMD_MOTION, {
       description: 'Move the cursor',
     }, async function(motion) {
-      await motion(that.marksession.cursor, {pastEnd: true});
+      if (that.markstate === null) {
+        throw new Error('Mark state null in mark mode');
+      }
+      await motion(that.markstate.session.cursor, {pastEnd: true});
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
       description: 'Delete last character (i.e. backspace key)',
     }, async function() {
-      await that.marksession.deleteAtCursor();
+      if (that.markstate === null) {
+        throw new Error('Mark state null in mark mode');
+      }
+      await that.markstate.session.deleteAtCursor();
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
       description: 'Delete character at the cursor (i.e. del key)',
     }, async function() {
-      await this.session.marksession.delCharsAfterCursor(1);
+      if (that.markstate === null) {
+        throw new Error('Mark state null in mark mode');
+      }
+      await that.markstate.session.delCharsAfterCursor(1);
     });
 
     this.api.registerAction([MODES.MARK], basic_defs.CMD_HELP, {
@@ -291,15 +310,15 @@ class MarksPlugin {
     this.api.registerHook('document', 'pluginPathContents', async (obj, { path }) => {
       const mark = await this._getMark(path.row);
 
-      const marking = this.marksessionpath && this.marksessionpath.is(path);
+      const marking = this.markstate && this.markstate.path.is(path);
 
       obj.marks = { mark, marking };
 
-      if (marking) {
-        obj.marks.markText = await this.marksession.document.getLine(
-          this.marksession.cursor.path.row
+      if (this.markstate && marking) {
+        obj.marks.markText = await this.markstate.session.document.getLine(
+          this.markstate.session.cursor.path.row
         );
-        obj.marks.markCol = this.marksession.cursor.col;
+        obj.marks.markCol = this.markstate.session.cursor.col;
       }
       return obj;
     });
@@ -311,16 +330,17 @@ class MarksPlugin {
         return obj;
       }
 
-      const marking = this.marksessionpath && this.marksessionpath.is(path);
+      const marking = this.markstate && this.markstate.path.is(path);
 
       obj.marks = { mark, marking };
 
-      if (marking) {
-        // NOTE: marksession is always in-memory so no need for null check
-        obj.marks.markText = this.marksession.document.store.getLineSync(
-          this.marksession.cursor.path.row
+      if (this.markstate && marking) {
+        // NOTE: markstate.session is always an inMemory db,
+        // so no need for null check
+        obj.marks.markText = this.markstate.session.document.store.getLineSync(
+          this.markstate.session.cursor.path.row
         );
-        obj.marks.markCol = this.marksession.cursor.col;
+        obj.marks.markCol = this.markstate.session.cursor.col;
       }
       return obj;
     });

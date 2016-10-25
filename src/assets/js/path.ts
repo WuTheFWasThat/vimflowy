@@ -49,7 +49,7 @@ export default class Path {
     if (!stop) {
       stop = Path.root();
     }
-    const ancestors = [];
+    const ancestors: Array<Path> = [];
     let path: Path = this;
     while (!path.is(stop)) {
       errors.assert(!path.isRoot(), `Failed to get ancestry for ${this} going up until ${stop}`);
@@ -91,12 +91,12 @@ export default class Path {
     return my_ancestry.slice(their_ancestry.length);
   }
 
-  public shedUntil(row) {
+  public shedUntil(row): [Array<Row>, Path] | null {
     let ancestor: Path = this;
-    const path = [];
+    const path: Array<Row> = [];
     while (ancestor.row !== row) {
       if (!ancestor.parent) {
-        return [null, null];
+        return null;
       }
       path.push(ancestor.row);
       ancestor = ancestor.parent;

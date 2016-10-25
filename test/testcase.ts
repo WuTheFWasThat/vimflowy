@@ -44,7 +44,7 @@ class TestCase {
     this.store = new InMemory();
     this.document = new Document(this.store);
 
-    this.plugins = options.plugins;
+    this.plugins = options.plugins || [];
     this.session = new Session(this.document, {
       bindings: keyBindings,
       viewRoot: Path.root(),
@@ -56,11 +56,9 @@ class TestCase {
     this.pluginManager = new PluginsManager(this.session);
 
     this.prom = Promise.resolve();
-    if (this.plugins) {
-      this.plugins.forEach((pluginName) => {
-        this.enablePlugin(pluginName);
-      });
-    }
+    this.plugins.forEach((pluginName) => {
+      this.enablePlugin(pluginName);
+    });
 
     this._chain(async () => {
       await this.document.load(serialized);
@@ -179,7 +177,7 @@ class TestCase {
     });
   }
 
-  public expectJumpIndex(index, historyLength = null) {
+  public expectJumpIndex(index: number, historyLength: number | null = null) {
     return this._chain(() => {
       this._expectEqual(this.session.jumpIndex, index,
                         'Unexpected jump index');
@@ -190,8 +188,11 @@ class TestCase {
     });
   }
 
-  public expectNumMenuResults(num_results) {
+  public expectNumMenuResults(num_results: number) {
     return this._chain(() => {
+      if (this.session.menu === null) {
+        throw new Error('Menu was null while expecting menu results');
+      }
       this._expectEqual(this.session.menu.results.length, num_results,
                         'Unexpected number of results');
     });

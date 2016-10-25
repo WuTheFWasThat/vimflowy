@@ -15,6 +15,9 @@ const CMD_MOTION = {name: 'MOTION'};
 keyDefinitions.registerAction([MODES.NORMAL], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
+  if (motion == null) {
+    throw new Error('Motion command was not passed a motion');
+  }
   const tmp = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
     await motion(tmp, {});
@@ -27,11 +30,17 @@ keyDefinitions.registerAction([MODES.NORMAL], CMD_MOTION, {
 keyDefinitions.registerAction([MODES.INSERT], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
+  if (motion == null) {
+    throw new Error('Motion command was not passed a motion');
+  }
   await motion(this.session.cursor, {pastEnd: true});
 });
 keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
+  if (motion == null) {
+    throw new Error('Motion command was not passed a motion');
+  }
   // this is necessary until we figure out multiline
   const tmp = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
@@ -47,6 +56,9 @@ keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
+  if (motion == null) {
+    throw new Error('Motion command was not passed a motion');
+  }
   for (let j = 0; j < this.repeat; j++) {
     await motion(this.session.cursor, {pastEnd: true});
   }
@@ -54,6 +66,9 @@ keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOTION, {
 keyDefinitions.registerAction([MODES.SEARCH], CMD_MOTION, {
   description: 'Move the cursor',
 }, async function(motion) {
+  if (motion == null) {
+    throw new Error('Motion command was not passed a motion');
+  }
   await motion(this.session.menu.session.cursor, {pastEnd: true});
 });
 
@@ -315,6 +330,9 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_DELETE], {
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
   description: 'Delete from cursor with motion',
 }, async function(motion) {
+  if (motion == null) {
+    throw new Error('Delete motion command was not passed a motion');
+  }
   const cursor = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
     await motion(cursor, {pastEnd: true, pastEndWord: true});
@@ -377,6 +395,9 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_RECURSIVE], {
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_CHANGE, CMD_MOTION], {
   description: 'Delete from cursor with motion, and enter insert mode',
 }, async function(motion) {
+  if (motion == null) {
+    throw new Error('Change motion command was not passed a motion');
+  }
   const cursor = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
     await motion(cursor, {pastEnd: true, pastEndWord: true});
@@ -433,6 +454,9 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_RECURSIVE], {
 keyDefinitions.registerAction([MODES.NORMAL], [CMD_YANK, CMD_MOTION], {
   description: 'Yank from cursor with motion',
 }, async function(motion) {
+  if (motion == null) {
+    throw new Error('Yank motion command was not passed a motion');
+  }
   const cursor = this.session.cursor.clone();
   for (let j = 0; j < this.repeat; j++) {
     await motion(cursor, {pastEnd: true, pastEndWord: true});

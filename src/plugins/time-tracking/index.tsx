@@ -22,7 +22,7 @@ class TimeTrackingPlugin {
   private currentPath: {
     row: Row,
     time: number,
-  };
+  } | null;
 
   constructor(api) {
     const that = this;
@@ -54,7 +54,7 @@ class TimeTrackingPlugin {
           <span key='time' style={{color: 'lightgray'}}>Loading...</span>
         );
       } else {
-        let isCurRow = path.row === (this.currentPath && this.currentPath.row);
+        const isCurRow = (this.currentPath !== null) && (path.row === this.currentPath.row);
 
         if (isCurRow || time > 1000) {
           let timeStr = ' ';
@@ -66,8 +66,8 @@ class TimeTrackingPlugin {
             <span key='time' style={{color: 'lightgray'}}>{timeStr}</span>
           );
 
-          if (isCurRow) {
-            let curTime = Date.now() - this.currentPath.time;
+          if ((this.currentPath !== null) && isCurRow) {
+            const curTime = Date.now() - this.currentPath.time;
             elements.push(
               <span key='curtime' style={{color: 'lightgray'}} className='curtime'>
                 {this.printTime(curTime)}
@@ -174,7 +174,7 @@ class TimeTrackingPlugin {
     }
   }
 
-  private async getRowData(row, keytype, default_value = null) {
+  private async getRowData(row: Row, keytype: string, default_value: any = null) {
     let key = `${row}:${keytype}`;
     return await this.api.getData(key, default_value);
   }
@@ -189,7 +189,7 @@ class TimeTrackingPlugin {
     await this.api.setData(key, value);
   }
 
-  private async transformRowData(row, keytype, transform, default_value = null) {
+  private async transformRowData(row, keytype, transform, default_value: any = null) {
     await this.setRowData(
       row, keytype,
       transform(await this.getRowData(row, keytype, default_value))

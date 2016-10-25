@@ -3,7 +3,7 @@ import React from 'react';
 import Path from '../path';
 
 type CrumbProps = {
-  onClick: (...args: any[]) => void,
+  onClick: ((...args: any[]) => void) | undefined,
 }
 class CrumbComponent extends React.PureComponent<CrumbProps, {}> {
   public render() {
@@ -26,7 +26,7 @@ class CrumbComponent extends React.PureComponent<CrumbProps, {}> {
 type BreadcrumbsProps = {
   viewRoot: Path;
   crumbContents: {[row: number]: string};
-  onCrumbClick: (...args: any[]) => void;
+  onCrumbClick: ((...args: any[]) => void) | null;
 }
 type BreadcrumbsState = {
   loaded: boolean;
@@ -40,7 +40,7 @@ export default class BreadcrumbsComponent extends React.Component<BreadcrumbsPro
   }
 
   public render() {
-    const crumbNodes = [];
+    const crumbNodes: Array<React.ReactNode> = [];
     let path = this.props.viewRoot;
     path = path.parent;
     while (!path.isRoot()) {

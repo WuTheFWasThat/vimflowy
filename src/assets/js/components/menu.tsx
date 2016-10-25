@@ -11,7 +11,7 @@ type Props = {
   menu: Menu;
 }
 type State = {
-  query: Line;
+  query: Line | null;
 }
 export default class MenuComponent extends React.Component<Props, State> {
   private updateFn: () => Promise<void>;

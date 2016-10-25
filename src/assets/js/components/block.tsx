@@ -16,9 +16,9 @@ type RowProps = {
   options: any; // TODO
   path: Path;
   line: Line;
-  onLineMouseOver: () => void;
-  onCharClick: (path: Path) => void;
-  onClick: (path: Path) => void;
+  onLineMouseOver: (() => void) | undefined;
+  onCharClick: ((path: Path, column: number, e: Event) => void) | null;
+  onClick: ((path: Path) => void) | null;
   style: React.CSSProperties;
 }
 export class RowComponent extends React.Component<RowProps, {}> {
@@ -97,10 +97,10 @@ type BlockProps = {
   options: any; // TODO
   path: Path;
 
-  onLineMouseOver: () => void;
-  onCharClick: (path: Path) => void;
-  onLineClick: (path: Path) => void;
-  onBulletClick: (path: Path) => void;
+  onLineMouseOver: (() => void) | undefined;
+  onCharClick: ((path: Path, column: number, e: Event) => void) | null;
+  onLineClick: ((path: Path) => void) | null;
+  onBulletClick: ((path: Path) => void) | undefined;
   topLevel: boolean;
   fetchData: () => void;
 }
@@ -110,7 +110,7 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
     const parent = this.props.path;
     const options = this.props.options;
 
-    const pathElements = [];
+    const pathElements: Array<React.ReactNode> = [];
 
     if (!parent.isRoot()) {
       const line = session.document.store.getLineSync(parent.row);
@@ -122,8 +122,8 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
       const elLine = (
         <RowComponent key='row'
           style={{
-            fontSize: this.props.topLevel ? 20 : null,
-            marginBottom: this.props.topLevel ? 10 : null,
+            fontSize: this.props.topLevel ? 20 : undefined,
+            marginBottom: this.props.topLevel ? 10 : undefined,
           }}
           session={session} path={parent} options={options}
           onLineMouseOver={this.props.onLineMouseOver}
@@ -164,7 +164,7 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
       let childrenDivs = children.map((row) => {
         const path = parent.child(row);
 
-        let cloneIcon = null;
+        let cloneIcon: React.ReactNode | null = null;
 
         const parents = session.document.store.getParentsSync(path.row);
         if (parents === null) {
@@ -179,7 +179,7 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
           );
         }
 
-        let onBulletClick = null;
+        let onBulletClick = undefined;
         const style: React.CSSProperties = {};
 
         let icon = 'fa-circle';

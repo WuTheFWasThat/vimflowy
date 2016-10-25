@@ -68,7 +68,7 @@ export default class Mutation {
     return this.mutate(session);
   }
   public async moveCursor(cursor): Promise<void> {
-    return null;
+    return;
   }
 }
 
@@ -112,7 +112,7 @@ export class DelChars extends Mutation {
   private row: Row;
   private col: Col;
   private nchars: number;
-  public deletedChars: Array<String>;
+  public deletedChars: Array<string>;
 
   constructor(row, col, nchars) {
     super();
@@ -296,7 +296,7 @@ export class DetachBlocks extends Mutation {
   private nrows: number;
   public deleted: Array<Row>;
   private next: SerializedPath;
-  private created: Row;
+  private created: Row | null;
   private created_index: number;
   private options: {addNew?: boolean, noNew?: boolean};
 
@@ -355,7 +355,7 @@ export class DetachBlocks extends Mutation {
   }
 
   public async rewind(session) {
-    const mutations = [];
+    const mutations: Array<Mutation> = [];
     if (this.created !== null) {
       mutations.push(new DetachBlocks(this.parent, this.created_index, 1, {noNew: true}));
     }
@@ -374,10 +374,11 @@ export class DetachBlocks extends Mutation {
   }
 
   public async moveCursor(cursor) {
-    const [walk, ancestor] = cursor.path.shedUntil(this.parent);
-    if (walk === null) {
+    const result = cursor.path.shedUntil(this.parent);
+    if (result === null) {
       return;
     }
+    const [walk, ancestor] = result;
     if (walk.length === 0) {
       return;
     }

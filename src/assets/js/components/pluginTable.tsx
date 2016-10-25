@@ -37,7 +37,7 @@ export default class PluginsTableComponent extends React.Component<Props, {}> {
             Plugins.names().map(
               name => {
                 const status = pluginManager.getStatus(name);
-                const actions = [];
+                const actions: Array<React.ReactNode> = [];
                 let btnClick;
                 let btnText;
                 if (status === Plugins.STATUSES.ENABLED) {

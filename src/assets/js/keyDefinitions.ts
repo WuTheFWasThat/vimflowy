@@ -193,7 +193,7 @@ export class KeyDefinitions {
   }
 
   public get_motions(multirow) {
-    const result = [];
+    const result: Array<string> = [];
     for (const name in this.motion_command_counts) {
       const counts = this.motion_command_counts[name];
       if (multirow) {
@@ -228,12 +228,20 @@ export class KeyDefinitions {
 
     this.commands[name] = command;
     this.defaultHotkeys[Modes.HotkeyType.NORMAL_MODE_TYPE][name] =
-      _.cloneDeep(metadata.default_hotkeys.all || []).concat(
-        _.cloneDeep(metadata.default_hotkeys.normal_like || [])
+      _.cloneDeep(
+        (metadata.default_hotkeys && metadata.default_hotkeys.all) || []
+      ).concat(
+        _.cloneDeep(
+          (metadata.default_hotkeys && metadata.default_hotkeys.normal_like) || []
+        )
       );
     this.defaultHotkeys[Modes.HotkeyType.INSERT_MODE_TYPE][name] =
-      _.cloneDeep(metadata.default_hotkeys.all || []).concat(
-        _.cloneDeep(metadata.default_hotkeys.insert_like || [])
+      _.cloneDeep(
+        (metadata.default_hotkeys && metadata.default_hotkeys.all) || []
+      ).concat(
+        _.cloneDeep(
+          (metadata.default_hotkeys && metadata.default_hotkeys.insert_like) || []
+        )
       );
     return command;
   }

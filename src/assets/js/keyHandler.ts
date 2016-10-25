@@ -68,7 +68,7 @@ export class KeyStream extends EventEmitter {
     this.waiting = false;
   }
 
-  public dequeue() {
+  public dequeue(): string | null {
     if (this.index === this.queue.length) { return null; }
     return this.queue[this.index++];
   }
@@ -90,7 +90,7 @@ export class KeyStream extends EventEmitter {
   }
 
   // forgets the most recently processed n items
-  public forget(n = null) {
+  public forget(n: number | null = null) {
     if (n === null) {
       // forget everything remembered, by default
       n = this.index;
@@ -108,9 +108,9 @@ export default class KeyHandler extends EventEmitter {
   private keyBindings: KeyBindings;
   private macros: MacroMap;
   private recording: {
-    stream?: KeyStream,
-    key?: Key,
-  };
+    stream: KeyStream,
+    key: Key,
+  } | null;
   private keyStream: KeyStream;
   private processQueue: Promise<any>;
 
@@ -124,10 +124,7 @@ export default class KeyHandler extends EventEmitter {
     this.session.document.store.getMacros().then((macros) => {
       this.macros = macros;
     });
-    this.recording = {
-      stream: null,
-      key: null,
-    };
+    this.recording = null;
 
     this.keyStream = new KeyStream();
     this.keyStream.on('save', () => {
@@ -140,16 +137,20 @@ export default class KeyHandler extends EventEmitter {
   // for macros
 
   public beginRecording(key) {
-    this.recording.stream = new KeyStream();
-    this.recording.key = key;
+    this.recording = {
+      stream: new KeyStream(),
+      key: key,
+    };
   }
 
   public async finishRecording() {
+    if (!this.recording) {
+      throw new Error('Tried to finish recording, but there was no recording');
+    }
     const macro = this.recording.stream.queue;
     this.macros[this.recording.key] = macro;
     await this.session.document.store.setMacros(this.macros);
-    this.recording.stream = null;
-    this.recording.key = null;
+    this.recording = null;
   }
 
   public async playRecording(recording) {
@@ -163,7 +164,7 @@ export default class KeyHandler extends EventEmitter {
   public async handleKey(key) {
     logger.debug('Handling key:', key);
     this.keyStream.enqueue(key);
-    if (this.recording.stream) {
+    if (this.recording) {
       this.recording.stream.enqueue(key);
     }
     return await this.processKeys(this.keyStream);
@@ -198,7 +199,7 @@ export default class KeyHandler extends EventEmitter {
   //   fn: a function to apply
   //   args: arguments to apply
   //   context: a context to execute the function in
-  public async getCommand(mode, keyStream, bindings = null, repeat = 1) {
+  public async getCommand(mode, keyStream, bindings: any = null, repeat = 1) {
     if (bindings === null) {
       bindings = this.keyBindings.bindings[mode];
     }
@@ -215,7 +216,7 @@ export default class KeyHandler extends EventEmitter {
 
     let key = keyStream.dequeue();
 
-    const args = [];
+    const args: Array<any> = [];
 
     [key, context] = await mode_obj.transform_key(key, context);
     if (key === null) {
@@ -273,22 +274,29 @@ export default class KeyHandler extends EventEmitter {
   // NOTE: this should maybe be normal-mode specific
   //       but it would also need to be done for the motions
   // takes keyStream, key, returns repeat number and key
-  public getRepeat(keyStream, key = null) {
+  public getRepeat(keyStream, key: string | null = null): [number | null, string | null] {
     if (key === null) {
       key = keyStream.dequeue();
     }
     const begins = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
     const continues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
+
+    if (key === null) {
+      return [null, null];
+    }
     if (begins.indexOf(key) === -1) {
       return [1, key];
     }
-    let numStr = key;
-    key = keyStream.dequeue();
-    if (key === null) { return [null, null]; }
-    while (continues.indexOf(key) !== -1) {
-      numStr += key;
+    let numStr = '' + key;
+    while (true) {
       key = keyStream.dequeue();
-      if (key === null) { return [null, null]; }
+      if (key === null) {
+        return [null, null];
+      }
+      if (continues.indexOf(key) === -1) {
+        break;
+      }
+      numStr += key;
     }
     return [parseInt(numStr, 10), key];
   }

@@ -36,6 +36,10 @@ type JumpLogEntry = {
   cursor_after?: Cursor,
 };
 
+type DelCharsOptions = {
+  yank?: boolean
+};
+
 /*
 a Session represents a session with a vimflowy document
 It holds a Cursor, a Document object, and a Settings object
@@ -58,7 +62,7 @@ export default class Session extends EventEmitter {
 
   public viewRoot: Path;
 
-  public menu?: Menu;
+  public menu: Menu | null;
 
   private mutations: Array<Mutation>;
   private history: Array<HistoryLogEntry>;
@@ -92,6 +96,8 @@ export default class Session extends EventEmitter {
     });
 
     this.register = new Register(this);
+
+    this.menu = null;
 
     this.viewRoot = options.viewRoot || Path.root();
     this.cursor = new Cursor(this, options.cursorPath || this.viewRoot, 0);
@@ -159,7 +165,11 @@ export default class Session extends EventEmitter {
 
   private parsePlaintext(content) {
     // Step 1: parse into (int, string) pairs of indentation amounts.
-    let lines = [];
+    let lines: Array<{
+      indent: number,
+      line: string,
+      annotation?: boolean,
+    }> = [];
     const whitespace = /^\s*/;
     const content_lines = content.split('\n');
     for (let i = 0; i < content_lines.length; i++) {
@@ -251,7 +261,7 @@ export default class Session extends EventEmitter {
         if (typeof(node) === 'string') {
           return [`- ${node}`];
         }
-        const lines = [];
+        const lines: Array<string> = [];
         lines.push(`- ${node.text}`);
         const children = node.children || [];
         children.forEach((child) => {
@@ -703,9 +713,9 @@ export default class Session extends EventEmitter {
     await this.addChars(this.cursor.row, col, chars);
   }
 
-  private async delChars(path, col, nchars, options: {yank?: boolean} = {}) {
+  private async delChars(path, col, nchars, options: DelCharsOptions = {}) {
     const n = await this.document.getLength(path.row);
-    let deleted = [];
+    let deleted: Array<string> = [];
     if ((n > 0) && (nchars > 0) && (col < n)) {
       const mutation = new mutations.DelChars(path.row, col, nchars);
       await this.do(mutation);
@@ -717,12 +727,12 @@ export default class Session extends EventEmitter {
     return deleted;
   }
 
-  public async delCharsBeforeCursor(nchars, options) {
+  public async delCharsBeforeCursor(nchars, options: DelCharsOptions = {}) {
     nchars = Math.min(this.cursor.col, nchars);
     return await this.delChars(this.cursor.path, this.cursor.col - nchars, nchars, options);
   }
 
-  public async delCharsAfterCursor(nchars, options) {
+  public async delCharsAfterCursor(nchars, options: DelCharsOptions = {}) {
     return await this.delChars(this.cursor.path, this.cursor.col, nchars, options);
   }
 
@@ -979,7 +989,7 @@ export default class Session extends EventEmitter {
   // implements proper "backspace" behavior
   public async deleteAtCursor() {
     if (this.cursor.col > 0) {
-      await this.delCharsBeforeCursor(1, {cursor: {pastEnd: true}});
+      await this.delCharsBeforeCursor(1);
       return true;
     }
 

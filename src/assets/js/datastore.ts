@@ -120,7 +120,7 @@ export default class DataStore {
   public async getDetachedParent(row: Row): Promise<Row> {
     return await this._get(this._detachedParentKey_(row), null);
   }
-  public async setDetachedParent(row: Row, parent: Row): Promise<void> {
+  public async setDetachedParent(row: Row, parent: Row | null): Promise<void> {
     return await this._set(this._detachedParentKey_(row), parent);
   }
 

@@ -58,7 +58,7 @@ const CMD_RECORD_MACRO = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL], CMD_RECORD_MACRO, {
   description: 'Begin/stop recording a macro',
 }, async function() {
-  if (this.keyHandler.recording.stream === null) {
+  if (this.keyHandler.recording === null) {
     const key = this.keyStream.dequeue();
     if (key === null) {
       this.keyStream.wait();
