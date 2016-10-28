@@ -35,11 +35,11 @@ export type LineProps = {
   highlights?: {[key: number]: boolean};
   wordHook?: (line: Array<LineInfo>, word_info: WordInfo) => Array<LineInfo>;
   lineHook?: (line: Array<LineInfo>) => Array<LineInfo>;
-  onCharClick?: (col: Col, e: Event) => void;
+  onCharClick?: ((col: Col, e: Event) => void) | null;
   cursorBetween?: boolean;
 }
 
-export default class LineComponent extends React.PureComponent<LineProps, {}> {
+export default class LineComponent extends React.Component<LineProps, {}> {
 
   constructor(props) {
     super(props);

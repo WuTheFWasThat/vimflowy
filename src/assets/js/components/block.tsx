@@ -22,8 +22,32 @@ type RowProps = {
   style: React.CSSProperties;
 }
 export class RowComponent extends React.Component<RowProps, {}> {
+  private onClick: (() => void) | undefined;
+  private onCharClick: ((column: number, e: Event) => void) | null;
+
+  // TODO: use shouldComponentUpdate?
+
   constructor(props) {
     super(props);
+    this.init(props);
+  }
+
+  private init(props) {
+    this.onClick = undefined;
+    if (props.onClick) {
+      this.onClick = () => props.onClick(props.path);
+    }
+
+    this.onCharClick = null;
+    if (props.onCharClick) {
+      this.onCharClick = (column: number, e: Event) => {
+        props.onCharClick(props.path, column, e);
+      };
+    }
+  }
+
+  public componentWillReceiveProps(props) {
+    this.init(props);
   }
 
   public render() {
@@ -70,7 +94,7 @@ export class RowComponent extends React.Component<RowProps, {}> {
     lineoptions = session.applyHook('renderLineOptions', lineoptions, hooksInfo);
     let lineContents = [
       <LineComponent key='line'
-        onCharClick={this.props.onCharClick && this.props.onCharClick.bind(this, path)}
+        onCharClick={this.onCharClick}
         {...lineoptions}
       />,
     ];
@@ -82,7 +106,7 @@ export class RowComponent extends React.Component<RowProps, {}> {
     return (
       <div key='text' className='node-text'
         onMouseOver={this.props.onLineMouseOver}
-        onClick={this.props.onClick && this.props.onClick.bind(this, path)}
+        onClick={this.onClick}
         style={this.props.style}
       >
         {results}
@@ -179,7 +203,6 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
           );
         }
 
-        let onBulletClick = undefined;
         const style: React.CSSProperties = {};
 
         let icon = 'fa-circle';
@@ -196,11 +219,13 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
           return null;
         }
 
+        let onBulletClick: (() => void) | undefined = undefined;
         if (child_children.length) {
           icon = child_collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
-          if (this.props.onBulletClick) {
+          const onBulletClickProp = this.props.onBulletClick;
+          if (onBulletClickProp != null) {
+            onBulletClick = () => onBulletClickProp(path);
             style.cursor = 'pointer';
-            onBulletClick = this.props.onBulletClick.bind(this, path);
           }
         }
 

@@ -209,8 +209,31 @@ async function create_session(dataSource, settings, doc, to_load) {
   window.keyBindings = keyBindings;
 
   let cursorBlinkTimeout: number | null = null;
-  function renderMain() {
+  const onRender = (options) => {
+    const $onto = $('#view');
+    logger.debug('Render called: ', options);
+    setTimeout(() => {
+      const cursorDiv = $('.cursor', $onto)[0];
+      if (cursorDiv) {
+        scrollIntoView(cursorDiv, $onto);
+      }
 
+      if (cursorBlinkTimeout !== null) {
+        clearTimeout(cursorBlinkTimeout);
+      }
+      $onto.removeClass('animate-blink-cursor');
+      cursorBlinkTimeout = setTimeout(
+        () => $onto.addClass('animate-blink-cursor'), 500);
+    }, 100);
+  };
+  const onExport = () => {
+    const filename = 'vimflowy_hotkeys.json';
+    const content = JSON.stringify(keyBindings.hotkeys, null, 2);
+    downloadFile(filename, 'application/json', content);
+    session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
+  };
+
+  function renderMain() {
     return new Promise((resolve) => {
       ReactDOM.render(
         <AppComponent
@@ -221,29 +244,8 @@ async function create_session(dataSource, settings, doc, to_load) {
           keyBindings={keyBindings}
           initialDataSource={dataSource}
           initialTheme={initialTheme}
-          onRender={(options) => {
-            const $onto = $('#view');
-            logger.debug('Render called: ', options);
-            setTimeout(() => {
-              const cursorDiv = $('.cursor', $onto)[0];
-              if (cursorDiv) {
-                scrollIntoView(cursorDiv, $onto);
-              }
-
-              if (cursorBlinkTimeout !== null) {
-                clearTimeout(cursorBlinkTimeout);
-              }
-              $onto.removeClass('animate-blink-cursor');
-              cursorBlinkTimeout = setTimeout(
-                () => $onto.addClass('animate-blink-cursor'), 500);
-            }, 100);
-          }}
-          onExport={() => {
-            const filename = 'vimflowy_hotkeys.json';
-            const content = JSON.stringify(keyBindings.hotkeys, null, 2);
-            downloadFile(filename, 'application/json', content);
-            session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
-          }}
+          onRender={onRender}
+          onExport={onExport}
         />,
         $('#app')[0],
         resolve

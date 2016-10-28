@@ -38,6 +38,10 @@ export default class SessionComponent extends React.Component<Props, State> {
   private update: () => void; // this is promise debounced
 
   private profileRender: boolean; // for debugging
+  private onCharClick: (path: Path, column: number, e: Event) => void;
+  private onLineClick: (path: Path) => Promise<void>;
+  private onBulletClick: (path: Path) => Promise<void>;
+  private onCrumbClick: (path: Path) => Promise<void>;
 
   static get propTypes() {
     return {
@@ -54,10 +58,50 @@ export default class SessionComponent extends React.Component<Props, State> {
       t: Date.now(),
     };
 
-    // make true to output time taken to get render contents
-    this.profileRender = false;
+    this.onCharClick = (path, column, e) => {
+      const session = this.props.session;
 
-    const session = this.props.session;
+      // NOTE: this is fire and forget
+      session.cursor.setPosition(path, column).then(() => {
+        // assume they might click again
+        this.setState({handleCharClicks: true} as State);
+      });
+
+      // prevent overall path click
+      e.stopPropagation();
+      return false;
+    };
+
+    this.onLineClick = async (path) => {
+      const session = this.props.session;
+
+      // if clicking outside of text, but on the row,
+      // move cursor to the end of the row
+      let col = this.cursorBetween() ? -1 : -2;
+      await session.cursor.setPosition(path, col);
+      this.update();
+    };
+
+    this.onBulletClick = async (path) => {
+      const session = this.props.session;
+
+      await session.toggleBlockCollapsed(path.row);
+      session.save();
+      this.update();
+    };
+
+    this.onCrumbClick = async (path) => {
+      const session = this.props.session;
+
+      await session.zoomInto(path);
+      session.save();
+      this.update();
+    };
+
+    this.fetchAndRerender = this.fetchAndRerender.bind(this);
+
+    // make true to output time taken to get render contents
+    this.profileRender = true;
 
     function promiseDebounce(fn) {
       let running = false;
@@ -83,6 +127,7 @@ export default class SessionComponent extends React.Component<Props, State> {
     }
 
     this.update = promiseDebounce(async () => {
+      const session = this.props.session;
       let t;
       if (this.profileRender) {
         t = Date.now();
@@ -143,12 +188,16 @@ export default class SessionComponent extends React.Component<Props, State> {
   }
 
   public componentDidMount() {
-    this.props.session.on('handledKey', this.update);
     this.update();
   }
 
-  public componentWillUnmount() {
-    this.props.session.off('handledKey', this.update);
+  private cursorBetween() {
+    const mode = this.state.mode;
+    if (mode == null) {
+      // this shouldn't really happen
+      return false;
+    }
+    return Modes.getMode(mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE;
   }
 
   public render() {
@@ -170,7 +219,7 @@ export default class SessionComponent extends React.Component<Props, State> {
     }
 
     const options: RenderOptions = {
-      cursorBetween: Modes.getMode(mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE,
+      cursorBetween: this.cursorBetween(),
       handleCharClicks: this.state.handleCharClicks,
     };
     this.props.onRender(options);
@@ -178,47 +227,21 @@ export default class SessionComponent extends React.Component<Props, State> {
     options.highlight_blocks = this.state.highlight_blocks || {};
 
     let onLineMouseOver: (() => void) | undefined = undefined;
-    let onCharClick: ((path: Path, column: number, e: Event) => void) | null = null;
     let onLineClick: ((path: Path) => void) | null = null;
     if (!this.state.handleCharClicks) {
       onLineMouseOver = () => this.setState({ handleCharClicks: true } as State);
     }
+    let onCharClick: ((path: Path, column: number, e: Event) => void) | null = null;
     if (mode === MODES.NORMAL || mode === MODES.INSERT) {
       if (this.state.handleCharClicks) {
-        onCharClick = (path, column, e) => {
-          // NOTE: this is fire and forget
-          session.cursor.setPosition(path, column).then(() => {
-            // assume they might click again
-            this.setState({handleCharClicks: true} as State);
-          });
-
-          // prevent overall path click
-          e.stopPropagation();
-          return false;
-        };
+        onCharClick = this.onCharClick;
       }
-      onLineClick = async (path) => {
-        // if clicking outside of text, but on the row,
-        // move cursor to the end of the row
-        let col = options.cursorBetween ? -1 : -2;
-        await session.cursor.setPosition(path, col);
-        this.update();
-      };
+      onLineClick = this.onLineClick;
     }
-
-    const onBulletClick = async (path) => {
-      await session.toggleBlockCollapsed(path.row);
-      session.save();
-      this.update();
-    };
 
     let onCrumbClick: ((...args: any[]) => void) | null = null;
     if (mode === MODES.NORMAL) {
-      onCrumbClick = async (path) => {
-        await session.zoomInto(path);
-        session.save();
-        this.update();
-      };
+      onCrumbClick = this.onCrumbClick;
     }
 
     const children = session.document.store.getChildrenSync(viewRoot.row);
@@ -252,8 +275,8 @@ export default class SessionComponent extends React.Component<Props, State> {
           onCharClick={onCharClick}
           onLineClick={onLineClick}
           onLineMouseOver={onLineMouseOver}
-          onBulletClick={onBulletClick}
-          fetchData={() => this.fetchAndRerender()}
+          onBulletClick={this.onBulletClick}
+          fetchData={this.fetchAndRerender}
         />
       </div>
     );
