@@ -42,9 +42,11 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 ## DATA STORAGE ##
 
 By default, the app is entirely local, and uses localStorage.
-So each browser would have its own document.
-Since data is local, offline editing is supported.
+In this case, your data is never sent on the internet,
+and Vimflowy works offline.
+Each device, and each browser, will have its own documents.
 If you're going to have a very large document, use a browser with large localStorage limits (Firefox, for example).
+Be very careful: clearing localStorage will result in you losing all your data!
 
 There is currently an experimental feature for remote data storage.
 This allows access from multiple devices.
@@ -52,7 +54,7 @@ However, there is no support for offline editing.
 
 Currently, the only backing data storage that has been implemented is Firebase.
 See [here](docs/storage/Firebase.md) for details on how to set this up.
-Please contact me if you are interested in other storage backings.
+Please contact the dev team if you are interested in other storage backings.
 
 ## NOTES FOR DEVELOPERS ##
 
