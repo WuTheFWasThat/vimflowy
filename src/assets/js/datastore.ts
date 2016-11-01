@@ -61,9 +61,6 @@ export default class DataStore {
     return `settings:${setting}`;
   }
 
-  protected _lastSaveKey_(): string {
-    return `${this.prefix}:lastSave`;
-  }
   protected _lastViewrootKey_(): string {
     return `${this.prefix}:lastviewroot2`;
   }
@@ -296,6 +293,10 @@ export class LocalStorageLazy extends CachingDataStore {
   private lastSave: number;
   private trackSaves: boolean;
 
+  protected _lastSaveKey_(): string {
+    return `${this.prefix}:lastSave`;
+  }
+
   constructor(prefix = '', trackSaves = false) {
     super(prefix);
     this.trackSaves = trackSaves;
@@ -322,9 +323,9 @@ export class LocalStorageLazy extends CachingDataStore {
   ): void {
     if (this.trackSaves) {
       if (this.getLastSave() > this.lastSave) {
-        alert('This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
+        throw new errors.MultipleUsersError(
+          'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
         );
-        throw new errors.DataPoisoned('Last save disagrees with cache');
       }
 
       if (!options.doesNotAffectLastSave) {
@@ -371,7 +372,6 @@ export class LocalStorageLazy extends CachingDataStore {
 }
 
 export class FirebaseStore extends CachingDataStore {
-  private lastSave: number;
   private fbase: any;
   // private fbase: Firebase;
 
@@ -382,7 +382,39 @@ export class FirebaseStore extends CachingDataStore {
       databaseURL: `https://${dbName}.firebaseio.com`,
     }).database();
     // this.fbase.authWithCustomToken(token, (err, authdata) => {})
-    this.lastSave = Date.now();
+  }
+
+  public async init(email, password) {
+
+    const listRef = this.fbase.ref('presence');
+    const userRef = listRef.push();
+    const initTime = Date.now();
+
+    this.fbase.ref('.info/connected').on('value', function(snap) {
+      if (snap.val()) {
+        // Remove ourselves when we disconnect.
+        userRef.onDisconnect().remove();
+
+        userRef.set(initTime);
+      }
+    });
+
+    // Number of online users is the number of objects in the presence list.
+    listRef.on('value', function(snap) {
+      const numUsers = snap.numChildren();
+      logger.info(`${numUsers} users online`);
+      if (numUsers > 1) {
+        snap.forEach((x) => {
+          if (x.val() > initTime) {
+            throw new errors.MultipleUsersError(
+              'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
+            );
+          }
+        });
+      }
+    });
+
+    await this.auth(email, password);
   }
 
   public async auth(email, password) {
@@ -439,12 +471,6 @@ export class FirebaseStore extends CachingDataStore {
   //     );
   //   });
   // }
-
-  // determine last time saved (for multiple tab detection)
-  // doesn't cache!
-  public getLastSave(): number {
-    return 1;
-  }
 
   public async getId(): Promise<number> {
     let id: number = await this._get(this._IDKey_(), 1);

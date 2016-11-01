@@ -1,6 +1,7 @@
 import React from 'react';
 
 import * as Modes from '../modes';
+import * as errors from '../errors';
 
 import SettingsComponent from './settings';
 import SessionComponent, { RenderOptions } from './session';
@@ -20,9 +21,39 @@ type Props = {
   onThemeChange: (theme: string) => void;
   onRender: (opts: RenderOptions) => void;
   onExport: () => void;
+  error: Error | null;
 }
 export default class AppComponent extends React.Component<Props, {}> {
   public render() {
+    if (this.props.error !== null) {
+      const wasExpected = this.props.error instanceof errors.ExpectedError;
+      const unexpectedMessage = (
+        <div style={{marginBottom: 20}}>
+          Please help out Vimflowy and report the bug!
+          Simply open the javascript console, save the log as debug information,
+          and send it to the Vimflowy dev team with a brief description of what happened.
+        </div>
+      );
+      return (
+        <div style={{padding: 50}}>
+          <div style={{marginBottom: 20}}>
+            An error was caught.  Please refresh the page to avoid weird state.
+          </div>
+          { wasExpected ? null : unexpectedMessage }
+          <div style={{marginBottom: 20}}>
+            ERROR:
+          </div>
+          <div>
+            {this.props.error.message}
+            { wasExpected ? null :
+              <div style={{marginTop: 20}}>
+                {JSON.stringify(this.props.error.stack)}
+              </div>
+            }
+          </div>
+        </div>
+      );
+    }
     const pluginManager = this.props.pluginManager;
     const session = this.props.session;
     const keyBindings = this.props.keyBindings;

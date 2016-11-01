@@ -80,6 +80,20 @@ const getMessageDiv = () => $('#message');
 const getMainDiv = () => $('#view');
 
 async function create_session(dataSource, settings, doc, to_load) {
+  let caughtErr: null | Error = null;
+
+  window.onerror = function(msg, url, line, col, err) {
+    logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
+    if (err) {
+      logger.error('Error: ', msg, err, err.stack, JSON.stringify(err));
+      caughtErr = err;
+    } else {
+      logger.error('Error: ', msg, JSON.stringify(msg));
+      caughtErr = new Error(msg);
+    }
+    renderMain();
+  };
+
   const changeStyle = (theme) => {
     // $('body').removeClass().addClass(theme);
     $('body').attr('id', theme);
@@ -237,6 +251,7 @@ async function create_session(dataSource, settings, doc, to_load) {
     return new Promise((resolve) => {
       ReactDOM.render(
         <AppComponent
+          error={caughtErr}
           onThemeChange={changeStyle}
           session={session}
           pluginManager={pluginManager}
@@ -365,7 +380,7 @@ $(document).ready(async () => {
     const firebaseUserPassword = await settings.getSetting('firebaseUserPassword');
 
     datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
-    await datastore.auth(firebaseUserEmail, firebaseUserPassword);
+    await datastore.init(firebaseUserEmail, firebaseUserPassword);
   } else if (dataSource === 'inmemory') {
     datastore = new DataStore.InMemory();
   } else {
@@ -375,7 +390,7 @@ $(document).ready(async () => {
   doc = new Document(datastore, docname);
 
   let to_load: any = null;
-  if (datastore.getLastSave() === 0) {
+  if ((await datastore.getChildren(Path.rootRow())).length === 0) {
     to_load = constants.default_data;
   }
 
@@ -384,37 +399,4 @@ $(document).ready(async () => {
   (Promise as any).onPossiblyUnhandledRejection(function(error) {
     throw error;
   });
-
-  let shown_error_time = 0;
-  window.onerror = function(msg, url, line, col, err) {
-    logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
-    if (err) {
-      logger.error('Error: ', err, err.stack);
-    }
-
-    if (err instanceof errors.DataPoisoned) {
-      // no need to alert, already alerted
-      return;
-    }
-
-    const t = Date.now();
-    if (t - shown_error_time < 60000) {
-      return;
-    } else {
-      shown_error_time = t;
-    }
-
-    return alert(`
-      An error was caught.  Please refresh the page to avoid weird state. \n\n
-      Please help out vimflowy and report the bug!
-      Simply open the javascript console, save the log as debug information,
-      and send it to wuthefwasthat@gmail.com with a brief description of what happened.
-      \n\n
-      ERROR:\n\n
-      ${msg}\n\n
-      ${err}\n\n
-      ${err && err.stack}
-    `
-    );
-  };
 });

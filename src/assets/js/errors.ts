@@ -1,13 +1,13 @@
 import * as _ from 'lodash';
 
 // takes a constructor and returns an error class
-const errorFactory = function(f) {
+const errorFactory = function(f, inheritClass = Error) {
   const g: any = function() {
     const e: any = new Error();
     this.stack = e.stack;
     return f.apply(this, arguments);
   };
-  g.prototype = Object.create(Error.prototype);
+  g.prototype = Object.create(inheritClass.prototype);
   return g;
 };
 
@@ -18,8 +18,11 @@ export const UnexpectedValue = errorFactory(function(name, value) {
 export const GenericError = errorFactory(function(message) { this.message = message; });
 export const SchemaVersion = errorFactory(function(message) { this.message = message; });
 
+// error class for errors that we can reasonably expect to happen
+// e.g. bad user input, multiple users
+export const ExpectedError = errorFactory(function(message) { this.message = message; });
 // is special because ignored by error handling in index.js
-export const DataPoisoned = errorFactory(function(message) { this.message = message; });
+export const MultipleUsersError = errorFactory(function(message) { this.message = message; }, ExpectedError);
 
 ///////////
 // asserts
