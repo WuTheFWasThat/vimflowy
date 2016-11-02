@@ -121,6 +121,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                     load_file($('#import-file :file')[0], async (err, content, filename) => {
                       if (err) { return session.showMessage(err, {text_class: 'error'}); }
                       const mimetype = utils.mimetypeLookup(filename);
+                      session.showMessage('Importing contents...', { time: 0 });
                       if (await session.importContent(content, mimetype)) {
                         session.showMessage('Imported!', {text_class: 'success'});
                         await session.setMode(Modes.modes.NORMAL);

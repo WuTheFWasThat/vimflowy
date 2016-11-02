@@ -176,10 +176,12 @@ async function create_session(dataSource, settings, doc, to_load) {
             $messageDiv.addClass(`text-${options.text_class}`);
           }
 
-          messageDivTimeout = setTimeout(() => {
-            $messageDiv.text('');
-            return $messageDiv.removeClass();
-          }, time);
+          if (time !== 0) {
+            messageDivTimeout = setTimeout(() => {
+              $messageDiv.text('');
+              return $messageDiv.removeClass();
+            }, time);
+          }
         }
       };
     })(),

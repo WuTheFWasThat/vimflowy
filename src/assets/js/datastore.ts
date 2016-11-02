@@ -399,13 +399,16 @@ export class FirebaseStore extends CachingDataStore {
     const userRef = listRef.push();
     const initTime = Date.now();
 
-    this.fbase.ref('.info/connected').on('value', function(snap) {
-      if (snap.val()) {
-        // Remove ourselves when we disconnect.
-        userRef.onDisconnect().remove();
+    await new Promise((resolve) => {
+      this.fbase.ref('.info/connected').on('value', function(snap) {
+        if (snap.val()) {
+          // Remove ourselves when we disconnect.
+          userRef.onDisconnect().remove();
 
-        userRef.set(initTime);
-      }
+          userRef.set(initTime);
+          resolve();
+        }
+      });
     });
 
     // Number of online users is the number of objects in the presence list.
