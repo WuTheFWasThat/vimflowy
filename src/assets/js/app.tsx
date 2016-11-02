@@ -49,6 +49,31 @@ import AppComponent from './components/app';
 
 declare const window: any; // because we attach globals for debugging
 
+const appEl = $('#app')[0];
+
+ReactDOM.render(
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+  }}>
+    <div style={{ flexGrow: 3 }}/>
+    <div style={{
+      textAlign: 'center',
+      alignSelf: 'center',
+      color: '#999',
+    }}>
+      <i className='fa fa-5x fa-spin fa-spinner'/>
+      <p>Loading...</p>
+    </div>
+    <div style={{ flexGrow: 8 }}/>
+  </div>,
+  appEl
+);
+
+
 function scrollIntoView(el, $within) {
   const elemTop = el.getBoundingClientRect().top;
   const elemBottom = el.getBoundingClientRect().bottom;
@@ -263,7 +288,7 @@ async function create_session(dataSource, settings, doc, to_load) {
           onRender={onRender}
           onExport={onExport}
         />,
-        $('#app')[0],
+        appEl,
         resolve
       );
     });
@@ -329,6 +354,9 @@ async function create_session(dataSource, settings, doc, to_load) {
       });
 
       $(document).on('paste', async (e) => {
+        if (session.mode === Modes.modes.SETTINGS) {
+          return;
+        }
         e.preventDefault();
         const text = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
         // TODO: deal with this better when there are multiple lines

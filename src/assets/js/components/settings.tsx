@@ -85,7 +85,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
               Export
             </div>
             <div className='settings-content'>
-              <table>
+              <table><tbody>
                 <tr>
                   <td>
                     <div className='btn theme-bg-secondary theme-trim'
@@ -108,7 +108,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                     Workflowy compatible, but does not support some features, e.g. marks and clones
                   </td>
                 </tr>
-              </table>
+              </tbody></table>
             </div>
             <div className='settings-header theme-bg-secondary theme-trim'>
               Import

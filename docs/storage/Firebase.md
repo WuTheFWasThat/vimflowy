@@ -3,28 +3,27 @@
 ### Obtain a Firebase project
 
 To use the Firebase backend, you should first set up a Firebase instance.
-You can do this for free at https://firebase.google.com/.
+You can do this by clicking `CREATE NEW PROJECT` at https://console.firebase.google.com/.
 
 You should then be given your own Firebase project id,
 something like `something-fiery-2222`.
 You should be able to now visit your console at a link like
 https://console.firebase.google.com/project/${projectId}, e.g.
 https://console.firebase.google.com/project/something-fiery-2222.
-For the remainder of this document, we will refer to that link as `${BASE_URL}`;
 
 ### Add a user
 
 Visit the Authentication tab.
 
-- Under `Authentication > Sign-In Method` (${BASE_URL}/authentication/providers), enable email/password.
+- Under `Authentication > Sign-In Method` (https://console.firebase.google.com/project/${projectId}/authentication/providers), enable email/password.
 
-- Under `Authentication > Users` (${BASE_URL}/authentication/users), click `Add User`;
+- Under `Authentication > Users` (https://console.firebase.google.com/project/${projectId}/authentication/users), click `Add User`.
   Pick an email and password, and enter it.
-  Remember the email/password pair - you'll need it later!
+  Remember the email/password pair - you'll need them later!
 
 ### Set up database rules
 
-In the database rules section, set up rules like this:
+In the `Database > Rules` section (https://console.firebase.google.com/project/${projectId}/database/rules), set up rules like this:
 
 ```
 {
@@ -37,7 +36,7 @@ In the database rules section, set up rules like this:
 
 ### Configure Vimflowy
 
-Now, in the general settings menu (${BASE_URL}/settings/general/)
+Now, in the general settings menu (https://console.firebase.google.com/project/${projectId}/settings/general/)
 find your API key.
 Together with the project ID, and user information from earlier,
 we have everything needed to configure Vimflowy to use Firebase.
@@ -48,14 +47,12 @@ Then enter in the four fields into the corresponding input boxes,
 and hit `Load Data Settings`.
 This should refresh the page automatically.
 Assuming configuration was correct and no errors occurred,
-you should now be using Firebase.
+you should now be using Firebase!
 
-To verify, check the settings menu again and you should see that the Firebase
-is already selected, and the settings already filled.
+#### Manual configuration (alternative, optional)
 
-#### Manual configuration (optional)
+Alternatively, you can manually configure from the Javascript console:
 
-NOTE: you can also manually configure in the Javascript console with the following code:
 ```
 var firebaseId = 'something-fiery-2222'
 var firebaseApiKey = 'some-key'
@@ -71,7 +68,15 @@ window.session.settings.setSetting('firebaseUserPassword', firebaseUserPassword)
 
 and then manually refresh the page!
 
+### Verify
+
+To verify Vimflowy is properly working with Firebase, check the settings menu again and you should see that the Firebase is already selected.
+
+You may also want to verify that the security rules are working.
+To do this, try changing the email/password pair to something invalid.
+After the page refresh, you should immediately see an error alert.
+
 ## Backups
 
 You can pay Firebase for automated backups of your data.
-See ${BASE_URL}/database/backups
+See https://console.firebase.google.com/project/${projectId}/database/backups

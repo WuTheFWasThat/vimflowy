@@ -14,7 +14,7 @@ type State = {
   firebaseUserEmail: string,
   firebaseUserPassword: string,
 }
-export default class SettingsComponent extends React.Component<Props, State> {
+export default class DataStoreSettingsComponent extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -139,7 +139,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
               see here
             </a>.
             <br/>
-            <table>
+            <table><tbody>
               <tr>
                 <td>
                   Firebase ID
@@ -200,7 +200,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                   />
                 </td>
               </tr>
-            </table>
+            </tbody></table>
             <br/>
           </div>
         ),
@@ -213,10 +213,13 @@ export default class SettingsComponent extends React.Component<Props, State> {
           <b> Local </b> data sources:
           <ul>
             <li>
-              Can only be accessed from this browser
+              Offline access supported
             </li>
             <li>
-              Support offline access
+              Data is never sent over the internet
+            </li>
+            <li>
+              Can only be accessed from this browser
             </li>
           </ul>
         </div>
@@ -227,7 +230,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
               Can be accessed from multiple devices or browsers
             </li>
             <li>
-              Have no offline support
+              No offline support
             </li>
           </ul>
         </div>
@@ -256,7 +259,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                   <tr key={dataSourceInfo.value}>
                     <td style={{padding: 10}}>
                       <input type='radio' name='dataSource'
-                        value={dataSourceInfo.value} checked={selected}
+                        value={dataSourceInfo.value} checked={selected} readOnly
                         onClick={(ev) => this.setDataSource((ev.target as HTMLInputElement).value)}
                       />
                     </td>

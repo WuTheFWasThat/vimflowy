@@ -129,10 +129,11 @@ export const default_data = [
   { text: 'Data', collapsed: true, children: [
     'As a user of Vimflowy, you are in full control of your data',
     'Vimflowy was designed to be agnostic to the storage backend',
+    'To manage data, visit the Settings menu',
     {
       text: 'By default, all data is entirely local (under the hood, we use localStorage)',
       children: [
-        'Your data is never sent on the internet',
+        'Your data is never sent over the internet',
         'Vimflowy works offline',
         'Each device (in fact, each browser) will have its own documents',
         {
@@ -151,7 +152,7 @@ export const default_data = [
         {
           text: 'Currently, the only remote backing data storage that has been implemented is Firebase',
           children: [
-            'See https://github.com/WuTheFWasThat/vimflowy/tree/master/docs/storage/Firebase.md for details on how to set this up',
+            'See the settings menu to set this up',
           ],
         },
         'Please contact the dev team if you are interested in other storage backings',
