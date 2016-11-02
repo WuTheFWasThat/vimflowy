@@ -622,7 +622,7 @@ export default class Document extends EventEmitter {
     }
 
     if (typeof serialized === 'string') {
-      await this.setLine(path.row, serialized.split(''));
+      await this.setLine(path.row, serialized.split('').map(char => ({char})));
     } else {
       if (serialized.id) {
         id_mapping[serialized.id] = path.row;
