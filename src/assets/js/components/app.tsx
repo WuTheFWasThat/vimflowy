@@ -166,6 +166,10 @@ export default class AppComponent extends React.Component<Props, {}> {
               style={{flexBasis: 0, flexGrow: 1}}
             >
             </div>
+            <div id='status'
+              style={{flexBasis: 0, flexGrow: 0}}
+            >
+            </div>
             {/* should be wide enough to fit the words 'VISUAL LINE'*/}
             <div className='center theme-bg-secondary'
               style={{flexBasis: 80, flexGrow: 0}}

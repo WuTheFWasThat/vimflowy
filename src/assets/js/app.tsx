@@ -77,6 +77,7 @@ function downloadFile(filename, mimetype, content) {
 }
 
 const getMessageDiv = () => $('#message');
+const getStatusDiv = () => $('#status');
 const getMainDiv = () => $('#view');
 
 async function create_session(dataSource, settings, doc, to_load) {
@@ -382,6 +383,12 @@ $(document).ready(async () => {
     try {
       datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
       await datastore.init(firebaseUserEmail, firebaseUserPassword);
+      datastore.events.on('saved', () => {
+        getStatusDiv().html('Saved!').removeClass().addClass('text-success');
+      });
+      datastore.events.on('unsaved', () => {
+        getStatusDiv().text('Saving...').removeClass().addClass('text-error');
+      });
     } catch (e) {
       alert(`
         Error loading firebase datastore:

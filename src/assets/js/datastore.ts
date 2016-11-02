@@ -4,6 +4,7 @@ import * as firebase from 'firebase';
 import * as _ from 'lodash';
 import * as Immutable from 'immutable';
 
+import EventEmitter from './eventEmitter';
 import * as constants from './constants';
 import * as errors from './errors';
 import logger from './logger';
@@ -376,6 +377,8 @@ export class LocalStorageLazy extends CachingDataStore {
 export class FirebaseStore extends CachingDataStore {
   private fbase: any;
   // private fbase: Firebase;
+  private numPendingSaves: number;
+  public events: EventEmitter;
 
   constructor(prefix = '', dbName, apiKey) {
     super(prefix);
@@ -383,10 +386,14 @@ export class FirebaseStore extends CachingDataStore {
       apiKey: apiKey,
       databaseURL: `https://${dbName}.firebaseio.com`,
     }).database();
+
+    this.events = new EventEmitter();
+    this.numPendingSaves = 0;
     // this.fbase.authWithCustomToken(token, (err, authdata) => {})
   }
 
   public async init(email, password) {
+    this.events.emit('saved');
 
     const listRef = this.fbase.ref('presence');
     const userRef = listRef.push();
@@ -448,11 +455,18 @@ export class FirebaseStore extends CachingDataStore {
   }
 
   protected _setUncached(key: string, value: any): Promise<void> {
+    if (this.numPendingSaves === 0) {
+      this.events.emit('unsaved');
+    }
+    this.numPendingSaves++;
     this.fbase.ref(key).set(
       value,
       (err) => {
         if (err) { throw err; }
-        // else put in promise queue, and notify properly when synced
+        this.numPendingSaves--;
+        if (this.numPendingSaves === 0) {
+          this.events.emit('saved');
+        }
       }
     );
     return Promise.resolve();
