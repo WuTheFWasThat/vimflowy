@@ -41,7 +41,7 @@ This is a productivity tool which draws great inspiration from workflowy and vim
 
 ## DATA STORAGE ##
 
-By default, the app is entirely local, and uses localStorage.
+By default, the app is entirely local, and uses HTML5's localStorage.
 In this case, your data is never sent on the internet,
 and Vimflowy works offline.
 Each device, and each browser, will have its own documents.

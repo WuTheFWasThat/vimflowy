@@ -4,13 +4,13 @@ Uses a datastore key which is agnostic to which document is being viewed
 (i.e. /blah and /blah2 have the same settings)
 */
 
-import DataStore from './datastore';
+import DataStore, { DataSource } from './datastore';
 
 const default_settings = {
   theme: 'default-theme',
   showKeyBindings: true,
   hotkeys: {},
-  dataSource: 'local',
+  dataSource: ('local' as DataSource),
 };
 
 export default class Settings {

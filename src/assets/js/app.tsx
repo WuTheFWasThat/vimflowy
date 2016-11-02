@@ -360,7 +360,7 @@ $(document).ready(async () => {
 
   const noLocalStorage = (typeof localStorage === 'undefined' || localStorage === null);
   let settings;
-  let dataSource;
+  let dataSource: DataStore.DataSource;
   let datastore;
   let doc;
 
@@ -379,8 +379,23 @@ $(document).ready(async () => {
     const firebaseUserEmail = await settings.getSetting('firebaseUserEmail');
     const firebaseUserPassword = await settings.getSetting('firebaseUserPassword');
 
-    datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
-    await datastore.init(firebaseUserEmail, firebaseUserPassword);
+    try {
+      datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
+      await datastore.init(firebaseUserEmail, firebaseUserPassword);
+    } catch (e) {
+      alert(`
+        Error loading firebase datastore:
+
+        ${e.message}
+
+        ${e.stack}
+
+        Falling back to localStorage default.
+      `);
+
+      dataSource = 'local';
+      datastore = new DataStore.LocalStorageLazy(docname, true);
+    }
   } else if (dataSource === 'inmemory') {
     datastore = new DataStore.InMemory();
   } else {

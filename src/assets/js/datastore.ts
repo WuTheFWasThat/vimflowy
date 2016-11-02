@@ -10,6 +10,8 @@ import logger from './logger';
 
 import { Line, Row, SerializedPath, MacroMap } from './types';
 
+export type DataSource = 'local' | 'firebase' | 'inmemory';
+
 /*
 DataStore abstracts the data layer, so that it can be swapped out.
 There are many methods the each type of DataStore should implement to satisfy the API.

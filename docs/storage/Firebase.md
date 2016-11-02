@@ -16,7 +16,7 @@ For the remainder of this document, we will refer to that link as `${BASE_URL}`;
 
 Visit the Authentication tab.
 
-- Under `Authentication > Sign-In Method` (${BASE_URL}/authentication/users), enable email/password.
+- Under `Authentication > Sign-In Method` (${BASE_URL}/authentication/providers), enable email/password.
 
 - Under `Authentication > Users` (${BASE_URL}/authentication/users), click `Add User`;
   Pick an email and password, and enter it.
@@ -37,12 +37,25 @@ In the database rules section, set up rules like this:
 
 ### Configure Vimflowy
 
-Now, in the general settings menu (${BASE_URL}/settings/general)
+Now, in the general settings menu (${BASE_URL}/settings/general/)
 find your API key.
 Together with the project ID, and user information from earlier,
 we have everything needed to configure Vimflowy to use Firebase.
 
-In your Vimflowy tab, open the Javascript console, and enter:
+Simply go to your tab with Vimflowy, and click Settings in the lower right.
+Select the Firebase option under `Data Storage`.
+Then enter in the four fields into the corresponding input boxes,
+and hit `Load Data Settings`.
+This should refresh the page automatically.
+Assuming configuration was correct and no errors occurred,
+you should now be using Firebase.
+
+To verify, check the settings menu again and you should see that the Firebase
+is already selected, and the settings already filled.
+
+#### Manual configuration (optional)
+
+NOTE: you can also manually configure in the Javascript console with the following code:
 ```
 var firebaseId = 'something-fiery-2222'
 var firebaseApiKey = 'some-key'
@@ -56,10 +69,9 @@ window.session.settings.setSetting('firebaseUserEmail', firebaseUserEmail)
 window.session.settings.setSetting('firebaseUserPassword', firebaseUserPassword)
 ```
 
-and refresh the page!
-
-To verify it's using Firebase, you can just look at the Database section of the Firebase console, while typing.
+and then manually refresh the page!
 
 ## Backups
 
 You can pay Firebase for automated backups of your data.
+See ${BASE_URL}/database/backups

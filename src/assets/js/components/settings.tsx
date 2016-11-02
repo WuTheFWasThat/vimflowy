@@ -9,9 +9,11 @@ import * as Modes from '../modes';
 import Session from '../session';
 import KeyBindings from '../keyBindings';
 import { PluginsManager } from '../plugins';
+import { DataSource } from '../datastore';
 
 import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
+import DataStoreSettingsComponent from './settings/dataStore';
 
 const MODE_TYPES = Modes.types;
 
@@ -26,20 +28,18 @@ type Props = {
   keyBindings: KeyBindings;
   pluginManager: PluginsManager;
   initialTheme: string;
-  initialDataSource: string;
+  initialDataSource: DataSource;
   onThemeChange: (theme: string) => void;
   onExport: () => void;
 }
 type State = {
   currentTab: TABS,
-  // dataSource:
 }
 export default class SettingsComponent extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
       currentTab: TABS.MAIN,
-      // dataSource: props.initialDataSource,
     };
   }
 
@@ -68,44 +68,19 @@ export default class SettingsComponent extends React.Component<Props, State> {
     const tabs_info = [
       {
         tab: TABS.MAIN,
-        heading: 'Settings',
+        heading: 'General settings',
         div: (
           <div>
-            {/*
-            <div className="settings-header theme-bg-secondary theme-trim">
+            <div className='settings-header theme-bg-secondary theme-trim'>
               Data storage
             </div>
-            <div className="settings-content">
-              <input type="radio" name="dataSource" value="local" checked={}/>
-              {" "} <b> Local: </b>
-              {" "} Stores data in localStorage. Can only be accessed from this browser. Not backed up.
-              <br/>
-              <input type="radio" name="dataSource" value="firebase"/>
-              {" "} <b> Firebase: </b>
-              <br/>
-            </div>
-              */ }
-            <div className='settings-header theme-bg-secondary theme-trim'>
-              Visual Theme
-            </div>
             <div className='settings-content'>
-              <select defaultValue={this.props.initialTheme}
-                onChange={(e) => this.props.onThemeChange((e.target as HTMLSelectElement).value)}
-              >
-                <option value='default-theme'>
-                  Default
-                </option>
-                <option value='dark-theme'>
-                  Dark
-                </option>
-                <option value='solarized_dark-theme'>
-                  Solarized Dark
-                </option>
-                <option value='solarized_light-theme'>
-                  Solarized Light
-                </option>
-              </select>
+              <DataStoreSettingsComponent
+                session={this.props.session}
+                initialDataSource={this.props.initialDataSource}
+              />
             </div>
+
             <div className='settings-header theme-bg-secondary theme-trim'>
               Export
             </div>
@@ -158,6 +133,29 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 </div>
               </div>
             </div>
+
+            <div className='settings-header theme-bg-secondary theme-trim'>
+              Visual Theme
+            </div>
+            <div className='settings-content'>
+              <select defaultValue={this.props.initialTheme}
+                onChange={(e) => this.props.onThemeChange((e.target as HTMLSelectElement).value)}
+              >
+                <option value='default-theme'>
+                  Default
+                </option>
+                <option value='dark-theme'>
+                  Dark
+                </option>
+                <option value='solarized_dark-theme'>
+                  Solarized Dark
+                </option>
+                <option value='solarized_light-theme'>
+                  Solarized Light
+                </option>
+              </select>
+            </div>
+
             <div className='settings-header theme-bg-secondary theme-trim'>
               Info
             </div>
@@ -267,7 +265,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 const className = `theme-trim theme-bg-secondary ${isActive ? 'active' : ''}`;
                 return (
                   <li className={className} key={info.tab}
-                      onClick={() => this.setState({currentTab: info.tab})}>
+                      onClick={() => this.setState({currentTab: info.tab} as State)}>
                     {info.heading}
                   </li>
                 );

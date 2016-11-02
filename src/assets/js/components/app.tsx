@@ -2,6 +2,7 @@ import React from 'react';
 
 import * as Modes from '../modes';
 import * as errors from '../errors';
+import { DataSource } from '../datastore';
 
 import SettingsComponent from './settings';
 import SessionComponent, { RenderOptions } from './session';
@@ -17,7 +18,7 @@ type Props = {
   showingKeyBindings: boolean;
   keyBindings: KeyBindings;
   initialTheme: string;
-  initialDataSource: string;
+  initialDataSource: DataSource;
   onThemeChange: (theme: string) => void;
   onRender: (opts: RenderOptions) => void;
   onExport: () => void;
