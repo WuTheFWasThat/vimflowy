@@ -34,7 +34,6 @@ export type LineProps = {
   cursors?: {[key: number]: boolean};
   highlights?: {[key: number]: boolean};
   wordHook?: (line: Array<LineInfo>, word_info: WordInfo) => Array<LineInfo>;
-  lineHook?: (line: Array<LineInfo>) => Array<LineInfo>;
   onCharClick?: ((col: Col, e: Event) => void) | null;
   cursorBetween?: boolean;
 }
@@ -43,6 +42,33 @@ export default class LineComponent extends React.Component<LineProps, {}> {
 
   constructor(props) {
     super(props);
+  }
+
+  public shouldComponentUpdate(nextProps) {
+    if (nextProps.lineData !== this.props.lineData) {
+      return true;
+    }
+    if (this.props.cursors && Object.keys(this.props.cursors).length > 0) {
+      return true;
+    }
+    if (nextProps.cursors && Object.keys(nextProps.cursors).length > 0) {
+      return true;
+    }
+    if (this.props.highlights && Object.keys(this.props.highlights).length > 0) {
+      return true;
+    }
+    if (nextProps.highlights && Object.keys(nextProps.highlights).length > 0) {
+      return true;
+    }
+    if (nextProps.cursorBetween !== this.props.cursorBetween) {
+      return true;
+    }
+    if (nextProps.onCharClick !== this.props.onCharClick) {
+      return true;
+    }
+    // NOTE: technically, we are ignoring wordHook changing
+
+    return true;
   }
 
   public render() {
@@ -138,10 +164,6 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       } else {
         word_chars.push(obj.char);
       }
-    }
-
-    if (this.props.lineHook) {
-      line = this.props.lineHook(line);
     }
 
     const renderSpec: Array<RenderOptions> = [];
