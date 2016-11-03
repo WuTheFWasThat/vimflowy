@@ -9,7 +9,9 @@
   <body id="default-theme">
     <div id="app" class="theme-bg-primary" style="width: 100%; height:100%;">
     </div>
-    <script src="build/app.js"></script>
+    <!-- Cross origin anonymous required for catching error message, since bitballoon serves scripts on different domain -->
+    <!-- See: https://www.ravikiranj.net/posts/2014/code/how-fix-cryptic-script-error-javascript/ -->
+    <script src="build/app.js" crossOrigin="anonymous"></script>
 
   </body>
 </html>
