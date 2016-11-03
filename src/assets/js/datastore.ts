@@ -29,16 +29,16 @@ const timeout = (ns) => {
 // const simulateDelay = 1;
 const simulateDelay = 0;
 
-const encodeLine = (line) => JSON.stringify(line.map((obj) => {
+const encodeLine = (line) => line.map((obj) => {
   // if no properties are true, serialize just the character to save space
   if (_.every(constants.text_properties.map(property => !obj[property]))) {
     return obj.char;
   } else {
     return obj;
   }
-}));
+});
 
-const decodeLine = (lineStr) => JSON.parse(lineStr).map((obj) => {
+const decodeLine = (line) => line.map((obj) => {
   if (typeof obj === 'string') {
     obj = { char: obj };
   }
@@ -46,13 +46,14 @@ const decodeLine = (lineStr) => JSON.parse(lineStr).map((obj) => {
 });
 
 // for reverse compatibility, mainly
-const decodeParents = (parentsStr) => {
-  let parents = JSON.parse(parentsStr);
+const decodeParents = (parents) => {
   if (typeof parents === 'number') {
     parents = [ parents ];
   }
   return parents;
 };
+
+const identity = (x) => x;
 
 export default class DataStore {
   protected prefix: string;
@@ -97,13 +98,13 @@ export default class DataStore {
   }
 
   protected async _get(
-    key: string, default_value: any = undefined, decode: (value: any) => any = JSON.parse
+    key: string, default_value: any = undefined, decode: (value: any) => any = identity
   ): Promise<any> {
     throw new errors.NotImplemented();
   }
 
   protected async _set(
-    key: string, value: any, encode: (value: any) => any = JSON.stringify
+    key: string, value: any, encode: (value: any) => any = identity
   ): Promise<void> {
     throw new errors.NotImplemented();
   }
@@ -223,7 +224,7 @@ export class CachingDataStore extends DataStore {
   }
 
   protected async _get(
-    key: string, default_value: any = undefined, decode: (value: any) => any = JSON.parse
+    key: string, default_value: any = undefined, decode: (value: any) => any = identity
   ): Promise<any> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     if (this.cache.has(key)) {
@@ -237,18 +238,18 @@ export class CachingDataStore extends DataStore {
   }
 
   protected async _set(
-    key: string, value: any, encode: (value: any) => any = JSON.stringify
+    key: string, value: any, encode: (value: any) => any = identity
   ): Promise<void> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
     this.cache = this.cache.set(key, value);
     await this._setUncached(key, encode(value));
   }
 
-  protected async _getUncached(key: string): Promise<string | null> {
+  protected async _getUncached(key: string): Promise<any | null> {
     throw new errors.NotImplemented();
   }
 
-  protected async _setUncached(key: string, value: string): Promise<void> {
+  protected async _setUncached(key: string, value: any): Promise<void> {
     throw new errors.NotImplemented();
   }
 
@@ -283,12 +284,12 @@ export class InMemory extends CachingDataStore {
     super('');
   }
 
-  protected async _getUncached(key: string): Promise<string | null> {
+  protected async _getUncached(key: string): Promise<any | null> {
     // no backing store
     return null;
   }
 
-  protected async _setUncached(key: string, value: string): Promise<void> {
+  protected async _setUncached(key: string, value: any): Promise<void> {
     // do nothing
   }
 
@@ -314,11 +315,11 @@ export class LocalStorageLazy extends CachingDataStore {
     return `${this.prefix}:lastID`;
   }
 
-  protected async _getUncached(key: string): Promise<string | null> {
+  protected async _getUncached(key: string): Promise<any | null> {
     return this._getLocalStorage_(key);
   }
 
-  protected async _setUncached(key: string, value: string): Promise<void> {
+  protected async _setUncached(key: string, value: any): Promise<void> {
     return this._setLocalStorage_(key, value);
   }
 
@@ -340,7 +341,7 @@ export class LocalStorageLazy extends CachingDataStore {
     }
 
     logger.debug('setting local storage', key, value);
-    return localStorage.setItem(key, value);
+    return localStorage.setItem(key, JSON.stringify(value));
   }
 
   private _getLocalStorage_(key: string): any {
@@ -349,11 +350,7 @@ export class LocalStorageLazy extends CachingDataStore {
     if (val == null) {
       return null;
     }
-    // this is for backwards compatibility due to setting collapsed explicitly to string undefined
-    if (val === 'undefined') {
-      return null;
-    }
-    return val;
+    return JSON.parse(val);
   }
 
   // determine last time saved (for multiple tab detection)
@@ -393,6 +390,8 @@ export class FirebaseStore extends CachingDataStore {
   public async init(email, password) {
     this.events.emit('saved');
 
+    await this.auth(email, password);
+
     const listRef = this.fbase.ref('presence');
     const userRef = listRef.push();
     const initTime = Date.now();
@@ -423,8 +422,6 @@ export class FirebaseStore extends CachingDataStore {
         });
       }
     });
-
-    await this.auth(email, password);
   }
 
   public async auth(email, password) {
@@ -435,8 +432,8 @@ export class FirebaseStore extends CachingDataStore {
     return `${this.prefix}:lastID`;
   }
 
-  protected _getUncached(key: string): Promise<string | null> {
-    return new Promise((resolve: (result: string | null) => void, reject) => {
+  protected _getUncached(key: string): Promise<any | null> {
+    return new Promise((resolve: (result: any | null) => void, reject) => {
       this.fbase.ref(key).once(
         'value',
         (data) => {
@@ -453,7 +450,7 @@ export class FirebaseStore extends CachingDataStore {
     });
   }
 
-  protected _setUncached(key: string, value: string): Promise<void> {
+  protected _setUncached(key: string, value: any): Promise<void> {
     if (this.numPendingSaves === 0) {
       this.events.emit('unsaved');
     }
