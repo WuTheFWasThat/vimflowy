@@ -443,12 +443,22 @@ export default class Document extends EventEmitter {
     return path.child(row);
   }
 
-  private async allLines() {
-    // TODO: deal with clones
-    const paths: Array<Path> = [];
+  private async allLinesIter(yieldCb) {
+    const ids = {};
+    let done = false;
 
     const helper = async (path) => {
-      paths.push(path);
+      if (path.id in ids) {
+        return;
+      }
+      if (done) {
+        return;
+      }
+      const shouldStop = await yieldCb(path);
+      if (shouldStop) {
+        done = true;
+        return;
+      }
       await Promise.all(
         (await this.getChildren(path)).map(
           async (child) => await helper(child)
@@ -456,7 +466,6 @@ export default class Document extends EventEmitter {
       );
     };
     await helper(this.root);
-    return paths;
   }
 
   public async search(query, options: SearchOptions = {}) {
@@ -474,9 +483,8 @@ export default class Document extends EventEmitter {
     const query_words =
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
-    const paths = await this.allLines();
-    for (let i = 0; i < paths.length; i++) {
-      const path = paths[i];
+    await this.allLinesIter(async (path) => {
+
       const text = await this.getText(path.row);
       const line = canonicalize(text);
       const matches: Array<number> = [];
@@ -491,9 +499,11 @@ export default class Document extends EventEmitter {
         results.push({ path, matches });
       }
       if (nresults > 0 && results.length === nresults) {
-        break;
+        // tell it to stop
+        return true;
       }
-    }
+      return false;
+    });
     return results;
   };
 

@@ -77,7 +77,10 @@ export default class Menu {
     const query = await this.session.curText();
     if ((JSON.stringify(query)) !== (JSON.stringify(this.lastQuery))) {
       this.lastQuery = query;
+      // const t = Date.now();
+      // console.log('updating results');
       this.results = await this.searchFn(query);
+      // console.log('updating results took', Date.now() - t);
       this.selection = 0;
     }
   }
