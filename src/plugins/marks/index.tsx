@@ -224,10 +224,10 @@ class MarksPlugin {
       description: 'Go to (search for) a mark',
     }, async function() {
       await this.session.setMode(MODES.SEARCH);
+      const marks = await that.listMarks();
       this.session.menu = new Menu(async (text) => {
         // find marks that start with the prefix
         const findMarks = async (document, prefix, nresults = 10) => {
-          const marks = await that.listMarks();
           const results: Array<{
             path: Path, mark: string,
           }> = []; // list of paths
