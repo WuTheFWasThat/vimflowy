@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 
 import * as constants from '../constants';
 import * as utils from '../utils';
@@ -72,7 +73,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
   }
 
   public render() {
-    const lineData = this.props.lineData;
+    const lineData = _.cloneDeep(this.props.lineData);
     const cursors = this.props.cursors || {};
     const highlights = this.props.highlights || {};
 
