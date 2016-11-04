@@ -250,7 +250,6 @@ async function create_session(dataSource, settings, doc, to_load) {
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;
 
-  let cursorBlinkTimeout: number | null = null;
   const onRender = (options) => {
     const $onto = $('#view');
     logger.debug('Render called: ', options);
@@ -259,13 +258,6 @@ async function create_session(dataSource, settings, doc, to_load) {
       if (cursorDiv) {
         scrollIntoView(cursorDiv, $onto);
       }
-
-      if (cursorBlinkTimeout !== null) {
-        clearTimeout(cursorBlinkTimeout);
-      }
-      $onto.removeClass('animate-blink-cursor');
-      cursorBlinkTimeout = setTimeout(
-        () => $onto.addClass('animate-blink-cursor'), 500);
     }, 100);
   };
   const onExport = () => {

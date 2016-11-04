@@ -5,14 +5,6 @@ import * as constants from '../constants';
 import * as utils from '../utils';
 import { Col, Line } from '../types';
 
-function getCursorClass(cursorBetween) {
-  if (cursorBetween) {
-    return 'theme-cursor-insert';
-  } else {
-    return 'theme-cursor';
-  }
-}
-
 type WordInfo = any; // TODO
 type RenderOptions = {
   cursor?: boolean;
@@ -228,8 +220,20 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       });
 
       if (spec.cursor) {
-        classes.push('cursor');
-        classes.push(getCursorClass(this.props.cursorBetween));
+        if (this.props.cursorBetween) {
+          results.push(
+            <span key='insert-cursor'
+              style={{position: 'relative', width: 0, height: 0}}>
+              <span className='theme-cursor blink-background' style={{
+                position: 'absolute',
+                height: '1.2em', width: 2, left: -1,
+              }}>
+              </span>
+            </span>
+          );
+        } else {
+          classes.push('cursor', 'theme-cursor');
+        }
       }
       if (spec.highlight) {
         classes.push('theme-bg-highlight');

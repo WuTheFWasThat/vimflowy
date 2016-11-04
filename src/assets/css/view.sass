@@ -33,16 +33,9 @@
     padding: 10px
     margin-bottom: 20px
 
-@keyframes blink-border
+@keyframes blink
    50%
-     border: 0px
-     margin-left: 0px
-     margin-right: 0px
+     visibility: hidden
 
-.theme-cursor-insert:before
-    position: absolute
-    display: inline-block
-    height: 1em
-    content: ''
-    .animate-blink-cursor &
-      animation: blink-border .5s step-end infinite alternate
+.blink-background
+  animation: blink .5s step-end infinite alternate
