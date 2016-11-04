@@ -16,6 +16,8 @@ import { Row } from '../../assets/js/types';
 
 import * as basic_defs from '../../assets/js/definitions/basics';
 
+declare const process: any;
+
 // NOTE: mark mode is still in the core code
 // TODO: separate that out too?
 
@@ -406,8 +408,7 @@ class MarksPlugin {
     this.api.registerListener('document', 'afterDetach', async () => {
       await this.computeMarksToPaths();
     });
-    await this.computeMarksToPaths();
-
+    this.computeMarksToPaths(); // FIRE AND FORGET
   }
 
   // maintain global marks data structures
@@ -430,8 +431,16 @@ class MarksPlugin {
   }
 
   private async _sanityCheckMarks() {
-    const marks_to_rows = await this._getMarksToRows();
-    const rows_to_marks = await this._getRowsToMarks();
+    if (process.env.NODE_ENV === 'production') {
+      return;
+    }
+    const [
+      marks_to_rows,
+      rows_to_marks,
+    ] = await Promise.all([
+      this._getMarksToRows(),
+      this._getRowsToMarks(),
+    ]);
     const marks_to_rows2 = {};
     for (const row in rows_to_marks) {
       const mark = rows_to_marks[row];
@@ -484,21 +493,7 @@ class MarksPlugin {
 
   // compute set of paths, used for rendering
   private async computeMarksToPaths() {
-    await this._sanityCheckMarks();
-    // note: some of these may be detached
-    const marks_to_rows = await this._getMarksToRows();
-    const marks_to_paths = {};
-    for (const mark in marks_to_rows) {
-      const row = marks_to_rows[mark];
-      // if (await this.document.isAttached(row)) {
-      const path = await this.session.document.canonicalPath(row);
-      if (path == null) {
-        continue;
-      }
-      // errors.assert(path !== null);
-      marks_to_paths[mark] = path;
-    }
-    this.marks_to_paths = marks_to_paths;
+    this.marks_to_paths = await this.listMarks();
   }
 
   private async listMarks() {

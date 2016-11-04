@@ -405,10 +405,17 @@ $(document).ready(async () => {
   }
 
   if (dataSource === 'firebase') {
-    const firebaseId = await settings.getSetting('firebaseId');
-    const firebaseApiKey = await settings.getSetting('firebaseApiKey');
-    const firebaseUserEmail = await settings.getSetting('firebaseUserEmail');
-    const firebaseUserPassword = await settings.getSetting('firebaseUserPassword');
+    const [
+      firebaseId,
+      firebaseApiKey,
+      firebaseUserEmail,
+      firebaseUserPassword,
+    ] = await Promise.all([
+      settings.getSetting('firebaseId'),
+      settings.getSetting('firebaseApiKey'),
+      settings.getSetting('firebaseUserEmail'),
+      settings.getSetting('firebaseUserPassword'),
+    ]);
 
     try {
       datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
