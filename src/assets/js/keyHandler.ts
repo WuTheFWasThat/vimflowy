@@ -73,6 +73,11 @@ export class KeyStream extends EventEmitter {
     return this.queue[this.index++];
   }
 
+  public peek(): string | null {
+    if (this.index === this.queue.length) { return null; }
+    return this.queue[this.index + 1];
+  }
+
   public checkpoint() {
     this.checkpoint_index = this.index;
   }
@@ -162,7 +167,7 @@ export default class KeyHandler extends EventEmitter {
   // general handling
 
   public async handleKey(key) {
-    logger.debug('Handling key:', key);
+    logger.info('Handling key:', key);
     this.keyStream.enqueue(key);
     if (this.recording) {
       this.recording.stream.enqueue(key);
@@ -173,12 +178,16 @@ export default class KeyHandler extends EventEmitter {
   private async _processKeys(keyStream) {
     while (!keyStream.done() && !keyStream.waiting) {
       keyStream.checkpoint();
-      const { handled, command } = await this.getCommand(this.session.mode, keyStream);
+      const { handled, result } = await this.getCommand(this.session.mode, keyStream);
       if (!handled) {
         const mode_obj = Modes.getMode(this.session.mode);
         mode_obj.handle_bad_key(keyStream);
-      } else if (command) {
-        const { fn, context, args } = command;
+      } else if (result) {
+        const { fn, context, args, commands } = result;
+        logger.info(
+          'Command:', context.repeat,
+          commands.map((cmd) => cmd.name).join('.')
+        );
         await fn.apply(context, args);
         const mode_obj = Modes.getMode(this.session.mode);
         await mode_obj.every(this.session, this.keyStream);
@@ -227,9 +236,12 @@ export default class KeyHandler extends EventEmitter {
       };
     }
 
-    let info;
+    let definition;
+    let commands;
     if (key in bindings) {
-      info = bindings[key];
+      const info = bindings[key];
+      definition = info.definition;
+      commands = info.commands;
     } else {
       if (!('MOTION' in bindings)) {
         return {
@@ -238,8 +250,12 @@ export default class KeyHandler extends EventEmitter {
       }
 
       // note: this uses original bindings to determine what's a motion
-      const [motion, motionrepeat, handled] = await this.getMotion(
-        keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat);
+      const {
+        fn: motion, commands: motioncommands,
+        repeat: motionrepeat, handled,
+      } = await this.getMotion(
+        keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat
+      );
       context.repeat = motionrepeat;
       if (motion === null) {
         return {
@@ -249,19 +265,22 @@ export default class KeyHandler extends EventEmitter {
 
       args.push(motion);
       // tslint:disable-next-line:no-string-literal
-      info = bindings['MOTION'];
+      const info = bindings['MOTION'];
+      definition = info.definition;
+      commands = info.commands;
+      commands = commands.concat(motioncommands);
     }
 
-    const { definition } = info;
     if (typeof definition === 'object') {
       // recursive definition
-      return await this.getCommand(mode, keyStream, info.definition, context.repeat);
+      return await this.getCommand(mode, keyStream, definition, context.repeat);
     } else if (typeof definition === 'function') {
       context = await mode_obj.transform_context(context);
       return {
         handled: true,
-        command: {
-          fn: info.definition,
+        result: {
+          commands: commands,
+          fn: definition,
           args: args,
           context: context,
         },
@@ -302,21 +321,27 @@ export default class KeyHandler extends EventEmitter {
   }
 
   // useful when you expect a motion
-  public async getMotion(keyStream, motionKey, bindings, repeat) {
+  private async getMotion(keyStream, motionKey, bindings, repeat) {
     let motionRepeat;
     [motionRepeat, motionKey] = this.getRepeat(keyStream, motionKey);
     repeat = repeat * motionRepeat;
 
     if (motionKey === null) {
       keyStream.wait();
-      return [null, repeat, true];
+      return {
+        fn: null, commands: null,
+        repeat, handled: true,
+      };
     }
 
     if (!(motionKey in bindings)) {
-      return [null, repeat, false];
+      return {
+        fn: null, commands: null,
+        repeat, handled: false,
+      };
     }
 
-    const { definition } = bindings[motionKey];
+    const { definition, commands } = bindings[motionKey];
     if (typeof definition === 'object') {
       // recursive definition
       return await this.getMotion(keyStream, null, definition, repeat);
@@ -328,7 +353,8 @@ export default class KeyHandler extends EventEmitter {
         keyHandler: this,
       };
       const motion = await definition.apply(context, []);
-      return [motion, repeat, true];
+      return { fn: motion, commands, repeat, handled: true };
+
     } else {
       throw new errors.UnexpectedValue('definition', definition);
     }

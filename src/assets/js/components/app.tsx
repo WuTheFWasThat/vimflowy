@@ -28,30 +28,55 @@ export default class AppComponent extends React.Component<Props, {}> {
   public render() {
     if (this.props.error !== null) {
       const wasExpected = this.props.error instanceof errors.ExpectedError;
-      const unexpectedMessage = (
-        <div style={{marginBottom: 20}}>
-          Please help out Vimflowy and report the bug!
-          Simply open the javascript console, save the log as debug information,
-          and send it to the Vimflowy dev team with a brief description of what happened.
-        </div>
-      );
-      return (
-        <div style={{padding: 50}}>
-          <div style={{marginBottom: 20}}>
-            An error was caught.  Please refresh the page to avoid weird state.
-          </div>
-          { wasExpected ? null : unexpectedMessage }
-          <div style={{marginBottom: 20}}>
-            ERROR:
-          </div>
+
+      let message;
+      if (wasExpected) {
+        message = (
           <div>
             {this.props.error.message}
-            { wasExpected ? null :
-              <div style={{marginTop: 20}}>
-                {JSON.stringify(this.props.error.stack)}
-              </div>
-            }
           </div>
+        );
+      } else {
+        message = (
+          <div>
+            An unexpected error was caught!
+            <br/>
+            <br/>
+            Please help out Vimflowy and report the bug.
+            Report the issue {' '}
+            <a href='https://github.com/WuTheFWasThat/vimflowy/issues/new'>
+              here
+            </a>
+            {' '} with:
+            <ul>
+              <li>
+                a description of what you did
+              </li>
+              <li>
+                a copy of the Javascript console output (ideally, but be careful if data privacy is important)
+              </li>
+              <li>
+                a copy of the following error message
+              </li>
+            </ul>
+            <h3>
+              Error:
+            </h3>
+            <pre style={{marginLeft: 20}}>
+              {this.props.error.message}
+              <br/>
+              <br/>
+              {this.props.error.stack}
+            </pre>
+            <br/>
+            Refresh the page to continue.
+          </div>
+        );
+      }
+
+      return (
+        <div style={{padding: 50}}>
+          {message}
         </div>
       );
     }

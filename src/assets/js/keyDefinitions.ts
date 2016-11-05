@@ -54,6 +54,7 @@ type MotionDefinition =
 type MotionMetadata = {
   // Description of the action, shows in HELP menu
   description: string;
+  commands?: Array<Command>;
   multirow?: boolean;
   definition?: MotionDefinition;
 };
@@ -76,6 +77,7 @@ type ActionDefinition =
 type ActionMetadata = {
   // Description of the action, shows in HELP menu
   description: string;
+  commands?: Array<Command>;
   definition?: ActionDefinition;
 };
 
@@ -258,13 +260,14 @@ export class KeyDefinitions {
   public registerMotion(
     commands, motion: MotionMetadata, definition: MotionDefinition
   ) {
-    motion = _.cloneDeep(motion);
-    motion.definition = definition;
-
     if (!commands.slice) {
       // commands isn't an array
       commands = [commands];
     }
+
+    motion = _.cloneDeep(motion);
+    motion.definition = definition;
+    motion.commands = commands;
 
     let obj = this.motions as MotionDefinition;
     let command;
@@ -319,13 +322,14 @@ export class KeyDefinitions {
   public registerAction(
     modes, commands, action: ActionMetadata, definition: ActionDefinition
   ) {
-    action = _.cloneDeep(action);
-    action.definition = definition;
-
     if (!commands.slice) {
       // commands isn't an array
       commands = [commands];
     }
+
+    action = _.cloneDeep(action);
+    action.definition = definition;
+    action.commands = commands;
 
     modes.forEach((mode) => {
       if (!this.actions[mode]) {
