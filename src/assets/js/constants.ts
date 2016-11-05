@@ -89,8 +89,8 @@ export const default_data = [
       'ctrl+j and ctrl+k to page through the results',
       'enter to select what you want, and esc to cancel',
     ] },
-    { text: 'Marks', mark: 'mark', collapsed: true, children: [
-      { text: 'I am marked!', mark: 'im_a_mark', children: [] },
+    { text: 'Marks', plugins: { mark: 'mark' }, collapsed: true, children: [
+      { text: 'I am marked!', plugins: { mark: 'im_a_mark' }, children: [] },
       'Press m to start marking a line, and enter to finish',
       'Use ` or \' to jump to marks',
       { text: 'Tag marks by typing @[markname], like this:  @im_a_mark', children: [

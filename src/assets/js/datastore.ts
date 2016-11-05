@@ -324,7 +324,7 @@ export class LocalStorageLazy extends CachingDataStore {
   }
 
   private _setLocalStorage_(
-    key: string, value: string,
+    key: string, value: any,
     options: {doesNotAffectLastSave?: boolean} = {}
   ): void {
     if (this.trackSaves) {
@@ -364,7 +364,7 @@ export class LocalStorageLazy extends CachingDataStore {
     while (this._getLocalStorage_(this._lineKey_(id)) !== null) {
       id++;
     }
-    this._setLocalStorage_(this._IDKey_(), (id + 1) + '');
+    this._setLocalStorage_(this._IDKey_(), id + 1);
     return id;
   }
 }
