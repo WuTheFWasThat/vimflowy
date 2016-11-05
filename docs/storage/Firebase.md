@@ -1,3 +1,11 @@
+## Info
+
+Firebase is a cloud service ran by Google.
+Thus if you set up Vimflowy to use Firebase, your data will sit on Google's servers.
+
+Note: As with all remote data implementations, you will be unable to access Vimflowy offline.
+However, you will be able to access it from multiple devices.
+
 ## Setup
 
 ### Obtain a Firebase project
