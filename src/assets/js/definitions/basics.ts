@@ -34,6 +34,8 @@ keyDefinitions.registerAction([MODES.INSERT], CMD_MOTION, {
     throw new Error('Motion command was not passed a motion');
   }
   await motion(this.session.cursor, {pastEnd: true});
+  // if the cursor moves, consider a new save sequence
+  this.session.save();
 });
 keyDefinitions.registerAction([MODES.VISUAL], CMD_MOTION, {
   description: 'Move the cursor',
@@ -274,7 +276,7 @@ const CMD_TOGGLE_FOLD = keyDefinitions.registerCommand({
   name: 'TOGGLE_FOLD',
   default_hotkeys: {
     normal_like: ['z'],
-    insert_like: ['ctrl+z'],
+    insert_like: ['ctrl+space'],
   },
 });
 
@@ -726,10 +728,9 @@ const CMD_SPLIT_LINE = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SPLIT_LINE, {
   description: 'Split line at cursor (i.e. enter key)',
 }, async function() {
+  this.keyStream.save();
   await this.session.newLineAtCursor();
-  if (this.mode === MODES.NORMAL) {
-    this.keyStream.save();
-  }
+  this.keyStream.save();
 });
 
 const CMD_SCROLL_DOWN = keyDefinitions.registerCommand({

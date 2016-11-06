@@ -7,11 +7,13 @@ const CMD_UNDO = keyDefinitions.registerCommand({
   name: 'UNDO',
   default_hotkeys: {
     normal_like: ['u'],
+    insert_like: ['ctrl+z'],
   },
 });
-keyDefinitions.registerAction([MODES.NORMAL], CMD_UNDO, {
+keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_UNDO, {
   description: 'Undo',
 }, async function() {
+  this.session.save(); // important for insert mode
   for (let j = 0; j < this.repeat; j++) {
     await this.session.undo();
   }

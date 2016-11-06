@@ -215,4 +215,35 @@ describe('numbers (repeat next action)', function() {
     t.expect(['tyank']);
     await t.done();
   });
+
+  it('saves in insert mode upon motion', async function() {
+    let t = new TestCase(['']);
+    t.sendKeys('A');
+    t.sendKeys('asdf');
+    t.sendKey('left');
+    t.sendKey('left');
+    t.sendKeys('asdf');
+    t.expect(['asasdfdf']);
+    t.sendKey('ctrl+z');
+    t.expect(['asdf']);
+    t.sendKey('ctrl+z');
+    t.expect(['']);
+    await t.done();
+  });
+
+  it('saves in insert mode before and after split line', async function() {
+    let t = new TestCase(['']);
+    t.sendKeys('A');
+    t.sendKeys('asdf');
+    t.sendKey('enter');
+    t.sendKeys('asdf');
+    t.expect(['asdf', 'asdf']);
+    t.sendKey('ctrl+z');
+    t.expect(['asdf', '']);
+    t.sendKey('ctrl+z');
+    t.expect(['asdf']);
+    t.sendKey('ctrl+z');
+    t.expect(['']);
+    await t.done();
+  });
 });

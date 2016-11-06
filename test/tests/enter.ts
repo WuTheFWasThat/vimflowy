@@ -11,8 +11,6 @@ describe('enter', function() {
     t.sendKeys('world');
     t.sendKey('esc');
     t.expect(['hello', 'world']);
-    t.sendKey('u');
-    t.expect(['']);
     await t.done();
   });
 
@@ -30,7 +28,11 @@ describe('enter', function() {
       ] },
     ]);
     t.sendKey('u');
+    t.sendKey('u');
+    t.sendKey('u');
     t.expect(['']);
+    t.sendKey('ctrl+r');
+    t.sendKey('ctrl+r');
     t.sendKey('ctrl+r');
     t.expect([
       { text: 'hello', children: [
@@ -68,6 +70,8 @@ describe('enter', function() {
     t.sendKey('esc');
     t.expect(['hello', '']);
     t.sendKey('u');
+    t.expect(['hello']);
+    t.sendKey('u');
     t.expect(['']);
     await t.done();
   });
@@ -79,6 +83,8 @@ describe('enter', function() {
     t.sendKeys('hello');
     t.sendKey('esc');
     t.expect(['', 'hello']);
+    t.sendKey('u');
+    t.expect(['', '']);
     t.sendKey('u');
     t.expect(['']);
     await t.done();
