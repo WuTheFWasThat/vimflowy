@@ -234,6 +234,7 @@ describe('jumps', function() {
 
     t.expectJumpIndex(3);
     t.sendKeys('u');
+    t.sendKeys('u');
     t.expectJumpIndex(4);
     t.expect([
       'first',

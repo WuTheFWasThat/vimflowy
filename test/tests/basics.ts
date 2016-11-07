@@ -246,4 +246,37 @@ describe('numbers (repeat next action)', function() {
     t.expect(['']);
     await t.done();
   });
+
+  it('saves in insert mode before and after tab', async function() {
+    let t = new TestCase(['a', 'b']);
+    t.sendKeys('jA');
+    t.sendKeys('asdf');
+    t.sendKey('tab');
+    t.sendKeys('asdf');
+    t.sendKey('shift+tab');
+    t.sendKeys('asdf');
+    t.expect(['a', 'basdfasdfasdf']);
+    t.sendKey('ctrl+z');
+    t.expect(['a', 'basdfasdf']);
+    t.sendKey('ctrl+z');
+    t.expect([{
+      text: 'a', children: [
+        'basdfasdf',
+      ],
+    }]);
+    t.sendKey('ctrl+z');
+    t.expect([{
+      text: 'a', children: [
+        'basdf',
+      ],
+    }]);
+    t.sendKey('ctrl+z');
+    t.expect(['a', 'basdf']);
+    t.sendKey('ctrl+z');
+    t.expect(['a', 'b']);
+    t.sendKey('ctrl+z');
+    t.expect(['a', 'b']);
+    t.expect(['a', 'b']);
+    await t.done();
+  });
 });

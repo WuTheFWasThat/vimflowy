@@ -30,7 +30,9 @@ describe('enter', function() {
     t.sendKey('u');
     t.sendKey('u');
     t.sendKey('u');
+    t.sendKey('u');
     t.expect(['']);
+    t.sendKey('ctrl+r');
     t.sendKey('ctrl+r');
     t.sendKey('ctrl+r');
     t.sendKey('ctrl+r');

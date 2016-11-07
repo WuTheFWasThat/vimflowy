@@ -70,16 +70,12 @@ const CMD_MOVE_BLOCK_RIGHT = keyDefinitions.registerCommand({
     insert_like: ['tab'],
   },
 });
-keyDefinitions.registerAction([MODES.NORMAL], CMD_MOVE_BLOCK_RIGHT, {
+keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
 }, async function() {
+  this.keyStream.save(); // important for insert mode
   await this.session.indentBlocks(this.session.cursor.path, this.repeat);
   this.keyStream.save();
-});
-keyDefinitions.registerAction([MODES.INSERT], CMD_MOVE_BLOCK_RIGHT, {
-  description: 'Move block right',
-}, async function() {
-  await this.session.indentBlocks(this.session.cursor.path, 1);
 });
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOVE_BLOCK_RIGHT, {
   description: 'Move block right',
@@ -92,16 +88,12 @@ const CMD_MOVE_BLOCK_LEFT = keyDefinitions.registerCommand({
     insert_like: ['shift+tab'],
   },
 });
-keyDefinitions.registerAction([MODES.NORMAL], CMD_MOVE_BLOCK_LEFT, {
+keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',
 }, async function() {
+  this.keyStream.save(); // important for insert mode
   await this.session.unindentBlocks(this.session.cursor.path, this.repeat);
   this.keyStream.save();
-});
-keyDefinitions.registerAction([MODES.INSERT], CMD_MOVE_BLOCK_LEFT, {
-  description: 'Move block left',
-}, async function() {
-  await this.session.unindentBlocks(this.session.cursor.path, 1);
 });
 keyDefinitions.registerAction([MODES.VISUAL_LINE], CMD_MOVE_BLOCK_LEFT, {
   description: 'Move block left',

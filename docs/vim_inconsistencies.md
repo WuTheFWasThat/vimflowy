@@ -14,6 +14,7 @@ And feel free to report more!
 - I goes to the beginning of the line, irrespective of whitespace
 
 - undoing operations always puts your cursor where it was.  (This is not true in vim: try going to the middle of a line and typing d0u)
+- in insert mode, not everything is a single action with respect to undo/redo.  motions, indenting, and splitting lines make for new items in history (i.e. for undo/redo)
 - in vim, cw works like ciw, which is inconsistent/counterintuitive
 - 100rx will replace as many as it can
 - t and T work when you use them repeatedly
