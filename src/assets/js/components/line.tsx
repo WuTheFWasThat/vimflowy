@@ -226,7 +226,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
               style={{position: 'relative', width: 0, height: 0}}>
               <span className='theme-cursor blink-background' style={{
                 position: 'absolute',
-                height: '1.2em', width: 2, left: -1,
+                height: '1.2em', width: 2, left: -1, bottom: '100%',
               }}>
               </span>
             </span>
