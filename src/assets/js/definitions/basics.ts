@@ -283,10 +283,41 @@ const CMD_TOGGLE_FOLD = keyDefinitions.registerCommand({
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_TOGGLE_FOLD, {
   description: 'Toggle whether a block is folded',
 }, async function() {
+  this.keyStream.save(); // important for insert mode
   await this.session.toggleCurBlockCollapsed();
-  if (this.mode === MODES.NORMAL) {
-    this.keyStream.save();
-  }
+  this.keyStream.save();
+});
+
+const CMD_OPEN_FOLD = keyDefinitions.registerCommand({
+  name: 'OPEN_FOLD',
+  default_hotkeys: {
+    normal_like: [],
+    insert_like: ['meta+down'],
+  },
+});
+
+keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_OPEN_FOLD, {
+  description: 'Open a collapsed block',
+}, async function() {
+  this.keyStream.save(); // important for insert mode
+  await this.session.setCurBlockCollapsed(false);
+  this.keyStream.save();
+});
+
+const CMD_CLOSE_FOLD = keyDefinitions.registerCommand({
+  name: 'CLOSE_FOLD',
+  default_hotkeys: {
+    normal_like: [],
+    insert_like: ['meta+up'],
+  },
+});
+
+keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_CLOSE_FOLD, {
+  description: 'Close a collapsed block',
+}, async function() {
+  this.keyStream.save(); // important for insert mode
+  await this.session.setCurBlockCollapsed(true);
+  this.keyStream.save();
 });
 
 const CMD_REPLACE = keyDefinitions.registerCommand({
@@ -296,6 +327,7 @@ const CMD_REPLACE = keyDefinitions.registerCommand({
   },
 });
 // TODO: visual and visual_line mode
+
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLACE, {
   description: 'Replace character',
 }, async function() {
@@ -341,6 +373,20 @@ keyDefinitions.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MOTION], {
   }
 
   await this.session.deleteBetween(this.session.cursor, cursor, { yank: true });
+  this.keyStream.save();
+});
+
+const CMD_DELETE_BLOCK = keyDefinitions.registerCommand({
+  name: 'DELETE_BLOCK',
+  default_hotkeys: {
+    insert_like: ['meta+shift+delete'],
+  },
+});
+keyDefinitions.registerAction([MODES.INSERT], [CMD_DELETE_BLOCK], {
+  description: 'Delete block',
+}, async function() {
+  this.keyStream.save();
+  await this.session.delBlocksAtCursor(1, {addNew: false});
   this.keyStream.save();
 });
 
@@ -726,7 +772,7 @@ const CMD_SPLIT_LINE = keyDefinitions.registerCommand({
   },
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SPLIT_LINE, {
-  description: 'Split line at cursor (i.e. enter key)',
+  description: 'Split line at cursor',
 }, async function() {
   this.keyStream.save();
   await this.session.newLineAtCursor();
@@ -738,12 +784,13 @@ const CMD_SCROLL_DOWN = keyDefinitions.registerCommand({
   default_hotkeys: {
     all: ['page down'],
     normal_like: ['ctrl+d'],
-    insert_like: ['ctrl+down'],
+    insert_like: [],
   },
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SCROLL_DOWN, {
   description: 'Scroll half window down',
 }, async function() {
+  this.session.save(); // important for insert mode
   await this.session.scroll(0.5);
   this.keyStream.forget(1);
 });
@@ -753,12 +800,13 @@ const CMD_SCROLL_UP = keyDefinitions.registerCommand({
   default_hotkeys: {
     all: ['page up'],
     normal_like: ['ctrl+u'],
-    insert_like: ['ctrl+up'],
+    insert_like: [],
   },
 });
 keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_SCROLL_UP, {
   description: 'Scroll half window up',
 }, async function() {
+  this.session.save(); // important for insert mode
   await this.session.scroll(-0.5);
   this.keyStream.forget(1);
 });

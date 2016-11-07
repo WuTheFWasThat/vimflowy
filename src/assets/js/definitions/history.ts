@@ -24,11 +24,13 @@ const CMD_REDO = keyDefinitions.registerCommand({
   name: 'REDO',
   default_hotkeys: {
     normal_like: ['ctrl+r'],
+    insert_like: ['ctrl+Z'],
   },
 });
 keyDefinitions.registerAction([MODES.NORMAL], CMD_REDO, {
   description: 'Redo',
 }, async function() {
+  this.session.save(); // probably unnecessary, but just in case, for insert mode
   for (let j = 0; j < this.repeat; j++) {
     await this.session.redo();
   }

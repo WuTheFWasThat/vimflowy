@@ -1212,11 +1212,21 @@ export default class Session extends EventEmitter {
   }
 
   public async toggleCurBlockCollapsed() {
-    return await this.toggleBlockCollapsed(this.cursor.row);
+    await this.toggleBlockCollapsed(this.cursor.row);
   }
 
   public async toggleBlockCollapsed(row) {
-    return await this.do(new mutations.ToggleBlock(row));
+    await this.do(new mutations.ToggleBlock(row));
+  }
+
+  public async setCurBlockCollapsed(collapsed) {
+    await this.setBlockCollapsed(this.cursor.row, collapsed);
+  }
+
+  public async setBlockCollapsed(row, collapsed) {
+    if ((await this.document.collapsed(row)) !== collapsed) {
+      await this.do(new mutations.ToggleBlock(row));
+    }
   }
 
   public async pasteBefore() {

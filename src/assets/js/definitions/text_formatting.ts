@@ -27,6 +27,19 @@ const CMD_STRIKETHROUGH = keyDefinitions.registerCommand({
     all: ['ctrl+enter'],
   },
 });
+const CMD_STRIKETHROUGH_LINE = keyDefinitions.registerCommand({
+  name: 'STRIKETHROUGH_LINE',
+  default_hotkeys: {
+    insert_like: ['meta+enter'],
+  },
+});
+keyDefinitions.registerAction([MODES.INSERT], CMD_STRIKETHROUGH_LINE, {
+  description: 'Strikethrough line',
+}, async function() {
+  this.keyStream.save();
+  await this.session.toggleRowProperty('strikethrough');
+  this.keyStream.save();
+});
 
 const text_format_normal = (property) => {
   return async function() {
