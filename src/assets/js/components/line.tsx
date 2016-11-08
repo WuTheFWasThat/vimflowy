@@ -222,14 +222,14 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       if (spec.cursor) {
         if (this.props.cursorBetween) {
           results.push(
-            <span key='insert-cursor'
-              style={{position: 'relative', width: 0, height: 0}}>
-              <span className='theme-cursor blink-background' style={{
-                position: 'absolute',
-                height: '1.2em', width: 2, left: -1, bottom: '100%',
+            <div key='insert-cursor'
+              className='theme-cursor blink-background'
+              style={{
+                display: 'inline-block',
+                height: '1.2em', width: 2, marginLeft: -1, marginRight: -1,
               }}>
-              </span>
-            </span>
+              {' '}
+            </div>
           );
         } else {
           classes.push('cursor', 'theme-cursor');
