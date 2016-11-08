@@ -1,7 +1,6 @@
 import Session from './session';
 import Document from './document';
 import * as DataStore from './datastore';
-import * as Modes from './modes';
 import * as constants from './constants';
 import { Line } from './types';
 
@@ -45,7 +44,7 @@ export default class Menu {
     this.session = new Session(doc);
     // NOTE: this is fire and forget
     // TODO: fix?
-    this.session.setMode(Modes.modes.INSERT);
+    this.session.setMode('INSERT');
     this.selection = 1;
 
     this.results = [];

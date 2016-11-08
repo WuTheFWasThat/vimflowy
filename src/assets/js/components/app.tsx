@@ -7,10 +7,10 @@ import { DataSource } from '../datastore';
 import SettingsComponent from './settings';
 import SessionComponent from './session';
 import MenuComponent from './menu';
-import { ModeHotkeysTableComponent } from './hotkeysTable';
+import HotkeysTableComponent from './hotkeysTable';
 import { PluginsManager } from '../plugins';
 import Session from '../session';
-import KeyBindings from '../keyBindings';
+import { KeyBindings } from '../keyBindings';
 
 type Props = {
   pluginManager: PluginsManager;
@@ -82,7 +82,7 @@ export default class AppComponent extends React.Component<Props, {}> {
     const pluginManager = this.props.pluginManager;
     const session = this.props.session;
     const keyBindings = this.props.keyBindings;
-    const settingsMode = session.mode === Modes.modes.SETTINGS;
+    const settingsMode = session.mode === 'SETTINGS';
     return (
       <div>
         {/* hack for firefox paste */}
@@ -91,7 +91,7 @@ export default class AppComponent extends React.Component<Props, {}> {
 
         <div id='contents'>
           <div id='menu'
-            className={session.mode === Modes.modes.SEARCH ? '' : 'hidden'}
+            className={session.mode === 'SEARCH' ? '' : 'hidden'}
           >
             {
               (() => {
@@ -104,7 +104,7 @@ export default class AppComponent extends React.Component<Props, {}> {
 
           <div id='view'
             style={{flex: '1 1 auto', fontSize: 10}}
-            className={session.mode === Modes.modes.SEARCH ? 'hidden' : ''}
+            className={session.mode === 'SEARCH' ? 'hidden' : ''}
           >
             {/* NOTE: maybe always showing session would be nice?
               * Mostly works to never have 'hidden',
@@ -134,9 +134,10 @@ export default class AppComponent extends React.Component<Props, {}> {
                 })()
               }
             >
-              <ModeHotkeysTableComponent
-                keyBindings={keyBindings}
-                mode={session.mode}
+              <HotkeysTableComponent
+                keyMap={keyBindings.mappings.mappings[session.mode]}
+                definitions={keyBindings.definitions}
+                ignoreEmpty={true}
               />
             </div>
           </div>
@@ -161,9 +162,9 @@ export default class AppComponent extends React.Component<Props, {}> {
             <a className='center theme-bg-secondary'
               onClick={async () => {
                 if (settingsMode) {
-                  await session.setMode(Modes.modes.NORMAL);
+                  await session.setMode('NORMAL');
                 } else {
-                  await session.setMode(Modes.modes.SETTINGS);
+                  await session.setMode('SETTINGS');
                 }
               }}
               style={{

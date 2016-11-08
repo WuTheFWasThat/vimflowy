@@ -4,7 +4,6 @@ export type Key = string;
 export type Macro = Array<Key>;
 export type MacroMap = {[key: string]: Macro};
 
-
 export type CursorOptions = {
   // means whether we're on the column or past it.
   // generally true when in insert mode but not in normal mode
@@ -19,14 +18,6 @@ export type CursorOptions = {
   keepProperties?: boolean,
 };
 
-// a character is represented by an object:
-// {
-//   char: 'a'
-//   bold: true
-//   italic: false
-//   ..
-// }
-// in the case where all properties are false, it may be simply the character (to save space)
 export type Char = {
   char: string,
   bold?: boolean,
@@ -68,4 +59,4 @@ export type Row = number;
 export type Col = number;
 export type SerializedPath = Array<Row>;
 
-export type ModeId = number;
+export type ModeId = string;

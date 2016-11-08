@@ -4,18 +4,16 @@ import _ from 'lodash';
 
 import * as utils from '../utils';
 import logger from '../logger';
-import * as Modes from '../modes';
+import { MODES } from '../modes';
 
 import Session from '../session';
-import KeyBindings from '../keyBindings';
+import { KeyBindings } from '../keyBindings';
 import { PluginsManager } from '../plugins';
 import { DataSource } from '../datastore';
 
 import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
 import DataStoreSettingsComponent from './settings/dataStore';
-
-const MODE_TYPES = Modes.types;
 
 enum TABS {
   MAIN,
@@ -124,7 +122,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                       session.showMessage('Importing contents...', { time: 0 });
                       if (await session.importContent(content, mimetype)) {
                         session.showMessage('Imported!', {text_class: 'success'});
-                        await session.setMode(Modes.modes.NORMAL);
+                        await session.setMode('NORMAL');
                       } else {
                         session.showMessage('Import failed due to parsing issue', {text_class: 'error'});
                       }
@@ -183,7 +181,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 </div>
                 <div style={{float:'left'}} className='btn theme-bg-secondary theme-trim'
                   onClick={() => {
-                    keyBindings.apply_default_hotkey_settings();
+                    keyBindings.setDefaultMappings();
                     return session.showMessage('Loaded defaults!', {text_class: 'success'});
                   }}>
 
@@ -199,7 +197,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                       } catch (e) {
                         return session.showMessage(`Failed to parse JSON: ${e}`, {text_class: 'error'});
                       }
-                      err = keyBindings.apply_hotkey_settings(hotkey_settings);
+                      err = keyBindings.setMappings(hotkey_settings);
                       if (err) {
                         return session.showMessage(err, {text_class: 'error'});
                       } else {
@@ -214,30 +212,18 @@ export default class SettingsComponent extends React.Component<Props, State> {
               </div>
               <div>
                 {
-                  (() => {
-                    return [
-                      { mode_type: Modes.HotkeyType.NORMAL_MODE_TYPE, id: 'hotkey-edit-normal' },
-                      { mode_type: Modes.HotkeyType.INSERT_MODE_TYPE, id: 'hotkey-edit-insert' },
-                    ].map(({mode_type, id}) => {
-                      const mode_defs = MODE_TYPES[mode_type].modes.map(
-                        // NOTE: without cloneDeep, there is some bug where
-                        // stuff in definitions get mutated
-                        mode => _.cloneDeep(keyBindings.definitions.actions_for_mode(mode))
-                      );
-                      return (
-                        <div id={id} key={id}>
-                          <div className='tooltip' title={MODE_TYPES[mode_type].description}>
-                            {mode_type}
-                          </div>
-                          <HotkeysTableComponent
-                            keyMap={keyBindings.hotkeys[mode_type]}
-                            motions={keyBindings.definitions.motions}
-                            actions={_.extend.apply(_, mode_defs)}
-                          />
-                        </div>
-                      );
-                    });
-                  })()
+                  Object.keys(MODES).map((mode) => {
+                    return (
+                      <div id={mode} key={mode}>
+                        {mode}
+                        <HotkeysTableComponent
+                          keyMap={keyBindings.mappings.mappings[mode]}
+                          definitions={keyBindings.definitions}
+                        />
+                      </div>
+                    );
+
+                  })
                 }
               </div>
             </div>

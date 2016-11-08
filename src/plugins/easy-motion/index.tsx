@@ -4,6 +4,15 @@ import React from 'react'; // tslint:disable-line no-unused-variable
 import Path from '../../assets/js/path';
 import * as Plugins from '../../assets/js/plugins';
 
+import defaultKeyMappings from '../../assets/js/keyMappings';
+
+defaultKeyMappings.registerModeMappings(
+  'NORMAL',
+  {
+    'easy-motion': [['space']],
+  },
+);
+
 type EasyMotionMappings = {
   key_to_path: {[key: string]: Path},
   path_to_key: {[serialized_path: string]: string},
@@ -18,23 +27,12 @@ Plugins.register(
   function(api) {
     let EASY_MOTION_MAPPINGS: EasyMotionMappings | null = null;
 
-    let CMD_EASY_MOTION = api.registerCommand({
-      name: 'EASY_MOTION',
-      default_hotkeys: {
-        normal_like: ['space'],
-      },
-    });
-
-    api.registerMotion(CMD_EASY_MOTION, {
-      description: 'Jump to a visible row (based on EasyMotion)',
-      multirow: true,
-    }, async function() {
-      let key = this.keyStream.dequeue();
-      if (key === null) {
-        this.keyStream.wait();
-
-        let paths: Array<Path> = (await this.session.getVisiblePaths()).filter(
-          path => !path.is(this.session.cursor.path)
+    api.registerMotion(
+      'easy-motion',
+      'Jump to a visible row (based on EasyMotion)',
+      async function({ session, keyStream }) {
+        let paths: Array<Path> = (await session.getVisiblePaths()).filter(
+          path => !path.is(session.cursor.path)
         );
 
         let keys = [
@@ -77,8 +75,9 @@ Plugins.register(
         await Promise.all(_.values(EASY_MOTION_MAPPINGS.key_to_path).map(
           async (path) => await api.updatedDataForRender(path.row)
         ));
-        return null;
-      } else {
+
+        const key = await keyStream.dequeue();
+
         return async function(cursor /*, options */) {
           if (EASY_MOTION_MAPPINGS === null) {
             throw new Error('Easy motion mappings were not set, as expected');
@@ -92,8 +91,8 @@ Plugins.register(
           ));
           EASY_MOTION_MAPPINGS = null;
         };
-      }
-    });
+      },
+    );
 
     return api.registerHook('session', 'renderBullet', function(bullet, info) {
       let ancestry_str = JSON.stringify(info.path.getAncestry());

@@ -219,13 +219,16 @@ export class MoveBlock extends Mutation {
   }
 
   public async validate(session) {
+    if (this.path.isRoot()) {
+      session.showMessage('Cannot detach root', {text_class: 'error'});
+      return false;
+    }
     // if parent is the same, don't do sibling clone validation
     const sameParent = this.parent.row === this.old_parent.row;
     return await validateRowInsertion(session, this.parent.row, this.path.row, {noSiblingCheck: sameParent});
   }
 
   public async mutate(session) {
-    errors.assert((!this.path.isRoot()), 'Cannot detach root');
     const info = await session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
     this.old_index = info.old.childIndex;
   }

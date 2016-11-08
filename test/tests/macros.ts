@@ -69,6 +69,7 @@ describe('macros', function() {
       '00000012',
       '0000',
     ]);
+    // can repeat
     // should it only do one delete?  (just need to enable save on recorded keystream)
     t.sendKeys('.');
     t.expect([
@@ -80,6 +81,39 @@ describe('macros', function() {
       '00000120',
       '00000012',
       '00',
+    ]);
+    t.sendKeys('x');
+    t.expect([
+      '12000000',
+      '01200000',
+      '00120000',
+      '00012000',
+      '00001200',
+      '00000120',
+      '00000012',
+      '0',
+    ]);
+    t.sendKeys('u');
+    t.expect([
+      '12000000',
+      '01200000',
+      '00120000',
+      '00012000',
+      '00001200',
+      '00000120',
+      '00000012',
+      '00',
+    ]);
+    t.sendKeys('u');
+    t.expect([
+      '12000000',
+      '01200000',
+      '00120000',
+      '00012000',
+      '00001200',
+      '00000120',
+      '00000012',
+      '0000',
     ]);
     await t.done();
   });

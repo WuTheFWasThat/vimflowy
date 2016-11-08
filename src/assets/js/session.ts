@@ -14,7 +14,6 @@ import Mutation from './mutations';
 import Menu from './menu';
 
 import * as Modes from './modes';
-const MODES = Modes.modes;
 
 import { ModeId, CursorOptions, Line, Row, Col } from './types';
 
@@ -106,8 +105,8 @@ export default class Session extends EventEmitter {
     this.reset_jump_history();
 
     // NOTE: this is fire and forget
-    // this.setMode(MODES.NORMAL);
-    this.mode = MODES.NORMAL;
+    // this.setMode('NORMAL');
+    this.mode = 'NORMAL';
     return this;
   }
 
@@ -363,11 +362,11 @@ export default class Session extends EventEmitter {
       logger.debug('REDOING <');
       for (let j = oldState.index; j < newState.index; j++) {
         const mutation = this.mutations[j];
-        logger.debug(`  Redoing mutation ${mutation.constructor.name}(${mutation.str()})`);
         if (!await mutation.validate(this)) {
           // this should not happen, since the state should be the same as before
           throw new errors.GenericError(`Failed to redo mutation: ${mutation.str()}`);
         }
+        logger.debug(`  Redoing mutation ${mutation.constructor.name}(${mutation.str()})`);
         await mutation.remutate(this);
         await mutation.moveCursor(this.cursor);
       }
@@ -385,6 +384,10 @@ export default class Session extends EventEmitter {
       return true;
     }
 
+    if (!await mutation.validate(this)) {
+      return false;
+    }
+
     if (this.historyIndex !== this.history.length - 1) {
       this.history = this.history.slice(0, this.historyIndex + 1);
       this.mutations = this.mutations.slice(0, this.history[this.historyIndex].index);
@@ -399,9 +402,6 @@ export default class Session extends EventEmitter {
     }
 
     logger.debug(`Applying mutation ${mutation.constructor.name}(${mutation.str()})`);
-    if (!await mutation.validate(this)) {
-      return false;
-    }
     await mutation.mutate(this);
     await mutation.moveCursor(this.cursor);
     await this.fixCursorForMode();
@@ -412,7 +412,7 @@ export default class Session extends EventEmitter {
 
   // TODO: do this in the mode
   private async fixCursorForMode() {
-    if (Modes.getMode(this.mode).metadata.hotkey_type !== Modes.HotkeyType.INSERT_MODE_TYPE) {
+    if (!Modes.getMode(this.mode).metadata.cursorBetween) {
       await this.cursor.backIfNeeded();
     }
   }

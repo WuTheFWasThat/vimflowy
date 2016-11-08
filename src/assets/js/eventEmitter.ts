@@ -37,7 +37,7 @@ export default class EventEmitter {
   }
 
   public once(event, listener) {
-    const fn = function() {
+    const fn = () => {
       this.removeListener(event, fn);
       return listener(...arguments);
     };

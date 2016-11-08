@@ -11,8 +11,6 @@ import Path from '../path';
 import logger from '../logger';
 import { CursorsInfoTree } from '../cursor';
 
-const MODES = Modes.modes;
-
 // TODO: move mode-specific logic into mode render functions
 
 type Props = {
@@ -118,14 +116,14 @@ export default class SessionComponent extends React.Component<Props, State> {
       const cursor = session.cursor;
       const cursorNode = cursorsTree.getPath(cursor.path);
       cursorNode.markCursor(cursor.col);
-      if (session.mode === MODES.VISUAL_LINE) {
+      if (session.mode === 'VISUAL_LINE') {
         // mirrors logic of finishes_visual_line in keyHandler.js
         const [parent, index1, index2] = await session.getVisualLineSelections();
         const children = await session.document.getChildRange(parent, index1, index2);
         children.forEach((child) => {
           cursorsTree.getPath(child).markVisual();
         });
-      } else if (session.mode === MODES.VISUAL) {
+      } else if (session.mode === 'VISUAL') {
         const anchor = session.anchor;
         if (anchor.path && cursor.path.is(anchor.path)) {
           const start = Math.min(cursor.col, anchor.col);
@@ -185,7 +183,7 @@ export default class SessionComponent extends React.Component<Props, State> {
 
   private cursorBetween() {
     const mode = this.props.session.mode;
-    return Modes.getMode(mode).metadata.hotkey_type === Modes.HotkeyType.INSERT_MODE_TYPE;
+    return Modes.getMode(mode).metadata.cursorBetween;
   }
 
   public render() {
@@ -214,17 +212,17 @@ export default class SessionComponent extends React.Component<Props, State> {
 
     let onLineClick: ((path: Path) => void) | null = null;
     let onCharClick: ((path: Path, column: number, e: Event) => void) | null = null;
-    if (mode === MODES.NORMAL ||
-        mode === MODES.INSERT ||
-        mode === MODES.VISUAL ||
-        mode === MODES.VISUAL_LINE
+    if (mode === 'NORMAL' ||
+        mode === 'INSERT' ||
+        mode === 'VISUAL' ||
+        mode === 'VISUAL_LINE'
        ) {
       onCharClick = this.onCharClick;
       onLineClick = this.onLineClick;
     }
 
     let onCrumbClick: ((...args: any[]) => void) | null = null;
-    if (mode === MODES.NORMAL) {
+    if (mode === 'NORMAL') {
       onCrumbClick = this.onCrumbClick;
     }
 

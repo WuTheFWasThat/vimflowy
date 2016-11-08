@@ -1,8 +1,8 @@
+import * as _ from 'lodash';
 import React from 'react'; // tslint:disable-line no-unused-variable
 
 import * as Plugins from '../../assets/js/plugins';
 import Menu from '../../assets/js/menu';
-import * as Modes from '../../assets/js/modes';
 import * as DataStore from '../../assets/js/datastore';
 import Document from '../../assets/js/document';
 import Session from '../../assets/js/session';
@@ -14,12 +14,35 @@ import { Logger } from '../../assets/js/logger';
 import Path from '../../assets/js/path';
 import { Row } from '../../assets/js/types';
 
-import * as basic_defs from '../../assets/js/definitions/basics';
+import defaultKeyMappings, {
+  INSERT_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS,
+} from '../../assets/js/keyMappings';
+import { motionKey } from '../../assets/js/keyDefinitions';
 
+// TODO: do this elsewhere
 declare const process: any;
 
-// NOTE: mark mode is still in the core code
-// TODO: separate that out too?
+defaultKeyMappings.registerModeMappings(
+  'MARK',
+  Object.assign({
+    'toggle-help': [['ctrl+?']],
+    'move-cursor-mark': [[motionKey]],
+    'finish-mark': [['enter']],
+    'mark-delete-char-after': [['delete']],
+    'mark-delete-char-before': [['backspace'], ['shift+backspace']],
+    'exit-mode': [['esc'], ['ctrl+c']],
+  }, _.pick(INSERT_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS))
+);
+
+defaultKeyMappings.registerModeMappings(
+  'NORMAL',
+  {
+    'begin-mark': [['m']],
+    'go-mark': [['g', 'm']],
+    'delete-mark': [['d', 'm']],
+    'search-marks': [['\''], ['`']],
+  },
+);
 
 const markStyle = {
   padding: '0px 10px',
@@ -117,13 +140,11 @@ class MarksPlugin {
 
     // Commands #
 
-    const MODES = Modes.modes;
-
     this.markstate = null;
 
     this.api.registerMode({
       name: 'MARK',
-      hotkey_type: Modes.HotkeyType.INSERT_MODE_TYPE,
+      cursorBetween: true,
       within_row: true,
       enter: async (session /*, newMode?: ModeId */) => {
         // initialize marks stuff
@@ -133,7 +154,7 @@ class MarksPlugin {
           session: new Session(doc),
           path: session.cursor.path,
         };
-        await this.markstate.session.setMode(MODES.INSERT);
+        await this.markstate.session.setMode('INSERT');
       },
       exit: async (/*session, newMode?: ModeId */) => {
         // do this, now that markstate is cleared
@@ -168,162 +189,144 @@ class MarksPlugin {
       ],
     });
 
-    const CMD_MARK = this.api.registerCommand({
-      name: 'MARK',
-      default_hotkeys: {
-        normal_like: ['m'],
+    this.api.registerAction(
+      'begin-mark',
+      'Mark a line',
+      async function({ session }) {
+        await session.setMode('MARK');
       },
-    });
-    this.api.registerAction([MODES.NORMAL], CMD_MARK, {
-      description: 'Mark a line',
-    }, async function() {
-      await this.session.setMode(MODES.MARK);
-    });
+    );
 
-    const CMD_FINISH_MARK = this.api.registerCommand({
-      name: 'FINISH_MARK',
-      default_hotkeys: {
-        insert_like: ['enter'],
-      },
-    });
-    this.api.registerAction([MODES.MARK], CMD_FINISH_MARK, {
-      description: 'Finish typing mark',
-    }, async function() {
-      if (that.markstate === null) {
-        throw new Error('Mark state null in mark mode');
+    this.api.registerAction(
+      'finish-mark',
+      'Finish typing mark',
+      async function({ session, keyStream }) {
+        if (that.markstate === null) {
+          throw new Error('Mark state null in mark mode');
+        }
+        const mark = await that.markstate.session.curText();
+        const markedRow = that.markstate.path.row;
+        const err = await that.updateMark(markedRow, mark);
+        if (err) { session.showMessage(err, {text_class: 'error'}); }
+        await session.setMode('NORMAL');
+        keyStream.save();
       }
-      const mark = await that.markstate.session.curText();
-      const markedRow = that.markstate.path.row;
-      const err = await that.updateMark(markedRow, mark);
-      if (err) { this.session.showMessage(err, {text_class: 'error'}); }
-      await this.session.setMode(MODES.NORMAL);
-      this.keyStream.save();
-    });
+    );
 
-    const CMD_GO = (this.api.commands as any).GO;
-    this.api.registerMotion([CMD_GO, CMD_MARK], {
-      description: 'Go to the mark indicated by the cursor, if it exists',
-    }, async function() {
-      return async cursor => {
-        const word = await this.session.document.getWord(cursor.row, cursor.col);
-        if (word.length < 1 || word[0] !== '@') {
-          return false;
-        }
-        const mark = word.slice(1);
-        const allMarks = await that.listMarks();
-        if (mark in allMarks) {
-          const path = allMarks[mark];
-          await this.session.zoomInto(path);
-          return true;
-        } else {
-          return false;
-        }
-      };
-    });
-
-    const CMD_DELETE = (this.api.commands as any).DELETE;
-    this.api.registerAction([MODES.NORMAL], [CMD_DELETE, CMD_MARK], {
-      description: 'Delete mark at cursor',
-    }, async function() {
-      const err = await that.updateMark(this.session.cursor.row, '');
-      if (err) { this.session.showMessage(err, {text_class: 'error'}); }
-      this.keyStream.save();
-    });
-
-    const CMD_MARK_SEARCH = this.api.registerCommand({
-      name: 'MARK_SEARCH',
-      default_hotkeys: {
-        normal_like: ['\'', '`'],
+    this.api.registerMotion(
+      'go-mark',
+      'Go to the mark indicated by the cursor, if it exists',
+      async function({ session }) {
+        return async cursor => {
+          const word = await session.document.getWord(cursor.row, cursor.col);
+          if (word.length < 1 || word[0] !== '@') {
+            return false;
+          }
+          const mark = word.slice(1);
+          const allMarks = await that.listMarks();
+          if (mark in allMarks) {
+            const path = allMarks[mark];
+            await session.zoomInto(path);
+            return true;
+          } else {
+            return false;
+          }
+        };
       },
-    });
-    this.api.registerAction([MODES.NORMAL], CMD_MARK_SEARCH, {
-      description: 'Go to (search for) a mark',
-    }, async function() {
-      await this.session.setMode(MODES.SEARCH);
-      const marks = await that.listMarks();
-      this.session.menu = new Menu(async (text) => {
-        // find marks that start with the prefix
-        const findMarks = async (document, prefix, nresults = 10) => {
-          const results: Array<{
-            path: Path, mark: string,
-          }> = []; // list of paths
-          for (const mark in marks) {
-            const path = marks[mark];
-            if (mark.indexOf(prefix) === 0) {
-              results.push({ path, mark });
-              if (nresults > 0 && results.length === nresults) {
-                break;
+    );
+
+    this.api.registerAction(
+      'delete-mark',
+      'Delete mark at cursor',
+      async function({ session, keyStream }) {
+        const err = await that.updateMark(session.cursor.row, '');
+        if (err) { session.showMessage(err, {text_class: 'error'}); }
+        keyStream.save();
+      },
+    );
+
+    this.api.registerAction(
+      'search-marks',
+      'Go to (search for) a mark',
+      async function({ session }) {
+        await session.setMode('SEARCH');
+        const marks = await that.listMarks();
+        session.menu = new Menu(async (text) => {
+          // find marks that start with the prefix
+          const findMarks = async (document, prefix, nresults = 10) => {
+            const results: Array<{
+              path: Path, mark: string,
+            }> = []; // list of paths
+            for (const mark in marks) {
+              const path = marks[mark];
+              if (mark.indexOf(prefix) === 0) {
+                results.push({ path, mark });
+                if (nresults > 0 && results.length === nresults) {
+                  break;
+                }
               }
             }
-          }
-          return results;
-        };
+            return results;
+          };
 
-        return await Promise.all(
-          (await findMarks(this.session.document, text)).map(
-            async ({ path, mark }) => {
-              const line = await this.session.document.getLine(path.row);
-              return {
-                contents: line,
-                renderHook(lineDiv) {
-                  return (
-                    <span>
-                      <span key={`mark_${mark}`} style={markStyle}
-                            className='theme-bg-secondary theme-trim'>
-                        {mark}
+          return await Promise.all(
+            (await findMarks(session.document, text)).map(
+              async ({ path, mark }) => {
+                const line = await session.document.getLine(path.row);
+                return {
+                  contents: line,
+                  renderHook(lineDiv) {
+                    return (
+                      <span>
+                        <span key={`mark_${mark}`} style={markStyle}
+                              className='theme-bg-secondary theme-trim'>
+                          {mark}
+                        </span>
+                        {lineDiv}
                       </span>
-                      {lineDiv}
-                    </span>
-                  );
-                },
-                fn: async () => await this.session.zoomInto(path),
-              };
-            }
-          )
-        );
-      });
-    });
-
-    this.api.registerAction([MODES.MARK], basic_defs.CMD_MOTION, {
-      description: 'Move the cursor',
-    }, async function(motion) {
-      if (that.markstate === null) {
-        throw new Error('Mark state null in mark mode');
+                    );
+                  },
+                  fn: async () => await session.zoomInto(path),
+                };
+              }
+            )
+          );
+        });
       }
-      await motion(that.markstate.session.cursor, {pastEnd: true});
-    });
+    );
 
-    this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_LAST_CHAR, {
-      description: 'Delete last character (i.e. backspace key)',
-    }, async function() {
-      if (that.markstate === null) {
-        throw new Error('Mark state null in mark mode');
-      }
-      await that.markstate.session.deleteAtCursor();
-    });
+    this.api.registerAction(
+      'move-cursor-mark',
+      'Move the cursor',
+      async function({ motion }) {
+        if (that.markstate === null) {
+          throw new Error('Mark state null in mark mode');
+        }
+        await motion(that.markstate.session.cursor, {pastEnd: true});
+      },
+    );
 
-    this.api.registerAction([MODES.MARK], basic_defs.CMD_DELETE_CHAR, {
-      description: 'Delete character at the cursor (i.e. del key)',
-    }, async function() {
-      if (that.markstate === null) {
-        throw new Error('Mark state null in mark mode');
-      }
-      await that.markstate.session.delCharsAfterCursor(1);
-    });
+    this.api.registerAction(
+      'mark-delete-char-before',
+      'Delete last character (i.e. backspace key)',
+      async function() {
+        if (that.markstate === null) {
+          throw new Error('Mark state null in mark mode');
+        }
+        await that.markstate.session.deleteAtCursor();
+      },
+    );
 
-    this.api.registerAction([MODES.MARK], basic_defs.CMD_HELP, {
-      description: 'Show/hide key bindings (edit in settings)',
-    }, async function() {
-      this.session.toggleBindingsDiv();
-      this.keyStream.forget(1);
-    });
-
-    this.api.registerAction([MODES.MARK], basic_defs.CMD_EXIT_MODE, {
-      description: 'Exit back to normal mode',
-    }, async function() {
-      await this.session.setMode(MODES.NORMAL);
-      this.keyStream.forget();
-    });
+    this.api.registerAction(
+      'mark-delete-char-after',
+      'Delete character at the cursor (i.e. del key)',
+      async function() {
+        if (that.markstate === null) {
+          throw new Error('Mark state null in mark mode');
+        }
+        await that.markstate.session.delCharsAfterCursor(1);
+      },
+    );
 
     this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
       const mark = await this._getMark(row);
@@ -378,7 +381,7 @@ class MarksPlugin {
     this.api.registerHook('session', 'renderLineWordHook', (line, info) => {
       const { wordInfo } = info;
 
-      if (this.session.mode === MODES.NORMAL) {
+      if (this.session.mode === 'NORMAL') {
         if (wordInfo.word[0] === '@') {
           const mark = wordInfo.word.slice(1);
           const path = this.marks_to_paths[mark];

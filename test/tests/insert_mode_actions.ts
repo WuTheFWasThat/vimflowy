@@ -32,6 +32,12 @@ describe('insert mode actions', () =>
     t.expect(['bug bug ']);
     t.sendKey('esc');
     t.sendKey('u');
+    t.expect(['bug ']);
+    t.sendKey('u');
+    t.expect(['']);
+    t.sendKey('u');
+    t.expect(['bug ']);
+    t.sendKey('u');
     t.expect(['bug reproduce']);
     // even though we remembered cursor to be past e, it gets moved back,
     // since we're now in normal mode

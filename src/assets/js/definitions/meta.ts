@@ -1,18 +1,13 @@
-import * as Modes from '../modes';
-import keyDefinitions from '../keyDefinitions';
+import keyDefinitions, { Action } from '../keyDefinitions';
 
-const MODES = Modes.modes;
-
-const CMD_EXPORT = keyDefinitions.registerCommand({
-  name: 'EXPORT',
-  default_hotkeys: {
-    normal_like: ['ctrl+s'],
-    insert_like: ['ctrl+s'],
+keyDefinitions.registerAction(new Action(
+  'export-file',
+  'Export as Json file',
+  async function() {
+    await this.session.exportFile('json');
   },
-});
-keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_EXPORT, {
-  description: 'Export as Json file',
-}, async function() {
-  await this.session.exportFile('json');
-});
+  {
+    drop: true,
+  },
+));
 

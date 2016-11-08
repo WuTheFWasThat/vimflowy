@@ -4,7 +4,7 @@ import TestCase from '../testcase';
 describe('repeat', function() {
 
   it('works with insertion of text', async function() {
-    let t = new TestCase(['']);
+    const t = new TestCase(['']);
     t.sendKeys('....');
     t.expect(['']);
     t.sendKeys('irainbow');
@@ -17,7 +17,7 @@ describe('repeat', function() {
   });
 
   it('works with deletion + motion', async function() {
-    let t = new TestCase(['the quick brown fox   jumped   over the lazy dog']);
+    const t = new TestCase(['the quick brown fox   jumped   over the lazy dog']);
     t.sendKeys('dw');
     t.expect(['quick brown fox   jumped   over the lazy dog']);
     t.sendKeys('..');
@@ -41,7 +41,7 @@ describe('repeat', function() {
   });
 
   it('works with change (c)', async function() {
-    let t = new TestCase(['vim is great']);
+    const t = new TestCase(['vim is great']);
     t.sendKeys('ceblah');
     t.sendKey('esc');
     t.sendKeys('w.w.');
@@ -50,7 +50,7 @@ describe('repeat', function() {
   });
 
   it('works with replace', async function() {
-    let t = new TestCase(['obladi oblada']);
+    const t = new TestCase(['obladi oblada']);
     t.sendKeys('eroehl.');
     t.expect(['oblado oblado']);
     await t.done();
@@ -60,7 +60,7 @@ describe('repeat', function() {
 
 describe('tricky cases for repeat', function() {
   it('test repeating x on empty row', async function() {
-    let t = new TestCase(['empty', '']);
+    const t = new TestCase(['empty', '']);
     t.sendKeys('ru');
     t.expect(['umpty', '']);
     t.sendKeys('jxk.');
@@ -69,7 +69,7 @@ describe('tricky cases for repeat', function() {
   });
 
   it('repeat of change', async function() {
-    let t = new TestCase([
+    const t = new TestCase([
       'oh say can you see',
       'and the home of the brave',
     ]);
@@ -88,7 +88,7 @@ describe('tricky cases for repeat', function() {
   });
 
   it('repeat of paste, edge case with empty line', async function() {
-    let t = new TestCase(['word']);
+    const t = new TestCase(['word']);
     t.sendKeys('de');
     t.expect(['']);
     t.sendKeys('p');
@@ -104,7 +104,7 @@ describe('tricky cases for repeat', function() {
   });
 
   it('works with visual mode', async function() {
-    let t = new TestCase([ '1234567' ]);
+    const t = new TestCase([ '1234567' ]);
     t.sendKeys('vllx');
     t.expect([ '4567' ]);
     t.sendKeys('.');
@@ -113,7 +113,7 @@ describe('tricky cases for repeat', function() {
   });
 
   it('doesnt repeat visual mode yank', async function() {
-    let t = new TestCase([ '1234' ]);
+    const t = new TestCase([ '1234' ]);
     t.sendKeys('xvly');
     t.expect([ '234' ]);
     t.sendKeys('.');

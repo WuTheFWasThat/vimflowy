@@ -8,8 +8,7 @@ import Document from '../src/assets/js/document';
 import Session from '../src/assets/js/session';
 import Register from '../src/assets/js/register';
 import '../src/assets/js/definitions';
-import KeyDefinitions from '../src/assets/js/keyDefinitions';
-import KeyBindings from '../src/assets/js/keyBindings';
+import makeDefaultBindings from '../src/assets/js/keyBindings';
 import KeyHandler from '../src/assets/js/keyHandler';
 import logger, * as Logger from '../src/assets/js/logger';
 import { PluginsManager, STATUSES } from '../src/assets/js/plugins';
@@ -23,7 +22,7 @@ afterEach('empty the queue', () => logger.empty());
 // share keybindings across tests, for efficiency
 // note that the bindings will change when plugins are enabled and disabled
 // thus, tests are not totally isolated
-let keyBindings = new KeyBindings(KeyDefinitions.clone());
+const keyBindings = makeDefaultBindings();
 
 type TestCaseOptions = {
   plugins?: Array<string>
@@ -72,21 +71,31 @@ class TestCase {
     });
   }
 
-  protected _chain(next) {
-    this.prom = this.prom.then(next);
+  protected _chain(next, waitKeyHandler = true) {
+    this.prom = this.prom.then(async () => {
+      if (waitKeyHandler) {
+        await this.keyhandler.chain(async () => {
+          await next();
+        });
+      } else {
+        await next();
+      }
+    });
     return this;
   }
 
   public done() {
-    this.prom = this.prom.then(async () => {
-      if (this.plugins) {
-        for (let i = 0; i < this.plugins.length; i++) {
-          const pluginName = this.plugins[i];
-          if (this.pluginManager.getStatus(pluginName) === STATUSES.ENABLED) {
-            await this.pluginManager.disable(pluginName);
+    this.keyhandler.chain(async() => {
+      this.prom = this.prom.then(async () => {
+        if (this.plugins) {
+          for (let i = 0; i < this.plugins.length; i++) {
+            const pluginName = this.plugins[i];
+            if (this.pluginManager.getStatus(pluginName) === STATUSES.ENABLED) {
+              await this.pluginManager.disable(pluginName);
+            }
           }
         }
-      }
+      });
     });
     return this.prom;
   }
@@ -123,11 +132,11 @@ class TestCase {
     if (typeof keys === 'string') {
       keys = keys.split('');
     }
-    keys.forEach((key) => {
-      this._chain(async () =>  {
-        await this.keyhandler.handleKey(key);
+    this._chain(() => {
+      keys.forEach((key) => {
+        this.keyhandler.queueKey(key);
       });
-    });
+    }, false);
     return this;
   }
 

@@ -1,104 +1,92 @@
-import * as Modes from '../modes';
-import keyDefinitions from '../keyDefinitions';
+import keyDefinitions, { Action, SequenceAction } from '../keyDefinitions';
+import { Key, Macro } from '../types';
 
-const MODES = Modes.modes;
-
-const CMD_UNDO = keyDefinitions.registerCommand({
-  name: 'UNDO',
-  default_hotkeys: {
-    normal_like: ['u'],
-    insert_like: ['ctrl+z'],
+keyDefinitions.registerAction(new Action(
+  'undo',
+  'Undo',
+  async function({ session, repeat }) {
+    for (let j = 0; j < repeat; j++) {
+      await session.undo();
+    }
   },
-});
-keyDefinitions.registerAction([MODES.NORMAL, MODES.INSERT], CMD_UNDO, {
-  description: 'Undo',
-}, async function() {
-  this.session.save(); // important for insert mode
-  for (let j = 0; j < this.repeat; j++) {
-    await this.session.undo();
+  { sequence: SequenceAction.DROP },
+));
+
+keyDefinitions.registerAction(new Action(
+  'redo',
+  'Redo',
+  async function({ session, repeat }) {
+    for (let j = 0; j < repeat; j++) {
+      await session.redo();
+    }
+  },
+  { sequence: SequenceAction.DROP },
+));
+
+keyDefinitions.registerAction(new Action(
+  'replay-command',
+  'Replay last command',
+  async function({ repeat, keyStream, keyHandler }) {
+    for (let j = 0; j < repeat; j++) {
+      await keyHandler.playRecording(keyStream.lastSequence);
+    }
+  },
+  { sequence: SequenceAction.DROP },
+));
+
+// TODO: store this on session?  dont assume global
+let RECORDING: {
+  macro: Macro,
+  key: Key,
+} | null = null;
+const RECORDING_LISTENER = (key) => {
+  if (!RECORDING) {
+    throw new Error('Recording listener on while there was no recording');
   }
-  this.keyStream.forget();
-});
+  // TODO avoid recording RECORD_MACRO itself?
+  // current record_macro implementation pops itself off
+  // and assumes it's only 1 key
+  RECORDING.macro.push(key);
+};
 
-const CMD_REDO = keyDefinitions.registerCommand({
-  name: 'REDO',
-  default_hotkeys: {
-    normal_like: ['ctrl+r'],
-    insert_like: ['ctrl+Z'],
+keyDefinitions.registerAction(new Action(
+  'record-macro',
+  'Begin/stop recording a macro',
+  async function({ session, keyStream }) {
+    if (RECORDING === null) {
+      const key = await keyStream.dequeue();
+      RECORDING = {
+        macro: [],
+        key: key,
+      };
+      keyStream.on('dequeue', RECORDING_LISTENER);
+    } else {
+      // pop off the RECORD_MACRO itself
+      RECORDING.macro.pop();
+      const macros = await session.document.store.getMacros();
+      const macro = RECORDING.macro;
+      macros[RECORDING.key] = macro;
+      await session.document.store.setMacros(macros);
+      RECORDING = null;
+      keyStream.off('dequeue', RECORDING_LISTENER);
+    }
   },
-});
-keyDefinitions.registerAction([MODES.NORMAL], CMD_REDO, {
-  description: 'Redo',
-}, async function() {
-  this.session.save(); // probably unnecessary, but just in case, for insert mode
-  for (let j = 0; j < this.repeat; j++) {
-    await this.session.redo();
-  }
-  this.keyStream.forget();
-});
+  { sequence: SequenceAction.DROP },
+));
 
-const CMD_REPLAY = keyDefinitions.registerCommand({
-  name: 'REPLAY',
-  default_hotkeys: {
-    normal_like: ['.'],
-  },
-});
-keyDefinitions.registerAction([MODES.NORMAL], CMD_REPLAY, {
-  description: 'Replay last command',
-}, async function() {
-  for (let j = 0; j < this.repeat; j++) {
-    await this.keyHandler.playRecording(this.keyStream.lastSequence);
-    this.session.save();
-  }
-  this.keyStream.forget();
-});
-
-const CMD_RECORD_MACRO = keyDefinitions.registerCommand({
-  name: 'RECORD_MACRO',
-  default_hotkeys: {
-    normal_like: ['q'],
-  },
-});
-keyDefinitions.registerAction([MODES.NORMAL], CMD_RECORD_MACRO, {
-  description: 'Begin/stop recording a macro',
-}, async function() {
-  if (this.keyHandler.recording === null) {
-    const key = this.keyStream.dequeue();
-    if (key === null) {
-      this.keyStream.wait();
+keyDefinitions.registerAction(new Action(
+  'play-macro',
+  'Play a macro',
+  async function({ keyStream, keyHandler, repeat, session }) {
+    const key = await keyStream.dequeue();
+    const macros = await session.document.store.getMacros();
+    const recording = macros[key];
+    if (recording == null) {
+      keyStream.drop();
       return;
     }
-    this.keyHandler.beginRecording(key);
-  } else {
-    // pop off the RECORD_MACRO itself
-    this.keyHandler.recording.stream.queue.pop();
-    await this.keyHandler.finishRecording();
-  }
-  this.keyStream.forget();
-});
-
-const CMD_PLAY_MACRO = keyDefinitions.registerCommand({
-  name: 'PLAY_MACRO',
-  default_hotkeys: {
-    normal_like: ['@'],
+    for (let j = 0; j < repeat; j++) {
+      await keyHandler.playRecording(recording);
+    }
   },
-});
-keyDefinitions.registerAction([MODES.NORMAL], CMD_PLAY_MACRO, {
-  description: 'Play a macro',
-}, async function() {
-  const key = this.keyStream.dequeue();
-  if (key === null) {
-    this.keyStream.wait();
-    return;
-  }
-  const recording = this.keyHandler.macros[key];
-  if (recording === undefined) {
-    this.keyStream.forget();
-    return;
-  }
-  for (let j = 0; j < this.repeat; j++) {
-    await this.keyHandler.playRecording(recording);
-  }
-  // save the macro-playing sequence itself
-  this.keyStream.save();
-});
+));

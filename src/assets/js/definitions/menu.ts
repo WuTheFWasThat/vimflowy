@@ -1,74 +1,82 @@
 import Menu from '../menu';
-import * as Modes from '../modes';
-import keyDefinitions from '../keyDefinitions';
+import keyDefinitions, { Action } from '../keyDefinitions';
 
-const MODES = Modes.modes;
-
-const CMD_SEARCH = keyDefinitions.registerCommand({
-  name: 'SEARCH',
-  default_hotkeys: {
-    normal_like: ['/', 'ctrl+f'],
+keyDefinitions.registerAction(new Action(
+  'search',
+  'Search',
+  async function({ session }) {
+    await session.setMode('SEARCH');
+    session.menu = new Menu(async (text) => {
+      const results = await session.document.search(text);
+      return Promise.all(
+        results.map(async ({ path, matches }) => {
+          const highlights = {};
+          matches.forEach((i) => {
+            highlights[i] = true;
+          });
+          return {
+            contents: await session.document.getLine(path.row),
+            renderOptions: { highlights },
+            fn: async () => {
+              await session.zoomInto(path);
+              await session.cursor.setPath(path);
+            },
+          };
+        })
+      );
+    });
   },
-});
-keyDefinitions.registerAction([MODES.NORMAL], CMD_SEARCH, {
-  description: 'Search',
-}, async function() {
-  await this.session.setMode(MODES.SEARCH);
-  this.session.menu = new Menu(async (text) => {
-    const results = await this.session.document.search(text);
-    return Promise.all(
-      results.map(async ({ path, matches }) => {
-        const highlights = {};
-        matches.forEach((i) => {
-          highlights[i] = true;
-        });
-        return {
-          contents: await this.session.document.getLine(path.row),
-          renderOptions: { highlights },
-          fn: async () => {
-            await this.session.zoomInto(path);
-            await this.session.cursor.setPath(path);
-          },
-        };
-      })
-    );
-  });
-});
+));
 
-const CMD_MENU_SELECT = keyDefinitions.registerCommand({
-  name: 'MENU_SELECT',
-  default_hotkeys: {
-    insert_like: ['enter'],
+keyDefinitions.registerAction(new Action(
+  'move-cursor-search',
+  'Move the cursor',
+  async function({ motion, session }) {
+    if (motion == null) {
+      throw new Error('Motion command was not passed a motion');
+    }
+    await motion(session.menu.session.cursor, {pastEnd: true});
   },
-});
-keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_SELECT, {
-  description: 'Select current menu selection',
-}, async function() {
-  await this.session.menu.select();
-  return await this.session.setMode(MODES.NORMAL);
-});
+));
 
-const CMD_MENU_UP = keyDefinitions.registerCommand({
-  name: 'MENU_UP',
-  default_hotkeys: {
-    insert_like: ['ctrl+k', 'up', 'tab'],
+keyDefinitions.registerAction(new Action(
+  'search-delete-char-after',
+  'Delete character after the cursor (i.e. del key)',
+  async function({ session }) {
+    await session.menu.session.delCharsAfterCursor(1);
   },
-});
-keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_UP, {
-  description: 'Select previous menu selection',
-}, async function() {
-  return this.session.menu.up();
-});
+));
 
-const CMD_MENU_DOWN = keyDefinitions.registerCommand({
-  name: 'MENU_DOWN',
-  default_hotkeys: {
-    insert_like: ['ctrl+j', 'down', 'shift+tab'],
+keyDefinitions.registerAction(new Action(
+  'search-delete-char-before',
+  'Delete previous character (i.e. backspace key)',
+  async function({ session }) {
+    await session.menu.session.deleteAtCursor();
   },
-});
-keyDefinitions.registerAction([MODES.SEARCH], CMD_MENU_DOWN, {
-  description: 'Select next menu selection',
-}, async function() {
-  return this.session.menu.down();
-});
+));
+
+keyDefinitions.registerAction(new Action(
+  'search-select',
+  'Select current menu selection',
+  async function({ session }) {
+    await session.menu.select();
+    return await session.setMode('NORMAL');
+  },
+));
+
+keyDefinitions.registerAction(new Action(
+  'search-up',
+  'Select previous menu selection',
+  async function({ session }) {
+    return session.menu.up();
+  },
+));
+
+keyDefinitions.registerAction(new Action(
+  'search-down',
+  'Select next menu selection',
+  async function({ session }) {
+    return session.menu.down();
+  },
+));
 

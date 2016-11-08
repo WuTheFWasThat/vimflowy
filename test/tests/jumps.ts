@@ -17,6 +17,7 @@ describe('jumps', function() {
     t.sendKeys(']');
     t.expectViewRoot(1);
     t.expectCursor(1, 0);
+    t.expectJumpIndex(1);
 
     t.sendKey(jumpPreviousKey);
     t.expectJumpIndex(0);

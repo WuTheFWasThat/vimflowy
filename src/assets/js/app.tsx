@@ -31,6 +31,7 @@ import logger from './logger';
 import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';
 import KeyHandler from './keyHandler';
+import defaultKeyMappings, { KeyMappings } from './keyMappings';
 import * as DataStore from './datastore';
 import Document from './document';
 import Settings from './settings';
@@ -43,7 +44,7 @@ import keyDefinitions from './keyDefinitions';
 import './definitions';
 // load all plugins
 import '../../plugins';
-import KeyBindings from './keyBindings';
+import { KeyBindings } from './keyBindings';
 
 import AppComponent from './components/app';
 
@@ -130,8 +131,11 @@ async function create_session(dataSource, settings, doc, to_load) {
   let showingKeyBindings = await settings.getSetting('showKeyBindings');
 
   // hotkeys and key bindings
-  const initial_hotkey_settings = await settings.getSetting('hotkeys', {});
-  const keyBindings = new KeyBindings(keyDefinitions, initial_hotkey_settings);
+  const initial_mappings = await settings.getSetting('hotkeys', {});
+  const mappings = defaultKeyMappings.clone().merge(
+    new KeyMappings(initial_mappings)
+  );
+  const keyBindings = new KeyBindings(keyDefinitions, mappings);
 
   // session
   if (!await doc.hasChildren(doc.root.row)) {
@@ -252,7 +256,7 @@ async function create_session(dataSource, settings, doc, to_load) {
 
   const onExport = () => {
     const filename = 'vimflowy_hotkeys.json';
-    const content = JSON.stringify(keyBindings.hotkeys, null, 2);
+    const content = JSON.stringify(mappings.serialize(), null, 2);
     downloadFile(filename, 'application/json', content);
     session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
   };
@@ -301,19 +305,15 @@ async function create_session(dataSource, settings, doc, to_load) {
 
     keyEmitter.listen();
     keyEmitter.on('keydown', (key) => {
+      keyHandler.queueKey(key);
       // NOTE: this is just a best guess... e.g. the mode could be wrong
       // problem is that we process asynchronously, but need to
       // return synchronously
-      const handled = !!keyBindings.bindings[session.mode][key];
+      return keyBindings.bindings[session.mode].getKey(key) != null;
+    });
 
-      // fire and forget
-      // NOTE: could use handled_command event instead?
-      keyHandler.handleKey(key).then(() => {
-        renderMain();
-      }).catch((err) => {
-        setTimeout(() => { throw err; });
-      });
-      return handled;
+    keyHandler.on('handledKey', () => {
+      renderMain();
     });
 
     // prepare dom
@@ -348,7 +348,7 @@ async function create_session(dataSource, settings, doc, to_load) {
       });
 
       $(document).on('paste', async (e) => {
-        if (session.mode === Modes.modes.SETTINGS) {
+        if (session.mode === 'SETTINGS') {
           return;
         }
         e.preventDefault();

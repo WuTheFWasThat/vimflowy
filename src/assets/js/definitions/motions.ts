@@ -1,289 +1,192 @@
-import keyDefinitions from '../keyDefinitions';
+import keyDefinitions, { Motion } from '../keyDefinitions';
 
-const CMD_LEFT = keyDefinitions.registerCommand({
-  name: 'LEFT',
-  default_hotkeys: {
-    all: ['left'],
-    normal_like: ['h'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-left',
+  'Move cursor left',
+  async function(context) {
+    return async (cursor, options) => await cursor.left();
   },
-});
-keyDefinitions.registerMotion(CMD_LEFT, {
-  description: 'Move cursor left',
-}, async function() {
-  return async (cursor, options) => await cursor.left();
-});
+));
 
-const CMD_RIGHT = keyDefinitions.registerCommand({
-  name: 'RIGHT',
-  default_hotkeys: {
-    all: ['right'],
-    normal_like: ['l'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-right',
+  'Move cursor right',
+  async function(context) {
+    return async (cursor, options) => await cursor.right(options);
   },
-});
-keyDefinitions.registerMotion(CMD_RIGHT, {
-  description: 'Move cursor right',
-}, async function() {
-  return async (cursor, options) => await cursor.right(options);
-});
+));
 
-const CMD_UP = keyDefinitions.registerCommand({
-  name: 'UP',
-  default_hotkeys: {
-    all: ['up'],
-    normal_like: ['k'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-up',
+  'Move cursor up',
+  async function(context) {
+    return async (cursor, options) => await cursor.up(options);
   },
-});
-keyDefinitions.registerMotion(CMD_UP, {
-  description: 'Move cursor up',
-  multirow: true,
-}, async function() {
-  return async (cursor, options) => await cursor.up(options);
-});
+));
 
-const CMD_DOWN = keyDefinitions.registerCommand({
-  name: 'DOWN',
-  default_hotkeys: {
-    all: ['down'],
-    normal_like: ['j'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-down',
+  'Move cursor down',
+  async function(context) {
+    return async (cursor, options) => await cursor.down(options);
   },
-});
-keyDefinitions.registerMotion(CMD_DOWN, {
-  description: 'Move cursor down',
-  multirow: true,
-}, async function() {
-  return async (cursor, options) => await cursor.down(options);
-});
+));
 
-const CMD_HOME = keyDefinitions.registerCommand({
-  name: 'HOME',
-  default_hotkeys: {
-    all: ['home'],
-    normal_like: ['0', '^'],
-    insert_like: ['ctrl+a', 'meta+left'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-line-beginning',
+  'Move cursor to beginning of line',
+  async function(context) {
+    return async (cursor, options) => await cursor.home();
   },
-});
-keyDefinitions.registerMotion(CMD_HOME, {
-  description: 'Move cursor to beginning of line',
-}, async function() {
-  return async (cursor, options) => await cursor.home();
-});
+));
 
-const CMD_END = keyDefinitions.registerCommand({
-  name: 'END',
-  default_hotkeys: {
-    all: ['end'],
-    normal_like : ['$'],
-    insert_like: ['ctrl+e', 'meta+right'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-line-end',
+  'Move cursor to end of line',
+  async function(context) {
+    return async (cursor, options) => await cursor.end(options);
   },
-});
-keyDefinitions.registerMotion(CMD_END, {
-  description: 'Move cursor to end of line',
-}, async function() {
-  return async (cursor, options) => await cursor.end(options);
-});
+));
 
-const CMD_BEGINNING_WORD = keyDefinitions.registerCommand({
-  name: 'BEGINNING_WORD',
-  default_hotkeys: {
-    normal_like: ['b'],
-    insert_like: ['alt+b', 'alt+left'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-word-beginning',
+  'Move cursor to the first word-beginning before it',
+  async function(context) {
+    return async (cursor, options) => await cursor.beginningWord({cursor: options});
   },
-});
-keyDefinitions.registerMotion(CMD_BEGINNING_WORD, {
-  description: 'Move cursor to the first word-beginning before it',
-}, async function() {
-  return async (cursor, options) =>
-    await cursor.beginningWord({cursor: options});
-});
+));
 
-const CMD_END_WORD = keyDefinitions.registerCommand({
-  name: 'END_WORD',
-  default_hotkeys: {
-    normal_like: ['e'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-word-end',
+  'Move cursor to the first word-ending after it',
+  async function(context) {
+    return async (cursor, options) => await cursor.endWord({cursor: options});
   },
-});
-keyDefinitions.registerMotion(CMD_END_WORD, {
-  description: 'Move cursor to the first word-ending after it',
-}, async function() {
-  return async (cursor, options) =>
-    await cursor.endWord({cursor: options});
-});
+));
 
-const CMD_NEXT_WORD = keyDefinitions.registerCommand({
-  name: 'NEXT_WORD',
-  default_hotkeys: {
-    normal_like: ['w'],
-    insert_like: ['alt+f', 'alt+right'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-word-next',
+  'Move cursor to the beginning of the next word',
+  async function(context) {
+    return async (cursor, options) => await cursor.nextWord({cursor: options});
   },
-});
-keyDefinitions.registerMotion(CMD_NEXT_WORD, {
-  description: 'Move cursor to the beginning of the next word',
-}, async function() {
-  return async (cursor, options) =>
-    await cursor.nextWord({cursor: options});
-});
+));
 
-const CMD_BEGINNING_WWORD = keyDefinitions.registerCommand({
-  name: 'BEGINNING_WWORD',
-  default_hotkeys: {
-    normal_like: ['B'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-Word-beginning',
+  'Move cursor to the first Word-beginning before it',
+  async function(context) {
+    return async (cursor, options) => await cursor.beginningWord({cursor: options, whitespaceWord: true});
   },
-});
-keyDefinitions.registerMotion(CMD_BEGINNING_WWORD, {
-  description: 'Move cursor to the first Word-beginning before it',
-}, async function() {
-  return async (cursor, options) =>
-    await cursor.beginningWord({cursor: options, whitespaceWord: true});
-});
+));
 
-const CMD_END_WWORD = keyDefinitions.registerCommand({
-  name: 'END_WWORD',
-  default_hotkeys: {
-    normal_like: ['E'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-Word-end',
+  'Move cursor to the first Word-ending after it',
+  async function(context) {
+    return async (cursor, options) => await cursor.endWord({cursor: options, whitespaceWord: true});
   },
-});
-keyDefinitions.registerMotion(CMD_END_WWORD, {
-  description: 'Move cursor to the first Word-ending after it',
-}, async function() {
-  return async (cursor, options) =>
-    await cursor.endWord({cursor: options, whitespaceWord: true});
-});
+));
 
-const CMD_NEXT_WWORD = keyDefinitions.registerCommand({
-  name: 'NEXT_WWORD',
-  default_hotkeys: {
-    normal_like: ['W'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-Word-next',
+  'Move cursor to the beginning of the next Word',
+  async function(context) {
+    return async (cursor, options) => await cursor.nextWord({cursor: options, whitespaceWord: true});
   },
-});
-keyDefinitions.registerMotion(CMD_NEXT_WWORD, {
-  description: 'Move cursor to the beginning of the next Word',
-}, async function() {
-  return async (cursor, options) =>
-    await cursor.nextWord({cursor: options, whitespaceWord: true});
-});
+));
 
-const CMD_FIND_NEXT_CHAR = keyDefinitions.registerCommand({
-  name: 'FIND_NEXT_CHAR',
-  default_hotkeys: {
-    normal_like: ['f'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-find-next-char',
+  'Move cursor to next occurrence of character in line',
+  async function({ keyStream }) {
+    const key = await keyStream.dequeue();
+    return async (cursor, options) => await cursor.findNextChar(key, {cursor: options});
   },
-});
-keyDefinitions.registerMotion(CMD_FIND_NEXT_CHAR, {
-  description: 'Move cursor to next occurrence of character in line',
-}, async function() {
-  const key = this.keyStream.dequeue();
-  if (key === null) {
-    this.keyStream.wait();
-    return null;
-  }
-  return async (cursor, options) =>
-    await cursor.findNextChar(key, {cursor: options});
-});
+));
 
-const CMD_FIND_PREV_CHAR = keyDefinitions.registerCommand({
-  name: 'FIND_PREV_CHAR',
-  default_hotkeys: {
-    normal_like: ['F'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-find-prev-char',
+  'Move cursor to previous occurrence of character in line',
+  async function({ keyStream }) {
+    const key = await keyStream.dequeue();
+    return async (cursor, options) => await cursor.findPrevChar(key, {cursor: options});
   },
-});
-keyDefinitions.registerMotion(CMD_FIND_PREV_CHAR, {
-  description: 'Move cursor to previous occurrence of character in line',
-}, async function() {
-  const key = this.keyStream.dequeue();
-  if (key === null) {
-    this.keyStream.wait();
-    return null;
-  }
-  return async (cursor, options) =>
-    await cursor.findPrevChar(key, {cursor: options});
-});
+));
 
-const CMD_TO_NEXT_CHAR = keyDefinitions.registerCommand({
-  name: 'TO_NEXT_CHAR',
-  default_hotkeys: {
-    normal_like: ['t'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-to-next-char',
+  'Move cursor to just before next occurrence of character in line',
+  async function({ keyStream }) {
+    const key = await keyStream.dequeue();
+    return async (cursor, options) => await cursor.findNextChar(key, {cursor: options, beforeFound: true});
   },
-});
-keyDefinitions.registerMotion(CMD_TO_NEXT_CHAR, {
-  description: 'Move cursor to just before next occurrence of character in line',
-}, async function() {
-  const key = this.keyStream.dequeue();
-  if (key === null) {
-    this.keyStream.wait();
-    return null;
-  }
-  return async (cursor, options) =>
-    await cursor.findNextChar(key, {cursor: options, beforeFound: true});
-});
+));
 
-const CMD_TO_PREV_CHAR = keyDefinitions.registerCommand({
-  name: 'TO_PREV_CHAR',
-  default_hotkeys: {
-    normal_like: ['T'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-to-prev-char',
+  'Move cursor to just after previous occurrence of character in line',
+  async function({ keyStream }) {
+    const key = await keyStream.dequeue();
+    return async (cursor, options) => await cursor.findPrevChar(key, {cursor: options, beforeFound: true});
   },
-});
-keyDefinitions.registerMotion(CMD_TO_PREV_CHAR, {
-  description: 'Move cursor to just after previous occurrence of character in line',
-}, async function() {
-  const key = this.keyStream.dequeue();
-  if (key === null) {
-    this.keyStream.wait();
-    return null;
-  }
-  return async (cursor, options) =>
-    await cursor.findPrevChar(key, {cursor: options, beforeFound: true});
-});
+));
 
-// NOTE: for normal mode, this is done within the CMD_GO tree
-const CMD_GO_HOME = keyDefinitions.registerCommand({
-  name: 'GO_HOME',
-  default_hotkeys: {
-    insert_like: ['meta+up'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-visible-beginning',
+  'Go to the beginning of visible document',
+  async function(context) {
+    return async (cursor, options) => await cursor.visibleHome();
   },
-});
-keyDefinitions.registerMotion(CMD_GO_HOME, {
-  description: 'Go to beginning of visible document',
-}, async function() {
-  return async (cursor, options) => await cursor.visibleHome();
-});
+));
 
-const CMD_GO_END = keyDefinitions.registerCommand({
-  name: 'GO_END',
-  default_hotkeys: {
-    normal_like: ['G'],
-    insert_like: ['meta+down'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-visible-end',
+  'Go to end of visible document',
+  async function(context) {
+    return async (cursor, options) => await cursor.visibleEnd();
   },
-});
-keyDefinitions.registerMotion(CMD_GO_END, {
-  description: 'Go to end of visible document',
-}, async function() {
-  return async (cursor, options) => await cursor.visibleEnd();
-});
+));
 
-const CMD_NEXT_SIBLING = keyDefinitions.registerCommand({
-  name: 'NEXT_SIBLING',
-  default_hotkeys: {
-    normal_like: ['}'],
-    insert_like: ['alt+down'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-parent',
+  'Go to the parent of current line',
+  async function(context) {
+    return async (cursor, options) => await cursor.parent(options);
   },
-});
-keyDefinitions.registerMotion(CMD_NEXT_SIBLING, {
-  description: 'Move cursor to the next sibling of the current line',
-  multirow: true,
-}, async function() {
-  return async (cursor, options) => await cursor.nextSibling(options);
-});
+));
 
-const CMD_PREV_SIBLING = keyDefinitions.registerCommand({
-  name: 'PREV_SIBLING',
-  default_hotkeys: {
-    normal_like: ['{'],
-    insert_like: ['alt+up'],
+keyDefinitions.registerMotion(new Motion(
+  'motion-next-clone',
+  'Go to next copy of this clone',
+  async function({ session }) {
+    if (session.mode !== 'NORMAL') {
+      // TODO fix this
+      // doesn't work for visual_line mode due to zoomInto
+      return;
+    }
+    return async (cursor, options) => {
+      const newPath = await session.document.nextClone(cursor.path);
+      await cursor.setPath(newPath);
+      if (!(await session.isVisible(newPath))) {
+        await session.zoomInto(newPath);
+      }
+    };
   },
-});
-keyDefinitions.registerMotion(CMD_PREV_SIBLING, {
-  description: 'Move cursor to the previous sibling of the current line',
-  multirow: true,
-}, async function() {
-  return async (cursor, options) => await cursor.prevSibling(options);
-});
+));
+
+keyDefinitions.registerMotion(new Motion(
+  'motion-next-sibling',
+  'Move cursor to the next sibling of the current line',
+  async function(context) {
+    return async (cursor, options) => await cursor.nextSibling(options);
+  },
+));
+
+keyDefinitions.registerMotion(new Motion(
+  'motion-prev-sibling',
+  'Move cursor to the previous sibling of the current line',
+  async function(context) {
+    return async (cursor, options) => await cursor.prevSibling(options);
+  },
+));

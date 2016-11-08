@@ -9,8 +9,8 @@ import EventEmitter from './eventEmitter';
 import Document from './document';
 import Cursor from './cursor';
 import Session from './session';
-import KeyBindings from './keyBindings';
-import { KeyDefinitions, Command } from './keyDefinitions';
+import { KeyBindings } from './keyBindings';
+import { KeyDefinitions, Action, Motion } from './keyDefinitions';
 
 type PluginMetadata = {
   name: string;
@@ -41,9 +41,8 @@ export class PluginApi {
   public logger: Logger;
   private bindings: KeyBindings;
   private definitions: KeyDefinitions;
-  public commands: { [key: string]: Command };
 
-  private registrations: Array<any>; // TODO
+  private registrations: Array<() => void>;
 
   constructor(session, metadata, pluginManager) {
     this.session = session;
@@ -57,7 +56,6 @@ export class PluginApi {
 
     this.bindings = this.session.bindings;
     this.definitions = this.bindings.definitions;
-    this.commands = this.definitions.commands;
 
     this.registrations = [];
   }
@@ -82,7 +80,7 @@ export class PluginApi {
   //       (first try combining bindings into definitions)
   //       should also re-render mode table
   private _reapply_hotkeys() {
-    const err = this.session.bindings.reapply_hotkey_settings();
+    const err = this.session.bindings.update();
     if (err) {
       throw new errors.GenericError(`Error applying hotkeys: ${err}`);
     }
@@ -90,7 +88,9 @@ export class PluginApi {
 
   public registerMode(metadata) {
     const mode = Modes.registerMode(metadata);
-    this.registrations.push({type: 'mode', args: [mode]});
+    this.registrations.push(() => {
+      this.deregisterMode(mode);
+    });
     this._reapply_hotkeys();
     return mode;
   }
@@ -100,37 +100,33 @@ export class PluginApi {
     this._reapply_hotkeys();
   }
 
-  public registerCommand(metadata) {
-    const cmd = this.definitions.registerCommand(metadata);
-    this.registrations.push({type: 'command', args: [cmd]});
+  public registerMotion(name, desc, def) {
+    const motion = new Motion(name, desc, def);
+    this.definitions.registerMotion(motion);
+    this.registrations.push(() => {
+      this.deregisterMotion(motion.name);
+    });
     this._reapply_hotkeys();
-    return cmd;
+    return motion;
   }
 
-  public deregisterCommand(command) {
-    this.definitions.deregisterCommand(command);
-    this._reapply_hotkeys();
-  }
-
-  public registerMotion(commands, motion, definition) {
-    this.definitions.registerMotion(commands, motion, definition);
-    this.registrations.push({type: 'motion', args: [commands]});
+  public deregisterMotion(name) {
+    this.definitions.deregisterMotion(name);
     this._reapply_hotkeys();
   }
 
-  public deregisterMotion(commands) {
-    this.definitions.deregisterMotion(commands);
+  public registerAction(name, desc, def) {
+    const action = new Action(name, desc, def);
+    this.definitions.registerAction(action);
+    this.registrations.push(() => {
+      this.deregisterAction(action.name);
+    });
     this._reapply_hotkeys();
+    return action;
   }
 
-  public registerAction(modes, commands, action, definition) {
-    this.definitions.registerAction(modes, commands, action, definition);
-    this.registrations.push({type: 'action', args: [modes, commands]});
-    this._reapply_hotkeys();
-  }
-
-  public deregisterAction(modes, commands) {
-    this.definitions.deregisterAction(modes, commands);
+  public deregisterAction(name) {
+    this.definitions.deregisterAction(name);
     this._reapply_hotkeys();
   }
 
@@ -147,7 +143,9 @@ export class PluginApi {
   public registerListener(who, event, listener) {
     const emitter = this._getEmitter(who);
     emitter.on(event, listener);
-    this.registrations.push({type: 'listener', args: [who, event, listener]});
+    this.registrations.push(() => {
+      this.deregisterListener(who, event, listener);
+    });
   }
 
   public deregisterListener(who, event, listener) {
@@ -158,7 +156,9 @@ export class PluginApi {
   public registerHook(who, event, transform) {
     const emitter = this._getEmitter(who);
     emitter.addHook(event, transform);
-    this.registrations.push({type: 'hook', args: [who, event, transform]});
+    this.registrations.push(() => {
+      this.deregisterHook(who, event, transform);
+    });
     this.document.refreshRender();
   }
 
@@ -169,22 +169,8 @@ export class PluginApi {
   }
 
   public deregisterAll() {
-    this.registrations.reverse().forEach((registration) => {
-      if (registration.type === 'mode') {
-        this.deregisterMode.apply(this, registration.args);
-      } else if (registration.type === 'command') {
-        this.deregisterCommand.apply(this, registration.args);
-      } else if (registration.type === 'motion') {
-        this.deregisterMotion.apply(this, registration.args);
-      } else if (registration.type === 'action') {
-        this.deregisterAction.apply(this, registration.args);
-      } else if (registration.type === 'listener') {
-        this.deregisterListener.apply(this, registration.args);
-      } else if (registration.type === 'hook') {
-        this.deregisterHook.apply(this, registration.args);
-      } else {
-        throw new errors.GenericError `Unknown registration type ${registration.type}`;
-      }
+    this.registrations.reverse().forEach((deregisterFn) => {
+      deregisterFn();
     });
     this.registrations = [];
   }

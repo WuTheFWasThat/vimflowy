@@ -28,8 +28,36 @@ describe('text formatting', function() {
       },
     ]);
     t.sendKeys('u');
+    t.expect([
+      {
+        text:          'underline ',
+        underline:     '......... ',
+      },
+    ]);
+    t.sendKeys('u');
+    t.expect([
+      {
+        text:          'underline',
+        underline:     '.........',
+      },
+    ]);
+    t.sendKeys('u');
     t.expect(['']);
     // redo knows the format
+    t.sendKey('ctrl+r');
+    t.expect([
+      {
+        text:          'underline',
+        underline:     '.........',
+      },
+    ]);
+    t.sendKey('ctrl+r');
+    t.expect([
+      {
+        text:          'underline ',
+        underline:     '......... ',
+      },
+    ]);
     t.sendKey('ctrl+r');
     t.expect([
       {

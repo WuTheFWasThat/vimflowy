@@ -1,78 +1,69 @@
 import React from 'react';
 
-import KeyBindings, { KeyMapping } from '../keyBindings';
-import { Motions, ActionsForMode } from '../keyDefinitions';
-import { ModeId } from '../types';
+import { HotkeyMapping } from '../keyMappings';
+import { KeyDefinitions, Motion, Action } from '../keyDefinitions';
 
 type HotkeysTableProps = {
-  keyMap: KeyMapping;
-  motions: Motions;
-  actions: ActionsForMode;
+  keyMap: HotkeyMapping;
+  definitions: KeyDefinitions;
   ignoreEmpty?: boolean;
 }
 
 export default class HotkeysTableComponent extends React.Component<HotkeysTableProps, {}> {
   public render() {
     const keyMap = this.props.keyMap;
-    const motions = this.props.motions;
-    const actions = this.props.actions;
+    const definitions = this.props.definitions;
     const ignoreEmpty = this.props.ignoreEmpty;
 
-    const buildTableContents = function(bindings, recursed = false) {
-      const result: Array<React.ReactNode> = [];
-      for (const k in bindings) {
-        const v = bindings[k];
-        let keys;
-        if (k === 'MOTION') {
-          if (recursed) {
-            keys = ['<MOTION>'];
-          } else {
-            continue;
-          }
-        } else {
-          keys = keyMap[k];
-          if (!keys) {
-            continue;
-          }
-        }
+    const actionRows: Array<React.ReactNode> = [];
+    const motionRows: Array<React.ReactNode> = [];
 
-        if (keys.length === 0 && ignoreEmpty) {
-          continue;
-        }
-
-        const cellStyle = { fontSize: 10, border: '1px solid', padding: 5 };
-
-        const el = (
-          <tr key={k}>
-            <td key='keys' style={cellStyle}>
-              { keys.join(' OR ') }
-            </td>
-            <td key='desc' style={ Object.assign({width: '100%'}, cellStyle) }>
-              { v.description }
-              {
-                (() => {
-                  if (typeof v.definition === 'object') {
-                    return buildTableContents(v.definition, true);
-                  }
-                })()
-              }
-            </td>
-          </tr>
-        );
-
-        result.push(el);
+    Object.keys(keyMap).forEach((name) => {
+      const registration = definitions.getRegistration(name);
+      if (registration === null) { return; }
+      const mappings_for_name = keyMap[name];
+      if (mappings_for_name.length === 0 && ignoreEmpty) {
+        return;
       }
-      return result;
-    };
+
+      const cellStyle = { fontSize: 10, border: '1px solid', padding: 5 };
+
+      /*
+          <div className='tooltip' title={MODE_TYPES[mode_type].description}>
+          </div>
+      */
+
+      const el = (
+        <tr key={name}>
+          <td key='keys' style={cellStyle}>
+            { mappings_for_name.join(' OR ') }
+          </td>
+          <td key='desc' style={ Object.assign({width: '100%'}, cellStyle) }>
+            { registration.description }
+          </td>
+        </tr>
+      );
+
+      if (registration instanceof Motion) {
+        motionRows.push(el);
+      } else if (registration instanceof Action) {
+        actionRows.push(el);
+      } else {
+        throw new Error(
+          `Unexpected: unknown registration type for ${registration}`
+        );
+      }
+
+    });
 
     return (
       <div>
         {
           (() => {
             return [
-              {label: 'Motions', definitions: motions},
-              {label: 'Actions', definitions: actions},
-            ].map(({label, definitions}) => {
+              {label: 'Motions', rows: motionRows},
+              {label: 'Actions', rows: actionRows},
+            ].map(({label, rows}) => {
               return [
                 <h5 key={label + '_header'} style={{margin: '5px 10px'}}>
                   {label}
@@ -82,7 +73,7 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
                        style={{width: '100%'}}
                 >
                   <tbody>
-                    {buildTableContents(definitions)}
+                    {rows}
                   </tbody>
                 </table>,
               ];
@@ -93,20 +84,3 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
     );
   }
 }
-
-type ModeHotkeysTableProps = {
-  keyBindings: KeyBindings;
-  mode: ModeId;
-}
-export class ModeHotkeysTableComponent extends React.Component<ModeHotkeysTableProps, {}> {
-  public render() {
-    const keyBindings = this.props.keyBindings;
-    const mode = this.props.mode;
-    return <HotkeysTableComponent
-      keyMap={keyBindings.keyMaps[mode]}
-      motions={keyBindings.definitions.motions}
-      actions={keyBindings.definitions.actions_for_mode(mode)}
-    />;
-  }
-}
-

@@ -5,9 +5,20 @@ import $ from 'jquery';
 import React from 'react'; // tslint:disable-line no-unused-variable
 
 import * as Plugins from '../../assets/js/plugins';
-import * as Modes from '../../assets/js/modes';
 import { Logger } from '../../assets/js/logger';
 import { Row } from '../../assets/js/types';
+
+import defaultKeyMappings from '../../assets/js/keyMappings';
+
+defaultKeyMappings.registerModeMappings(
+  'NORMAL',
+  {
+    'toggle-time-tracking': [['Z', 'l']],
+    'clear-row-time': [['Z', 'c']],
+    'add-row-time': [['Z', 'a'], ['Z', '>']],
+    'subtract-row-time': [['Z', 's'], ['Z', '<']],
+  },
+);
 
 function pad(val, length, padChar = '0') {
   val += '';
@@ -25,7 +36,6 @@ class TimeTrackingPlugin {
   } | null;
 
   constructor(api) {
-    const that = this;
     this.api = api;
     this.logger = this.api.logger;
     this.logger.info('Loading time tracking');
@@ -94,59 +104,34 @@ class TimeTrackingPlugin {
       await this.onRowChange(this.currentPath, null);
     });
 
-    let CMD_TOGGLE = this.api.registerCommand({
-      name: 'TOGGLE',
-      default_hotkeys: {
-        normal_like: ['Z'],
+    this.api.registerAction(
+      'toggle-time-tracking',
+      'Toggle whether time is being logged',
+      async () => {
+        return await this.toggleLogging();
       },
-    });
-    let CMD_TOGGLE_LOGGING = this.api.registerCommand({
-      name: 'TOGGLE_LOGGING',
-      default_hotkeys: {
-        normal_like: ['l'],
+    );
+    this.api.registerAction(
+      'clear-row-time',
+      'Clear current row time',
+      async () => {
+        return await this.resetcurrentPath();
       },
-    });
-    let CMD_CLEAR_TIME = this.api.registerCommand({
-      name: 'CLEAR_TIME',
-      default_hotkeys: {
-        normal_like: ['c'],
+    );
+    this.api.registerAction(
+      'add-row-time',
+      'Add time to current row (in minutes)',
+      async ({ repeat }) => {
+        return await this.changeTimecurrentPath(repeat);
       },
-    });
-    let CMD_ADD_TIME = this.api.registerCommand({
-      name: 'ADD_TIME',
-      default_hotkeys: {
-        normal_like: ['>', 'a'],
+    );
+    this.api.registerAction(
+      'subtract-row-time',
+      'Subtract time from current row (in minutes)',
+      async ({ repeat }) => {
+        return await this.changeTimecurrentPath(-repeat);
       },
-    });
-    let CMD_SUBTRACT_TIME = this.api.registerCommand({
-      name: 'SUBTRACT_TIME',
-      default_hotkeys: {
-        normal_like: ['<', 's'],
-      },
-    });
-    this.api.registerAction([Modes.modes.NORMAL], CMD_TOGGLE, {
-      description: 'Toggle a setting',
-    }, {});
-    this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_TOGGLE_LOGGING], {
-      description: 'Toggle whether time is being logged',
-    }, async () => {
-      return await this.toggleLogging();
-    });
-    this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_CLEAR_TIME], {
-      description: 'Clear current row time',
-    }, async () => {
-      return await this.resetcurrentPath();
-    });
-    this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_ADD_TIME], {
-      description: 'Add time to current row (in minutes)',
-    }, async function() {
-      return await that.changeTimecurrentPath(this.repeat);
-    });
-    this.api.registerAction([Modes.modes.NORMAL], [CMD_TOGGLE, CMD_SUBTRACT_TIME], {
-      description: 'Subtract time from current row (in minutes)',
-    }, async function() {
-      return await that.changeTimecurrentPath(-this.repeat);
-    });
+    );
 
     setInterval(() => {
       if (this.currentPath !== null) {

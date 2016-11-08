@@ -3,7 +3,7 @@ import TestCase from '../testcase';
 
 describe('backspace', function() {
   it('works in simple case', async function() {
-    let t = new TestCase(['abc']);
+    const t = new TestCase(['abc']);
     t.sendKey('A');
     t.sendKey('backspace');
     t.sendKey('backspace');
@@ -12,7 +12,7 @@ describe('backspace', function() {
   });
 
   it('works deleting from second line', async function() {
-    let t = new TestCase(['abc', 'def']);
+    const t = new TestCase(['abc', 'def']);
     t.sendKeys('jli');
     t.sendKey('backspace');
     t.expect(['abc', 'ef']);
@@ -33,7 +33,7 @@ describe('backspace', function() {
   });
 
   it('works at end of line', async function() {
-    let t = new TestCase(['ab', 'cd']);
+    const t = new TestCase(['ab', 'cd']);
     t.sendKeys('jA');
     t.sendKey('backspace');
     t.sendKey('backspace');
@@ -46,7 +46,7 @@ describe('backspace', function() {
   });
 
   it('works from children', async function() {
-    let t = new TestCase([
+    const t = new TestCase([
       { text: 'ab', children: [
         'bc',
       ] },
@@ -98,7 +98,7 @@ describe('backspace', function() {
   });
 
   it('works with undo/redo', async function() {
-    let t = new TestCase([
+    const t = new TestCase([
       { text: 'ab', children: [
         'cd',
       ] },
@@ -108,11 +108,13 @@ describe('backspace', function() {
     t.expect([
       'abcd',
     ]);
+    t.expectCursor(1, 2);
     // t.sendKey('backspace');
     // t.expect([
     //   'acd'
     // ]);
     t.sendKey('esc');
+    t.expectCursor(1, 1);
     t.sendKeys('u');
     t.expect([
       { text: 'ab', children: [
@@ -123,6 +125,7 @@ describe('backspace', function() {
     t.expect([
       'abcd',
     ]);
+    t.expectCursor(1, 1);
     t.sendKey('x');
     t.expect([
       'acd',
@@ -131,7 +134,7 @@ describe('backspace', function() {
   });
 
   it('fails when both rows have children', async function() {
-    let t = new TestCase([
+    const t = new TestCase([
       { text: 'ab', children: [
         'cd',
       ] },
@@ -185,7 +188,7 @@ describe('backspace', function() {
 
 describe('delete', () =>
   it('works in basic case', async function() {
-    let t = new TestCase(['ab', 'cd']);
+    const t = new TestCase(['ab', 'cd']);
     t.sendKeys('i');
     t.sendKey('delete');
     t.expect(['b', 'cd']);

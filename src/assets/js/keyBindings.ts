@@ -1,193 +1,152 @@
-// imports
 import * as _ from 'lodash';
 
-// import * as utils from './utils';
-import * as Modes from './modes';
 import * as errors from './errors';
 import logger from './logger';
 import EventEmitter from './eventEmitter';
-import { KeyDefinitions } from './keyDefinitions';
+import mainDefinitions, { KeyDefinitions, Motion, Action } from './keyDefinitions';
+import defaultMappings, { HotkeyMapping, KeyMappings } from './keyMappings';
+import { Key } from './types';
 
-/*
-Terminology:
-      key       - a key corresponds to a keypress, including modifiers/special keys
-      command   - a command is a semantic event (see keyDefinitions.js)
-      mode      - same as vim's notion of modes.
-                  each mode determines the set of possible commands, and a new set of bindings
-      mode type - there are two mode types: insert-like and normal-like.
-                  Each mode falls into precisely one of these two categories.
-                  'insert-like' describes modes in which typing characters inserts the characters.
-                  Thus the only keys configurable as commands are those with modifiers.
-                  'normal-like' describes modes in which the user is not typing, and all keys are potential commands.
+// one of these per mode
+export class KeyBindingsTree {
+  private children: {[key: string]: KeyBindingsTree | Motion | Action};
+  public hasMotion: boolean;
+  public hasAction: boolean;
+  private definitions: KeyDefinitions;
+  private lastAdded: [string, Motion | Action] | null;
+  private path: Array<Key>; // sequence of keys to get here
 
-The Keybindings class is primarily responsible for dealing with hotkeys
-Given a hotkey mapping, it combines it with key definitions to create a bindings dictionary,
-also performing some validation on the hotkeys.
-Concretely, it exposes 2 main objects:
-      hotkeys:
-          a 2-layered mapping.  For each mode type and command name, contains a list of keys
-          this is the object the user can configure
-      bindings:
-          another 2-layer mapping.  For each mode and relevant key, maps to the corresponding command's function
-          this is the object used internally for handling keys (i.e. translating them to commands)
-It also internally maintains
-      keyMaps:
-          a 2-layer mapping similar to hotkeys.  For each mode and command name, a list of keys.
-          Used for rendering the hotkeys table
-          besides translating the mode types into each mode,
-          keyMaps differs from hotkeys by handles some quirky behavior,
-          such as making the DELETE_CHAR command always act like DELETE in visual/visual_line modes
-
-*/
-
-// TODO: merge this into keyDefinitions
-
-const MODES = Modes.modes;
-const MODE_TYPES = Modes.types;
-
-export type KeyMapping = any; // TODO
-export type KeyMappings = {[mode: number]: KeyMapping};
-type KeyBindingsRaw = any; // TODO
-
-type HotkeySettingsForMode = any; // TODO
-// for each mode, a set of hotkeys
-type HotkeySettings = {[key: string]: HotkeySettingsForMode};
-
-type MotionBindings = any; // TODO
-
-// takes key definitions and keyMappings, and combines them to key bindings
-function getBindings(definitions, keyMap) {
-  const bindings = {};
-  for (const name in definitions) {
-    let keys;
-    if (name === 'MOTION') {
-      keys = ['MOTION'];
-    } else if (name in keyMap) {
-      keys = keyMap[name];
-    } else {
-      continue;
-    }
-
-    const v = _.cloneDeep(definitions[name]);
-    v.name = name;
-
-    if (typeof v.definition === 'object') {
-      const [err, sub_bindings] = getBindings(v.definition, keyMap);
-      if (err) {
-        return [err, null];
-      } else {
-        v.definition = sub_bindings;
-      }
-    }
-
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      if (key in bindings) {
-        return [`Duplicate binding on key ${key}`, bindings];
-      }
-      bindings[key] = v;
-    }
-  }
-  return [null, bindings];
-}
-
-export default class KeyBindings extends EventEmitter {
-  public definitions: KeyDefinitions;
-
-  // a mapping from commands to keys
-  public keyMaps: KeyMappings;
-  // a recursive mapping from keys to commands
-  public bindings: KeyBindingsRaw;
-
-  public motion_bindings: MotionBindings;
-
-  private hotkey_settings: HotkeySettings;
-  public hotkeys: HotkeySettings; // includes defaults
-
-  constructor(definitions, hotkey_settings?: HotkeySettings) {
-    super();
-
+  constructor(path: Array<Key>, definitions: KeyDefinitions) {
+    this.children = {};
+    this.hasMotion = false;
+    this.hasAction = false;
+    this.lastAdded = null;
+    this.path = path;
     this.definitions = definitions;
-
-    // initialization mostly happens inside apply_hotkey_settings
-    const err = this.apply_hotkey_settings(hotkey_settings);
-    if (err) {
-      logger.error(`Failed to apply desired hotkeys ${hotkey_settings}`);
-      logger.error(err);
-      this.apply_default_hotkey_settings();
-    }
   }
 
-  // tries to apply new hotkey settings, returning an error if there was one
-  // new bindings may result if any of the following happen:
-  //   - hotkey settings change
-  //   - mode registered/deregistered
-  //   - command, motion, or action registered/deregistered
-  public apply_hotkey_settings(hotkey_settings: HotkeySettings = {}) {
-    // merge hotkey settings into default hotkeys (in case default hotkeys has some new things)
-    const hotkeys = {};
-    for (const mode_type in MODE_TYPES) {
-      hotkeys[mode_type] = _.extend({}, this.definitions.defaultHotkeys[mode_type], hotkey_settings[mode_type] || {});
-    }
-
-    // for each mode, get key mapping for that particular mode - a mapping from command to set of keys
-    const keyMaps = {};
-    for (const mode_type in MODE_TYPES) {
-      const mode_type_obj = MODE_TYPES[mode_type];
-      for (let i = 0; i < mode_type_obj.modes.length; i++) {
-        const mode = mode_type_obj.modes[i];
-        const modeKeyMap = {};
-        this.definitions.commands_for_mode(mode).forEach((command) => {
-          modeKeyMap[command] = hotkeys[mode_type][command].slice();
-        });
-
-        // TODO: something wrong with this logic
-        // this.definitions.get_motions(!Modes.getMode(mode).metadata.within_row).forEach((command) => {
-        this.definitions.get_motions(true).forEach((command) => {
-          modeKeyMap[command] = hotkeys[mode_type][command].slice();
-        });
-
-        keyMaps[mode] = modeKeyMap;
+  public print(tabs = 0) {
+    const prefix = ' '.repeat(tabs * 2);
+    Object.keys(this.children).forEach((key) => {
+      const child: any = this.getKey(key);
+      if (child == null) { return; } // this shouldn't happen
+      if (child instanceof KeyBindingsTree) {
+        console.log(prefix, key, ':'); // tslint:disable-line:no-console
+        child.print(tabs + 1);
+      } else {
+        console.log(prefix, key, ':', child.name); // tslint:disable-line:no-console
       }
-    }
-
-    const bindings = {};
-    for (const mode_name in MODES) {
-      const mode = MODES[mode_name];
-      const [err, mode_bindings] = getBindings(this.definitions.actions_for_mode(mode), keyMaps[mode]);
-      if (err) { return `Error getting bindings for ${mode_name}: ${err}`; }
-      bindings[mode] = mode_bindings;
-    }
-
-    const motion_bindings = {};
-    for (const mode_name in MODES) {
-      const mode = MODES[mode_name];
-      const [err, mode_bindings] = getBindings(this.definitions.motions, keyMaps[mode]);
-      if (err) { return `Error getting motion bindings for ${mode_name}: ${err}`; }
-      motion_bindings[mode] = mode_bindings;
-    }
-
-    this.hotkeys = hotkeys;
-    this.bindings = bindings;
-    this.motion_bindings = motion_bindings;
-    this.keyMaps = keyMaps;
-
-    this.hotkey_settings = hotkey_settings;
-    this.emit('applied_hotkey_settings', hotkey_settings);
-    return null;
+    });
   }
 
-  // apply default hotkeys
-  public apply_default_hotkey_settings() {
-    const err = this.apply_hotkey_settings({});
-    return errors.assert_equals(err, null, 'Failed to apply default hotkeys');
+  public getKey(key: Key): KeyBindingsTree | Motion | Action | null {
+    return this.children[key] || null;
   }
 
-  public reapply_hotkey_settings() {
-    const err = this.apply_hotkey_settings(this.hotkey_settings);
-    return err;
+  protected addMappingHelper(
+    keys: Array<Key>, index: number, name: string,
+    mapped: Action | Motion
+  ) {
+    const key = keys[index];
+
+    let child = this.children[key];
+    if (child instanceof Motion) {
+      throw new Error(
+        `Multiple registrations for key sequence ${keys.slice(0, index + 1)}:
+        ${name} and ${child.name}`
+      );
+    }
+    if (child instanceof Action) {
+      throw new Error(
+        `Multiple registrations for key sequence ${keys.slice(0, index + 1)}:
+        ${name} and ${child.name}`
+      );
+    }
+
+    if (index === keys.length - 1) {
+      if (child != null) {
+        throw new errors.GenericError(
+          `Multiple registrations for key sequence ${keys.slice(0, index)}:
+          ${name} and ${child.lastAdded && child.lastAdded[0]}`
+        );
+      }
+
+      this.children[key] = mapped;
+    } else {
+      // need new variable for type safety
+      let childBindings: KeyBindingsTree;
+      if (child == null) {
+        childBindings = new KeyBindingsTree(this.path.concat([key]), this.definitions);
+        this.children[key] = childBindings;
+      } else {
+        childBindings = child;
+      }
+      childBindings.addMappingHelper(keys, index + 1, name, mapped);
+    }
+
+    if (mapped instanceof Motion) {
+      this.hasMotion = true;
+    } else {
+      this.hasAction = true;
+    }
+    this.lastAdded = [name, mapped];
   }
 
-  // TODO getBindingsForMode: (mode) -> return @bindings[mode]
+  public addMapping(name: string, keys: Array<Key>) {
+    const mapped = this.definitions.getRegistration(name);
+    if (mapped == null) {
+      // Ignore mappings if there's no definition
+      // This can happen if e.g. we saved keymappings but then turned off a plugin
+      logger.warn(`Attempted to register hotkey for ${name}, but no definition found`);
+      return;
+    }
+
+    this.addMappingHelper(keys, 0, name, mapped);
+  }
 }
 
+function makeBindings(definitions: KeyDefinitions, mappings: KeyMappings) {
+  const allBindings = {};
+  _.map(mappings.mappings, (mapping: HotkeyMapping, mode: string) => {
+    const bindings = new KeyBindingsTree([], definitions);
+    _.map(mapping, (keySequences: Array<Array<Key>>, command: string) => {
+      keySequences.forEach((sequence) => {
+        bindings.addMapping(command, sequence);
+      });
+    });
+    allBindings[mode] = bindings;
+  });
+  return allBindings;
+}
+
+export class KeyBindings extends EventEmitter {
+  public bindings: {[mode: string]: KeyBindingsTree};
+  public definitions: KeyDefinitions;
+  public mappings: KeyMappings;
+
+  constructor(definitions: KeyDefinitions, mappings: KeyMappings) {
+    super();
+    this.definitions = definitions;
+    this.setMappings(mappings);
+  }
+
+  public setDefaultMappings() {
+    this.mappings = defaultMappings;
+    this.update();
+  }
+
+  public setMappings(mappings: KeyMappings) {
+    this.mappings = mappings;
+    this.update();
+  }
+
+  // NOTE: definitions can change so that this is necessary to rerun
+  // TODO: make it able to recompute differentially?
+  public update() {
+    this.bindings = makeBindings(this.definitions, this.mappings);
+  }
+}
+
+export default function makeDefaultBindings() {
+  return new KeyBindings(mainDefinitions, defaultMappings);
+};

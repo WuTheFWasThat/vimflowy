@@ -1,5 +1,6 @@
 /*
-Takes in keys, and, based on the keybindings (see keyBindings.js), manipulates the session (see session.js)
+Takes in keys, and, based on the keybindings (see keyBindings.ts),
+manipulates the session (see session.ts)
 
 The KeyHandler class manages the state of what keys have been input, dealing with the logic for
 - handling multi-key sequences, i.e. a key that semantically needs another key (e.g. the GO command, `g` in vim)
@@ -10,113 +11,97 @@ The KeyHandler class manages the state of what keys have been input, dealing wit
 - telling the session when to save (i.e. the proper checkpoints for undo and redo)
 It maintains custom logic for this, for each mode.
 (NOTE: hopefully this logic can be more unified!  It is currently quite fragile)
-
-the KeyStream class is a helper class which deals with queuing and checkpointing a stream of key events
 */
 
+// TODO/NOTE: for now, macros/repeat sequences still save keys and not commands
+// it's tricky to fix due to
+// the commands not being serializable (e.g. in the case where arguments are motions)
+// or when the command awaits from keyStream
+
 import EventEmitter from './eventEmitter';
-import * as errors from './errors';
 import Session from './session';
-import KeyBindings from './keyBindings';
+import { KeyBindings, KeyBindingsTree } from './keyBindings';
+import { Motion, Action, ActionContext, motionKey, SequenceAction } from './keyDefinitions';
 // import Menu from './menu';
 import * as Modes from './modes';
+import Queue from './utils/queue';
 // import * as constants from './constants';
 
-import { Key, MacroMap } from './types';
+import { Key, ModeId } from './types';
 import logger from './logger';
 
-// const MODES = Modes.modes;
-
-// manages a stream of keys, with the ability to
-// - queue keys
-// - wait for more keys
-// - flush sequences of keys
-// - save sequences of relevant keys
+// Simple stream class where you can
+// enqueue synchronously, and dequeue asynchronously
+// (waiting for the next enqueue if nothing is available)
 export class KeyStream extends EventEmitter {
-  public queue: Array<Key>;
-  private lastSequence: Array<Key>;
-  private index: number;
-  private checkpoint_index: number;
-  private waiting: boolean;
+  private queue: Queue<Key>;
 
-  constructor(keys = []) {
+  public lastSequence: Array<Key>;
+  private curSequence: Array<Key>;
+  // where up to curSequence to actually keep
+  private saveIndex: number;
+
+  constructor(keys: Array<Key> = []) {
     super();
+    this.queue = new Queue<Key>(keys);
 
-    this.queue = []; // queue so that we can read group of keys, like 123 or fy
-    this.lastSequence = []; // last key sequence
-    this.index = 0;
-    this.checkpoint_index = 0;
-    this.waiting = false;
-
-    keys.forEach((key) => this.enqueue(key));
+    this.lastSequence = [];
+    this.curSequence = [];
+    this.saveIndex = 0;
   }
 
   public empty() {
-    return this.queue.length === 0;
+    return this.queue.empty();
   }
 
-  public done() {
-    return this.index === this.queue.length;
+  public async dequeue(): Promise<Key> {
+    const val = await this.queue.dequeue();
+    this.curSequence.push(val);
+    this.emit('dequeue', val);
+    return val;
   }
 
-  public rewind() {
-    this.index = this.checkpoint_index;
+  public enqueue(val) {
+    this.queue.enqueue(val);
   }
 
-  public enqueue(key) {
-    this.queue.push(key);
-    this.waiting = false;
+  public keep() {
+    this.saveIndex = this.curSequence.length;
   }
 
-  public dequeue(): string | null {
-    if (this.index === this.queue.length) { return null; }
-    return this.queue[this.index++];
+  public drop() {
+    this.curSequence = this.curSequence.slice(0, this.saveIndex);
   }
 
-  public peek(): string | null {
-    if (this.index === this.queue.length) { return null; }
-    return this.queue[this.index + 1];
-  }
-
-  public checkpoint() {
-    this.checkpoint_index = this.index;
-  }
-
-  // means we are waiting for another key before we can do things
-  public wait() {
-    this.waiting = true;
-    this.rewind();
+  public dropAll() {
+    this.curSequence = [];
   }
 
   public save() {
-    const processed = this.forget();
-    this.lastSequence = processed;
-    this.emit('save');
-  }
-
-  // forgets the most recently processed n items
-  public forget(n: number | null = null) {
-    if (n === null) {
-      // forget everything remembered, by default
-      n = this.index;
+    if (this.curSequence.length) {
+      this.lastSequence = this.curSequence;
+      this.curSequence = [];
+      this.saveIndex = 0;
     }
-
-    errors.assert(this.index >= n);
-    const dropped = this.queue.splice(this.index - n, n);
-    this.index = this.index - n;
-    return dropped;
   }
 }
+
+type GetCommandOptions = {
+  session: Session,
+  mode: ModeId,
+  repeat: number,
+};
+
+type ActionRecord = {
+  action: Action,
+  motion: Motion | null,
+  context: ActionContext,
+};
 
 export default class KeyHandler extends EventEmitter {
   private session: Session;
   private keyBindings: KeyBindings;
-  private macros: MacroMap;
-  private recording: {
-    stream: KeyStream,
-    key: Key,
-  } | null;
-  private keyStream: KeyStream;
+  public keyStream: KeyStream;
   private processQueue: Promise<any>;
 
   constructor(session, keyBindings) {
@@ -125,193 +110,186 @@ export default class KeyHandler extends EventEmitter {
 
     this.keyBindings = keyBindings;
 
-    this.macros = {};
-    this.session.document.store.getMacros().then((macros) => {
-      this.macros = macros;
-    });
-    this.recording = null;
-
     this.keyStream = new KeyStream();
-    this.keyStream.on('save', () => {
-      return this.session.save();
-    });
 
     this.processQueue = Promise.resolve();
   }
 
-  // for macros
-
-  public beginRecording(key) {
-    this.recording = {
-      stream: new KeyStream(),
-      key: key,
-    };
-  }
-
-  public async finishRecording() {
-    if (!this.recording) {
-      throw new Error('Tried to finish recording, but there was no recording');
-    }
-    const macro = this.recording.stream.queue;
-    this.macros[this.recording.key] = macro;
-    await this.session.document.store.setMacros(this.macros);
-    this.recording = null;
-  }
-
   public async playRecording(recording) {
     // the recording shouldn't save, (i.e. no @session.save)
+    const oldSave = this.session.save;
+    this.session.save = () => null;
     const recordKeyStream = new KeyStream(recording);
-    return await this._processKeys(recordKeyStream);
+    await this._processKeys(recordKeyStream);
+    this.session.save = oldSave;
   }
 
   // general handling
 
-  public async handleKey(key) {
+  public queueKey(key) {
     logger.info('Handling key:', key);
-    this.keyStream.enqueue(key);
-    if (this.recording) {
-      this.recording.stream.enqueue(key);
+    // TODO NOTE: we could record too many keys for macros, in theory,
+    // since processing is slow
+    const hadWaiting = this.keyStream.enqueue(key);
+    if (!hadWaiting) {
+      this.processKeys(); // FIRE AND FORGET
     }
-    return await this.processKeys(this.keyStream);
+  }
+
+  private async handleRecord(keyStream, record: ActionRecord) {
+    const old_mode = this.session.mode;
+    const mode_obj = Modes.getMode(old_mode);
+    let { action, context, motion } = record;
+    context = await mode_obj.transform_context(context);
+    logger.info('Action:', action.name);
+    if (motion) {
+      logger.info('Motion:', motion.name);
+      context.motion = await motion.definition.call(motion.definition, context);
+    }
+    logger.debug('Context:', context);
+
+    await mode_obj.beforeEvery(action.name, context);
+    if (action.metadata.sequence === SequenceAction.DROP_ALL) {
+      keyStream.dropAll();
+    } else if (action.metadata.sequence === SequenceAction.DROP) {
+      keyStream.drop();
+    } else {
+      keyStream.keep();
+    }
+    await action.definition.call(action.definition, context);
+
+    const new_mode_obj = Modes.getMode(this.session.mode);
+    await new_mode_obj.every(action.name, context, old_mode);
   }
 
   private async _processKeys(keyStream) {
-    while (!keyStream.done() && !keyStream.waiting) {
-      keyStream.checkpoint();
-      const { handled, result } = await this.getCommand(this.session.mode, keyStream);
-      if (!handled) {
-        const mode_obj = Modes.getMode(this.session.mode);
-        mode_obj.handle_bad_key(keyStream);
-      } else if (result) {
-        const { fn, context, args, commands } = result;
-        logger.info(
-          'Command:', context.repeat,
-          commands.map((cmd) => cmd.name).join('.')
-        );
-        await fn.apply(context, args);
-        const mode_obj = Modes.getMode(this.session.mode);
-        await mode_obj.every(this.session, this.keyStream);
+    while (!keyStream.empty()) {
+      const record = await this.getCommand(keyStream);
+      if (record != null) {
+        await this.handleRecord(keyStream, record);
+        this.session.emit('handledKey');
+        this.emit('handledKey');
       }
-      this.session.emit('handledKey');
     }
   }
 
-  public processKeys(keyStream) {
-    this.processQueue = this.processQueue.then(async () => {
-      await this._processKeys(keyStream);
-    });
+  public chain(next) {
+    this.processQueue = this.processQueue.then(next);
     return this.processQueue;
   }
 
-  // returns:
-  //   handled: whether we processed all keys (did not encounter a bad key)
-  //   fn: a function to apply
-  //   args: arguments to apply
-  //   context: a context to execute the function in
-  public async getCommand(mode, keyStream, bindings: any = null, repeat = 1) {
-    if (bindings === null) {
-      bindings = this.keyBindings.bindings[mode];
-    }
+  public processKeys() {
+    this.chain(async () => {
+      await this._processKeys(this.keyStream);
+    }).catch((err) => {
+      // expose any errors
+      setTimeout(() => { throw err; });
+    }).then(() => {
+      this.emit('processedQueue');
+    });
+  }
 
-    let context = {
+  public async getCommand(keyStream: KeyStream): Promise<ActionRecord | null> {
+    const mode = this.session.mode;
+    const mode_obj = Modes.getMode(mode);
+
+    const bindings = this.keyBindings.bindings[this.session.mode];
+    let key = await keyStream.dequeue();
+    let context: ActionContext = {
       mode,
       session: this.session,
-      repeat,
+      repeat: 1,
       keyStream,
       keyHandler: this,
     };
 
-    const mode_obj = Modes.getMode(mode);
-
-    let key = keyStream.dequeue();
-
-    const args: Array<any> = [];
-
     [key, context] = await mode_obj.transform_key(key, context);
     if (key === null) {
-      // either key was already null, or
       // a transform acted (which, for now, we always consider not bad.  could change)
-      return {
-        handled: true,
-      };
+      // TODO TODO TODO this is wrong behavior
+      // have transform key return an action?
+      return null;
     }
 
-    let definition;
-    let commands;
-    if (key in bindings) {
-      const info = bindings[key];
-      definition = info.definition;
-      commands = info.commands;
-    } else {
-      if (!('MOTION' in bindings)) {
-        return {
-          handled: false,
-        };
-      }
+    return this.getAction(keyStream, key, bindings, context);
+  }
 
-      // note: this uses original bindings to determine what's a motion
-      const {
-        fn: motion, commands: motioncommands,
-        repeat: motionrepeat, handled,
-      } = await this.getMotion(
-        keyStream, key, this.keyBindings.motion_bindings[mode], context.repeat
-      );
-      context.repeat = motionrepeat;
+  public async getAction(
+    keyStream: KeyStream, key: Key,
+    bindings: KeyBindingsTree, context: ActionContext
+  ): Promise<ActionRecord | null> {
+
+    let info: KeyBindingsTree | Motion | Action | null = bindings.getKey(key);
+    let action: Action;
+    let motion: Motion | null = null;
+
+    if (info instanceof KeyBindingsTree) {
+      if (!info.hasAction) {
+        return null;
+      }
+      key = await keyStream.dequeue();
+      return await this.getAction(keyStream, key, info, context);
+    }
+    if (info instanceof Action) {
+      action = info;
+    } else if (info instanceof Motion) {
+      motion = info;
+      // use original bindings' motion function
+      const moveInfo = this.keyBindings.bindings[context.mode].getKey(motionKey);
+      if (moveInfo == null) {
+        return null;
+      }
+      if (moveInfo instanceof KeyBindingsTree) {
+        throw new Error(`${motionKey} should be registered as the final key`);
+      }
+      if (moveInfo instanceof Motion) {
+        throw new Error(`${motionKey} should be registered for an action`);
+      }
+      action = moveInfo;
+    } else { // info is null
+      const moveInfo = bindings.getKey(motionKey);
+      if (moveInfo == null) { // no handler for motion
+        return null;
+      }
+      if (moveInfo instanceof KeyBindingsTree) {
+        throw new Error(`${motionKey} should be registered as the final key`);
+      }
+      if (moveInfo instanceof Motion) {
+        throw new Error(`${motionKey} should be registered for an action`);
+      }
+      action = moveInfo;
+      let motion_repeat;
+      [motion_repeat, key] = await this.getRepeat(keyStream, key);
+      context.repeat = context.repeat * motion_repeat;
+      motion = await this.getMotion(keyStream, key, this.keyBindings.bindings[context.mode]);
       if (motion === null) {
-        return {
-          handled,
-        };
+        return null;
       }
-
-      args.push(motion);
-      // tslint:disable-next-line:no-string-literal
-      const info = bindings['MOTION'];
-      definition = info.definition;
-      commands = info.commands;
-      commands = commands.concat(motioncommands);
+      motion = motion;
     }
 
-    if (typeof definition === 'object') {
-      // recursive definition
-      return await this.getCommand(mode, keyStream, definition, context.repeat);
-    } else if (typeof definition === 'function') {
-      context = await mode_obj.transform_context(context);
-      return {
-        handled: true,
-        result: {
-          commands: commands,
-          fn: definition,
-          args: args,
-          context: context,
-        },
-      };
-    } else {
-      throw new errors.UnexpectedValue('definition', definition);
-    }
+    return {
+      motion,
+      action,
+      context,
+    };
   }
 
   // NOTE: this should maybe be normal-mode specific
   //       but it would also need to be done for the motions
   // takes keyStream, key, returns repeat number and key
-  public getRepeat(keyStream, key: string | null = null): [number | null, string | null] {
-    if (key === null) {
-      key = keyStream.dequeue();
-    }
+  public async getRepeat(
+    keyStream: KeyStream, key: string
+  ): Promise<[number, string]> {
     const begins = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
     const continues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x => x.toString()));
 
-    if (key === null) {
-      return [null, null];
-    }
     if (begins.indexOf(key) === -1) {
       return [1, key];
     }
     let numStr = '' + key;
     while (true) {
-      key = keyStream.dequeue();
-      if (key === null) {
-        return [null, null];
-      }
+      key = await keyStream.dequeue();
       if (continues.indexOf(key) === -1) {
         break;
       }
@@ -321,42 +299,22 @@ export default class KeyHandler extends EventEmitter {
   }
 
   // useful when you expect a motion
-  private async getMotion(keyStream, motionKey, bindings, repeat) {
-    let motionRepeat;
-    [motionRepeat, motionKey] = this.getRepeat(keyStream, motionKey);
-    repeat = repeat * motionRepeat;
-
-    if (motionKey === null) {
-      keyStream.wait();
-      return {
-        fn: null, commands: null,
-        repeat, handled: true,
-      };
-    }
-
-    if (!(motionKey in bindings)) {
-      return {
-        fn: null, commands: null,
-        repeat, handled: false,
-      };
-    }
-
-    const { definition, commands } = bindings[motionKey];
-    if (typeof definition === 'object') {
-      // recursive definition
-      return await this.getMotion(keyStream, null, definition, repeat);
-    } else if (typeof definition === 'function') {
-      const context = {
-        session: this.session,
-        repeat,
-        keyStream,
-        keyHandler: this,
-      };
-      const motion = await definition.apply(context, []);
-      return { fn: motion, commands, repeat, handled: true };
-
+  private async getMotion(
+    keyStream: KeyStream, key: Key, bindings: KeyBindingsTree
+  ): Promise<Motion | null> {
+    const info = bindings.getKey(key);
+    if (info == null) {
+      return null;
+    } else if (info instanceof KeyBindingsTree) {
+      if (!info.hasMotion) {
+        return null;
+      }
+      key = await keyStream.dequeue();
+      return await this.getMotion(keyStream, key, info);
+    } else if (info instanceof Action) {
+      return null;
     } else {
-      throw new errors.UnexpectedValue('definition', definition);
+      return info;
     }
   }
 }

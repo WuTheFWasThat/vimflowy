@@ -3,7 +3,7 @@ import TestCase from '../testcase';
 
 describe('find', function() {
   it('works in basic cases', async function() {
-    let t = new TestCase(['Peter Piper picked a peck of pickled peppers']);
+    const t = new TestCase(['Peter Piper picked a peck of pickled peppers']);
     t.sendKeys('fprd');
     t.expect(['Peter Pider picked a peck of pickled peppers']);
     t.sendKeys('fprl');
@@ -20,7 +20,7 @@ describe('find', function() {
   });
 
   it('works backwards in basic cases', async function() {
-    let t = new TestCase(['Peter Piper picked a peck of pickled peppers']);
+    const t = new TestCase(['Peter Piper picked a peck of pickled peppers']);
     t.sendKeys('$Fpx');
     t.expect(['Peter Piper picked a peck of pickled pepers']);
     t.sendKeys('3FpTpra');

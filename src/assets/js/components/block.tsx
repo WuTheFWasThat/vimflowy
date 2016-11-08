@@ -6,8 +6,6 @@ import Spinner from './spinner';
 import Session from '../session';
 import { CachedRowInfo } from '../document';
 import Path from '../path';
-import * as Modes from '../modes';
-const MODES = Modes.modes;
 import { CursorsInfoTree } from '../cursor';
 
 type RowProps = {
@@ -191,7 +189,7 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
 
     if (this.props.topLevel && !children.length) {
       let message = 'Nothing here yet.';
-      if (session.mode === MODES.NORMAL) {
+      if (session.mode === 'NORMAL') {
         // TODO move this
         message += ' Press `o` to start adding content!';
       }

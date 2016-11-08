@@ -38,6 +38,10 @@ describe('delete to home/end in insert mode', function() {
     t.expect(['some ']);
     t.sendKey('esc');
     t.sendKeys('u');
+    t.expect(['']);
+    t.sendKeys('u');
+    t.expect(['some ']);
+    t.sendKeys('u');
     t.expect(['some random text']);
     await t.done();
 
@@ -50,6 +54,10 @@ describe('delete to home/end in insert mode', function() {
     t.sendKey('ctrl+y');
     t.expect(['random text']);
     t.sendKey('esc');
+    t.sendKeys('u');
+    t.expect(['']);
+    t.sendKeys('u');
+    t.expect(['random text']);
     t.sendKeys('u');
     t.expect(['some random text']);
     await t.done();
