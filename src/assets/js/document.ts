@@ -7,7 +7,194 @@ import * as constants from './constants';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 import { CachingDataStore } from './datastore';
-import { Row, SerializedLine } from './types';
+import { Row, Line, SerializedLine } from './types';
+
+/*
+ * Immutable representation of what we know about a row,
+ * including all descendants (recursively) by reference.
+ * Child is null, if we haven't loaded it yet
+ */
+type RowInfo = {
+  line: Line;
+  collapsed: boolean;
+  // TODO use Immutable.List?
+  parentRows: Array<Row>;
+  childRows: Array<Row>;
+  pluginData: any;
+}
+class CachedRowInfo {
+  private _row: Row;
+  private _info: RowInfo;
+  // TODO: use immutable list?
+  private _children: Array<CachedRowInfo | null>;
+  private _loaded: boolean;
+
+  constructor(
+    row: Row,
+    info: RowInfo,
+    children: Array<CachedRowInfo | null>,
+  ) {
+    this._row = row;
+    this._info = info;
+    this._children = children;
+
+    let loaded = true;
+    if (!this._info.collapsed) {
+      this._children.forEach((child) => {
+        if (child == null) {
+          loaded = false;
+        } else {
+          if (!child.loaded) {
+            loaded = false;
+          }
+        }
+      });
+    }
+    this._loaded = loaded;
+  }
+
+  public get children() {
+    return this._children;
+  }
+  public get parentRows() {
+    return this._info.parentRows;
+  }
+  public get childRows() {
+    return this._info.childRows;
+  }
+  public get line() {
+    return this._info.line;
+  }
+  public get row() {
+    return this._row;
+  }
+  public get collapsed() {
+    return this._info.collapsed;
+  }
+  public get loaded() {
+    return this._loaded;
+  }
+
+  public setChildren(children): CachedRowInfo {
+    return new CachedRowInfo(this._row, this._info, children);
+  }
+  private setInfo(info: RowInfo): CachedRowInfo {
+    return new CachedRowInfo(this._row, info, this._children);
+  }
+  public setLine(line: Line): CachedRowInfo {
+    const info: RowInfo = _.cloneDeep(this._info);
+    info.line = line;
+    return this.setInfo(info);
+  }
+  public setCollapsed(collapsed: boolean): CachedRowInfo {
+    const info: RowInfo = _.cloneDeep(this._info);
+    info.collapsed = collapsed;
+    return this.setInfo(info);
+  }
+  public setChildRows(childRows: Array<Row>): CachedRowInfo {
+    const info: RowInfo = _.cloneDeep(this._info);
+    info.childRows = childRows;
+    return this.setInfo(info);
+  }
+  public setParentRows(parentRows: Array<Row>): CachedRowInfo {
+    const info: RowInfo = _.cloneDeep(this._info);
+    info.parentRows = parentRows;
+    return this.setInfo(info);
+  }
+  public setPluginData(pluginData: any): CachedRowInfo {
+    const info: RowInfo = _.cloneDeep(this._info);
+    info.pluginData = pluginData;
+    return this.setInfo(info);
+  }
+}
+
+class DocumentCache {
+  private cache: {[row: number]: CachedRowInfo};
+
+  constructor() {
+    this.cache = {};
+  }
+
+  public loadRow(row: Row, info: RowInfo) {
+    const cached = new CachedRowInfo(row, info, info.childRows.map((childRow) => {
+      return this.get(childRow);
+    }));
+    this.set(row, cached);
+    return cached;
+  }
+
+  public isCached(row: Row) {
+    return !!this.get(row);
+  }
+
+  /*
+   * Updates childRows for a given row
+   * Call this function if a row changed
+   */
+  private bubbleUpdate(row: Row) {
+    const cachedRow = this.get(row);
+    if (!cachedRow) {
+      return;
+    }
+    cachedRow.parentRows.forEach((parentRow) => {
+      const parentCachedRow = this.get(parentRow);
+      if (!parentCachedRow) {
+        return;
+      }
+      // NOTE: this will cause more bubbled updates
+      this.set(parentRow, this.updateChildren(parentCachedRow));
+    });
+  }
+
+  private set(row: Row, cachedRow: CachedRowInfo) {
+    this.cache[row] = cachedRow;
+    this.bubbleUpdate(row);
+  }
+
+  private update(row: Row, updateFn: (CachedRowInfo) => CachedRowInfo, force?: boolean) {
+    const cachedRow = this.get(row);
+    if (!cachedRow) {
+      if (force) {
+        throw new Error(`Updating failed - Row ${row} was not cached`);
+      }
+      return false;
+    }
+    this.set(row, updateFn(cachedRow));
+    return true;
+  }
+
+  public get(row: Row) {
+    const cachedRow = this.cache[row];
+    if (!cachedRow) {
+      return null;
+    }
+    return cachedRow;
+  }
+
+  private updateChildren(cachedRow: CachedRowInfo) {
+    return cachedRow.setChildren(
+      cachedRow.childRows.map((childRow) => this.get(childRow))
+    );
+  }
+
+  public setLine(row: Row, line: Line) {
+    this.update(row, (cachedRow) => cachedRow.setLine(line), true);
+  }
+  public setCollapsed(row: Row, collapsed: boolean) {
+    this.update(row, (cachedRow) => cachedRow.setCollapsed(collapsed), true);
+  }
+  public setChildRows(row: Row, childRows: Array<Row>) {
+    this.update(row, (cachedRow) =>
+      this.updateChildren(cachedRow.setChildRows(childRows))
+    , true);
+  }
+  public setParentRows(row: Row, parentRows: Array<Row>) {
+    this.update(row, (cachedRow) => cachedRow.setParentRows(parentRows), true);
+  }
+  public setPluginData(row: Row, pluginData: any) {
+    this.update(row, (cachedRow) => cachedRow.setPluginData(pluginData), true);
+  }
+}
 
 /*
 Document is a wrapper class around the actual datastore, providing methods to manipulate the document
@@ -22,20 +209,48 @@ Currently, the separation between the Session and Document classes is not very g
 type SearchOptions = {nresults?: number, case_sensitive?: boolean};
 
 export default class Document extends EventEmitter {
+  public cache: DocumentCache;
   public store: CachingDataStore;
   public name: string;
   public root: Path;
 
   constructor(store, name = '') {
     super();
+    this.cache = new DocumentCache();
     this.store = store;
     this.name = name;
     this.root = Path.root();
     return this;
   }
 
+  private async getInfo(row): Promise<CachedRowInfo> {
+    const cached = this.cache.get(row);
+    if (cached !== null) {
+      return cached;
+    }
+
+    const [ line, collapsed, children, parents, pluginData ] = await Promise.all([
+      this.store.getLine(row),
+      this.store.getCollapsed(row),
+      this.store.getChildren(row),
+      this.store.getParents(row),
+      this.applyHookAsync('pluginRowContents', {}, { row }),
+    ]);
+    const info: RowInfo = {
+      line, collapsed,
+      parentRows: parents,
+      childRows: children,
+      pluginData,
+    };
+    return this.cache.loadRow(row, info);
+  }
+
+  public updateCachedPluginData(row, pluginData) {
+    this.cache.setPluginData(row, pluginData);
+  }
+
   public async getLine(row) {
-    return await this.store.getLine(row);
+    return (await this.getInfo(row)).line;
   }
 
   public async getChars(row) {
@@ -52,6 +267,7 @@ export default class Document extends EventEmitter {
   }
 
   public async setLine(row, line) {
+    this.cache.setLine(row, line);
     await this.store.setLine(row, line);
   }
 
@@ -81,7 +297,7 @@ export default class Document extends EventEmitter {
 
   public async writeChars(row, col, chars) {
     const args = [col, 0].concat(chars);
-    const line = await this.getLine(row);
+    const line = (await this.getLine(row)).slice();
     [].splice.apply(line, args);
     return await this.setLine(row, line);
   }
@@ -100,7 +316,8 @@ export default class Document extends EventEmitter {
   // structure
 
   public async _getChildren(row, min = 0, max = -1) {
-    return this._getSlice(await this.store.getChildren(row), min, max);
+    const info = await this.getInfo(row);
+    return this._getSlice(info.childRows, min, max);
   }
 
   private _getSlice(array, min, max) {
@@ -124,6 +341,7 @@ export default class Document extends EventEmitter {
   }
 
   private async _setChildren(row, children) {
+    this.cache.setChildRows(row, children);
     return await this.store.setChildren(row, children);
   }
 
@@ -133,11 +351,13 @@ export default class Document extends EventEmitter {
   }
 
   private async _getParents(row) {
-    return await this.store.getParents(row);
+    const info = await this.getInfo(row);
+    return info.parentRows;
   }
 
-  private async _setParents(row, children_rows) {
-    return await this.store.setParents(row, children_rows);
+  private async _setParents(row, parent_rows) {
+    this.cache.setParentRows(row, parent_rows);
+    return await this.store.setParents(row, parent_rows);
   }
 
   public async getChildren(parent_path): Promise<Array<Path>> {
@@ -178,11 +398,16 @@ export default class Document extends EventEmitter {
   }
 
   public async collapsed(row) {
-    return await this.store.getCollapsed(row);
+    return (await this.getInfo(row)).collapsed;
+  }
+
+  public async setCollapsed(row, collapsed) {
+    this.cache.setCollapsed(row, collapsed);
+    await this.store.setCollapsed(row, collapsed);
   }
 
   public async toggleCollapsed(row) {
-    return await this.store.setCollapsed(row, !await this.collapsed(row));
+    this.setCollapsed(row, !await this.collapsed(row));
   }
 
   // last thing visible nested within row
@@ -231,7 +456,7 @@ export default class Document extends EventEmitter {
   // Excludes 'row' itself unless options.inclusive is specified
   // NOTE: includes possibly detached nodes
   public async allAncestors(row, options) {
-    options = _.defaults({}, options, { inclusive: false });
+    options = Object.assign({inclusive: false}, options);
     const visited = {};
     const ancestors: Array<Row> = []; // 'visited' with preserved insert order
     if (options.inclusive) {
@@ -650,7 +875,7 @@ export default class Document extends EventEmitter {
       });
 
       await this.setLine(path.row, line);
-      await this.store.setCollapsed(path.row, serialized.collapsed);
+      await this.setCollapsed(path.row, serialized.collapsed);
 
       if (serialized.children) {
         for (let i = 0; i < serialized.children.length; i++) {

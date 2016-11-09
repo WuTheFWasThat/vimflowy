@@ -310,8 +310,12 @@ async function create_session(dataSource, settings, doc, to_load) {
 
       // fire and forget
       // NOTE: could use handled_command event instead?
+      let t = Date.now();
+      console.log('handling key', t);
       keyHandler.handleKey(key).then(() => {
+        console.log('handled key', Date.now()  - t);
         renderMain();
+        console.log('rendered main', Date.now()  - t);
       }).catch((err) => {
         setTimeout(() => { throw err; });
       });
