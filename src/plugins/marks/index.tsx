@@ -309,10 +309,10 @@ class MarksPlugin {
       this.keyStream.forget();
     });
 
-    this.api.registerHook('document', 'pluginPathContents', async (obj, { path }) => {
-      const mark = await this._getMark(path.row);
+    this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
+      const mark = await this._getMark(row);
 
-      const marking = this.markstate && this.markstate.path.is(path);
+      const marking = this.markstate && (this.markstate.path.row === row);
 
       obj.marks = { mark, marking };
 
@@ -325,14 +325,14 @@ class MarksPlugin {
       return obj;
     });
 
-    this.api.registerHook('document', 'pluginPathContentsSync', (obj, { path }) => {
-      const mark = this._getMarkSync(path.row);
+    this.api.registerHook('document', 'pluginRowContentsSync', (obj, { row}) => {
+      const mark = this._getMarkSync(row);
       if (mark === null) {
         obj.marks = null;
         return obj;
       }
 
-      const marking = this.markstate && this.markstate.path.is(path);
+      const marking = this.markstate && (this.markstate.path.row === row);
 
       obj.marks = { mark, marking };
 

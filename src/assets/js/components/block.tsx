@@ -84,7 +84,7 @@ export class RowComponent extends React.Component<RowProps, {}> {
       cursorBetween: options.cursorBetween,
     };
 
-    const pluginData = session.document.applyHook('pluginPathContentsSync', {}, { path });
+    const pluginData = session.document.applyHook('pluginRowContentsSync', {}, { row: path.row });
     const hooksInfo = { path, pluginData };
 
     lineoptions.wordHook = (line, wordInfo) => {

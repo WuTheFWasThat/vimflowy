@@ -36,13 +36,13 @@ class TimeTrackingPlugin {
     // NOTE: all these are fire and forget
     this.api.cursor.on('rowChange', this.onRowChange.bind(this));
 
-    this.api.registerHook('document', 'pluginPathContents', async (obj, { path }) => {
-      obj.timeTracked = await this.rowTime(path);
+    this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
+      obj.timeTracked = await this.rowTime(row);
       return obj;
     });
 
-    this.api.registerHook('document', 'pluginPathContentsSync', (obj, { path }) => {
-      obj.timeTracked = this.rowTimeSync(path);
+    this.api.registerHook('document', 'pluginRowContentsSync', (obj, { row }) => {
+      obj.timeTracked = this.rowTimeSync(row);
       return obj;
     });
 
@@ -266,11 +266,11 @@ class TimeTrackingPlugin {
   }
 
   private async rowTime(row) {
-    return await this.getRowData(row.row, 'treeTotalTime', 0);
+    return await this.getRowData(row, 'treeTotalTime', 0);
   }
 
   private rowTimeSync(row) {
-    return this.getRowDataSync(row.row, 'treeTotalTime');
+    return this.getRowDataSync(row, 'treeTotalTime');
   }
 
   private printTime(ms) {

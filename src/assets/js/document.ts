@@ -548,7 +548,7 @@ export default class Document extends EventEmitter {
     }
 
     const [ pluginContents, childrenContents, line, isClone ] = await Promise.all([
-      this.applyHookAsync('pluginPathContents', {}, { path }),
+      this.applyHookAsync('pluginRowContents', {}, { row: path.row }),
       childProm,
       this.getLine(path.row),
       this.isClone(path.row),
