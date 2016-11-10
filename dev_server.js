@@ -28,13 +28,15 @@ server.listen(port, 'localhost', err => {
   console.log(`Listening at http://localhost:${port}`);
 });
 
-const spawn = require('child_process').spawn;
-spawn(
-  'node_modules/.bin/mocha',
-  [
-    '--opts', 'test/mocha.opts',
-    '--reporter', 'dot',
-    '--watch',
-  ],
-  {stdio: 'inherit'}
-);
+if (process.env.TEST) {
+  const spawn = require('child_process').spawn;
+  spawn(
+    'node_modules/.bin/mocha',
+    [
+      '--opts', 'test/mocha.opts',
+      '--reporter', 'dot',
+      '--watch',
+    ],
+    {stdio: 'inherit'}
+  );
+}

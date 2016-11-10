@@ -312,6 +312,8 @@ async function create_session(dataSource, settings, doc, to_load) {
       // NOTE: could use handled_command event instead?
       keyHandler.handleKey(key).then(() => {
         renderMain();
+      }).catch((err) => {
+        setTimeout(() => { throw err; });
       });
       return handled;
     });
@@ -447,7 +449,13 @@ $(document).ready(async () => {
 
   create_session(dataSource, settings, doc, to_load);
 
-  (Promise as any).onPossiblyUnhandledRejection(function(error) {
-    throw error;
-  });
+  // NOTE: problem is that this is very slow!
+  //   To restore:
+  //     - npm install --save bluebird
+  //     - npm install --save-dev babel-plugin-transform-promise-to-bluebird
+  //     - add this back to the top of babelrc
+  //       "transform-promise-to-bluebird",
+  // (Promise as any).onPossiblyUnhandledRejection(function(error) {
+  //   throw error;
+  // });
 });
