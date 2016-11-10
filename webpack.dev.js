@@ -5,10 +5,9 @@ var SRC_DIR = path.join(__dirname, 'src');
 
 module.exports = {
   debug: true,
-  devtool: 'eval',
   entry: [
-    'webpack-dev-server/client?http://localhost:3000',
-    'webpack/hot/only-dev-server',
+    // 'webpack-dev-server/client?http://localhost:3000',
+    // 'webpack/hot/only-dev-server',
     './src/assets/ts/app.tsx'
   ],
   module: {
@@ -16,7 +15,7 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loaders: [
-          'react-hot', 'awesome-typescript-loader', 'tslint',
+          /* 'react-hot', */ 'awesome-typescript-loader', 'tslint',
         ],
         include: SRC_DIR
       },

@@ -11,6 +11,7 @@ initialize the main page
 import * as $ from 'jquery';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 import * as ReactDOM from 'react-dom';
+import { mapStackTrace } from 'sourcemapped-stacktrace';
 
 import 'font-awesome/css/font-awesome.css';
 import '../css/utils.sass';
@@ -115,13 +116,19 @@ async function create_session(
   window.onerror = function(msg: string, url: string, line: number, _col: number, err: Error) {
     logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
     if (err) {
-      logger.error('Error: ', msg, err, err.stack, JSON.stringify(err));
-      caughtErr = err;
+      console.log('unmapped stack', err.stack);
+      mapStackTrace(err.stack, function(mappedStack) {
+        console.log('mapped stack', mappedStack);
+        err.stack = mappedStack;
+        logger.error('Error: ', msg, err, err.stack, JSON.stringify(err));
+        caughtErr = err;
+        renderMain();
+      });
     } else {
       logger.error('Error: ', msg, JSON.stringify(msg));
       caughtErr = new Error(msg);
+      renderMain();
     }
-    renderMain();
   };
 
   const changeStyle = (theme: string) => {
