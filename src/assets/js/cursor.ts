@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import * as utils from './utils';
 import * as constants from './constants';
 import EventEmitter from './eventEmitter';
-import { Col, TextProperties, CursorOptions } from './types';
+import { Row, Col, TextProperties, CursorOptions } from './types';
 import Path from './path';
 import Document from './document';
 import Session from './session';
@@ -399,14 +399,14 @@ export default class Cursor extends EventEmitter {
   public async up(cursorOptions: CursorOptions = {}) {
     const path = await this.session.prevVisible(this.path);
     if (path !== null) {
-      return await this.setPath(path, cursorOptions);
+      await this.setPath(path, cursorOptions);
     }
   }
 
   public async down(cursorOptions: CursorOptions = {}) {
     const path = await this.session.nextVisible(this.path);
     if (path !== null) {
-      return await this.setPath(path, cursorOptions);
+      await this.setPath(path, cursorOptions);
     }
   }
 
@@ -466,3 +466,87 @@ export default class Cursor extends EventEmitter {
     });
   }
 }
+
+// NOTE: this doesnt go into the document tree since
+// 1. it doesnt deduplicate cloned rows
+// 2. implementation details, e.g. this isn't immutable
+export class CursorsInfoTree {
+  public row: Row;
+
+  // actual cursor!
+  public cursor: Col | null;
+  // has regular selection
+  public selected: {[col: number]: boolean};
+  // is visually selected (entire row)
+  public visual: boolean;
+
+  // has children with selections
+  public children: {[row: number]: CursorsInfoTree};
+  public parent: CursorsInfoTree | null;
+  public hasSelection: boolean;
+
+  constructor(row: Row, parent: null | CursorsInfoTree = null) {
+    if (parent === null && (row !== Path.rootRow())) {
+      throw new Error('CursorsInfoTree rooted at non-root row');
+    }
+    this.row = row;
+    this.visual = false;
+    this.selected = {};
+    this.cursor = null;
+    this.children = {};
+    this.parent = parent;
+    this.hasSelection = false;
+  }
+
+  public getPath(path: Path): CursorsInfoTree {
+    let result = (this as CursorsInfoTree);
+    path.getAncestry().forEach((row) => {
+      result = result.getChild(row);
+    });
+    return result;
+  }
+
+  public getChild(row: Row): CursorsInfoTree {
+    const child = this.children[row];
+    if (child != null) {
+      return child;
+    }
+    const newChild =  new CursorsInfoTree(row, this);
+    this.children[row] = newChild;
+    return newChild;
+  }
+
+  private markSelected() {
+    if (!this.hasSelection) {
+      this.hasSelection = true;
+      if (this.parent) {
+        this.parent.markSelected();
+      }
+    }
+  }
+
+  public markCols(cols: Array<Col>) {
+    cols.forEach((col) => {
+      this.selected[col] = true;
+    });
+    this.markSelected();
+  }
+
+  public markCursor(col: Col) {
+    this.cursor = col;
+    this.markSelected();
+  }
+
+  public markVisual() {
+    this.visual = true;
+    this.markSelected();
+  }
+
+  public markChildrenVisual(childRows) {
+    childRows.forEach((row) => {
+      const child = this.getChild(row);
+      child.markVisual();
+    });
+  }
+}
+

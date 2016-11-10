@@ -417,6 +417,7 @@ export class FirebaseStore extends DataStore {
       this.events.emit('unsaved');
     }
     this.numPendingSaves++;
+    // TODO: buffer these and batch them?
     this.fbase.ref(key).set(
       value,
       (err) => {

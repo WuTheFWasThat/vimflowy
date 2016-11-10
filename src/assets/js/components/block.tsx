@@ -1,7 +1,5 @@
 import React from 'react';
 
-import logger from '../logger';
-
 import LineComponent, { LineProps } from './line';
 import Spinner from './spinner';
 
@@ -10,44 +8,42 @@ import { CachedRowInfo } from '../document';
 import Path from '../path';
 import * as Modes from '../modes';
 const MODES = Modes.modes;
+import { CursorsInfoTree } from '../cursor';
 
 type RowProps = {
   session: Session;
-  options: any; // TODO
   path: Path;
   cached: CachedRowInfo;
   onLineMouseOver: (() => void) | undefined;
   onCharClick: ((path: Path, column: number, e: Event) => void) | null;
   onClick: ((path: Path) => void) | null;
   style: React.CSSProperties;
+  cursorsTree: CursorsInfoTree;
+  cursorBetween: boolean;
 }
 class RowComponent extends React.Component<RowProps, {}> {
   private onClick: (() => void) | undefined;
   private onCharClick: ((column: number, e: Event) => void) | null;
-  private hasCursor: boolean;
-
-  // TODO: use shouldComponentUpdate?
 
   constructor(props) {
     super(props);
     this.init(props);
-    this.hasCursor = props.session.cursor.path.isDescendant(props.path);
   }
 
   public shouldComponentUpdate(nextProps) {
-    // TODO: hacky, move this stuff to cache itself?
-    const hadCursor = this.hasCursor;
-    this.hasCursor = nextProps.session.cursor.path.isDescendant(nextProps.path);
-    // if (nextProps.topLevel !== this.props.topLevel) {
-    //   return true;
-    // }
+    if (!nextProps.path.is(this.props.path)) {
+      throw new Error('Expected paths to match');
+    }
     if (nextProps.cached !== this.props.cached) {
       return true;
     }
-    if (!nextProps.path.is(this.props.path)) {
+    if (this.props.cursorsTree.hasSelection) {
       return true;
     }
-    if (hadCursor || this.hasCursor) {
+    if (nextProps.cursorsTree.hasSelection) {
+      return true;
+    }
+    if (nextProps.cursorBetween !== this.props.cursorBetween) {
       return true;
     }
     // TODO: options (contians cursorBetween, highlights, cursors)
@@ -77,35 +73,25 @@ class RowComponent extends React.Component<RowProps, {}> {
   public render() {
     const session = this.props.session;
     const path = this.props.path;
-    const options = this.props.options;
     const lineData = this.props.cached.line;
+    const cursorsTree = this.props.cursorsTree;
 
-    let cursors = {};
+    const cursors = {};
     const highlights = {};
 
-    if (path.is(session.cursor.path)) {
-      cursors[session.cursor.col] = true;
-
-      if (session.anchor && (session.mode !== MODES.VISUAL_LINE)) {
-        if (session.anchor.path && path.is(session.anchor.path)) {
-          const start = Math.min(session.cursor.col, session.anchor.col);
-          const end = Math.max(session.cursor.col, session.anchor.col);
-          for (let j = start; j <= end; j++) {
-            highlights[j] = true;
-          }
-        } else {
-          logger.warn('Multiline not yet implemented');
-        }
-      }
+    if (cursorsTree.cursor != null) {
+      cursors[cursorsTree.cursor] = true;
     }
-
+    Object.keys(cursorsTree.selected).forEach((col) => {
+      highlights[col] = true;
+    });
     const results = [];
 
     let lineoptions: LineProps = {
       lineData,
       cursors,
       highlights,
-      cursorBetween: options.cursorBetween,
+      cursorBetween: this.props.cursorBetween,
     };
 
     const hooksInfo = { path, pluginData: this.props.cached.pluginData };
@@ -141,10 +127,11 @@ class RowComponent extends React.Component<RowProps, {}> {
 
 type BlockProps = {
   session: Session;
-  options: any; // TODO
   path: Path;
 
   cached: CachedRowInfo | null;
+  cursorsTree: CursorsInfoTree;
+  cursorBetween: boolean;
   onLineMouseOver: (() => void) | undefined;
   onCharClick: ((path: Path, column: number, e: Event) => void) | null;
   onLineClick: ((path: Path) => void) | null;
@@ -153,18 +140,18 @@ type BlockProps = {
   fetchData: () => void;
 }
 export default class BlockComponent extends React.Component<BlockProps, {}> {
-  private hasCursor: boolean;
 
   constructor(props) {
     super(props);
-    this.hasCursor = props.session.cursor.path.isDescendant(props.path);
-    // TODO: deal with visual mode
   }
 
   public shouldComponentUpdate(nextProps) {
-    // TODO: hacky, move this stuff to cache itself?
-    const hadCursor = this.hasCursor;
-    this.hasCursor = nextProps.session.cursor.path.isDescendant(nextProps.path);
+    if (this.props.cursorsTree.hasSelection) {
+      return true;
+    }
+    if (nextProps.cursorsTree.hasSelection) {
+      return true;
+    }
     if (nextProps.topLevel !== this.props.topLevel) {
       return true;
     }
@@ -174,10 +161,9 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
     if (!nextProps.path.is(this.props.path)) {
       return true;
     }
-    if (hadCursor || this.hasCursor) {
+    if (nextProps.cursorBetween !== this.props.cursorBetween) {
       return true;
     }
-    // TODO: options (contians cursorBetween, highlights, cursors)
     // TODO: other fns?
 
     return false;
@@ -186,8 +172,8 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
   public render() {
     const session = this.props.session;
     const parent = this.props.path;
-    const options = this.props.options;
     const cached = this.props.cached;
+    const cursorsTree = this.props.cursorsTree;
 
     const pathElements: Array<React.ReactNode> = [];
 
@@ -203,7 +189,9 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
             fontSize: this.props.topLevel ? 20 : undefined,
             marginBottom: this.props.topLevel ? 10 : undefined,
           }}
-          session={session} path={parent} options={options}
+          cursorsTree={cursorsTree}
+          cursorBetween={this.props.cursorBetween}
+          session={session} path={parent}
           onLineMouseOver={this.props.onLineMouseOver}
           onCharClick={this.props.onCharClick}
           cached={cached}
@@ -280,11 +268,13 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
             <BlockComponent key='block'
              cached={cachedChild}
              topLevel={false}
+             cursorsTree={cursorsTree.getChild(path.row)}
              onLineMouseOver={this.props.onLineMouseOver}
              onCharClick={this.props.onCharClick}
              onLineClick={this.props.onLineClick}
              onBulletClick={this.props.onBulletClick}
-             session={session} path={path} options={options}
+             session={session} path={path}
+             cursorBetween={this.props.cursorBetween}
              fetchData={this.props.fetchData}
            />
           </div>
@@ -304,7 +294,7 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
     }
 
     let className = 'node';
-    if (parent.row in options.highlight_blocks) {
+    if (cursorsTree.visual) {
       className += ' theme-bg-highlight';
     }
     return (

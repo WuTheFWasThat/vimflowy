@@ -232,16 +232,26 @@ export default class Document extends EventEmitter {
     return this.cache.loadRow(row, info);
   }
 
-  public async forceLoad(row = this.root.row, isFirst = false) {
+  public async forceLoadTree(row = this.root.row, ignoreCollapsed = false) {
     const cachedRow = await this.getInfo(row);
 
-    if (isFirst || !cachedRow.collapsed) {
+    if (ignoreCollapsed || !cachedRow.collapsed) {
       await Promise.all(
         cachedRow.childRows.map(
-          async (childRow) => await this.forceLoad(childRow)
+          async (childRow) => await this.forceLoadTree(childRow)
         )
       );
     }
+  }
+
+  // TODO: actually use this
+  public async forceLoadPath(path) {
+    const ancestry = path.getAncestry();
+    await Promise.all(
+      ancestry.map(async (row) => {
+        await this.getInfo(row);
+      })
+    );
   }
 
   // TODO: ACTUALLY USE THIS IN PLUGINS!!!

@@ -6,8 +6,10 @@ import BreadcrumbsComponent from './breadcrumbs';
 import BlockComponent from './block';
 import Spinner from './spinner';
 import Session from '../session';
-import { ModeId } from '../types';
+import { ModeId, Col } from '../types';
 import Path from '../path';
+import logger from '../logger';
+import { CursorsInfoTree } from '../cursor';
 
 const MODES = Modes.modes;
 
@@ -29,6 +31,7 @@ type State = {
   t: number;
 
   // set after data is loaded
+  cursorsTree?: CursorsInfoTree;
   highlight_blocks?: {[row: number]: boolean};
   crumbContents?: {[row: number]: string };
   mode?: ModeId;
@@ -143,6 +146,32 @@ export default class SessionComponent extends React.Component<Props, State> {
         });
       }
 
+      const cursorsTree = new CursorsInfoTree(Path.rootRow());
+      const cursor = session.cursor;
+      const cursorNode = cursorsTree.getPath(cursor.path);
+      cursorNode.markCursor(cursor.col);
+      if (session.mode === MODES.VISUAL_LINE) {
+        // mirrors logic of finishes_visual_line in keyHandler.js
+        const [parent, index1, index2] = await session.getVisualLineSelections();
+        const children = await session.document.getChildRange(parent, index1, index2);
+        children.forEach((child) => {
+          cursorsTree.getPath(child).markVisual();
+        });
+      } else if (session.mode === MODES.VISUAL) {
+        const anchor = session.anchor;
+        if (anchor.path && cursor.path.is(anchor.path)) {
+          const start = Math.min(cursor.col, anchor.col);
+          const end = Math.max(cursor.col, anchor.col);
+          let cols: Array<Col> = [];
+          for (let j = start; j <= end; j++) {
+            cols.push(j);
+          }
+          cursorNode.markCols(cols);
+        } else {
+          logger.warn('Multiline not yet implemented');
+        }
+      }
+
       const crumbContents = {};
       let path = session.viewRoot;
       while (!path.isRoot()) {
@@ -154,6 +183,7 @@ export default class SessionComponent extends React.Component<Props, State> {
         handleCharClicks: false,
         highlight_blocks,
         crumbContents,
+        cursorsTree,
         mode: session.mode,
         viewRoot: session.viewRoot,
         t: Date.now(), // to force rerendering
@@ -176,7 +206,7 @@ export default class SessionComponent extends React.Component<Props, State> {
       t = Date.now();
       console.log('Starting forceLoad'); // tslint:disable-line no-console
     }
-    await session.document.forceLoad(session.viewRoot.row, true);
+    await session.document.forceLoadTree(session.viewRoot.row, true);
     if (this.profileRender) {
       console.log('forceLoad took time', Date.now() - t); // tslint:disable-line no-console
     }
@@ -203,6 +233,7 @@ export default class SessionComponent extends React.Component<Props, State> {
   public render() {
     const session = this.props.session;
     if (!this.state.loaded) { return <Spinner/>; }
+
     const mode = this.state.mode;
     if (mode == null) {
       throw new Error('mode should have been loaded');
@@ -218,14 +249,20 @@ export default class SessionComponent extends React.Component<Props, State> {
       throw new Error('crumbContents should have been loaded');
     }
 
+    const cursorsTree = this.state.cursorsTree;
+    if (cursorsTree == null) {
+      throw new Error('cursorsTree should have been loaded');
+    }
+
     const cachedRow = session.document.cache.get(viewRoot.row);
     if (cachedRow === null) {
       this.fetchAndRerender();
       return <Spinner/>;
     }
 
+    const cursorBetween = this.cursorBetween();
     const options: RenderOptions = {
-      cursorBetween: this.cursorBetween(),
+      cursorBetween,
       handleCharClicks: this.state.handleCharClicks,
     };
     this.props.onRender(options);
@@ -269,9 +306,10 @@ export default class SessionComponent extends React.Component<Props, State> {
         }
         <BlockComponent
           session={session}
+          cursorsTree={cursorsTree.getPath(viewRoot)}
           cached={session.document.cache.get(viewRoot.row)}
           path={viewRoot}
-          options={options}
+          cursorBetween={cursorBetween}
           topLevel={true}
           onCharClick={onCharClick}
           onLineClick={onLineClick}
