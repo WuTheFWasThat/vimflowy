@@ -269,6 +269,7 @@ export default class SessionComponent extends React.Component<Props, State> {
         }
         <BlockComponent
           session={session}
+          cached={session.document.cache.get(viewRoot.row)}
           path={viewRoot}
           options={options}
           topLevel={true}

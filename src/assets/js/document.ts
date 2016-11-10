@@ -9,11 +9,6 @@ import Path from './path';
 import { CachingDataStore } from './datastore';
 import { Row, Line, SerializedLine } from './types';
 
-/*
- * Immutable representation of what we know about a row,
- * including all descendants (recursively) by reference.
- * Child is null, if we haven't loaded it yet
- */
 type RowInfo = {
   line: Line;
   collapsed: boolean;
@@ -22,12 +17,18 @@ type RowInfo = {
   childRows: Array<Row>;
   pluginData: any;
 }
-class CachedRowInfo {
+
+/*
+ * Immutable representation of what we know about a row,
+ * including all descendants (recursively) by reference.
+ * Child is null, if we haven't loaded it yet
+ */
+// TODO: rename this to cached Tree?
+export class CachedRowInfo {
   private _row: Row;
   private _info: RowInfo;
   // TODO: use immutable list?
   private _children: Array<CachedRowInfo | null>;
-  private _loaded: boolean;
 
   constructor(
     row: Row,
@@ -37,20 +38,6 @@ class CachedRowInfo {
     this._row = row;
     this._info = info;
     this._children = children;
-
-    let loaded = true;
-    if (!this._info.collapsed) {
-      this._children.forEach((child) => {
-        if (child == null) {
-          loaded = false;
-        } else {
-          if (!child.loaded) {
-            loaded = false;
-          }
-        }
-      });
-    }
-    this._loaded = loaded;
   }
 
   public get children() {
@@ -71,8 +58,8 @@ class CachedRowInfo {
   public get collapsed() {
     return this._info.collapsed;
   }
-  public get loaded() {
-    return this._loaded;
+  public get pluginData() {
+    return this._info.pluginData;
   }
 
   public setChildren(children): CachedRowInfo {
@@ -245,6 +232,8 @@ export default class Document extends EventEmitter {
     return this.cache.loadRow(row, info);
   }
 
+  // TODO: ACTUALLY USE THIS IN PLUGINS!!!
+  // possibly expose a row data api instead?
   public updateCachedPluginData(row, pluginData) {
     this.cache.setPluginData(row, pluginData);
   }

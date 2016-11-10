@@ -7,6 +7,7 @@ import Spinner from './spinner';
 import { Line } from '../types';
 
 import Session from '../session';
+import { CachedRowInfo } from '../document';
 import Path from '../path';
 import * as Modes from '../modes';
 const MODES = Modes.modes;
@@ -16,12 +17,13 @@ type RowProps = {
   options: any; // TODO
   path: Path;
   line: Line;
+  pluginData: any;
   onLineMouseOver: (() => void) | undefined;
   onCharClick: ((path: Path, column: number, e: Event) => void) | null;
   onClick: ((path: Path) => void) | null;
   style: React.CSSProperties;
 }
-export class RowComponent extends React.Component<RowProps, {}> {
+class RowComponent extends React.Component<RowProps, {}> {
   private onClick: (() => void) | undefined;
   private onCharClick: ((column: number, e: Event) => void) | null;
 
@@ -84,8 +86,7 @@ export class RowComponent extends React.Component<RowProps, {}> {
       cursorBetween: options.cursorBetween,
     };
 
-    const pluginData = session.document.applyHook('pluginRowContentsSync', {}, { row: path.row });
-    const hooksInfo = { path, pluginData };
+    const hooksInfo = { path, pluginData: this.props.pluginData };
 
     lineoptions.wordHook = (line, wordInfo) => {
       return session.applyHook('renderLineWordHook', line, Object.assign({ wordInfo }, hooksInfo));
@@ -121,6 +122,7 @@ type BlockProps = {
   options: any; // TODO
   path: Path;
 
+  cached: CachedRowInfo | null;
   onLineMouseOver: (() => void) | undefined;
   onCharClick: ((path: Path, column: number, e: Event) => void) | null;
   onLineClick: ((path: Path) => void) | null;
@@ -129,20 +131,50 @@ type BlockProps = {
   fetchData: () => void;
 }
 export default class BlockComponent extends React.Component<BlockProps, {}> {
+  private hasCursor: boolean;
+
+  constructor(props) {
+    super(props);
+    this.hasCursor = props.session.cursor.path.isDescendant(props.path);
+    // TODO: deal with visual mode
+  }
+
+  public shouldComponentUpdate(nextProps) {
+    // TODO: hacky, move this stuff to cache itself?
+    const hadCursor = this.hasCursor;
+    this.hasCursor = nextProps.session.cursor.path.isDescendant(nextProps.path);
+    if (nextProps.topLevel !== this.props.topLevel) {
+      return true;
+    }
+    if (nextProps.cached !== this.props.cached) {
+      return true;
+    }
+    if (!nextProps.path.is(this.props.path)) {
+      return true;
+    }
+    if (hadCursor || this.hasCursor) {
+      return true;
+    }
+    // TODO: options (contians cursorBetween, highlights, cursors)
+    // TODO: other fns?
+
+    return false;
+  }
+
   public render() {
     const session = this.props.session;
     const parent = this.props.path;
     const options = this.props.options;
+    const cached = this.props.cached;
 
     const pathElements: Array<React.ReactNode> = [];
 
-    if (!parent.isRoot()) {
-      const line = session.document.store.getLineSync(parent.row);
-      if (line === null) {
-        this.props.fetchData();
-        return <Spinner/>;
-      }
+    if (cached === null) {
+      this.props.fetchData();
+      return <Spinner/>;
+    }
 
+    if (!parent.isRoot()) {
       const elLine = (
         <RowComponent key='row'
           style={{
@@ -152,24 +184,16 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
           session={session} path={parent} options={options}
           onLineMouseOver={this.props.onLineMouseOver}
           onCharClick={this.props.onCharClick}
-          line={line}
+          line={cached.line}
+          pluginData={cached.pluginData}
           onClick={this.props.onLineClick}
         />
       );
       pathElements.push(elLine);
     }
 
-    const children = session.document.store.getChildrenSync(parent.row);
-    if (children === null) {
-      this.props.fetchData();
-      return <Spinner/>;
-    }
-
-    const collapsed = session.document.store.getCollapsedSync(parent.row);
-    if (collapsed === null) {
-      this.props.fetchData();
-      return <Spinner/>;
-    }
+    const children = cached.childRows;
+    const collapsed = cached.collapsed;
 
     if (this.props.topLevel && !children.length) {
       let message = 'Nothing here yet.';
@@ -185,16 +209,18 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
       );
     } else if (children.length && ((!collapsed) || this.props.topLevel)) {
       let childrenLoaded = true;
-      let childrenDivs = children.map((row) => {
+      let childrenDivs = cached.children.map((cachedChild) => {
+        if (cachedChild === null) {
+          childrenLoaded = false;
+          return null;
+        }
+
+        const row = cachedChild.row;
         const path = parent.child(row);
 
         let cloneIcon: React.ReactNode | null = null;
 
-        const parents = session.document.store.getParentsSync(path.row);
-        if (parents === null) {
-          childrenLoaded = false;
-          return null;
-        }
+        const parents = cachedChild.parentRows;
         // NOTE: this is not actually correct!
         // should use isClone, which is different since a parent may be detached
         if (parents.length > 1) {
@@ -207,21 +233,9 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
 
         let icon = 'fa-circle';
 
-        const child_children = session.document.store.getChildrenSync(path.row);
-        if (child_children === null) {
-          childrenLoaded = false;
-          return null;
-        }
-
-        const child_collapsed = session.document.store.getCollapsedSync(path.row);
-        if (child_collapsed === null) {
-          childrenLoaded = false;
-          return null;
-        }
-
         let onBulletClick: (() => void) | undefined = undefined;
-        if (child_children.length) {
-          icon = child_collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
+        if (cachedChild.childRows.length) {
+          icon = cachedChild.collapsed ? 'fa-plus-circle' : 'fa-minus-circle';
           const onBulletClickProp = this.props.onBulletClick;
           if (onBulletClickProp != null) {
             onBulletClick = () => onBulletClickProp(path);
@@ -243,6 +257,7 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
             {cloneIcon}
             {bullet}
             <BlockComponent key='block'
+             cached={cachedChild}
              topLevel={false}
              onLineMouseOver={this.props.onLineMouseOver}
              onCharClick={this.props.onCharClick}
