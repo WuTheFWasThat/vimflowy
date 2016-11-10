@@ -174,11 +174,11 @@ export default class SessionComponent extends React.Component<Props, State> {
     let t;
     if (this.profileRender) {
       t = Date.now();
-      console.log('Starting getViewContents'); // tslint:disable-line no-console
+      console.log('Starting forceLoad'); // tslint:disable-line no-console
     }
-    await session.document.getViewContents(session.viewRoot, true);
+    await session.document.forceLoad(session.viewRoot.row, true);
     if (this.profileRender) {
-      console.log('getViewContents took time', Date.now() - t); // tslint:disable-line no-console
+      console.log('forceLoad took time', Date.now() - t); // tslint:disable-line no-console
     }
     this.update();
   }
@@ -210,12 +210,18 @@ export default class SessionComponent extends React.Component<Props, State> {
 
     const viewRoot = this.state.viewRoot;
     if (viewRoot == null) {
-      throw new Error('viewToot should have been loaded');
+      throw new Error('viewRoot should have been loaded');
     }
 
     const crumbContents = this.state.crumbContents;
     if (crumbContents == null) {
       throw new Error('crumbContents should have been loaded');
+    }
+
+    const cachedRow = session.document.cache.get(viewRoot.row);
+    if (cachedRow === null) {
+      this.fetchAndRerender();
+      return <Spinner/>;
     }
 
     const options: RenderOptions = {
@@ -242,12 +248,6 @@ export default class SessionComponent extends React.Component<Props, State> {
     let onCrumbClick: ((...args: any[]) => void) | null = null;
     if (mode === MODES.NORMAL) {
       onCrumbClick = this.onCrumbClick;
-    }
-
-    const children = session.document.store.getChildrenSync(viewRoot.row);
-    if (children === null) {
-      this.fetchAndRerender();
-      return <Spinner/>;
     }
 
     // TODO: have an extra breadcrumb indicator when not at viewRoot?

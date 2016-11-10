@@ -41,11 +41,6 @@ class TimeTrackingPlugin {
       return obj;
     });
 
-    this.api.registerHook('document', 'pluginRowContentsSync', (obj, { row }) => {
-      obj.timeTracked = this.rowTimeSync(row);
-      return obj;
-    });
-
     this.api.registerHook('session', 'renderAfterLine', (elements, renderData) => {
       const { path, pluginData } = renderData;
       const time = pluginData.timeTracked;
@@ -179,11 +174,6 @@ class TimeTrackingPlugin {
     return await this.api.getData(key, default_value);
   }
 
-  private getRowDataSync(row, keytype) {
-    let key = `${row}:${keytype}`;
-    return this.api.getDataSync(key);
-  }
-
   private async setRowData(row, keytype, value) {
     let key = `${row}:${keytype}`;
     await this.api.setData(key, value);
@@ -267,10 +257,6 @@ class TimeTrackingPlugin {
 
   private async rowTime(row) {
     return await this.getRowData(row, 'treeTotalTime', 0);
-  }
-
-  private rowTimeSync(row) {
-    return this.getRowDataSync(row, 'treeTotalTime');
   }
 
   private printTime(ms) {

@@ -4,7 +4,6 @@ import logger from '../logger';
 
 import LineComponent, { LineProps } from './line';
 import Spinner from './spinner';
-import { Line } from '../types';
 
 import Session from '../session';
 import { CachedRowInfo } from '../document';
@@ -16,8 +15,7 @@ type RowProps = {
   session: Session;
   options: any; // TODO
   path: Path;
-  line: Line;
-  pluginData: any;
+  cached: CachedRowInfo;
   onLineMouseOver: (() => void) | undefined;
   onCharClick: ((path: Path, column: number, e: Event) => void) | null;
   onClick: ((path: Path) => void) | null;
@@ -26,12 +24,36 @@ type RowProps = {
 class RowComponent extends React.Component<RowProps, {}> {
   private onClick: (() => void) | undefined;
   private onCharClick: ((column: number, e: Event) => void) | null;
+  private hasCursor: boolean;
 
   // TODO: use shouldComponentUpdate?
 
   constructor(props) {
     super(props);
     this.init(props);
+    this.hasCursor = props.session.cursor.path.isDescendant(props.path);
+  }
+
+  public shouldComponentUpdate(nextProps) {
+    // TODO: hacky, move this stuff to cache itself?
+    const hadCursor = this.hasCursor;
+    this.hasCursor = nextProps.session.cursor.path.isDescendant(nextProps.path);
+    // if (nextProps.topLevel !== this.props.topLevel) {
+    //   return true;
+    // }
+    if (nextProps.cached !== this.props.cached) {
+      return true;
+    }
+    if (!nextProps.path.is(this.props.path)) {
+      return true;
+    }
+    if (hadCursor || this.hasCursor) {
+      return true;
+    }
+    // TODO: options (contians cursorBetween, highlights, cursors)
+    // TODO: other fns?
+
+    return false;
   }
 
   private init(props) {
@@ -56,7 +78,7 @@ class RowComponent extends React.Component<RowProps, {}> {
     const session = this.props.session;
     const path = this.props.path;
     const options = this.props.options;
-    const lineData = this.props.line;
+    const lineData = this.props.cached.line;
 
     let cursors = {};
     const highlights = {};
@@ -86,7 +108,7 @@ class RowComponent extends React.Component<RowProps, {}> {
       cursorBetween: options.cursorBetween,
     };
 
-    const hooksInfo = { path, pluginData: this.props.pluginData };
+    const hooksInfo = { path, pluginData: this.props.cached.pluginData };
 
     lineoptions.wordHook = (line, wordInfo) => {
       return session.applyHook('renderLineWordHook', line, Object.assign({ wordInfo }, hooksInfo));
@@ -184,8 +206,7 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
           session={session} path={parent} options={options}
           onLineMouseOver={this.props.onLineMouseOver}
           onCharClick={this.props.onCharClick}
-          line={cached.line}
-          pluginData={cached.pluginData}
+          cached={cached}
           onClick={this.props.onLineClick}
         />
       );

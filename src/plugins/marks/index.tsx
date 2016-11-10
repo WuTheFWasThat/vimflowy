@@ -325,28 +325,6 @@ class MarksPlugin {
       return obj;
     });
 
-    this.api.registerHook('document', 'pluginRowContentsSync', (obj, { row}) => {
-      const mark = this._getMarkSync(row);
-      if (mark === null) {
-        obj.marks = null;
-        return obj;
-      }
-
-      const marking = this.markstate && (this.markstate.path.row === row);
-
-      obj.marks = { mark, marking };
-
-      if (this.markstate && marking) {
-        // NOTE: markstate.session is always an inMemory db,
-        // so no need for null check
-        obj.marks.markText = this.markstate.session.document.store.getLineSync(
-          this.markstate.session.cursor.path.row
-        );
-        obj.marks.markCol = this.markstate.session.cursor.col;
-      }
-      return obj;
-    });
-
     this.api.registerHook('session', 'renderLineOptions', (options, info) => {
       if (info.pluginData.marks && info.pluginData.marks.marking) {
         options.cursors = {};
@@ -417,9 +395,6 @@ class MarksPlugin {
   private async _getRowsToMarks() {
     return await this.api.getData('ids_to_marks', {});
   }
-  private _getRowsToMarksSync() {
-    return this.api.getDataSync('ids_to_marks');
-  }
   private async _setRowsToMarks(rows_to_marks) {
     return await this.api.setData('ids_to_marks', rows_to_marks);
   }
@@ -452,14 +427,6 @@ class MarksPlugin {
   // get mark for an row, '' if it doesn't exist
   private async _getMark(row) {
     const marks = await this._getRowsToMarks();
-    return marks[row] || '';
-  }
-
-  private _getMarkSync(row) {
-    const marks = this._getRowsToMarksSync();
-    if (marks === null) {
-      return null;
-    }
     return marks[row] || '';
   }
 

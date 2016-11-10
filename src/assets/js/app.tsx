@@ -314,6 +314,7 @@ async function create_session(dataSource, settings, doc, to_load) {
       console.log('handling key', t);
       keyHandler.handleKey(key).then(() => {
         console.log('handled key', Date.now()  - t);
+        t = Date.now();
         renderMain();
         console.log('rendered main', Date.now()  - t);
       }).catch((err) => {

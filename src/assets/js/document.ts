@@ -6,7 +6,7 @@ import * as constants from './constants';
 // import logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
-import { CachingDataStore } from './datastore';
+import DataStore from './datastore';
 import { Row, Line, SerializedLine } from './types';
 
 type RowInfo = {
@@ -197,7 +197,7 @@ type SearchOptions = {nresults?: number, case_sensitive?: boolean};
 
 export default class Document extends EventEmitter {
   public cache: DocumentCache;
-  public store: CachingDataStore;
+  public store: DataStore;
   public name: string;
   public root: Path;
 
@@ -230,6 +230,18 @@ export default class Document extends EventEmitter {
       pluginData,
     };
     return this.cache.loadRow(row, info);
+  }
+
+  public async forceLoad(row = this.root.row, isFirst = false) {
+    const cachedRow = await this.getInfo(row);
+
+    if (isFirst || !cachedRow.collapsed) {
+      await Promise.all(
+        cachedRow.childRows.map(
+          async (childRow) => await this.forceLoad(childRow)
+        )
+      );
+    }
   }
 
   // TODO: ACTUALLY USE THIS IN PLUGINS!!!
@@ -743,40 +755,6 @@ export default class Document extends EventEmitter {
     }
 
     return struct;
-  }
-
-  public async getViewContents(path = this.root, isFirst = false) {
-
-    const [ collapsed, children ] = await Promise.all([
-      this.collapsed(path.row),
-      this._getChildren(path.row),
-    ]);
-
-    let childProm = Promise.resolve(null);
-    if (isFirst || !collapsed) {
-      childProm = Promise.all(
-        children.map(
-          async (child) => await this.getViewContents(path.child(child))
-        )
-      );
-    }
-
-    const [ pluginContents, childrenContents, line, isClone ] = await Promise.all([
-      this.applyHookAsync('pluginRowContents', {}, { row: path.row }),
-      childProm,
-      this.getLine(path.row),
-      this.isClone(path.row),
-    ]);
-
-    return {
-      path: path,
-      line: line,
-      collapsed: collapsed,
-      isClone: isClone,
-      plugins: pluginContents,
-      hasChildren: children.length > 0,
-      children: childrenContents,
-    };
   }
 
   public async serialize(

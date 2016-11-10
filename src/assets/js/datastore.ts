@@ -2,7 +2,6 @@
 import * as firebase from 'firebase';
 
 import * as _ from 'lodash';
-import * as Immutable from 'immutable';
 
 import EventEmitter from './eventEmitter';
 import * as constants from './constants';
@@ -97,14 +96,39 @@ export default class DataStore {
     return `${this.prefix}:macros`;
   }
 
-  protected async _get(
+  private async _get(
     key: string, default_value: any = undefined, decode: (value: any) => any = identity
-  ): Promise<any> {
+  ): Promise<any | null> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
+
+    const value = await this.get(key);
+    let decodedValue;
+    if (value === null) {
+      decodedValue = default_value;
+      logger.debug('tried getting', key, 'defaulted to', decodedValue);
+    } else {
+      decodedValue = decode(value);
+      logger.debug('got from storage', key, decodedValue);
+    }
+    return decodedValue;
+  }
+
+  protected async get(key: string): Promise<any> {
     throw new errors.NotImplemented();
   }
 
-  protected async _set(
+  private async _set(
     key: string, value: any, encode: (value: any) => any = identity
+  ): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
+
+    const encodedValue = encode(value);
+    logger.debug('setting to storage', key, encodedValue);
+    this.set(key, encodedValue);
+  }
+
+  protected async set(
+    key: string, value: any
   ): Promise<void> {
     throw new errors.NotImplemented();
   }
@@ -215,87 +239,27 @@ export default class DataStore {
   }
 }
 
-export class CachingDataStore extends DataStore {
-  private cache: Immutable.Map<string, any>;
+export class InMemory extends DataStore {
+  private cache: {[key: string]: any};
 
-  constructor(prefix = '') {
-    super(prefix);
-    this.cache = Immutable.Map({});
-  }
-
-  protected async _get(
-    key: string, default_value: any = undefined, decode: (value: any) => any = identity
-  ): Promise<any> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    if (this.cache.has(key)) {
-      return _.cloneDeep(this.cache.get(key));
-    } else {
-      const value = await this._getUncached(key);
-      const decodedValue = value === null ? default_value : decode(value);
-      this.cache = this.cache.set(key, decodedValue);
-      return decodedValue;
-    }
-  }
-
-  protected async _set(
-    key: string, value: any, encode: (value: any) => any = identity
-  ): Promise<void> {
-    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
-    this.cache = this.cache.set(key, value);
-    await this._setUncached(key, encode(value));
-  }
-
-  protected async _getUncached(key: string): Promise<any | null> {
-    throw new errors.NotImplemented();
-  }
-
-  protected async _setUncached(key: string, value: any): Promise<void> {
-    throw new errors.NotImplemented();
-  }
-
-  private _getSync(key: string): any {
-    if (!this.cache.has(key)) { return null; }
-    return this.cache.get(key);
-  }
-
-  public getLineSync(row: Row): Line {
-    return this._getSync(this._lineKey_(row));
-  }
-
-  public getChildrenSync(row: Row): Array<Row> {
-    return this._getSync(this._childrenKey_(row));
-  }
-
-  public getParentsSync(row: Row): Array<Row> {
-    return this._getSync(this._parentsKey_(row));
-  }
-
-  public getCollapsedSync(row: Row): Boolean {
-    return this._getSync(this._collapsedKey_(row));
-  }
-
-  public getPluginDataSync(plugin: string, key: string): any {
-    return this._getSync(this._pluginDataKey_(plugin, key));
-  }
-}
-
-export class InMemory extends CachingDataStore {
   constructor() {
     super('');
+    this.cache = {};
   }
 
-  protected async _getUncached(key: string): Promise<any | null> {
-    // no backing store
-    return null;
+  protected async get(key: string): Promise<any | null> {
+    if (!(key in this.cache)) {
+      return null;
+    }
+    return this.cache[key];
   }
 
-  protected async _setUncached(key: string, value: any): Promise<void> {
-    // do nothing
+  protected async set(key: string, value: any): Promise<void> {
+    this.cache[key] = value;
   }
-
 }
 
-export class LocalStorageLazy extends CachingDataStore {
+export class LocalStorageLazy extends DataStore {
   private lastSave: number;
   private trackSaves: boolean;
 
@@ -315,11 +279,11 @@ export class LocalStorageLazy extends CachingDataStore {
     return `${this.prefix}:lastID`;
   }
 
-  protected async _getUncached(key: string): Promise<any | null> {
+  protected async get(key: string): Promise<any | null> {
     return this._getLocalStorage_(key);
   }
 
-  protected async _setUncached(key: string, value: any): Promise<void> {
+  protected async set(key: string, value: any): Promise<void> {
     return this._setLocalStorage_(key, value);
   }
 
@@ -340,13 +304,11 @@ export class LocalStorageLazy extends CachingDataStore {
       }
     }
 
-    logger.debug('setting local storage', key, value);
     return localStorage.setItem(key, JSON.stringify(value));
   }
 
-  private _getLocalStorage_(key: string): any {
+  private _getLocalStorage_(key: string): any | null {
     const val = localStorage.getItem(key);
-    logger.debug('got from local storage', key, val);
     if (val == null) {
       return null;
     }
@@ -369,7 +331,7 @@ export class LocalStorageLazy extends CachingDataStore {
   }
 }
 
-export class FirebaseStore extends CachingDataStore {
+export class FirebaseStore extends DataStore {
   private fbase: any;
   // private fbase: Firebase;
   private numPendingSaves: number;
@@ -432,7 +394,7 @@ export class FirebaseStore extends CachingDataStore {
     return `${this.prefix}:lastID`;
   }
 
-  protected _getUncached(key: string): Promise<any | null> {
+  protected get(key: string): Promise<any | null> {
     return new Promise((resolve: (result: any | null) => void, reject) => {
       this.fbase.ref(key).once(
         'value',
@@ -450,7 +412,7 @@ export class FirebaseStore extends CachingDataStore {
     });
   }
 
-  protected _setUncached(key: string, value: any): Promise<void> {
+  protected set(key: string, value: any): Promise<void> {
     if (this.numPendingSaves === 0) {
       this.events.emit('unsaved');
     }
@@ -469,11 +431,11 @@ export class FirebaseStore extends CachingDataStore {
   }
 
   public async getId(): Promise<number> {
-    let id: number = await this._get(this._IDKey_(), 1);
-    while ((await this._get(this._lineKey_(id), null)) !== null) {
+    let id: number = (await this.get(this._IDKey_())) || 1;
+    while ((await this.get(this._lineKey_(id))) !== null) {
       id++;
     }
-    await this._set(this._IDKey_(), id + 1);
+    await this.set(this._IDKey_(), id + 1);
     return id;
   }
 }
