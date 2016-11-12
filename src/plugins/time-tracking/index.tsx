@@ -177,6 +177,7 @@ class TimeTrackingPlugin {
   private async setRowData(row, keytype, value) {
     let key = `${row}:${keytype}`;
     await this.api.setData(key, value);
+    await this.api.updatedDataForRender(row);
   }
 
   private async transformRowData(row, keytype, transform, default_value: any = null) {

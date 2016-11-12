@@ -71,8 +71,12 @@ Plugins.register(
           mappings.key_to_path[jump_key] = path;
           mappings.path_to_key[JSON.stringify(path.getAncestry())] = jump_key;
         });
+
         EASY_MOTION_MAPPINGS = mappings;
 
+        await Promise.all(_.values(EASY_MOTION_MAPPINGS.key_to_path).map(
+          async (path) => await api.updatedDataForRender(path.row)
+        ));
         return null;
       } else {
         return async function(cursor /*, options */) {
@@ -83,6 +87,9 @@ Plugins.register(
             let path = EASY_MOTION_MAPPINGS.key_to_path[key];
             await cursor.setPosition(path, 0);
           }
+          await Promise.all(_.values(EASY_MOTION_MAPPINGS.key_to_path).map(
+            async (path) => await api.updatedDataForRender(path.row)
+          ));
           EASY_MOTION_MAPPINGS = null;
         };
       }

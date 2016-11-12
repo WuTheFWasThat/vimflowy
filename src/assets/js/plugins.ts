@@ -70,6 +70,14 @@ export class PluginApi {
     return await this.document.store.getPluginData(this.name, key, default_value);
   }
 
+  // marks row for re-rendering
+  public async updatedDataForRender(row) {
+    // this is sort of a weird implementation,
+    // but it causes the cachedRowInfo to get updated
+    // and also updates pluginData, which is the typical use case
+    await this.document.updateCachedPluginData(row);
+  }
+
   // TODO: have definitions be event emitter? have this be automatic somehow
   //       (first try combining bindings into definitions)
   //       should also re-render mode table

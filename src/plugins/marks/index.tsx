@@ -63,7 +63,8 @@ class MarksPlugin {
         return `row ${this.row}, mark ${this.mark}`;
       }
       public async mutate(/* session */) {
-        return await that._setMark(this.row, this.mark);
+        await that._setMark(this.row, this.mark);
+        await that.api.updatedDataForRender(this.row);
       }
       public async rewind(/* session */) {
         return [
@@ -86,7 +87,8 @@ class MarksPlugin {
       }
       public async mutate(/* session */) {
         this.mark = await that._getMark(this.row);
-        return await that._unsetMark(this.row, this.mark);
+        await that._unsetMark(this.row, this.mark);
+        await that.api.updatedDataForRender(this.row);
       }
       public async rewind(/* session */) {
         return [
@@ -134,7 +136,19 @@ class MarksPlugin {
         await this.markstate.session.setMode(MODES.INSERT);
       },
       exit: async (/*session, newMode?: ModeId */) => {
+        // do this, now that markstate is cleared
+        if (!this.markstate) {
+          throw new Error('Mark state null during exit');
+        }
+        const markedRow = this.markstate.path.row;
         this.markstate = null;
+        await this.api.updatedDataForRender(markedRow);
+      },
+      every: async (/*session*/) => {
+        if (!this.markstate) {
+          throw new Error('Mark state null during every');
+        }
+        await this.api.updatedDataForRender(this.markstate.path.row);
       },
       key_transforms: [
         async (key, context) => {
@@ -145,6 +159,7 @@ class MarksPlugin {
                 throw new Error('Mark state null during key transform');
               }
               await this.markstate.session.addCharsAtCursor([{char: key}]);
+              await this.api.updatedDataForRender(this.markstate.path.row);
               return [null, context];
             }
           }
@@ -178,7 +193,8 @@ class MarksPlugin {
         throw new Error('Mark state null in mark mode');
       }
       const mark = await that.markstate.session.curText();
-      const err = await that.updateMark(that.markstate.path.row, mark);
+      const markedRow = that.markstate.path.row;
+      const err = await that.updateMark(markedRow, mark);
       if (err) { this.session.showMessage(err, {text_class: 'error'}); }
       await this.session.setMode(MODES.NORMAL);
       this.keyStream.save();
@@ -311,11 +327,8 @@ class MarksPlugin {
 
     this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
       const mark = await this._getMark(row);
-
       const marking = this.markstate && (this.markstate.path.row === row);
-
       obj.marks = { mark, marking };
-
       if (this.markstate && marking) {
         obj.marks.markText = await this.markstate.session.document.getLine(
           this.markstate.session.cursor.path.row

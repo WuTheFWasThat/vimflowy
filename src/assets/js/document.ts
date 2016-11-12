@@ -254,9 +254,8 @@ export default class Document extends EventEmitter {
     );
   }
 
-  // TODO: ACTUALLY USE THIS IN PLUGINS!!!
-  // possibly expose a row data api instead?
-  public updateCachedPluginData(row, pluginData) {
+  public async updateCachedPluginData(row) {
+    const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
     this.cache.setPluginData(row, pluginData);
   }
 

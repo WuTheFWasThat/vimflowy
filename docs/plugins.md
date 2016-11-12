@@ -143,6 +143,9 @@ For hooks:
   In the case of rendering hooks, for example, the value is a ReactDOM element (or array of them),
   and thus the hook function should return a new ReactDOM element (or array of them).
 
+If you use rendering hooks, you must also inform Vimflowy internals when a row should be rerendered.
+To do this, simply call `api.updatedDataForRender(row)`.
+
 *More detailed info will be added in the future.*
 
 #### data persistence
