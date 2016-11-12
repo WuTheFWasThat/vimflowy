@@ -159,11 +159,13 @@ export class PluginApi {
     const emitter = this._getEmitter(who);
     emitter.addHook(event, transform);
     this.registrations.push({type: 'hook', args: [who, event, transform]});
+    this.document.refreshRender();
   }
 
   public deregisterHook(who, event, transform) {
     const emitter = this._getEmitter(who);
     emitter.removeHook(event, transform);
+    this.document.refreshRender();
   }
 
   public deregisterAll() {

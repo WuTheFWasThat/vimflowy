@@ -40,7 +40,8 @@ export default class Cursor extends EventEmitter {
     this.path = path;
     this.col = col;
     this.properties = {};
-    this._getPropertiesFromContext(); // TODO: this is fire and forget...
+    // TODO
+    // this._getPropertiesFromContext(); // TODO: this is fire and forget...
 
     // -1 means last col
     this.moveCol = moveCol !== null ? moveCol : col;

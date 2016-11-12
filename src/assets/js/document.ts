@@ -40,6 +40,12 @@ export class CachedRowInfo {
     this._children = children;
   }
 
+  public clone() {
+    return new CachedRowInfo(
+      this._row, this._info, this._children
+    );
+  }
+
   public get children() {
     return this._children;
   }
@@ -181,6 +187,15 @@ class DocumentCache {
   public setPluginData(row: Row, pluginData: any) {
     this.update(row, (cachedRow) => cachedRow.setPluginData(pluginData), true);
   }
+
+  // change a row, simply to mark that it's changed
+  public touch(row: Row) {
+    this.update(row, (cachedRow) => cachedRow.clone(), true);
+  }
+
+  public touchAll() {
+    Object.keys(this.cache).forEach((rowStr: string) => this.touch(parseInt(rowStr, 10)));
+  }
 }
 
 /*
@@ -257,6 +272,10 @@ export default class Document extends EventEmitter {
   public async updateCachedPluginData(row) {
     const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
     this.cache.setPluginData(row, pluginData);
+  }
+
+  public async refreshRender() {
+    this.cache.touchAll();
   }
 
   public async getLine(row) {

@@ -106,8 +106,8 @@ export default class Session extends EventEmitter {
     this.reset_jump_history();
 
     // NOTE: this is fire and forget
-    // TODO: fix?
-    this.setMode(MODES.NORMAL);
+    // this.setMode(MODES.NORMAL);
+    this.mode = MODES.NORMAL;
     return this;
   }
 
