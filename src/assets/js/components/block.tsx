@@ -14,7 +14,6 @@ type RowProps = {
   session: Session;
   path: Path;
   cached: CachedRowInfo;
-  onLineMouseOver: (() => void) | undefined;
   onCharClick: ((path: Path, column: number, e: Event) => void) | null;
   onClick: ((path: Path) => void) | null;
   style: React.CSSProperties;
@@ -28,28 +27,6 @@ class RowComponent extends React.Component<RowProps, {}> {
   constructor(props) {
     super(props);
     this.init(props);
-  }
-
-  public shouldComponentUpdate(nextProps) {
-    if (!nextProps.path.is(this.props.path)) {
-      throw new Error('Expected paths to match');
-    }
-    if (nextProps.cached !== this.props.cached) {
-      return true;
-    }
-    if (this.props.cursorsTree.hasSelection) {
-      return true;
-    }
-    if (nextProps.cursorsTree.hasSelection) {
-      return true;
-    }
-    if (nextProps.cursorBetween !== this.props.cursorBetween) {
-      return true;
-    }
-    // TODO: options (contians cursorBetween, highlights, cursors)
-    // TODO: other fns?
-
-    return false;
   }
 
   private init(props) {
@@ -114,7 +91,6 @@ class RowComponent extends React.Component<RowProps, {}> {
 
     return (
       <div key='text' className='node-text'
-        onMouseOver={this.props.onLineMouseOver}
         onClick={this.onClick}
         style={this.props.style}
       >
@@ -132,7 +108,6 @@ type BlockProps = {
   cached: CachedRowInfo | null;
   cursorsTree: CursorsInfoTree;
   cursorBetween: boolean;
-  onLineMouseOver: (() => void) | undefined;
   onCharClick: ((path: Path, column: number, e: Event) => void) | null;
   onLineClick: ((path: Path) => void) | null;
   onBulletClick: ((path: Path) => void) | undefined;
@@ -159,15 +134,26 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
       return true;
     }
     if (!nextProps.path.is(this.props.path)) {
+      // NOTE: this can happen e.g. when you zoom out
       return true;
     }
     if (nextProps.cursorBetween !== this.props.cursorBetween) {
       return true;
     }
-    // TODO: other fns?
+    if (nextProps.onCharClick !== this.props.onCharClick) {
+      return true;
+    }
+    if (nextProps.onLineClick !== this.props.onLineClick) {
+      return true;
+    }
+    if (nextProps.onBulletClick !== this.props.onBulletClick) {
+      return true;
+    }
+    // NOTE: it's assumed that session and fetchData never change
 
     return false;
   }
+
 
   public render() {
     const session = this.props.session;
@@ -192,7 +178,6 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
           cursorsTree={cursorsTree}
           cursorBetween={this.props.cursorBetween}
           session={session} path={parent}
-          onLineMouseOver={this.props.onLineMouseOver}
           onCharClick={this.props.onCharClick}
           cached={cached}
           onClick={this.props.onLineClick}
@@ -269,7 +254,6 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
              cached={cachedChild}
              topLevel={false}
              cursorsTree={cursorsTree.getChild(path.row)}
-             onLineMouseOver={this.props.onLineMouseOver}
              onCharClick={this.props.onCharClick}
              onLineClick={this.props.onLineClick}
              onBulletClick={this.props.onBulletClick}

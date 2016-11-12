@@ -212,10 +212,13 @@ export default class SessionComponent extends React.Component<Props, State> {
 
     const cursorBetween = this.cursorBetween();
 
-    let onLineMouseOver: (() => void) | undefined = undefined;
     let onLineClick: ((path: Path) => void) | null = null;
     let onCharClick: ((path: Path, column: number, e: Event) => void) | null = null;
-    if (mode === MODES.NORMAL || mode === MODES.INSERT) {
+    if (mode === MODES.NORMAL ||
+        mode === MODES.INSERT ||
+        mode === MODES.VISUAL ||
+        mode === MODES.VISUAL_LINE
+       ) {
       onCharClick = this.onCharClick;
       onLineClick = this.onLineClick;
     }
@@ -251,7 +254,6 @@ export default class SessionComponent extends React.Component<Props, State> {
           topLevel={true}
           onCharClick={onCharClick}
           onLineClick={onLineClick}
-          onLineMouseOver={onLineMouseOver}
           onBulletClick={this.onBulletClick}
           fetchData={this.fetchAndRerender}
         />

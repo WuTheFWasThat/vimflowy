@@ -37,33 +37,6 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     super(props);
   }
 
-  public shouldComponentUpdate(nextProps) {
-    if (nextProps.lineData !== this.props.lineData) {
-      return true;
-    }
-    if (this.props.cursors && Object.keys(this.props.cursors).length > 0) {
-      return true;
-    }
-    if (nextProps.cursors && Object.keys(nextProps.cursors).length > 0) {
-      return true;
-    }
-    if (this.props.highlights && Object.keys(this.props.highlights).length > 0) {
-      return true;
-    }
-    if (nextProps.highlights && Object.keys(nextProps.highlights).length > 0) {
-      return true;
-    }
-    if (nextProps.cursorBetween !== this.props.cursorBetween) {
-      return true;
-    }
-    if (nextProps.onCharClick !== this.props.onCharClick) {
-      return true;
-    }
-    // NOTE: technically, we are ignoring wordHook changing
-
-    return true;
-  }
-
   public render() {
     const lineData = _.cloneDeep(this.props.lineData);
     const cursors = this.props.cursors || {};
