@@ -384,7 +384,7 @@ class MarksPlugin {
     });
 
     this.api.registerListener('document', 'afterDetach', async () => {
-      await this.computeMarksToPaths();
+      this.computeMarksToPaths(); // FIRE AND FORGET
     });
     this.computeMarksToPaths(); // FIRE AND FORGET
   }
@@ -441,7 +441,7 @@ class MarksPlugin {
     await this._setMarksToRows(marks_to_rows);
     await this._setRowsToMarks(rows_to_marks);
     await this._sanityCheckMarks();
-    await this.computeMarksToPaths();
+    this.computeMarksToPaths();
   }
 
   private async _unsetMark(row, mark) {
@@ -455,12 +455,17 @@ class MarksPlugin {
     await this._setMarksToRows(marks_to_rows);
     await this._setRowsToMarks(rows_to_marks);
     await this._sanityCheckMarks();
-    await this.computeMarksToPaths();
+    this.computeMarksToPaths();
   }
 
   // compute set of paths, used for rendering
-  private async computeMarksToPaths() {
-    this.marks_to_paths = await this.listMarks();
+  // this is a fire and forget function.
+  // this.marks_to_paths  is used only for the marks word hook
+  // so we don't care if it's a bit out of date
+  private computeMarksToPaths() {
+    (async () => {
+      this.marks_to_paths = await this.listMarks();
+    })();
   }
 
   private async listMarks() {

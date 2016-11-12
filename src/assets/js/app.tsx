@@ -250,16 +250,6 @@ async function create_session(dataSource, settings, doc, to_load) {
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;
 
-  const onRender = (options) => {
-    const $onto = $('#view');
-    logger.debug('Render called: ', options);
-    setTimeout(() => {
-      const cursorDiv = $('.cursor', $onto)[0];
-      if (cursorDiv) {
-        scrollIntoView(cursorDiv, $onto);
-      }
-    }, 100);
-  };
   const onExport = () => {
     const filename = 'vimflowy_hotkeys.json';
     const content = JSON.stringify(keyBindings.hotkeys, null, 2);
@@ -279,12 +269,20 @@ async function create_session(dataSource, settings, doc, to_load) {
           keyBindings={keyBindings}
           initialDataSource={dataSource}
           initialTheme={initialTheme}
-          onRender={onRender}
           onExport={onExport}
         />,
         appEl,
         resolve
       );
+    }).then(() => {
+      const $onto = $('#view');
+      // NOTE: not sure why this is necessary
+      setTimeout(() => {
+        const cursorDiv = $('.cursor', $onto)[0];
+        if (cursorDiv) {
+          scrollIntoView(cursorDiv, $onto);
+        }
+      }, 100);
     });
   }
 
@@ -310,13 +308,8 @@ async function create_session(dataSource, settings, doc, to_load) {
 
       // fire and forget
       // NOTE: could use handled_command event instead?
-      let t = Date.now();
-      console.log('handling key', t);
       keyHandler.handleKey(key).then(() => {
-        console.log('handled key', Date.now()  - t);
-        t = Date.now();
         renderMain();
-        console.log('rendered main', Date.now()  - t);
       }).catch((err) => {
         setTimeout(() => { throw err; });
       });

@@ -5,7 +5,7 @@ import * as errors from '../errors';
 import { DataSource } from '../datastore';
 
 import SettingsComponent from './settings';
-import SessionComponent, { RenderOptions } from './session';
+import SessionComponent from './session';
 import MenuComponent from './menu';
 import { ModeHotkeysTableComponent } from './hotkeysTable';
 import { PluginsManager } from '../plugins';
@@ -20,7 +20,6 @@ type Props = {
   initialTheme: string;
   initialDataSource: DataSource;
   onThemeChange: (theme: string) => void;
-  onRender: (opts: RenderOptions) => void;
   onExport: () => void;
   error: Error | null;
 }
@@ -113,7 +112,6 @@ export default class AppComponent extends React.Component<Props, {}> {
               */}
               <SessionComponent
                 session={session}
-                onRender={this.props.onRender}
               />
             </div>
 
