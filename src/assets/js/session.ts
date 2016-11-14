@@ -16,7 +16,7 @@ import Menu from './menu';
 import * as Modes from './modes';
 const MODES = Modes.modes;
 
-import { ModeId, CursorOptions } from './types';
+import { ModeId, CursorOptions, Line, Row, Col } from './types';
 
 type SessionOptions = any; // TODO
 type HistoryLogEntry = {
@@ -697,15 +697,15 @@ export default class Session extends EventEmitter {
     return await this.document.getLength(this.cursor.row);
   }
 
-  private async addChars(row, col, chars) {
+  private async addChars(row: Row, col: Col, chars: Line) {
     await this.do(new mutations.AddChars(row, col, chars));
   }
 
-  public async addCharsAtCursor(chars) {
+  public async addCharsAtCursor(chars: Line) {
     await this.addChars(this.cursor.row, this.cursor.col, chars);
   }
 
-  public async addCharsAfterCursor(chars) {
+  public async addCharsAfterCursor(chars: Line) {
     let col = this.cursor.col;
     if (col < (await this.document.getLength(this.cursor.row))) {
       col += 1;
@@ -715,7 +715,7 @@ export default class Session extends EventEmitter {
 
   private async delChars(path, col, nchars, options: DelCharsOptions = {}) {
     const n = await this.document.getLength(path.row);
-    let deleted: Array<string> = [];
+    let deleted: Line = [];
     if ((n > 0) && (nchars > 0) && (col < n)) {
       const mutation = new mutations.DelChars(path.row, col, nchars);
       await this.do(mutation);

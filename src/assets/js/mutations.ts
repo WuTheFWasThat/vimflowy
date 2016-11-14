@@ -24,7 +24,7 @@ the mutation may also optionally implement
 
 import * as _ from 'lodash';
 import * as errors from './errors';
-import { Row, Col, Char, SerializedLine, SerializedPath } from './types';
+import { Row, Col, Char, SerializedLine, SerializedPath, Line } from './types';
 import Path from './path';
 
 // validate inserting id as a child of parent_id
@@ -112,7 +112,7 @@ export class DelChars extends Mutation {
   private row: Row;
   private col: Col;
   private nchars: number;
-  public deletedChars: Array<string>;
+  public deletedChars: Line;
 
   constructor(row, col, nchars) {
     super();

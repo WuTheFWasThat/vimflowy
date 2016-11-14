@@ -7,7 +7,7 @@ import * as constants from './constants';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 import DataStore from './datastore';
-import { Row, Line, SerializedLine } from './types';
+import { Row, Line, SerializedLine, SerializedBlock } from './types';
 
 type RowInfo = {
   line: Line;
@@ -331,7 +331,7 @@ export default class Document extends EventEmitter {
     return await this.setLine(row, line);
   }
 
-  public async deleteChars(row, col, num) {
+  public async deleteChars(row, col, num): Promise<Line> {
     const line = await this.getLine(row);
     const deleted = line.splice(col, num);
     await this.setLine(row, line);
@@ -789,7 +789,7 @@ export default class Document extends EventEmitter {
     row = this.root.row,
     options: {pretty?: boolean} = {},
     serialized = {}
-  ) {
+  ): Promise<SerializedBlock> {
     if (row in serialized) {
       const struct = serialized[row];
       struct.id = row;

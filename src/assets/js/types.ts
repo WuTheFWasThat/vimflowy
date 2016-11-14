@@ -52,6 +52,16 @@ export type SerializedLine = {
   collapsed?: boolean,
   plugins?: any,
 };
+export type SerializedBlock = {
+  text: string,
+  bold?: boolean,
+  italic?: boolean,
+  underline?: boolean,
+  strikethrough?: boolean,
+  collapsed?: boolean,
+  plugins?: any,
+  children?: Array<SerializedBlock>
+} | { clone: Row } | string;
 
 export type Row = number;
 export type Col = number;

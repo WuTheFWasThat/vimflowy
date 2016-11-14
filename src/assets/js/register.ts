@@ -4,6 +4,7 @@ either nothing, a set of characters, a set of row ids, or a set of serialized ro
 Implements pasting for each of the types
 */
 import Session from './session';
+import { Line, SerializedBlock, Row } from './types';
 
 export enum RegisterTypes {
   NONE = 0,
@@ -17,7 +18,7 @@ type PasteOptions = {before?: boolean};
 export default class Register {
   private session: Session;
   private type: RegisterTypes;
-  private saved: any; // TODO
+  private saved: null | Line | Array<SerializedBlock> | Array<Row>;
 
   constructor(session) {
     this.session = session;
@@ -30,17 +31,17 @@ export default class Register {
     this.saved = null;
   }
 
-  public saveChars(save) {
+  public saveChars(save: Line) {
     this.type = RegisterTypes.CHARS;
     this.saved = save;
   }
 
-  public saveSerializedRows(save) {
+  public saveSerializedRows(save: Array<SerializedBlock>) {
     this.type = RegisterTypes.SERIALIZED_ROWS;
     this.saved = save;
   }
 
-  public saveClonedRows(save) {
+  public saveClonedRows(save: Array<Row>) {
     this.type = RegisterTypes.CLONED_ROWS;
     this.saved = save;
   }
@@ -51,7 +52,7 @@ export default class Register {
 
   public deserialize(serialized) {
     this.type = serialized.type;
-    return this.saved = serialized.saved;
+    this.saved = serialized.saved;
   }
 
   // Pasting
@@ -67,7 +68,7 @@ export default class Register {
   }
 
   public async pasteChars(options: PasteOptions = {}) {
-    const chars = this.saved;
+    const chars = (this.saved as Line);
     if (options.before) {
       await this.session.addCharsAtCursor(chars);
     } else {
@@ -81,7 +82,7 @@ export default class Register {
     const parent = path.parent;
     const index = await this.session.document.indexInParent(path);
 
-    const serialized_rows = this.saved;
+    const serialized_rows = (this.saved as Array<SerializedBlock>);
 
     if (options.before) {
       await this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
@@ -100,7 +101,7 @@ export default class Register {
     const parent = path.parent;
     const index = await this.session.document.indexInParent(path);
 
-    const cloned_rows = this.saved;
+    const cloned_rows = (this.saved as Array<Row>);
 
     if (options.before) {
       await this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});

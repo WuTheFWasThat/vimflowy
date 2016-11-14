@@ -156,7 +156,7 @@ class TestCase {
 
   public expect(expected) {
     return this._chain(async () => {
-      const serialized = await this.document.serialize(this.document.root.row, {pretty: true});
+      const serialized: any = await this.document.serialize(this.document.root.row, {pretty: true});
       this._expectDeepEqual(serialized.children, expected, 'Unexpected serialized content');
     });
   }

@@ -352,7 +352,7 @@ async function create_session(dataSource, settings, doc, to_load) {
           return;
         }
         e.preventDefault();
-        const text = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
+        const text: string = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
         // TODO: deal with this better when there are multiple lines
         // maybe put in insert mode?
         const lines = text.split('\n');
@@ -361,7 +361,7 @@ async function create_session(dataSource, settings, doc, to_load) {
           if (i !== 0) {
             await session.newLineAtCursor();
           }
-          const chars = line.split('');
+          const chars = line.split('').map((chr) => ({ char: chr }));
           await session.addCharsAtCursor(chars);
         }
         session.save();
