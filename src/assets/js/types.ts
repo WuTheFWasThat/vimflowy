@@ -45,20 +45,21 @@ export type TextProperties = {
 export type Line = Array<Char>;
 export type SerializedLine = {
   text: string,
-  bold?: boolean,
-  italic?: boolean,
-  underline?: boolean,
-  strikethrough?: boolean,
+  bold?: string,
+  italic?: string,
+  underline?: string,
+  strikethrough?: string,
   collapsed?: boolean,
   plugins?: any,
 };
 export type SerializedBlock = {
   text: string,
-  bold?: boolean,
-  italic?: boolean,
-  underline?: boolean,
-  strikethrough?: boolean,
+  bold?: string,
+  italic?: string,
+  underline?: string,
+  strikethrough?: string,
   collapsed?: boolean,
+  id?: Row,
   plugins?: any,
   children?: Array<SerializedBlock>
 } | { clone: Row } | string;

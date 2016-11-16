@@ -1,8 +1,10 @@
+import { SerializedBlock } from './types';
+
 type TextProperty = 'bold' | 'italic' | 'underline' | 'strikethrough';
 export const text_properties: Array<TextProperty> = ['bold', 'italic', 'underline', 'strikethrough'];
 
 export const empty_data = [''];
-export const default_data = [
+export const default_data: Array<SerializedBlock> = [
   'Welcome to vimflowy!',
   '(I hope you know to use j and k to move up and down!)',
   { text: 'Features', children: [

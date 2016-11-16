@@ -15,6 +15,7 @@ import logger, * as Logger from '../src/assets/js/logger';
 import { PluginsManager, STATUSES } from '../src/assets/js/plugins';
 import Cursor from '../src/assets/js/cursor';
 import Path from '../src/assets/js/path';
+import { SerializedBlock } from '../src/assets/js/types';
 
 logger.setStream(Logger.STREAM.QUEUE);
 afterEach('empty the queue', () => logger.empty());
@@ -23,8 +24,6 @@ afterEach('empty the queue', () => logger.empty());
 // note that the bindings will change when plugins are enabled and disabled
 // thus, tests are not totally isolated
 let keyBindings = new KeyBindings(KeyDefinitions.clone());
-
-type Serialized = any; // TODO
 
 type TestCaseOptions = {
   plugins?: Array<string>
@@ -40,7 +39,7 @@ class TestCase {
   protected pluginManager: PluginsManager;
   protected prom: Promise<void>;
 
-  constructor(serialized: Serialized = [''], options: TestCaseOptions = {}) {
+  constructor(serialized: Array<SerializedBlock> = [''], options: TestCaseOptions = {}) {
     this.store = new InMemory();
     this.document = new Document(this.store);
 
