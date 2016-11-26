@@ -15,8 +15,10 @@ const default_settings = {
 
 export default class Settings {
   private datastore: DataStore;
+  private docname: string;
 
-  constructor(datastore) {
+  constructor(docname, datastore) {
+    this.docname = docname;
     this.datastore = datastore;
   }
 
@@ -25,6 +27,21 @@ export default class Settings {
   }
 
   public async setSetting(setting, value) {
+    return await this.datastore.setSetting(setting, value);
+  }
+
+  public async getDocSetting(setting) {
+    const defaultValue = default_settings[setting];
+    if (this.docname !== '') {
+      setting = `${this.docname}:${setting}`;
+    }
+    return await this.datastore.getSetting(setting, defaultValue);
+  }
+
+  public async setDocSetting(setting, value) {
+    if (this.docname !== '') {
+      setting = `${this.docname}:${setting}`;
+    }
     return await this.datastore.setSetting(setting, value);
   }
 }

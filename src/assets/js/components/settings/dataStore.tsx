@@ -29,10 +29,10 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
   public componentDidMount() {
     (async () => {
       const settings = this.props.session.settings;
-      const firebaseId = await settings.getSetting('firebaseId');
-      const firebaseApiKey = await settings.getSetting('firebaseApiKey');
-      const firebaseUserEmail = await settings.getSetting('firebaseUserEmail');
-      const firebaseUserPassword = await settings.getSetting('firebaseUserPassword');
+      const firebaseId = await settings.getDocSetting('firebaseId');
+      const firebaseApiKey = await settings.getDocSetting('firebaseApiKey');
+      const firebaseUserEmail = await settings.getDocSetting('firebaseUserEmail');
+      const firebaseUserPassword = await settings.getDocSetting('firebaseUserPassword');
       this.setState({
         firebaseId,
         firebaseApiKey,
@@ -45,16 +45,16 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
   private async saveDataSettings() {
     const settings = this.props.session.settings;
     const dataSource = this.state.dataSource;
-    await settings.setSetting('dataSource', dataSource);
+    await settings.setDocSetting('dataSource', dataSource);
     if (dataSource === 'firebase') {
       const firebaseId = this.state.firebaseId;
       const firebaseApiKey = this.state.firebaseApiKey;
       const firebaseUserEmail = this.state.firebaseUserEmail;
       const firebaseUserPassword = this.state.firebaseUserPassword;
-      await settings.setSetting('firebaseId', firebaseId);
-      await settings.setSetting('firebaseApiKey', firebaseApiKey);
-      await settings.setSetting('firebaseUserEmail', firebaseUserEmail);
-      await settings.setSetting('firebaseUserPassword', firebaseUserPassword);
+      await settings.setDocSetting('firebaseId', firebaseId);
+      await settings.setDocSetting('firebaseApiKey', firebaseApiKey);
+      await settings.setDocSetting('firebaseUserEmail', firebaseUserEmail);
+      await settings.setDocSetting('firebaseUserPassword', firebaseUserPassword);
     }
     window.location.reload();
   }

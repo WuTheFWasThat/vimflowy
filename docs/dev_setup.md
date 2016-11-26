@@ -21,7 +21,7 @@ After a short wait, you should see the app at `http://localhost:3000/`
 
 When source code changes, assets should be automatically recompiled and tests automatically re-ran.
 
-Note that you may make new documents simply by visiting `http://localhost:3000/:documentname`
+Note that you may make new documents simply by visiting `http://localhost:3000?doc=<documentname>`
 
 ### Tests
 

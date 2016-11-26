@@ -188,7 +188,7 @@ export const default_data: Array<SerializedBlock> = [
     'Collapse things often to avoid clutter.  Zoom into collapsed bullets',
     'Use ctrl+[hjkl] to move blocks of content around easily',
     'Use ? to hide the keybindings menu, once you become an expert',
-    'For local version only: Multiple documents.  Just visit /<documentname>',
+    'Multiple documents.  Just add the query parameter ?doc=<documentname>',
   ] },
   'Press i to enter insert mode and start adding your own content!',
   'For more info, visit https://github.com/WuTheFWasThat/vimflowy',

@@ -378,7 +378,9 @@ async function create_session(dataSource, settings, doc, to_load) {
 
 $(document).ready(async () => {
 
-  const docname = window.location.pathname.split('/')[1];
+  let docname: string = utils.getParameterByName('doc') || '';
+  if (!docname) { docname = window.location.pathname.split('/')[1]; }
+  if (!docname) { docname = window.location.hash.substr(1); }
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
 
   const noLocalStorage = (typeof localStorage === 'undefined' || localStorage === null);
@@ -389,11 +391,11 @@ $(document).ready(async () => {
 
   if (noLocalStorage) {
     alert('You need local storage support for data to be persisted!');
-    settings = new Settings(new DataStore.InMemory());
+    settings = new Settings(docname, new DataStore.InMemory());
     dataSource = 'inmemory';
   } else {
-    settings = new Settings(new DataStore.LocalStorageLazy());
-    dataSource = await settings.getSetting('dataSource');
+    settings = new Settings(docname, new DataStore.LocalStorageLazy());
+    dataSource = await settings.getDocSetting('dataSource');
   }
 
   if (dataSource === 'firebase') {
@@ -403,10 +405,10 @@ $(document).ready(async () => {
       firebaseUserEmail,
       firebaseUserPassword,
     ] = await Promise.all([
-      settings.getSetting('firebaseId'),
-      settings.getSetting('firebaseApiKey'),
-      settings.getSetting('firebaseUserEmail'),
-      settings.getSetting('firebaseUserPassword'),
+      settings.getDocSetting('firebaseId'),
+      settings.getDocSetting('firebaseApiKey'),
+      settings.getDocSetting('firebaseUserEmail'),
+      settings.getDocSetting('firebaseUserPassword'),
     ]);
 
     try {
