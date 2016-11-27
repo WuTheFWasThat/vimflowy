@@ -1,4 +1,3 @@
-/* globals alert, localStorage */
 import * as firebase from 'firebase';
 
 import * as _ from 'lodash';

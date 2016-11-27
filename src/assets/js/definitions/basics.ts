@@ -1,5 +1,3 @@
-/* globals window */
-
 import * as utils from '../utils';
 import keyDefinitions, { Action, SequenceAction } from '../keyDefinitions';
 import { CursorOptions } from '../types';

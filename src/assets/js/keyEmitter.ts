@@ -1,4 +1,3 @@
-/* globals document, window, navigator, alert, InstallTrigger */
 import $ from 'jquery';
 import * as _ from 'lodash';
 

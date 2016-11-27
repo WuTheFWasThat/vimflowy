@@ -1,5 +1,3 @@
-/* globals alert */
-
 import * as _ from 'lodash';
 
 import * as Modes from './modes';
@@ -187,8 +185,11 @@ export class PluginApi {
   }
 
   public async panic() {
-    alert(`Plugin '${this.name}' has encountered a major problem. Please report this problem to the plugin author.`);
-    await this.pluginManager.disable(this.name);
+    // await this.pluginManager.disable(this.name);
+    throw new Error(
+      `Plugin '${this.name}' has encountered a major problem.
+      Please report this problem to the plugin author.`
+    );
   }
 }
 
@@ -312,7 +313,7 @@ const registerPlugin = function(
   plugin.enable = enable;
   plugin.disable = disable || _.once(function(api) {
     api.deregisterAll();
-    alert(
+    throw new Error(
       `The plugin '${plugin.name}' was disabled but doesn't support online disable functionality. Refresh to disable.`
     );
   });

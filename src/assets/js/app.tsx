@@ -1,5 +1,3 @@
-/* globals window, document, localStorage, alert */
-
 /*
 initialize the main page
 - handle button clicks (import/export/hotkey stuff)
