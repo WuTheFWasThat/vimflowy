@@ -21,7 +21,7 @@ Plugins.register(
     api.registerMotion(
       'easy-motion',
       'Jump to a visible row (based on EasyMotion)',
-      async function({ session, keyStream }) {
+      async function({ session, keyStream, keyHandler }) {
         let paths: Array<Path> = (await session.getVisiblePaths()).filter(
           path => !path.is(session.cursor.path)
         );
@@ -66,6 +66,8 @@ Plugins.register(
         await Promise.all(_.values(EASY_MOTION_MAPPINGS.key_to_path).map(
           async (path) => await api.updatedDataForRender(path.row)
         ));
+        // TODO hacky way to trigger re-render
+        keyHandler.emit('handledKey');
 
         const key = await keyStream.dequeue();
 

@@ -165,9 +165,11 @@ export default class KeyHandler extends EventEmitter {
       const record = await this.getCommand(keyStream);
       if (record != null) {
         await this.handleRecord(keyStream, record);
-        this.session.emit('handledKey');
-        this.emit('handledKey');
       }
+      // NOTE: needs to be outside if statement
+      // in case of transformed key
+      this.session.emit('handledKey');
+      this.emit('handledKey');
     }
   }
 

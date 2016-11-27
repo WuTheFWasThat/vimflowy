@@ -127,22 +127,24 @@ export class KeyBindings extends EventEmitter {
   constructor(definitions: KeyDefinitions, mappings: KeyMappings) {
     super();
     this.definitions = definitions;
+    this.definitions.on('update', () => this.update());
     this.setMappings(mappings);
   }
 
   public setDefaultMappings() {
-    this.mappings = defaultMappings;
-    this.update();
+    this.setMappings(defaultMappings);
   }
 
   public setMappings(mappings: KeyMappings) {
+    if (this.mappings) {
+      this.mappings.removeAllListeners('update');
+    }
     this.mappings = mappings;
+    this.mappings.on('update', () => this.update());
     this.update();
   }
 
-  // NOTE: definitions can change so that this is necessary to rerun
-  // TODO: make it able to recompute differentially?
-  public update() {
+  private update() {
     this.bindings = makeBindings(this.definitions, this.mappings);
   }
 }

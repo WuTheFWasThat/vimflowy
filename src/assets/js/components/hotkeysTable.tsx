@@ -4,7 +4,7 @@ import { HotkeyMapping } from '../keyMappings';
 import { KeyDefinitions, Motion, Action } from '../keyDefinitions';
 
 type HotkeysTableProps = {
-  keyMap: HotkeyMapping;
+  keyMap: HotkeyMapping | null;
   definitions: KeyDefinitions;
   ignoreEmpty?: boolean;
 }
@@ -12,6 +12,9 @@ type HotkeysTableProps = {
 export default class HotkeysTableComponent extends React.Component<HotkeysTableProps, {}> {
   public render() {
     const keyMap = this.props.keyMap;
+    if (!keyMap) {
+      return <div>No hotkeys!</div>;
+    }
     const definitions = this.props.definitions;
     const ignoreEmpty = this.props.ignoreEmpty;
 

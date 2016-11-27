@@ -1,3 +1,4 @@
+import EventEmitter from './eventEmitter';
 import Session from './session';
 import KeyHandler, { KeyStream } from './keyHandler';
 import Cursor from './cursor';
@@ -57,10 +58,11 @@ export class Action {
   }
 }
 
-export class KeyDefinitions {
+export class KeyDefinitions extends EventEmitter {
   private registry: {[name: string]: Action | Motion};
 
   constructor() {
+    super();
     this.registry = {};
   }
 
@@ -73,6 +75,7 @@ export class KeyDefinitions {
       throw new Error(`${motion.name} already defined!`);
     }
     this.registry[motion.name] = motion;
+    this.emit('update');
   }
 
   public deregisterMotion(motionName: MotionName) {
@@ -84,6 +87,7 @@ export class KeyDefinitions {
       throw new Error(`Tried to deregister motion ${motionName}, but it was registered as an action!`);
     }
     delete this.registry[motionName];
+    this.emit('update');
   }
 
   public registerAction(action: Action) {
@@ -91,6 +95,7 @@ export class KeyDefinitions {
       throw new Error(`${action.name} already defined!`);
     }
     this.registry[action.name] = action;
+    this.emit('update');
   }
 
   public deregisterAction(actionName: ActionName) {
@@ -102,6 +107,7 @@ export class KeyDefinitions {
       throw new Error(`Tried to deregister action ${actionName}, but it was registered as a motion!`);
     }
     delete this.registry[actionName];
+    this.emit('update');
   }
 }
 

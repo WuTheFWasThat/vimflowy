@@ -75,16 +75,8 @@ export class PluginApi {
     await this.document.updateCachedPluginData(row);
   }
 
-  // TODO: have definitions be event emitter? have this be automatic somehow
-  //       (first try combining bindings into definitions)
-  //       should also re-render mode table
-  private _reapply_hotkeys() {
-    this.session.bindings.update();
-  }
-
   public registerMode(metadata) {
     const mode = Modes.registerMode(metadata);
-    this._reapply_hotkeys();
     this.registrations.push(() => {
       this.deregisterMode(mode);
     });
@@ -93,12 +85,10 @@ export class PluginApi {
 
   public deregisterMode(mode) {
     Modes.deregisterMode(mode);
-    this._reapply_hotkeys();
   }
 
   public registerDefaultMappings(mode: string, mappings: HotkeyMapping) {
     defaultKeyMappings.registerModeMappings(mode, mappings);
-    this._reapply_hotkeys();
     this.registrations.push(() => {
       this.deregisterDefaultMappings(mode, mappings);
     });
@@ -106,13 +96,11 @@ export class PluginApi {
 
   public deregisterDefaultMappings(mode: string, mappings: HotkeyMapping) {
     defaultKeyMappings.deregisterModeMappings(mode, mappings);
-    this._reapply_hotkeys();
   }
 
   public registerMotion(name, desc, def) {
     const motion = new Motion(name, desc, def);
     this.definitions.registerMotion(motion);
-    this._reapply_hotkeys();
     this.registrations.push(() => {
       this.deregisterMotion(motion.name);
     });
@@ -121,7 +109,6 @@ export class PluginApi {
 
   public deregisterMotion(name) {
     this.definitions.deregisterMotion(name);
-    this._reapply_hotkeys();
   }
 
   public registerAction(name, desc, def) {
@@ -130,13 +117,11 @@ export class PluginApi {
     this.registrations.push(() => {
       this.deregisterAction(action.name);
     });
-    this._reapply_hotkeys();
     return action;
   }
 
   public deregisterAction(name) {
     this.definitions.deregisterAction(name);
-    this._reapply_hotkeys();
   }
 
   private _getEmitter(who): Document | Session {

@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import logger from './logger';
 
-// import * as Modes from './modes';
+import EventEmitter from './eventEmitter';
 import { motionKey } from './keyDefinitions';
 import { Key } from './types';
 
@@ -13,21 +13,39 @@ export type HotkeyMapping = {
 
 // for each mode, keeps a set of hotkeys
 // simple wrapper class, no sanity checks
-export class KeyMappings {
+export class KeyMappings extends EventEmitter {
   public mappings: {[mode: string]: HotkeyMapping};
+
+  public static merge(first, second) {
+    const getMerged = () => {
+      const mappings = _.cloneDeep(first.mappings);
+      Object.keys(second.mappings).forEach((mode) => {
+        mappings[mode] = Object.assign(mappings[mode] || {}, second.mappings[mode]);
+      });
+      return mappings;
+    };
+    const merged = new KeyMappings(getMerged());
+
+    first.on('update', () => merged.setMappings(getMerged()));
+    second.on('update', () => merged.setMappings(getMerged()));
+    return merged;
+  }
+
   constructor(mappings) {
+    super();
     this.mappings = _.cloneDeep(mappings);
   }
 
-  public clone() {
-    return new KeyMappings(this.mappings);
+  public setMappings(mappings) {
+    this.mappings = mappings;
+    this.emit('update');
   }
 
   public serialize() {
     return _.cloneDeep(this.mappings);
   }
 
-  public registerMapping(mode: string, keySequence: Array<Key>, name: string) {
+  private _registerMapping(mode: string, keySequence: Array<Key>, name: string) {
     let mappings_for_mode = this.mappings[mode];
     if (!mappings_for_mode) {
       mappings_for_mode = {};
@@ -41,16 +59,22 @@ export class KeyMappings {
     sequences_for_name.push(keySequence);
   }
 
+  public registerMapping(mode: string, keySequence: Array<Key>, name: string) {
+    this._registerMapping(mode, keySequence, name);
+    this.emit('update');
+  }
+
   public registerModeMappings(mode: string, mappings: HotkeyMapping) {
     Object.keys(mappings).forEach((name) => {
       const keySequences = mappings[name];
-      keySequences.forEach((sequence) => this.registerMapping(mode, sequence, name));
+      keySequences.forEach((sequence) => this._registerMapping(mode, sequence, name));
     });
+    this.emit('update');
   }
 
   // TODO: future dont require name for this
   // also sanity check collisions in registration
-  public deregisterMapping(mode: string, keySequence: Array<Key>, name: string) {
+  private _deregisterMapping(mode: string, keySequence: Array<Key>, name: string) {
     const mappings_for_mode = this.mappings[mode];
     if (!mappings_for_mode) {
       logger.warn(`Nothing to deregister for mode ${mode}`);
@@ -67,18 +91,17 @@ export class KeyMappings {
     mappings_for_mode[name] = sequences_for_name;
   }
 
+  public deregisterMapping(mode: string, keySequence: Array<Key>, name: string) {
+    this._deregisterMapping(mode, keySequence, name);
+    this.emit('update');
+  }
+
   public deregisterModeMappings(mode: string, mappings: HotkeyMapping) {
     Object.keys(mappings).forEach((name) => {
       const keySequences = mappings[name];
-      keySequences.forEach((sequence) => this.deregisterMapping(mode, sequence, name));
+      keySequences.forEach((sequence) => this._deregisterMapping(mode, sequence, name));
     });
-  }
-
-  public merge(other: KeyMappings) {
-    Object.keys(other.mappings).forEach((mode) => {
-      this.registerModeMappings(mode, other.mappings[mode]);
-    });
-    return this;
+    this.emit('update');
   }
 }
 

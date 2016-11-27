@@ -308,7 +308,7 @@ export class LocalStorageLazy extends DataStore {
 
   private _getLocalStorage_(key: string): any | null {
     const val = localStorage.getItem(key);
-    if (val == null) {
+    if ((val == null) || (val === 'undefined')) {
       return null;
     }
     return JSON.parse(val);

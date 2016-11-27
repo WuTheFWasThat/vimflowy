@@ -129,10 +129,8 @@ async function create_session(dataSource, settings, doc, to_load) {
   let showingKeyBindings = await settings.getSetting('showKeyBindings');
 
   // hotkeys and key bindings
-  const initial_mappings = await settings.getSetting('hotkeys', {});
-  const mappings = defaultKeyMappings.clone().merge(
-    new KeyMappings(initial_mappings)
-  );
+  const saved_mappings = await settings.getSetting('hotkeys', {});
+  const mappings = KeyMappings.merge(defaultKeyMappings, new KeyMappings(saved_mappings));
   const keyBindings = new KeyBindings(keyDefinitions, mappings);
 
   // session
