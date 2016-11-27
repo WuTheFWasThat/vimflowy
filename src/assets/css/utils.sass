@@ -43,7 +43,6 @@
   clear: both
 
 .tooltip
-    display: inline
     position: relative
     cursor: default
 
@@ -53,30 +52,19 @@
 
     &:hover:after
         background: #111
-        background: rgba(0,0,0,.8)
+        background: rgba(0,0,0,.6)
         border-radius: .5em
-        bottom: 1.85em
+        bottom: 1em
         color: #fff
         content: attr(title)
         display: block
-        left: 1em
+        text-align: center
         padding: .3em 1em
         position: absolute
-        width: 250px
+        width: '100%'
         z-index: 98
         font-size: 12px
 
-    &:hover:before
-        border: solid
-        border-color: #111 transparent
-        border-color: rgba(0,0,0,.8) transparent
-        border-width: .4em .4em 0 .4em
-        bottom: 1em
-        content: ""
-        display: block
-        left: 2em
-        position: absolute
-        z-index: 99
 
 .text-success
     color: green

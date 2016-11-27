@@ -31,18 +31,44 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
 
       const cellStyle = { fontSize: 10, border: '1px solid', padding: 5 };
 
-      /*
-          <div className='tooltip' title={MODE_TYPES[mode_type].description}>
-          </div>
-      */
-
       const el = (
         <tr key={name}>
-          <td key='keys' style={cellStyle}>
-            { mappings_for_name.join(' OR ') }
+          <td style={cellStyle}>
+            { registration.name }
+            <i className='fa fa-question-circle tooltip'
+               title={registration.description} style={{float: 'right'}}/>
           </td>
-          <td key='desc' style={ Object.assign({width: '100%'}, cellStyle) }>
-            { registration.description }
+          <td style={cellStyle}>
+            {
+              mappings_for_name.map((sequence, i) => {
+                return (
+                  <span key={i}>
+                    {
+                      (i > 0)
+                      ? <span key='or'> OR </span>
+                      : null
+                    }
+                    {
+                      sequence.map((key, j) => {
+                        return (
+                          <span key={j}
+                            className='theme-trim theme-bg-primary'
+                            style={{
+                              padding: 1,
+                              borderRadius: 3,
+                              margin: 1,
+                            }}
+                          >
+                            {key}
+                          </span>
+                        );
+                      })
+                    }
+                  </div>
+                );
+              })
+            }
+
           </td>
         </tr>
       );
@@ -56,7 +82,6 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
           `Unexpected: unknown registration type for ${registration}`
         );
       }
-
     });
 
     return (
