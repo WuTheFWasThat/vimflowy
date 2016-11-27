@@ -64,25 +64,22 @@ A **mode** is an editing mode, ala modal editing.
 Commands are always executed in the context of a mode.
 The function `session.setMode(mode)` changes what mode you're in.
 
-A **command** is a building block for defining an action and/or motion.
-It can be used combinatorially in different motions/action definitions.
-Each command is assigned default hotkeys, and can be thought of as a layer of indirection above keypresses.
-
 A **motion** is a movement of a cursor.
-It is defined by associating a sequence of commands with a function (that mutates a cursor).
 
 An **action** is a manipulation of the document/underlying data.
-It is defined by associating a sequence of commands with a function to perform the action, for a given set of modes.
-There is a special 'MOTION' command which lets an action use any motion as a subroutine.
-See the definitions of yank and delete, in [`src/assets/js/definitions/basics.ts`](../src/assets/js/definitions/basics.ts), for an example.
+
+A **mapping** is a map from action/motion names to a set of key sequences used to trigger that action or motion.
+Actions may optionally accept motions and do something with the motion
+(e.g. move the cursor according to the movement, or delete text according to the movement).
+To accept a motion, an action's mapping must have a special key '<motion>' which means any sequence for a motion.
 
 For other example usages, see the folder [`src/assets/js/definitions`](../src/assets/js/definitions), and the easy-motion plugin.
 
 ```
     api.registerMode(metadata) -> mode
-    api.registerCommand(metadata) -> command
-    api.registerMotion(commands, metadata, fn)
-    api.registerAction(modes, commands, metadata, fn)
+    api.registerMotion(name, description, definition) -> Motion
+    api.registerAction(name, description, definition) -> Action
+    api.registerDefaultMappings(mode, mappings)
 ```
 
 In your plugin's disable function, you'll want to deregister everything, in reverse order of registration:
@@ -92,9 +89,9 @@ In your plugin's disable function, you'll want to deregister everything, in reve
 You can also manually call each deregister, but this is not recomended
 ```
     api.deregisterMode(mode)
-    api.deregisterCommand(command)
-    api.deregisterMotion(commands)
-    api.deregisterAction(modes, commands)
+    api.deregisterMotion(name)
+    api.deregisterAction(name)
+    api.deregisterDefaultMappings(mode, mappings)
 ```
 
 See [`keyDefinitions.ts`](../src/assets/js/keyDefinitions.ts) for detailed schema for the metadata of each of these.

@@ -128,8 +128,6 @@ export default class KeyHandler extends EventEmitter {
 
   public queueKey(key) {
     logger.info('Handling key:', key);
-    // TODO NOTE: we could record too many keys for macros, in theory,
-    // since processing is slow
     const hadWaiting = this.keyStream.enqueue(key);
     if (!hadWaiting) {
       this.processKeys(); // FIRE AND FORGET
@@ -206,8 +204,7 @@ export default class KeyHandler extends EventEmitter {
     [key, context] = await mode_obj.transform_key(key, context);
     if (key === null) {
       // a transform acted (which, for now, we always consider not bad.  could change)
-      // TODO TODO TODO this is wrong behavior
-      // have transform key return an action?
+      // TODO have transform key return an action?
       return null;
     }
 

@@ -104,12 +104,8 @@ export default class Mode {
 export const MODES: {[key: string]: Mode} = {};
 
 const registerMode = function(metadata) {
-
   if (MODES[metadata.name]) {
-    throw new Error('Reregistered mode');
-    // NOTE: re-registration of the mode currently happens in unit tests
-    // TODO figure this out better.  also tests shouldn't keep registering new modes anyways
-    // return MODES[metadata.name];
+    throw new Error(`Reregistered mode ${metadata.name}`);
   }
   const mode = new Mode(metadata);
   MODES[metadata.name] = mode;
@@ -192,8 +188,6 @@ registerMode({
   async exit(session) {
     await session.cursor.left();
     // unlike other modes, esc in insert mode keeps changes
-    // TODO BEFORE COMMITTING
-    // keyStream.drop();
     session.save();
   },
 });
@@ -206,8 +200,7 @@ registerMode({
   },
   async exit(session, newMode?: ModeId) {
     session.anchor = null;
-    // TODO BEFORE COMMITTING
-    // keyStream.save();
+    // NOTE: should we have keyStream.save()?
     if (newMode === 'NORMAL') {
       session.save();
     }
@@ -222,8 +215,7 @@ registerMode({
   },
   async exit(session, newMode?: ModeId) {
     session.anchor = null;
-    // TODO BEFORE COMMIT
-    // keyStream.save();
+    // NOTE: should we have keyStream.save()?
     if (newMode === 'NORMAL') {
       session.save();
     }
@@ -259,8 +251,7 @@ registerMode({
   },
   async exit(session, newMode?: ModeId) {
     session.menu = null;
-    // TODO BEFORE COMMIT
-    // keyStream.drop();
+    // NOTE: should keyStream.drop() here?
   },
   key_transforms: [
     async function(key, context) {
@@ -268,7 +259,7 @@ registerMode({
       if (key.length === 1) {
         await context.session.menu.session.addCharsAtCursor([{char: key}]);
         await context.session.menu.update();
-        // context.keyStream.drop();
+        context.keyStream.drop();
         return [null, context];
       }
       return [key, context];

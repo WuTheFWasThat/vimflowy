@@ -8,18 +8,6 @@ import * as Plugins from '../../assets/js/plugins';
 import { Logger } from '../../assets/js/logger';
 import { Row } from '../../assets/js/types';
 
-import defaultKeyMappings from '../../assets/js/keyMappings';
-
-defaultKeyMappings.registerModeMappings(
-  'NORMAL',
-  {
-    'toggle-time-tracking': [['Z', 'l']],
-    'clear-row-time': [['Z', 'c']],
-    'add-row-time': [['Z', 'a'], ['Z', '>']],
-    'subtract-row-time': [['Z', 's'], ['Z', '<']],
-  },
-);
-
 function pad(val, length, padChar = '0') {
   val += '';
   let numPads = length - val.length;
@@ -130,6 +118,16 @@ class TimeTrackingPlugin {
       'Subtract time from current row (in minutes)',
       async ({ repeat }) => {
         return await this.changeTimecurrentPath(-repeat);
+      },
+    );
+
+    this.api.registerDefaultMappings(
+      'NORMAL',
+      {
+        'toggle-time-tracking': [['Z', 'l']],
+        'clear-row-time': [['Z', 'c']],
+        'add-row-time': [['Z', 'a'], ['Z', '>']],
+        'subtract-row-time': [['Z', 's'], ['Z', '<']],
       },
     );
 

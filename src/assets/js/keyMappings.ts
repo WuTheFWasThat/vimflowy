@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import logger from './logger';
 
 // import * as Modes from './modes';
 import { motionKey } from './keyDefinitions';
@@ -26,7 +27,7 @@ export class KeyMappings {
     return _.cloneDeep(this.mappings);
   }
 
-  public registerMapping(mode: string, name: string, keySequence: Array<Key>) {
+  public registerMapping(mode: string, keySequence: Array<Key>, name: string) {
     let mappings_for_mode = this.mappings[mode];
     if (!mappings_for_mode) {
       mappings_for_mode = {};
@@ -40,14 +41,37 @@ export class KeyMappings {
     sequences_for_name.push(keySequence);
   }
 
-  public registerMappings(mode: string, name: string, keySequences: Array<Array<Key>>) {
-    keySequences.forEach((sequence) => this.registerMapping(mode, name, sequence));
+  public registerModeMappings(mode: string, mappings: HotkeyMapping) {
+    Object.keys(mappings).forEach((name) => {
+      const keySequences = mappings[name];
+      keySequences.forEach((sequence) => this.registerMapping(mode, sequence, name));
+    });
   }
 
-  public registerModeMappings(mode: string, mappings: HotkeyMapping) {
-    this.mappings[mode] = Object.assign(
-      this.mappings[mode] || {}, mappings
-    );
+  // TODO: future dont require name for this
+  // also sanity check collisions in registration
+  public deregisterMapping(mode: string, keySequence: Array<Key>, name: string) {
+    const mappings_for_mode = this.mappings[mode];
+    if (!mappings_for_mode) {
+      logger.warn(`Nothing to deregister for mode ${mode}`);
+      return;
+    }
+    let sequences_for_name = mappings_for_mode[name];
+    if (!(sequences_for_name && sequences_for_name.length)) {
+      logger.warn(`No sequences to deregister for ${name} in mode ${mode}`);
+      return;
+    }
+    sequences_for_name = sequences_for_name.filter((sequence) => {
+      return JSON.stringify(sequence) !== JSON.stringify(keySequence);
+    });
+    mappings_for_mode[name] = sequences_for_name;
+  }
+
+  public deregisterModeMappings(mode: string, mappings: HotkeyMapping) {
+    Object.keys(mappings).forEach((name) => {
+      const keySequences = mappings[name];
+      keySequences.forEach((sequence) => this.deregisterMapping(mode, sequence, name));
+    });
   }
 
   public merge(other: KeyMappings) {

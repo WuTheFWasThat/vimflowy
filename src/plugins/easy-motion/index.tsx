@@ -4,15 +4,6 @@ import React from 'react'; // tslint:disable-line no-unused-variable
 import Path from '../../assets/js/path';
 import * as Plugins from '../../assets/js/plugins';
 
-import defaultKeyMappings from '../../assets/js/keyMappings';
-
-defaultKeyMappings.registerModeMappings(
-  'NORMAL',
-  {
-    'easy-motion': [['space']],
-  },
-);
-
 type EasyMotionMappings = {
   key_to_path: {[key: string]: Path},
   path_to_key: {[serialized_path: string]: string},
@@ -94,7 +85,14 @@ Plugins.register(
       },
     );
 
-    return api.registerHook('session', 'renderBullet', function(bullet, info) {
+    api.registerDefaultMappings(
+      'NORMAL',
+      {
+        'easy-motion': [['space']],
+      },
+    );
+
+    api.registerHook('session', 'renderBullet', function(bullet, info) {
       let ancestry_str = JSON.stringify(info.path.getAncestry());
       if (EASY_MOTION_MAPPINGS !== null) {
         if (ancestry_str in EASY_MOTION_MAPPINGS.path_to_key) {

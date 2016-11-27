@@ -14,35 +14,11 @@ import { Logger } from '../../assets/js/logger';
 import Path from '../../assets/js/path';
 import { Row } from '../../assets/js/types';
 
-import defaultKeyMappings, {
-  INSERT_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS,
-} from '../../assets/js/keyMappings';
+import { INSERT_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS } from '../../assets/js/keyMappings';
 import { motionKey } from '../../assets/js/keyDefinitions';
 
 // TODO: do this elsewhere
 declare const process: any;
-
-defaultKeyMappings.registerModeMappings(
-  'MARK',
-  Object.assign({
-    'toggle-help': [['ctrl+?']],
-    'move-cursor-mark': [[motionKey]],
-    'finish-mark': [['enter']],
-    'mark-delete-char-after': [['delete']],
-    'mark-delete-char-before': [['backspace'], ['shift+backspace']],
-    'exit-mode': [['esc'], ['ctrl+c']],
-  }, _.pick(INSERT_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS))
-);
-
-defaultKeyMappings.registerModeMappings(
-  'NORMAL',
-  {
-    'begin-mark': [['m']],
-    'go-mark': [['g', 'm']],
-    'delete-mark': [['d', 'm']],
-    'search-marks': [['\''], ['`']],
-  },
-);
 
 const markStyle = {
   padding: '0px 10px',
@@ -325,6 +301,28 @@ class MarksPlugin {
           throw new Error('Mark state null in mark mode');
         }
         await that.markstate.session.delCharsAfterCursor(1);
+      },
+    );
+
+    this.api.registerDefaultMappings(
+      'MARK',
+      Object.assign({
+        'toggle-help': [['ctrl+?']],
+        'move-cursor-mark': [[motionKey]],
+        'finish-mark': [['enter']],
+        'mark-delete-char-after': [['delete']],
+        'mark-delete-char-before': [['backspace'], ['shift+backspace']],
+        'exit-mode': [['esc'], ['ctrl+c']],
+      }, _.pick(INSERT_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS))
+    );
+
+    this.api.registerDefaultMappings(
+      'NORMAL',
+      {
+        'begin-mark': [['m']],
+        'go-mark': [['g', 'm']],
+        'delete-mark': [['d', 'm']],
+        'search-marks': [['\''], ['`']],
       },
     );
 

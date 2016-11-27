@@ -9,6 +9,7 @@ import EventEmitter from './eventEmitter';
 import Document from './document';
 import Cursor from './cursor';
 import Session from './session';
+import defaultKeyMappings, { HotkeyMapping } from './keyMappings';
 import { KeyBindings } from './keyBindings';
 import { KeyDefinitions, Action, Motion } from './keyDefinitions';
 
@@ -80,18 +81,15 @@ export class PluginApi {
   //       (first try combining bindings into definitions)
   //       should also re-render mode table
   private _reapply_hotkeys() {
-    const err = this.session.bindings.update();
-    if (err) {
-      throw new errors.GenericError(`Error applying hotkeys: ${err}`);
-    }
+    this.session.bindings.update();
   }
 
   public registerMode(metadata) {
     const mode = Modes.registerMode(metadata);
+    this._reapply_hotkeys();
     this.registrations.push(() => {
       this.deregisterMode(mode);
     });
-    this._reapply_hotkeys();
     return mode;
   }
 
@@ -100,13 +98,26 @@ export class PluginApi {
     this._reapply_hotkeys();
   }
 
+  public registerDefaultMappings(mode: string, mappings: HotkeyMapping) {
+    defaultKeyMappings.registerModeMappings(mode, mappings);
+    this._reapply_hotkeys();
+    this.registrations.push(() => {
+      this.deregisterDefaultMappings(mode, mappings);
+    });
+  }
+
+  public deregisterDefaultMappings(mode: string, mappings: HotkeyMapping) {
+    defaultKeyMappings.deregisterModeMappings(mode, mappings);
+    this._reapply_hotkeys();
+  }
+
   public registerMotion(name, desc, def) {
     const motion = new Motion(name, desc, def);
     this.definitions.registerMotion(motion);
+    this._reapply_hotkeys();
     this.registrations.push(() => {
       this.deregisterMotion(motion.name);
     });
-    this._reapply_hotkeys();
     return motion;
   }
 

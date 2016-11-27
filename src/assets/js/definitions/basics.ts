@@ -134,8 +134,6 @@ keyDefinitions.registerAction(new Action(
   },
 ));
 
-
-// TODO: this isn't actually a motion, but that's okay for now...
 keyDefinitions.registerAction(new Action(
   'visit-link',
   'Visit to the link indicated by the cursor, in a new tab',
