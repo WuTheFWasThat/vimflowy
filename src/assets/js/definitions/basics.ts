@@ -4,7 +4,7 @@ import { CursorOptions } from '../types';
 
 keyDefinitions.registerAction(new Action(
   'move-cursor-normal',
-  'Move the cursor',
+  'Move the cursor (according to the specified motion)',
   async function(context) {
     const { motion, session, repeat } = context;
     if (motion == null) {
@@ -23,7 +23,7 @@ keyDefinitions.registerAction(new Action(
 
 keyDefinitions.registerAction(new Action(
   'move-cursor-insert',
-  'Move the cursor',
+  'Move the cursor (according to the specified motion)',
   async function(context) {
     const { motion, session } = context;
     if (motion == null) {
@@ -35,7 +35,7 @@ keyDefinitions.registerAction(new Action(
 
 keyDefinitions.registerAction(new Action(
   'move-cursor-visual',
-  'Move the cursor',
+  'Move the cursor (according to the specified motion)',
   async function(context) {
     const { motion, session, repeat } = context;
     if (motion == null) {
@@ -57,7 +57,7 @@ keyDefinitions.registerAction(new Action(
 
 keyDefinitions.registerAction(new Action(
   'move-cursor-visual-line',
-  'Move the cursor',
+  'Move the cursor (according to the specified motion)',
   async function(context) {
     const { motion, session, repeat } = context;
     if (motion == null) {
@@ -134,14 +134,12 @@ keyDefinitions.registerAction(new Action(
 
 keyDefinitions.registerAction(new Action(
   'visit-link',
-  'Visit to the link indicated by the cursor, in a new tab',
+  'Visit the link indicated by the cursor, in a new tab',
   async function({ session }) {
-    return async (cursor) => {
-      const word = await session.document.getWord(cursor.row, cursor.col);
-      if (utils.isLink(word)) {
-        window.open(word);
-      }
-    };
+    const word = await session.document.getWord(session.cursor.row, session.cursor.col);
+    if (utils.isLink(word)) {
+      window.open(word);
+    }
   },
   { sequence: SequenceAction.DROP },
 ));

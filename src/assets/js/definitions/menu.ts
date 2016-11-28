@@ -30,7 +30,7 @@ keyDefinitions.registerAction(new Action(
 
 keyDefinitions.registerAction(new Action(
   'move-cursor-search',
-  'Move the cursor',
+  'Move the cursor within the search box (according to the specified motion)',
   async function({ motion, session }) {
     if (motion == null) {
       throw new Error('Motion command was not passed a motion');

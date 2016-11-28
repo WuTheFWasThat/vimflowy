@@ -64,7 +64,7 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
                         );
                       })
                     }
-                  </div>
+                  </span>
                 );
               })
             }

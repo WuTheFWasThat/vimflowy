@@ -273,7 +273,7 @@ class MarksPlugin {
 
     this.api.registerAction(
       'move-cursor-mark',
-      'Move the cursor',
+      'Move the cursor within the mark being edited (according to the specified motion)',
       async function({ motion }) {
         if (that.markstate === null) {
           throw new Error('Mark state null in mark mode');
@@ -381,7 +381,7 @@ class MarksPlugin {
 
       if (this.session.mode === 'NORMAL') {
         if (wordInfo.word[0] === '@') {
-          const mark = wordInfo.word.slice(1);
+          const mark = wordInfo.word.slice(1).replace(/(\.|!|\?)+$/g, '');
           const path = this.marks_to_paths[mark];
           if (path) {
             for (let i = wordInfo.start; i <= wordInfo.end; i++) {

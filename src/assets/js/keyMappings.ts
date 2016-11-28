@@ -6,6 +6,8 @@ import { motionKey } from './keyDefinitions';
 import { Key } from './types';
 
 // TODO: 'swap-case': [['~']]
+// TODO: 'next-sentence': [[')']]
+// TODO: 'prev-sentence': [['(']]
 
 export type HotkeyMapping = {
   [name: string]: Array<Array<Key>>

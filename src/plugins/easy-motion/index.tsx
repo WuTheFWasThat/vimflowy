@@ -13,7 +13,10 @@ Plugins.register(
   {
     name: 'Easy motion',
     author: 'Jeff Wu',
-    description: 'Lets you easily jump between rows.  Based on https://github.com/easymotion/vim-easymotion',
+    description: `
+    Lets you easily jump between rows, by default with <space>.
+    Based on https://github.com/easymotion/vim-easymotion
+    `,
   },
   function(api) {
     let EASY_MOTION_MAPPINGS: EasyMotionMappings | null = null;
