@@ -8,6 +8,7 @@ import { MODES } from '../modes';
 
 import Session from '../session';
 import { KeyBindings } from '../keyBindings';
+import { KeyMappings } from '../keyMappings';
 import { PluginsManager } from '../plugins';
 import { DataSource } from '../datastore';
 
@@ -197,7 +198,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                       } catch (e) {
                         return session.showMessage(`Failed to parse JSON: ${e}`, {text_class: 'error'});
                       }
-                      err = keyBindings.setMappings(hotkey_settings);
+                      err = keyBindings.setMappings(new KeyMappings(hotkey_settings));
                       if (err) {
                         return session.showMessage(err, {text_class: 'error'});
                       } else {
@@ -214,7 +215,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 {
                   Object.keys(MODES).map((mode) => {
                     return (
-                      <div id={mode} key={mode}>
+                      <div key={mode}>
                         {mode}
                         <HotkeysTableComponent
                           keyMap={keyBindings.mappings.mappings[mode]}

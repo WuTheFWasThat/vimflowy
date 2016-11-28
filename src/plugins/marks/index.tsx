@@ -273,7 +273,7 @@ class MarksPlugin {
 
     this.api.registerAction(
       'move-cursor-mark',
-      'Move the cursor',
+      'Move the cursor within the mark being edited (according to the specified motion)',
       async function({ motion }) {
         if (that.markstate === null) {
           throw new Error('Mark state null in mark mode');
