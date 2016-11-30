@@ -104,7 +104,8 @@ export default class SettingsComponent extends React.Component<Props, State> {
                     </div>
                   </td>
                   <td>
-                    Workflowy compatible, but does not support some features, e.g. marks and clones
+                    Workflowy compatible.
+                    Does not support all features (e.g. vimflowy's marks/clones, or workflowy's tags, etc.)
                   </td>
                 </tr>
               </tbody></table>

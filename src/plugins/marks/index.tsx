@@ -381,7 +381,7 @@ class MarksPlugin {
 
       if (this.session.mode === 'NORMAL') {
         if (wordInfo.word[0] === '@') {
-          const mark = wordInfo.word.slice(1);
+          const mark = wordInfo.word.slice(1).replace(/(\.|!|\?)+$/g, '');
           const path = this.marks_to_paths[mark];
           if (path) {
             for (let i = wordInfo.start; i <= wordInfo.end; i++) {

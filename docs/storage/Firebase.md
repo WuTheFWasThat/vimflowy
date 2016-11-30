@@ -19,7 +19,9 @@ You should be able to now visit your console at a link like
 https://console.firebase.google.com/project/${projectId}, e.g.
 https://console.firebase.google.com/project/something-fiery-2222.
 
-### Add a user
+### Set up authentication
+
+#### Add a user
 
 Visit the Authentication tab.
 
@@ -29,9 +31,10 @@ Visit the Authentication tab.
   Pick an email and password, and enter it.
   Remember the email/password pair - you'll need them later!
 
-### Set up database rules
+#### Set up database rules
 
-In the `Database > Rules` section (https://console.firebase.google.com/project/${projectId}/database/rules), set up rules like this:
+Visit the `Database > Rules` section (https://console.firebase.google.com/project/${projectId}/database/rules).
+Make sure the rules look like this (it should be the default):
 
 ```
 {

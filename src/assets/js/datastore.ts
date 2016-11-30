@@ -389,10 +389,6 @@ export class FirebaseStore extends DataStore {
     return await firebase.auth().signInWithEmailAndPassword(email, password);
   }
 
-  private _IDKey_() {
-    return `${this.prefix}:lastID`;
-  }
-
   protected get(key: string): Promise<any | null> {
     return new Promise((resolve: (result: any | null) => void, reject) => {
       this.fbase.ref(key).once(
@@ -431,11 +427,6 @@ export class FirebaseStore extends DataStore {
   }
 
   public async getId(): Promise<number> {
-    let id: number = (await this.get(this._IDKey_())) || 1;
-    while ((await this.get(this._lineKey_(id))) !== null) {
-      id++;
-    }
-    await this.set(this._IDKey_(), id + 1);
-    return id;
+    return Math.floor(Math.random() * 1e15);
   }
 }
