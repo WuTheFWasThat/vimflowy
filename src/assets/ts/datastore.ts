@@ -429,4 +429,8 @@ export class FirebaseStore extends DataStore {
     );
     return Promise.resolve();
   }
+
+  public async getId(): Promise<number> {
+    return Math.floor(Math.random() * 1e15);
+  }
 }
