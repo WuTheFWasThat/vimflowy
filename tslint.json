@@ -43,7 +43,7 @@
       "no-duplicate-variable": true,
       "no-empty": true,
       "no-eval": true,
-      "no-inferrable-types": true,
+      "no-inferrable-types": false,
       "no-internal-module": true,
       "no-require-imports": false,
       "no-string-literal": true,

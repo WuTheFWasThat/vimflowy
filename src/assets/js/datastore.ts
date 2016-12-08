@@ -25,7 +25,7 @@ const timeout = (ns) => {
 };
 // const simulateDelay = 10;
 // const simulateDelay = 1;
-const simulateDelay = 0;
+const simulateDelay: number = 0;
 
 const encodeLine = (line) => line.map((obj) => {
   // if no properties are true, serialize just the character to save space
