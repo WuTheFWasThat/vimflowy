@@ -55,43 +55,48 @@ const identity = (x) => x;
 
 export default class DataStore {
   protected prefix: string;
+  private lastId: number | null;
 
   constructor(prefix = '') {
     this.prefix = `${prefix}save`;
+    this.lastId = null;
   }
 
-  protected _lineKey_(row: Row): string {
+  private _lastIDKey_() {
+    return `${this.prefix}:lastID`;
+  }
+  private _lineKey_(row: Row): string {
     return `${this.prefix}:${row}:line`;
   }
-  protected _parentsKey_(row: Row): string {
+  private _parentsKey_(row: Row): string {
     return `${this.prefix}:${row}:parent`;
   }
-  protected _childrenKey_(row: Row): string {
+  private _childrenKey_(row: Row): string {
     return `${this.prefix}:${row}:children`;
   }
-  protected _detachedChildrenKey_(row: Row): string {
+  private _detachedChildrenKey_(row: Row): string {
     return `${this.prefix}:${row}:detached_children`;
   }
-  protected _detachedParentKey_(row: Row): string {
+  private _detachedParentKey_(row: Row): string {
     return `${this.prefix}:${row}:detached_parent`;
   }
-  protected _collapsedKey_(row: Row): string {
+  private _collapsedKey_(row: Row): string {
     return `${this.prefix}:${row}:collapsed`;
   }
 
-  protected _pluginDataKey_(plugin: string, key: string): string {
+  private _pluginDataKey_(plugin: string, key: string): string {
     return `${this.prefix}:plugin:${plugin}:data:${key}`;
   }
 
   // no prefix, meaning it's global
-  protected _settingKey_(setting): string {
+  private _settingKey_(setting): string {
     return `settings:${setting}`;
   }
 
-  protected _lastViewrootKey_(): string {
+  private _lastViewrootKey_(): string {
     return `${this.prefix}:lastviewroot2`;
   }
-  protected _macrosKey_(): string {
+  private _macrosKey_(): string {
     return `${this.prefix}:macros`;
   }
 
@@ -220,10 +225,15 @@ export default class DataStore {
   // public so test case can override
   public async getId(): Promise<number> {
     // suggest to override this for efficiency
-    let id = 1;
-    while ((await this._get(this._lineKey_(id), null)) !== null) {
-      id++;
+    let id;
+    if (this.lastId === null) {
+      id = 1 + await this._get(this._lastIDKey_(), 0);
+    } else {
+      id = this.lastId + 1;
     }
+    // NOTE: fire and forget
+    this._set(this._lastIDKey_(), id);
+    this.lastId = id;
     return id;
   }
 
@@ -274,10 +284,6 @@ export class LocalStorageLazy extends DataStore {
     }
   }
 
-  private _IDKey_() {
-    return `${this.prefix}:lastID`;
-  }
-
   protected async get(key: string): Promise<any | null> {
     return this._getLocalStorage_(key);
   }
@@ -318,15 +324,6 @@ export class LocalStorageLazy extends DataStore {
   // note that this doesn't cache!
   public getLastSave(): number {
     return this._getLocalStorage_(this._lastSaveKey_()) || 0;
-  }
-
-  public async getId(): Promise<number> {
-    let id: number = this._getLocalStorage_(this._IDKey_()) || 1;
-    while (this._getLocalStorage_(this._lineKey_(id)) !== null) {
-      id++;
-    }
-    this._setLocalStorage_(this._IDKey_(), id + 1);
-    return id;
   }
 }
 
@@ -424,9 +421,5 @@ export class FirebaseStore extends DataStore {
       }
     );
     return Promise.resolve();
-  }
-
-  public async getId(): Promise<number> {
-    return Math.floor(Math.random() * 1e15);
   }
 }
