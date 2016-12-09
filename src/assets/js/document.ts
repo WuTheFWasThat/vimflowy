@@ -235,7 +235,12 @@ export default class Document extends EventEmitter {
       childRows: [], parentRows: [], // parent will get added
       pluginData: pluginData,
     });
-    await this._attach(row, parent, index);
+    await Promise.all([
+      this._attach(row, parent, index),
+      // purely to populate the cache
+      this.store.setDetachedChildren(row, []),
+      this.store.setDetachedParent(row, null),
+    ]);
     return row;
   }
 

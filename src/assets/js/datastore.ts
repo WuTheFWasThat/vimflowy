@@ -56,10 +56,12 @@ const identity = (x) => x;
 export default class DataStore {
   protected prefix: string;
   private lastId: number | null;
+  private cache: {[key: string]: any};
 
   constructor(prefix = '') {
     this.prefix = `${prefix}save`;
     this.lastId = null;
+    this.cache = {};
   }
 
   private _lastIDKey_() {
@@ -105,6 +107,9 @@ export default class DataStore {
   ): Promise<any | null> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
 
+    if (key in this.cache) {
+      return this.cache[key];
+    }
     const value = await this.get(key);
     let decodedValue;
     if (value === null) {
@@ -114,6 +119,7 @@ export default class DataStore {
       decodedValue = decode(value);
       logger.debug('got from storage', key, decodedValue);
     }
+    this.cache[key] = decodedValue;
     return decodedValue;
   }
 
@@ -128,6 +134,7 @@ export default class DataStore {
 
     const encodedValue = encode(value);
     logger.debug('setting to storage', key, encodedValue);
+    this.cache[key] = encodedValue;
     this.set(key, encodedValue);
   }
 
@@ -249,22 +256,16 @@ export default class DataStore {
 }
 
 export class InMemory extends DataStore {
-  private cache: {[key: string]: any};
-
   constructor() {
     super('');
-    this.cache = {};
   }
 
   protected async get(key: string): Promise<any | null> {
-    if (!(key in this.cache)) {
-      return null;
-    }
-    return this.cache[key];
+    return null;
   }
 
   protected async set(key: string, value: any): Promise<void> {
-    this.cache[key] = value;
+    // do nothing
   }
 }
 

@@ -41,6 +41,8 @@ class MarksPlugin {
 
   constructor(api) {
     this.api = api;
+    // NOTE: this may not be initialized correctly at first
+    // this only affects rendering @marklinks for now
     this.marks_to_paths = {};
   }
 
