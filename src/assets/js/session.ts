@@ -871,15 +871,20 @@ export default class Session extends EventEmitter {
   ) {
     options.setCursor = 'first';
 
+    const [ collapsed, hasChildren ] = await Promise.all([
+      this.document.collapsed(this.cursor.row),
+      this.document.hasChildren(this.cursor.row),
+    ]);
+
     if (this.cursor.path.is(this.viewRoot)) {
-      if (!await this.document.hasChildren(this.cursor.row)) {
-        if (!await this.document.collapsed(this.cursor.row)) {
+      if (!hasChildren) {
+        if (!collapsed) {
           await this.toggleBlockCollapsed(this.cursor.row);
         }
       }
 
       await this.addBlocks(this.cursor.path, 0, [''], options);
-    } else if ((!await this.document.collapsed(this.cursor.row)) && (await this.document.hasChildren(this.cursor.row))) {
+    } else if ((!collapsed) && hasChildren) {
       await this.addBlocks(this.cursor.path, 0, [''], options);
     } else {
       const parent = this.cursor.path.parent;
