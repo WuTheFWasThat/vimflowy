@@ -41,6 +41,7 @@ class MarksPlugin {
 
   constructor(api) {
     this.api = api;
+    this.marks_to_paths = {};
   }
 
   public async enable() {
