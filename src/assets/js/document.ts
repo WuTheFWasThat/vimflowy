@@ -225,6 +225,20 @@ export default class Document extends EventEmitter {
     return this;
   }
 
+
+  private async _newChild(parent, index = -1) {
+    const row = await this.store.getNew();
+    const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
+    // necessary only for speed reasons
+    this.cache.loadRow(row, {
+      line: [], collapsed: false,
+      childRows: [], parentRows: [], // parent will get added
+      pluginData: pluginData,
+    });
+    await this._attach(row, parent, index);
+    return row;
+  }
+
   private async getInfo(row): Promise<CachedRowInfo> {
     const cached = this.cache.get(row);
     if (cached !== null) {
@@ -684,12 +698,6 @@ export default class Document extends EventEmitter {
       }
       return path.child(child_row);
     });
-  }
-
-  private async _newChild(parent, index = -1) {
-    const row = await this.store.getNew();
-    await this._attach(row, parent, index);
-    return row;
   }
 
   public async newChild(path, index = -1) {
