@@ -1,4 +1,4 @@
-import keyDefinitions, { Action } from '../keyDefinitions';
+import keyDefinitions, { Action, ActionContext } from '../keyDefinitions';
 
 const toggle_row_property = (property) => {
   return async function({ session }) {
@@ -13,7 +13,10 @@ const toggle_property_at_cursor = (property) => {
 };
 
 const toggle_property_visual_line = property =>
-  async function({ session, visual_line }) {
+  async function({ session, visual_line }: ActionContext) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
     const paths = await session.document.getChildRange(
       visual_line.parent, visual_line.row_start_i, visual_line.row_end_i
     );

@@ -34,6 +34,7 @@ export type TextProperties = {
 };
 
 export type Line = Array<Char>;
+export type EncodedLine = Array<Char | string>;
 export type SerializedLine = {
   text: string,
   bold?: string,

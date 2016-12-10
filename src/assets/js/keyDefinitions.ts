@@ -2,7 +2,8 @@ import EventEmitter from './eventEmitter';
 import Session from './session';
 import KeyHandler, { KeyStream } from './keyHandler';
 import Cursor from './cursor';
-import { ModeId, CursorOptions } from './types';
+import Path from './path';
+import { Row, ModeId, CursorOptions } from './types';
 
 // NOTE: this is a special key, which accepts any motion keys.
 // It causes definition functions to take an extra cursor argument.
@@ -38,7 +39,15 @@ export type ActionContext = {
   repeat: number;
   keyStream: KeyStream;
   keyHandler: KeyHandler;
-  motion?: Motion;
+  motion?: MotionFn;
+  visual_line?: {
+    row_start_i: number,
+    row_end_i: number,
+    row_start: Row,
+    row_end: Row,
+    parent: Path,
+    num_rows: number,
+  },
 };
 export type ActionDefinition = (context: ActionContext) => Promise<void>;
 type ActionName = string;
@@ -50,7 +59,7 @@ export class Action {
   public description: string;
   public definition: ActionDefinition;
   public metadata: ActionMetadata;
-  constructor(name, description, definition, metadata?) {
+  constructor(name, description, definition: ActionDefinition, metadata?) {
     this.name = name;
     this.description = description;
     this.definition = definition;

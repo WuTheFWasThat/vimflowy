@@ -194,6 +194,9 @@ keyDefinitions.registerAction(new Action(
   'visual-line-delete',
   'Delete visual line selection',
   async function({ session, visual_line }) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
     await session.delBlocks(visual_line.parent.row, visual_line.row_start_i, visual_line.num_rows, {addNew: false});
     await session.setMode('NORMAL');
   },
@@ -239,6 +242,9 @@ keyDefinitions.registerAction(new Action(
   'visual-line-change',
   'Change',
   async function({ session, visual_line }) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
     await session.delBlocks(visual_line.parent.row, visual_line.row_start_i, visual_line.num_rows, {addNew: true});
     await session.setMode('INSERT');
   },
@@ -296,6 +302,9 @@ keyDefinitions.registerAction(new Action(
   'visual-line-yank',
   'Yank',
   async function({ session, visual_line }) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
     await session.yankBlocks(visual_line.row_start, visual_line.num_rows);
     await session.setMode('NORMAL');
   },
@@ -348,6 +357,9 @@ keyDefinitions.registerAction(new Action(
   'visual-line-yank-clone',
   'Yank blocks as a clone',
   async function({ session, visual_line }) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
     await session.yankBlocksClone(visual_line.row_start, visual_line.num_rows);
     await session.setMode('NORMAL');
   },
@@ -420,7 +432,7 @@ keyDefinitions.registerAction(new Action(
     }
     await session.deleteBetween(
       session.cursor,
-      await session.cursor.clone().home(options.cursor),
+      await session.cursor.clone().home(/*options.cursor*/),
       options
     );
   },

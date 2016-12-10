@@ -12,6 +12,9 @@ keyDefinitions.registerAction(new Action(
   'visual-line-indent',
   'Indent blocks right',
   async function({ session, visual_line }) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
     await session.indentBlocks(visual_line.row_start, visual_line.num_rows);
     await session.setMode('NORMAL');
   },
@@ -30,6 +33,9 @@ keyDefinitions.registerAction(new Action(
   'visual-line-unindent',
   'Unindent blocks',
   async function({ session, visual_line }) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
     await session.unindentBlocks(visual_line.row_start, visual_line.num_rows);
     await session.setMode('NORMAL');
   }

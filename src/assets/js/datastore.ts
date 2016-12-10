@@ -7,7 +7,7 @@ import * as constants from './constants';
 import * as errors from './errors';
 import logger from './logger';
 
-import { Line, Row, SerializedPath, MacroMap } from './types';
+import { Row, Line, EncodedLine, SerializedPath, MacroMap } from './types';
 
 export type DataSource = 'local' | 'firebase' | 'inmemory';
 
@@ -18,7 +18,7 @@ However, in the case of a key-value store, one can simply implement `get` and `s
 Currently, DataStore has a synchronous API.  This may need to change eventually...  :(
 */
 
-const timeout = (ns) => {
+const timeout = (ns: number) => {
   return new Promise((resolve) => {
     setTimeout(resolve, ns);
   });
@@ -27,7 +27,7 @@ const timeout = (ns) => {
 // const simulateDelay = 1;
 const simulateDelay: number = 0;
 
-const encodeLine = (line) => line.map((obj) => {
+const encodeLine: (line: Line) => EncodedLine = (line) => line.map((obj) => {
   // if no properties are true, serialize just the character to save space
   if (_.every(constants.text_properties.map(property => !obj[property]))) {
     return obj.char;
@@ -36,9 +36,9 @@ const encodeLine = (line) => line.map((obj) => {
   }
 });
 
-const decodeLine = (line) => line.map((obj) => {
+const decodeLine: (line: EncodedLine) => Line = (line) => line.map((obj) => {
   if (typeof obj === 'string') {
-    obj = { char: obj };
+    return { char: obj };
   }
   return obj;
 });

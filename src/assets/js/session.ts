@@ -72,7 +72,7 @@ export default class Session extends EventEmitter {
   private getLinesPerPage: () => number;
   private getVisiblePaths: () => Array<Path>;
   public showMessage: (message: string, options?: any) => void;
-  private toggleBindingsDiv: () => void;
+  public toggleBindingsDiv: () => void;
   private downloadFile: (filename: string, mimetype: string, content: any) => void;
 
   constructor(doc, options: SessionOptions = {}) {
@@ -791,7 +791,7 @@ export default class Session extends EventEmitter {
 
   // options:
   //   - includeEnd says whether to also delete cursor2 location
-  public async deleteBetween(cursor1, cursor2, options: {includeEnd?: boolean} = {}) {
+  public async deleteBetween(cursor1, cursor2, options: {includeEnd?: boolean, yank?: boolean} = {}) {
     if (!cursor2.path.is(cursor1.path)) {
       logger.warn('Not yet implemented');
       return;
@@ -1015,7 +1015,7 @@ export default class Session extends EventEmitter {
     return await this.delBlocks(path.parent.row, await this.document.indexInParent(path), 1, options);
   }
 
-  public async delBlocks(parent, index, nrows, options: {noSave?: boolean} = {}) {
+  public async delBlocks(parent, index, nrows, options: {noSave?: boolean, addNew?: boolean} = {}) {
     const mutation = new mutations.DetachBlocks(parent, index, nrows, options);
     await this.do(mutation);
     if (!options.noSave) {
