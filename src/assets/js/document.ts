@@ -10,12 +10,12 @@ import DataStore from './datastore';
 import { Row, Line, SerializedLine, SerializedBlock } from './types';
 
 type RowInfo = {
-  line: Line;
-  collapsed: boolean;
+  readonly line: Line;
+  readonly collapsed: boolean;
   // TODO use Immutable.List?
-  parentRows: Array<Row>;
-  childRows: Array<Row>;
-  pluginData: any;
+  readonly parentRows: Array<Row>;
+  readonly childRows: Array<Row>;
+  readonly pluginData: any;
 }
 
 /*
@@ -25,78 +25,67 @@ type RowInfo = {
  */
 // TODO: rename this to cached Tree?
 export class CachedRowInfo {
-  private _row: Row;
-  private _info: RowInfo;
+  public readonly row: Row;
+  public readonly info: RowInfo;
   // TODO: use immutable list?
-  private _children: Array<CachedRowInfo | null>;
+  public readonly children: Array<CachedRowInfo | null>;
 
   constructor(
     row: Row,
     info: RowInfo,
     children: Array<CachedRowInfo | null>,
   ) {
-    this._row = row;
-    this._info = info;
-    this._children = children;
+    this.row = row;
+    this.info = info;
+    this.children = children;
   }
 
   public clone() {
     return new CachedRowInfo(
-      this._row, this._info, this._children
+      this.row, this.info, this.children
     );
   }
 
-  public get children() {
-    return this._children;
-  }
   public get parentRows() {
-    return this._info.parentRows;
+    return this.info.parentRows;
   }
   public get childRows() {
-    return this._info.childRows;
+    return this.info.childRows;
   }
   public get line() {
-    return this._info.line;
-  }
-  public get row() {
-    return this._row;
+    return this.info.line;
   }
   public get collapsed() {
-    return this._info.collapsed;
+    return this.info.collapsed;
   }
   public get pluginData() {
-    return this._info.pluginData;
+    return this.info.pluginData;
   }
 
   public setChildren(children): CachedRowInfo {
-    return new CachedRowInfo(this._row, this._info, children);
+    return new CachedRowInfo(this.row, this.info, children);
   }
   private setInfo(info: RowInfo): CachedRowInfo {
-    return new CachedRowInfo(this._row, info, this._children);
+    return new CachedRowInfo(this.row, info, this.children);
   }
   public setLine(line: Line): CachedRowInfo {
-    const info: RowInfo = _.cloneDeep(this._info);
-    info.line = line;
+    const info: RowInfo = Object.assign({}, this.info, { line });
     return this.setInfo(info);
   }
   public setCollapsed(collapsed: boolean): CachedRowInfo {
-    const info: RowInfo = _.cloneDeep(this._info);
-    info.collapsed = collapsed;
+    const info: RowInfo = Object.assign({}, this.info, { collapsed });
     return this.setInfo(info);
   }
   public setChildRows(childRows: Array<Row>): CachedRowInfo {
-    const info: RowInfo = _.cloneDeep(this._info);
-    info.childRows = childRows;
+    const info: RowInfo = Object.assign({}, this.info, { childRows });
     return this.setInfo(info);
   }
   public setParentRows(parentRows: Array<Row>): CachedRowInfo {
-    const info: RowInfo = _.cloneDeep(this._info);
-    info.parentRows = parentRows;
+    const info: RowInfo = Object.assign({}, this.info, { parentRows });
     return this.setInfo(info);
   }
   public setPluginData(pluginData: any): CachedRowInfo {
-    const info: RowInfo = _.cloneDeep(this._info);
-    info.pluginData = pluginData;
+    const info: RowInfo = Object.assign({}, this.info, { pluginData });
     return this.setInfo(info);
   }
 }

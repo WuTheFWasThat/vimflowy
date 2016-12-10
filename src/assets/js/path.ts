@@ -5,8 +5,8 @@ import { Row, SerializedPath } from './types';
 // represents a tree-traversal starting from the root going down
 // should be immutable
 export default class Path {
-  public parent: Path;
-  public row: Row;
+  public readonly parent: Path;
+  public readonly row: Row;
 
   public static rootRow(): Row {
     return 0;
