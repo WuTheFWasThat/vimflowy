@@ -230,7 +230,7 @@ export class MoveBlock extends Mutation {
 
   public async mutate(session) {
     const info = await session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
-    this.old_index = info.old.childIndex;
+    this.old_index = info.old.child_index;
   }
 
   public async rewind(session) {

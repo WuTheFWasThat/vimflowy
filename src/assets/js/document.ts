@@ -233,7 +233,8 @@ export default class Document extends EventEmitter {
     return row;
   }
 
-  private async getInfo(row): Promise<CachedRowInfo> {
+  private async getInfo(row: Row): Promise<CachedRowInfo> {
+    errors.assert(row != null, 'Cannot get info for undefined');
     const cached = this.cache.get(row);
     if (cached !== null) {
       return cached;
@@ -534,10 +535,10 @@ export default class Document extends EventEmitter {
     await this._setParents(row, parents);
 
     const info = {
-      parentId: parent_row,
-      parentIndex: pi,
-      childId: row,
-      childIndex: ci,
+      parent_row,
+      parent_index: pi,
+      row,
+      child_index: ci,
     };
     this.emit('childRemoved', info);
     return info;
@@ -557,10 +558,10 @@ export default class Document extends EventEmitter {
     parents.push(parent_row);
     await this._setParents(row, parents);
     const info = {
-      parentId: parent_row,
-      parentIndex: parents.length - 1,
-      childId: row,
-      childIndex: index,
+      parent_row,
+      parent_index: parents.length - 1,
+      row,
+      child_index: index,
     };
     this.emit('childAdded', info);
     return info;
@@ -569,7 +570,7 @@ export default class Document extends EventEmitter {
   public async _detach(row, parent_row) {
     const wasLast = (await this._getParents(row)).length === 1;
 
-    await this.emitAsync('beforeDetach', { id: row, parent_id: parent_row, last: wasLast });
+    await this.emitAsync('beforeDetach', { row, parent_row, last: wasLast });
     const info = await this._removeChild(parent_row, row);
     if (wasLast) {
       await this.store.setDetachedParent(row, parent_row);
@@ -577,13 +578,13 @@ export default class Document extends EventEmitter {
       detached_children.push(row);
       await this.store.setDetachedChildren(parent_row, detached_children);
     }
-    await this.emitAsync('afterDetach', { id: row, parent_id: parent_row, last: wasLast });
+    await this.emitAsync('afterDetach', { row, parent_row, last: wasLast });
     return info;
   }
 
   public async _attach(child_row, parent_row, index = -1) {
     const isFirst = (await this._getParents(child_row)).length === 0;
-    await this.emitAsync('beforeAttach', { id: child_row, parent_id: parent_row, first: isFirst});
+    await this.emitAsync('beforeAttach', { row: child_row, parent_row, first: isFirst});
     const info = await this._addChild(parent_row, child_row, index);
     const old_detached_parent = await this.store.getDetachedParent(child_row);
     if (old_detached_parent !== null) {
@@ -595,23 +596,23 @@ export default class Document extends EventEmitter {
       detached_children.splice(ci, 1);
       await this.store.setDetachedChildren(old_detached_parent, detached_children);
     }
-    await this.emitAsync('afterAttach', { id: child_row, parent_id: parent_row, first: isFirst, old_detached_parent});
+    await this.emitAsync('afterAttach', { row: child_row, parent_row, first: isFirst, old_detached_parent});
     return info;
   }
 
   public async _move(child_row, old_parent_row, new_parent_row, index = -1) {
     await this.emitAsync('beforeMove', {
-      id: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
+      row: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
     });
 
     const remove_info = await this._removeChild(old_parent_row, child_row);
-    if ((old_parent_row === new_parent_row) && (index > remove_info.childIndex)) {
+    if ((old_parent_row === new_parent_row) && (index > remove_info.child_index)) {
       index = index - 1;
     }
     const add_info = await this._addChild(new_parent_row, child_row, index);
 
     await this.emitAsync('afterMove', {
-      id: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
+      row: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
     });
 
     return {
