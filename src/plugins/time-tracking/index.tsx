@@ -8,8 +8,8 @@ import * as Plugins from '../../assets/js/plugins';
 import { Logger } from '../../assets/js/logger';
 import { Row } from '../../assets/js/types';
 
-function pad(val, length, padChar = '0') {
-  val += '';
+function pad(num: number, length: number, padChar: string = '0') {
+  const val = '' + num;
   let numPads = length - val.length;
   if (numPads === 0) { return val; }
   return new Array(numPads + 1).join(padChar) + val;
@@ -23,7 +23,7 @@ class TimeTrackingPlugin {
     time: number,
   } | null;
 
-  constructor(api) {
+  constructor(api: Plugins.PluginApi) {
     this.api = api;
     this.logger = this.api.logger;
     this.logger.info('Loading time tracking');
@@ -262,7 +262,7 @@ class TimeTrackingPlugin {
   }
 }
 
-Plugins.register(
+Plugins.register<TimeTrackingPlugin>(
   {
     name: 'Time Tracking',
     author: 'Zachary Vance',

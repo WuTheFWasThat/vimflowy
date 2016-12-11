@@ -282,8 +282,10 @@ export class PluginsManager extends EventEmitter {
   }
 }
 
-const registerPlugin = function(
-  plugin_metadata: PluginMetadata, enable, disable
+const registerPlugin = function<T>(
+  plugin_metadata: PluginMetadata,
+  enable: (api: PluginApi) => Promise<T> | T,
+  disable: (api: PluginApi, value: T) => Promise<void> | void,
 ) {
   plugin_metadata.version = plugin_metadata.version || 1;
   plugin_metadata.author = plugin_metadata.author || 'anonymous';
@@ -293,6 +295,7 @@ const registerPlugin = function(
   // Create the plugin object
   // Plugin stores all data about a plugin, including metadata
   // plugin.value contains the actual resolved value
+  // TODO: typecheck this
   const plugin: any = _.cloneDeep(plugin_metadata);
   PLUGINS[plugin.name] = plugin;
   plugin.enable = enable;

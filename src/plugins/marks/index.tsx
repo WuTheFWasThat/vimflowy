@@ -542,7 +542,7 @@ export class MarksPlugin {
 
 const pluginName = 'Marks';
 
-Plugins.register(
+Plugins.register<MarksPlugin>(
   {
     name: pluginName,
     author: 'Jeff Wu',
@@ -555,9 +555,7 @@ Plugins.register(
     await marksPlugin.enable();
     return marksPlugin;
   },
-  async (api) => {
-    api.deregisterAll();
-  },
+  (api) => api.deregisterAll(),
 );
 
 export { pluginName };

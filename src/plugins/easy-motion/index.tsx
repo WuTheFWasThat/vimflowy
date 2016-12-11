@@ -9,7 +9,7 @@ type EasyMotionMappings = {
   path_to_key: {[serialized_path: string]: string},
 };
 
-Plugins.register(
+Plugins.register<void>(
   {
     name: 'Easy motion',
     author: 'Jeff Wu',
@@ -112,5 +112,5 @@ Plugins.register(
       return bullet;
     });
   },
-  (api => api.deregisterAll())
+  (api => api.deregisterAll()),
 );
