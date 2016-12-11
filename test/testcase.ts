@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import { InMemory } from '../src/assets/js/datastore';
 import Document from '../src/assets/js/document';
 import Session from '../src/assets/js/session';
-import Register from '../src/assets/js/register';
+import Register, { RegisterTypes, SerializedRegister } from '../src/assets/js/register';
 import '../src/assets/js/definitions';
 import makeDefaultBindings from '../src/assets/js/keyBindings';
 import KeyHandler from '../src/assets/js/keyHandler';
@@ -14,7 +14,7 @@ import logger, * as Logger from '../src/assets/js/logger';
 import { PluginsManager, STATUSES } from '../src/assets/js/plugins';
 import Cursor from '../src/assets/js/cursor';
 import Path from '../src/assets/js/path';
-import { SerializedBlock } from '../src/assets/js/types';
+import { SerializedBlock, Row, Col, Key } from '../src/assets/js/types';
 
 logger.setStream(Logger.STREAM.QUEUE);
 afterEach('empty the queue', () => logger.empty());
@@ -71,7 +71,7 @@ class TestCase {
     });
   }
 
-  protected _chain(next, waitKeyHandler = true) {
+  protected _chain(next: () => void, waitKeyHandler = true) {
     this.prom = this.prom.then(async () => {
       if (waitKeyHandler) {
         await this.keyhandler.chain(async () => {
@@ -100,7 +100,7 @@ class TestCase {
     return this.prom;
   }
 
-  protected _expectDeepEqual(actual, expected, message) {
+  protected _expectDeepEqual<T>(actual: T, expected: T, message: string) {
     if (!_.isEqual(actual, expected)) {
       logger.flush();
       console.error(`
@@ -114,7 +114,7 @@ class TestCase {
     }
   }
 
-  protected _expectEqual(actual, expected, message) {
+  protected _expectEqual<T>(actual: T, expected: T, message: string) {
     if (actual !== expected) {
       logger.flush();
       console.error(`
@@ -128,10 +128,14 @@ class TestCase {
     }
   }
 
-  public sendKeys(keys) {
-    if (typeof keys === 'string') {
-      keys = keys.split('');
+  public sendKeys(keysInput: string | Array<Key>) {
+    let keys: Array<Key>;
+    if (typeof keysInput === 'string') {
+      keys = keysInput.split('');
+    } else {
+      keys = keysInput;
     }
+
     this._chain(() => {
       keys.forEach((key) => {
         this.keyhandler.queueKey(key);
@@ -140,43 +144,43 @@ class TestCase {
     return this;
   }
 
-  public sendKey(key) {
+  public sendKey(key: Key) {
     return this.sendKeys([key]);
   }
 
-  public import(content, mimetype) {
+  public import(content: any, mimetype: string) {
     return this._chain(() => {
       return this.session.importContent(content, mimetype);
     });
   }
 
-  public enablePlugin(pluginName) {
+  public enablePlugin(pluginName: string) {
     return this._chain(async () => {
       return await this.pluginManager.enable(pluginName);
     });
   }
 
-  public disablePlugin(pluginName) {
+  public disablePlugin(pluginName: string) {
     return this._chain(async () => {
       return await this.pluginManager.disable(pluginName);
     });
   }
 
-  public expect(expected) {
+  public expect(expected: Array<SerializedBlock>) {
     return this._chain(async () => {
       const serialized: any = await this.document.serialize(this.document.root.row, {pretty: true});
       this._expectDeepEqual(serialized.children, expected, 'Unexpected serialized content');
     });
   }
 
-  public expectViewRoot(expected) {
+  public expectViewRoot(expected: Row) {
     return this._chain(() => {
       this._expectEqual(this.session.viewRoot.row, expected,
                         'Unexpected view root');
     });
   }
 
-  public expectCursor(row, col) {
+  public expectCursor(row: Row, col: Col) {
     return this._chain(() => {
       this._expectEqual(this.session.cursor.row, row,
                         'Unexpected cursor row');
@@ -206,32 +210,29 @@ class TestCase {
     });
   }
 
-  public setRegister(value) {
+  public setRegister(value: SerializedRegister) {
     this.register.deserialize(value);
     return this;
   }
 
-  public expectRegister(expected) {
+  public expectRegister(expected: SerializedRegister) {
     return this._chain(() => {
       let current = this.register.serialize();
-      this._expectDeepEqual(current, expected,
-                            'Unexpected register content');
+      this._expectDeepEqual(current, expected, 'Unexpected register content');
     });
   }
 
-  public expectRegisterType(expected) {
+  public expectRegisterType(expected: RegisterTypes) {
     return this._chain(() => {
       let current = this.register.serialize();
-      this._expectDeepEqual(current.type, expected,
-                            'Unexpected register type');
+      this._expectDeepEqual(current.type, expected, 'Unexpected register type');
     });
   }
 
-  public expectExport(fileExtension, expected) {
+  public expectExport(mimeType: string, expected: string) {
     return this._chain(async () => {
-      let content = await this.session.exportContent(fileExtension);
-      this._expectEqual(content, expected,
-                        'Unexpected export content');
+      let content = await this.session.exportContent(mimeType);
+      this._expectEqual(content, expected, 'Unexpected export content');
     });
   }
 }

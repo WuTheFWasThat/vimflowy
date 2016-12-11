@@ -2,14 +2,15 @@
 import TestCase from '../testcase';
 import * as Marks from '../../src/plugins/marks';
 import '../../src/assets/js/plugins';
+import { Row } from '../../src/assets/js/types';
 
 // Testing
 class MarksTestCase extends TestCase {
-  public expectMarks(expected) {
+  public expectMarks(expected: {[key: string]: Row}) {
     return this._chain(async () => {
-      const marksApi = this.pluginManager.getInfo(Marks.pluginName).value;
+      const marksApi: Marks.MarksPlugin = this.pluginManager.getInfo(Marks.pluginName).value;
       const marksToPaths = await marksApi.listMarks();
-      const marksToRows = {};
+      const marksToRows: {[key: string]: Row} = {};
       for (const mark in marksToPaths) {
         marksToRows[mark] = marksToPaths[mark].row;
       }

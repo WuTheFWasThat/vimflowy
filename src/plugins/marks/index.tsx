@@ -26,7 +26,7 @@ const markStyle = {
   borderRadius: 6,
 };
 
-class MarksPlugin {
+export class MarksPlugin {
   private api: Plugins.PluginApi;
   private logger: Logger;
   private session: Session;
@@ -485,11 +485,11 @@ class MarksPlugin {
     })();
   }
 
-  private async listMarks() {
+  public async listMarks(): Promise<{[mark: string]: Path}> {
     await this._sanityCheckMarks();
     const marks_to_rows = await this._getMarksToRows();
 
-    const all_marks = {};
+    const all_marks: {[mark: string]: Path} = {};
     await Promise.all(
       Object.keys(marks_to_rows).map(async (mark) => {
         const row = marks_to_rows[mark];

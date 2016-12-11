@@ -1,3 +1,6 @@
+// TODO: enum for text properties
+// TODO: enum for export mimetypes/extensions
+
 // keyboard key
 export type Key = string;
 

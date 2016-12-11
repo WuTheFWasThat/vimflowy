@@ -13,12 +13,18 @@ export enum RegisterTypes {
   CLONED_ROWS = 3,
 }
 
+export type RegisterValue = null | Line | Array<SerializedBlock> | Array<Row>;
+export type SerializedRegister = {
+  type: RegisterTypes,
+  saved: RegisterValue,
+};
+
 type PasteOptions = {before?: boolean};
 
 export default class Register {
   private session: Session;
   private type: RegisterTypes;
-  private saved: null | Line | Array<SerializedBlock> | Array<Row>;
+  private saved: RegisterValue;
 
   constructor(session) {
     this.session = session;
@@ -50,7 +56,7 @@ export default class Register {
     return {type: this.type, saved: this.saved};
   }
 
-  public deserialize(serialized) {
+  public deserialize(serialized: SerializedRegister) {
     this.type = serialized.type;
     this.saved = serialized.saved;
   }
