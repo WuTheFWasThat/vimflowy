@@ -3,7 +3,7 @@ import React from 'react';
 type Props = {
   fontSize?: number;
   loadingText?: string;
-}
+};
 export default class Spinner extends React.PureComponent<Props, {}> {
   public render() {
     const style = {

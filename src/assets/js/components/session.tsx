@@ -15,14 +15,14 @@ import { CursorsInfoTree } from '../cursor';
 
 type Props = {
   session: Session;
-}
+};
 type State = {
   loaded: boolean;
 
   // set after data is loaded
   cursorsTree?: CursorsInfoTree;
   crumbContents?: {[row: number]: string };
-}
+};
 export default class SessionComponent extends React.Component<Props, State> {
   private update: () => void; // this is promise debounced
 

@@ -4,7 +4,7 @@ import * as Plugins from '../plugins';
 
 type Props = {
   pluginManager: Plugins.PluginsManager;
-}
+};
 export default class PluginsTableComponent extends React.Component<Props, {}> {
   public render() {
     const pluginManager = this.props.pluginManager;

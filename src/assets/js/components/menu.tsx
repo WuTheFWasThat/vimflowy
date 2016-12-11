@@ -9,10 +9,10 @@ import { Line } from '../types';
 type Props = {
   session: Session;
   menu: Menu;
-}
+};
 type State = {
   query: Line | null;
-}
+};
 export default class MenuComponent extends React.Component<Props, State> {
   private updateFn: () => Promise<void>;
   constructor(props) {

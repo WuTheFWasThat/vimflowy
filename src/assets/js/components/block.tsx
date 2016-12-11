@@ -17,7 +17,7 @@ type RowProps = {
   style: React.CSSProperties;
   cursorsTree: CursorsInfoTree;
   cursorBetween: boolean;
-}
+};
 class RowComponent extends React.Component<RowProps, {}> {
   private onClick: (() => void) | undefined;
   private onCharClick: ((column: number, e: Event) => void) | null;
@@ -111,7 +111,7 @@ type BlockProps = {
   onBulletClick: ((path: Path) => void) | undefined;
   topLevel: boolean;
   fetchData: () => void;
-}
+};
 export default class BlockComponent extends React.Component<BlockProps, {}> {
 
   constructor(props) {

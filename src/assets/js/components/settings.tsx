@@ -30,10 +30,10 @@ type Props = {
   initialDataSource: DataSource;
   onThemeChange: (theme: string) => void;
   onExport: () => void;
-}
+};
 type State = {
   currentTab: TABS,
-}
+};
 export default class SettingsComponent extends React.Component<Props, State> {
   constructor(props) {
     super(props);

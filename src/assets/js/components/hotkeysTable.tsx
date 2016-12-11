@@ -7,7 +7,7 @@ type HotkeysTableProps = {
   keyMap: HotkeyMapping | null;
   definitions: KeyDefinitions;
   ignoreEmpty?: boolean;
-}
+};
 
 export default class HotkeysTableComponent extends React.Component<HotkeysTableProps, {}> {
   public render() {

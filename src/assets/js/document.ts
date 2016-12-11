@@ -16,7 +16,7 @@ type RowInfo = {
   readonly parentRows: Array<Row>;
   readonly childRows: Array<Row>;
   readonly pluginData: any;
-}
+};
 
 /*
  * Immutable representation of what we know about a row,

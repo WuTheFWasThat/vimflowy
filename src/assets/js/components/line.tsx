@@ -14,7 +14,7 @@ type RenderOptions = {
   href?: string;
   onClick?: (e: Event) => void;
   classes?: Array<string>;
-}
+};
 type LineInfo = {
   column: number,
   char: string,
@@ -29,7 +29,7 @@ export type LineProps = {
   wordHook?: (line: Array<LineInfo>, word_info: WordInfo) => Array<LineInfo>;
   onCharClick?: ((col: Col, e: Event) => void) | null;
   cursorBetween?: boolean;
-}
+};
 
 export default class LineComponent extends React.Component<LineProps, {}> {
 

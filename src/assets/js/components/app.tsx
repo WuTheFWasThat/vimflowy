@@ -22,7 +22,7 @@ type Props = {
   onThemeChange: (theme: string) => void;
   onExport: () => void;
   error: Error | null;
-}
+};
 export default class AppComponent extends React.Component<Props, {}> {
   public render() {
     if (this.props.error !== null) {

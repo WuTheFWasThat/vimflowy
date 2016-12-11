@@ -6,7 +6,10 @@
     "types": [],
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "strictNullChecks": true
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true
   },
   "exclude": ["node_modules"]
 }

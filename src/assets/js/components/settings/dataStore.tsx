@@ -6,14 +6,14 @@ import Session from '../../session';
 type Props = {
   session: Session;
   initialDataSource: DataSource;
-}
+};
 type State = {
   dataSource: DataSource,
   firebaseId: string,
   firebaseApiKey: string,
   firebaseUserEmail: string,
   firebaseUserPassword: string,
-}
+};
 export default class DataStoreSettingsComponent extends React.Component<Props, State> {
   constructor(props) {
     super(props);

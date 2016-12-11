@@ -26,7 +26,7 @@ const keyBindings = makeDefaultBindings();
 
 type TestCaseOptions = {
   plugins?: Array<string>
-}
+};
 
 class TestCase {
   public store: InMemory;

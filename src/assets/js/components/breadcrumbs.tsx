@@ -4,7 +4,7 @@ import Path from '../path';
 
 type CrumbProps = {
   onClick: ((...args: any[]) => void) | undefined,
-}
+};
 class CrumbComponent extends React.PureComponent<CrumbProps, {}> {
   public render() {
     let className = '';
@@ -27,10 +27,10 @@ type BreadcrumbsProps = {
   viewRoot: Path;
   crumbContents: {[row: number]: string};
   onCrumbClick: ((...args: any[]) => void) | null;
-}
+};
 type BreadcrumbsState = {
   loaded: boolean;
-}
+};
 export default class BreadcrumbsComponent extends React.Component<BreadcrumbsProps, BreadcrumbsState> {
   constructor(props) {
     super(props);
