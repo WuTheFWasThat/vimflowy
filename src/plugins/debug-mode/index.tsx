@@ -1,8 +1,8 @@
 import React from 'react'; // tslint:disable-line no-unused-variable
 
-import * as Plugins from '../../assets/js/plugins';
+import { registerPlugin } from '../../assets/js/plugins';
 
-Plugins.register<void>({
+registerPlugin<void>({
   name: 'ID Debug Mode',
   author: 'Zachary Vance',
   description: 'Display internal IDs for each node (for debugging for developers)',

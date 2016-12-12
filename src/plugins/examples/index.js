@@ -1,6 +1,6 @@
-import * as Plugins from '../../assets/js/plugins';
+import { registerPlugin } from '../../assets/js/plugins';
 
-Plugins.register({
+registerPlugin({
   name: 'Hello World example',
   version: 1,
   author: 'Jeff Wu',

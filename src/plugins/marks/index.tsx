@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import React from 'react'; // tslint:disable-line no-unused-variable
 
-import * as Plugins from '../../assets/js/plugins';
+import { registerPlugin, PluginApi } from '../../assets/js/plugins';
 import Menu from '../../assets/js/menu';
 import * as DataStore from '../../assets/js/datastore';
 import Document from '../../assets/js/document';
@@ -27,7 +27,7 @@ const markStyle = {
 };
 
 export class MarksPlugin {
-  private api: Plugins.PluginApi;
+  private api: PluginApi;
   private logger: Logger;
   private session: Session;
   private document: Document;
@@ -39,7 +39,7 @@ export class MarksPlugin {
   public UnsetMark: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
 
-  constructor(api) {
+  constructor(api: PluginApi) {
     this.api = api;
     // NOTE: this may not be initialized correctly at first
     // this only affects rendering @marklinks for now
@@ -545,7 +545,7 @@ export class MarksPlugin {
 
 const pluginName = 'Marks';
 
-Plugins.register<MarksPlugin>(
+registerPlugin<MarksPlugin>(
   {
     name: pluginName,
     author: 'Jeff Wu',

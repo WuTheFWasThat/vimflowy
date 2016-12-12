@@ -4,7 +4,7 @@
 import $ from 'jquery';
 import React from 'react'; // tslint:disable-line no-unused-variable
 
-import * as Plugins from '../../assets/js/plugins';
+import { registerPlugin, PluginApi } from '../../assets/js/plugins';
 import { Logger } from '../../assets/js/logger';
 import { Row } from '../../assets/js/types';
 
@@ -16,14 +16,14 @@ function pad(num: number, length: number, padChar: string = '0') {
 }
 
 class TimeTrackingPlugin {
-  private api: Plugins.PluginApi;
+  private api: PluginApi;
   private logger: Logger;
   private currentPath: {
     row: Row,
     time: number,
   } | null;
 
-  constructor(api: Plugins.PluginApi) {
+  constructor(api: PluginApi) {
     this.api = api;
     this.logger = this.api.logger;
     this.logger.info('Loading time tracking');
@@ -189,7 +189,7 @@ class TimeTrackingPlugin {
     }
   }
 
-  private async onRowChange(from, to) {
+  private async onRowChange(from: Path | null, to: Path | null) {
     if (!(await this.isLogging())) {
       return;
     }
@@ -264,7 +264,7 @@ class TimeTrackingPlugin {
   }
 }
 
-Plugins.register<TimeTrackingPlugin>(
+registerPlugin<TimeTrackingPlugin>(
   {
     name: 'Time Tracking',
     author: 'Zachary Vance',

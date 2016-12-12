@@ -286,7 +286,7 @@ export class PluginsManager extends EventEmitter {
   }
 }
 
-const registerPlugin = function<T>(
+export const registerPlugin = function<T>(
   plugin_metadata: PluginMetadata,
   enable: (api: PluginApi) => Promise<T> | T,
   disable: (api: PluginApi, value: T) => Promise<void> | void,
@@ -312,7 +312,6 @@ const registerPlugin = function<T>(
 };
 
 // exports
-export { registerPlugin as register };
 export function all() { return PLUGINS; }
 export function getPlugin(name) { return PLUGINS[name]; }
 export function names() { return (_.keys(PLUGINS)).sort(); }

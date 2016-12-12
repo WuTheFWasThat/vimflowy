@@ -2,14 +2,14 @@ import _ from 'lodash';
 import React from 'react'; // tslint:disable-line no-unused-variable
 
 import Path from '../../assets/js/path';
-import * as Plugins from '../../assets/js/plugins';
+import { registerPlugin } from '../../assets/js/plugins';
 
 type EasyMotionMappings = {
   key_to_path: {[key: string]: Path},
   path_to_key: {[serialized_path: string]: string},
 };
 
-Plugins.register<void>(
+registerPlugin<void>(
   {
     name: 'Easy motion',
     author: 'Jeff Wu',
