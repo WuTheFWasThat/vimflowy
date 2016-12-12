@@ -54,8 +54,7 @@ export function assert_deep_equals(a, b, message = 'assert_deep_equals error') {
       \n${JSON.stringify(a, null, 2)}
       \nBut got:
       \n${JSON.stringify(b, null, 2)}
-    `
-    );
+    `);
   }
 }
 

@@ -255,7 +255,7 @@ export class MoveBlock extends Mutation {
     }
     // TODO: other cursors could also
     // be on a relevant path..
-    cursor._setPath((this.parent.extend([this.path.row])).extend(walk));
+    await cursor._setPath((this.parent.extend([this.path.row])).extend(walk));
   }
 }
 

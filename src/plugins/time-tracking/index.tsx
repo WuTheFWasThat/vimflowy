@@ -6,6 +6,7 @@ import React from 'react'; // tslint:disable-line no-unused-variable
 
 import { registerPlugin, PluginApi } from '../../assets/js/plugins';
 import { Logger } from '../../assets/js/logger';
+import Path from '../../assets/js/path';
 import { Row } from '../../assets/js/types';
 
 function pad(num: number, length: number, padChar: string = '0') {
@@ -22,17 +23,26 @@ class TimeTrackingPlugin {
     row: Row,
     time: number,
   } | null;
+  private isLogging: boolean;
 
   constructor(api: PluginApi) {
     this.api = api;
     this.logger = this.api.logger;
     this.logger.info('Loading time tracking');
     this.currentPath = null;
+    this.isLogging = false;
 
-    // TODO: sequence onRowChange?
-    this.onRowChange(null, this.api.cursor.path); // Initial setup, fire and forget
+    // Initial setup, fire and forget
+    (async () => {
+      await this.toggleLogging(
+        await this.api.getData('isLogging', true)
+      );
+    })();
+
     // NOTE: all these are fire and forget
-    this.api.cursor.on('rowChange', this.onRowChange.bind(this));
+    this.api.cursor.on('rowChange', async (_oldPath: Path, newPath: Path) => {
+      await this.onRowChange(newPath.row);
+    });
 
     this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
       obj.timeTracked = await this.rowTime(row);
@@ -89,7 +99,7 @@ class TimeTrackingPlugin {
     });
 
     this.api.registerListener('session', 'exit', async () => {
-      await this.onRowChange(this.currentPath, null);
+      await this.onRowChange(null);
     });
 
     this.api.registerAction(
@@ -149,6 +159,7 @@ class TimeTrackingPlugin {
       } else {
         this.currentPath.time = Date.now() - curTime;
       }
+      await this.api.updatedDataForRender(this.currentPath.row);
     }
   }
 
@@ -172,36 +183,52 @@ class TimeTrackingPlugin {
     );
   }
 
-  private async isLogging() {
-    return await this.api.getData('isLogging', true);
-  }
+  private async toggleLogging(forceValue?: boolean) {
+    // toggle, by default
+    let isLogging = !this.isLogging;
+    if (forceValue != null) {
+      isLogging = forceValue;
+    }
 
-  private async toggleLogging() {
-    let isLogging = await this.isLogging();
     if (isLogging) {
-      this.logger.info('Turning logging off');
-      await this.onRowChange(this.api.cursor.row, null); // Final close
-      await this.api.setData('isLogging', false);
-    } else {
       this.logger.info('Turning logging on');
       await this.api.setData('isLogging', true);
-      await this.onRowChange(null, this.api.cursor.row); // Initial setup
+      if (!this.isLogging) {
+        await this.onRowChange(this.api.cursor.row); // Initial setup
+      }
+    } else {
+      this.logger.info('Turning logging off');
+      if (this.isLogging) {
+        await this.onRowChange(null); // Final close
+      }
+      await this.api.setData('isLogging', false);
     }
+    this.isLogging = isLogging;
   }
 
-  private async onRowChange(from: Path | null, to: Path | null) {
-    if (!(await this.isLogging())) {
+  private async onRowChange(to: Row | null) {
+    const from: Row | null = (this.currentPath && this.currentPath.row) || null;
+    if (!this.isLogging) {
+      this.currentPath = null;
+      if (from) {
+        await this.api.updatedDataForRender(from);
+      }
       return;
     }
-    this.logger.debug(`Switching from row ${from && from.row} to row ${to && to.row}`);
+    this.logger.debug(`Switching from row ${from} to row ${to}`);
     let time = Date.now();
-    if (this.currentPath && this.currentPath.row !== (to && to.row)) {
-      await this.modifyTimeForRow(from.row, (time - this.currentPath.time));
+    if (this.currentPath && (this.currentPath.row !== to)) {
+      // NOTE: fire and forget
+      this.modifyTimeForRow(this.currentPath.row, time - this.currentPath.time);
       this.currentPath = null;
+      if (from) {
+        await this.api.updatedDataForRender(from);
+      }
     }
     if (to !== null) {
       if (this.currentPath === null) {
-        this.currentPath = { row: to.row, time };
+        this.currentPath = { row: to, time };
+        await this.api.updatedDataForRender(to);
       }
     }
   }
@@ -209,6 +236,7 @@ class TimeTrackingPlugin {
   private async resetcurrentPath() {
     if (this.currentPath) {
       this.currentPath.time = Date.now();
+      await this.api.updatedDataForRender(this.currentPath.row);
     }
   }
 

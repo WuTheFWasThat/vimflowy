@@ -56,30 +56,30 @@ export default class Cursor extends EventEmitter {
     return new Cursor(this.session, this.path, this.col, this.moveCol);
   }
 
-  public _setPath(path) {
-    this.emit('rowChange', this.path, path);
+  public async _setPath(path) {
+    await this.emitAsync('rowChange', this.path, path);
     this.path = path;
   }
 
-  private _setCol(col) {
-    this.emit('colChange', this.col, col);
+  private async _setCol(col) {
+    await this.emitAsync('colChange', this.col, col);
     this.col = col;
   }
 
   public async from(other) {
-    this._setPath(other.path);
-    this._setCol(other.col);
+    await this._setPath(other.path);
+    await this._setCol(other.col);
     this.moveCol = other.moveCol;
     this.properties = _.cloneDeep(other.properties);
   }
 
   public async setPosition(path, col, cursorOptions?: CursorOptions) {
-    this._setPath(path);
+    await this._setPath(path);
     await this.setCol(col, cursorOptions);
   }
 
   public async setPath(path, cursorOptions?: CursorOptions) {
-    this._setPath(path);
+    await this._setPath(path);
     await this._fromMoveCol(cursorOptions);
   }
 
@@ -102,7 +102,7 @@ export default class Cursor extends EventEmitter {
     } else {
       col = Math.max(0, Math.min(maxcol, this.moveCol));
     }
-    this._setCol(col);
+    await this._setCol(col);
     if (!cursorOptions.keepProperties) {
       await this._getPropertiesFromContext();
     }
