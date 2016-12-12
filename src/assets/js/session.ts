@@ -70,12 +70,12 @@ export default class Session extends EventEmitter {
   public jumpIndex: number;
 
   private getLinesPerPage: () => number;
-  private getVisiblePaths: () => Array<Path>;
+  public getVisiblePaths: () => Array<Path>;
   public showMessage: (message: string, options?: any) => void;
   public toggleBindingsDiv: () => void;
   private downloadFile: (filename: string, mimetype: string, content: any) => void;
 
-  constructor(doc, options: SessionOptions = {}) {
+  constructor(doc: Document, options: SessionOptions = {}) {
     super();
 
     this.document = doc;
@@ -90,7 +90,7 @@ export default class Session extends EventEmitter {
     this.toggleBindingsDiv = options.toggleBindingsDiv || (() => null);
     this.getLinesPerPage = options.getLinesPerPage || (() => 10);
     this.downloadFile = options.downloadFile || ((filename, mimetype, content) => {
-      logger.info(`Would download file to ${filename}`);
+      logger.info(`Would download file to ${filename}, mimetype ${mimetype}`);
       logger.debug(content);
     });
 
@@ -134,7 +134,7 @@ export default class Session extends EventEmitter {
   // import/export
   ////////////////////////////////
 
-  private parseJson(content) {
+  private parseJson(content: string) {
     let root;
     try {
       root = JSON.parse(content);
@@ -142,7 +142,7 @@ export default class Session extends EventEmitter {
       this.showMessage('The uploaded file is not valid JSON', {text_class: 'error'});
       return false;
     }
-    const verify = function(node) {
+    const verify = function(node: any) {
       if (node.clone) {
         return true;
       }
@@ -162,7 +162,7 @@ export default class Session extends EventEmitter {
     return root;
   }
 
-  private parsePlaintext(content) {
+  private parsePlaintext(content: string) {
     // Step 1: parse into (int, string) pairs of indentation amounts.
     let lines: Array<{
       indent: number,
@@ -171,22 +171,23 @@ export default class Session extends EventEmitter {
     }> = [];
     const whitespace = /^\s*/;
     const content_lines = content.split('\n');
-    for (let i = 0; i < content_lines.length; i++) {
-      let line = content_lines[i];
+    content_lines.forEach((line) => {
+      const matches = line.match(whitespace);
+      const indent = matches ? matches[0].length : 0;
       if (line.match(/^\s*".*"$/)) { // Flag workflowy annotations as special cases
         lines.push({
-          indent: line.match(whitespace)[0].length,
+          indent,
           line: line.replace(/^\s*"(.*)"$/, '$1'),
           annotation: true,
         });
-        continue;
+      } else {
+        // TODO: record whether COMPLETE and strikethrough line if so?
+        lines.push({
+          indent,
+          line: line.replace(whitespace, '').replace(/^(?:-\s*)?(?:\[COMPLETE\] )?/, ''),
+        });
       }
-      // TODO: record whether COMPLETE and strikethrough line if so?
-      lines.push({
-        indent: line.match(whitespace)[0].length,
-        line: line.replace(whitespace, '').replace(/^(?:-\s*)?(?:\[COMPLETE\] )?/, ''),
-      });
-    }
+    });
     while (lines[lines.length - 1].line === '') { // Strip trailing blank line(s)
       lines = lines.splice(0, lines.length - 1);
     }
@@ -469,7 +470,7 @@ export default class Session extends EventEmitter {
     return path;
   }
 
-  public async prevVisible(path) {
+  public async prevVisible(path: Path) {
     if (path.is(this.viewRoot)) {
       return null;
     }
@@ -490,7 +491,7 @@ export default class Session extends EventEmitter {
 
   // finds oldest ancestor that is visible *besides viewRoot*
   // returns null if there is no visible ancestor (i.e. path is not under viewroot)
-  public async oldestVisibleAncestor(path) {
+  public async oldestVisibleAncestor(path: Path) {
     let last = path;
     while (true) {
       const cur = last.parent;
@@ -506,7 +507,7 @@ export default class Session extends EventEmitter {
 
   // finds closest ancestor that is visible
   // returns null if there is no visible ancestor (i.e. path is not under viewroot)
-  public async youngestVisibleAncestor(path) {
+  public async youngestVisibleAncestor(path: Path) {
     let answer = path;
     let cur = path;
     while (true) {
@@ -527,7 +528,7 @@ export default class Session extends EventEmitter {
   // View root
   ////////////////////////////////
 
-  public async changeViewRoot(path) {
+  public async changeViewRoot(path: Path) {
     this.viewRoot = path;
     // NOTE: should this be fire and forget instead?
     await this.document.store.setLastViewRoot(path.getAncestry());
@@ -541,13 +542,15 @@ export default class Session extends EventEmitter {
     return this.jumpIndex = 0; // index into jump history
   }
 
-  private _addToJumpHistory(jump_fn) {
+  // jump_fn is just some function that changes
+  // viewRoot and cursor
+  private async _addToJumpHistory(jump_fn: () => Promise<void>) {
     const jump = this.jumpHistory[this.jumpIndex];
     jump.cursor_after = this.cursor.clone();
 
     this.jumpHistory = this.jumpHistory.slice(0, this.jumpIndex + 1);
 
-    jump_fn();
+    await jump_fn();
 
     this.jumpHistory.push({
       viewRoot: this.viewRoot,
@@ -557,7 +560,7 @@ export default class Session extends EventEmitter {
   }
 
   // try going to jump, return true if succeeds
-  private async tryJump(jump) {
+  private async tryJump(jump: JumpLogEntry) {
     if (jump.viewRoot.row === this.viewRoot.row) {
       return false; // not moving, don't jump
     }
@@ -573,6 +576,10 @@ export default class Session extends EventEmitter {
       await this.cursor.setPath(children[0]);
     } else {
       await this.cursor.setPath(jump.viewRoot);
+    }
+
+    if (!jump.cursor_after) {
+      throw new Error('Jump should have had cursor_after');
     }
 
     if (await this.document.isAttached(jump.cursor_after.row)) {
@@ -626,23 +633,23 @@ export default class Session extends EventEmitter {
   // try to change the view root to row
   // fails if there is no child
   // records in jump history
-  private async changeView(path) {
+  private async changeView(path: Path) {
     if (path.row === this.viewRoot.row) {
       return; // not moving, do nothing
     }
     await this._addToJumpHistory(async () => {
-      return await this.changeViewRoot(path);
+      await this.changeViewRoot(path);
     });
   }
 
   // try to zoom into newroot, updating the cursor
-  public async zoomInto(newroot) {
+  public async zoomInto(newroot: Path) {
     await this.changeView(newroot);
-    let newrow = await this.youngestVisibleAncestor(this.cursor.path);
-    if (newrow === null) { // not visible, need to reset cursor
-      newrow = newroot;
+    let newpath = await this.youngestVisibleAncestor(this.cursor.path);
+    if (newpath === null) { // not visible, need to reset cursor
+      newpath = newroot;
     }
-    await this.cursor.setPath(newrow);
+    await this.cursor.setPath(newpath);
   }
 
   public async zoomOut() {
@@ -657,6 +664,9 @@ export default class Session extends EventEmitter {
       return false;
     }
     const newroot = await this.oldestVisibleAncestor(this.cursor.path);
+    if (newroot == null) {
+      throw new Error('Got error zooming in to cursor');
+    }
     if (await this.zoomInto(newroot)) {
       return true;
     }
@@ -713,7 +723,7 @@ export default class Session extends EventEmitter {
     await this.addChars(this.cursor.row, col, chars);
   }
 
-  private async delChars(path, col, nchars, options: DelCharsOptions = {}) {
+  private async delChars(path: Path, col: Col, nchars: number, options: DelCharsOptions = {}) {
     const n = await this.document.getLength(path.row);
     let deleted: Line = [];
     if ((n > 0) && (nchars > 0) && (col < n)) {
@@ -727,16 +737,16 @@ export default class Session extends EventEmitter {
     return deleted;
   }
 
-  public async delCharsBeforeCursor(nchars, options: DelCharsOptions = {}) {
+  public async delCharsBeforeCursor(nchars: number, options: DelCharsOptions = {}) {
     nchars = Math.min(this.cursor.col, nchars);
     return await this.delChars(this.cursor.path, this.cursor.col - nchars, nchars, options);
   }
 
-  public async delCharsAfterCursor(nchars, options: DelCharsOptions = {}) {
+  public async delCharsAfterCursor(nchars: number, options: DelCharsOptions = {}) {
     return await this.delChars(this.cursor.path, this.cursor.col, nchars, options);
   }
 
-  private async changeChars(row, col, nchars, change_fn) {
+  private async changeChars(row: Row, col: Col, nchars: number, change_fn) {
     const mutation = new mutations.ChangeChars(row, col, nchars, change_fn);
     await this.do(mutation);
     return mutation.ncharsDeleted;
@@ -761,7 +771,7 @@ export default class Session extends EventEmitter {
     return await this.delChars(this.cursor.path, 0, await this.curLineLength());
   }
 
-  public async yankChars(path, col, nchars) {
+  public async yankChars(path: Path, col: Col, nchars: number) {
     const line = await this.document.getLine(path.row);
     if (line.length > 0) {
       this.register.saveChars(line.slice(col, col + nchars));
@@ -770,7 +780,7 @@ export default class Session extends EventEmitter {
 
   // options:
   //   - includeEnd says whether to also delete cursor2 location
-  public async yankBetween(cursor1, cursor2, options: {includeEnd?: boolean} = {}) {
+  public async yankBetween(cursor1: Cursor, cursor2: Cursor, options: {includeEnd?: boolean} = {}) {
     if (!cursor2.path.is(cursor1.path)) {
       logger.warn('Not yet implemented');
       return;
@@ -791,7 +801,7 @@ export default class Session extends EventEmitter {
 
   // options:
   //   - includeEnd says whether to also delete cursor2 location
-  public async deleteBetween(cursor1, cursor2, options: {includeEnd?: boolean, yank?: boolean} = {}) {
+  public async deleteBetween(cursor1: Cursor, cursor2: Cursor, options: {includeEnd?: boolean, yank?: boolean} = {}) {
     if (!cursor2.path.is(cursor1.path)) {
       logger.warn('Not yet implemented');
       return;
@@ -808,16 +818,19 @@ export default class Session extends EventEmitter {
 
   // toggling text properties
   // if new_value is null, should be inferred based on old values
-  private async toggleProperty(property, new_value, row, col, n) {
+  private async toggleProperty(property, new_value: boolean | null, row: Row, col: Col, n: number) {
     return await this.changeChars(row, col, n, function(deleted) {
+      let toggle_value: boolean;
       if (new_value === null) {
         const all_were_true = _.every(deleted.map(obj => obj[property]));
-        new_value = !all_were_true;
+        toggle_value = !all_were_true;
+      } else {
+        toggle_value = new_value;
       }
 
       return deleted.map(function(char_obj) {
         const new_obj = _.clone(char_obj);
-        new_obj[property] = new_value;
+        new_obj[property] = toggle_value;
         return new_obj;
       });
     });
@@ -929,14 +942,14 @@ export default class Session extends EventEmitter {
   // - first is previous sibling of second, AND has no children
   // - second is first child of first, AND has no children
   private async _joinRows(first, second, options: {delimiter?: string} = {}) {
-    let addDelimiter = false;
+    let addDelimiter: string | null = null;
     const firstLine = await this.document.getLine(first.row);
     const secondLine = await this.document.getLine(second.row);
     if (options.delimiter) {
       if (firstLine.length && secondLine.length) {
         if (firstLine[firstLine.length - 1].char !== options.delimiter) {
           if (secondLine[0].char !== options.delimiter) {
-            addDelimiter = true;
+            addDelimiter = options.delimiter;
           }
         }
       }
@@ -945,13 +958,13 @@ export default class Session extends EventEmitter {
     if (!await this.document.hasChildren(second.row)) {
       await this.cursor.setPosition(first, -1);
       await this.delBlock(second, {noNew: true, noSave: true});
-      if (addDelimiter) {
+      if (addDelimiter != null) {
         const mutation = new mutations.AddChars(
-          first.row, firstLine.length, [{ char: options.delimiter }]);
+          first.row, firstLine.length, [{ char: addDelimiter }]);
         await this.do(mutation);
       }
       const mutation = new mutations.AddChars(
-        first.row, firstLine.length + (addDelimiter ? 1 : 0), secondLine);
+        first.row, firstLine.length + (addDelimiter == null ? 0 : 1), secondLine);
       await this.do(mutation);
       await this.cursor.setPosition(first, firstLine.length);
       return true;
@@ -969,14 +982,14 @@ export default class Session extends EventEmitter {
 
     await this.cursor.setPosition(second, 0);
     await this.delBlock(first, {noNew: true, noSave: true});
-    if (addDelimiter) {
-      const mutation = new mutations.AddChars(second.row, 0, [{ char: options.delimiter }]);
+    if (addDelimiter != null) {
+      const mutation = new mutations.AddChars(second.row, 0, [{ char: addDelimiter }]);
       await this.do(mutation);
     }
     const mutation = new mutations.AddChars(second.row, 0, firstLine);
     await this.do(mutation);
 
-    if (addDelimiter) {
+    if (addDelimiter != null) {
       await this.cursor.left();
     }
 
@@ -1015,7 +1028,10 @@ export default class Session extends EventEmitter {
     return await this.delBlocks(path.parent.row, await this.document.indexInParent(path), 1, options);
   }
 
-  public async delBlocks(parent, index, nrows, options: {noSave?: boolean, addNew?: boolean} = {}) {
+  public async delBlocks(
+    parent: Row, index: number, nrows: number,
+    options: {noSave?: boolean, addNew?: boolean} = {}
+  ) {
     const mutation = new mutations.DetachBlocks(parent, index, nrows, options);
     await this.do(mutation);
     if (!options.noSave) {
@@ -1027,14 +1043,14 @@ export default class Session extends EventEmitter {
     }
   }
 
-  public async delBlocksAtCursor(nrows, options = {}) {
+  public async delBlocksAtCursor(nrows: number, options = {}) {
     const parent = this.cursor.path.parent;
     const index = await this.document.indexInParent(this.cursor.path);
     return await this.delBlocks(parent.row, index, nrows, options);
   }
 
   public async addBlocks(
-    parent, index = -1, serialized_rows,
+    parent: Path, index = -1, serialized_rows,
     options: {cursorOptions?: CursorOptions, setCursor?: string} = {}
   ) {
     const mutation = new mutations.AddBlocks(parent, index, serialized_rows);
@@ -1054,16 +1070,16 @@ export default class Session extends EventEmitter {
     this.register.saveSerializedRows(serialized);
   }
 
-  public async yankBlocksAtCursor(nrows) {
+  public async yankBlocksAtCursor(nrows: number) {
     await this.yankBlocks(this.cursor.path, nrows);
   }
 
-  public async yankBlocksClone(row, nrows) {
-    const siblings = await this.document.getSiblingRange(row, 0, nrows - 1);
+  public async yankBlocksClone(path: Path, nrows: number) {
+    const siblings = await this.document.getSiblingRange(path, 0, nrows - 1);
     this.register.saveClonedRows(siblings.map(sibling => sibling.row));
   }
 
-  public async yankBlocksCloneAtCursor(nrows) {
+  public async yankBlocksCloneAtCursor(nrows: number) {
     await this.yankBlocksClone(this.cursor.path, nrows);
   }
 
@@ -1084,16 +1100,16 @@ export default class Session extends EventEmitter {
     }
   }
 
-  private async moveBlock(path, parent_path, index = -1) {
+  private async moveBlock(path: Path, parent_path: Path, index = -1) {
     return await this.do(new mutations.MoveBlock(path, parent_path, index));
   }
 
-  public async indentBlocks(row, numblocks = 1) {
-    if (row.is(this.viewRoot)) {
+  public async indentBlocks(path: Path, numblocks = 1) {
+    if (path.is(this.viewRoot)) {
       this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
     }
-    const newparent = await this.document.getSiblingBefore(row);
+    const newparent = await this.document.getSiblingBefore(path);
     if (newparent === null) {
       this.showMessage('Cannot indent without higher sibling', {text_class: 'error'});
       return null; // cannot indent
@@ -1103,7 +1119,7 @@ export default class Session extends EventEmitter {
       await this.toggleBlockCollapsed(newparent.row);
     }
 
-    const siblings = await this.document.getSiblingRange(row, 0, numblocks - 1);
+    const siblings = await this.document.getSiblingRange(path, 0, numblocks - 1);
     for (let i = 0; i < siblings.length; i++) {
       const sib = siblings[i];
       await this.moveBlock(sib, newparent, -1);
@@ -1111,18 +1127,18 @@ export default class Session extends EventEmitter {
     return newparent;
   }
 
-  public async unindentBlocks(row, numblocks = 1) {
-    if (row.is(this.viewRoot)) {
+  public async unindentBlocks(path: Path, numblocks = 1) {
+    if (path.is(this.viewRoot)) {
       this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
     }
-    const parent = row.parent;
+    const parent = path.parent;
     if (parent.row === this.viewRoot.row) {
       this.showMessage('Cannot unindent past root', {text_class: 'error'});
       return null;
     }
 
-    const siblings = await this.document.getSiblingRange(row, 0, numblocks - 1);
+    const siblings = await this.document.getSiblingRange(path, 0, numblocks - 1);
 
     const newparent = parent.parent;
     let pp_i = await this.document.indexInParent(parent);
@@ -1220,15 +1236,15 @@ export default class Session extends EventEmitter {
     await this.toggleBlockCollapsed(this.cursor.row);
   }
 
-  public async toggleBlockCollapsed(row) {
+  public async toggleBlockCollapsed(row: Row) {
     await this.do(new mutations.ToggleBlock(row));
   }
 
-  public async setCurBlockCollapsed(collapsed) {
+  public async setCurBlockCollapsed(collapsed: boolean) {
     await this.setBlockCollapsed(this.cursor.row, collapsed);
   }
 
-  public async setBlockCollapsed(row, collapsed) {
+  public async setBlockCollapsed(row: Row, collapsed: boolean) {
     if ((await this.document.collapsed(row)) !== collapsed) {
       await this.do(new mutations.ToggleBlock(row));
     }
@@ -1244,7 +1260,7 @@ export default class Session extends EventEmitter {
 
   // given an anchor and cursor, figures out the right blocks to be deleting
   // returns a parent, minindex, and maxindex
-  public async getVisualLineSelections() {
+  public async getVisualLineSelections(): Promise<[Path, number, number]> {
     const [common, ancestors1, ancestors2] =
       await this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
     if (ancestors1.length === 0) {
@@ -1267,7 +1283,7 @@ export default class Session extends EventEmitter {
     }
   }
 
-  public async scroll(npages) {
+  public async scroll(npages: number) {
     let numlines = Math.round(npages * this.getLinesPerPage());
     numlines = Math.max(Math.min(numlines, 1000), -1000); // guard against craziness
 

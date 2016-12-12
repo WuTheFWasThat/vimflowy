@@ -15,7 +15,7 @@ keyDefinitions.registerAction(new Action(
     if (visual_line == null) {
       throw new Error('Visual_line mode arguments missing');
     }
-    await session.indentBlocks(visual_line.row_start, visual_line.num_rows);
+    await session.indentBlocks(visual_line.start, visual_line.num_rows);
     await session.setMode('NORMAL');
   },
 ));
@@ -36,7 +36,7 @@ keyDefinitions.registerAction(new Action(
     if (visual_line == null) {
       throw new Error('Visual_line mode arguments missing');
     }
-    await session.unindentBlocks(visual_line.row_start, visual_line.num_rows);
+    await session.unindentBlocks(visual_line.start, visual_line.num_rows);
     await session.setMode('NORMAL');
   }
 ));

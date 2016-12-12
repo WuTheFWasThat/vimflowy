@@ -128,10 +128,10 @@ const transform_insert_key = function(key) {
 registerMode({
   name: 'NORMAL',
   cursorBetween: false,
-  async enter(session, oldMode?: ModeId) {
+  async enter(session) {
     await session.cursor.backIfNeeded();
   },
-  async every(actionName, { keyStream, session }) {
+  async every(_actionName, { keyStream, session }) {
     keyStream.save();
     session.save();
   },
@@ -195,7 +195,7 @@ registerMode({
 registerMode({
   name: 'VISUAL',
   cursorBetween: false,
-  async enter(session, oldMode?: ModeId) {
+  async enter(session) {
     session.anchor = session.cursor.clone();
   },
   async exit(session, newMode?: ModeId) {
@@ -210,7 +210,7 @@ registerMode({
 registerMode({
   name: 'VISUAL_LINE',
   cursorBetween: false,
-  async enter(session, oldMode?: ModeId) {
+  async enter(session) {
     session.anchor = session.cursor.clone();
   },
   async exit(session, newMode?: ModeId) {
@@ -223,11 +223,12 @@ registerMode({
   async transform_context(context) {
     const { session } = context;
     const [parent, index1, index2] = await session.getVisualLineSelections();
+    const children = await session.document.getChildren(parent);
     context.visual_line = {
-      row_start_i: index1,
-      row_end_i: index2,
-      row_start: (await session.document.getChildren(parent))[index1],
-      row_end: (await session.document.getChildren(parent))[index2],
+      start_i: index1,
+      end_i: index2,
+      start: children[index1],
+      end: children[index2],
       parent: parent,
       num_rows: (index2 - index1) + 1,
     };
@@ -245,11 +246,11 @@ registerMode({
   name: 'SEARCH',
   cursorBetween: true,
   within_row: true,
-  async every(actionName, { session, keyStream }) {
+  async every(_actionName, { session, keyStream }) {
     await session.menu.update();
     keyStream.drop();
   },
-  async exit(session, newMode?: ModeId) {
+  async exit(session) {
     session.menu = null;
     // NOTE: should keyStream.drop() here?
   },

@@ -3,13 +3,16 @@ import * as _ from 'lodash';
 import * as Modes from './modes';
 import logger, { Logger } from './logger';
 import * as errors from './errors';
-import EventEmitter from './eventEmitter';
+import EventEmitter, { Listener, Hook } from './eventEmitter';
 import Document from './document';
 import Cursor from './cursor';
 import Session from './session';
 import defaultKeyMappings, { HotkeyMapping } from './keyMappings';
 import { KeyBindings } from './keyBindings';
-import { KeyDefinitions, Action, Motion } from './keyDefinitions';
+import {
+  KeyDefinitions, Action, Motion,
+  ActionDefinition, MotionDefinition,
+} from './keyDefinitions';
 
 type PluginMetadata = {
   name: string;
@@ -98,7 +101,7 @@ export class PluginApi {
     defaultKeyMappings.deregisterModeMappings(mode, mappings);
   }
 
-  public registerMotion(name, desc, def) {
+  public registerMotion(name: string, desc: string, def: MotionDefinition) {
     const motion = new Motion(name, desc, def);
     this.definitions.registerMotion(motion);
     this.registrations.push(() => {
@@ -107,11 +110,11 @@ export class PluginApi {
     return motion;
   }
 
-  public deregisterMotion(name) {
+  public deregisterMotion(name: string) {
     this.definitions.deregisterMotion(name);
   }
 
-  public registerAction(name, desc, def) {
+  public registerAction(name: string, desc: string, def: ActionDefinition) {
     const action = new Action(name, desc, def);
     this.definitions.registerAction(action);
     this.registrations.push(() => {
@@ -120,7 +123,7 @@ export class PluginApi {
     return action;
   }
 
-  public deregisterAction(name) {
+  public deregisterAction(name: string) {
     this.definitions.deregisterAction(name);
   }
 
@@ -134,7 +137,7 @@ export class PluginApi {
     }
   }
 
-  public registerListener(who, event, listener) {
+  public registerListener(who: string, event: string, listener: Listener) {
     const emitter = this._getEmitter(who);
     emitter.on(event, listener);
     this.registrations.push(() => {
@@ -142,12 +145,13 @@ export class PluginApi {
     });
   }
 
-  public deregisterListener(who, event, listener) {
+  public deregisterListener(who: string, event: string, listener: Listener) {
     const emitter = this._getEmitter(who);
     emitter.off(event, listener);
   }
 
-  public registerHook(who, event, transform) {
+  // TODO: type this better
+  public registerHook(who: string, event: string, transform: Hook) {
     const emitter = this._getEmitter(who);
     emitter.addHook(event, transform);
     this.registrations.push(() => {
@@ -156,7 +160,7 @@ export class PluginApi {
     this.document.refreshRender();
   }
 
-  public deregisterHook(who, event, transform) {
+  public deregisterHook(who: string, event: string, transform: Hook) {
     const emitter = this._getEmitter(who);
     emitter.removeHook(event, transform);
     this.document.refreshRender();

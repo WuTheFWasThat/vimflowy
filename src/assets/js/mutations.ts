@@ -24,12 +24,15 @@ the mutation may also optionally implement
 
 import * as _ from 'lodash';
 import * as errors from './errors';
+import Session from './session';
+import Cursor from './cursor';
 import { Row, Col, Char, SerializedLine, SerializedPath, Line } from './types';
 import Path from './path';
 
 // validate inserting id as a child of parent_id
 const validateRowInsertion = async function(
-  session, parent_id, id, options: {noSiblingCheck?: boolean} = {}
+  session: Session, parent_id: number, id: number,
+  options: {noSiblingCheck?: boolean} = {}
 ) {
   // check that there won't be doubled siblings
   if (!options.noSiblingCheck) {
@@ -55,19 +58,19 @@ export default class Mutation {
   public str() {
     return '';
   }
-  public async validate(session): Promise<boolean> {
+  public async validate(_session: Session): Promise<boolean> {
     return true;
   }
-  public async mutate(session): Promise<void> {
+  public async mutate(_session: Session): Promise<void> {
     throw new errors.NotImplemented();
   }
-  public async rewind(session): Promise<Array<Mutation>> {
+  public async rewind(_session: Session): Promise<Array<Mutation>> {
     return [];
   }
-  public async remutate(session): Promise<void> {
+  public async remutate(session: Session): Promise<void> {
     return this.mutate(session);
   }
-  public async moveCursor(cursor): Promise<void> {
+  public async moveCursor(_cursor: Cursor): Promise<void> {
     return;
   }
 }
@@ -75,9 +78,9 @@ export default class Mutation {
 export class AddChars extends Mutation {
   private row: Row;
   private col: Col;
-  private chars: Array<string>;
+  private chars: Array<Char>;
 
-  constructor(row, col, chars) {
+  constructor(row: Row, col: Col, chars: Array<Char>) {
     super();
     this.row = row;
     this.col = col;
@@ -88,17 +91,17 @@ export class AddChars extends Mutation {
     return `row ${this.row}, col ${this.col}, nchars ${this.chars.length}`;
   }
 
-  public async mutate(session) {
+  public async mutate(session: Session) {
     await session.document.writeChars(this.row, this.col, this.chars);
   }
 
-  public async rewind(session) {
+  public async rewind() {
     return [
       new DelChars(this.row, this.col, this.chars.length),
     ];
   }
 
-  public async moveCursor(cursor) {
+  public async moveCursor(cursor: Cursor) {
     if (!(cursor.path.row === this.row)) {
       return;
     }
@@ -114,7 +117,7 @@ export class DelChars extends Mutation {
   private nchars: number;
   public deletedChars: Line;
 
-  constructor(row, col, nchars) {
+  constructor(row: Row, col: Col, nchars: number) {
     super();
     this.row = row;
     this.col = col;
@@ -125,17 +128,17 @@ export class DelChars extends Mutation {
     return `row ${this.row}, col ${this.col}, nchars ${this.nchars}`;
   }
 
-  public async mutate(session) {
+  public async mutate(session: Session) {
     this.deletedChars = await session.document.deleteChars(this.row, this.col, this.nchars);
   }
 
-  public async rewind(session) {
+  public async rewind() {
     return [
       new AddChars(this.row, this.col, this.deletedChars),
     ];
   }
 
-  public async moveCursor(cursor) {
+  public async moveCursor(cursor: Cursor) {
     if (cursor.row !== this.row) {
       return;
     }
@@ -153,12 +156,15 @@ export class ChangeChars extends Mutation {
   private row: Row;
   private col: Col;
   private nchars: number;
-  private transform: (chars: Array<Char>) => Array<Char>;
-  private newChars: Array<Char>;
+  private transform?: (chars: Array<Char>) => Array<Char>;
+  private newChars?: Array<Char>;
   private deletedChars: Array<Char>;
   public ncharsDeleted: number;
 
-  constructor(row, col, nchars, transform?, newChars?) {
+  constructor(
+    row: Row, col: Col, nchars: number,
+    transform?: (chars: Array<Char>) => Array<Char>, newChars?: Array<Char>,
+  ) {
     super();
     this.row = row;
     this.col = col;
@@ -171,7 +177,7 @@ export class ChangeChars extends Mutation {
     return `change row ${this.row}, col ${this.col}, nchars ${this.nchars}`;
   }
 
-  public async mutate(session) {
+  public async mutate(session: Session) {
     this.deletedChars = await session.document.deleteChars(this.row, this.col, this.nchars);
     this.ncharsDeleted = this.deletedChars.length;
     if (this.transform) {
@@ -181,13 +187,16 @@ export class ChangeChars extends Mutation {
     await session.document.writeChars(this.row, this.col, this.newChars);
   }
 
-  public async rewind(session) {
+  public async rewind() {
+    if (this.newChars == null) {
+      throw new Error('No new chars?');
+    }
     return [
-      new ChangeChars(this.row, this.col, this.newChars.length, null, this.deletedChars),
+      new ChangeChars(this.row, this.col, this.newChars.length, undefined, this.deletedChars),
     ];
   }
 
-  public async remutate(session) {
+  public async remutate(session: Session) {
     await session.document.deleteChars(this.row, this.col, this.ncharsDeleted);
     await session.document.writeChars(this.row, this.col, this.newChars);
   }
@@ -202,7 +211,7 @@ export class MoveBlock extends Mutation {
   private index: number;
   private old_index: number;
 
-  constructor(path, parent, index) {
+  constructor(path: Path, parent: Path, index: number) {
     super();
     this.path = path;
     this.parent = parent;
@@ -218,7 +227,7 @@ export class MoveBlock extends Mutation {
     return `move ${this.path.row} from ${this.path.parent.row} to ${this.parent.row}`;
   }
 
-  public async validate(session) {
+  public async validate(session: Session) {
     if (this.path.isRoot()) {
       session.showMessage('Cannot detach root', {text_class: 'error'});
       return false;
@@ -228,18 +237,18 @@ export class MoveBlock extends Mutation {
     return await validateRowInsertion(session, this.parent.row, this.path.row, {noSiblingCheck: sameParent});
   }
 
-  public async mutate(session) {
+  public async mutate(session: Session) {
     const info = await session.document._move(this.path.row, this.old_parent.row, this.parent.row, this.index);
     this.old_index = info.old.child_index;
   }
 
-  public async rewind(session) {
+  public async rewind() {
     return [
       new MoveBlock((this.parent.extend([this.path.row])), this.old_parent, this.old_index),
     ];
   }
 
-  public async moveCursor(cursor) {
+  public async moveCursor(cursor: Cursor) {
     const walk = cursor.path.walkFrom(this.path);
     if (walk === null) {
       return;
@@ -256,7 +265,7 @@ export class AttachBlocks extends Mutation {
   private nrows: number;
   private index: number;
 
-  constructor(parent, cloned_rows, index) {
+  constructor(parent: Row, cloned_rows: Array<Row>, index: number) {
     super();
     this.parent = parent;
     this.cloned_rows = cloned_rows;
@@ -272,7 +281,7 @@ export class AttachBlocks extends Mutation {
     return `parent ${this.parent}, index ${this.index}`;
   }
 
-  public async validate(session) {
+  public async validate(session: Session) {
     for (let i = 0; i < this.cloned_rows.length; i++) {
       const row = this.cloned_rows[i];
       if (!await validateRowInsertion(session, this.parent, row)) {
@@ -282,17 +291,18 @@ export class AttachBlocks extends Mutation {
     return true;
   }
 
-  public async mutate(session) {
+  public async mutate(session: Session) {
     await session.document._attachChildren(this.parent, this.cloned_rows, this.index);
   }
 
-  public async rewind(session) {
+  public async rewind() {
     return [
       new DetachBlocks(this.parent, this.index, this.nrows),
     ];
   }
 }
 
+type DetachBlocksOptions = {addNew?: boolean, noNew?: boolean};
 export class DetachBlocks extends Mutation {
   private parent: Row;
   private index: number;
@@ -301,21 +311,21 @@ export class DetachBlocks extends Mutation {
   private next: SerializedPath;
   private created: Row | null;
   private created_index: number;
-  private options: {addNew?: boolean, noNew?: boolean};
+  private options: DetachBlocksOptions;
 
-  constructor(parent, index, nrows, options?) {
+  constructor(parent: Row, index: number, nrows: number = 1, options: DetachBlocksOptions = {}) {
     super();
     this.parent = parent;
     this.index = index;
-    this.nrows = nrows || 1;
-    this.options = options || {};
+    this.nrows = nrows;
+    this.options = options;
   }
 
   public str() {
     return `parent ${this.parent}, index ${this.index}, nrows ${this.nrows}`;
   }
 
-  public async mutate(session) {
+  public async mutate(session: Session) {
     this.deleted = (await session.document._getChildren(this.parent, this.index, this.index + this.nrows - 1))
       .filter((sib => sib !== null));
 
@@ -357,7 +367,7 @@ export class DetachBlocks extends Mutation {
     this.next = next;
   }
 
-  public async rewind(session) {
+  public async rewind() {
     const mutations: Array<Mutation> = [];
     if (this.created !== null) {
       mutations.push(new DetachBlocks(this.parent, this.created_index, 1, {noNew: true}));
@@ -376,7 +386,7 @@ export class DetachBlocks extends Mutation {
     }
   }
 
-  public async moveCursor(cursor) {
+  public async moveCursor(cursor: Cursor) {
     const result = cursor.path.shedUntil(this.parent);
     if (result === null) {
       return;
@@ -399,9 +409,9 @@ export class AddBlocks extends Mutation {
   private serialized_rows: Array<SerializedLine>;
   private index: number;
   private nrows: number;
-  public added_rows: Array<Row>;
+  public added_rows: Array<Path>;
 
-  constructor(parent, index, serialized_rows) {
+  constructor(parent: Path, index: number, serialized_rows: Array<SerializedLine>) {
     super();
     this.parent = parent;
     this.serialized_rows = serialized_rows;
@@ -417,7 +427,7 @@ export class AddBlocks extends Mutation {
     return `parent ${this.parent.row}, index ${this.index}`;
   }
 
-  public async mutate(session) {
+  public async mutate(session: Session) {
     let index = this.index;
 
     const id_mapping = {};
@@ -430,13 +440,13 @@ export class AddBlocks extends Mutation {
     }
   }
 
-  public async rewind(session) {
+  public async rewind() {
     return [
       new DetachBlocks(this.parent.row, this.index, this.nrows),
     ];
   }
 
-  public async remutate(session) {
+  public async remutate(session: Session) {
     let index = this.index;
     for (let i = 0; i < this.added_rows.length; i++) {
       const sib = this.added_rows[i];
@@ -449,17 +459,17 @@ export class AddBlocks extends Mutation {
 export class ToggleBlock extends Mutation {
   private row: Row;
 
-  constructor(row) {
+  constructor(row: Row) {
     super();
     this.row = row;
   }
   public str() {
     return `row ${this.row}`;
   }
-  public async mutate(session) {
+  public async mutate(session: Session) {
     await session.document.toggleCollapsed(this.row);
   }
-  public async rewind(session) {
+  public async rewind() {
     return [
       this,
     ];

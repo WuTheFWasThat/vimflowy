@@ -197,7 +197,7 @@ keyDefinitions.registerAction(new Action(
     if (visual_line == null) {
       throw new Error('Visual_line mode arguments missing');
     }
-    await session.delBlocks(visual_line.parent.row, visual_line.row_start_i, visual_line.num_rows, {addNew: false});
+    await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: false});
     await session.setMode('NORMAL');
   },
 ));
@@ -245,7 +245,7 @@ keyDefinitions.registerAction(new Action(
     if (visual_line == null) {
       throw new Error('Visual_line mode arguments missing');
     }
-    await session.delBlocks(visual_line.parent.row, visual_line.row_start_i, visual_line.num_rows, {addNew: true});
+    await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: true});
     await session.setMode('INSERT');
   },
 ));
@@ -305,7 +305,7 @@ keyDefinitions.registerAction(new Action(
     if (visual_line == null) {
       throw new Error('Visual_line mode arguments missing');
     }
-    await session.yankBlocks(visual_line.row_start, visual_line.num_rows);
+    await session.yankBlocks(visual_line.start, visual_line.num_rows);
     await session.setMode('NORMAL');
   },
   { sequence: SequenceAction.DROP_ALL },
@@ -360,7 +360,7 @@ keyDefinitions.registerAction(new Action(
     if (visual_line == null) {
       throw new Error('Visual_line mode arguments missing');
     }
-    await session.yankBlocksClone(visual_line.row_start, visual_line.num_rows);
+    await session.yankBlocksClone(visual_line.start, visual_line.num_rows);
     await session.setMode('NORMAL');
   },
 ));

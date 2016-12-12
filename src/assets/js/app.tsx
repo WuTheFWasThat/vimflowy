@@ -107,7 +107,7 @@ const getMainDiv = () => $('#view');
 async function create_session(dataSource, settings, doc, to_load) {
   let caughtErr: null | Error = null;
 
-  window.onerror = function(msg, url, line, col, err) {
+  window.onerror = function(msg, url, line, _col, err) {
     logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
     if (err) {
       logger.error('Error: ', msg, err, err.stack, JSON.stringify(err));

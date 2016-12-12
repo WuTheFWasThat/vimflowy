@@ -27,7 +27,7 @@ import * as Modes from './modes';
 import Queue from './utils/queue';
 // import * as constants from './constants';
 
-import { Key, ModeId } from './types';
+import { Key } from './types';
 import logger from './logger';
 
 // Simple stream class where you can
@@ -85,12 +85,6 @@ export class KeyStream extends EventEmitter {
     }
   }
 }
-
-type GetCommandOptions = {
-  session: Session,
-  mode: ModeId,
-  repeat: number,
-};
 
 type ActionRecord = {
   action: Action,

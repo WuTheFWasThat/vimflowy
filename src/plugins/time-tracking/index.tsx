@@ -139,7 +139,7 @@ class TimeTrackingPlugin {
     }, 1000);
   }
 
-  private async changeTimecurrentPath(delta_minutes) {
+  private async changeTimecurrentPath(delta_minutes: number) {
     if (this.currentPath !== null) {
       let curTime = Date.now() - this.currentPath.time;
       curTime += delta_minutes * 60 * 1000;
@@ -157,13 +157,15 @@ class TimeTrackingPlugin {
     return await this.api.getData(key, default_value);
   }
 
-  private async setRowData(row, keytype, value) {
+  private async setRowData(row: Row, keytype: string, value: any) {
     let key = `${row}:${keytype}`;
     await this.api.setData(key, value);
     await this.api.updatedDataForRender(row);
   }
 
-  private async transformRowData(row, keytype, transform, default_value: any = null) {
+  private async transformRowData(
+    row: Row, keytype: string,
+    transform: (val: number) => number, default_value: any = null) {
     await this.setRowData(
       row, keytype,
       transform(await this.getRowData(row, keytype, default_value))
@@ -210,12 +212,12 @@ class TimeTrackingPlugin {
     }
   }
 
-  private async modifyTimeForRow(row, delta) {
+  private async modifyTimeForRow(row: Row, delta: number) {
     await this.transformRowData(row, 'rowTotalTime', current => (current + delta), 0);
     await this._rebuildTreeTime(row, true);
   }
 
-  private async _rebuildTotalTime(row) {
+  private async _rebuildTotalTime(row: Row) {
     let children = await this.api.session.document._getChildren(row);
     let detached_children = await this.api.session.document.store.getDetachedChildren(row);
 
@@ -231,7 +233,7 @@ class TimeTrackingPlugin {
     await this.setRowData(row, 'treeTotalTime', totalTime);
   }
 
-  private async _rebuildTreeTime(row, inclusive = false) {
+  private async _rebuildTreeTime(row: Row, inclusive = false) {
     const ancestors = await this.api.session.document.allAncestors(row, { inclusive });
     for (let i = 0; i < ancestors.length; i++) {
       const ancestor_row = ancestors[i];
@@ -239,11 +241,11 @@ class TimeTrackingPlugin {
     }
   }
 
-  private async rowTime(row) {
+  private async rowTime(row: Row) {
     return await this.getRowData(row, 'treeTotalTime', 0);
   }
 
-  private printTime(ms) {
+  private printTime(ms: number) {
     let sign = '';
     if (ms < 0) {
       sign = '-';

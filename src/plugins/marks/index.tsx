@@ -199,16 +199,16 @@ export class MarksPlugin {
         return async cursor => {
           const word = await session.document.getWord(cursor.row, cursor.col);
           if (word.length < 1 || word[0] !== '@') {
-            return false;
+            session.showMessage(`Cursor should be over a @mark link`);
+            return;
           }
           const mark = word.slice(1);
           const allMarks = await that.listMarks();
           if (mark in allMarks) {
             const path = allMarks[mark];
             await session.zoomInto(path);
-            return true;
           } else {
-            return false;
+            session.showMessage(`No mark ${mark} to go to!`);
           }
         };
       },
@@ -232,7 +232,7 @@ export class MarksPlugin {
         const marks = await that.listMarks();
         session.menu = new Menu(async (text) => {
           // find marks that start with the prefix
-          const findMarks = async (document, prefix, nresults = 10) => {
+          const findMarks = async (_document, prefix, nresults = 10) => {
             const results: Array<{
               path: Path, mark: string,
             }> = []; // list of paths
@@ -278,6 +278,9 @@ export class MarksPlugin {
       'move-cursor-mark',
       'Move the cursor within the mark being edited (according to the specified motion)',
       async function({ motion }) {
+        if (motion == null) {
+          throw new Error('Expected a motion!');
+        }
         if (that.markstate === null) {
           throw new Error('Mark state null in mark mode');
         }

@@ -18,9 +18,14 @@ const toggle_property_visual_line = property =>
       throw new Error('Visual_line mode arguments missing');
     }
     const paths = await session.document.getChildRange(
-      visual_line.parent, visual_line.row_start_i, visual_line.row_end_i
+      visual_line.parent, visual_line.start_i, visual_line.end_i
     );
-    const rows = paths.map(path => path.row);
+    const rows = paths.map(path => {
+      if (path == null) {
+        throw new Error('Visual line had null row');
+      }
+      return path.row;
+    });
     // TODO: dedup rows to avoid double toggle
     await session.toggleRowsProperty(property, rows);
     await session.setMode('NORMAL');

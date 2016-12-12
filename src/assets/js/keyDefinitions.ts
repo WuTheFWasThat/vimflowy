@@ -3,7 +3,7 @@ import Session from './session';
 import KeyHandler, { KeyStream } from './keyHandler';
 import Cursor from './cursor';
 import Path from './path';
-import { Row, ModeId, CursorOptions } from './types';
+import { ModeId, CursorOptions } from './types';
 
 // NOTE: this is a special key, which accepts any motion keys.
 // It causes definition functions to take an extra cursor argument.
@@ -41,10 +41,10 @@ export type ActionContext = {
   keyHandler: KeyHandler;
   motion?: MotionFn;
   visual_line?: {
-    row_start_i: number,
-    row_end_i: number,
-    row_start: Row,
-    row_end: Row,
+    start_i: number,
+    end_i: number,
+    start: Path,
+    end: Path,
     parent: Path,
     num_rows: number,
   },

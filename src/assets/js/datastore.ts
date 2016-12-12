@@ -123,7 +123,7 @@ export default class DataStore {
     return decodedValue;
   }
 
-  protected async get(key: string): Promise<any> {
+  protected async get(_key: string): Promise<any> {
     throw new errors.NotImplemented();
   }
 
@@ -139,7 +139,7 @@ export default class DataStore {
   }
 
   protected async set(
-    key: string, value: any
+    _key: string, _value: any
   ): Promise<void> {
     throw new errors.NotImplemented();
   }
@@ -260,11 +260,11 @@ export class InMemory extends DataStore {
     super('');
   }
 
-  protected async get(key: string): Promise<any | null> {
+  protected async get(_key: string): Promise<any | null> {
     return null;
   }
 
-  protected async set(key: string, value: any): Promise<void> {
+  protected async set(_key: string, _value: any): Promise<void> {
     // do nothing
   }
 }

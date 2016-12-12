@@ -7,7 +7,7 @@ import * as constants from './constants';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 import DataStore from './datastore';
-import { Row, Line, SerializedLine, SerializedBlock } from './types';
+import { Row, Col, Line, SerializedLine, SerializedBlock } from './types';
 
 type RowInfo = {
   readonly line: Line;
@@ -62,7 +62,7 @@ export class CachedRowInfo {
     return this.info.pluginData;
   }
 
-  public setChildren(children): CachedRowInfo {
+  public setChildren(children: Array<CachedRowInfo | null>): CachedRowInfo {
     return new CachedRowInfo(this.row, this.info, children);
   }
   private setInfo(info: RowInfo): CachedRowInfo {
@@ -215,7 +215,7 @@ export default class Document extends EventEmitter {
   }
 
 
-  private async _newChild(parent, index = -1) {
+  public async _newChild(parent: Row, index = -1) {
     const row = await this.store.getNew();
     const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
     // necessary only for speed reasons
@@ -269,7 +269,7 @@ export default class Document extends EventEmitter {
   }
 
   // TODO: actually use this
-  public async forceLoadPath(path) {
+  public async forceLoadPath(path: Path) {
     const ancestry = path.getAncestry();
     await Promise.all(
       ancestry.map(async (row) => {
@@ -278,7 +278,7 @@ export default class Document extends EventEmitter {
     );
   }
 
-  public async updateCachedPluginData(row) {
+  public async updateCachedPluginData(row: Row) {
     const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
     this.cache.setPluginData(row, pluginData);
   }
@@ -287,31 +287,31 @@ export default class Document extends EventEmitter {
     this.cache.touchAll();
   }
 
-  public async getLine(row) {
+  public async getLine(row: Row) {
     return (await this.getInfo(row)).line;
   }
 
-  public async getChars(row) {
+  public async getChars(row: Row) {
     return (await this.getLine(row)).map(obj => obj.char);
   }
 
-  public async getText(row): Promise<string> {
+  public async getText(row: Row): Promise<string> {
     return (await this.getChars(row)).join('');
   }
 
-  public async getChar(row, col) {
+  public async getChar(row: Row, col: Col) {
     const charInfo = (await this.getLine(row))[col];
     return charInfo && charInfo.char;
   }
 
-  public async setLine(row, line) {
+  public async setLine(row: Row, line) {
     this.cache.setLine(row, line);
     await this.store.setLine(row, line);
   }
 
   // get word at this location
   // if on a whitespace character, return nothing
-  public async getWord(row, col) {
+  public async getWord(row: Row, col: Col) {
     const text = await this.getChars(row);
 
     if (utils.isWhitespace(text[col])) {
@@ -333,27 +333,27 @@ export default class Document extends EventEmitter {
     return word;
   }
 
-  public async writeChars(row, col, chars) {
+  public async writeChars(row: Row, col: Col, chars) {
     const args = [col, 0].concat(chars);
     const line = (await this.getLine(row)).slice();
     [].splice.apply(line, args);
     return await this.setLine(row, line);
   }
 
-  public async deleteChars(row, col, num): Promise<Line> {
+  public async deleteChars(row: Row, col: Col, num: number): Promise<Line> {
     const line = await this.getLine(row);
     const deleted = line.splice(col, num);
     await this.setLine(row, line);
     return deleted;
   }
 
-  public async getLength(row) {
+  public async getLength(row: Row) {
     return (await this.getLine(row)).length;
   }
 
   // structure
 
-  public async _getChildren(row, min = 0, max = -1) {
+  public async _getChildren(row: Row, min = 0, max = -1) {
     const info = await this.getInfo(row);
     return this._getSlice(info.childRows, min, max);
   }
@@ -378,7 +378,7 @@ export default class Document extends EventEmitter {
     });
   }
 
-  private async _setChildren(row, children) {
+  private async _setChildren(row: Row, children) {
     this.cache.setChildRows(row, children);
     return await this.store.setChildren(row, children);
   }
@@ -388,12 +388,12 @@ export default class Document extends EventEmitter {
     return _.findIndex(children, row => row === child);
   }
 
-  private async _getParents(row) {
+  private async _getParents(row: Row) {
     const info = await this.getInfo(row);
     return info.parentRows;
   }
 
-  private async _setParents(row, parent_rows) {
+  private async _setParents(row: Row, parent_rows) {
     this.cache.setParentRows(row, parent_rows);
     return await this.store.setParents(row, parent_rows);
   }
@@ -402,7 +402,7 @@ export default class Document extends EventEmitter {
     return (await this._getChildren(parent_path.row)).map(row => parent_path.child(row));
   }
 
-  public async hasChildren(row) {
+  public async hasChildren(row: Row) {
     return (await this._getChildren(row)).length > 0;
   }
 
@@ -435,21 +435,21 @@ export default class Document extends EventEmitter {
     return _.findIndex(children, sib => sib.row === child.row);
   }
 
-  public async collapsed(row) {
+  public async collapsed(row: Row) {
     return (await this.getInfo(row)).collapsed;
   }
 
-  public async setCollapsed(row, collapsed) {
+  public async setCollapsed(row: Row, collapsed) {
     this.cache.setCollapsed(row, collapsed);
     await this.store.setCollapsed(row, collapsed);
   }
 
-  public async toggleCollapsed(row) {
+  public async toggleCollapsed(row: Row) {
     this.setCollapsed(row, !await this.collapsed(row));
   }
 
   // last thing visible nested within row
-  public async walkToLastVisible(row, pathsofar = []) {
+  public async walkToLastVisible(row: Row, pathsofar = []) {
     if (await this.collapsed(row)) {
       return pathsofar;
     }
@@ -474,7 +474,7 @@ export default class Document extends EventEmitter {
 
   // Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   // NOTE: this is not very efficient, in the worst case, but probably doesn't matter
-  public async canonicalPath(row) { // Given an row, return a path with that row
+  public async canonicalPath(row: Row) { // Given an row, return a path with that row
     errors.assert(row !== null, 'Empty row passed to canonicalPath');
     if (row === Path.rootRow()) {
       return this.root;
@@ -493,7 +493,7 @@ export default class Document extends EventEmitter {
   // Return all ancestor rows, topologically sorted (root is *last*).
   // Excludes 'row' itself unless options.inclusive is specified
   // NOTE: includes possibly detached nodes
-  public async allAncestors(row, options) {
+  public async allAncestors(row: Row, options) {
     options = Object.assign({inclusive: false}, options);
     const visited = {};
     const ancestors: Array<Row> = []; // 'visited' with preserved insert order
@@ -516,13 +516,13 @@ export default class Document extends EventEmitter {
     return ancestors;
   }
 
-  public async _hasChild(parent_row, row) {
+  public async _hasChild(parent_row: Row, row: Row) {
     const children = await this._getChildren(parent_row);
     const ci = _.findIndex(children, sib => sib === row);
     return ci !== -1;
   }
 
-  private async _removeChild(parent_row, row) {
+  private async _removeChild(parent_row: Row, row: Row) {
     const children = await this._getChildren(parent_row);
     const ci = _.findIndex(children, sib => sib === row);
     errors.assert(ci !== -1);
@@ -544,7 +544,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  private async _addChild(parent_row, row, index) {
+  private async _addChild(parent_row: Row, row: Row, index) {
     const children = await this._getChildren(parent_row);
     errors.assert(index <= children.length);
     if (index === -1) {
@@ -567,7 +567,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  public async _detach(row, parent_row) {
+  public async _detach(row: Row, parent_row: Row) {
     const wasLast = (await this._getParents(row)).length === 1;
 
     await this.emitAsync('beforeDetach', { row, parent_row, last: wasLast });
@@ -582,7 +582,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  public async _attach(child_row, parent_row, index = -1) {
+  public async _attach(child_row: Row, parent_row: Row, index = -1) {
     const isFirst = (await this._getParents(child_row)).length === 0;
     await this.emitAsync('beforeAttach', { row: child_row, parent_row, first: isFirst});
     const info = await this._addChild(parent_row, child_row, index);
@@ -600,7 +600,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  public async _move(child_row, old_parent_row, new_parent_row, index = -1) {
+  public async _move(child_row: Row, old_parent_row: Row, new_parent_row: Row, index = -1) {
     await this.emitAsync('beforeMove', {
       row: child_row, old_parent: old_parent_row, new_parent: new_parent_row,
     });
@@ -623,18 +623,18 @@ export default class Document extends EventEmitter {
 
   // attaches a detached child to a parent
   // the child should not have a parent already
-  public async attachChild(parent, child, index = -1) {
+  public async attachChild(parent: Path, child, index = -1) {
     return await this.attachChildren(parent, [child], index)[0];
   }
 
-  public async attachChildren(parent, new_children, index = -1) {
+  public async attachChildren(parent: Path, new_children, index = -1) {
     await this._attachChildren(parent.row, new_children.map(x => x.row), index);
     // for child in new_children
     //   child.setParent parent
     return new_children;
   }
 
-  private async _attachChildren(parent, new_children, index = -1) {
+  public async _attachChildren(parent: Row, new_children, index = -1) {
     for (let i = 0; i < new_children.length; i++) {
       const child = new_children[i];
       await this._attach(child, parent, index);
@@ -649,7 +649,7 @@ export default class Document extends EventEmitter {
   // 1. the common ancestor of the paths
   // 2. the array of ancestors between common ancestor and path1
   // 3. the array of ancestors between common ancestor and path2
-  public async getCommonAncestor(path1, path2): Promise<[Path, Array<Path>, Array<Path>]> {
+  public async getCommonAncestor(path1: Path, path2: Path): Promise<[Path, Array<Path>, Array<Path>]> {
     const ancestors1: Array<Path> = path1.getAncestryPaths();
     const ancestors2: Array<Path> = path2.getAncestryPaths();
     const commonAncestry = _.takeWhile(
@@ -667,26 +667,26 @@ export default class Document extends EventEmitter {
     return (await this.allAncestors(row, {inclusive: true})).indexOf(this.root.row) !== -1;
   }
 
-  public async getSiblingBefore(path) {
+  public async getSiblingBefore(path: Path) {
     return await this.getSiblingOffset(path, -1);
   }
 
-  public async getSiblingAfter(path) {
+  public async getSiblingAfter(path: Path) {
     return await this.getSiblingOffset(path, 1);
   }
 
-  public async getSiblingOffset(path, offset) {
+  public async getSiblingOffset(path: Path, offset) {
     return (await this.getSiblingRange(path, offset, offset, true))[0];
   }
 
-  public async getSiblingRange(path, min_offset, max_offset, includeNull = false) {
+  public async getSiblingRange(path: Path, min_offset, max_offset, includeNull = false) {
     const index = await this.indexInParent(path);
     return this._getSlice(
       await this.getSiblings(path), min_offset + index, max_offset + index
     ).filter(x => includeNull || (x !== null));
   }
 
-  public async getChildRange(path, min, max) {
+  public async getChildRange(path: Path, min: number, max: number): Promise<Array<null | Path>> {
     return (await this._getChildren(path.row, min, max)).map(function(child_row) {
       if (child_row === null) {
         return null;
@@ -695,22 +695,23 @@ export default class Document extends EventEmitter {
     });
   }
 
-  public async newChild(path, index = -1) {
+  public async newChild(path: Path, index = -1) {
     const row = await this._newChild(path.row, index);
     return path.child(row);
   }
 
   private async allLinesIter(yieldCb) {
-    const ids = {};
+    const visited_rows = {};
     let done = false;
 
-    const helper = async (path) => {
-      if (path.id in ids) {
-        return;
-      }
+    const helper = async (path: Path) => {
       if (done) {
         return;
       }
+      if (path.row in visited_rows) {
+        return;
+      }
+      visited_rows[path.row] = true;
       const shouldStop = await yieldCb(path);
       if (shouldStop) {
         done = true;
@@ -725,7 +726,7 @@ export default class Document extends EventEmitter {
     await helper(this.root);
   }
 
-  public async search(query, options: SearchOptions = {}) {
+  public async search(query: string, options: SearchOptions = {}) {
     const { nresults = 10, case_sensitive = false } = options;
     const results: Array<{
       path: Path,

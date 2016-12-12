@@ -52,7 +52,7 @@ export class Logger {
   }
 
   // tslint:disable-next-line no-unused-variable
-  private log() {
+  public log() {
     if (this.stream === STREAM.STDOUT) {
       return console.log.apply(console, arguments);
     } else if (this.stream === STREAM.STDERR) {
