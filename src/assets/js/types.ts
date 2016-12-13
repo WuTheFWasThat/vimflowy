@@ -21,38 +21,39 @@ export type CursorOptions = {
   keepProperties?: boolean,
 };
 
-export type Char = {
-  char: string,
+export type CharTextProperties = {
   bold?: boolean,
   italic?: boolean,
   underline?: boolean,
   strikethrough?: boolean,
 };
 
-export type TextProperties = {
-  bold?: boolean,
-  italic?: boolean,
-  underline?: boolean,
-  strikethrough?: boolean,
+export type TextProperty = keyof CharTextProperties;
+// TODO: better way?
+export const TextProperties: Array<TextProperty> = [
+  'bold', 'italic', 'underline', 'strikethrough'
+];
+
+export type Char = {
+  char: string,
+  properties: CharTextProperties,
+};
+
+export type SerializedLineProperties = {
+  [P in keyof CharTextProperties]?: string
 };
 
 export type Line = Array<Char>;
 export type EncodedLine = Array<Char | string>;
 export type SerializedLine = {
   text: string,
-  bold?: string,
-  italic?: string,
-  underline?: string,
-  strikethrough?: string,
+  properties?: SerializedLineProperties,
   collapsed?: boolean,
   plugins?: any,
 };
 export type SerializedBlock = {
   text: string,
-  bold?: string,
-  italic?: string,
-  underline?: string,
-  strikethrough?: string,
+  properties?: SerializedLineProperties,
   collapsed?: boolean,
   id?: Row,
   plugins?: any,

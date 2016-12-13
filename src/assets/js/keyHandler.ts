@@ -138,7 +138,8 @@ export default class KeyHandler extends EventEmitter {
       logger.info('Motion:', motion.name);
       context.motion = await motion.definition.call(motion.definition, context);
     }
-    logger.debug('Context:', context);
+    // logger.debug('Context:', context);
+    logger.debug(`Context: { repeat: ${context.repeat} }`);
 
     await mode_obj.beforeEvery(action.name, context);
     if (action.metadata.sequence === SequenceAction.DROP_ALL) {

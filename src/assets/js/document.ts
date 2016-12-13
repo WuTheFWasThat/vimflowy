@@ -2,12 +2,14 @@ import * as _ from 'lodash';
 
 import * as utils from './utils';
 import * as errors from './errors';
-import * as constants from './constants';
 // import logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 import DataStore from './datastore';
-import { Row, Col, Line, SerializedLine, SerializedBlock } from './types';
+import {
+  Row, Col, Line,
+  SerializedLine, SerializedBlock, TextProperties, SerializedLineProperties,
+} from './types';
 
 type RowInfo = {
   readonly line: Line;
@@ -769,15 +771,20 @@ export default class Document extends EventEmitter {
   public async serializeRow(row = this.root.row): Promise<SerializedLine> {
     const line = await this.getLine(row);
     const text = await this.getText(row);
+
+    const properties: SerializedLineProperties = {};
+    TextProperties.forEach((property) => {
+      if (_.some(line.map(obj => obj.properties[property]))) {
+        properties[property] = line.map(obj => obj.properties[property] ? '.' : ' ').join('');
+      }
+    });
+
     const struct: SerializedLine = {
       text,
     };
-
-    constants.text_properties.forEach((property) => {
-      if (_.some(line.map(obj => obj[property]))) {
-        struct[property] = line.map(obj => obj[property] ? '.' : ' ').join('');
-      }
-    });
+    if (Object.keys(properties).length > 0) {
+      struct.properties = properties;
+    }
     if (await this.collapsed(row)) {
       struct.collapsed = true;
     }
@@ -821,10 +828,8 @@ export default class Document extends EventEmitter {
     if (options.pretty) {
       if ((children.length === 0) &&
           (!await this.isClone(row)) &&
-          _.every(
-            Object.keys(struct),
-            key => (key === 'children' || key === 'text' || key === 'collapsed')
-          )
+          (!struct.properties) &&
+          (!struct.plugins)
          ) {
         return struct.text;
       }
@@ -856,22 +861,24 @@ export default class Document extends EventEmitter {
     }
 
     if (typeof serialized === 'string') {
-      await this.setLine(path.row, serialized.split('').map(char => ({char})));
+      await this.setLine(path.row, serialized.split('').map(utils.plainChar));
     } else {
       if (serialized.id) {
         id_mapping[serialized.id] = path.row;
       }
-      const line = serialized.text.split('').map(char => ({char}));
-      constants.text_properties.forEach((property) => {
-        if (serialized[property]) {
-          for (const i in serialized[property]) {
-            const val = serialized[property][i];
-            if (val === '.') {
-              line[i][property] = true;
+      const line = serialized.text.split('').map(utils.plainChar);
+      if (serialized.properties) {
+        TextProperties.forEach((property) => {
+          if (serialized.properties[property]) {
+            for (const i in serialized.properties[property]) {
+              const val = serialized.properties[property][i];
+              if (val === '.') {
+                line[i].properties[property] = true;
+              }
             }
           }
-        }
-      });
+        });
+      }
 
       await this.setLine(path.row, line);
       await this.setCollapsed(path.row, serialized.collapsed);

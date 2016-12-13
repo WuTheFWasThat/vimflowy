@@ -1,9 +1,10 @@
 import * as _ from 'lodash';
 
 import * as utils from './utils';
-import * as constants from './constants';
 import EventEmitter from './eventEmitter';
-import { Row, Col, TextProperties, CursorOptions } from './types';
+import {
+  Row, Col, CharTextProperties, CursorOptions, TextProperties, TextProperty
+} from './types';
 import Path from './path';
 import Document from './document';
 import Session from './session';
@@ -29,11 +30,14 @@ export default class Cursor extends EventEmitter {
   public path: Path;
   public session: Session;
   public document: Document;
-  public properties: TextProperties;
+  public properties: CharTextProperties;
 
   private moveCol: Col;
 
-  constructor(session, path, col = 0, moveCol: number | null = null) {
+  constructor(
+    session: Session, path: Path, col: Col = 0,
+    moveCol: number | null = null
+  ) {
     super();
     this.session = session;
     this.document = session.document;
@@ -56,29 +60,29 @@ export default class Cursor extends EventEmitter {
     return new Cursor(this.session, this.path, this.col, this.moveCol);
   }
 
-  public async _setPath(path) {
+  public async _setPath(path: Path) {
     await this.emitAsync('rowChange', this.path, path);
     this.path = path;
   }
 
-  private async _setCol(col) {
+  private async _setCol(col: Col) {
     await this.emitAsync('colChange', this.col, col);
     this.col = col;
   }
 
-  public async from(other) {
+  public async from(other: Cursor) {
     await this._setPath(other.path);
     await this._setCol(other.col);
     this.moveCol = other.moveCol;
     this.properties = _.cloneDeep(other.properties);
   }
 
-  public async setPosition(path, col, cursorOptions?: CursorOptions) {
+  public async setPosition(path: Path, col: Col, cursorOptions?: CursorOptions) {
     await this._setPath(path);
     await this.setCol(col, cursorOptions);
   }
 
-  public async setPath(path, cursorOptions?: CursorOptions) {
+  public async setPath(path: Path, cursorOptions?: CursorOptions) {
     await this._setPath(path);
     await this._fromMoveCol(cursorOptions);
   }
@@ -218,12 +222,12 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  public async isInWhitespace(path, col) {
+  public async isInWhitespace(path: Path, col) {
     const char = await this.document.getChar(path.row, col);
     return utils.isWhitespace(char);
   }
 
-  public async isInWord(path, col, matchChar) {
+  public async isInWord(path: Path, col, matchChar) {
     if (utils.isWhitespace(matchChar)) {
       return false;
     }
@@ -335,7 +339,7 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  public async findNextChar(char, options: WordMovementOptions = {}) {
+  public async findNextChar(char: string, options: WordMovementOptions = {}) {
     const end = (await this.document.getLength(this.path.row)) - 1;
     if (this.col === end) {
       return;
@@ -368,7 +372,7 @@ export default class Cursor extends EventEmitter {
     }
   }
 
-  public async findPrevChar(char, options: WordMovementOptions = {}) {
+  public async findPrevChar(char: string, options: WordMovementOptions = {}) {
     if (this.col === 0) {
       return;
     }
@@ -438,15 +442,15 @@ export default class Cursor extends EventEmitter {
 
   // cursor properties
 
-  public setProperty(property, value) {
+  public setProperty(property: TextProperty, value) {
     return this.properties[property] = value;
   }
 
-  public getProperty(property) {
+  public getProperty(property: TextProperty) {
     return this.properties[property];
   }
 
-  public toggleProperty(property) {
+  public toggleProperty(property: TextProperty) {
     return this.setProperty(property, !this.getProperty(property));
   }
 
@@ -458,11 +462,11 @@ export default class Cursor extends EventEmitter {
     if (line.length === 0) {
       obj = {};
     } else if (this.col === 0) {
-      obj = line[this.col];
+      obj = line[this.col].properties || {};
     } else {
-      obj = line[this.col - 1];
+      obj = line[this.col - 1].properties || {};
     }
-    constants.text_properties.forEach((property) => {
+    TextProperties.forEach((property) => {
       this.setProperty(property, obj[property]);
     });
   }

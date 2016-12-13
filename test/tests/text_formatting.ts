@@ -22,23 +22,29 @@ describe('text formatting', function() {
     t.sendKey('esc');
     t.expect([
       {
-        text:          'underline strikethrough',
-        underline:     '.........              ',
-        strikethrough: '          .............',
+        text:            'underline strikethrough',
+        properties: {
+          underline:     '.........              ',
+          strikethrough: '          .............',
+        },
       },
     ]);
     t.sendKeys('u');
     t.expect([
       {
-        text:          'underline ',
-        underline:     '......... ',
+        text:            'underline ',
+        properties: {
+          underline:     '......... ',
+        },
       },
     ]);
     t.sendKeys('u');
     t.expect([
       {
-        text:          'underline',
-        underline:     '.........',
+        text:            'underline',
+        properties: {
+          underline:     '.........',
+        },
       },
     ]);
     t.sendKeys('u');
@@ -47,23 +53,29 @@ describe('text formatting', function() {
     t.sendKey('ctrl+r');
     t.expect([
       {
-        text:          'underline',
-        underline:     '.........',
+        text:            'underline',
+        properties: {
+          underline:     '.........',
+        },
       },
     ]);
     t.sendKey('ctrl+r');
     t.expect([
       {
-        text:          'underline ',
-        underline:     '......... ',
+        text:            'underline ',
+        properties: {
+          underline:     '......... ',
+        },
       },
     ]);
     t.sendKey('ctrl+r');
     t.expect([
       {
-        text:          'underline strikethrough',
-        underline:     '.........              ',
-        strikethrough: '          .............',
+        text:            'underline strikethrough',
+        properties: {
+          underline:     '.........              ',
+          strikethrough: '          .............',
+        },
       },
     ]);
     await t.done();
@@ -81,9 +93,11 @@ describe('text formatting', function() {
     t.sendKeys('bold');
     t.expect([
       {
-        text:   'normal, italic, bold italic, bold',
-        bold:   '                .................',
-        italic: '        .....................    ',
+        text:     'normal, italic, bold italic, bold',
+        properties: {
+          bold:   '                .................',
+          italic: '        .....................    ',
+        },
       },
     ]);
     t.sendKey('esc');
@@ -92,18 +106,22 @@ describe('text formatting', function() {
     t.sendKey('esc');
     t.expect([
       {
-        text:   'abnormal, italic, bold italic, bold',
-        bold:   '                  .................',
-        italic: '          .....................    ',
+        text:     'abnormal, italic, bold italic, bold',
+        properties: {
+          bold:   '                  .................',
+          italic: '          .....................    ',
+        },
       },
     ]);
     t.sendKeys('0cWv');
     t.sendKey('esc');
     t.expect([
       {
-        text:   'vitalic, bold italic, bold',
-        bold:   '         .................',
-        italic: '......................    ',
+        text:     'vitalic, bold italic, bold',
+        properties: {
+          bold:   '         .................',
+          italic: '......................    ',
+        },
       },
     ]);
     // uses style left of cursor
@@ -113,9 +131,11 @@ describe('text formatting', function() {
     t.sendKey('esc');
     t.expect([
       {
-        text:   'vitalic, abrold italic, bold',
-        bold:   '          ..................',
-        italic: '........................    ',
+        text:     'vitalic, abrold italic, bold',
+        properties: {
+          bold:   '          ..................',
+          italic: '........................    ',
+        },
       },
     ]);
 
@@ -125,9 +145,11 @@ describe('text formatting', function() {
     t.sendKey('esc');
     t.expect([
       {
-        text:   'vitalic, abroad italic, bald',
-        bold:   '          ..................',
-        italic: '........................    ',
+        text:     'vitalic, abroad italic, bald',
+        properties: {
+          bold:   '          ..................',
+          italic: '........................    ',
+        },
       },
     ]);
 
@@ -135,14 +157,18 @@ describe('text formatting', function() {
     t.sendKeys('p');
     t.expect([
       {
-        text:   'vitalic, abroad italic, bald',
-        bold:   '          ..................',
-        italic: '........................    ',
+        text:     'vitalic, abroad italic, bald',
+        properties: {
+          bold:   '          ..................',
+          italic: '........................    ',
+        },
       },
       {
-        text:   'vitalic, abrold italic, bold',
-        bold:   '          ..................',
-        italic: '........................    ',
+        text:     'vitalic, abrold italic, bold',
+        properties: {
+          bold:   '          ..................',
+          italic: '........................    ',
+        },
       },
     ]);
     await t.done();
@@ -160,34 +186,46 @@ describe('text formatting', function() {
     t.sendKeys('bold');
     t.expect([
       {
-        text:   'this',
-        bold:   '....',
+        text:     'this',
+        properties: {
+          bold:   '....',
+        },
       },
       {
-        text:   'is',
-        bold:   '..',
+        text:     'is',
+        properties: {
+          bold:   '..',
+        },
       },
       {
-        text:   'bold',
-        bold:   '....',
-        italic: '....',
+        text:     'bold',
+        properties: {
+          bold:   '....',
+          italic: '....',
+        },
       },
     ]);
     t.sendKey('esc');
     t.sendKeys('onormal');
     t.expect([
       {
-        text:   'this',
-        bold:   '....',
+        text:     'this',
+        properties: {
+          bold:   '....',
+        },
       },
       {
-        text:   'is',
-        bold:   '..',
+        text:     'is',
+        properties: {
+          bold:   '..',
+        },
       },
       {
-        text:   'bold',
-        bold:   '....',
-        italic: '....',
+        text:     'bold',
+        properties: {
+          bold:   '....',
+          italic: '....',
+        },
       },
       'normal',
     ]);
@@ -198,17 +236,21 @@ describe('text formatting', function() {
   it('works with delete/paste', async function() {
     let t = new TestCase([
       {
-        text:   'bim',
-        bold:   '. .',
-        italic: ' ..',
+        text:     'bim',
+        properties: {
+          bold:   '. .',
+          italic: ' ..',
+        },
       },
     ]);
     t.sendKeys('xp');
     t.expect([
       {
-        text:   'ibm',
-        bold:   ' ..',
-        italic: '. .',
+        text:     'ibm',
+        properties: {
+          bold:   ' ..',
+          italic: '. .',
+        },
       },
     ]);
     await t.done();
@@ -221,8 +263,10 @@ describe('text formatting', function() {
     t.sendKey(strikethroughKey);
     t.expect([
       {
-        text:          'test',
-        strikethrough: '....',
+        text:            'test',
+        properties: {
+          strikethrough: '....',
+        },
       },
     ]);
     t.sendKey(strikethroughKey);
@@ -233,16 +277,20 @@ describe('text formatting', function() {
 
     t = new TestCase([
       {
-        text:   'test',
-        bold:   '... ',
+        text:     'test',
+        properties: {
+          bold:   '... ',
+        },
       },
     ]);
     t.sendKeys('ll');
     t.sendKey(boldKey);
     t.expect([
       {
-        text:   'test',
-        bold:   '....',
+        text:     'test',
+        properties: {
+          bold:   '....',
+        },
       },
     ]);
     t.sendKey(boldKey);
@@ -252,23 +300,29 @@ describe('text formatting', function() {
     t.sendKeys('u');
     t.expect([
       {
-        text:   'test',
-        bold:   '....',
+        text:     'test',
+        properties: {
+          bold:   '....',
+        },
       },
     ]);
     t.sendKeys('u');
     t.expect([
       {
-        text:   'test',
-        bold:   '... ',
+        text:     'test',
+        properties: {
+          bold:   '... ',
+        },
       },
     ]);
     // cursor ends up where it was
     t.sendKeys('x');
     t.expect([
       {
-        text:   'tet',
-        bold:   '.. ',
+        text:     'tet',
+        properties: {
+          bold:   '.. ',
+        },
       },
     ]);
     await t.done();
@@ -284,8 +338,10 @@ describe('text formatting', function() {
     t.expectCursor(1, 1);
     t.expect([
       {
-        text:          'test',
-        strikethrough: '....',
+        text:            'test',
+        properties: {
+          strikethrough: '....',
+        },
       },
     ]);
     await t.done();
@@ -297,92 +353,114 @@ describe('text formatting', function() {
     t.sendKey(boldKey);
     t.expect([
       {
-        text: 'hello world',
-        bold: '.....      ',
+        text:   'hello world',
+        properties: {
+          bold: '.....      ',
+        },
       },
     ]);
     t.sendKey('x');
     t.expect([
       {
-        text: 'hell world',
-        bold: '....      ',
+        text:   'hell world',
+        properties: {
+          bold: '....      ',
+        },
       },
     ]);
     t.sendKeys('v$');
     t.sendKey(strikethroughKey);
     t.expect([
       {
-        text:          'hell world',
-        bold:          '....      ',
-        strikethrough: '    ......',
+        text:            'hell world',
+        properties: {
+          bold:          '....      ',
+          strikethrough: '    ......',
+        },
       },
     ]);
     t.sendKeys('x');
     t.expect([
       {
-        text:          'hell worl',
-        bold:          '....     ',
-        strikethrough: '    .....',
+        text:            'hell worl',
+        properties: {
+          bold:          '....     ',
+          strikethrough: '    .....',
+        },
       },
     ]);
     t.sendKeys('vb');
     t.sendKey(strikethroughKey);
     t.expect([
       {
-        text:          'hell worl',
-        bold:          '....     ',
-        strikethrough: '    .    ',
+        text:            'hell worl',
+        properties: {
+          bold:          '....     ',
+          strikethrough: '    .    ',
+        },
       },
     ]);
     t.sendKeys('hvb');
     t.sendKey(boldKey);
     t.expect([
       {
-        text:          'hell worl',
-        bold:          '.....    ',
-        strikethrough: '    .    ',
+        text:            'hell worl',
+        properties: {
+          bold:          '.....    ',
+          strikethrough: '    .    ',
+        },
       },
     ]);
     t.sendKeys('v');
     t.sendKey(boldKey);
     t.expect([
       {
-        text:          'hell worl',
-        bold:          ' ....    ',
-        strikethrough: '    .    ',
+        text:            'hell worl',
+        properties: {
+          bold:          ' ....    ',
+          strikethrough: '    .    ',
+        },
       },
     ]);
     t.sendKeys('v$');
     t.sendKey(strikethroughKey);
     t.expect([
       {
-        text:          'hell worl',
-        bold:          ' ....    ',
-        strikethrough: '.........',
+        text:            'hell worl',
+        properties: {
+          bold:          ' ....    ',
+          strikethrough: '.........',
+        },
       },
     ]);
     t.sendKeys('v0');
     t.sendKey(strikethroughKey);
     t.expect([
       {
-        text:          'hell worl',
-        bold:          ' ....    ',
+        text:            'hell worl',
+        properties: {
+          bold:          ' ....    ',
+        },
       },
     ]);
     t.sendKeys('u');
     t.expect([
       {
-        text:          'hell worl',
-        bold:          ' ....    ',
-        strikethrough: '.........',
+        text:            'hell worl',
+        properties: {
+          bold:          ' ....    ',
+          strikethrough: '.........',
+        },
       },
     ]);
     t.sendKeys('u');
     t.expect([
       {
-        text:          'hell worl',
-        bold:          ' ....    ',
-        strikethrough: '    .    ',
+        text:            'hell worl',
+        properties: {
+          bold:          ' ....    ',
+          strikethrough: '    .    ',
+        },
       },
     ]);
     await t.done();
@@ -394,16 +472,22 @@ describe('text formatting', function() {
     t.sendKey(boldKey);
     t.expect([
       {
-        text: 'blah',
-        bold: '....',
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
       },
       {
-        text: 'blah',
-        bold: '....',
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
       },
       {
-        text: 'blah',
-        bold: '....',
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
       },
     ]);
     t.sendKeys('ggVjj');
@@ -413,43 +497,57 @@ describe('text formatting', function() {
 
     t = new TestCase([
       {
-        text: 'blah',
-        bold: '... ',
-        children: [{text: 'fee', bold: '. .'}, 'fi'],
+        text:   'blah',
+        properties: {
+          bold: '... ',
+        },
+        children: [{text: 'fee', properties: {bold: '. .'}}, 'fi'],
       },
       {
-        text: 'blah',
-        bold: '    ',
+        text:   'blah',
+        properties: {
+          bold: '    ',
+        },
         children: ['fo', 'fum'],
       },
       {
-        text: 'blah',
-        bold: '   .',
+        text:   'blah',
+        properties: {
+          bold: '   .',
+        },
       },
     ]);
     t.sendKeys(['V', siblingDownKey, siblingDownKey, boldKey]);
     t.expect([
       {
-        text: 'blah',
-        bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi'],
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
+        children: [{text: 'fee', properties: {bold: '. .'}}, 'fi'],
       },
       {
-        text: 'blah',
-        bold: '....',
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
         children: ['fo', 'fum'],
       },
       {
-        text: 'blah',
-        bold: '....',
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
       },
     ]);
     t.sendKeys(['G', 'V', siblingUpKey, boldKey]);
     t.expect([
       {
-        text: 'blah',
-        bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi'],
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
+        children: [{text: 'fee', properties: {bold: '. .'}}, 'fi'],
       },
       {
         text: 'blah',
@@ -460,13 +558,17 @@ describe('text formatting', function() {
     t.sendKeys(['V', siblingUpKey, boldKey]);
     t.expect([
       {
-        text: 'blah',
-        bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi'],
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
+        children: [{text: 'fee', properties: {bold: '. .'}}, 'fi'],
       },
       {
-        text: 'blah',
-        bold: '....',
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
         children: ['fo', 'fum'],
       },
       'blah',
@@ -474,9 +576,11 @@ describe('text formatting', function() {
     t.sendKeys('u');
     t.expect([
       {
-        text: 'blah',
-        bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi'],
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
+        children: [{text: 'fee', properties: {bold: '. .'}}, 'fi'],
       },
       {
         text: 'blah',
@@ -487,34 +591,44 @@ describe('text formatting', function() {
     t.sendKeys('u');
     t.expect([
       {
-        text: 'blah',
-        bold: '....',
-        children: [{text: 'fee', bold: '. .'}, 'fi'],
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
+        children: [{text: 'fee', properties: {bold: '. .'}}, 'fi'],
       },
       {
-        text: 'blah',
-        bold: '....',
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
         children: ['fo', 'fum'],
       },
       {
-        text: 'blah',
-        bold: '....',
+        text:   'blah',
+        properties: {
+          bold: '....',
+        },
       },
     ]);
     t.sendKeys('u');
     t.expect([
       {
-        text: 'blah',
-        bold: '... ',
-        children: [{text: 'fee', bold: '. .'}, 'fi'],
+        text:   'blah',
+        properties: {
+          bold: '... ',
+        },
+        children: [{text: 'fee', properties: {bold: '. .'}}, 'fi'],
       },
       {
         text: 'blah',
         children: ['fo', 'fum'],
       },
       {
-        text: 'blah',
-        bold: '   .',
+        text:   'blah',
+        properties: {
+          bold: '   .',
+        },
       },
     ]);
     await t.done();

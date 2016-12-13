@@ -3,11 +3,11 @@ import * as firebase from 'firebase';
 import * as _ from 'lodash';
 
 import EventEmitter from './eventEmitter';
-import * as constants from './constants';
 import * as errors from './errors';
+import * as utils from './utils';
 import logger from './logger';
 
-import { Row, Line, EncodedLine, SerializedPath, MacroMap } from './types';
+import { Row, Line, EncodedLine, SerializedPath, MacroMap, TextProperties } from './types';
 
 export type DataSource = 'local' | 'firebase' | 'inmemory';
 
@@ -28,8 +28,7 @@ const timeout = (ns: number) => {
 const simulateDelay: number = 0;
 
 const encodeLine: (line: Line) => EncodedLine = (line) => line.map((obj) => {
-  // if no properties are true, serialize just the character to save space
-  if (_.every(constants.text_properties.map(property => !obj[property]))) {
+  if (_.every(TextProperties.map(property => !obj.properties[property]))) {
     return obj.char;
   } else {
     return obj;
@@ -38,8 +37,15 @@ const encodeLine: (line: Line) => EncodedLine = (line) => line.map((obj) => {
 
 const decodeLine: (line: EncodedLine) => Line = (line) => line.map((obj) => {
   if (typeof obj === 'string') {
-    return { char: obj };
+    return utils.plainChar(obj);
   }
+
+  obj.properties = obj.properties || {};
+  // for backwards compatibility
+  TextProperties.map((property) => {
+    if (obj[property]) { obj.properties[property] = obj[property]; }
+  });
+
   return obj;
 });
 

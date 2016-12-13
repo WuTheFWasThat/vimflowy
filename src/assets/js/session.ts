@@ -15,7 +15,7 @@ import Menu from './menu';
 
 import * as Modes from './modes';
 
-import { ModeId, CursorOptions, Line, Row, Col } from './types';
+import { TextProperty, ModeId, CursorOptions, Line, Row, Col } from './types';
 
 type SessionOptions = any; // TODO
 type HistoryLogEntry = {
@@ -818,30 +818,30 @@ export default class Session extends EventEmitter {
 
   // toggling text properties
   // if new_value is null, should be inferred based on old values
-  private async toggleProperty(property, new_value: boolean | null, row: Row, col: Col, n: number) {
+  private async toggleProperty(property: TextProperty, new_value: boolean | null, row: Row, col: Col, n: number) {
     return await this.changeChars(row, col, n, function(deleted) {
       let toggle_value: boolean;
       if (new_value === null) {
-        const all_were_true = _.every(deleted.map(obj => obj[property]));
+        const all_were_true = _.every(deleted.map(obj => obj.properties[property]));
         toggle_value = !all_were_true;
       } else {
         toggle_value = new_value;
       }
 
       return deleted.map(function(char_obj) {
-        const new_obj = _.clone(char_obj);
-        new_obj[property] = toggle_value;
+        const new_obj = _.cloneDeep(char_obj);
+        new_obj.properties[property] = toggle_value;
         return new_obj;
       });
     });
   }
 
-  public async toggleRowsProperty(property, rows) {
+  public async toggleRowsProperty(property: TextProperty, rows) {
     const all_were_true = _.every(
       await Promise.all(
         rows.map(async (row) => {
           return _.every(
-            (await this.document.getLine(row)).map(obj => obj[property])
+            (await this.document.getLine(row)).map(obj => obj.properties[property])
           );
         })
       )
@@ -858,14 +858,14 @@ export default class Session extends EventEmitter {
     return null;
   }
 
-  public async toggleRowProperty(property, row = this.cursor.row) {
+  public async toggleRowProperty(property: TextProperty, row = this.cursor.row) {
     return await this.toggleProperty(
       property, null, row, 0,
       await this.document.getLength(row)
     );
   }
 
-  public async toggleRowPropertyBetween(property, cursor1, cursor2, options: {includeEnd?: boolean}) {
+  public async toggleRowPropertyBetween(property: TextProperty, cursor1, cursor2, options: {includeEnd?: boolean}) {
     if (!(cursor2.path.is(cursor1.path))) {
       logger.warn('Not yet implemented');
       return;
@@ -960,7 +960,7 @@ export default class Session extends EventEmitter {
       await this.delBlock(second, {noNew: true, noSave: true});
       if (addDelimiter != null) {
         const mutation = new mutations.AddChars(
-          first.row, firstLine.length, [{ char: addDelimiter }]);
+          first.row, firstLine.length, [utils.plainChar(addDelimiter)]);
         await this.do(mutation);
       }
       const mutation = new mutations.AddChars(
@@ -983,7 +983,7 @@ export default class Session extends EventEmitter {
     await this.cursor.setPosition(second, 0);
     await this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter != null) {
-      const mutation = new mutations.AddChars(second.row, 0, [{ char: addDelimiter }]);
+      const mutation = new mutations.AddChars(second.row, 0, [utils.plainChar(addDelimiter)]);
       await this.do(mutation);
     }
     const mutation = new mutations.AddChars(second.row, 0, firstLine);

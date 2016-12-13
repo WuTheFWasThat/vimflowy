@@ -1,8 +1,8 @@
-import * as constants from './constants';
 // import { Document } from './document';
 // import * as DataStore from './datastore';
 import Session from './session';
 import { ActionContext } from './keyDefinitions';
+import * as utils from './utils';
 
 import { ModeId, Key } from './types';
 
@@ -158,12 +158,10 @@ registerMode({
       key = transform_insert_key(key);
       if (key.length === 1) {
         // simply insert the key
-        const obj = {char: key};
-        for (let i = 0; i < constants.text_properties.length; i++) {
-          const property = constants.text_properties[i];
-          if (context.session.cursor.getProperty(property)) { obj[property] = true; }
-        }
-        await context.session.addCharsAtCursor([obj]);
+        await context.session.addCharsAtCursor([{
+          char: key,
+          properties: Object.assign({}, context.session.cursor.properties),
+        }]);
         return [null, context];
       }
       return [key, context];
@@ -258,7 +256,7 @@ registerMode({
     async function(key, context) {
       key = transform_insert_key(key);
       if (key.length === 1) {
-        await context.session.menu.session.addCharsAtCursor([{char: key}]);
+        await context.session.menu.session.addCharsAtCursor([utils.plainChar(key)]);
         await context.session.menu.update();
         context.keyStream.drop();
         return [null, context];
