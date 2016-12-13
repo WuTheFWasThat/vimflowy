@@ -1,5 +1,4 @@
 import React from 'react';
-import $ from 'jquery';
 import _ from 'lodash';
 
 import * as utils from '../utils';
@@ -15,6 +14,7 @@ import { DataSource } from '../datastore';
 import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
 import DataStoreSettingsComponent from './settings/dataStore';
+import FileInput from './fileInput';
 
 enum TABS {
   MAIN,
@@ -46,24 +46,6 @@ export default class SettingsComponent extends React.Component<Props, State> {
     const session = this.props.session;
     const keyBindings = this.props.keyBindings;
 
-    const load_file = function(filesDiv, cb) {
-      const file = filesDiv.files[0];
-      if (!file) {
-        return cb('No file selected for import!');
-      }
-      session.showMessage('Reading in file...');
-      const reader = new FileReader();
-      reader.readAsText(file, 'UTF-8');
-      reader.onload = function(evt) {
-        const content = (evt.target as any).result;
-        return cb(null, content, file.name);
-      };
-      return reader.onerror = function(evt) {
-        cb('Import failed due to file-reading issue');
-        return logger.error('Import Error', evt);
-      };
-    };
-
     const tabs_info = [
       {
         tab: TABS.MAIN,
@@ -81,7 +63,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
             </div>
 
             <div className='settings-header theme-bg-secondary theme-trim'>
-              Export
+              Export Data
             </div>
             <div className='settings-content'>
               <table><tbody>
@@ -111,28 +93,34 @@ export default class SettingsComponent extends React.Component<Props, State> {
               </tbody></table>
             </div>
             <div className='settings-header theme-bg-secondary theme-trim'>
-              Import
+              Import Data
             </div>
             <div className='settings-content'>
-              <div id='import-file'>
-                <input type='file' name='import-file' style={{maxWidth:'75%'}}/>
-                <div style={{float:'right'}} className='btn theme-bg-secondary theme-trim'
-                  onClick={() => {
-                    load_file($('#import-file :file')[0], async (err, content, filename) => {
-                      if (err) { return session.showMessage(err, {text_class: 'error'}); }
-                      const mimetype = utils.mimetypeLookup(filename);
-                      session.showMessage('Importing contents...', { time: 0 });
-                      if (await session.importContent(content, mimetype)) {
-                        session.showMessage('Imported!', {text_class: 'success'});
-                        await session.setMode('NORMAL');
-                      } else {
-                        session.showMessage('Import failed due to parsing issue', {text_class: 'error'});
-                      }
-                    });
-                  }}>
-                  Import!
+              <FileInput
+                onSelect={(filename) => {
+                  session.showMessage(`Reading in file ${filename}...`);
+                }}
+                onLoad={async (filename, contents) => {
+                  const mimetype = utils.mimetypeLookup(filename);
+                  session.showMessage('Importing contents...', { time: 0 });
+                  if (await session.importContent(contents, mimetype)) {
+                    session.showMessage('Imported!', {text_class: 'success'});
+                    await session.setMode('NORMAL');
+                  } else {
+                    session.showMessage('Import failed due to parsing issue', {text_class: 'error'});
+                  }
+                }}
+                onError={(error) => {
+                  logger.error('Data file input error', error);
+                  session.showMessage(`Error reading data: ${error}`, {text_class: 'error'});
+                }}
+              >
+                <div
+                  className='btn theme-bg-secondary theme-trim'
+                >
+                  Import from file
                 </div>
-              </div>
+              </FileInput>
             </div>
 
             <div className='settings-header theme-bg-secondary theme-trim'>
@@ -189,28 +177,39 @@ export default class SettingsComponent extends React.Component<Props, State> {
 
                   Load defaults
                 </div>
-                <div style={{float:'left'}} className='btn theme-bg-secondary theme-trim'
-                  onClick={() => {
-                    load_file($('#hotkeys_file_input')[0], function(err, content) {
-                      if (err) { return session.showMessage(err, {text_class: 'error'}); }
-                      let hotkey_settings;
-                      try {
-                        hotkey_settings = JSON.parse(content);
-                      } catch (e) {
-                        return session.showMessage(`Failed to parse JSON: ${e}`, {text_class: 'error'});
-                      }
-                      err = keyBindings.setMappings(new KeyMappings(hotkey_settings));
-                      if (err) {
-                        return session.showMessage(err, {text_class: 'error'});
-                      } else {
-                        return session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
-                      }
-                    });
-                  }}>
-
-                  Import from file
-                </div>
-                <input id='hotkeys_file_input' type='file' style={{float:'left'}}/>
+                <FileInput
+                  onSelect={(filename) => {
+                    session.showMessage(`Reading in file ${filename}...`);
+                  }}
+                  onLoad={(_filename, contents) => {
+                    let hotkey_settings;
+                    try {
+                      hotkey_settings = JSON.parse(contents);
+                    } catch (e) {
+                      session.showMessage(`Failed to parse JSON: ${e}`, {text_class: 'error'});
+                      return;
+                    }
+                    const err = keyBindings.setMappings(new KeyMappings(hotkey_settings));
+                    if (err) {
+                      session.showMessage(err, {text_class: 'error'});
+                    } else {
+                      session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
+                    }
+                    // NOTE: this is fire and forget
+                    session.settings.setSetting('hotkeys', hotkey_settings);
+                  }}
+                  onError={(error) => {
+                    logger.error('Hotkeys file input error', error);
+                    session.showMessage(`Error reading hotkeys: ${error}`, {text_class: 'error'});
+                  }}
+                  style={{float: 'left', position: 'relative'}}
+                >
+                  <div
+                    className='btn theme-bg-secondary theme-trim'
+                  >
+                    Import from file
+                  </div>
+                </FileInput>
               </div>
               <div>
                 {

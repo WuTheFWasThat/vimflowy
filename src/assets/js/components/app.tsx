@@ -187,7 +187,7 @@ export default class AppComponent extends React.Component<Props, {}> {
               </div>
             </a>
             <div id='message'
-              style={{flexBasis: 0, flexGrow: 1}}
+              style={{flexBasis: 0, flexGrow: 1, overflowX: 'scroll'}}
             >
             </div>
             <div id='status'
