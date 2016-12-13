@@ -1,8 +1,5 @@
 import { SerializedBlock } from './types';
 
-type TextProperty = 'bold' | 'italic' | 'underline' | 'strikethrough';
-export const text_properties: Array<TextProperty> = ['bold', 'italic', 'underline', 'strikethrough'];
-
 export const empty_data = [''];
 export const default_data: Array<SerializedBlock> = [
   'Welcome to vimflowy!',
@@ -23,16 +20,20 @@ export const default_data: Array<SerializedBlock> = [
       ] },
       { text: 'Text formatting', collapsed: true, children: [
         {
-          text:      'Bold, italicized, and underlined text.  Emphatic!',
-          bold:      '....                                    ........ ',
-          italic:    '      ..........                        ........ ',
-          underline: '                      ..........        ........ ',
+          text:        'Bold, italicized, and underlined text.  Emphatic!',
+          properties: {
+            bold:      '....                                    ........ ',
+            italic:    '      ..........                        ........ ',
+            underline: '                      ..........        ........ ',
+          },
         },
         {
           text:          'Strike through',
           children: [ {
-            text:          'Useful for todo lists',
-            strikethrough: '.....................',
+            text:            'Useful for todo lists',
+            properties: {
+              strikethrough: '.....................',
+            },
           } ],
         },
       ] },

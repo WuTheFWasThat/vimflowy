@@ -16,6 +16,7 @@ import Cursor from '../src/assets/js/cursor';
 import Path from '../src/assets/js/path';
 import { SerializedBlock, Row, Col, Key } from '../src/assets/js/types';
 
+// logger.setLevel(Logger.LEVEL.DEBUG);
 logger.setStream(Logger.STREAM.QUEUE);
 afterEach('empty the queue', () => logger.empty());
 

@@ -10,6 +10,7 @@ import LineComponent from '../../assets/js/components/line';
 import Mutation from '../../assets/js/mutations';
 import * as errors from '../../assets/js/errors';
 import * as constants from '../../assets/js/constants';
+import * as utils from '../../assets/js/utils';
 import { Logger } from '../../assets/js/logger';
 import Path from '../../assets/js/path';
 import { Row } from '../../assets/js/types';
@@ -158,7 +159,7 @@ export class MarksPlugin {
               if (this.markstate === null) {
                 throw new Error('Mark state null during key transform');
               }
-              await this.markstate.session.addCharsAtCursor([{char: key}]);
+              await this.markstate.session.addCharsAtCursor([utils.plainChar(key)]);
               await this.api.updatedDataForRender(this.markstate.path.row);
               return [null, context];
             }

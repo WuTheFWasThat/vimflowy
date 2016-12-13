@@ -1,8 +1,15 @@
 import $ from 'jquery';
 
+import { Char } from './types';
+
 // TODO: is quite silly to consider undefined as whitespace
 export function isWhitespace(chr) {
   return (chr === ' ') || (chr === '\n') || (chr === undefined);
+}
+
+// a Char with no text formatting
+export function plainChar(chr: string): Char {
+  return { char: chr, properties: {} };
 }
 
 // NOTE: currently unused

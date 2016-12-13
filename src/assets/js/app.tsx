@@ -357,7 +357,7 @@ async function create_session(dataSource, settings, doc, to_load) {
           if (i !== 0) {
             await session.newLineAtCursor();
           }
-          const chars = line.split('').map((chr) => ({ char: chr }));
+          const chars = line.split('').map(utils.plainChar);
           await session.addCharsAtCursor(chars);
         }
         session.save();

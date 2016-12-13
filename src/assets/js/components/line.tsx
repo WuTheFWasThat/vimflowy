@@ -1,9 +1,8 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 
-import * as constants from '../constants';
 import * as utils from '../utils';
-import { Col, Line } from '../types';
+import { Col, Line, TextProperties, CharTextProperties } from '../types';
 
 type WordInfo = any; // TODO
 type RenderOptions = {
@@ -12,6 +11,7 @@ type RenderOptions = {
   text?: string;
   type?: string;
   href?: string;
+  properties?: CharTextProperties;
   onClick?: (e: Event) => void;
   classes?: Array<string>;
 };
@@ -52,7 +52,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     // add cursor if at end
     // NOTE: this doesn't seem to work for the breadcrumbs, e.g. try visual selecting word at end
     if (lineData.length in cursors) {
-      lineData.push({char: cursorChar});
+      lineData.push(utils.plainChar(cursorChar));
     }
 
     if (lineData.length === 0) {
@@ -63,11 +63,9 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       const obj = lineData[i];
       const renderOptions: RenderOptions = {};
 
-      constants.text_properties.forEach((property) => {
-        if (obj[property]) {
-          renderOptions[property] = true;
-        }
-      });
+      if (obj.properties) {
+        renderOptions.properties = _.cloneDeep(obj.properties);
+      }
 
       let x = obj.char;
 
@@ -103,7 +101,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     let word_start = 0;
 
 
-    const newLineData = lineData.concat([{char: ' '}]);
+    const newLineData = lineData.concat([utils.plainChar(' ')]);
     for (let i = 0; i < newLineData.length; i++) { // to make end condition easier
       // TODO  or (utils.isPunctuation obj.char)
       // problem is URLs have dots in them...
@@ -179,18 +177,21 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     }
 
     renderSpec.forEach((spec, index) => {
-      const classes = spec.classes || [];
+      const { classes = [], properties } = spec;
+
       const divType = spec.type || 'span';
       if (divType === 'a') {
         classes.push('theme-text-link');
       }
 
       // make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
-      constants.text_properties.forEach((property) => {
-        if (spec[property]) {
-          classes.push(property);
-        }
-      });
+      if (properties) {
+        TextProperties.forEach((property) => {
+          if (properties[property]) {
+            classes.push(property);
+          }
+        });
+      }
 
       if (spec.cursor) {
         if (this.props.cursorBetween) {
