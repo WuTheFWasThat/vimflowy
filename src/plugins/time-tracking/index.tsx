@@ -52,7 +52,7 @@ class TimeTrackingPlugin {
     this.api.registerHook('session', 'renderAfterLine', (elements, renderData) => {
       const { path, pluginData } = renderData;
       const time = pluginData.timeTracked;
-      if (time === null) {
+      if (time == null) {
         elements.push(
           <span key='time' style={{color: 'lightgray'}}>Loading...</span>
         );
@@ -106,28 +106,28 @@ class TimeTrackingPlugin {
       'toggle-time-tracking',
       'Toggle whether time is being logged',
       async () => {
-        return await this.toggleLogging();
+        await this.toggleLogging();
       },
     );
     this.api.registerAction(
       'clear-row-time',
       'Clear current row time',
       async () => {
-        return await this.resetcurrentPath();
+        await this.resetCurrentPath();
       },
     );
     this.api.registerAction(
       'add-row-time',
       'Add time to current row (in minutes)',
       async ({ repeat }) => {
-        return await this.changeTimecurrentPath(repeat);
+        await this.changeTimeCurrentPath(repeat);
       },
     );
     this.api.registerAction(
       'subtract-row-time',
       'Subtract time from current row (in minutes)',
       async ({ repeat }) => {
-        return await this.changeTimecurrentPath(-repeat);
+        await this.changeTimeCurrentPath(-repeat);
       },
     );
 
@@ -149,7 +149,7 @@ class TimeTrackingPlugin {
     }, 1000);
   }
 
-  private async changeTimecurrentPath(delta_minutes: number) {
+  private async changeTimeCurrentPath(delta_minutes: number) {
     if (this.currentPath !== null) {
       let curTime = Date.now() - this.currentPath.time;
       curTime += delta_minutes * 60 * 1000;
@@ -215,25 +215,24 @@ class TimeTrackingPlugin {
       }
       return;
     }
+    if ((from != null) && (from === to)) {
+      return;
+    }
     this.logger.debug(`Switching from row ${from} to row ${to}`);
     let time = Date.now();
-    if (this.currentPath && (this.currentPath.row !== to)) {
-      // NOTE: fire and forget
-      this.modifyTimeForRow(this.currentPath.row, time - this.currentPath.time);
-      this.currentPath = null;
-      if (from) {
-        await this.api.updatedDataForRender(from);
-      }
+    if (this.currentPath != null) { // if (from != null) doesn't typecheck :(
+      await this.modifyTimeForRow(this.currentPath.row, time - this.currentPath.time);
+      await this.api.updatedDataForRender(from);
     }
     if (to !== null) {
-      if (this.currentPath === null) {
-        this.currentPath = { row: to, time };
-        await this.api.updatedDataForRender(to);
-      }
+      this.currentPath = { row: to, time };
+      await this.api.updatedDataForRender(to);
+    } else {
+      this.currentPath = null;
     }
   }
 
-  private async resetcurrentPath() {
+  private async resetCurrentPath() {
     if (this.currentPath) {
       this.currentPath.time = Date.now();
       await this.api.updatedDataForRender(this.currentPath.row);
