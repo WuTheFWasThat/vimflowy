@@ -124,10 +124,18 @@ export class KeyBindings extends EventEmitter {
   public definitions: KeyDefinitions;
   public mappings: KeyMappings;
 
+  private update: () => void;
+
   constructor(definitions: KeyDefinitions, mappings: KeyMappings) {
     super();
     this.definitions = definitions;
-    this.definitions.on('update', () => this.update());
+
+    this.update = () => {
+      this.bindings = makeBindings(this.definitions, this.mappings);
+      this.emit('update');
+    };
+
+    this.definitions.on('update', this.update);
     this.setMappings(mappings);
   }
 
@@ -137,15 +145,11 @@ export class KeyBindings extends EventEmitter {
 
   public setMappings(mappings: KeyMappings) {
     if (this.mappings) {
-      this.mappings.removeAllListeners('update');
+      this.mappings.off('update', this.update);
     }
     this.mappings = mappings;
-    this.mappings.on('update', () => this.update());
+    this.mappings.on('update', this.update);
     this.update();
-  }
-
-  private update() {
-    this.bindings = makeBindings(this.definitions, this.mappings);
   }
 }
 

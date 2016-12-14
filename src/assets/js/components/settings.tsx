@@ -35,11 +35,25 @@ type State = {
   currentTab: TABS,
 };
 export default class SettingsComponent extends React.Component<Props, State> {
+  private keyBindingsUpdate: () => void;
+
   constructor(props) {
     super(props);
     this.state = {
       currentTab: TABS.MAIN,
     };
+    this.keyBindingsUpdate = () => {
+      this.forceUpdate();
+    };
+  }
+
+  public componentDidMount() {
+    // set up listener for keybindings
+    this.props.keyBindings.on('update', this.keyBindingsUpdate);
+  }
+
+  public componentWillUnmount() {
+    this.props.keyBindings.off('update', this.keyBindingsUpdate);
   }
 
   public render() {

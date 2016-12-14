@@ -10,9 +10,6 @@ type Props = {
 
 export const load_file = function(file) {
   return new Promise((resolve, reject) => {
-    if (!file) {
-      return reject('No file selected for import!');
-    }
     const reader = new FileReader();
     reader.readAsText(file, 'UTF-8');
     reader.onload = function(evt) {
@@ -38,6 +35,8 @@ export default class FileInput extends React.Component<Props, {}> {
 
   private handleChange(e) {
     const file = e.target.files[0];
+    if (!file) { return; } // do nothing, they canceled
+
     if (this.props.onSelect) {
       this.props.onSelect(file.name);
     }
