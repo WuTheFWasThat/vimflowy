@@ -116,7 +116,19 @@ export default class DataStore {
     if (key in this.cache) {
       return this.cache[key];
     }
-    const value = await this.get(key);
+    let value: any = await this.get(key);
+    if (value != null) {
+      // NOTE: only need try catch for backwards compatibility
+      try {
+        // need typeof check because of backwards compatibility plus stupidness less
+        // JSON.parse([106]) === 106
+        if (typeof value === 'string') {
+          value = JSON.parse(value);
+        }
+      } catch (e) {
+        // do nothing
+      }
+    }
     let decodedValue;
     if (value === null) {
       decodedValue = default_value;
@@ -129,7 +141,7 @@ export default class DataStore {
     return decodedValue;
   }
 
-  protected async get(_key: string): Promise<any> {
+  protected async get(_key: string): Promise<string | null> {
     throw new errors.NotImplemented();
   }
 
@@ -141,11 +153,11 @@ export default class DataStore {
     const encodedValue = encode(value);
     logger.debug('setting to storage', key, encodedValue);
     this.cache[key] = encodedValue;
-    this.set(key, encodedValue);
+    this.set(key, JSON.stringify(encodedValue));
   }
 
   protected async set(
-    _key: string, _value: any
+    _key: string, _value: string
   ): Promise<void> {
     throw new errors.NotImplemented();
   }
@@ -266,11 +278,11 @@ export class InMemory extends DataStore {
     super('');
   }
 
-  protected async get(_key: string): Promise<any | null> {
+  protected async get(_key: string): Promise<string | null> {
     return null;
   }
 
-  protected async set(_key: string, _value: any): Promise<void> {
+  protected async set(_key: string, _value: string): Promise<void> {
     // do nothing
   }
 }
@@ -291,11 +303,11 @@ export class LocalStorageLazy extends DataStore {
     }
   }
 
-  protected async get(key: string): Promise<any | null> {
+  protected async get(key: string): Promise<string | null> {
     return this._getLocalStorage_(key);
   }
 
-  protected async set(key: string, value: any): Promise<void> {
+  protected async set(key: string, value: string): Promise<void> {
     return this._setLocalStorage_(key, value);
   }
 
@@ -316,7 +328,7 @@ export class LocalStorageLazy extends DataStore {
       }
     }
 
-    return localStorage.setItem(key, JSON.stringify(value));
+    return localStorage.setItem(key, value);
   }
 
   private _getLocalStorage_(key: string): any | null {
@@ -324,13 +336,13 @@ export class LocalStorageLazy extends DataStore {
     if ((val == null) || (val === 'undefined')) {
       return null;
     }
-    return JSON.parse(val);
+    return val;
   }
 
   // determine last time saved (for multiple tab detection)
   // note that this doesn't cache!
   public getLastSave(): number {
-    return this._getLocalStorage_(this._lastSaveKey_()) || 0;
+    return JSON.parse(this._getLocalStorage_(this._lastSaveKey_()) || '0');
   }
 }
 
@@ -393,8 +405,8 @@ export class FirebaseStore extends DataStore {
     return await firebase.auth().signInWithEmailAndPassword(email, password);
   }
 
-  protected get(key: string): Promise<any | null> {
-    return new Promise((resolve: (result: any | null) => void, reject) => {
+  protected get(key: string): Promise<string | null> {
+    return new Promise((resolve: (result: string | null) => void, reject) => {
       this.fbase.ref(key).once(
         'value',
         (data) => {
@@ -411,7 +423,7 @@ export class FirebaseStore extends DataStore {
     });
   }
 
-  protected set(key: string, value: any): Promise<void> {
+  protected set(key: string, value: string): Promise<void> {
     if (this.numPendingSaves === 0) {
       this.events.emit('unsaved');
     }
