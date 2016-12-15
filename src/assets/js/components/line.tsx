@@ -197,7 +197,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
         if (this.props.cursorBetween) {
           results.push(
             <div key='insert-cursor'
-              className='theme-cursor blink-background'
+              className='cursor theme-cursor blink-background'
               style={{
                 display: 'inline-block',
                 height: '1.2em', width: 2, marginLeft: -1, marginRight: -1,
