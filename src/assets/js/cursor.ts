@@ -36,7 +36,7 @@ export default class Cursor extends EventEmitter {
 
   constructor(
     session: Session, path: Path, col: Col = 0,
-    moveCol: number | null = null
+    moveCol: Col | null = null
   ) {
     super();
     this.session = session;
@@ -87,7 +87,7 @@ export default class Cursor extends EventEmitter {
     await this._fromMoveCol(cursorOptions);
   }
 
-  public async setCol(moveCol, cursorOptions: CursorOptions = { pastEnd: true }) {
+  public async setCol(moveCol: Col, cursorOptions: CursorOptions = { pastEnd: true }) {
     this.moveCol = moveCol;
     await this._fromMoveCol(cursorOptions);
     // if moveCol was too far, fix it
@@ -222,12 +222,12 @@ export default class Cursor extends EventEmitter {
     return this;
   }
 
-  public async isInWhitespace(path: Path, col) {
+  public async isInWhitespace(path: Path, col: Col) {
     const char = await this.document.getChar(path.row, col);
     return utils.isWhitespace(char);
   }
 
-  public async isInWord(path: Path, col, matchChar) {
+  public async isInWord(path: Path, col: Col, matchChar: string) {
     if (utils.isWhitespace(matchChar)) {
       return false;
     }
@@ -245,13 +245,13 @@ export default class Cursor extends EventEmitter {
   }
 
   // return function that sees whether we're still in the word
-  private _getWordCheck(options: WordMovementOptions, matchChar) {
+  private _getWordCheck(options: WordMovementOptions, matchChar: string) {
     if (options.whitespaceWord) {
-      return async (path, col) => {
+      return async (path: Path, col: Col) => {
         return !(await this.isInWhitespace(path, col));
       };
     } else {
-      return async (path, col) => await this.isInWord(path, col, matchChar);
+      return async (path: Path, col: Col) => await this.isInWord(path, col, matchChar);
     }
   }
 
@@ -442,7 +442,7 @@ export default class Cursor extends EventEmitter {
 
   // cursor properties
 
-  public setProperty(property: TextProperty, value) {
+  public setProperty(property: TextProperty, value: boolean) {
     return this.properties[property] = value;
   }
 
@@ -458,7 +458,7 @@ export default class Cursor extends EventEmitter {
   // NOTE: only relevant for insert mode.
   private async _getPropertiesFromContext() {
     const line = await this.document.getLine(this.path.row);
-    let obj;
+    let obj: CharTextProperties;
     if (line.length === 0) {
       obj = {};
     } else if (this.col === 0) {
@@ -467,7 +467,7 @@ export default class Cursor extends EventEmitter {
       obj = line[this.col - 1].properties || {};
     }
     TextProperties.forEach((property) => {
-      this.setProperty(property, obj[property]);
+      this.setProperty(property, !!obj[property]);
     });
   }
 }
@@ -547,7 +547,7 @@ export class CursorsInfoTree {
     this.markSelected();
   }
 
-  public markChildrenVisual(childRows) {
+  public markChildrenVisual(childRows: Array<Row>) {
     childRows.forEach((row) => {
       const child = this.getChild(row);
       child.markVisual();
