@@ -3,6 +3,8 @@ import * as _ from 'lodash';
 
 import { Char } from './types';
 
+export function id<T>(x: T): T { return x; }
+
 // NOTE: fn should not have side effects,
 // since we parallelize the calls
 export async function asyncFilter<T>(

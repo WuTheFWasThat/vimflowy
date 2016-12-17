@@ -7,7 +7,7 @@ import * as errors from './errors';
 import * as utils from './utils';
 import logger from './logger';
 
-import { Row, Line, EncodedLine, SerializedPath, MacroMap, TextProperties } from './types';
+import { Row, Char, Line, EncodedLine, SerializedPath, MacroMap, TextProperties } from './types';
 
 export type DataSource = 'local' | 'firebase' | 'inmemory';
 
@@ -40,24 +40,24 @@ const decodeLine: (line: EncodedLine) => Line = (line) => line.map((obj) => {
     return utils.plainChar(obj);
   }
 
-  obj.properties = obj.properties || {};
+  const chr: Char = _.cloneDeep(obj);
+  chr.properties = chr.properties || {};
   // for backwards compatibility
   TextProperties.map((property) => {
-    if (obj[property]) { obj.properties[property] = obj[property]; }
+    const old_obj = obj as any;
+    if (old_obj[property]) { chr.properties[property] = old_obj[property]; }
   });
 
-  return obj;
+  return chr;
 });
 
-// for reverse compatibility, mainly
-const decodeParents = (parents) => {
+// for backwards compatibility, mainly
+const decodeParents = (parents: number | Array<number>): Array<number> => {
   if (typeof parents === 'number') {
     parents = [ parents ];
   }
   return parents;
 };
-
-const identity = (x) => x;
 
 export default class DataStore {
   protected prefix: string;
@@ -94,7 +94,7 @@ export default class DataStore {
   }
 
   // no prefix, meaning it's global
-  private _settingKey_(setting): string {
+  private _settingKey_(setting: string): string {
     return `settings:${setting}`;
   }
 
@@ -105,19 +105,21 @@ export default class DataStore {
     return `${this.prefix}:macros`;
   }
 
-  private async _get(
-    key: string, default_value: any = undefined, decode: (value: any) => any = identity
-  ): Promise<any | null> {
+  private async _get<T>(
+    key: string,
+    default_value: T,
+    decode: (value: any) => T = utils.id
+  ): Promise<T> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
 
     if (key in this.cache) {
-      return decode(this.cache[key]);
+      return this.cache[key];
     }
     let value: any = await this.get(key);
     if (value != null) {
       // NOTE: only need try catch for backwards compatibility
       try {
-        // need typeof check because of backwards compatibility plus stupidness less
+        // need typeof check because of backwards compatibility plus stupidness like
         // JSON.parse([106]) === 106
         if (typeof value === 'string') {
           value = JSON.parse(value);
@@ -126,7 +128,7 @@ export default class DataStore {
         // do nothing
       }
     }
-    let decodedValue;
+    let decodedValue: T;
     if (value === null) {
       decodedValue = default_value;
       logger.debug('tried getting', key, 'defaulted to', decodedValue);
@@ -143,13 +145,13 @@ export default class DataStore {
   }
 
   private async _set(
-    key: string, value: any, encode: (value: any) => any = identity
+    key: string, value: any, encode: (value: any) => any = utils.id
   ): Promise<void> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
 
+    this.cache[key] = value;
     const encodedValue = encode(value);
     logger.debug('setting to storage', key, encodedValue);
-    this.cache[key] = encodedValue;
     this.set(key, JSON.stringify(encodedValue));
   }
 
@@ -183,7 +185,7 @@ export default class DataStore {
     return await this._set(this._childrenKey_(row), children);
   }
 
-  public async getDetachedParent(row: Row): Promise<Row> {
+  public async getDetachedParent(row: Row): Promise<Row | null> {
     return await this._get(this._detachedParentKey_(row), null);
   }
   public async setDetachedParent(row: Row, parent: Row | null): Promise<void> {
@@ -191,7 +193,7 @@ export default class DataStore {
   }
 
   public async getCollapsed(row: Row): Promise<boolean> {
-    return await this._get(this._collapsedKey_(row));
+    return await this._get(this._collapsedKey_(row), false);
   }
   public async setCollapsed(row: Row, collapsed: boolean): Promise<void> {
     return await this._set(this._collapsedKey_(row), collapsed || false);
@@ -337,12 +339,11 @@ export class LocalStorageLazy extends DataStore {
 }
 
 export class FirebaseStore extends DataStore {
-  private fbase: any;
-  // private fbase: Firebase;
+  private fbase: firebase.database.Database;
   private numPendingSaves: number;
   public events: EventEmitter;
 
-  constructor(prefix = '', dbName, apiKey) {
+  constructor(prefix = '', dbName: string, apiKey: string) {
     super(prefix);
     this.fbase = firebase.initializeApp({
       apiKey: apiKey,
@@ -354,7 +355,7 @@ export class FirebaseStore extends DataStore {
     // this.fbase.authWithCustomToken(token, (err, authdata) => {})
   }
 
-  public async init(email, password) {
+  public async init(email: string, password: string) {
     this.events.emit('saved');
 
     await this.auth(email, password);
@@ -365,6 +366,9 @@ export class FirebaseStore extends DataStore {
 
     await new Promise((resolve) => {
       this.fbase.ref('.info/connected').on('value', function(snap) {
+        if (snap == null) {
+          throw new Error('Failed to get connected ref');
+        }
         if (snap.val()) {
           // Remove ourselves when we disconnect.
           userRef.onDisconnect().remove();
@@ -377,6 +381,9 @@ export class FirebaseStore extends DataStore {
 
     // Number of online users is the number of objects in the presence list.
     listRef.on('value', function(snap) {
+      if (snap == null) {
+        throw new Error('Failed to get listRef');
+      }
       const numUsers = snap.numChildren();
       logger.info(`${numUsers} users online`);
       if (numUsers > 1) {
@@ -386,12 +393,14 @@ export class FirebaseStore extends DataStore {
               'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
             );
           }
+          // NOTE: not sure why ts file says to return a boolean
+          return true;
         });
       }
     });
   }
 
-  public async auth(email, password) {
+  public async auth(email: string, password: string) {
     return await firebase.auth().signInWithEmailAndPassword(email, password);
   }
 
@@ -407,7 +416,7 @@ export class FirebaseStore extends DataStore {
           }
           return resolve(data.val());
         },
-        (err) => {
+        (err: Error) => {
           return reject(err);
         }
       );
