@@ -71,7 +71,7 @@ class TimeTrackingPlugin {
       const time = pluginData.timeTracked;
       if (time == null) {
         elements.push(
-          <span key='time' style={{color: 'lightgray'}}>Loading...</span>
+          <span key='time' style={{color: 'lightgray'}}>{' '}Loading...</span>
         );
       } else {
         const isCurRow = (this.currentPath !== null) && (path.row === this.currentPath.row);
