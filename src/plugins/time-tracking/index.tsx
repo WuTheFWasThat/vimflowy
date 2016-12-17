@@ -1,5 +1,22 @@
-// Time-tracking keeps track of the amount of time spent in each subtree.
-// Clones are double-counted. This is a known bug and will not be fixed.
+/* Time-tracking keeps track of the amount of time spent in each subtree.
+
+  rowTotalTime:  The amount of time spent on a particular row
+  detachedTime:  The amount of time spent in children of a row,
+                 where the children were subsequently deleted from the
+                 document.
+  treeTotalTime: Total amount of time under a row.
+                 Cached sum of rowTotalTime, detachedTime, and
+                 (recursively) treeTotalTime of all current children.
+
+NOTES:
+- Clones are double-counted. This is known and will not be fixed.
+  That is, if A contains both B and C, which each have a copy of D cloned,
+  A's time will double-count D.
+  This probably bad behavior but there is no plan to fix it.
+- When a row is completely deleted, its time get counted in its parent
+  from right before it got detached.
+  If it then gets re-attached, that time gets taken away from the old parent.
+*/
 
 import $ from 'jquery';
 import React from 'react'; // tslint:disable-line no-unused-variable
@@ -88,13 +105,19 @@ class TimeTrackingPlugin {
     });
 
     this.api.registerListener('document', 'afterAttach', async (info) => {
-      await this._rebuildTreeTime(info.row);
       if (info.old_detached_parent) {
+        const treeTime = await this.getRowData(info.row, 'treeTotalTime', 0);
+        await this.transformRowData(info.old_detached_parent, 'detachedTime', current => (current - treeTime), 0);
         await this._rebuildTreeTime(info.old_detached_parent, true);
       }
+      await this._rebuildTreeTime(info.row);
     });
 
     this.api.registerListener('document', 'afterDetach', async (info) => {
+      if (info.last) {
+        const treeTime = await this.getRowData(info.row, 'treeTotalTime', 0);
+        await this.transformRowData(info.parent_row, 'detachedTime', current => (current + treeTime), 0);
+      }
       await this._rebuildTreeTime(info.row);
     });
 
@@ -246,17 +269,18 @@ class TimeTrackingPlugin {
 
   private async _rebuildTotalTime(row: Row) {
     let children = await this.api.session.document._getChildren(row);
-    let detached_children = await this.api.session.document.store.getDetachedChildren(row);
-
-    let childTotalTimes = await Promise.all(
-      children.concat(detached_children).map(
+    const times = await Promise.all(
+      children.map(
         async (child_row) => {
           return await this.getRowData(child_row, 'treeTotalTime', 0);
         }
-      )
+      ).concat([
+        this.getRowData(row, 'detachedTime', 0),
+        this.getRowData(row, 'rowTotalTime', 0),
+      ])
     );
-    let rowTime = await this.getRowData(row, 'rowTotalTime', 0);
-    let totalTime = childTotalTimes.reduce((a, b) => (a + b), rowTime);
+
+    const totalTime = times.reduce((a, b) => (a + b), 0);
     await this.setRowData(row, 'treeTotalTime', totalTime);
   }
 

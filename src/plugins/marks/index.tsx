@@ -27,6 +27,15 @@ const markStyle = {
   borderRadius: 6,
 };
 
+/*
+ * ALGORITHMIC NOTE: maintaining the set of marks
+ * Rather than trying to update the list
+ * as rows get removed and added from the document (which is especially
+ * tricky because of cloning),
+ * we simply store all marks, even if attached to the document,
+ * and then prune after looking them up.
+ */
+
 export class MarksPlugin {
   private api: PluginApi;
   private logger: Logger;
