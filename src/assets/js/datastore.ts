@@ -111,7 +111,7 @@ export default class DataStore {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
 
     if (key in this.cache) {
-      return this.cache[key];
+      return decode(this.cache[key]);
     }
     let value: any = await this.get(key);
     if (value != null) {

@@ -157,13 +157,15 @@ export class PluginApi {
     this.registrations.push(() => {
       this.deregisterHook(who, event, transform);
     });
-    this.document.refreshRender();
+    // pluginData can change for all rows (also could be render-related hook)
+    this.document.cache.clear();
   }
 
   public deregisterHook(who: string, event: string, transform: Hook) {
     const emitter = this._getEmitter(who);
     emitter.removeHook(event, transform);
-    this.document.refreshRender();
+    // pluginData can change for all rows (also could be render-related hook)
+    this.document.cache.clear();
   }
 
   public deregisterAll() {
