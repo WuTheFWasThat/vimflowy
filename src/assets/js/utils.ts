@@ -1,6 +1,23 @@
 import $ from 'jquery';
+import * as _ from 'lodash';
 
 import { Char } from './types';
+
+// NOTE: fn should not have side effects,
+// since we parallelize the calls
+export async function asyncFilter<T>(
+  arr: Array<T>, fn: (el: T) => Promise<boolean>
+) {
+  const result: Array<{ el: T, i: number }> = [];
+  await Promise.all(
+    arr.map(async (el, i) => {
+      if (await fn(el)) {
+        result.push({ el, i });
+      }
+    })
+  );
+  return _.sortBy(result, (x) => x.i).map((x) => x.el);
+}
 
 // TODO: is quite silly to consider undefined as whitespace
 export function isWhitespace(chr) {

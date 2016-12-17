@@ -470,8 +470,9 @@ export default class Document extends EventEmitter {
     if (parents.length < 2) { // for efficiency reasons
       return false;
     }
-    const numAttachedParents = parents.filter(parent => this.isAttached(parent)).length;
-    return numAttachedParents > 1;
+    const attachedParents = await utils.asyncFilter(
+      parents, async (parent) => await this.isAttached(parent));
+    return attachedParents.length > 1;
   }
 
   // Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
@@ -570,7 +571,7 @@ export default class Document extends EventEmitter {
   }
 
   public async _detach(row: Row, parent_row: Row) {
-    const wasLast = (await this._getParents(row)).length === 1;
+    const wasLast = !(await this.isClone(row));
 
     await this.emitAsync('beforeDetach', { row, parent_row, last: wasLast });
     const info = await this._removeChild(parent_row, row);
