@@ -229,7 +229,6 @@ export default class Document extends EventEmitter {
     await Promise.all([
       this._attach(row, parent, index),
       // purely to populate the cache
-      this.store.setDetachedChildren(row, []),
       this.store.setDetachedParent(row, null),
     ]);
     return row;
@@ -577,9 +576,6 @@ export default class Document extends EventEmitter {
     const info = await this._removeChild(parent_row, row);
     if (wasLast) {
       await this.store.setDetachedParent(row, parent_row);
-      const detached_children = await this.store.getDetachedChildren(parent_row);
-      detached_children.push(row);
-      await this.store.setDetachedChildren(parent_row, detached_children);
     }
     await this.emitAsync('afterDetach', { row, parent_row, last: wasLast });
     return info;
@@ -593,11 +589,6 @@ export default class Document extends EventEmitter {
     if (old_detached_parent !== null) {
       errors.assert(isFirst);
       await this.store.setDetachedParent(child_row, null);
-      const detached_children = await this.store.getDetachedChildren(old_detached_parent);
-      const ci = _.findIndex(detached_children, sib => sib === child_row);
-      errors.assert(ci !== -1);
-      detached_children.splice(ci, 1);
-      await this.store.setDetachedChildren(old_detached_parent, detached_children);
     }
     await this.emitAsync('afterAttach', { row: child_row, parent_row, first: isFirst, old_detached_parent});
     return info;

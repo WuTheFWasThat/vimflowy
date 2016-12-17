@@ -82,9 +82,6 @@ export default class DataStore {
   private _childrenKey_(row: Row): string {
     return `${this.prefix}:${row}:children`;
   }
-  private _detachedChildrenKey_(row: Row): string {
-    return `${this.prefix}:${row}:detached_children`;
-  }
   private _detachedParentKey_(row: Row): string {
     return `${this.prefix}:${row}:detached_parent`;
   }
@@ -191,13 +188,6 @@ export default class DataStore {
   }
   public async setDetachedParent(row: Row, parent: Row | null): Promise<void> {
     return await this._set(this._detachedParentKey_(row), parent);
-  }
-
-  public async getDetachedChildren(row: Row): Promise<Array<Row>> {
-    return await this._get(this._detachedChildrenKey_(row), []);
-  }
-  public async setDetachedChildren(row: Row, children: Array<Row>): Promise<void> {
-    return await this._set(this._detachedChildrenKey_(row), children);
   }
 
   public async getCollapsed(row: Row): Promise<boolean> {
@@ -406,6 +396,7 @@ export class FirebaseStore extends DataStore {
   }
 
   protected get(key: string): Promise<string | null> {
+    logger.debug('Firebase: getting', key);
     return new Promise((resolve: (result: string | null) => void, reject) => {
       this.fbase.ref(key).once(
         'value',
@@ -427,6 +418,7 @@ export class FirebaseStore extends DataStore {
     if (this.numPendingSaves === 0) {
       this.events.emit('unsaved');
     }
+    logger.debug('Firebase: setting', key, 'to', value);
     this.numPendingSaves++;
     // TODO: buffer these and batch them?
     this.fbase.ref(key).set(
