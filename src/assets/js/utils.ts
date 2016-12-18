@@ -5,6 +5,17 @@ import { Char } from './types';
 
 export function id<T>(x: T): T { return x; }
 
+// gets slice of an array, *inclusive*
+export function getSlice<T>(array: Array<T>, min: number, max: number): Array<T> {
+  if (max === -1) {
+    if (array.length === 0) {
+      return [];
+    }
+    max = array.length - 1;
+  }
+  return array.slice(min, max + 1);
+}
+
 // NOTE: fn should not have side effects,
 // since we parallelize the calls
 export async function asyncFilter<T>(

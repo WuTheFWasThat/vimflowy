@@ -245,7 +245,7 @@ export class MoveBlock extends Mutation {
 
   public async rewind() {
     return [
-      new MoveBlock((this.parent.extend([this.path.row])), this.old_parent, this.old_index),
+      new MoveBlock(this.parent.extend([this.path.row]), this.old_parent, this.old_index),
     ];
   }
 
@@ -326,8 +326,7 @@ export class DetachBlocks extends Mutation {
   }
 
   public async mutate(session: Session) {
-    this.deleted = (await session.document._getChildren(this.parent, this.index, this.index + this.nrows - 1))
-      .filter((sib => sib !== null));
+    this.deleted = await session.document._getChildren(this.parent, this.index, this.index + this.nrows - 1);
 
     for (let i = 0; i < this.deleted.length; i++) {
       const row = this.deleted[i];

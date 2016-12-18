@@ -352,29 +352,9 @@ export default class Document extends EventEmitter {
 
   // structure
 
-  public async _getChildren(row: Row, min = 0, max = -1) {
+  public async _getChildren(row: Row, min = 0, max = -1): Promise<Array<Row>> {
     const info = await this.getInfo(row);
-    return this._getSlice(info.childRows, min, max);
-  }
-
-  private _getSlice(array, min, max) {
-    if (array.length === 0) {
-      return [];
-    }
-    if (max === -1) { max = array.length - 1; }
-    const indices: Array<number> = [];
-    for (let i = min; i <= max; i++) {
-      indices.push(i);
-    }
-    return indices.map(function(index) {
-      if (index >= array.length) {
-        return null;
-      } else if (index < 0) {
-        return null;
-      } else {
-        return array[index];
-      }
-    });
+    return utils.getSlice(info.childRows, min, max);
   }
 
   private async _setChildren(row: Row, children) {
@@ -663,21 +643,29 @@ export default class Document extends EventEmitter {
   }
 
   public async getSiblingOffset(path: Path, offset) {
-    return (await this.getSiblingRange(path, offset, offset, true))[0];
+    const arr = await this.getSiblingRange(path, offset, offset);
+    if (!arr.length) {
+      return null;
+    }
+    return arr[0];
   }
 
-  public async getSiblingRange(path: Path, min_offset, max_offset, includeNull = false) {
-    const index = await this.indexInParent(path);
-    return this._getSlice(
-      await this.getSiblings(path), min_offset + index, max_offset + index
-    ).filter(x => includeNull || (x !== null));
+  public async getSiblingRange(path: Path, min_offset, max_offset) {
+    const [ index, siblings ] = await Promise.all([
+      this.indexInParent(path),
+      this.getSiblings(path),
+    ]);
+    if (index + max_offset < 0) { return []; }
+    const arr = utils.getSlice(
+      siblings,
+      Math.max(index + min_offset, 0),
+      index + max_offset,
+    );
+    return arr;
   }
 
-  public async getChildRange(path: Path, min: number, max: number): Promise<Array<null | Path>> {
+  public async getChildRange(path: Path, min: number, max: number): Promise<Array<Path>> {
     return (await this._getChildren(path.row, min, max)).map(function(child_row) {
-      if (child_row === null) {
-        return null;
-      }
       return path.child(child_row);
     });
   }

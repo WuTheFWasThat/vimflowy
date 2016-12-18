@@ -121,9 +121,6 @@ export default class SessionComponent extends React.Component<Props, State> {
         const [parent, index1, index2] = await session.getVisualLineSelections();
         const children = await session.document.getChildRange(parent, index1, index2);
         children.forEach((child) => {
-          if (child == null) {
-            throw new Error('Visual line child null');
-          }
           cursorsTree.getPath(child).markVisual();
         });
       } else if (session.mode === 'VISUAL') {
