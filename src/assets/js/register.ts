@@ -85,6 +85,9 @@ export default class Register {
 
   public async pasteSerializedRows(options: PasteOptions = {}) {
     const path = this.session.cursor.path;
+    if (path.parent == null) {
+      throw new Error('Cursor was at root');
+    }
     const parent = path.parent;
     const index = await this.session.document.indexInParent(path);
 
@@ -104,6 +107,9 @@ export default class Register {
 
   public async pasteClonedRows(options: PasteOptions = {}) {
     const path = this.session.cursor.path;
+    if (path.parent == null) {
+      throw new Error('Cursor was at root');
+    }
     const parent = path.parent;
     const index = await this.session.document.indexInParent(path);
 

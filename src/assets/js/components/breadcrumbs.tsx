@@ -42,8 +42,11 @@ export default class BreadcrumbsComponent extends React.Component<BreadcrumbsPro
   public render() {
     const crumbNodes: Array<React.ReactNode> = [];
     let path = this.props.viewRoot;
+    if (path.parent == null) {
+      throw new Error('Shouldn\'t render breadcrumbs at root');
+    }
     path = path.parent;
-    while (!path.isRoot()) {
+    while (path.parent != null) {
       crumbNodes.push(
         <CrumbComponent key={path.row}
           onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}

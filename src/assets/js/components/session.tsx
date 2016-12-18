@@ -140,7 +140,7 @@ export default class SessionComponent extends React.Component<Props, State> {
 
       const crumbContents = {};
       let path = session.viewRoot;
-      while (!path.isRoot()) {
+      while (path.parent != null) {
         path = path.parent;
         crumbContents[path.row] = await session.document.getText(path.row);
       }

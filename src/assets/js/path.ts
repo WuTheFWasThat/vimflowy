@@ -5,7 +5,7 @@ import { Row, SerializedPath } from './types';
 // represents a tree-traversal starting from the root going down
 // should be immutable
 export default class Path {
-  public readonly parent: Path;
+  public readonly parent: Path | null;
   public readonly row: Row;
 
   public static rootRow(): Row {
@@ -16,27 +16,29 @@ export default class Path {
     return new Path(null, Path.rootRow());
   }
 
-  public static loadFromAncestry(ancestry: SerializedPath) {
+  public static loadFromAncestry(ancestry: SerializedPath): Path {
     if (ancestry.length === 0) {
       return Path.root();
     }
-    const row = ancestry.pop();
+    const row: Row = ancestry.pop() as Row;
     const parent = Path.loadFromAncestry(ancestry);
     return parent.child(row);
   }
 
-  constructor(parent, row) {
+  constructor(parent: Path | null, row: Row) {
     this.parent = parent;
     this.row = row;
   }
 
-  public isRoot() {
+  public isRoot(): boolean {
     return this.row === Path.rootRow();
   }
 
   // gets a list of IDs
   public getAncestry(): SerializedPath {
-    if (this.isRoot()) { return []; }
+    if (this.parent == null) { // i.e. (this.isRoot())
+      return [];
+    }
     const ancestors = this.parent.getAncestry();
     ancestors.push(this.row);
     return ancestors;
@@ -45,14 +47,13 @@ export default class Path {
   // returns an array representing the ancestry of a row,
   // up until the ancestor specified by the `stop` parameter
   // i.e. [stop, stop's child, ... , row's parent , row]
-  public getAncestryPaths(stop?): Array<Path> {
-    if (!stop) {
-      stop = Path.root();
-    }
+  public getAncestryPaths(stop: Path = Path.root()): Array<Path> {
     const ancestors: Array<Path> = [];
     let path: Path = this;
     while (!path.is(stop)) {
-      errors.assert(!path.isRoot(), `Failed to get ancestry for ${this} going up until ${stop}`);
+      if (path.parent == null) {
+        throw new Error(`Failed to get ancestry for ${this} going up until ${stop}`);
+      }
       ancestors.push(path);
       path = path.parent;
     }
@@ -68,16 +69,16 @@ export default class Path {
   //   return 1 + this.parent.length();
   // }
 
-  public child(row) {
+  public child(row: Row): Path {
     errors.assert(row !== this.row);
     return new Path(this, row);
   }
 
-  public isDescendant(other_path) {
+  public isDescendant(other_path: Path): boolean {
     return this.walkFrom(other_path) !== null;
   }
 
-  public walkFrom(ancestor) {
+  public walkFrom(ancestor: Path): null | Array<Row> {
     const my_ancestry = this.getAncestry();
     const their_ancestry = ancestor.getAncestry();
     if (my_ancestry.length < their_ancestry.length) {
@@ -91,7 +92,7 @@ export default class Path {
     return my_ancestry.slice(their_ancestry.length);
   }
 
-  public shedUntil(row): [Array<Row>, Path] | null {
+  public shedUntil(row: Row): [Array<Row>, Path] | null {
     let ancestor: Path = this;
     const path: Array<Row> = [];
     while (ancestor.row !== row) {
@@ -104,7 +105,7 @@ export default class Path {
     return [path.reverse(), ancestor];
   }
 
-  public extend(walk) {
+  public extend(walk: Array<Row>): Path {
     let descendent: Path = this;
     walk.forEach((row) => {
       descendent = descendent.child(row);
@@ -113,11 +114,11 @@ export default class Path {
   }
 
   // Represents the exact same row
-  public is(other) {
+  public is(other: Path): boolean {
     if (other === undefined) { return false; }
     if (this.row !== other.row) { return false; }
-    if (this.isRoot()) { return other.isRoot(); }
-    if (other.isRoot()) { return false; }
+    if (this.parent == null) { return other.parent == null; }
+    if (other.parent == null) { return false; }
     return this.parent.is(other.parent);
   }
 }

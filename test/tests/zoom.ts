@@ -204,6 +204,8 @@ describe('zoom', function() {
       ] },
     ]);
     t.sendKey(zoomInAllKey);
+    t.expectViewRoot(3);
+    t.expectCursor(3, 0);
     t.sendKey('shift+tab');
     t.expect([
       { text: 'first', children: [

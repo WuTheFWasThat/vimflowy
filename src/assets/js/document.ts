@@ -381,13 +381,16 @@ export default class Document extends EventEmitter {
   }
 
   public async getSiblings(path: Path) {
-    if (path.isRoot()) {
+    if (path.parent == null) { // i.e. (path.isRoot())
       return [path];
     }
     return await this.getChildren(path.parent);
   }
 
-  public async nextClone(path: Path) {
+  public async nextClone(path: Path): Promise<Path> {
+    if (path.parent == null) {
+      return path;
+    }
     const parents = await this._getParents(path.row);
     let i = parents.indexOf(path.parent.row);
     errors.assert(i > -1);

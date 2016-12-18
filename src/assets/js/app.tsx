@@ -188,7 +188,7 @@ async function create_session(dataSource, settings, doc, to_load) {
     getVisiblePaths: async () => {
       const paths: Array<Path> = [];
       $.makeArray($('.bullet')).forEach((bullet) => {
-        if (!utils.isScrolledIntoView($(bullet), getMainDiv())) {
+        if (!utils.isScrolledIntoView(bullet, getMainDiv())) {
           return;
         }
         if ($(bullet).hasClass('fa-clone')) {

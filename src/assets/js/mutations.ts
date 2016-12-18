@@ -222,6 +222,9 @@ export class MoveBlock extends Mutation {
     super();
     this.path = path;
     this.parent = parent;
+    if (this.path.parent == null) {
+      throw new Error('Can\'t move root');
+    }
     this.old_parent = this.path.parent;
     if (index === undefined) {
       this.index = -1;
@@ -231,7 +234,7 @@ export class MoveBlock extends Mutation {
   }
 
   public str() {
-    return `move ${this.path.row} from ${this.path.parent.row} to ${this.parent.row}`;
+    return `move ${this.path.row} from ${this.old_parent.row} to ${this.parent.row}`;
   }
 
   public async validate(session: Session) {
