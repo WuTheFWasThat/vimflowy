@@ -50,7 +50,7 @@ export type ActionContext = {
   },
 };
 export type ActionDefinition = (context: ActionContext) => Promise<void>;
-type ActionName = string;
+export type ActionName = string;
 type ActionMetadata = {
   sequence?: SequenceAction;
 };

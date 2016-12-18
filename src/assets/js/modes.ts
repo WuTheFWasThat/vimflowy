@@ -1,14 +1,14 @@
 // import { Document } from './document';
 // import * as DataStore from './datastore';
 import Session from './session';
-import { ActionContext } from './keyDefinitions';
+import { ActionName, ActionContext } from './keyDefinitions';
 import * as utils from './utils';
 
 import { ModeId, Key } from './types';
 
 type ModeMetadata = {
   name: string;
-  description: string;
+  description?: string;
   cursorBetween: boolean;
   // whether only within-row motions are supported
   within_row?: boolean;
@@ -19,23 +19,23 @@ type ModeMetadata = {
   // other functions won't receive the key)
   //
   // the functions are called in the order they're registered
-  key_transforms?: Array<(key: Key | null, context: ActionContext) => Promise<[Key | null, ActionContext]>>;
+  key_transforms?: Array<(key: Key, context: ActionContext) => Promise<[Key | null, ActionContext]>>;
 
   // function taking session, upon entering mode
   enter?: (session: Session, newMode?: ModeId) => Promise<void>;
   // function executed on every action, while in the mode.
   // takes session and keystream
-  beforeEvery?: (actionName: string, context: ActionContext) => Promise<void>;
+  beforeEvery?: (actionName: ActionName, context: ActionContext) => Promise<void>;
   // function executed on every action, while in the mode.
   // takes session and keystream
-  every?: (actionName: string, context: ActionContext, oldMode: ModeId) => Promise<void>;
+  every?: (actionName: ActionName, context: ActionContext, oldMode: ModeId) => Promise<void>;
   // function taking session, upon exiting mode
   exit?: (session: Session, oldMode?: ModeId) => Promise<void>;
 
   // a function taking a context and returning a new context
   // in which definition functions will be executed
   // (this is called right before execution)
-  transform_context?: (context: any) => Promise<any>;
+  transform_context?: (context: ActionContext) => Promise<any>;
 };
 
 export default class Mode {
@@ -43,7 +43,7 @@ export default class Mode {
   public name: string;
   public id: ModeId;
 
-  constructor(metadata) {
+  constructor(metadata: ModeMetadata) {
     this.metadata = metadata;
     this.name = metadata.name;
     this.id = metadata.name;
@@ -58,7 +58,7 @@ export default class Mode {
 
   // function executed on every action, while in the mode.
   // takes session and keystream
-  public async every(actionName, context, oldMode): Promise<void> {
+  public async every(actionName: ActionName, context: ActionContext, oldMode: ModeId): Promise<void> {
     if (this.metadata.every) {
       return await this.metadata.every(actionName, context, oldMode);
     }
@@ -66,7 +66,7 @@ export default class Mode {
 
   // function executed on every action, while in the mode.
   // takes session and keystream
-  public async beforeEvery(actionName, context): Promise<void> {
+  public async beforeEvery(actionName: ActionName, context: ActionContext): Promise<void> {
     if (this.metadata.beforeEvery) {
       return await this.metadata.beforeEvery(actionName, context);
     }
@@ -81,16 +81,19 @@ export default class Mode {
   // a function taking a context and returning a new context
   // in which definition functions will be executed
   // (this is called right before execution)
-  public async transform_context(context: any): Promise<any> {
+  public async transform_context(context: ActionContext): Promise<any> {
     if (this.metadata.transform_context) {
       return await this.metadata.transform_context(context);
     }
     return context;
   }
 
-  public async transform_key(key, context) {
+  public async transform_key(key: Key | null, context: ActionContext): Promise<[Key | null, ActionContext]> {
     if (this.metadata.key_transforms) {
       for (let i = 0; i < this.metadata.key_transforms.length; i++) {
+        if (key == null) {
+          break;
+        }
         const key_transform = this.metadata.key_transforms[i];
         [key, context] = await key_transform(key, context);
       }
@@ -103,7 +106,7 @@ export default class Mode {
 // mapping from mode name to the actual mode object
 export const MODES: {[key: string]: Mode} = {};
 
-const registerMode = function(metadata) {
+const registerMode = function(metadata: ModeMetadata) {
   if (MODES[metadata.name]) {
     throw new Error(`Reregistered mode ${metadata.name}`);
   }
@@ -112,11 +115,11 @@ const registerMode = function(metadata) {
   return mode;
 };
 
-const deregisterMode = function(mode) {
+const deregisterMode = function(mode: ModeMetadata) {
   delete MODES[mode.name];
 };
 
-const transform_insert_key = function(key) {
+const transform_insert_key = function(key: Key) {
   if (key === 'shift+enter') {
     key = '\n';
   } else if (key === 'space' || key === 'shift+space') {
@@ -128,10 +131,10 @@ const transform_insert_key = function(key) {
 registerMode({
   name: 'NORMAL',
   cursorBetween: false,
-  async enter(session) {
+  async enter(session: Session) {
     await session.cursor.backIfNeeded();
   },
-  async every(_actionName, { keyStream, session }) {
+  async every(_actionName: ActionName, { keyStream, session }: ActionContext) {
     keyStream.save();
     session.save();
   },
@@ -145,7 +148,7 @@ registerMode({
   ],
 });
 
-const nonSavingInsertActions = {
+const nonSavingInsertActions: {[key: string]: boolean} = {
   'delete-char-before': true,
   'delete-char-after': true,
 };
@@ -167,7 +170,7 @@ registerMode({
       return [key, context];
     },
   ],
-  async beforeEvery(actionName, { session, keyStream }) {
+  async beforeEvery(actionName: ActionName, { session, keyStream }) {
     if (actionName === 'exit-mode') {
       keyStream.save();
     } else if (!nonSavingInsertActions[actionName]) {
@@ -175,7 +178,7 @@ registerMode({
       session.save();
     }
   },
-  async every(actionName, { session }, oldMode) {
+  async every(actionName: ActionName, { session }: ActionContext, oldMode) {
     if ((!nonSavingInsertActions[actionName]) &&
         (oldMode === 'INSERT')
        ) {
@@ -183,7 +186,7 @@ registerMode({
       session.save();
     }
   },
-  async exit(session) {
+  async exit(session: Session) {
     await session.cursor.left();
     // unlike other modes, esc in insert mode keeps changes
     session.save();
@@ -193,11 +196,11 @@ registerMode({
 registerMode({
   name: 'VISUAL',
   cursorBetween: false,
-  async enter(session) {
-    session.anchor = session.cursor.clone();
+  async enter(session: Session) {
+    session.startAnchor();
   },
-  async exit(session, newMode?: ModeId) {
-    session.anchor = null;
+  async exit(session: Session, newMode?: ModeId) {
+    session.stopAnchor();
     // NOTE: should we have keyStream.save()?
     if (newMode === 'NORMAL') {
       session.save();
@@ -208,11 +211,11 @@ registerMode({
 registerMode({
   name: 'VISUAL_LINE',
   cursorBetween: false,
-  async enter(session) {
-    session.anchor = session.cursor.clone();
+  async enter(session: Session) {
+    session.startAnchor();
   },
   async exit(session, newMode?: ModeId) {
-    session.anchor = null;
+    session.stopAnchor();
     // NOTE: should we have keyStream.save()?
     if (newMode === 'NORMAL') {
       session.save();
@@ -244,7 +247,10 @@ registerMode({
   name: 'SEARCH',
   cursorBetween: true,
   within_row: true,
-  async every(_actionName, { session, keyStream }) {
+  async every(_actionName: ActionName, { session, keyStream }) {
+    if (session.menu == null) {
+      throw new Error('No menu in session');
+    }
     await session.menu.update();
     keyStream.drop();
   },
@@ -254,6 +260,9 @@ registerMode({
   },
   key_transforms: [
     async function(key, context) {
+      if (context.session.menu == null) {
+        throw new Error('No menu in session');
+      }
       key = transform_insert_key(key);
       if (key.length === 1) {
         await context.session.menu.session.addCharsAtCursor([utils.plainChar(key)]);

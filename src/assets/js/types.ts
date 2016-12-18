@@ -34,16 +34,17 @@ export const TextProperties: Array<TextProperty> = [
   'bold', 'italic', 'underline', 'strikethrough'
 ];
 
+export type SerializedLineProperties = {
+  [P in keyof CharTextProperties]?: string
+};
+
 export type Char = {
   char: string,
   properties: CharTextProperties,
 };
 
-export type SerializedLineProperties = {
-  [P in keyof CharTextProperties]?: string
-};
-
-export type Line = Array<Char>;
+export type Chars = Array<Char>;
+export type Line = Chars;
 export type EncodedLine = Array<Char | string>;
 export type SerializedLine = {
   text: string,

@@ -15,19 +15,19 @@ import Menu from './menu';
 
 import * as Modes from './modes';
 
-import { TextProperty, ModeId, CursorOptions, Line, Row, Col } from './types';
+import {
+  TextProperty, ModeId, CursorOptions, Row, Col, Chars, SerializedBlock
+} from './types';
 
 type SessionOptions = any; // TODO
+type ViewState = {
+  cursor: Cursor,
+  viewRoot: Path,
+};
 type HistoryLogEntry = {
   index: number,
-  after?: {
-    cursor: Cursor,
-    viewRoot: Path,
-  },
-  before?: {
-    cursor: Cursor,
-    viewRoot: Path,
-  }
+  after?: ViewState,
+  before?: ViewState,
 };
 type JumpLogEntry = {
   viewRoot: Path,
@@ -62,7 +62,7 @@ export default class Session extends EventEmitter {
   public document: Document;
   public register: Register;
   public cursor: Cursor;
-  public anchor: Cursor;
+  private _anchor: Cursor | null;
 
   public viewRoot: Path;
 
@@ -105,6 +105,7 @@ export default class Session extends EventEmitter {
 
     this.viewRoot = options.viewRoot || Path.root();
     this.cursor = new Cursor(this, options.cursorPath || this.viewRoot, 0);
+    this._anchor = null;
 
     this.reset_history();
     this.reset_jump_history();
@@ -262,14 +263,14 @@ export default class Session extends EventEmitter {
       // Workflowy compatible plaintext export
       //   Ignores 'collapsed' and viewRoot
       const indent = '  ';
-      const exportLines = function(node) {
+      const exportLines = function(node: any) {
         if (typeof(node) === 'string') {
           return [`- ${node}`];
         }
         const lines: Array<string> = [];
         lines.push(`- ${node.text}`);
         const children = node.children || [];
-        children.forEach((child) => {
+        children.forEach((child: any) => {
           if (child.clone) { return; }
           exportLines(child).forEach((line) => {
             lines.push(`${indent}${line}`);
@@ -332,7 +333,7 @@ export default class Session extends EventEmitter {
     });
   }
 
-  private async _restoreViewState(state) {
+  private async _restoreViewState(state: ViewState) {
     await this.cursor.from(state.cursor);
     await this.fixCursorForMode();
     await this.changeView(state.viewRoot);
@@ -358,6 +359,9 @@ export default class Session extends EventEmitter {
       }
 
       logger.debug('> END UNDO');
+      if (!newState.before) {
+        throw new Error('No previous cursor state found while undoing');
+      }
       await this._restoreViewState(newState.before);
     }
   }
@@ -380,11 +384,14 @@ export default class Session extends EventEmitter {
         await mutation.moveCursor(this.cursor);
       }
       logger.debug('> END REDO');
+      if (!oldState.after) {
+        throw new Error('No after cursor state found while redoing');
+      }
       await this._restoreViewState(oldState.after);
     }
   }
 
-  public async do(mutation) {
+  public async do(mutation: Mutation) {
     if (!this.history) {
       // NOTE: we let mutations through since some plugins may apply mutations on load
       // these mutations won't be undoable, which is desired
@@ -431,7 +438,7 @@ export default class Session extends EventEmitter {
   ////////////////////////////////
 
   // whether contents are currently viewable (i.e. subtree is visible)
-  public async viewable(path) {
+  public async viewable(path: Path) {
     return path.is(this.viewRoot) || (
             path.isDescendant(this.viewRoot) &&
             (!await this.document.collapsed(path.row))
@@ -439,12 +446,12 @@ export default class Session extends EventEmitter {
   }
 
   // whether a given path is visible
-  public async isVisible(path) {
+  public async isVisible(path: Path) {
     const visibleAncestor = await this.youngestVisibleAncestor(path);
     return (visibleAncestor !== null) && path.is(visibleAncestor);
   }
 
-  public async nextVisible(path) {
+  public async nextVisible(path: Path) {
     if (await this.viewable(path)) {
       const children = await this.document.getChildren(path);
       if (children.length > 0) {
@@ -459,6 +466,9 @@ export default class Session extends EventEmitter {
       if (nextsib !== null) {
         return nextsib;
       }
+      if (path.parent == null) {
+        throw new Error('Did not encounter view root on way to root');
+      }
       path = path.parent;
       if (path.is(this.viewRoot)) {
         return null;
@@ -467,7 +477,7 @@ export default class Session extends EventEmitter {
   }
 
   // last thing visible nested within id
-  public async lastVisible(path = this.viewRoot) {
+  public async lastVisible(path: Path = this.viewRoot): Promise<Path> {
     if (!(await this.viewable(path))) {
       return path;
     }
@@ -716,15 +726,15 @@ export default class Session extends EventEmitter {
     return await this.document.getLength(this.cursor.row);
   }
 
-  private async addChars(row: Row, col: Col, chars: Line) {
+  private async addChars(row: Row, col: Col, chars: Chars) {
     await this.do(new mutations.AddChars(row, col, chars));
   }
 
-  public async addCharsAtCursor(chars: Line) {
+  public async addCharsAtCursor(chars: Chars) {
     await this.addChars(this.cursor.row, this.cursor.col, chars);
   }
 
-  public async addCharsAfterCursor(chars: Line) {
+  public async addCharsAfterCursor(chars: Chars) {
     let col = this.cursor.col;
     if (col < (await this.document.getLength(this.cursor.row))) {
       col += 1;
@@ -734,7 +744,7 @@ export default class Session extends EventEmitter {
 
   private async delChars(path: Path, col: Col, nchars: number, options: DelCharsOptions = {}) {
     const n = await this.document.getLength(path.row);
-    let deleted: Line = [];
+    let deleted: Chars = [];
     if ((n > 0) && (nchars > 0) && (col < n)) {
       const mutation = new mutations.DelChars(path.row, col, nchars);
       await this.do(mutation);
@@ -755,13 +765,13 @@ export default class Session extends EventEmitter {
     return await this.delChars(this.cursor.path, this.cursor.col, nchars, options);
   }
 
-  private async changeChars(row: Row, col: Col, nchars: number, change_fn) {
+  private async changeChars(row: Row, col: Col, nchars: number, change_fn: (chars: Chars) => Chars) {
     const mutation = new mutations.ChangeChars(row, col, nchars, change_fn);
     await this.do(mutation);
     return mutation.ncharsDeleted;
   }
 
-  public async replaceCharsAfterCursor(char, nchars) {
+  public async replaceCharsAfterCursor(char: string, nchars: number) {
     const ndeleted = await this.changeChars(this.cursor.row, this.cursor.col, nchars, (chars =>
       chars.map(function(char_obj) {
         const new_obj = _.clone(char_obj);
@@ -772,7 +782,7 @@ export default class Session extends EventEmitter {
     await this.cursor.setCol(this.cursor.col + ndeleted - 1);
   }
 
-  public async clearRowAtCursor(options) {
+  public async clearRowAtCursor(options: {yank?: boolean}) {
     if (options.yank) {
       // yank as a row, not chars
       await this.yankRowAtCursor();
@@ -1077,7 +1087,7 @@ export default class Session extends EventEmitter {
   }
 
   public async addBlocks(
-    parent: Path, index = -1, serialized_rows,
+    parent: Path, index = -1, serialized_rows: Array<SerializedBlock>,
     options: {cursorOptions?: CursorOptions, setCursor?: string} = {}
   ) {
     const mutation = new mutations.AddBlocks(parent, index, serialized_rows);
@@ -1089,7 +1099,7 @@ export default class Session extends EventEmitter {
     }
   }
 
-  public async yankBlocks(path, nrows) {
+  public async yankBlocks(path: Path, nrows: number) {
     const siblings = await this.document.getSiblingRange(path, 0, nrows - 1);
     const serialized = await Promise.all(siblings.map(
       async (x) => await this.document.serialize(x.row)
@@ -1303,18 +1313,38 @@ export default class Session extends EventEmitter {
     return await this.register.paste({});
   }
 
+  public get anchor(): Cursor {
+    if ((this.mode !== 'VISUAL_LINE') && (this.mode !== 'VISUAL')) {
+      throw new Error('Wanted visual line selections but not in visual or visual line mode');
+    }
+    if (this._anchor == null) {
+      throw new Error(`No anchor found in ${this.mode} mode!`);
+    }
+    return this._anchor;
+  }
+
+  public startAnchor() {
+    this._anchor = this.cursor.clone();
+  }
+
+  public stopAnchor() {
+    this._anchor = null;
+  }
+
   // given an anchor and cursor, figures out the right blocks to be deleting
   // returns a parent, minindex, and maxindex
   public async getVisualLineSelections(): Promise<[Path, number, number]> {
+    const anchor = this.anchor;
+    const cursor = this.cursor;
     const [common, ancestors1, ancestors2] =
-      await this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
+      await this.document.getCommonAncestor(cursor.path, anchor.path);
     if (ancestors1.length === 0) {
       if (common.parent == null) {
         throw new Error('Invalid state: cursor was at root?');
       }
       // anchor is underneath cursor
       const parent = common.parent;
-      const index = await this.document.indexInParent(this.cursor.path);
+      const index = await this.document.indexInParent(cursor.path);
       return [parent, index, index];
     } else if (ancestors2.length === 0) {
       if (common.parent == null) {
@@ -1322,11 +1352,11 @@ export default class Session extends EventEmitter {
       }
       // cursor is underneath anchor
       const parent = common.parent;
-      const index = await this.document.indexInParent(this.anchor.path);
+      const index = await this.document.indexInParent(anchor.path);
       return [parent, index, index];
     } else {
-      let index1 = await this.document.indexInParent(ancestors1[0] || this.cursor.path);
-      let index2 = await this.document.indexInParent(ancestors2[0] || this.anchor.path);
+      let index1 = await this.document.indexInParent(ancestors1[0] || cursor.path);
+      let index2 = await this.document.indexInParent(ancestors2[0] || anchor.path);
       if (index2 < index1) {
         [index1, index2] = [index2, index1];
       }

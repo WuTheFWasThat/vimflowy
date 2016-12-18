@@ -27,7 +27,7 @@ import * as errors from './errors';
 import Session from './session';
 import Cursor from './cursor';
 import { AttachedChildInfo } from './document';
-import { Row, Col, Char, SerializedLine, SerializedPath, Line } from './types';
+import { Row, Col, Char, Chars, SerializedBlock, SerializedPath, Line } from './types';
 import Path from './path';
 
 // validate inserting id as a child of parent_id
@@ -157,7 +157,7 @@ export class ChangeChars extends Mutation {
   private row: Row;
   private col: Col;
   private nchars: number;
-  private transform?: (chars: Array<Char>) => Array<Char>;
+  private transform?: (chars: Chars) => Chars;
   private newChars?: Array<Char>;
   private deletedChars: Array<Char>;
   public ncharsDeleted: number;
@@ -350,9 +350,9 @@ export class DetachBlocks extends Mutation {
 
     const children = await session.document._getChildren(this.parent);
 
-    // note: next is a path, relative to the parent
+    // a path, relative to the parent
+    let next: Array<Row>;
 
-    let next;
     if (this.index < children.length) {
       next = [children[this.index]];
     } else {
@@ -384,7 +384,7 @@ export class DetachBlocks extends Mutation {
     return mutations;
   }
 
-  public async remutate(session) {
+  public async remutate(session: Session) {
     for (let i = 0; i < this.deleted.length; i++) {
       const row = this.deleted[i];
       await session.document._detach(row, this.parent);
@@ -414,12 +414,12 @@ export class DetachBlocks extends Mutation {
 // creates new blocks (as opposed to attaching ones that already exist)
 export class AddBlocks extends Mutation {
   private parent: Path;
-  private serialized_rows: Array<SerializedLine>;
+  private serialized_rows: Array<SerializedBlock>;
   private index: number;
   private nrows: number;
   public added_rows: Array<Path>;
 
-  constructor(parent: Path, index: number, serialized_rows: Array<SerializedLine>) {
+  constructor(parent: Path, index: number, serialized_rows: Array<SerializedBlock>) {
     super();
     this.parent = parent;
     this.serialized_rows = serialized_rows;

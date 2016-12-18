@@ -208,7 +208,14 @@ export default class Cursor extends EventEmitter {
   public async visibleHome() {
     let path;
     if (this.session.viewRoot.isRoot()) {
-      path = await this.session.nextVisible(this.session.viewRoot);
+      const firstChild = await this.session.nextVisible(this.session.viewRoot);
+      if (firstChild == null) {
+        throw new Error('No next visible for root?');
+      }
+      if (firstChild.parent == null) {
+        throw new Error('Next visible of root was root?');
+      }
+      path = firstChild;
     } else {
       path = this.session.viewRoot;
     }
