@@ -20,6 +20,13 @@ type RowInfo = {
   readonly pluginData: any;
 };
 
+export type AttachedChildInfo = {
+  parent_row: Row,
+  parent_index: number,
+  row: Row,
+  child_index: number,
+};
+
 /*
  * Immutable representation of what we know about a row,
  * including all descendants (recursively) by reference.
@@ -212,7 +219,7 @@ export default class Document extends EventEmitter {
   }
 
 
-  public async _newChild(parent: Row, index = -1) {
+  public async _newChild(parent: Row, index = -1): Promise<AttachedChildInfo> {
     const row = await this.store.getNew();
     const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
     // necessary only for speed reasons
@@ -221,12 +228,12 @@ export default class Document extends EventEmitter {
       childRows: [], parentRows: [], // parent will get added
       pluginData: pluginData,
     });
-    await Promise.all([
+    const [ info ] = await Promise.all([
       this._attach(row, parent, index),
       // purely to populate the cache
       this.store.setDetachedParent(row, null),
     ]);
-    return row;
+    return info;
   }
 
   private async getInfo(row: Row): Promise<CachedRowInfo> {
@@ -375,12 +382,8 @@ export default class Document extends EventEmitter {
     return await this.store.setChildren(row, children);
   }
 
-  public async _childIndex(parent, child) {
-    const children = await this._getChildren(parent);
-    return _.findIndex(children, row => row === child);
-  }
 
-  private async _getParents(row: Row) {
+  private async _getParents(row: Row): Promise<Array<Row>> {
     const info = await this.getInfo(row);
     return info.parentRows;
   }
@@ -537,14 +540,13 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  private async _addChild(parent_row: Row, row: Row, index) {
+  private async _addChild(parent_row: Row, row: Row, index): Promise<AttachedChildInfo> {
     const children = await this._getChildren(parent_row);
     errors.assert(index <= children.length);
     if (index === -1) {
-      children.push(row);
-    } else {
-      children.splice(index, 0, row);
+      index = children.length;
     }
+    children.splice(index, 0, row);
     await this._setChildren(parent_row, children);
 
     const parents = await this._getParents(row);
@@ -572,7 +574,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  public async _attach(child_row: Row, parent_row: Row, index = -1) {
+  public async _attach(child_row: Row, parent_row: Row, index = -1): Promise<AttachedChildInfo> {
     const isFirst = (await this._getParents(child_row)).length === 0;
     await this.emitAsync('beforeAttach', { row: child_row, parent_row, first: isFirst});
     const info = await this._addChild(parent_row, child_row, index);
@@ -681,7 +683,7 @@ export default class Document extends EventEmitter {
   }
 
   public async newChild(path: Path, index = -1) {
-    const row = await this._newChild(path.row, index);
+    const { row } = await this._newChild(path.row, index);
     return path.child(row);
   }
 

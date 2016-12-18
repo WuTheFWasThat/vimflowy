@@ -26,6 +26,7 @@ import * as _ from 'lodash';
 import * as errors from './errors';
 import Session from './session';
 import Cursor from './cursor';
+import { AttachedChildInfo } from './document';
 import { Row, Col, Char, SerializedLine, SerializedPath, Line } from './types';
 import Path from './path';
 
@@ -309,8 +310,7 @@ export class DetachBlocks extends Mutation {
   private nrows: number;
   public deleted: Array<Row>;
   private next: SerializedPath;
-  private created: Row | null;
-  private created_index: number;
+  private created_info: AttachedChildInfo | null;
   private options: DetachBlocksOptions;
 
   constructor(parent: Row, index: number, nrows: number = 1, options: DetachBlocksOptions = {}) {
@@ -334,10 +334,10 @@ export class DetachBlocks extends Mutation {
       await session.document._detach(row, this.parent);
     }
 
-    this.created = null;
+    this.created_info = null;
     if (this.options.addNew) {
-      this.created = await session.document._newChild(this.parent, this.index);
-      this.created_index = await session.document._childIndex(this.parent, this.created);
+      const info = await session.document._newChild(this.parent, this.index);
+      this.created_info = info;
     }
 
     const children = await session.document._getChildren(this.parent);
@@ -352,9 +352,9 @@ export class DetachBlocks extends Mutation {
         next = [];
         if (this.parent === session.document.root.row) {
           if (!this.options.noNew) {
-            this.created = await session.document._newChild(this.parent);
-            this.created_index = await session.document._childIndex(this.parent, this.created);
-            next = [this.created];
+            const info = await session.document._newChild(this.parent);
+            this.created_info = info;
+            next = [info.row];
           }
         }
       } else {
@@ -369,8 +369,8 @@ export class DetachBlocks extends Mutation {
 
   public async rewind() {
     const mutations: Array<Mutation> = [];
-    if (this.created !== null) {
-      mutations.push(new DetachBlocks(this.parent, this.created_index, 1, {noNew: true}));
+    if (this.created_info !== null) {
+      mutations.push(new DetachBlocks(this.parent, this.created_info.child_index, 1, {noNew: true}));
     }
     mutations.push(new AttachBlocks(this.parent, this.deleted, this.index));
     return mutations;
@@ -381,8 +381,8 @@ export class DetachBlocks extends Mutation {
       const row = this.deleted[i];
       await session.document._detach(row, this.parent);
     }
-    if (this.created !== null) {
-      await session.document._attach(this.created, this.parent, this.created_index);
+    if (this.created_info !== null) {
+      await session.document._attach(this.created_info.row, this.parent, this.created_info.child_index);
     }
   }
 
