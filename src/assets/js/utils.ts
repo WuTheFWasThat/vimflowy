@@ -72,7 +72,7 @@ export function scrollDiv($elem: any, amount: number) {
   return $elem.scrollTop($elem.scrollTop() + amount);
 }
 
-export function isScrolledIntoView(elem: Element, container: Element) {
+export function isScrolledIntoView(elem: any, container: any) {
   const $elem = $(elem);
   const $container = $(container);
 

@@ -198,7 +198,7 @@ export default class Session extends EventEmitter {
     }
 
     // Step 2: convert a list of (int, string, annotation?) into a forest format
-    const parseAllChildren = function(parentIndentation, lineNumber) {
+    const parseAllChildren = function(parentIndentation: number, lineNumber: number) {
       const children: Array<any> = [];
       if (lineNumber < lines.length && lines[lineNumber].annotation) {
         // Each node can have an annotation immediately follow it
@@ -229,7 +229,7 @@ export default class Session extends EventEmitter {
     return root;
   }
 
-  private parseContent(content, mimetype) {
+  private parseContent(content: string, mimetype: string) {
     if (mimetype === 'application/json') {
       return this.parseJson(content);
     } else if (mimetype === 'text/plain' || mimetype === 'Text') {
@@ -240,7 +240,7 @@ export default class Session extends EventEmitter {
   }
 
   // TODO: make this use replace_empty = true?
-  public async importContent(content, mimetype) {
+  public async importContent(content: string, mimetype: string) {
     const root = this.parseContent(content, mimetype);
     if (!root) { return false; }
     const { path } = this.cursor;
@@ -254,7 +254,7 @@ export default class Session extends EventEmitter {
     return true;
   }
 
-  public async exportContent(mimetype) {
+  public async exportContent(mimetype: string) {
     const jsonContent = await this.document.serialize();
     if (mimetype === 'application/json') {
       return JSON.stringify(jsonContent, undefined, 2);
@@ -479,6 +479,9 @@ export default class Session extends EventEmitter {
   }
 
   public async prevVisible(path: Path) {
+    if (path.parent == null) {
+      return null;
+    }
     if (path.is(this.viewRoot)) {
       return null;
     }
@@ -486,15 +489,14 @@ export default class Session extends EventEmitter {
     if (prevsib !== null) {
       return await this.lastVisible(prevsib);
     }
-    const { parent } = path;
-    if (parent.is(this.viewRoot)) {
-      if (parent.is(this.document.root)) {
+    if (path.parent.is(this.viewRoot)) {
+      if (path.parent.is(this.document.root)) {
         return null;
       } else {
         return this.viewRoot;
       }
     }
-    return parent;
+    return path.parent;
   }
 
   // finds oldest ancestor that is visible *besides viewRoot*
@@ -502,12 +504,12 @@ export default class Session extends EventEmitter {
   public async oldestVisibleAncestor(path: Path) {
     let last = path;
     while (true) {
+      if (last.parent == null) {
+        return null;
+      }
       const cur = last.parent;
       if (cur.is(this.viewRoot)) {
         return last;
-      }
-      if (cur.isRoot()) {
-        return null;
       }
       last = cur;
     }
@@ -522,7 +524,7 @@ export default class Session extends EventEmitter {
       if (cur.is(this.viewRoot)) {
         return answer;
       }
-      if (cur.isRoot()) {
+      if (cur.parent == null) {
         return null;
       }
       if (await this.document.collapsed(cur.row)) {
@@ -661,9 +663,8 @@ export default class Session extends EventEmitter {
   }
 
   public async zoomOut() {
-    if (this.viewRoot.row !== this.document.root.row) {
-      const { parent } = this.viewRoot;
-      return await this.zoomInto(parent);
+    if (this.viewRoot.parent != null) {
+      return await this.zoomInto(this.viewRoot.parent);
     }
   }
 
@@ -909,6 +910,9 @@ export default class Session extends EventEmitter {
       await this.addBlocks(this.cursor.path, 0, [''], options);
     } else {
       const parent = this.cursor.path.parent;
+      if (parent == null) {
+        throw new Error('Cursor was at viewroot?');
+      }
       const index = await this.document.indexInParent(this.cursor.path);
       await this.addBlocks(parent, index + 1, [''], options);
     }
@@ -919,6 +923,9 @@ export default class Session extends EventEmitter {
       return;
     }
     const parent = this.cursor.path.parent;
+    if (parent == null) {
+      throw new Error('Cursor was at viewroot?');
+    }
     const index = await this.document.indexInParent(this.cursor.path);
     await this.addBlocks(parent, index, [''], {setCursor: 'first'});
   }
@@ -950,6 +957,12 @@ export default class Session extends EventEmitter {
   // - first is previous sibling of second, AND has no children
   // - second is first child of first, AND has no children
   private async _joinRows(first: Path, second: Path, options: {delimiter?: string} = {}) {
+    if (first.parent == null) {
+      throw new Error('Tried to join first as root?');
+    }
+    if (second.parent == null) {
+      throw new Error('Tried to join first as root?');
+    }
     let addDelimiter: string | null = null;
     const firstLine = await this.document.getLine(first.row);
     const secondLine = await this.document.getLine(second.row);
@@ -1033,6 +1046,9 @@ export default class Session extends EventEmitter {
   }
 
   private async delBlock(path: Path, options: DelBlockOptions) {
+    if (path.parent == null) {
+      throw new Error('Cannot delete root');
+    }
     return await this.delBlocks(path.parent.row, await this.document.indexInParent(path), 1, options);
   }
 
@@ -1053,6 +1069,9 @@ export default class Session extends EventEmitter {
 
   public async delBlocksAtCursor(nrows: number, options = {}) {
     const parent = this.cursor.path.parent;
+    if (parent == null) {
+      throw new Error('Cursor was at root?');
+    }
     const index = await this.document.indexInParent(this.cursor.path);
     return await this.delBlocks(parent.row, index, nrows, options);
   }
@@ -1136,14 +1155,17 @@ export default class Session extends EventEmitter {
   }
 
   public async unindentBlocks(path: Path, numblocks = 1) {
-    if (path.is(this.viewRoot)) {
+    if (path.row === this.viewRoot.row) {
       this.showMessage('Cannot unindent view root', {text_class: 'error'});
-      return;
+      return null;
+    }
+    if (path.parent == null) {
+      throw new Error('Tried to unindent root?');
     }
     const parent = path.parent;
-    if (parent.row === this.viewRoot.row) {
+    if (parent.parent == null) {
       this.showMessage('Cannot unindent past root', {text_class: 'error'});
-      return null;
+      return;
     }
 
     const siblings = await this.document.getSiblingRange(path, 0, numblocks - 1);
@@ -1191,6 +1213,12 @@ export default class Session extends EventEmitter {
       this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
     }
+
+    const parent = path.parent;
+    if (parent == null) {
+      throw new Error('Path was at root and yet not viewRoot?');
+    }
+
     if (await this.document.collapsed(path.row)) {
       return await this.unindentBlocks(path);
     }
@@ -1200,7 +1228,6 @@ export default class Session extends EventEmitter {
       return;
     }
 
-    const parent = path.parent;
     const p_i = await this.document.indexInParent(path);
 
     const newparent = await this.unindentBlocks(path);
@@ -1220,6 +1247,9 @@ export default class Session extends EventEmitter {
     if (next === null) {
       return;
     }
+    if (next.parent == null) {
+      throw new Error('Next visible should never return root');
+    }
 
     if ((await this.document.hasChildren(next.row)) && (!await this.document.collapsed(next.row))) {
       // make it the first child
@@ -1236,6 +1266,9 @@ export default class Session extends EventEmitter {
     const prev = await this.prevVisible(path);
     if (prev === null) {
       return;
+    }
+    if (prev.parent == null) {
+      throw new Error('Prev visible should never return root');
     }
 
     // make it the previous sibling
@@ -1276,11 +1309,17 @@ export default class Session extends EventEmitter {
     const [common, ancestors1, ancestors2] =
       await this.document.getCommonAncestor(this.cursor.path, this.anchor.path);
     if (ancestors1.length === 0) {
+      if (common.parent == null) {
+        throw new Error('Invalid state: cursor was at root?');
+      }
       // anchor is underneath cursor
       const parent = common.parent;
       const index = await this.document.indexInParent(this.cursor.path);
       return [parent, index, index];
     } else if (ancestors2.length === 0) {
+      if (common.parent == null) {
+        throw new Error('Invalid state: anchor was at root?');
+      }
       // cursor is underneath anchor
       const parent = common.parent;
       const index = await this.document.indexInParent(this.anchor.path);

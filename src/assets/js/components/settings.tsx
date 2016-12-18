@@ -116,6 +116,10 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 }}
                 onLoad={async (filename, contents) => {
                   const mimetype = utils.mimetypeLookup(filename);
+                  if (!mimetype) {
+                    session.showMessage('Invalid filetype!', { time: 0 });
+                    return;
+                  }
                   session.showMessage('Importing contents...', { time: 0 });
                   if (await session.importContent(contents, mimetype)) {
                     session.showMessage('Imported!', {text_class: 'success'});

@@ -416,14 +416,17 @@ export default class Cursor extends EventEmitter {
   }
 
   public async parent(cursorOptions: CursorOptions = {}) {
-    const path = this.path.parent;
-    if (path.row === this.document.root.row) {
+    const newpath = this.path.parent;
+    if (newpath == null) {
+      throw new Error('Cursor was at root');
+    }
+    if (newpath.parent == null) {
       return;
     }
     if (this.path.is(this.session.viewRoot)) {
-      await this.session.changeViewRoot(path);
+      await this.session.changeViewRoot(newpath);
     }
-    return await this.setPath(path, cursorOptions);
+    return await this.setPath(newpath, cursorOptions);
   }
 
   public async prevSibling(cursorOptions: CursorOptions = {}) {
