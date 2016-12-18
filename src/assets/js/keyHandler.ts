@@ -189,7 +189,7 @@ export default class KeyHandler extends EventEmitter {
     const mode_obj = Modes.getMode(mode);
 
     const bindings = this.keyBindings.bindings[this.session.mode];
-    let key = await keyStream.dequeue();
+    let key: Key | null = await keyStream.dequeue();
     let context: ActionContext = {
       mode,
       session: this.session,

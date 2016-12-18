@@ -26,7 +26,7 @@ export default class Register {
   private type: RegisterTypes;
   private saved: RegisterValue;
 
-  constructor(session) {
+  constructor(session: Session) {
     this.session = session;
     this.saveNone();
     return this;
