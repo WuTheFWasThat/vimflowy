@@ -296,8 +296,6 @@ export const registerPlugin = function<T>(
   plugin_metadata.version = plugin_metadata.version || 1;
   plugin_metadata.author = plugin_metadata.author || 'anonymous';
 
-  errors.assert(enable, `Plugin ${plugin_metadata.name} needs to register with a callback`);
-
   // Create the plugin object
   // Plugin stores all data about a plugin, including metadata
   // plugin.value contains the actual resolved value

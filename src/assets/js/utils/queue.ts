@@ -33,7 +33,7 @@ export default class Queue<T> {
     return this.nextProm;
   }
 
-  public enqueue(val) {
+  public enqueue(val: T) {
     if (this.resolveNext != null) {
       this.resolveNext(val);
       this.nextProm = null;

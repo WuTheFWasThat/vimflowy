@@ -37,8 +37,8 @@ export class Logger {
     this.setLevel(level);
     this.setStream(stream);
 
-    const register_loglevel = (name, value) => {
-      return this[name.toLowerCase()] = function() {
+    const register_loglevel = (name: string, value: number) => {
+      return (this as any)[name.toLowerCase()] = function() {
         if (this.level <= value) {
           return this.log.apply(this, arguments);
         }
@@ -46,7 +46,7 @@ export class Logger {
     };
 
     LEVELS.forEach((name) => {
-      const value = LEVEL[name];
+      const value: LEVEL = (LEVEL as any)[name];
       register_loglevel(name, value);
     });
   }
@@ -62,7 +62,7 @@ export class Logger {
     }
   }
 
-  public setLevel(level) {
+  public setLevel(level: LEVEL) {
     this.level = level;
   }
 
@@ -70,7 +70,7 @@ export class Logger {
     this.level = Infinity;
   }
 
-  public setStream(stream) {
+  public setStream(stream: STREAM) {
     this.stream = stream;
     if (this.stream === STREAM.QUEUE) {
       this.queue = [];

@@ -185,12 +185,15 @@ export class ChangeChars extends Mutation {
       this.newChars = this.transform(this.deletedChars);
       errors.assert(this.newChars.length === this.ncharsDeleted);
     }
+    if (!this.newChars) {
+      throw new Error('Changechars should receive either transform or newChars');
+    }
     await session.document.writeChars(this.row, this.col, this.newChars);
   }
 
   public async rewind() {
     if (this.newChars == null) {
-      throw new Error('No new chars?');
+      throw new Error('No new chars after mutation?');
     }
     return [
       new ChangeChars(this.row, this.col, this.newChars.length, undefined, this.deletedChars),
@@ -198,6 +201,9 @@ export class ChangeChars extends Mutation {
   }
 
   public async remutate(session: Session) {
+    if (this.newChars == null) {
+      throw new Error('No new chars after mutation?');
+    }
     await session.document.deleteChars(this.row, this.col, this.ncharsDeleted);
     await session.document.writeChars(this.row, this.col, this.newChars);
   }
