@@ -7,7 +7,7 @@ import EventEmitter from './eventEmitter';
 import Path from './path';
 import DataStore from './datastore';
 import {
-  Row, Col, Line,
+  Row, Col, Char, Line,
   SerializedLine, SerializedBlock, TextProperties, SerializedLineProperties,
 } from './types';
 
@@ -146,7 +146,7 @@ class DocumentCache {
     this.bubbleUpdate(row);
   }
 
-  private update(row: Row, updateFn: (CachedRowInfo) => CachedRowInfo, force?: boolean) {
+  private update(row: Row, updateFn: (info: CachedRowInfo) => CachedRowInfo, force?: boolean) {
     const cachedRow = this.get(row);
     if (!cachedRow) {
       if (force) {
@@ -209,7 +209,7 @@ export default class Document extends EventEmitter {
   public name: string;
   public root: Path;
 
-  constructor(store, name = '') {
+  constructor(store: DataStore, name = '') {
     super();
     this.cache = new DocumentCache();
     this.store = store;
@@ -303,7 +303,7 @@ export default class Document extends EventEmitter {
     return charInfo && charInfo.char;
   }
 
-  public async setLine(row: Row, line) {
+  public async setLine(row: Row, line: Line) {
     this.cache.setLine(row, line);
     await this.store.setLine(row, line);
   }
@@ -332,10 +332,9 @@ export default class Document extends EventEmitter {
     return word;
   }
 
-  public async writeChars(row: Row, col: Col, chars) {
-    const args = [col, 0].concat(chars);
+  public async writeChars(row: Row, col: Col, chars: Array<Char>) {
     const line = (await this.getLine(row)).slice();
-    [].splice.apply(line, args);
+    line.splice(col, 0, ...chars);
     return await this.setLine(row, line);
   }
 
@@ -357,7 +356,7 @@ export default class Document extends EventEmitter {
     return utils.getSlice(info.childRows, min, max);
   }
 
-  private async _setChildren(row: Row, children) {
+  private async _setChildren(row: Row, children: Array<Row>) {
     this.cache.setChildRows(row, children);
     return await this.store.setChildren(row, children);
   }
@@ -368,12 +367,12 @@ export default class Document extends EventEmitter {
     return info.parentRows;
   }
 
-  private async _setParents(row: Row, parent_rows) {
+  private async _setParents(row: Row, parent_rows: Array<Row>) {
     this.cache.setParentRows(row, parent_rows);
     return await this.store.setParents(row, parent_rows);
   }
 
-  public async getChildren(parent_path): Promise<Array<Path>> {
+  public async getChildren(parent_path: Path): Promise<Array<Path>> {
     return (await this._getChildren(parent_path.row)).map(row => parent_path.child(row));
   }
 
@@ -381,14 +380,14 @@ export default class Document extends EventEmitter {
     return (await this._getChildren(row)).length > 0;
   }
 
-  public async getSiblings(path) {
+  public async getSiblings(path: Path) {
     if (path.isRoot()) {
       return [path];
     }
     return await this.getChildren(path.parent);
   }
 
-  public async nextClone(path) {
+  public async nextClone(path: Path) {
     const parents = await this._getParents(path.row);
     let i = parents.indexOf(path.parent.row);
     errors.assert(i > -1);
@@ -405,7 +404,7 @@ export default class Document extends EventEmitter {
     return new_parent_path.child(path.row);
   }
 
-  public async indexInParent(child) {
+  public async indexInParent(child: Path) {
     const children = await this.getSiblings(child);
     return _.findIndex(children, sib => sib.row === child.row);
   }
@@ -414,7 +413,7 @@ export default class Document extends EventEmitter {
     return (await this.getInfo(row)).collapsed;
   }
 
-  public async setCollapsed(row: Row, collapsed) {
+  public async setCollapsed(row: Row, collapsed: boolean) {
     this.cache.setCollapsed(row, collapsed);
     await this.store.setCollapsed(row, collapsed);
   }
@@ -424,7 +423,7 @@ export default class Document extends EventEmitter {
   }
 
   // last thing visible nested within row
-  public async walkToLastVisible(row: Row, pathsofar = []) {
+  public async walkToLastVisible(row: Row, pathsofar: Array<Row> = []): Promise<Array<Row>> {
     if (await this.collapsed(row)) {
       return pathsofar;
     }
@@ -438,7 +437,7 @@ export default class Document extends EventEmitter {
 
   // a node is cloned only if it has multiple parents.
   // note that this may return false even if it appears multiple times in the display (if its ancestor is cloned)
-  public async isClone(row) {
+  public async isClone(row: Row) {
     const parents = await this._getParents(row);
     if (parents.length < 2) { // for efficiency reasons
       return false;
@@ -450,7 +449,7 @@ export default class Document extends EventEmitter {
 
   // Figure out which is the canonical one. Right now this is really 'arbitraryInstance'
   // NOTE: this is not very efficient, in the worst case, but probably doesn't matter
-  public async canonicalPath(row: Row) { // Given an row, return a path with that row
+  public async canonicalPath(row: Row): Promise<Path | null> {
     errors.assert(row !== null, 'Empty row passed to canonicalPath');
     if (row === Path.rootRow()) {
       return this.root;
@@ -469,14 +468,16 @@ export default class Document extends EventEmitter {
   // Return all ancestor rows, topologically sorted (root is *last*).
   // Excludes 'row' itself unless options.inclusive is specified
   // NOTE: includes possibly detached nodes
-  public async allAncestors(row: Row, options) {
-    options = Object.assign({inclusive: false}, options);
-    const visited = {};
+  public async allAncestors(
+    row: Row,
+    { inclusive = false }: { inclusive?: boolean } = { }
+  ) {
+    const visited: {[row: number]: boolean} = {};
     const ancestors: Array<Row> = []; // 'visited' with preserved insert order
-    if (options.inclusive) {
+    if (inclusive) {
       ancestors.push(row);
     }
-    const visit = async (n) => { // DFS
+    const visit = async (n: Row) => { // DFS
       visited[n] = true;
       const parents = await this._getParents(n);
       for (let i = 0; i < parents.length; i++) {
@@ -520,7 +521,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  private async _addChild(parent_row: Row, row: Row, index): Promise<AttachedChildInfo> {
+  private async _addChild(parent_row: Row, row: Row, index: number): Promise<AttachedChildInfo> {
     const children = await this._getChildren(parent_row);
     errors.assert(index <= children.length);
     if (index === -1) {
@@ -590,18 +591,18 @@ export default class Document extends EventEmitter {
 
   // attaches a detached child to a parent
   // the child should not have a parent already
-  public async attachChild(parent: Path, child, index = -1) {
-    return await this.attachChildren(parent, [child], index)[0];
+  public async attachChild(parent: Path, child: Path, index = -1): Promise<Path> {
+    return (await this.attachChildren(parent, [child], index))[0];
   }
 
-  public async attachChildren(parent: Path, new_children, index = -1) {
+  public async attachChildren(parent: Path, new_children: Array<Path>, index = -1): Promise<Array<Path>> {
     await this._attachChildren(parent.row, new_children.map(x => x.row), index);
     // for child in new_children
     //   child.setParent parent
     return new_children;
   }
 
-  public async _attachChildren(parent: Row, new_children, index = -1) {
+  public async _attachChildren(parent: Row, new_children: Array<Row>, index = -1) {
     for (let i = 0; i < new_children.length; i++) {
       const child = new_children[i];
       await this._attach(child, parent, index);
@@ -630,7 +631,7 @@ export default class Document extends EventEmitter {
 
   // returns whether an row is actually reachable from the root node
   // if something is not detached, it will have a parent, but the parent wont mention it as a child
-  public async isAttached(row) {
+  public async isAttached(row: Row) {
     return (await this.allAncestors(row, {inclusive: true})).indexOf(this.root.row) !== -1;
   }
 
@@ -642,7 +643,7 @@ export default class Document extends EventEmitter {
     return await this.getSiblingOffset(path, 1);
   }
 
-  public async getSiblingOffset(path: Path, offset) {
+  public async getSiblingOffset(path: Path, offset: number) {
     const arr = await this.getSiblingRange(path, offset, offset);
     if (!arr.length) {
       return null;
@@ -650,7 +651,7 @@ export default class Document extends EventEmitter {
     return arr[0];
   }
 
-  public async getSiblingRange(path: Path, min_offset, max_offset) {
+  public async getSiblingRange(path: Path, min_offset: number, max_offset: number) {
     const [ index, siblings ] = await Promise.all([
       this.indexInParent(path),
       this.getSiblings(path),
@@ -675,8 +676,8 @@ export default class Document extends EventEmitter {
     return path.child(row);
   }
 
-  private async allLinesIter(yieldCb) {
-    const visited_rows = {};
+  private async allLinesIter(yieldCb: (path: Path) => Promise<boolean>): Promise<void> {
+    const visited_rows: {[row: number]: boolean} = {};
     let done = false;
 
     const helper = async (path: Path) => {
@@ -712,11 +713,11 @@ export default class Document extends EventEmitter {
       return results;
     }
 
-    const canonicalize = x => case_sensitive ? x : x.toLowerCase();
+    const canonicalize = (x: string) => case_sensitive ? x : x.toLowerCase();
     const query_words =
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
-    await this.allLinesIter(async (path) => {
+    await this.allLinesIter(async (path: Path) => {
 
       const text = await this.getText(path.row);
       const line = canonicalize(text);
@@ -772,10 +773,10 @@ export default class Document extends EventEmitter {
   public async serialize(
     row = this.root.row,
     options: {pretty?: boolean} = {},
-    serialized = {}
+    serialized: {[row: number]: SerializedBlock} = {}
   ): Promise<SerializedBlock> {
     if (row in serialized) {
-      const struct = serialized[row];
+      const struct: any = serialized[row];
       struct.id = row;
       return { clone: row };
     }
@@ -811,8 +812,9 @@ export default class Document extends EventEmitter {
   }
 
   public async loadTo(
-    serialized, parent_path = this.root, index = -1,
-    id_mapping = {}, replace_empty = false
+    // TODO: serialized is a SerializedBlock
+    serialized: any, parent_path = this.root, index = -1,
+    id_mapping: {[key: number]: Row} = {}, replace_empty = false
   ) {
     if (serialized.clone) {
       // NOTE: this assumes we load in the same order we serialize
@@ -869,7 +871,7 @@ export default class Document extends EventEmitter {
     return path;
   }
 
-  public async load(serialized_rows) {
+  public async load(serialized_rows: Array<SerializedBlock>) {
     const id_mapping = {};
     for (let i = 0; i < serialized_rows.length; i++) {
       const serialized_row = serialized_rows[i];

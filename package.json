@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@types/immutable": "^3.8.4",
-    "@types/jquery": "^2.0.32",
+    "@types/jquery": "^2.0.34",
     "@types/lodash": "^4.14.36",
     "@types/react": "^0.14.36",
     "@types/react-dom": "^0.14.18",

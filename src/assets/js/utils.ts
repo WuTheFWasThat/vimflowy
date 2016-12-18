@@ -32,8 +32,8 @@ export async function asyncFilter<T>(
   return _.sortBy(result, (x) => x.i).map((x) => x.el);
 }
 
-// TODO: is quite silly to consider undefined as whitespace
-export function isWhitespace(chr) {
+// TODO: is quite silly to consider undefined as whitespace...
+export function isWhitespace(chr: string | undefined) {
   return (chr === ' ') || (chr === '\n') || (chr === undefined);
 }
 
@@ -43,19 +43,19 @@ export function plainChar(chr: string): Char {
 }
 
 // NOTE: currently unused
-export function isPunctuation(chr) {
+export function isPunctuation(chr: string) {
   return chr === '.' || chr === ',' || chr === '!' || chr === '?';
 }
 
 const urlRegex = /^https?:\/\/([^\s]+\.[^\s]+$|localhost)/;
-export function isLink(word) {
+export function isLink(word: string) {
   return urlRegex.test(word);
 }
 
-export function mimetypeLookup(filename) {
+export function mimetypeLookup(filename: string): string | undefined {
   const parts = filename.split('.');
   const extension = parts.length > 1 ? parts[parts.length - 1] : '';
-  const extensionLookup = {
+  const extensionLookup: {[key: string]: string} = {
     'json': 'application/json',
     'txt': 'text/plain',
     '': 'text/plain',
@@ -63,7 +63,8 @@ export function mimetypeLookup(filename) {
   return extensionLookup[extension.toLowerCase()];
 }
 
-export function scrollDiv($elem, amount) {
+// TODO: get jquery typing to work?
+export function scrollDiv($elem: any, amount: number) {
   // # animate.  seems to not actually be great though
   // $elem.stop().animate({
   //     scrollTop: $elem[0].scrollTop + amount
@@ -71,7 +72,7 @@ export function scrollDiv($elem, amount) {
   return $elem.scrollTop($elem.scrollTop() + amount);
 }
 
-export function isScrolledIntoView(elem, container) {
+export function isScrolledIntoView(elem: Element, container: Element) {
   const $elem = $(elem);
   const $container = $(container);
 
@@ -84,7 +85,7 @@ export function isScrolledIntoView(elem, container) {
   return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
 
-export function getParameterByName(name) {
+export function getParameterByName(name: string) {
   name = name.replace(/[\[\]]/g, '\\$&');
   const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
   const results = regex.exec(window.location.href);

@@ -36,9 +36,14 @@ type JumpLogEntry = {
 };
 
 type DelCharsOptions = {
-  yank?: boolean
+  yank?: boolean,
 };
 
+type DelBlockOptions = {
+  noSave?: boolean,
+  addNew?: boolean,
+  noNew?: boolean,
+};
 /*
 a Session represents a session with a vimflowy document
 It holds a Cursor, a Document object, and a Settings object
@@ -285,6 +290,9 @@ export default class Session extends EventEmitter {
                    `${this.document.name}.${type}` ;
     // Infer mimetype from file extension
     const mimetype = utils.mimetypeLookup(filename);
+    if (!mimetype) {
+      throw new Error('Invalid export type');
+    }
     const content = await this.exportContent(mimetype);
     this.downloadFile(filename, mimetype, content);
     this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
@@ -836,7 +844,7 @@ export default class Session extends EventEmitter {
     });
   }
 
-  public async toggleRowsProperty(property: TextProperty, rows) {
+  public async toggleRowsProperty(property: TextProperty, rows: Array<Row>) {
     const all_were_true = _.every(
       await Promise.all(
         rows.map(async (row) => {
@@ -865,7 +873,7 @@ export default class Session extends EventEmitter {
     );
   }
 
-  public async toggleRowPropertyBetween(property: TextProperty, cursor1, cursor2, options: {includeEnd?: boolean}) {
+  public async toggleRowPropertyBetween(property: TextProperty, cursor1: Cursor, cursor2: Cursor, options: {includeEnd?: boolean}) {
     if (!(cursor2.path.is(cursor1.path))) {
       logger.warn('Not yet implemented');
       return;
@@ -941,7 +949,7 @@ export default class Session extends EventEmitter {
   // can only join if either:
   // - first is previous sibling of second, AND has no children
   // - second is first child of first, AND has no children
-  private async _joinRows(first, second, options: {delimiter?: string} = {}) {
+  private async _joinRows(first: Path, second: Path, options: {delimiter?: string} = {}) {
     let addDelimiter: string | null = null;
     const firstLine = await this.document.getLine(first.row);
     const secondLine = await this.document.getLine(second.row);
@@ -957,7 +965,7 @@ export default class Session extends EventEmitter {
 
     if (!await this.document.hasChildren(second.row)) {
       await this.cursor.setPosition(first, -1);
-      await this.delBlock(second, {noNew: true, noSave: true});
+      await this.delBlock(second, { noNew: true, noSave: true });
       if (addDelimiter != null) {
         const mutation = new mutations.AddChars(
           first.row, firstLine.length, [utils.plainChar(addDelimiter)]);
@@ -1024,13 +1032,13 @@ export default class Session extends EventEmitter {
     return false;
   }
 
-  private async delBlock(path, options) {
+  private async delBlock(path: Path, options: DelBlockOptions) {
     return await this.delBlocks(path.parent.row, await this.document.indexInParent(path), 1, options);
   }
 
   public async delBlocks(
     parent: Row, index: number, nrows: number,
-    options: {noSave?: boolean, addNew?: boolean} = {}
+    options: DelBlockOptions = {}
   ) {
     const mutation = new mutations.DetachBlocks(parent, index, nrows, options);
     await this.do(mutation);
@@ -1084,7 +1092,7 @@ export default class Session extends EventEmitter {
   }
 
   public async attachBlocks(
-    parent, ids, index = -1, options: {setCursor?: string} = {}
+    parent: Path, ids: Array<Row>, index = -1, options: {setCursor?: string} = {}
   ) {
     const mutation = new mutations.AttachBlocks(parent.row, ids, index);
     const will_work = await mutation.validate(this);
@@ -1112,7 +1120,7 @@ export default class Session extends EventEmitter {
     const newparent = await this.document.getSiblingBefore(path);
     if (newparent === null) {
       this.showMessage('Cannot indent without higher sibling', {text_class: 'error'});
-      return null; // cannot indent
+      return null;
     }
 
     if (await this.document.collapsed(newparent.row)) {
@@ -1151,7 +1159,7 @@ export default class Session extends EventEmitter {
     return newparent;
   }
 
-  public async indent(path = this.cursor.path) {
+  public async indent(path: Path = this.cursor.path) {
     if (path.is(this.viewRoot)) {
       this.showMessage('Cannot indent view root', {text_class: 'error'});
       return;
@@ -1161,6 +1169,10 @@ export default class Session extends EventEmitter {
     }
 
     const sib = await this.document.getSiblingBefore(path);
+    if (sib == null) {
+      this.showMessage('Cannot indent without higher sibling', {text_class: 'error'});
+      return;
+    }
 
     const newparent = await this.indentBlocks(path);
     if (newparent === null) {
@@ -1174,7 +1186,7 @@ export default class Session extends EventEmitter {
     }
   }
 
-  public async unindent(path = this.cursor.path) {
+  public async unindent(path: Path = this.cursor.path) {
     if (path.is(this.viewRoot)) {
       this.showMessage('Cannot unindent view root', {text_class: 'error'});
       return;
@@ -1203,7 +1215,7 @@ export default class Session extends EventEmitter {
     }
   }
 
-  public async swapDown(path = this.cursor.path) {
+  public async swapDown(path: Path = this.cursor.path) {
     const next = await this.nextVisible(await this.lastVisible(path));
     if (next === null) {
       return;
