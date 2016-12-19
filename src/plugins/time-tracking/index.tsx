@@ -245,7 +245,7 @@ class TimeTrackingPlugin {
     let time = Date.now();
     if (this.currentPath != null) { // if (from != null) doesn't typecheck :(
       await this.modifyTimeForRow(this.currentPath.row, time - this.currentPath.time);
-      await this.api.updatedDataForRender(from);
+      await this.api.updatedDataForRender(from as Row);
     }
     if (to !== null) {
       this.currentPath = { row: to, time };

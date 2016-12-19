@@ -21,6 +21,10 @@ import { motionKey } from '../../assets/js/keyDefinitions';
 // TODO: do this elsewhere
 declare const process: any;
 
+type Mark = string;
+type MarksToRows = {[key: string]: Row};
+type RowsToMarks = {[key: number]: Mark};
+
 const markStyle = {
   padding: '0px 10px',
   marginRight: 10,
@@ -45,7 +49,7 @@ export class MarksPlugin {
     session: Session,
     path: Path,
   } | null;
-  public SetMark: new(row: Row, mark: string) => Mutation;
+  public SetMark: new(row: Row, mark: Mark) => Mutation;
   public UnsetMark: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
 
@@ -64,9 +68,9 @@ export class MarksPlugin {
 
     class SetMark extends Mutation {
       private row: Row;
-      private mark: string;
+      private mark: Mark;
 
-      constructor(row, mark) {
+      constructor(row: Row, mark: Mark) {
         super();
         this.row = row;
         this.mark = mark;
@@ -88,9 +92,9 @@ export class MarksPlugin {
 
     class UnsetMark extends Mutation {
       private row: Row;
-      private mark: string;
+      private mark: Mark;
 
-      constructor(row) {
+      constructor(row: Row) {
         super();
         this.row = row;
       }
@@ -242,9 +246,9 @@ export class MarksPlugin {
         const marks = await that.listMarks();
         session.menu = new Menu(async (text) => {
           // find marks that start with the prefix
-          const findMarks = async (_document, prefix, nresults = 10) => {
+          const findMarks = async (_document: Document, prefix: string, nresults = 10) => {
             const results: Array<{
-              path: Path, mark: string,
+              path: Path, mark: Mark,
             }> = []; // list of paths
             for (const mark in marks) {
               const path = marks[mark];
@@ -264,7 +268,7 @@ export class MarksPlugin {
                 const line = await session.document.getLine(path.row);
                 return {
                   contents: line,
-                  renderHook(lineDiv) {
+                  renderHook(lineDiv: React.ReactNode) {
                     return (
                       <span>
                         <span key={`mark_${mark}`} style={markStyle}
@@ -422,16 +426,16 @@ export class MarksPlugin {
   // maintain global marks data structures
   //   a map: row -> mark
   //   and a second map: mark -> row
-  private async _getRowsToMarks() {
+  private async _getRowsToMarks(): Promise<RowsToMarks> {
     return await this.api.getData('ids_to_marks', {});
   }
-  private async _setRowsToMarks(rows_to_marks) {
+  private async _setRowsToMarks(rows_to_marks: RowsToMarks) {
     return await this.api.setData('ids_to_marks', rows_to_marks);
   }
-  private async _getMarksToRows() {
+  private async _getMarksToRows(): Promise<MarksToRows> {
     return await this.api.getData('marks_to_ids', {});
   }
-  private async _setMarksToRows(mark_to_rows) {
+  private async _setMarksToRows(mark_to_rows: MarksToRows) {
     return await this.api.setData('marks_to_ids', mark_to_rows);
   }
 
@@ -446,7 +450,7 @@ export class MarksPlugin {
       this._getMarksToRows(),
       this._getRowsToMarks(),
     ]);
-    const marks_to_rows2 = {};
+    const marks_to_rows2: MarksToRows = {};
     for (const row in rows_to_marks) {
       const mark = rows_to_marks[row];
       marks_to_rows2[mark] = parseInt(row, 10);
@@ -455,12 +459,12 @@ export class MarksPlugin {
   }
 
   // get mark for an row, '' if it doesn't exist
-  private async _getMark(row) {
+  private async _getMark(row: Row) {
     const marks = await this._getRowsToMarks();
     return marks[row] || '';
   }
 
-  private async _setMark(row, mark) {
+  private async _setMark(row: Row, mark: Mark) {
     await this._sanityCheckMarks();
     const marks_to_rows = await this._getMarksToRows();
     const rows_to_marks = await this._getRowsToMarks();
@@ -474,7 +478,7 @@ export class MarksPlugin {
     this.computeMarksToPaths();
   }
 
-  private async _unsetMark(row, mark) {
+  private async _unsetMark(row: Row, mark: Mark) {
     await this._sanityCheckMarks();
     const marks_to_rows = await this._getMarksToRows();
     const rows_to_marks = await this._getRowsToMarks();
@@ -517,7 +521,7 @@ export class MarksPlugin {
 
   // Set the mark for row
   // Returns whether setting mark succeeded
-  private async updateMark(row, mark = '') {
+  private async updateMark(row: Row, mark: Mark = '') {
     const marks_to_rows = await this._getMarksToRows();
     const rows_to_marks = await this._getRowsToMarks();
     const oldmark = rows_to_marks[row];
