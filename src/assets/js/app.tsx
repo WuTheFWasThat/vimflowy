@@ -188,7 +188,7 @@ async function create_session(dataSource, settings, doc, to_load) {
     getVisiblePaths: async () => {
       const paths: Array<Path> = [];
       $.makeArray($('.bullet')).forEach((bullet) => {
-        if (!utils.isScrolledIntoView(bullet, getMainDiv())) {
+        if (!utils.isScrolledIntoView($(bullet), getMainDiv())) {
           return;
         }
         if ($(bullet).hasClass('fa-clone')) {
@@ -387,10 +387,10 @@ $(document).ready(async () => {
 
   if (noLocalStorage) {
     alert('You need local storage support for data to be persisted!');
-    settings = new Settings(docname, new DataStore.InMemory());
+    settings = new Settings(new DataStore.InMemory());
     dataSource = 'inmemory';
   } else {
-    settings = new Settings(docname, new DataStore.LocalStorageLazy());
+    settings = new Settings(new DataStore.LocalStorageLazy(docname));
     dataSource = await settings.getDocSetting('dataSource');
   }
 

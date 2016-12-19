@@ -61,11 +61,13 @@ const decodeParents = (parents: number | Array<number>): Array<number> => {
 
 export default class DataStore {
   protected prefix: string;
+  private docname: string;
   private lastId: number | null;
   private cache: {[key: string]: any};
 
-  constructor(prefix = '') {
-    this.prefix = `${prefix}save`;
+  constructor(docname = '') {
+    this.docname = docname;
+    this.prefix = `${docname}save`;
     this.lastId = null;
     this.cache = {};
   }
@@ -96,6 +98,11 @@ export default class DataStore {
   // no prefix, meaning it's global
   private _settingKey_(setting: string): string {
     return `settings:${setting}`;
+  }
+
+  // not using regular prefix, for backwards compatibility
+  private _docSettingKey_(setting: string): string {
+    return `settings:${this.docname}:${setting}`;
   }
 
   private _lastViewrootKey_(): string {
@@ -218,6 +225,15 @@ export default class DataStore {
   public async setSetting(setting: string, value: any): Promise<void> {
     return await this._set(this._settingKey_(setting), value);
   }
+  // get document specific settings
+  public async getDocSetting(
+    setting: string, default_value: any = undefined
+  ): Promise<any> {
+    return await this._get(this._docSettingKey_(setting), default_value);
+  }
+  public async setDocSetting(setting: string, value: any): Promise<void> {
+    return await this._set(this._docSettingKey_(setting), value);
+  }
 
   // get last view (for page reload)
   public async setLastViewRoot(ancestry: SerializedPath): Promise<void> {
@@ -287,8 +303,8 @@ export class LocalStorageLazy extends DataStore {
     return `${this.prefix}:lastSave`;
   }
 
-  constructor(prefix = '', trackSaves = false) {
-    super(prefix);
+  constructor(docname = '', trackSaves = false) {
+    super(docname);
     this.trackSaves = trackSaves;
     if (this.trackSaves) {
       this.lastSave = Date.now();
@@ -343,8 +359,8 @@ export class FirebaseStore extends DataStore {
   private numPendingSaves: number;
   public events: EventEmitter;
 
-  constructor(prefix = '', dbName: string, apiKey: string) {
-    super(prefix);
+  constructor(docname = '', dbName: string, apiKey: string) {
+    super(docname);
     this.fbase = firebase.initializeApp({
       apiKey: apiKey,
       databaseURL: `https://${dbName}.firebaseio.com`,
