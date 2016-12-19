@@ -10,6 +10,7 @@ import { Col } from '../types';
 import Path from '../path';
 import logger from '../logger';
 import { CursorsInfoTree } from '../cursor';
+import { promiseDebounce } from '../utils';
 
 // TODO: move mode-specific logic into mode render functions
 
@@ -32,7 +33,7 @@ export default class SessionComponent extends React.Component<Props, State> {
   private onBulletClick: (path: Path) => Promise<void>;
   private onCrumbClick: (path: Path) => Promise<void>;
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       loaded: false,
@@ -82,29 +83,6 @@ export default class SessionComponent extends React.Component<Props, State> {
     // make true to output time taken to get render contents
     this.profileRender = true;
 
-    function promiseDebounce(fn) {
-      let running = false;
-      let pending = false;
-      const run = () => {
-        running = true;
-        fn.apply(fn, arguments).then(() => {
-          if (pending) {
-            pending = false;
-            run();
-          } else {
-            running = false;
-          }
-        });
-      };
-      return () => {
-        if (!running) {
-          run();
-        } else {
-          pending = true;
-        }
-      };
-    }
-
     this.update = promiseDebounce(async () => {
       const session = this.props.session;
       let t;
@@ -138,7 +116,7 @@ export default class SessionComponent extends React.Component<Props, State> {
         }
       }
 
-      const crumbContents = {};
+      const crumbContents: {[row: number]: string} = {};
       let path = session.viewRoot;
       while (path.parent != null) {
         path = path.parent;

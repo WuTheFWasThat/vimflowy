@@ -6,7 +6,7 @@
     "types": [],
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true

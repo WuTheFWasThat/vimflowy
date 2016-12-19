@@ -6,10 +6,13 @@ Uses a datastore key which is agnostic to which document is being viewed
 
 import DataStore, { DataSource } from './datastore';
 
+// TODO: an enum for themes
+
 type SettingsType = {
   theme: string;
   showKeyBindings: boolean;
   hotkeys: any; // TODO
+  enabledPlugins: Array<string>,
 };
 
 type SettingType = keyof SettingsType;
@@ -18,6 +21,7 @@ const default_settings: SettingsType = {
   theme: 'default-theme',
   showKeyBindings: true,
   hotkeys: {},
+  enabledPlugins: ['Marks'],
 };
 
 type DocSettingsType = {

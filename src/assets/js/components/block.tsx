@@ -7,6 +7,7 @@ import Session from '../session';
 import { CachedRowInfo } from '../document';
 import Path from '../path';
 import { CursorsInfoTree } from '../cursor';
+// import { Col } from '../types';
 
 type RowProps = {
   session: Session;
@@ -22,26 +23,34 @@ class RowComponent extends React.Component<RowProps, {}> {
   private onClick: (() => void) | undefined;
   private onCharClick: ((column: number, e: Event) => void) | null;
 
-  constructor(props) {
+  constructor(props: RowProps) {
     super(props);
     this.init(props);
   }
 
-  private init(props) {
+  private init(props: RowProps) {
     this.onClick = undefined;
     if (props.onClick) {
-      this.onClick = () => props.onClick(props.path);
+      this.onClick = () => {
+        if (!props.onClick) {
+          throw new Error('onClick disappeared');
+        }
+        props.onClick(props.path);
+      };
     }
 
     this.onCharClick = null;
     if (props.onCharClick) {
       this.onCharClick = (column: number, e: Event) => {
+        if (!props.onCharClick) {
+          throw new Error('onCharClick disappeared');
+        }
         props.onCharClick(props.path, column, e);
       };
     }
   }
 
-  public componentWillReceiveProps(props) {
+  public componentWillReceiveProps(props: RowProps) {
     this.init(props);
   }
 
@@ -51,16 +60,18 @@ class RowComponent extends React.Component<RowProps, {}> {
     const lineData = this.props.cached.line;
     const cursorsTree = this.props.cursorsTree;
 
-    const cursors = {};
-    const highlights = {};
+    const cursors: {[col: number]: boolean} = {};
+    const highlights: {[col: number]: boolean} = {};
 
     if (cursorsTree.cursor != null) {
       cursors[cursorsTree.cursor] = true;
     }
-    Object.keys(cursorsTree.selected).forEach((col) => {
+    // TODO: Object.keys alternative that returns Array<number>?
+    (Object.keys(cursorsTree.selected)).forEach((col: any) => {
       highlights[col] = true;
     });
-    const results = [];
+    // TODO: React.ReactNode vs React.ReactElement<any>?
+    const results: Array<React.ReactNode> = [];
 
     let lineoptions: LineProps = {
       lineData,
@@ -83,7 +94,7 @@ class RowComponent extends React.Component<RowProps, {}> {
       />,
     ];
     lineContents = session.applyHook('renderLineContents', lineContents, hooksInfo);
-    [].push.apply(results, lineContents);
+    results.push(...lineContents);
 
     const infoChildren = session.applyHook('renderAfterLine', [], hooksInfo);
 
@@ -114,11 +125,11 @@ type BlockProps = {
 };
 export default class BlockComponent extends React.Component<BlockProps, {}> {
 
-  constructor(props) {
+  constructor(props: BlockProps) {
     super(props);
   }
 
-  public shouldComponentUpdate(nextProps) {
+  public shouldComponentUpdate(nextProps: BlockProps) {
     if (this.props.cursorsTree.hasSelection) {
       return true;
     }

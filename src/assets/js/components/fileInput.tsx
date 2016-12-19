@@ -8,7 +8,7 @@ type Props = {
   style?: React.CSSProperties;
 };
 
-export const load_file = function(file) {
+export const load_file = function(file: File) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsText(file, 'UTF-8');
@@ -28,13 +28,14 @@ export const load_file = function(file) {
 export default class FileInput extends React.Component<Props, {}> {
   private id: string;
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.id = `fileinput.${Math.random()}`;
   }
 
-  private handleChange(e) {
-    const file = e.target.files[0];
+  private handleChange(e: React.FormEvent<HTMLInputElement>) {
+    // TODO: what is the right type here?
+    const file = (e.target as any).files[0];
     if (!file) { return; } // do nothing, they canceled
 
     if (this.props.onSelect) {
