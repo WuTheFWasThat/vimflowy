@@ -6,42 +6,59 @@ Uses a datastore key which is agnostic to which document is being viewed
 
 import DataStore, { DataSource } from './datastore';
 
-const default_settings = {
+type SettingsType = {
+  theme: string;
+  showKeyBindings: boolean;
+  hotkeys: any; // TODO
+};
+
+type SettingType = keyof SettingsType;
+
+const default_settings: SettingsType = {
   theme: 'default-theme',
   showKeyBindings: true,
   hotkeys: {},
-  dataSource: ('local' as DataSource),
+};
+
+type DocSettingsType = {
+  dataSource: DataSource;
+  firebaseId: string | null;
+  firebaseApiKey: string | null;
+  firebaseUserEmail: string | null;
+  firebaseUserPassword: string | null;
+};
+
+type DocSettingType = keyof DocSettingsType;
+
+const default_doc_settings: DocSettingsType = {
+  dataSource: 'local',
+  firebaseId: null,
+  firebaseApiKey: null,
+  firebaseUserEmail: null,
+  firebaseUserPassword: null,
 };
 
 export default class Settings {
   private datastore: DataStore;
-  private docname: string;
 
-  constructor(docname, datastore) {
-    this.docname = docname;
+  constructor(datastore: DataStore) {
     this.datastore = datastore;
   }
 
-  public async getSetting(setting) {
+  public async getSetting<S extends SettingType>(setting: S): Promise<SettingsType[S]> {
     return await this.datastore.getSetting(setting, default_settings[setting]);
   }
 
-  public async setSetting(setting, value) {
+  public async setSetting<S extends SettingType>(setting: S, value: SettingsType[S]): Promise<void> {
     return await this.datastore.setSetting(setting, value);
   }
 
-  public async getDocSetting(setting) {
-    const defaultValue = default_settings[setting];
-    if (this.docname !== '') {
-      setting = `${this.docname}:${setting}`;
-    }
-    return await this.datastore.getSetting(setting, defaultValue);
+  public async getDocSetting<S extends DocSettingType>(setting: S): Promise<DocSettingsType[S]> {
+    const defaultValue = default_doc_settings[setting];
+    return await this.datastore.getDocSetting(setting, defaultValue);
   }
 
-  public async setDocSetting(setting, value) {
-    if (this.docname !== '') {
-      setting = `${this.docname}:${setting}`;
-    }
-    return await this.datastore.setSetting(setting, value);
+  public async setDocSetting<S extends DocSettingType>(setting: S, value: DocSettingsType[S]): Promise<void> {
+    return await this.datastore.setDocSetting(setting, value);
   }
 }
