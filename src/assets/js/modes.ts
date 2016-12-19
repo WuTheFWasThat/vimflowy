@@ -6,7 +6,7 @@ import * as utils from './utils';
 
 import { ModeId, Key } from './types';
 
-type ModeMetadata = {
+export type ModeMetadata = {
   name: string;
   description?: string;
   cursorBetween: boolean;

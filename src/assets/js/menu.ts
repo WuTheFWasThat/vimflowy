@@ -24,9 +24,10 @@ export type MenuResult = {
 };
 
 type Query = string;
+type SearchFn = (query: Query) => Promise<Array<MenuResult>>;
 
 export default class Menu {
-  private searchFn: (query: Query) => Promise<Array<MenuResult>>;
+  private searchFn: SearchFn;
   public results: Array<MenuResult>;
   public selection: number;
 
@@ -34,7 +35,7 @@ export default class Menu {
 
   private lastQuery: Query;
 
-  constructor(searchFn) {
+  constructor(searchFn: SearchFn) {
     this.searchFn = searchFn;
 
     const doc = new Document(new DataStore.InMemory());

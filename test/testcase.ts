@@ -11,7 +11,7 @@ import '../src/assets/js/definitions';
 import makeDefaultBindings from '../src/assets/js/keyBindings';
 import KeyHandler from '../src/assets/js/keyHandler';
 import logger, * as Logger from '../src/assets/js/logger';
-import { PluginsManager, STATUSES } from '../src/assets/js/plugins';
+import { PluginsManager, PluginStatus } from '../src/assets/js/plugins';
 import Cursor from '../src/assets/js/cursor';
 import Path from '../src/assets/js/path';
 import { SerializedBlock, Row, Col, Key } from '../src/assets/js/types';
@@ -91,7 +91,7 @@ class TestCase {
         if (this.plugins) {
           for (let i = 0; i < this.plugins.length; i++) {
             const pluginName = this.plugins[i];
-            if (this.pluginManager.getStatus(pluginName) === STATUSES.ENABLED) {
+            if (this.pluginManager.getStatus(pluginName) === PluginStatus.ENABLED) {
               await this.pluginManager.disable(pluginName);
             }
           }

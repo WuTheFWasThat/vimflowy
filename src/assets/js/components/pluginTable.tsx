@@ -1,9 +1,9 @@
 import React from 'react';
 
-import * as Plugins from '../plugins';
+import { PluginsManager, PluginStatus, names as PluginNames, getPlugin } from '../plugins';
 
 type Props = {
-  pluginManager: Plugins.PluginsManager;
+  pluginManager: PluginsManager;
 };
 export default class PluginsTableComponent extends React.Component<Props, {}> {
   public render() {
@@ -34,18 +34,18 @@ export default class PluginsTableComponent extends React.Component<Props, {}> {
         </thead>
         <tbody>
           {
-            Plugins.names().map(
+            PluginNames().map(
               name => {
                 const status = pluginManager.getStatus(name);
                 const actions: Array<React.ReactNode> = [];
                 let btnClick;
                 let btnText;
-                if (status === Plugins.STATUSES.ENABLED) {
+                if (status === PluginStatus.ENABLED) {
                   btnClick = async () => {
                     return await pluginManager.disable(name);
                   };
                   btnText = 'Disable';
-                } else if (status === Plugins.STATUSES.DISABLED) {
+                } else if (status === PluginStatus.DISABLED) {
                   btnClick = async () => {
                     return await pluginManager.enable(name);
                   };
@@ -61,30 +61,30 @@ export default class PluginsTableComponent extends React.Component<Props, {}> {
                 }
 
                 let color = 'inherit';
-                if (status === Plugins.STATUSES.ENABLED) {
+                if (status === PluginStatus.ENABLED) {
                   color = 'green';
-                } else if (status === Plugins.STATUSES.ENABLING ||
-                           status === Plugins.STATUSES.DISABLING) {
+                } else if (status === PluginStatus.ENABLING ||
+                           status === PluginStatus.DISABLING) {
                   color = 'yellow';
-                } else if (status === Plugins.STATUSES.UNREGISTERED ||
-                           status === Plugins.STATUSES.DISABLED) {
+                } else if (status === PluginStatus.UNREGISTERED ||
+                           status === PluginStatus.DISABLED) {
                   color = 'red';
                 }
 
                 let statusText;
-                if (status === Plugins.STATUSES.ENABLED) {
+                if (status === PluginStatus.ENABLED) {
                   statusText = 'Enabled';
-                } else if (status === Plugins.STATUSES.ENABLING) {
+                } else if (status === PluginStatus.ENABLING) {
                   statusText = 'Enabling';
-                } else if (status === Plugins.STATUSES.DISABLED) {
+                } else if (status === PluginStatus.DISABLED) {
                   statusText = 'Disabled';
-                } else if (status === Plugins.STATUSES.DISABLING) {
+                } else if (status === PluginStatus.DISABLING) {
                   statusText = 'Disabling';
-                } else if (status === Plugins.STATUSES.UNREGISTERED) {
+                } else if (status === PluginStatus.UNREGISTERED) {
                   statusText = 'Unregistered';
                 }
 
-                const plugin = Plugins.getPlugin(name) || {};
+                const plugin = getPlugin(name) || {};
                 const tdStyle = { padding: 5};
                 return (
                   <tr key={name} className='theme-bg-secondary'>
