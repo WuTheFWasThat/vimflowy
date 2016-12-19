@@ -15,7 +15,7 @@ type State = {
   firebaseUserPassword: string,
 };
 export default class DataStoreSettingsComponent extends React.Component<Props, State> {
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       dataSource: props.initialDataSource,
@@ -59,31 +59,31 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
     window.location.reload();
   }
 
-  private setDataSource(dataSource) {
+  private setDataSource(dataSource: DataSource) {
     this.setState({
       dataSource,
     } as State);
   }
 
-  private setFirebaseId(firebaseId) {
+  private setFirebaseId(firebaseId: string) {
     this.setState({
       firebaseId,
     } as State);
   }
 
-  private setFirebaseApiKey(firebaseApiKey) {
+  private setFirebaseApiKey(firebaseApiKey: string) {
     this.setState({
       firebaseApiKey,
     } as State);
   }
 
-  private setFirebaseUserEmail(firebaseUserEmail) {
+  private setFirebaseUserEmail(firebaseUserEmail: string) {
     this.setState({
       firebaseUserEmail,
     } as State);
   }
 
-  private setFirebaseUserPassword(firebaseUserPassword) {
+  private setFirebaseUserPassword(firebaseUserPassword: string) {
     this.setState({
       firebaseUserPassword,
     } as State);
@@ -260,7 +260,7 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
                     <td style={{padding: 10}}>
                       <input type='radio' name='dataSource'
                         value={dataSourceInfo.value} checked={selected} readOnly
-                        onClick={(ev) => this.setDataSource((ev.target as HTMLInputElement).value)}
+                        onClick={(ev) => this.setDataSource((ev.target as HTMLInputElement).value as DataSource)}
                       />
                     </td>
                     <td style={{padding: 10}}>

@@ -33,7 +33,7 @@ export type LineProps = {
 
 export default class LineComponent extends React.Component<LineProps, {}> {
 
-  constructor(props) {
+  constructor(props: LineProps) {
     super(props);
   }
 

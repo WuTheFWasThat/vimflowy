@@ -268,7 +268,7 @@ export class MarksPlugin {
                 const line = await session.document.getLine(path.row);
                 return {
                   contents: line,
-                  renderHook(lineDiv: React.ReactNode) {
+                  renderHook(lineDiv: React.ReactElement<any>) {
                     return (
                       <span>
                         <span key={`mark_${mark}`} style={markStyle}

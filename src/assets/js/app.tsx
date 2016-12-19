@@ -36,6 +36,7 @@ import Settings from './settings';
 import { PluginsManager } from './plugins';
 import Path from './path';
 import Session from './session';
+import { SerializedBlock } from './types';
 
 import keyDefinitions from './keyDefinitions';
 // load actual definitions
@@ -72,8 +73,8 @@ ReactDOM.render(
   appEl
 );
 
-
-function scrollIntoView(el, $within) {
+// TODO: jquery type?
+function scrollIntoView(el: Element, $within: any) {
   const elemTop = el.getBoundingClientRect().top;
   const elemBottom = el.getBoundingClientRect().bottom;
 
@@ -91,7 +92,7 @@ function scrollIntoView(el, $within) {
   }
 }
 
-function downloadFile(filename, mimetype, content) {
+function downloadFile(filename: string, mimetype: string, content: string) {
   const exportDiv = $('#export');
   exportDiv.attr('download', filename);
   exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
@@ -104,10 +105,12 @@ const getMessageDiv = () => $('#message');
 const getStatusDiv = () => $('#status');
 const getMainDiv = () => $('#view');
 
-async function create_session(dataSource, settings, doc, to_load) {
+async function create_session(
+  dataSource: DataStore.DataSource, settings: Settings, doc: Document, to_load: Array<SerializedBlock>
+) {
   let caughtErr: null | Error = null;
 
-  window.onerror = function(msg, url, line, _col, err) {
+  window.onerror = function(msg: string, url: string, line: number, _col: number, err: Error) {
     logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
     if (err) {
       logger.error('Error: ', msg, err, err.stack, JSON.stringify(err));
@@ -119,7 +122,7 @@ async function create_session(dataSource, settings, doc, to_load) {
     renderMain();
   };
 
-  const changeStyle = (theme) => {
+  const changeStyle = (theme: string) => {
     // $('body').removeClass().addClass(theme);
     $('body').attr('id', theme);
     settings.setSetting('theme', theme);
@@ -129,7 +132,7 @@ async function create_session(dataSource, settings, doc, to_load) {
   let showingKeyBindings = await settings.getSetting('showKeyBindings');
 
   // hotkeys and key bindings
-  const saved_mappings = await settings.getSetting('hotkeys', {});
+  const saved_mappings = await settings.getSetting('hotkeys');
   const mappings = KeyMappings.merge(defaultKeyMappings, new KeyMappings(saved_mappings));
   const keyBindings = new KeyBindings(keyDefinitions, mappings);
 
@@ -160,7 +163,7 @@ async function create_session(dataSource, settings, doc, to_load) {
     cursorPath: cursorPath,
     showMessage: (() => {
       let messageDivTimeout: null | number = null;
-      return (message, options: {time?: number, text_class?: string} = {}) => {
+      return (message: string, options: {time?: number, text_class?: string} = {}) => {
 
         const { time = 5000 } = options;
 
@@ -221,7 +224,7 @@ async function create_session(dataSource, settings, doc, to_load) {
   // load plugins
 
   const pluginManager = new PluginsManager(session);
-  let enabledPlugins = (await settings.getSetting('enabledPlugins')) || ['Marks'];
+  let enabledPlugins = await settings.getSetting('enabledPlugins');
   if (typeof enabledPlugins.slice === 'undefined') { // for backwards compatibility
     enabledPlugins = Object.keys(enabledPlugins);
   }
@@ -408,8 +411,14 @@ $(document).ready(async () => {
     ]);
 
     try {
+      if (!firebaseId) {
+        throw new Error('No firebase ID found');
+      }
+      if (!firebaseApiKey) {
+        throw new Error('No firebase API key found');
+      }
       datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
-      await datastore.init(firebaseUserEmail, firebaseUserPassword);
+      await datastore.init(firebaseUserEmail || '', firebaseUserPassword || '');
       datastore.events.on('saved', () => {
         getStatusDiv().html('Saved!').removeClass().addClass('text-success');
       });

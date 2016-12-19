@@ -37,7 +37,7 @@ type State = {
 export default class SettingsComponent extends React.Component<Props, State> {
   private keyBindingsUpdate: () => void;
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       currentTab: TABS.MAIN,

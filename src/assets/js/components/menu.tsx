@@ -15,7 +15,7 @@ type State = {
 };
 export default class MenuComponent extends React.Component<Props, State> {
   private updateFn: () => Promise<void>;
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       query: null,

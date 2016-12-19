@@ -32,6 +32,29 @@ export async function asyncFilter<T>(
   return _.sortBy(result, (x) => x.i).map((x) => x.el);
 }
 
+export function promiseDebounce(fn: (...args: Array<any>) => Promise<void>) {
+  let running = false;
+  let pending = false;
+  const run = (...args: Array<any>) => {
+    running = true;
+    fn(...args).then(() => {
+      if (pending) {
+        pending = false;
+        run(...args);
+      } else {
+        running = false;
+      }
+    });
+  };
+  return (...args: Array<any>) => {
+    if (!running) {
+      run(...args);
+    } else {
+      pending = true;
+    }
+  };
+};
+
 // TODO: is quite silly to consider undefined as whitespace...
 export function isWhitespace(chr: string | undefined) {
   return (chr === ' ') || (chr === '\n') || (chr === undefined);

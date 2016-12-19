@@ -32,7 +32,7 @@ type BreadcrumbsState = {
   loaded: boolean;
 };
 export default class BreadcrumbsComponent extends React.Component<BreadcrumbsProps, BreadcrumbsState> {
-  constructor(props) {
+  constructor(props: BreadcrumbsProps) {
     super(props);
     this.state = {
       loaded: false,
