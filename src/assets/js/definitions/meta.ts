@@ -1,4 +1,4 @@
-import keyDefinitions, { Action } from '../keyDefinitions';
+import keyDefinitions, { Action, SequenceAction } from '../keyDefinitions';
 
 keyDefinitions.registerAction(new Action(
   'export-file',
@@ -7,7 +7,7 @@ keyDefinitions.registerAction(new Action(
     await this.session.exportFile('json');
   },
   {
-    drop: true,
+    sequence: SequenceAction.DROP,
   },
 ));
 

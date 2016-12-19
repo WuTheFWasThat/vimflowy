@@ -39,7 +39,7 @@ let RECORDING: {
   macro: Macro,
   key: Key,
 } | null = null;
-const RECORDING_LISTENER = (key) => {
+const RECORDING_LISTENER = (key: Key) => {
   if (!RECORDING) {
     throw new Error('Recording listener on while there was no recording');
   }

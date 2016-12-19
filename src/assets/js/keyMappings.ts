@@ -13,12 +13,14 @@ export type HotkeyMapping = {
   [name: string]: Array<Array<Key>>
 };
 
+type HotkeyMappingPerMode = {[mode: string]: HotkeyMapping};
+
 // for each mode, keeps a set of hotkeys
 // simple wrapper class, no sanity checks
 export class KeyMappings extends EventEmitter {
-  public mappings: {[mode: string]: HotkeyMapping};
+  public mappings: HotkeyMappingPerMode;
 
-  public static merge(first, second) {
+  public static merge(first: KeyMappings, second: KeyMappings) {
     const getMerged = () => {
       const mappings = _.cloneDeep(first.mappings);
       Object.keys(second.mappings).forEach((mode) => {
@@ -33,12 +35,12 @@ export class KeyMappings extends EventEmitter {
     return merged;
   }
 
-  constructor(mappings) {
+  constructor(mappings: HotkeyMappingPerMode) {
     super();
     this.mappings = _.cloneDeep(mappings);
   }
 
-  public setMappings(mappings) {
+  public setMappings(mappings: HotkeyMappingPerMode) {
     this.mappings = mappings;
     this.emit('update');
   }

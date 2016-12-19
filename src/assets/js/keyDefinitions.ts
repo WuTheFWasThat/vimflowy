@@ -21,7 +21,7 @@ export class Motion {
   public name: MotionName;
   public description: string;
   public definition: MotionDefinition;
-  constructor(name, description, definition: MotionDefinition) {
+  constructor(name: MotionName, description: string, definition: MotionDefinition) {
     this.name = name;
     this.description = description;
     this.definition = definition;
@@ -59,7 +59,7 @@ export class Action {
   public description: string;
   public definition: ActionDefinition;
   public metadata: ActionMetadata;
-  constructor(name, description, definition: ActionDefinition, metadata?) {
+  constructor(name: MotionName, description: string, definition: ActionDefinition, metadata?: ActionMetadata) {
     this.name = name;
     this.description = description;
     this.definition = definition;
