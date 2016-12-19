@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 
 import logger from './logger';
 import EventEmitter from './eventEmitter';
+import { Key } from './types';
 
 /*
 KeyEmitter is an EventEmitter that emits keys
@@ -14,26 +15,27 @@ For more info, see its consumer, keyHandler.js, as well as keyBindings.js
 Note that one-character keys are treated specially, in that they are insertable in insert mode.
 */
 
+declare var window: any;
 // tslint:disable:no-string-literal
 // SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
-const isOpera = !!window['opera'] || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
-const isSafari = Object.prototype.toString.call(window['HTMLElement']).indexOf('Constructor') > 0; // Safari 3+
-const isChrome = !!window['chrome'] && !isOpera; // Chrome 1+
+const isOpera: boolean = !!window['opera'] || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
+const isSafari: boolean = Object.prototype.toString.call(window['HTMLElement']).indexOf('Constructor') > 0; // Safari 3+
+const isChrome: boolean = !!window['chrome'] && !isOpera; // Chrome 1+
 declare var InstallTrigger: any;
-const isFirefox = typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
+const isFirefox: boolean = typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
 // tslint:enable:no-string-literal
 
 if (!isChrome && !isFirefox && !isSafari) {
   alert('Unsupported browser!  Please use a recent Chrome, Firefox, or Safari');
 }
 
-function cancel(ev) {
+function cancel(ev: Event) {
   ev.stopPropagation();
   ev.preventDefault();
   return false;
 }
 
-const shiftMap = {
+const shiftMap: {[key: string]: Key} = {
   '`': '~',
   '1': '!',
   '2': '@',
@@ -57,7 +59,7 @@ const shiftMap = {
   '/': '?',
 };
 
-const ignoreMap = {
+const ignoreMap: {[keyCode: number]: string} = {
   16: 'shift alone',
   17: 'ctrl alone',
   18: 'alt alone',
@@ -65,7 +67,7 @@ const ignoreMap = {
   93: 'right command alone',
 };
 
-const keyCodeMap = {
+const keyCodeMap: {[keyCode: number]: Key} = {
   8: 'backspace',
   9: 'tab',
   13: 'enter',
@@ -117,7 +119,6 @@ for (let j = 1; j <= 26; j++) {
 if (isFirefox) {
   keyCodeMap[173] = '-';
 }
-
 
 export default class KeyEmitter extends EventEmitter {
   constructor() {

@@ -1,19 +1,20 @@
 import keyDefinitions, { Action, ActionContext } from '../keyDefinitions';
+import { TextProperty } from '../types';
 
-const toggle_row_property = (property) => {
-  return async function({ session }) {
+const toggle_row_property = (property: TextProperty) => {
+  return async function({ session }: ActionContext) {
     await session.toggleRowProperty(property);
   };
 };
 
-const toggle_property_at_cursor = (property) => {
-  return async function({ session }) {
+const toggle_property_at_cursor = (property: TextProperty) => {
+  return async function({ session }: ActionContext) {
     session.cursor.toggleProperty(property);
   };
 };
 
-const toggle_property_visual_line = property =>
-  async function({ session, visual_line }: ActionContext) {
+const toggle_property_visual_line = (property: TextProperty) => {
+  return async function({ session, visual_line }: ActionContext) {
     if (visual_line == null) {
       throw new Error('Visual_line mode arguments missing');
     }
@@ -24,15 +25,15 @@ const toggle_property_visual_line = property =>
     });
     await session.toggleRowsProperty(property, rows);
     await session.setMode('NORMAL');
-  }
-;
+  };
+};
 
-const toggle_property_visual = property =>
-  async function({ session }) {
+const toggle_property_visual = (property: TextProperty) => {
+  return async function({ session }: ActionContext) {
     await session.toggleRowPropertyBetween(property, session.cursor, session.anchor, {includeEnd: true});
     await session.setMode('NORMAL');
-  }
-;
+  };
+};
 
 keyDefinitions.registerAction(new Action(
   'toggle-row-bold',

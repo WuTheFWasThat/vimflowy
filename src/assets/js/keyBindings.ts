@@ -106,7 +106,7 @@ export class KeyBindingsTree {
 }
 
 function makeBindings(definitions: KeyDefinitions, mappings: KeyMappings) {
-  const allBindings = {};
+  const allBindings: {[mode: string]: KeyBindingsTree} = {};
   _.map(mappings.mappings, (mapping: HotkeyMapping, mode: string) => {
     const bindings = new KeyBindingsTree([], definitions);
     _.map(mapping, (keySequences: Array<Array<Key>>, command: string) => {

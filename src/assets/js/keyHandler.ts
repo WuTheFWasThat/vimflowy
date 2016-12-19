@@ -61,7 +61,7 @@ export class KeyStream extends EventEmitter {
     return val;
   }
 
-  public enqueue(val) {
+  public enqueue(val: Key) {
     this.queue.enqueue(val);
   }
 
@@ -98,7 +98,7 @@ export default class KeyHandler extends EventEmitter {
   public keyStream: KeyStream;
   private processQueue: Promise<any>;
 
-  constructor(session, keyBindings) {
+  constructor(session: Session, keyBindings: KeyBindings) {
     super();
     this.session = session;
 
@@ -109,7 +109,7 @@ export default class KeyHandler extends EventEmitter {
     this.processQueue = Promise.resolve();
   }
 
-  public async playRecording(recording) {
+  public async playRecording(recording: Array<Key>) {
     // the recording shouldn't save, (i.e. no @session.save)
     const oldSave = this.session.save;
     this.session.save = () => null;
@@ -120,7 +120,7 @@ export default class KeyHandler extends EventEmitter {
 
   // general handling
 
-  public queueKey(key) {
+  public queueKey(key: Key) {
     logger.info('Handling key:', key);
     const hadWaiting = this.keyStream.enqueue(key);
     if (!hadWaiting) {
@@ -128,7 +128,7 @@ export default class KeyHandler extends EventEmitter {
     }
   }
 
-  private async handleRecord(keyStream, record: ActionRecord) {
+  private async handleRecord(keyStream: KeyStream, record: ActionRecord) {
     const old_mode = this.session.mode;
     const mode_obj = Modes.getMode(old_mode);
     let { action, context, motion } = record;
@@ -155,7 +155,7 @@ export default class KeyHandler extends EventEmitter {
     await new_mode_obj.every(action.name, context, old_mode);
   }
 
-  private async _processKeys(keyStream) {
+  private async _processKeys(keyStream: KeyStream) {
     while (!keyStream.empty()) {
       const record = await this.getCommand(keyStream);
       if (record != null) {
@@ -168,7 +168,7 @@ export default class KeyHandler extends EventEmitter {
     }
   }
 
-  public chain(next) {
+  public chain(next: () => void | Promise<void>) {
     this.processQueue = this.processQueue.then(next);
     return this.processQueue;
   }

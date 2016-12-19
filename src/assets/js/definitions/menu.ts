@@ -10,7 +10,7 @@ keyDefinitions.registerAction(new Action(
       const results = await session.document.search(text);
       return Promise.all(
         results.map(async ({ path, matches }) => {
-          const highlights = {};
+          const highlights: {[column: number]: boolean} = {};
           matches.forEach((i) => {
             highlights[i] = true;
           });
