@@ -49,16 +49,17 @@ class TimeTrackingPlugin {
     this.currentPath = null;
     this.isLogging = false;
 
-    // Initial setup, fire and forget
-    (async () => {
-      await this.toggleLogging(
-        await this.api.getData('isLogging', true)
-      );
-    })();
-
-    // NOTE: all these are fire and forget
     this.api.cursor.on('rowChange', async (_oldPath: Path, newPath: Path) => {
       await this.onRowChange(newPath.row);
+    });
+
+    this.api.registerListener('document', 'childAdded', async ({ row }) => {
+      // for caching
+      await Promise.all([
+        this._setRowData(row, 'treeTotalTime', 0),
+        this._setRowData(row, 'rowTotalTime', 0),
+        this._setRowData(row, 'detachedTime', 0),
+      ]);
     });
 
     this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
@@ -191,9 +192,13 @@ class TimeTrackingPlugin {
     return await this.api.getData(key, default_value);
   }
 
-  private async setRowData(row: Row, keytype: string, value: any) {
+  private async _setRowData(row: Row, keytype: string, value: any) {
     let key = `${row}:${keytype}`;
     await this.api.setData(key, value);
+  }
+
+  private async setRowData(row: Row, keytype: string, value: any) {
+    await this._setRowData(row, keytype, value);
     await this.api.updatedDataForRender(row);
   }
 
@@ -206,7 +211,7 @@ class TimeTrackingPlugin {
     );
   }
 
-  private async toggleLogging(forceValue?: boolean) {
+  public async toggleLogging(forceValue?: boolean) {
     // toggle, by default
     let isLogging = !this.isLogging;
     if (forceValue != null) {
@@ -326,7 +331,12 @@ registerPlugin<TimeTrackingPlugin>(
     version: 3,
   },
   async (api) => {
-    return new TimeTrackingPlugin(api);
+    const timeTracking = new TimeTrackingPlugin(api);
+    // Initial setup
+    await timeTracking.toggleLogging(
+      await api.getData('isLogging', true)
+    );
+    return timeTracking;
   },
   (api => api.deregisterAll())
 );

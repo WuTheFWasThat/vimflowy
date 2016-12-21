@@ -221,18 +221,28 @@ export default class Document extends EventEmitter {
 
   public async _newChild(parent: Row, index = -1): Promise<AttachedChildInfo> {
     const row = await this.store.getNew();
-    const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
+
+    // NOTE: order is important for caching.
+    // - first emit async so plugins can prepare for what will happen
+    // - then load regular data (attach hooks can use cached plugin data)
+    // - lastly update plugin data (plugin data knows attached state)
+
+    await this.emitAsync('childAdded', { row, parent });
+
     // necessary only for speed reasons
     this.cache.loadRow(row, {
       line: [], collapsed: false,
       childRows: [], parentRows: [], // parent will get added
-      pluginData: pluginData,
+      pluginData: {},
     });
+
     const [ info ] = await Promise.all([
       this._attach(row, parent, index),
       // purely to populate the cache
       this.store.setDetachedParent(row, null),
     ]);
+
+    await this.updateCachedPluginData(row);
     return info;
   }
 
@@ -282,8 +292,12 @@ export default class Document extends EventEmitter {
   }
 
   public async updateCachedPluginData(row: Row) {
-    const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
-    this.cache.setPluginData(row, pluginData);
+    if (this.cache.isCached(row)) {
+      const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
+      this.cache.setPluginData(row, pluginData);
+    } else {
+      await this.getInfo(row);
+    }
   }
 
   public async getLine(row: Row) {
@@ -542,7 +556,6 @@ export default class Document extends EventEmitter {
       row,
       child_index: index,
     };
-    this.emit('childAdded', info);
     return info;
   }
 
@@ -858,8 +871,10 @@ export default class Document extends EventEmitter {
         });
       }
 
-      await this.setLine(path.row, line);
-      await this.setCollapsed(path.row, serialized.collapsed);
+      await Promise.all([
+        this.setLine(path.row, line),
+        this.setCollapsed(path.row, serialized.collapsed),
+      ]);
 
       if (serialized.children) {
         for (let i = 0; i < serialized.children.length; i++) {

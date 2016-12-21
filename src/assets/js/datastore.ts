@@ -159,6 +159,7 @@ export default class DataStore {
     this.cache[key] = value;
     const encodedValue = encode(value);
     logger.debug('setting to storage', key, encodedValue);
+    // NOTE: fire and forget
     this.set(key, JSON.stringify(encodedValue));
   }
 
