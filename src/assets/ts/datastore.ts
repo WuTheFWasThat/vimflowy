@@ -309,6 +309,7 @@ export class LocalStorageLazy extends DataStore {
   }
 
   protected async get(key: string): Promise<string | null> {
+    console.log('get key from localstorage', key);
     return this._getLocalStorage_(key);
   }
 
