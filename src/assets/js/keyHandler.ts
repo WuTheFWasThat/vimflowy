@@ -168,13 +168,13 @@ export default class KeyHandler extends EventEmitter {
     }
   }
 
-  public chain(next: () => void | Promise<void>) {
+  public queue(next: () => void | Promise<void>) {
     this.processQueue = this.processQueue.then(next);
     return this.processQueue;
   }
 
   public processKeys() {
-    this.chain(async () => {
+    this.queue(async () => {
       await this._processKeys(this.keyStream);
     }).catch((err) => {
       // expose any errors

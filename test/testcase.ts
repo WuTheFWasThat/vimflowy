@@ -75,7 +75,7 @@ class TestCase {
   protected _chain(next: () => void, waitKeyHandler = true) {
     this.prom = this.prom.then(async () => {
       if (waitKeyHandler) {
-        await this.keyhandler.chain(async () => {
+        await this.keyhandler.queue(async () => {
           await next();
         });
       } else {
@@ -86,7 +86,7 @@ class TestCase {
   }
 
   public done() {
-    this.keyhandler.chain(async() => {
+    this.keyhandler.queue(async() => {
       this.prom = this.prom.then(async () => {
         if (this.plugins) {
           for (let i = 0; i < this.plugins.length; i++) {

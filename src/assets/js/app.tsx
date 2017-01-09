@@ -352,18 +352,20 @@ async function create_session(
         }
         e.preventDefault();
         const text: string = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
-        // TODO: deal with this better when there are multiple lines
-        // maybe put in insert mode?
-        const lines = text.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          if (i !== 0) {
-            await session.newLineAtCursor();
+        await keyHandler.queue(async () => {
+          // TODO: deal with this better when there are multiple lines
+          // maybe put in insert mode?
+          const lines = text.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (i !== 0) {
+              await session.newLineAtCursor();
+            }
+            const chars = line.split('').map(utils.plainChar);
+            await session.addCharsAtCursor(chars);
           }
-          const chars = line.split('').map(utils.plainChar);
-          await session.addCharsAtCursor(chars);
-        }
-        session.save();
+          session.save();
+        });
         renderMain();
       });
     });
