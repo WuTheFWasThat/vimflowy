@@ -212,6 +212,7 @@ export default class SessionComponent extends React.Component<Props, State> {
             if (!viewRoot.isRoot()) {
               return [
                 <BreadcrumbsComponent key='crumbs'
+                  session={session}
                   viewRoot={viewRoot}
                   onCrumbClick={onCrumbClick}
                   crumbContents={crumbContents}

@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Path from '../path';
+import Session from '../session';
 
 type CrumbProps = {
   onClick: ((...args: any[]) => void) | undefined,
@@ -24,6 +25,7 @@ class CrumbComponent extends React.PureComponent<CrumbProps, {}> {
 }
 
 type BreadcrumbsProps = {
+  session: Session;
   viewRoot: Path;
   crumbContents: {[row: number]: string};
   onCrumbClick: ((...args: any[]) => void) | null;
@@ -40,6 +42,8 @@ export default class BreadcrumbsComponent extends React.Component<BreadcrumbsPro
   }
 
   public render() {
+    const session = this.props.session;
+
     const crumbNodes: Array<React.ReactNode> = [];
     let path = this.props.viewRoot;
     if (path.parent == null) {
@@ -47,11 +51,26 @@ export default class BreadcrumbsComponent extends React.Component<BreadcrumbsPro
     }
     path = path.parent;
     while (path.parent != null) {
+      const cachedRow = session.document.cache.get(path.row);
+      if (!cachedRow) {
+        throw new Error('Row wasnt cached despite being in crumbs');
+      }
+      const hooksInfo = {
+        path,
+        pluginData: cachedRow.pluginData,
+      };
+
       crumbNodes.push(
         <CrumbComponent key={path.row}
           onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
         >
-          {this.props.crumbContents[path.row]}
+        {
+          session.applyHook(
+            'renderLineContents',
+            [this.props.crumbContents[path.row]],
+            hooksInfo
+          )
+        }
         </CrumbComponent>
       );
       path = path.parent;
