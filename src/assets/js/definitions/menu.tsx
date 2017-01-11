@@ -1,3 +1,5 @@
+import React from 'react';
+
 import Menu from '../menu';
 import keyDefinitions, { Action } from '../keyDefinitions';
 
@@ -16,6 +18,27 @@ keyDefinitions.registerAction(new Action(
           });
           return {
             contents: await session.document.getLine(path.row),
+            renderHook(lineDiv: React.ReactElement<any>) {
+              const cachedRow = session.document.cache.get(path.row);
+              if (!cachedRow) {
+                throw new Error('Row wasnt cached despite search returning it');
+              }
+              const hooksInfo = {
+                path,
+                pluginData: cachedRow.pluginData,
+              };
+              return (
+                <span>
+                  {
+                    session.applyHook(
+                      'renderLineContents',
+                      [lineDiv],
+                      hooksInfo
+                    )
+                  }
+                </span>
+              );
+            },
             renderOptions: { highlights },
             fn: async () => {
               await session.zoomInto(path);
