@@ -279,5 +279,52 @@ describe('swapping blocks', function() {
     ]);
     await t.done();
   });
+
+  it('doesnt swap up past viewroot', async function() {
+    let t = new TestCase([
+      '0',
+      { text: '1', collapsed: true, children: [
+        '2',
+        '3',
+      ] },
+    ]);
+    t.sendKey('j');
+    t.sendKey('enter');
+    t.sendKey('j');
+    t.sendKey('ctrl+k');
+    t.expect([
+      '0',
+      { text: '1', collapsed: true, children: [
+        '2',
+        '3',
+      ] },
+    ]);
+    await t.done();
+  });
+
+  it('doesnt swap down past viewroot', async function() {
+    let t = new TestCase([
+      '0',
+      { text: '1', collapsed: true, children: [
+        '2',
+        '3',
+      ] },
+      '4',
+    ]);
+    t.sendKey('j');
+    t.sendKey('enter');
+    t.sendKey('j');
+    t.sendKey('j');
+    t.sendKey('ctrl+j');
+    t.expect([
+      '0',
+      { text: '1', collapsed: true, children: [
+        '2',
+        '3',
+      ] },
+      '4',
+    ]);
+    await t.done();
+  });
 });
 

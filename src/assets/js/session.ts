@@ -1280,11 +1280,14 @@ export default class Session extends EventEmitter {
     if (prev.parent == null) {
       throw new Error('Prev visible should never return root');
     }
+    if (prev.is(this.viewRoot)) {
+      return;
+    }
 
     // make it the previous sibling
     const parent = prev.parent;
     const p_i = await this.document.indexInParent(prev);
-    return await this.moveBlock(path, parent, p_i);
+    await this.moveBlock(path, parent, p_i);
   }
 
   public async toggleCurBlockCollapsed() {
