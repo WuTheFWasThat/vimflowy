@@ -261,6 +261,7 @@ export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'visual-line-delete': [['d'], ['x']],
   'visual-line-change': [['c']],
   'visual-line-yank': [['y']],
+  'visual-line-yank-clone': [['Y']],
   'visual-line-indent': [['>'], ['tab'], ['ctrl+l']],
   'visual-line-unindent': [['<'], ['shift+tab'], ['ctrl+h']],
   'visual-line-toggle-bold': [['ctrl+B']],

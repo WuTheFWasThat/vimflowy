@@ -352,7 +352,6 @@ keyDefinitions.registerAction(new Action(
   },
 ));
 
-// TODO: have a mapping for this and test it
 keyDefinitions.registerAction(new Action(
   'visual-line-yank-clone',
   'Yank blocks as a clone',

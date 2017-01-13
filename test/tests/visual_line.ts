@@ -371,4 +371,27 @@ describe('visual line mode', function() {
     ]);
     await t.done();
   });
+
+  it('yank clone works', async function() {
+    let t = new TestCase([
+      'yay',
+      'woo',
+      { text: 'yes', children: [
+        'hooray!',
+      ] },
+    ]);
+    t.sendKeys('Vj');
+    t.sendKeys('Y');
+    t.sendKeys('jp');
+    t.expect([
+      { text: 'yay', id: 1 },
+      { text: 'woo', id: 2 },
+      { text: 'yes', children: [
+        { clone: 1 },
+        { clone: 2 },
+        'hooray!',
+      ] },
+    ]);
+    await t.done();
+  });
 });
