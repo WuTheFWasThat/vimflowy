@@ -300,6 +300,7 @@ export class MarksPlugin {
         }
         await motion(that.markstate.session.cursor, {pastEnd: true});
       },
+      { acceptsMotion: true },
     );
 
     this.api.registerAction(

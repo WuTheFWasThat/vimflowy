@@ -63,6 +63,7 @@ keyDefinitions.registerAction(new Action(
     }
     await motion(session.menu.session.cursor, {pastEnd: true});
   },
+  { acceptsMotion: true },
 ));
 
 keyDefinitions.registerAction(new Action(

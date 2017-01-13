@@ -51,8 +51,9 @@ export type ActionContext = {
 };
 export type ActionDefinition = (context: ActionContext) => Promise<void>;
 export type ActionName = string;
-type ActionMetadata = {
+export type ActionMetadata = {
   sequence?: SequenceAction;
+  acceptsMotion?: boolean;
 };
 export class Action {
   public name: ActionName;

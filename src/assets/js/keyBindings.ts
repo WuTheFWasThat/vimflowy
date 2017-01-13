@@ -3,7 +3,9 @@ import * as _ from 'lodash';
 import * as errors from './errors';
 import logger from './logger';
 import EventEmitter from './eventEmitter';
-import mainDefinitions, { KeyDefinitions, Motion, Action } from './keyDefinitions';
+import mainDefinitions, {
+  KeyDefinitions, Motion, Action, motionKey
+} from './keyDefinitions';
 import defaultMappings, { HotkeyMapping, KeyMappings } from './keyMappings';
 import { Key } from './types';
 
@@ -61,6 +63,16 @@ export class KeyBindingsTree {
         `Multiple registrations for key sequence ${keys.slice(0, index + 1)}:
         ${name} and ${child.name}`
       );
+    }
+
+    if (key === motionKey) {
+      if (mapped instanceof Motion) {
+        throw new Error('Motions cannot accept motions in bindings');
+      } else {
+        if (!mapped.metadata.acceptsMotion) {
+          throw new Error(`Action ${mapped.name} does not accept motions`);
+        }
+      }
     }
 
     if (index === keys.length - 1) {

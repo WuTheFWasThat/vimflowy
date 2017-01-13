@@ -12,7 +12,7 @@ import { KeyBindings } from './keyBindings';
 import { Row, ModeId } from './types';
 import {
   KeyDefinitions, Action, Motion,
-  ActionDefinition, MotionDefinition,
+  ActionDefinition, MotionDefinition, ActionMetadata
 } from './keyDefinitions';
 
 type PluginMetadata = {
@@ -128,8 +128,8 @@ export class PluginApi {
     this.definitions.deregisterMotion(name);
   }
 
-  public registerAction(name: string, desc: string, def: ActionDefinition) {
-    const action = new Action(name, desc, def);
+  public registerAction(name: string, desc: string, def: ActionDefinition, metadata: ActionMetadata = {}) {
+    const action = new Action(name, desc, def, metadata);
     this.definitions.registerAction(action);
     this.registrations.push(() => {
       this.deregisterAction(action.name);

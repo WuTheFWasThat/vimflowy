@@ -18,7 +18,7 @@ keyDefinitions.registerAction(new Action(
       await session.cursor.from(tmp);
     }
   },
-  { sequence: SequenceAction.DROP },
+  { sequence: SequenceAction.DROP, acceptsMotion: true },
 ));
 
 keyDefinitions.registerAction(new Action(
@@ -31,6 +31,7 @@ keyDefinitions.registerAction(new Action(
     }
     await motion(session.cursor, {pastEnd: true});
   },
+  { acceptsMotion: true },
 ));
 
 keyDefinitions.registerAction(new Action(
@@ -53,6 +54,7 @@ keyDefinitions.registerAction(new Action(
       await session.cursor.from(tmp);
     }
   },
+  { acceptsMotion: true },
 ));
 
 keyDefinitions.registerAction(new Action(
@@ -67,6 +69,7 @@ keyDefinitions.registerAction(new Action(
       await motion(session.cursor, {pastEnd: true});
     }
   },
+  { acceptsMotion: true },
 ));
 
 keyDefinitions.registerAction(new Action(
@@ -216,6 +219,7 @@ keyDefinitions.registerAction(new Action(
 
     await session.deleteBetween(session.cursor, cursor, { yank: true });
   },
+  { acceptsMotion: true },
 ));
 
 keyDefinitions.registerAction(new Action(
@@ -283,6 +287,7 @@ keyDefinitions.registerAction(new Action(
     await session.setMode('INSERT');
     await session.deleteBetween(session.cursor, cursor, {yank: true});
   },
+  { acceptsMotion: true },
 ));
 
 // yank
@@ -342,6 +347,7 @@ keyDefinitions.registerAction(new Action(
 
     await session.yankBetween(session.cursor, cursor, {});
   },
+  { acceptsMotion: true },
 ));
 
 keyDefinitions.registerAction(new Action(
