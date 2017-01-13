@@ -68,6 +68,37 @@ export class Action {
   }
 }
 
+// NOTE: doesn't compose metadata
+export function composeActions(
+  name: ActionName, description: string,
+  parts: Array<Action | Motion>
+): Action {
+  const definition = async function(context: ActionContext) {
+    let i = 0;
+    while (i < parts.length) {
+      const part = parts[i];
+      if (part instanceof Motion) {
+        throw new Error('Cannot compose with motion without an action that accepts it');
+      }
+
+      if (part.metadata.acceptsMotion) {
+        i++;
+        const motion = parts[i];
+        if (motion instanceof Action) {
+          throw new Error(
+            `Error while composing action ${name}:
+            Action accepting motion was not followed by motion`
+          )
+        }
+        context.motion = await motion.definition.call(motion.definition, context);
+      }
+      await part.definition(context);
+      i++;
+    }
+  };
+  return new Action(name, description, definition)
+}
+
 export class KeyDefinitions extends EventEmitter {
   private registry: {[name: string]: Action | Motion};
 
@@ -98,6 +129,24 @@ export class KeyDefinitions extends EventEmitter {
     }
     delete this.registry[motionName];
     this.emit('update');
+  }
+
+  public registerComposedAction(
+    name: ActionName, description: string,
+    part_names: Array<string>
+  ) {
+    this.registerAction(composeActions(
+      name, description,
+      part_names.map((part_name) => {
+        const part = this.getRegistration(part_name);
+        if (part == null) {
+          throw new Error(
+            `Could not compose action ${name} with unregistered part ${part_name}`
+          );
+        }
+        return part;
+      })
+    ))
   }
 
   public registerAction(action: Action) {

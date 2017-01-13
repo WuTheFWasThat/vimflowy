@@ -1,6 +1,5 @@
 import * as utils from '../utils';
 import keyDefinitions, { Action, SequenceAction } from '../keyDefinitions';
-import { CursorOptions } from '../types';
 
 keyDefinitions.registerAction(new Action(
   'move-cursor-normal',
@@ -417,80 +416,23 @@ keyDefinitions.registerAction(new Action(
   },
 ));
 
-// TODO: something like this would be nice...
-// keyDefinitions.registerActionAsMacro
-// 'delete-to-line-beginning'
-// ['delete-motion', 'motion-line-beginning']
-keyDefinitions.registerAction(new Action(
+keyDefinitions.registerComposedAction(
   'delete-to-line-beginning',
   'Delete to the beginning of the line',
-  async function({ session, mode }) {
-    const options: {
-      cursor: CursorOptions,
-      yank: boolean
-    } = {
-      cursor: {},
-      yank: true,
-    };
-    if (mode === 'INSERT') {
-      options.cursor.pastEnd = true;
-    }
-    await session.deleteBetween(
-      session.cursor,
-      await session.cursor.clone().home(/*options.cursor*/),
-      options
-    );
-  },
-));
+  ['delete-motion', 'motion-line-beginning']
+);
 
-// TODO registerAsMacro
-keyDefinitions.registerAction(new Action(
+keyDefinitions.registerComposedAction(
   'delete-to-line-end',
   'Delete to the end of the line',
-  async function({ session, mode }) {
-    const options: {
-      cursor: CursorOptions,
-      yank: boolean,
-      includeEnd: boolean,
-    } = {
-      yank: true,
-      cursor: {},
-      includeEnd: true,
-    };
-    if (mode === 'INSERT') {
-      options.cursor.pastEnd = true;
-    }
-    await session.deleteBetween(
-      session.cursor,
-      await session.cursor.clone().end(options.cursor),
-      options
-    );
-  },
-));
+  ['delete-motion', 'motion-line-end']
+);
 
-keyDefinitions.registerAction(new Action(
+keyDefinitions.registerComposedAction(
   'delete-to-word-beginning',
   'Delete to the beginning of the previous word',
-  async function({ session, mode }) {
-    const options: {
-      cursor: CursorOptions,
-      yank: boolean,
-      includeEnd: boolean,
-    } = {
-      yank: true,
-      cursor: {},
-      includeEnd: true,
-    };
-    if (mode === 'INSERT') {
-      options.cursor.pastEnd = true;
-    }
-    await session.deleteBetween(
-      session.cursor,
-      await session.cursor.clone().beginningWord({cursor: options.cursor, whitespaceWord: true}),
-      options
-    );
-  },
-));
+  ['delete-motion', 'motion-word-beginning']
+);
 
 keyDefinitions.registerAction(new Action(
   'paste-after',
