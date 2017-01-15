@@ -279,4 +279,13 @@ describe('numbers (repeat next action)', function() {
     t.expect(['a', 'b']);
     await t.done();
   });
+
+  it('change to end of line', async function() {
+    let t = new TestCase(['humpty dumpty']);
+    t.sendKeys('fyC');
+    t.sendKeys('hump');
+    t.sendKey('esc');
+    t.expect([ 'humpthump' ]);
+    await t.done();
+  });
 });

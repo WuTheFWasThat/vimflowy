@@ -427,5 +427,12 @@ describe('yank', function() {
       ]);
       await t.done();
     });
+
+    it('works to end of line', async function() {
+      let t = new TestCase(['humpty dumpty']);
+      t.sendKeys('fpY0P');
+      t.expect([ 'pty dumptyhumpty dumpty' ]);
+      await t.done();
+    });
   });
 });

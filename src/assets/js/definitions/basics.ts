@@ -289,6 +289,12 @@ keyDefinitions.registerAction(new Action(
   { acceptsMotion: true },
 ));
 
+keyDefinitions.registerComposedAction(
+  'change-to-line-end',
+  'Delete to the end of the line, and enter insert mode',
+  ['change-motion', 'motion-line-end']
+);
+
 // yank
 
 keyDefinitions.registerAction(new Action(
@@ -348,6 +354,12 @@ keyDefinitions.registerAction(new Action(
   },
   { acceptsMotion: true },
 ));
+
+keyDefinitions.registerComposedAction(
+  'yank-to-line-end',
+  'Yank to the end of the line',
+  ['yank-motion', 'motion-line-end']
+);
 
 keyDefinitions.registerAction(new Action(
   'yank-clone',
