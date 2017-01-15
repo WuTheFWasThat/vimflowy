@@ -88,7 +88,7 @@ export function composeActions(
           throw new Error(
             `Error while composing action ${name}:
             Action accepting motion was not followed by motion`
-          )
+          );
         }
         context.motion = await motion.definition.call(motion.definition, context);
       }
@@ -96,7 +96,7 @@ export function composeActions(
       i++;
     }
   };
-  return new Action(name, description, definition)
+  return new Action(name, description, definition);
 }
 
 export class KeyDefinitions extends EventEmitter {
@@ -146,7 +146,7 @@ export class KeyDefinitions extends EventEmitter {
         }
         return part;
       })
-    ))
+    ));
   }
 
   public registerAction(action: Action) {
