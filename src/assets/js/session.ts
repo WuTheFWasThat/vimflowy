@@ -285,7 +285,7 @@ export default class Session extends EventEmitter {
   }
 
   public async exportFile(type = 'json') {
-    this.showMessage('Exporting...');
+    this.showMessage('Exporting...', { time: 0 });
     const filename = this.document.name === '' ?
                    `vimflowy.${type}` :
                    `${this.document.name}.${type}` ;

@@ -377,42 +377,20 @@ export class FirebaseStore extends DataStore {
 
     await this.auth(email, password);
 
-    const listRef = this.fbase.ref('presence');
-    const userRef = listRef.push();
-    const initTime = Date.now();
+    const clientId = Date.now() + '-' + ('' + Math.random()).slice(2);
+    const lastClientRef = this.fbase.ref('lastClient');
 
-    await new Promise((resolve) => {
-      this.fbase.ref('.info/connected').on('value', function(snap) {
-        if (snap == null) {
-          throw new Error('Failed to get connected ref');
-        }
-        if (snap.val()) {
-          // Remove ourselves when we disconnect.
-          userRef.onDisconnect().remove();
-
-          userRef.set(initTime);
-          resolve();
-        }
-      });
-    });
+    await lastClientRef.set(clientId);
 
     // Number of online users is the number of objects in the presence list.
-    listRef.on('value', function(snap) {
+    lastClientRef.on('value', function(snap) {
       if (snap == null) {
         throw new Error('Failed to get listRef');
       }
-      const numUsers = snap.numChildren();
-      logger.info(`${numUsers} users online`);
-      if (numUsers > 1) {
-        snap.forEach((x) => {
-          if (x.val() > initTime) {
-            throw new errors.MultipleUsersError(
-              'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
-            );
-          }
-          // NOTE: not sure why ts file says to return a boolean
-          return true;
-        });
+      if (snap.val() !== clientId) {
+        throw new errors.MultipleUsersError(
+          'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
+        );
       }
     });
   }
