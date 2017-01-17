@@ -8,7 +8,10 @@ import Document from '../src/assets/js/document';
 import Session from '../src/assets/js/session';
 import Register, { RegisterTypes, SerializedRegister } from '../src/assets/js/register';
 import '../src/assets/js/definitions';
-import makeDefaultBindings from '../src/assets/js/keyBindings';
+import mainDefinitions from '../src/assets/js/keyDefinitions';
+import KeyBindings from '../src/assets/js/keyBindings';
+import Config from '../src/assets/js/config';
+import vimConfig from '../src/assets/js/configurations/vim';
 import KeyHandler from '../src/assets/js/keyHandler';
 import logger, * as Logger from '../src/assets/js/logger';
 import { PluginsManager, PluginStatus } from '../src/assets/js/plugins';
@@ -23,10 +26,10 @@ afterEach('empty the queue', () => logger.empty());
 // share keybindings across tests, for efficiency
 // note that the bindings will change when plugins are enabled and disabled
 // thus, tests are not totally isolated
-const keyBindings = makeDefaultBindings();
+const keyBindings: KeyBindings = new KeyBindings(mainDefinitions, vimConfig.defaultMappings);
 
 type TestCaseOptions = {
-  plugins?: Array<string>
+  plugins?: Array<string>,
 };
 
 class TestCase {
@@ -44,15 +47,17 @@ class TestCase {
     this.document = new Document(this.store);
 
     this.plugins = options.plugins || [];
+
     this.session = new Session(this.document, {
-      bindings: keyBindings,
       viewRoot: Path.root(),
     });
+
+    const config: Config = vimConfig;
 
     this.keyhandler = new KeyHandler(this.session, keyBindings);
     this.register = this.session.register;
 
-    this.pluginManager = new PluginsManager(this.session);
+    this.pluginManager = new PluginsManager(this.session, config, keyBindings);
 
     this.prom = Promise.resolve();
     this.plugins.forEach((pluginName) => {

@@ -5,9 +5,11 @@ import * as utils from '../utils';
 import logger from '../logger';
 import { MODES } from '../modes';
 
+import Settings from '../settings';
 import Session from '../session';
-import { KeyBindings } from '../keyBindings';
-import { KeyMappings } from '../keyMappings';
+import Config from '../config';
+import KeyBindings from '../keyBindings';
+import KeyMappings from '../keyMappings';
 import { PluginsManager } from '../plugins';
 import { DataSource } from '../datastore';
 
@@ -24,6 +26,8 @@ enum TABS {
 
 type Props = {
   session: Session;
+  settings: Settings;
+  config: Config;
   keyBindings: KeyBindings;
   pluginManager: PluginsManager;
   initialTheme: string;
@@ -71,7 +75,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
             </div>
             <div className='settings-content'>
               <DataStoreSettingsComponent
-                session={this.props.session}
+                settings={this.props.settings}
                 initialDataSource={this.props.initialDataSource}
               />
             </div>
@@ -189,7 +193,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 </div>
                 <div style={{float:'left'}} className='btn theme-bg-secondary theme-trim'
                   onClick={() => {
-                    keyBindings.setDefaultMappings();
+                    keyBindings.setMappings(this.props.config.defaultMappings);
                     return session.showMessage('Loaded defaults!', {text_class: 'success'});
                   }}>
 
@@ -214,7 +218,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                       session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
                     }
                     // NOTE: this is fire and forget
-                    session.settings.setSetting('hotkeys', hotkey_settings);
+                    this.props.settings.setSetting('hotkeys', hotkey_settings);
                   }}
                   onError={(error) => {
                     logger.error('Hotkeys file input error', error);

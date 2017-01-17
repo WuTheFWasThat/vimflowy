@@ -1,10 +1,10 @@
 import React from 'react';
 
 import { DataSource } from '../../datastore';
-import Session from '../../session';
+import Settings from '../../settings';
 
 type Props = {
-  session: Session;
+  settings: Settings;
   initialDataSource: DataSource;
 };
 type State = {
@@ -28,7 +28,7 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
 
   public componentDidMount() {
     (async () => {
-      const settings = this.props.session.settings;
+      const settings = this.props.settings;
       const firebaseId = await settings.getDocSetting('firebaseId');
       const firebaseApiKey = await settings.getDocSetting('firebaseApiKey');
       const firebaseUserEmail = await settings.getDocSetting('firebaseUserEmail');
@@ -43,7 +43,7 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
   }
 
   private async saveDataSettings() {
-    const settings = this.props.session.settings;
+    const settings = this.props.settings;
     const dataSource = this.state.dataSource;
     await settings.setDocSetting('dataSource', dataSource);
     if (dataSource === 'firebase') {

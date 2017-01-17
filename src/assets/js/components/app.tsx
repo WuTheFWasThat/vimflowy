@@ -3,6 +3,7 @@ import React from 'react';
 import * as Modes from '../modes';
 import * as errors from '../errors';
 import { DataSource } from '../datastore';
+import Settings from '../settings';
 
 import SettingsComponent from './settings';
 import SessionComponent from './session';
@@ -10,11 +11,14 @@ import MenuComponent from './menu';
 import HotkeysTableComponent from './hotkeysTable';
 import { PluginsManager } from '../plugins';
 import Session from '../session';
-import { KeyBindings } from '../keyBindings';
+import Config from '../config';
+import KeyBindings from '../keyBindings';
 
 type Props = {
   pluginManager: PluginsManager;
   session: Session;
+  settings: Settings;
+  config: Config;
   showingKeyBindings: boolean;
   keyBindings: KeyBindings;
   initialTheme: string;
@@ -144,7 +148,9 @@ export default class AppComponent extends React.Component<Props, {}> {
 
           <div id='settings' className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
             <SettingsComponent
-              session={session}
+              session={this.props.session}
+              settings={this.props.settings}
+              config={this.props.config}
               keyBindings={keyBindings}
               pluginManager={pluginManager}
               initialTheme={this.props.initialTheme}

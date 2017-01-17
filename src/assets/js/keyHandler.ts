@@ -20,7 +20,7 @@ It maintains custom logic for this, for each mode.
 
 import EventEmitter from './eventEmitter';
 import Session from './session';
-import { KeyBindings, KeyBindingsTree } from './keyBindings';
+import KeyBindings, { KeyBindingsTree } from './keyBindings';
 import { Motion, Action, ActionContext, motionKey, SequenceAction } from './keyDefinitions';
 // import Menu from './menu';
 import * as Modes from './modes';

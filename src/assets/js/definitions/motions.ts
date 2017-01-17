@@ -190,3 +190,20 @@ keyDefinitions.registerMotion(new Motion(
     return async (cursor, options) => { await cursor.prevSibling(options); };
   },
 ));
+
+export const SINGLE_LINE_MOTIONS = [
+  'motion-left',
+  'motion-right',
+  'motion-line-beginning',
+  'motion-line-end',
+  'motion-word-beginning',
+  'motion-word-end',
+  'motion-word-next',
+  'motion-Word-beginning',
+  'motion-Word-end',
+  'motion-Word-next',
+  'motion-find-next-char',
+  'motion-find-prev-char',
+  'motion-to-next-char',
+  'motion-to-prev-char',
+];

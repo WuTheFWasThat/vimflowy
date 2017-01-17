@@ -896,4 +896,8 @@ export default class Document extends EventEmitter {
       await this.loadTo(serialized_row, this.root, -1, id_mapping, true);
     }
   }
+
+  public async loadEmpty() {
+    this.load(['']);
+  }
 }
