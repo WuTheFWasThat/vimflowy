@@ -36,7 +36,7 @@ import { PluginsManager } from './plugins';
 import Path from './path';
 import Session from './session';
 import { SerializedBlock } from './types';
-import Config from './config';
+import Config, { ConfigType } from './config';
 import vimConfig from './configurations/vim';
 
 import keyDefinitions from './keyDefinitions';
@@ -402,7 +402,14 @@ $(document).ready(async () => {
     dataSource = await settings.getDocSetting('dataSource');
   }
 
-  const config: Config = vimConfig;
+  const conf_type: ConfigType = 'vim';
+  let config: Config;
+  if (conf_type === 'vim') {
+    config = vimConfig;
+  } else {
+    // TODO: workflowy config
+    config = vimConfig;
+  }
 
   if (dataSource === 'firebase') {
     const [
