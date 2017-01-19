@@ -7,8 +7,9 @@ import EventEmitter, { Listener, Hook } from './eventEmitter';
 import Document from './document';
 import Cursor from './cursor';
 import Session from './session';
-import defaultKeyMappings, { HotkeyMapping } from './keyMappings';
-import { KeyBindings } from './keyBindings';
+import Config from './config';
+import { HotkeyMapping } from './keyMappings';
+import KeyBindings from './keyBindings';
 import { Row, ModeId } from './types';
 import {
   KeyDefinitions, Action, Motion,
@@ -57,11 +58,13 @@ export class PluginApi {
   public logger: Logger;
   private bindings: KeyBindings;
   private definitions: KeyDefinitions;
+  private config: Config;
 
   private registrations: Array<() => void>;
 
-  constructor(session: Session, metadata: PluginMetadata, pluginManager: PluginsManager) {
+  constructor(config: Config, session: Session, bindings: KeyBindings, metadata: PluginMetadata, pluginManager: PluginsManager) {
     this.session = session;
+    this.config = config;
     this.metadata = metadata;
     this.pluginManager = pluginManager;
     this.name = this.metadata.name;
@@ -70,7 +73,7 @@ export class PluginApi {
     // TODO: Add subloggers and prefix all log messages with the plugin name
     this.logger = logger;
 
-    this.bindings = this.session.bindings;
+    this.bindings = bindings;
     this.definitions = this.bindings.definitions;
 
     this.registrations = [];
@@ -105,14 +108,14 @@ export class PluginApi {
   }
 
   public registerDefaultMappings(mode: ModeId, mappings: HotkeyMapping) {
-    defaultKeyMappings.registerModeMappings(mode, mappings);
+    this.config.defaultMappings.registerModeMappings(mode, mappings);
     this.registrations.push(() => {
       this.deregisterDefaultMappings(mode, mappings);
     });
   }
 
   public deregisterDefaultMappings(mode: ModeId, mappings: HotkeyMapping) {
-    defaultKeyMappings.deregisterModeMappings(mode, mappings);
+    this.config.defaultMappings.deregisterModeMappings(mode, mappings);
   }
 
   public registerMotion(name: string, desc: string, def: MotionDefinition) {
@@ -200,6 +203,8 @@ export class PluginApi {
 
 export class PluginsManager extends EventEmitter {
   private session: Session;
+  private config: Config;
+  private bindings: KeyBindings;
   private plugin_infos: {
     [key: string]: {
       api?: PluginApi,
@@ -208,9 +213,11 @@ export class PluginsManager extends EventEmitter {
     }
   };
 
-  constructor(session: Session) {
+  constructor(session: Session, config: Config, bindings: KeyBindings) {
     super();
     this.session = session;
+    this.config = config;
+    this.bindings = bindings;
     this.plugin_infos = {};
   }
 
@@ -266,7 +273,7 @@ export class PluginsManager extends EventEmitter {
     this.setStatus(name, PluginStatus.ENABLING);
 
     const plugin = PLUGINS[name];
-    const api = new PluginApi(this.session, plugin, this);
+    const api = new PluginApi(this.config, this.session, this.bindings, plugin, this);
     const value = await plugin.enable(api);
 
     this.plugin_infos[name] = { api, value };

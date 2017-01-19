@@ -9,7 +9,6 @@ import logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 import Document from './document';
-import Settings from './settings';
 import Mutation from './mutations';
 import Menu from './menu';
 
@@ -19,7 +18,16 @@ import {
   TextProperty, ModeId, CursorOptions, Row, Col, Chars, SerializedBlock
 } from './types';
 
-type SessionOptions = any; // TODO
+type SessionOptions = {
+  initialMode?: ModeId,
+  viewRoot?: Path,
+  cursorPath?: Path,
+  showMessage?: (message: string, options?: any) => void,
+  getVisiblePaths?: () => Promise<Array<Path>>,
+  toggleBindingsDiv?: () => void,
+  getLinesPerPage?: () => number,
+  downloadFile?: (filename: string, mimetype: string, content: any) => void,
+};
 type ViewState = {
   cursor: Cursor,
   viewRoot: Path,
@@ -44,9 +52,10 @@ type DelBlockOptions = {
   addNew?: boolean,
   noNew?: boolean,
 };
+
 /*
 a Session represents a session with a vimflowy document
-It holds a Cursor, a Document object, and a Settings object
+It holds a Cursor, a Document object
 It exposes methods for manipulation of the document, and movement of the cursor
 
 Currently, the separation between the Session and Document classes is not very good.  (see document.js)
@@ -54,9 +63,6 @@ Ideally, session shouldn't do much more than handle cursors and history
 */
 
 export default class Session extends EventEmitter {
-  public settings: Settings;
-  public bindings: any; // TODO
-
   public mode: ModeId;
 
   public document: Document;
@@ -75,7 +81,7 @@ export default class Session extends EventEmitter {
   public jumpIndex: number;
 
   private getLinesPerPage: () => number;
-  public getVisiblePaths: () => Array<Path>;
+  public getVisiblePaths: () => Promise<Array<Path>>;
   public showMessage: (message: string, options?: any) => void;
   public toggleBindingsDiv: () => void;
   private downloadFile: (filename: string, mimetype: string, content: any) => void;
@@ -85,13 +91,10 @@ export default class Session extends EventEmitter {
 
     this.document = doc;
 
-    this.bindings = options.bindings;
-    this.settings = options.settings;
-
     this.showMessage = options.showMessage || ((message) => {
       logger.info(`Showing message: ${message}`);
     });
-    this.getVisiblePaths = options.getVisiblePaths || (() => []);
+    this.getVisiblePaths = options.getVisiblePaths || (async () => []);
     this.toggleBindingsDiv = options.toggleBindingsDiv || (() => null);
     this.getLinesPerPage = options.getLinesPerPage || (() => 10);
     this.downloadFile = options.downloadFile || ((filename, mimetype, content) => {
@@ -110,9 +113,10 @@ export default class Session extends EventEmitter {
     this.reset_history();
     this.reset_jump_history();
 
+    const mode = options.initialMode || 'NORMAL';
     // NOTE: this is fire and forget
-    // this.setMode('NORMAL');
-    this.mode = 'NORMAL';
+    // this.setMode(mode);
+    this.mode = mode;
     return this;
   }
 

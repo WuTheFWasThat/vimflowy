@@ -3,10 +3,8 @@ import * as _ from 'lodash';
 import * as errors from './errors';
 import logger from './logger';
 import EventEmitter from './eventEmitter';
-import mainDefinitions, {
-  KeyDefinitions, Motion, Action, motionKey
-} from './keyDefinitions';
-import defaultMappings, { HotkeyMapping, KeyMappings } from './keyMappings';
+import { KeyDefinitions, Motion, Action, motionKey } from './keyDefinitions';
+import KeyMappings, { HotkeyMapping } from './keyMappings';
 import { Key } from './types';
 
 // one of these per mode
@@ -131,7 +129,7 @@ function makeBindings(definitions: KeyDefinitions, mappings: KeyMappings) {
   return allBindings;
 }
 
-export class KeyBindings extends EventEmitter {
+export default class KeyBindings extends EventEmitter {
   public bindings: {[mode: string]: KeyBindingsTree};
   public definitions: KeyDefinitions;
   public mappings: KeyMappings;
@@ -151,10 +149,6 @@ export class KeyBindings extends EventEmitter {
     this.setMappings(mappings);
   }
 
-  public setDefaultMappings() {
-    this.setMappings(defaultMappings);
-  }
-
   public setMappings(mappings: KeyMappings) {
     if (this.mappings) {
       this.mappings.off('update', this.update);
@@ -164,7 +158,3 @@ export class KeyBindings extends EventEmitter {
     this.update();
   }
 }
-
-export default function makeDefaultBindings() {
-  return new KeyBindings(mainDefinitions, defaultMappings);
-};

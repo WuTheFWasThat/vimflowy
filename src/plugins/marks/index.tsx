@@ -9,13 +9,13 @@ import Session from '../../assets/js/session';
 import LineComponent from '../../assets/js/components/line';
 import Mutation from '../../assets/js/mutations';
 import * as errors from '../../assets/js/errors';
-import * as constants from '../../assets/js/constants';
 import * as utils from '../../assets/js/utils';
 import { Logger } from '../../assets/js/logger';
 import Path from '../../assets/js/path';
 import { Row } from '../../assets/js/types';
 
-import { INSERT_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS } from '../../assets/js/keyMappings';
+import { SINGLE_LINE_MOTIONS } from '../../assets/js/definitions/motions';
+import { INSERT_MOTION_MAPPINGS } from '../../assets/js/configurations/vim';
 import { motionKey } from '../../assets/js/keyDefinitions';
 
 // TODO: do this elsewhere
@@ -142,7 +142,7 @@ export class MarksPlugin {
       enter: async (session /*, newMode?: ModeId */) => {
         // initialize marks stuff
         const doc = new Document(new DataStore.InMemory());
-        await doc.load(constants.empty_data);
+        await doc.loadEmpty();
         this.markstate = {
           session: new Session(doc),
           path: session.cursor.path,

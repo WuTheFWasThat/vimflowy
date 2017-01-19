@@ -21,7 +21,6 @@ import '../css/themes/dark.sass';
 import '../css/themes/solarized_dark.sass';
 import '../css/themes/solarized_light.sass';
 
-import * as constants from './constants';
 import * as errors from './errors';
 import * as utils from './utils';
 import logger from './logger';
@@ -29,7 +28,7 @@ import logger from './logger';
 import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';
 import KeyHandler from './keyHandler';
-import defaultKeyMappings, { KeyMappings } from './keyMappings';
+import KeyMappings from './keyMappings';
 import * as DataStore from './datastore';
 import Document from './document';
 import Settings from './settings';
@@ -37,13 +36,15 @@ import { PluginsManager } from './plugins';
 import Path from './path';
 import Session from './session';
 import { SerializedBlock } from './types';
+import Config from './config';
+import vimConfig from './configurations/vim';
 
 import keyDefinitions from './keyDefinitions';
 // load actual definitions
 import './definitions';
 // load all plugins
 import '../../plugins';
-import { KeyBindings } from './keyBindings';
+import KeyBindings from './keyBindings';
 
 import AppComponent from './components/app';
 
@@ -106,6 +107,7 @@ const getStatusDiv = () => $('#status');
 const getMainDiv = () => $('#view');
 
 async function create_session(
+  config: Config,
   dataSource: DataStore.DataSource, settings: Settings, doc: Document, to_load: Array<SerializedBlock>
 ) {
   let caughtErr: null | Error = null;
@@ -133,13 +135,13 @@ async function create_session(
 
   // hotkeys and key bindings
   const saved_mappings = await settings.getSetting('hotkeys');
-  const mappings = KeyMappings.merge(defaultKeyMappings, new KeyMappings(saved_mappings));
+  const mappings = KeyMappings.merge(config.defaultMappings, new KeyMappings(saved_mappings));
   const keyBindings = new KeyBindings(keyDefinitions, mappings);
 
   // session
   if (!await doc.hasChildren(doc.root.row)) {
     // HACKY: should load the actual data now, but since plugins aren't enabled...
-    await doc.load(constants.empty_data);
+    await doc.loadEmpty();
   }
   const viewRoot = Path.loadFromAncestry(await doc.store.getLastViewRoot());
   // TODO: if we ever support multi-user case, ensure last view root is valid
@@ -157,8 +159,6 @@ async function create_session(
   }
 
   const session = new Session(doc, {
-    bindings: keyBindings,
-    settings,
     viewRoot: viewRoot,
     cursorPath: cursorPath,
     showMessage: (() => {
@@ -223,7 +223,7 @@ async function create_session(
 
   // load plugins
 
-  const pluginManager = new PluginsManager(session);
+  const pluginManager = new PluginsManager(session, config, keyBindings);
   let enabledPlugins = await settings.getSetting('enabledPlugins');
   if (typeof enabledPlugins.slice === 'undefined') { // for backwards compatibility
     enabledPlugins = Object.keys(enabledPlugins);
@@ -265,6 +265,8 @@ async function create_session(
       ReactDOM.render(
         <AppComponent
           error={caughtErr}
+          settings={settings}
+          config={config}
           onThemeChange={changeStyle}
           session={session}
           pluginManager={pluginManager}
@@ -399,6 +401,8 @@ $(document).ready(async () => {
     dataSource = await settings.getDocSetting('dataSource');
   }
 
+  const config: Config = vimConfig;
+
   if (dataSource === 'firebase') {
     const [
       firebaseId,
@@ -451,10 +455,10 @@ $(document).ready(async () => {
 
   let to_load: any = null;
   if ((await datastore.getChildren(Path.rootRow())).length === 0) {
-    to_load = constants.default_data;
+    to_load = config.defaultData;
   }
 
-  create_session(dataSource, settings, doc, to_load);
+  create_session(config, dataSource, settings, doc, to_load);
 
   // NOTE: problem is that this is very slow!
   //   To restore:

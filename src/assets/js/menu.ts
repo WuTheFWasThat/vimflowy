@@ -1,7 +1,6 @@
 import Session from './session';
 import Document from './document';
 import * as DataStore from './datastore';
-import * as constants from './constants';
 import { Line } from './types';
 
 /*
@@ -39,13 +38,10 @@ export default class Menu {
     this.searchFn = searchFn;
 
     const doc = new Document(new DataStore.InMemory());
-    doc.load(constants.empty_data); // NOTE: should be async but is okay since in-memory
+    doc.loadEmpty(); // NOTE: should be async but is okay since in-memory
 
     // a bit of a overkill-y hack, use an entire session object internally
-    this.session = new Session(doc);
-    // NOTE: this is fire and forget
-    // TODO: fix?
-    this.session.setMode('INSERT');
+    this.session = new Session(doc, { initialMode: 'INSERT' });
     this.selection = 1;
 
     this.results = [];
