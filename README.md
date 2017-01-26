@@ -91,10 +91,9 @@ I'm curious how they compare for others, so if you try both, let me know what yo
 
 #### Why doesn't *mumble* work like vim?
 
-My goal is to make Vimflowy feel like home to vim users.
-That said, Vimflowy also intentionally differs in few ways, partially due to its Workflowy-inspired half.
-Some known inconsistencies with vim are documented [here](docs/vim_inconsistencies.md).
-Also, vim has a lot of stuff, to implement so there are some missing features.
+My goal is to make Vimflowy feel like home to vim users. However:
+- Vim has a lot of commands, so there are some still missing.
+- Vimflowy intentionally differs in few ways, partially due to its Workflowy-inspired half.
+  Some known inconsistencies with vim are documented [here](docs/vim_inconsistencies.md).
 
-If you find that something is incongruous with your vim use, whether a bug or missing feature, make an issue. Or better yet, a pull request!
-
+If you find that something is incongruous with your vim use, whether a bug or missing feature, let me know via a github issue. Or better yet, a pull request!
