@@ -187,11 +187,11 @@ export default class SettingsComponent extends React.Component<Props, State> {
           <div>
             <div className='settings-content'>
               <div className='clearfix' style={{marginBottom: 10}}>
-                <div style={{float:'left'}} className='btn theme-bg-secondary theme-trim'
+                <div style={{float: 'left'}} className='btn theme-bg-secondary theme-trim'
                   onClick={this.props.onExport} >
                   Export as file
                 </div>
-                <div style={{float:'left'}} className='btn theme-bg-secondary theme-trim'
+                <div style={{float: 'left'}} className='btn theme-bg-secondary theme-trim'
                   onClick={() => {
                     keyBindings.setMappings(this.props.config.defaultMappings);
                     return session.showMessage('Loaded defaults!', {text_class: 'success'});

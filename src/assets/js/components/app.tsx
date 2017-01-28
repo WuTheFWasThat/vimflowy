@@ -179,13 +179,13 @@ export default class AppComponent extends React.Component<Props, {}> {
               }}
             >
               <div className={settingsMode ? 'hidden' : ''}>
-                <span style={{marginRight:10}} className='fa fa-cog'>
+                <span style={{marginRight: 10}} className='fa fa-cog'>
                 </span>
                 <span>Settings
                 </span>
               </div>
               <div className={settingsMode ? '' : 'hidden'}>
-                <span style={{marginRight:10}} className='fa fa-arrow-left'>
+                <span style={{marginRight: 10}} className='fa fa-arrow-left'>
                 </span>
                 <span>
                   Back
