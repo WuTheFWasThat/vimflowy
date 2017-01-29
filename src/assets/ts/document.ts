@@ -1,13 +1,14 @@
 import * as _ from 'lodash';
 
 import * as utils from './utils';
+import HooksManager from './utils/hooks';
 import * as errors from './errors';
 // import logger from './logger';
 import EventEmitter from './eventEmitter';
 import Path from './path';
 import DataStore from './datastore';
 import {
-  Row, Col, Char, Line, SerializedLine, SerializedBlock
+  Row, Col, Char, Line, ApiHooks, SerializedLine, SerializedBlock
 } from './types';
 
 type RowInfo = {
@@ -207,6 +208,7 @@ export default class Document extends EventEmitter {
   public store: DataStore;
   public name: string;
   public root: Path;
+  public hooks: HooksManager<ApiHooks>;
 
   constructor(store: DataStore, name = '') {
     super();
@@ -214,6 +216,7 @@ export default class Document extends EventEmitter {
     this.store = store;
     this.name = name;
     this.root = Path.root();
+    this.hooks = new HooksManager<ApiHooks>();
     return this;
   }
 
@@ -259,7 +262,7 @@ export default class Document extends EventEmitter {
       this.store.getCollapsed(row),
       this.store.getChildren(row),
       this.store.getParents(row),
-      this.applyHookAsync('pluginRowContents', {}, { row }),
+      this.hooks.applyAsync('pluginRowContents', {}, { row }),
     ]);
     const info: RowInfo = {
       line, collapsed,
@@ -294,7 +297,7 @@ export default class Document extends EventEmitter {
 
   public async updateCachedPluginData(row: Row) {
     if (this.cache.isCached(row)) {
-      const pluginData = await this.applyHookAsync('pluginRowContents', {}, { row });
+      const pluginData = await this.hooks.applyAsync('pluginRowContents', {}, { row });
       this.cache.setPluginData(row, pluginData);
     } else {
       await this.getInfo(row);
@@ -765,7 +768,7 @@ export default class Document extends EventEmitter {
     if (await this.collapsed(row)) {
       struct.collapsed = true;
     }
-    const plugins = await this.applyHookAsync('serializeRow', {}, {row});
+    const plugins = await this.hooks.applyAsync('serializeRow', {}, {row});
     if (Object.keys(plugins).length > 0) {
       struct.plugins = plugins;
     }

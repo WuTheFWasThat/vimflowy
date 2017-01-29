@@ -4,14 +4,15 @@ import * as _ from 'lodash';
 import { registerMode, deregisterMode, ModeMetadata } from './modes';
 import logger, { Logger } from './logger';
 import * as errors from './errors';
-import EventEmitter, { Listener, Hook } from './eventEmitter';
+import EventEmitter, { Listener } from './eventEmitter';
+import { Hook } from './utils/hooks';
 import Document from './document';
 import Cursor from './cursor';
 import Session from './session';
 import Config from './config';
 import { HotkeyMapping } from './keyMappings';
 import KeyBindings from './keyBindings';
-import { Row, ModeId } from './types';
+import { Row, ModeId, ApiHooks } from './types';
 import {
   KeyDefinitions, Action, Motion,
   ActionDefinition, MotionDefinition, ActionMetadata
@@ -169,19 +170,17 @@ export class PluginApi {
   }
 
   // TODO: type this better
-  public registerHook(who: Emitter, event: string, transform: Hook) {
-    const emitter = this._getEmitter(who);
-    emitter.addHook(event, transform);
+  public registerHook<K extends keyof ApiHooks>(event: K, transform: Hook<ApiHooks[K], any>) {
+    this.document.hooks.add(event, transform);
     this.registrations.push(() => {
-      this.deregisterHook(who, event, transform);
+      this.deregisterHook(event, transform);
     });
     // pluginData can change for all rows (also could be render-related hook)
     this.document.cache.clear();
   }
 
-  public deregisterHook(who: Emitter, event: string, transform: Hook) {
-    const emitter = this._getEmitter(who);
-    emitter.removeHook(event, transform);
+  public deregisterHook<K extends keyof ApiHooks>(event: K, transform: Hook<ApiHooks[K], any>) {
+    this.document.hooks.remove(event, transform);
     // pluginData can change for all rows (also could be render-related hook)
     this.document.cache.clear();
   }

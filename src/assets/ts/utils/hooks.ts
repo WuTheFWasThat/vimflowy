@@ -45,34 +45,37 @@ export default class HooksManager<HookTypes> {
   private hookManagers: {[K in keyof HookTypes]?: HookManager<HookTypes[K], any>};
 
   constructor() {
-    this.hookManagers = {};
+    this.hookManagers = {} as any;
+    // TODO wtf
+    // this.hookManagers = {} as {[K in keyof HookTypes]?: HookManager<HookTypes[K], any>};
+  }
+
+  private getManager<K extends keyof HookTypes>(event: K): HookManager<HookTypes[K], any> {
+    const maybeManager = this.hookManagers[event];
+    if (maybeManager == null) {
+      const manager = new HookManager<HookTypes[K], any>();
+      this.hookManagers[event] = manager;
+      return manager;
+    } else {
+      return maybeManager;
+    }
   }
 
   public add<K extends keyof HookTypes>(event: K, hook: Hook<HookTypes[K], any>) {
-    if (!this.hookManagers[event]) {
-      this.hookManagers[event] = new HookManager<HookTypes[K], any>();
-    }
-    this.hookManagers[event].add(hook);
+    this.getManager(event).add(hook);
     return this;
   }
 
   public remove<K extends keyof HookTypes>(event: K, hook: Hook<HookTypes[K], any>) {
-    if (!this.hookManagers[event]) { return this; }
-    this.hookManagers[event].remove(hook);
+    this.getManager(event).remove(hook);
     return this;
   }
 
   public apply<K extends keyof HookTypes>(event: K, obj: HookTypes[K], info: any) {
-    if (this.hookManagers[event]) {
-      return this.hookManagers[event].apply(obj, info);
-    }
-    return obj;
+    return this.getManager(event).apply(obj, info);
   }
 
   public async applyAsync<K extends keyof HookTypes>(event: K, obj: HookTypes[K], info: any): Promise<HookTypes[K]> {
-    if (this.hookManagers[event]) {
-      return await this.hookManagers[event].applyAsync(obj, info);
-    }
-    return obj;
+    return await this.getManager(event).applyAsync(obj, info);
   }
 }

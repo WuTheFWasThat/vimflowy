@@ -116,7 +116,7 @@ export class MarksPlugin {
 
     // Serialization #
 
-    this.api.registerHook('document', 'serializeRow', async (struct, info) => {
+    this.api.registerHook('serializeRow', async (struct, info) => {
       const mark = await this._getMark(info.row);
       if (mark) {
         struct.mark = mark;
@@ -347,7 +347,7 @@ export class MarksPlugin {
       },
     );
 
-    this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
+    this.api.registerHook('pluginRowContents', async (obj, { row }) => {
       const mark = await this._getMark(row);
       const marking = this.markstate && (this.markstate.path.row === row);
       obj.marks = { mark, marking };
@@ -360,14 +360,14 @@ export class MarksPlugin {
       return obj;
     });
 
-    this.api.registerHook('session', 'renderLineOptions', (options, info) => {
+    this.api.registerHook('renderLineOptions', (options, info) => {
       if (info.pluginData.marks && info.pluginData.marks.marking) {
         options.cursors = {};
       }
       return options;
     });
 
-    this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
+    this.api.registerHook('renderLineContents', (lineContents, info) => {
       const { pluginData } = info;
       if (pluginData.marks) {
         if (pluginData.marks.marking) {
@@ -397,7 +397,7 @@ export class MarksPlugin {
       return lineContents;
     });
 
-    this.api.registerHook('session', 'renderWordTokenHook', (tokenizer) => {
+    this.api.registerHook('renderWordTokenHook', (tokenizer) => {
       return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
         token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
       ) => {

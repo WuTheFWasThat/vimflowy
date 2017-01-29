@@ -38,3 +38,11 @@ export type Col = number;
 export type SerializedPath = Array<Row>;
 
 export type ModeId = string;
+
+// completely specifies how to render a line
+export type ApiHooks = {
+  pluginRowContents: any,
+  serializeRow: any,
+  // renderLineWordHook:
+  renderLineOptions: RenderLineOptions,
+};

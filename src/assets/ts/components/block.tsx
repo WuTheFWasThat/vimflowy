@@ -1,13 +1,13 @@
 import * as React from 'react';
 
-import LineComponent, { LineProps } from './line';
+import LineComponent from './line';
 import Spinner from './spinner';
 
 import Session from '../session';
 import { CachedRowInfo } from '../document';
 import Path from '../path';
 import { CursorsInfoTree } from '../cursor';
-import { Col } from '../types';
+import { Col, RenderLineOptions } from '../types';
 import { PartialUnfolder, Token } from '../utils/token_unfolder';
 
 type RowProps = {
@@ -78,7 +78,7 @@ class RowComponent extends React.Component<RowProps, {}> {
     // TODO: React.ReactNode vs React.ReactElement<any>?
     const results: Array<React.ReactNode> = [];
 
-    let lineoptions: LineProps = {
+    let lineoptions: RenderLineOptions = {
       lineData,
       cursors,
       highlights,

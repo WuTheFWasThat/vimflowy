@@ -123,8 +123,8 @@ We expose an API for both event listeners and data-mutating hooks
     api.registerListener(object, eventname, fn),
     api.deregisterListener(object, eventname, fn),
 
-    api.registerHook(object, hookname, fn),
-    api.deregisterHook(object, hookname, fn),
+    api.registerHook(hookname, fn),
+    api.deregisterHook(hookname, fn),
 ```
 where:
 

@@ -99,7 +99,7 @@ registerPlugin(
       },
     );
 
-    api.registerHook('session', 'renderBullet', function(bullet, info) {
+    api.registerHook('renderBullet', function(bullet, info) {
       let ancestry_str = JSON.stringify(info.path.getAncestry());
       if (EASY_MOTION_MAPPINGS !== null) {
         if (ancestry_str in EASY_MOTION_MAPPINGS.path_to_key) {

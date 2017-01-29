@@ -62,12 +62,12 @@ class TimeTrackingPlugin {
       ]);
     });
 
-    this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
+    this.api.registerHook('pluginRowContents', async (obj, { row }) => {
       obj.timeTracked = await this.rowTime(row);
       return obj;
     });
 
-    this.api.registerHook('session', 'renderAfterLine', (elements, renderData) => {
+    this.api.registerHook('renderAfterLine', (elements, renderData) => {
       const { path, pluginData } = renderData;
       const time = pluginData.timeTracked;
       if (time == null) {
