@@ -1,53 +1,67 @@
 import React from 'react';
 
+import Session from '../session';
+import Path from '../path';
 import Menu from '../menu';
 import keyDefinitions, { Action } from '../keyDefinitions';
 
-keyDefinitions.registerAction(new Action(
-  'search',
-  'Search',
-  async function({ session }) {
-    await session.setMode('SEARCH');
-    session.menu = new Menu(async (text) => {
-      const results = await session.document.search(text);
-      return Promise.all(
-        results.map(async ({ path, matches }) => {
-          const highlights: {[column: number]: boolean} = {};
-          matches.forEach((i) => {
-            highlights[i] = true;
-          });
-          return {
-            contents: await session.document.getLine(path.row),
-            renderHook(lineDiv: React.ReactElement<any>) {
-              const cachedRow = session.document.cache.get(path.row);
-              if (!cachedRow) {
-                throw new Error('Row wasnt cached despite search returning it');
+async function start_search(searchRoot: Path, session: Session) {
+  await session.setMode('SEARCH');
+  session.menu = new Menu(async (text) => {
+    const results = await session.document.search(searchRoot, text);
+    return Promise.all(
+      results.map(async ({ path, matches }) => {
+        const highlights: {[column: number]: boolean} = {};
+        matches.forEach((i) => {
+          highlights[i] = true;
+        });
+        return {
+          contents: await session.document.getLine(path.row),
+          renderHook(lineDiv: React.ReactElement<any>) {
+            const cachedRow = session.document.cache.get(path.row);
+            if (!cachedRow) {
+              throw new Error('Row wasnt cached despite search returning it');
+            }
+            const hooksInfo = {
+              path,
+              pluginData: cachedRow.pluginData,
+            };
+            return (
+              <span>
+              {
+                session.applyHook(
+                  'renderLineContents',
+                  [lineDiv],
+                  hooksInfo
+                )
               }
-              const hooksInfo = {
-                path,
-                pluginData: cachedRow.pluginData,
-              };
-              return (
-                <span>
-                  {
-                    session.applyHook(
-                      'renderLineContents',
-                      [lineDiv],
-                      hooksInfo
-                    )
-                  }
-                </span>
-              );
-            },
-            renderOptions: { highlights },
-            fn: async () => {
-              await session.zoomInto(path);
-              await session.cursor.setPath(path);
-            },
-          };
-        })
-      );
-    });
+              </span>
+            );
+          },
+          renderOptions: { highlights },
+          fn: async () => {
+            await session.zoomInto(path);
+            await session.cursor.setPath(path);
+          },
+        };
+      })
+    );
+  });
+}
+
+keyDefinitions.registerAction(new Action(
+  'search-local',
+  'Search within view root',
+  async function({ session }) {
+    await start_search(session.viewRoot, session);
+  },
+));
+
+keyDefinitions.registerAction(new Action(
+  'search-global',
+  'Search within entire document',
+  async function({ session }) {
+    await start_search(session.document.root, session);
   },
 ));
 

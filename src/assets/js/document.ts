@@ -692,7 +692,9 @@ export default class Document extends EventEmitter {
     return path.child(row);
   }
 
-  private async allLinesIter(yieldCb: (path: Path) => Promise<boolean>): Promise<void> {
+  private async traverseSubtree(
+    root: Path, yieldCb: (path: Path) => Promise<boolean>
+  ): Promise<void> {
     const visited_rows: {[row: number]: boolean} = {};
     let done = false;
 
@@ -715,10 +717,10 @@ export default class Document extends EventEmitter {
         )
       );
     };
-    await helper(this.root);
+    await helper(root);
   }
 
-  public async search(query: string, options: SearchOptions = {}) {
+  public async search(root: Path, query: string, options: SearchOptions = {}) {
     const { nresults = 10, case_sensitive = false } = options;
     const results: Array<{
       path: Path,
@@ -733,7 +735,7 @@ export default class Document extends EventEmitter {
     const query_words =
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
-    await this.allLinesIter(async (path: Path) => {
+    await this.traverseSubtree(root, async (path: Path) => {
 
       const text = await this.getText(path.row);
       const line = canonicalize(text);

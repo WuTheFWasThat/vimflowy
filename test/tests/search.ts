@@ -1,7 +1,10 @@
 /* globals describe, it */
 import TestCase from '../testcase';
 
-describe('search', function() {
+const globalSearchKey = 'ctrl+/';
+const localSearchKey = '/';
+
+describe('global search', function() {
   it('works in basic cases', async function() {
     let t = new TestCase([
       'blah',
@@ -16,7 +19,8 @@ describe('search', function() {
         'search',
       ] },
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.expectNumMenuResults(5);
     t.sendKey('enter');
     t.sendKeys('dd');
@@ -32,7 +36,8 @@ describe('search', function() {
         'search',
       ] },
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.expectNumMenuResults(4);
     await t.done();
   });
@@ -51,7 +56,8 @@ describe('search', function() {
         'search',
       ] },
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.expectNumMenuResults(5);
     t.sendKey('ctrl+j');
     t.sendKey('enter');
@@ -68,7 +74,8 @@ describe('search', function() {
         'search',
       ] },
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.expectNumMenuResults(4);
     await t.done();
 
@@ -85,7 +92,8 @@ describe('search', function() {
         'search',
       ] },
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.expectNumMenuResults(5);
     t.sendKey('ctrl+j');
     t.sendKey('ctrl+j');
@@ -103,7 +111,8 @@ describe('search', function() {
         'search',
       ] },
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.expectNumMenuResults(4);
     await t.done();
   });
@@ -113,7 +122,8 @@ describe('search', function() {
       'blah',
       'blur',
     ]);
-    t.sendKeys('/blurb');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('blurb');
     t.expectNumMenuResults(0);
     t.sendKey('backspace');
     t.expectNumMenuResults(1);
@@ -128,7 +138,8 @@ describe('search', function() {
       'blah',
       'blur',
     ]);
-    t.sendKeys('/blurb');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('blurb');
     t.expectNumMenuResults(0);
     t.sendKey('left');
     t.sendKey('delete');
@@ -155,7 +166,8 @@ describe('search', function() {
         'search',
       ] },
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.expectNumMenuResults(5);
     t.sendKey('ctrl+k');
     t.sendKey('enter');
@@ -171,7 +183,8 @@ describe('search', function() {
       ] },
       'blah',
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.expectNumMenuResults(4);
     await t.done();
   });
@@ -190,7 +203,8 @@ describe('search', function() {
         'search',
       ] },
     ]);
-    t.sendKeys('/search');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('search');
     t.sendKey('esc');
     t.sendKeys('dd');
     t.expect([
@@ -214,7 +228,8 @@ describe('search', function() {
       'crease',
       'CASE',
     ]);
-    t.sendKeys('/case');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('case');
     t.sendKey('ctrl+j');
     t.sendKey('enter');
     t.sendKeys('dd');
@@ -231,7 +246,8 @@ describe('search', function() {
       'basketball',
       'basket of bread',
     ]);
-    t.sendKeys('/bread basket');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('bread basket');
     t.sendKey('enter');
     t.sendKeys('dd');
     t.expect([
@@ -251,9 +267,43 @@ describe('search', function() {
     ]);
     t.sendKeys('jj]]]');
     t.expectViewRoot(3);
-    t.sendKeys('/fir');
+    t.sendKey(globalSearchKey);
+    t.sendKeys('fir');
     t.sendKey('enter');
     t.expectViewRoot(1);
+    await t.done();
+  });
+});
+
+describe('local search', function() {
+  it('works in basic cases', async function() {
+    let t = new TestCase([
+      'blah',
+      'searchblah',
+      { text: 'blahsearch', children: [
+        'blahsearchblah',
+        'search',
+        'surch',
+        'blah',
+      ] },
+      { text: 'blah', children: [
+        'search',
+      ] },
+    ]);
+    t.sendKeys('jj');
+    t.sendKey('enter');
+    t.sendKey(localSearchKey);
+    t.sendKeys('search');
+    t.expectNumMenuResults(3);
+    t.sendKey('enter');
+    t.sendKeys('dd');
+    t.expect([
+      'blah',
+      'searchblah',
+      { text: 'blah', children: [
+        'search',
+      ] },
+    ]);
     await t.done();
   });
 });
