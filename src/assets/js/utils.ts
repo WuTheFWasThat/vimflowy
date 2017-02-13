@@ -71,8 +71,20 @@ export function isPunctuation(chr: string) {
 }
 
 const urlRegex = /^https?:\/\/([^\s]+\.[^\s]+$|localhost)/;
-export function isLink(word: string) {
-  return urlRegex.test(word);
+export function checkLink(word: string): [string, number, number] | null {
+  if (!word.length) { return null; }
+  let lo = 0;
+  let hi = word.length;
+  while ((word[lo] === '(') && (word[hi - 1] === ')')) {
+    lo += 1;
+    hi -= 1;
+    word = word.substring(lo, hi);
+  }
+  if (urlRegex.test(word)) {
+    return [word, lo, hi];
+  } else {
+    return null;
+  }
 }
 
 export function mimetypeLookup(filename: string): string | undefined {

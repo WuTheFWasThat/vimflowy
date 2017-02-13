@@ -116,10 +116,12 @@ export default class LineComponent extends React.Component<LineProps, {}> {
           if (this.props.wordHook) {
             line = this.props.wordHook(line, word_info);
           }
-          if (utils.isLink(word_info.word)) {
-            for (let j = word_info.start; j <= word_info.end; j++) {
+          const linkInfo = utils.checkLink(word_info.word);
+          if (linkInfo != null) {
+            const [link, lo, hi] = linkInfo;
+            for (let j = word_info.start + lo; j < word_info.start + hi; j++) {
               line[j].renderOptions.type = 'a';
-              line[j].renderOptions.href = word_info.word;
+              line[j].renderOptions.href = link;
             }
           }
         }

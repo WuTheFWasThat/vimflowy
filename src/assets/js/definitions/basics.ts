@@ -139,8 +139,11 @@ keyDefinitions.registerAction(new Action(
   'Visit the link indicated by the cursor, in a new tab',
   async function({ session }) {
     const word = await session.document.getWord(session.cursor.row, session.cursor.col);
-    if (utils.isLink(word)) {
-      window.open(word);
+    const linkInfo = utils.checkLink(word);
+    if (linkInfo != null) {
+      window.open(linkInfo[0]);
+    } else {
+      session.showMessage(`Tried to open non-link: ${word}`, {text_class: 'error'});
     }
   },
   { sequence: SequenceAction.DROP },
