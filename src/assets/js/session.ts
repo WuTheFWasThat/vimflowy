@@ -775,6 +775,17 @@ export default class Session extends EventEmitter {
     return mutation.ncharsDeleted;
   }
 
+  public async swapCaseAtCursor() {
+    await this.changeChars(this.cursor.row, this.cursor.col, 1, (chars => 
+      chars.map(function(char_obj) {
+        const new_char = _.clone(char_obj);
+        new_char.char = char_obj.char.toLowerCase() === char_obj.char ? char_obj.char.toUpperCase() : char_obj.char.toLowerCase();
+        return new_char;
+      })
+    ));
+    await this.cursor.right();
+  }
+
   public async replaceCharsAfterCursor(char: string, nchars: number) {
     const ndeleted = await this.changeChars(this.cursor.row, this.cursor.col, nchars, (chars =>
       chars.map(function(char_obj) {

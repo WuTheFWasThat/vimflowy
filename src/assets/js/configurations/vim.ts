@@ -124,6 +124,7 @@ export const NORMAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'zoom-root': [['shift+enter'], ['ctrl+shift+left']],
   'jump-prev': [['ctrl+o']],
   'jump-next': [['ctrl+i']],
+  'swap-case': [['~']],
 }, NORMAL_MOTION_MAPPINGS);
 
 export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({

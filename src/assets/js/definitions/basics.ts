@@ -535,3 +535,12 @@ keyDefinitions.registerAction(new Action(
     await session.cursor.from(tmp);
   },
 ));
+
+// swapping case
+keyDefinitions.registerAction(new Action(
+  'swap-case',
+  'Swap case',
+  async function({ session }) {
+    await session.swapCaseAtCursor();
+  }
+));
