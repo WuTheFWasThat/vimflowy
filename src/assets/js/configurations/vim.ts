@@ -139,6 +139,7 @@ export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'visual-toggle-italic': [['ctrl+I']],
   'visual-toggle-underline': [['ctrl+U']],
   'visual-toggle-strikethrough': [['ctrl+enter']],
+  'visual-swap-case': [['~']],
 }, _.pick(NORMAL_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS));
 
 export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({

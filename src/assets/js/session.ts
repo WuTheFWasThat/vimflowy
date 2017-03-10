@@ -775,15 +775,32 @@ export default class Session extends EventEmitter {
     return mutation.ncharsDeleted;
   }
 
+  private swapCase(chars: Chars) {
+    return chars.map(function(char_obj) {
+      const new_char = _.clone(char_obj);
+      new_char.char = char_obj.char.toLowerCase() === char_obj.char ? char_obj.char.toUpperCase() : char_obj.char.toLowerCase();
+      return new_char;
+    });
+  }
+
   public async swapCaseAtCursor() {
-    await this.changeChars(this.cursor.row, this.cursor.col, 1, (chars => 
-      chars.map(function(char_obj) {
-        const new_char = _.clone(char_obj);
-        new_char.char = char_obj.char.toLowerCase() === char_obj.char ? char_obj.char.toUpperCase() : char_obj.char.toLowerCase();
-        return new_char;
-      })
-    ));
+    await this.changeChars(this.cursor.row, this.cursor.col, 1, this.swapCase);
     await this.cursor.right();
+  }
+
+  public async swapCaseInVisual(cursor1: Cursor, cursor2: Cursor) {
+    if (!(cursor2.path.is(cursor1.path))) {
+      logger.warn('Not yet implemented');
+      return;
+    }
+
+    if (cursor2.col < cursor1.col) {
+      [cursor1, cursor2] = [cursor2, cursor1];
+    }
+
+    const howManyCharacters = cursor2.col - cursor1.col + 1;
+    await this.changeChars(cursor1.row, cursor1.col, howManyCharacters, this.swapCase);
+    await this.cursor.from(cursor1);
   }
 
   public async replaceCharsAfterCursor(char: string, nchars: number) {

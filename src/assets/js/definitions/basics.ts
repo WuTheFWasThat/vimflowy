@@ -544,3 +544,12 @@ keyDefinitions.registerAction(new Action(
     await session.swapCaseAtCursor();
   }
 ));
+
+keyDefinitions.registerAction(new Action(
+  'visual-swap-case',
+  'Swap case in VISUAL mode',
+  async function({ session }) {
+    await session.swapCaseInVisual(session.cursor, session.anchor);
+    await session.setMode('NORMAL');
+  }
+));
