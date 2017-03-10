@@ -330,5 +330,13 @@ describe('next word', function() {
     t.expect(['ah... es .. t ahem* as ']);
     await t.done();
   });
+
+  // tricky case that used to fail
+  it('delete word right up to end of line', async function() {
+    let t = new TestCase(['d w']);
+    t.sendKeys('dw');
+    t.expect(['w']);
+    await t.done();
+  });
 });
 

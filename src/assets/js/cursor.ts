@@ -22,9 +22,9 @@ type WordMovementOptions = {
 
 // TODO: make a view class which includes viewRoot and cursor
 /*
-Cursor represents a cursor within a session
-it handles movement logic, insert mode line properties (e.g. bold/italic)
-*/
+   Cursor represents a cursor within a session
+   it handles movement logic, insert mode line properties (e.g. bold/italic)
+ */
 export default class Cursor extends EventEmitter {
   public col: Col;
   public path: Path;
@@ -35,8 +35,7 @@ export default class Cursor extends EventEmitter {
   private moveCol: Col;
 
   constructor(
-    session: Session, path: Path, col: Col = 0,
-    moveCol: Col | null = null
+    session: Session, path: Path, col: Col = 0, moveCol: Col | null = null
   ) {
     super();
     this.session = session;
@@ -292,7 +291,7 @@ export default class Cursor extends EventEmitter {
 
     await this._nextChar();
     while ((!(await this.atVisibleEnd())) &&
-            (await this.isInWhitespace(this.path, this.col))) {
+           (await this.isInWhitespace(this.path, this.col))) {
       await this._nextChar();
     }
 
@@ -332,16 +331,31 @@ export default class Cursor extends EventEmitter {
     while ((this.col < end) && (await wordcheck(this.path, this.col + 1))) {
       await this._right();
     }
-
     await this._nextChar();
-    while ((!(await this.atVisibleEnd())) &&
-            (await this.isInWhitespace(this.path, this.col))) {
+
+    let found_next_word = false;
+    let found_whitespace = false;
+    while (true) {
+      if (!await this.isInWhitespace(this.path, this.col)) {
+        if (found_whitespace) {
+          found_next_word = true;
+        }
+        break;
+      }
+      found_whitespace = true;
+      if (await this.atVisibleEnd()) {
+        break;
+      }
       await this._nextChar();
     }
 
-    end = (await this.document.getLength(this.path.row)) - 1;
-    if (this.col === end && options.cursor && options.cursor.pastEnd) {
-      await this._right();
+    if (!found_next_word) {
+      if (options.cursor && options.cursor.pastEnd) {
+        end = (await this.document.getLength(this.path.row)) - 1;
+        if (this.col === end) {
+          await this._right();
+        }
+      }
     }
     return this;
   }
