@@ -42,4 +42,19 @@ describe.only('swapping case', function() {
 
     await t.done();
   });
+
+  it('should undo case swapping', async function() {
+    let t = new TestCase(['swapCaseHere']);
+    t.sendKeys('0~');
+    t.expect(['SwapCaseHere']);
+    t.sendKeys('u');
+    t.expect(['swapCaseHere']);
+
+    t.sendKeys('llvll~');
+    t.expect(['swAPcaseHere']);
+    t.sendKeys('u');
+    t.expect(['swapCaseHere']);
+
+    await t.done();
+  });
 });
