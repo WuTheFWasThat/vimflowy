@@ -11,7 +11,8 @@
     "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx' && eslint --ignore-path .gitignore .",
     "start": "node dev_server.js",
     "test": "mocha --opts test/mocha.opts",
-    "typecheck": "tsc -p . --noEmit"
+    "typecheck": "tsc -p . --noEmit",
+    "verify": "npm run lint && npm run typecheck && npm test"
   },
   "dependencies": {
     "@types/immutable": "^3.8.4",

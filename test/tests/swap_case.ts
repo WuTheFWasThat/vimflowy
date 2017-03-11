@@ -21,11 +21,11 @@ describe('swapping case', function() {
     const t = new TestCase(['oo']);
     t.sendKeys('$~');
     t.expect(['oO']);
-    t.expectCursor(1,1);
+    t.expectCursor(1, 1);
 
     t.sendKeys('~');
     t.expect(['oo']);
-    t.expectCursor(1,1);
+    t.expectCursor(1, 1);
 
     await t.done();
   });
@@ -101,5 +101,5 @@ describe('swapping case', function() {
     t.expectCursor(1, 0);
 
     await t.done();
-  })
+  });
 });
