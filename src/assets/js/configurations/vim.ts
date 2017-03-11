@@ -158,6 +158,7 @@ export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'visual-line-toggle-underline': [['ctrl+U']],
   'visual-line-toggle-strikethrough': [['ctrl+enter']],
   'toggle-row-strikethrough': [['meta+enter']],
+  'visual-line-swap-case': [['~']],
 }, NORMAL_MOTION_MAPPINGS);
 
 export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
