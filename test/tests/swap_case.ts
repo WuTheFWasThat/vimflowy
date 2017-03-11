@@ -66,4 +66,27 @@ describe('swapping case', function() {
 
     await t.done();
   });
+
+  it('should swap case for multiple selected nodes, without children', async function () {
+    const t = new TestCase([
+      {
+        text: 'swap',
+        children: ['case']
+      },
+      'here',
+      'not here'
+    ]);
+    t.sendKeys('0Vjj~');
+    t.expect([
+      {
+        text: 'SWAP',
+        children: ['case']
+      },
+      'HERE',
+      'not here'
+    ]);
+    t.expectCursor(3, 0);
+
+    await t.done();
+  })
 });
