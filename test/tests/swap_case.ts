@@ -88,5 +88,18 @@ describe('swapping case', function() {
     t.expectCursor(3, 0);
 
     await t.done();
+  });
+
+  it('should undo multiline case swapping', async function() {
+    const t = new TestCase(['swap', 'case']);
+    t.sendKeys('0V~');
+    t.expect(['SWAP', 'case']);
+    t.expectCursor(1, 0);
+
+    t.sendKeys('u');
+    t.expect(['swap', 'case']);
+    t.expectCursor(1, 0);
+
+    await t.done();
   })
 });

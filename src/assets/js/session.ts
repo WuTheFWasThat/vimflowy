@@ -804,21 +804,12 @@ export default class Session extends EventEmitter {
   }
 
   public async swapCaseInVisualLine(rows: Array<Row>) {
-    const linesWithRows = await Promise.all(rows.map(async row => {
-      return {
-        line: await this.document.getLine(row),
-        row: row
-      };
-    }));
-
-    const caseSwappedLinesWithRows = linesWithRows.map(l => {
-      return {
-        line: this.swapCase(l.line),
-        row: l.row
-      };
-    });
-
-    await Promise.all(caseSwappedLinesWithRows.map(async swapped => await this.document.setLine(swapped.row, swapped.line)));
+    await Promise.all(rows.map(async row => await this.changeChars(
+      row,
+      0,
+      await this.document.getLength(row),
+      this.swapCase
+    )));
   }
 
   public async replaceCharsAfterCursor(char: string, nchars: number) {
