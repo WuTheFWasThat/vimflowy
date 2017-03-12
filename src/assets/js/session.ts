@@ -775,7 +775,7 @@ export default class Session extends EventEmitter {
     return mutation.ncharsDeleted;
   }
 
-  private swapCase(chars: Chars) {
+  private static swapCase(chars: Chars) {
     return chars.map(function(char_obj) {
       const new_char = _.clone(char_obj);
       new_char.char = char_obj.char.toLowerCase() === char_obj.char ? char_obj.char.toUpperCase() : char_obj.char.toLowerCase();
@@ -798,8 +798,8 @@ export default class Session extends EventEmitter {
       [cursor1, cursor2] = [cursor2, cursor1];
     }
 
-    const howManyCharacters = cursor2.col - cursor1.col + 1;
-    await this.changeChars(cursor1.row, cursor1.col, howManyCharacters, this.swapCase);
+    const nchars = cursor2.col - cursor1.col + 1;
+    await this.changeChars(cursor1.row, cursor1.col, nchars, this.swapCase);
     await this.cursor.from(cursor1);
   }
 

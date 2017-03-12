@@ -536,7 +536,6 @@ keyDefinitions.registerAction(new Action(
   },
 ));
 
-// swapping case
 keyDefinitions.registerAction(new Action(
   'swap-case',
   'Swap case',
