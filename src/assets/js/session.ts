@@ -86,6 +86,13 @@ export default class Session extends EventEmitter {
   public toggleBindingsDiv: () => void;
   private downloadFile: (filename: string, mimetype: string, content: any) => void;
 
+  private static swapCase(chars: Chars) {
+    return chars.map(function(char_obj) {
+      const new_char = _.clone(char_obj);
+      new_char.char = char_obj.char.toLowerCase() === char_obj.char ? char_obj.char.toUpperCase() : char_obj.char.toLowerCase();
+      return new_char;
+    });
+  }
   constructor(doc: Document, options: SessionOptions = {}) {
     super();
 
@@ -775,16 +782,8 @@ export default class Session extends EventEmitter {
     return mutation.ncharsDeleted;
   }
 
-  private static swapCase(chars: Chars) {
-    return chars.map(function(char_obj) {
-      const new_char = _.clone(char_obj);
-      new_char.char = char_obj.char.toLowerCase() === char_obj.char ? char_obj.char.toUpperCase() : char_obj.char.toLowerCase();
-      return new_char;
-    });
-  }
-
   public async swapCaseAtCursor() {
-    await this.changeChars(this.cursor.row, this.cursor.col, 1, this.swapCase);
+    await this.changeChars(this.cursor.row, this.cursor.col, 1, Session.swapCase);
     await this.cursor.right();
   }
 
@@ -799,7 +798,7 @@ export default class Session extends EventEmitter {
     }
 
     const nchars = cursor2.col - cursor1.col + 1;
-    await this.changeChars(cursor1.row, cursor1.col, nchars, this.swapCase);
+    await this.changeChars(cursor1.row, cursor1.col, nchars, Session.swapCase);
     await this.cursor.from(cursor1);
   }
 
@@ -808,7 +807,7 @@ export default class Session extends EventEmitter {
       row,
       0,
       await this.document.getLength(row),
-      this.swapCase
+      Session.swapCase
     )));
   }
 
@@ -1424,5 +1423,4 @@ export default class Session extends EventEmitter {
 
     this.emit('scroll', numlines);
   }
-
 }
