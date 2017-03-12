@@ -25,10 +25,7 @@ type State = {
   crumbContents?: {[row: number]: string };
 };
 
-type Profiler = {
-  start: () => void;
-  finish: () => void;
-};
+type Profiler = (profilerMessage: string) => () => void;
 
 export default class SessionComponent extends React.Component<Props, State> {
   private update: () => void; // this is promise debounced
@@ -92,24 +89,23 @@ export default class SessionComponent extends React.Component<Props, State> {
 
     this.getProfiler = (profileRender) => {
       if (!profileRender) {
-        return {
-          start: () => null,
-          finish: () => null
-        };
+        return () => () => null;
       }
 
       let t0 = Date.now();
 
-      return {
-        start: () => { t0 = Date.now(); },
-        finish: () => logger.info('Update took time', Date.now() - t0)
+      return (profilerMessage) => {
+        t0 = Date.now();
+
+        return () => {
+          logger.info(profilerMessage, Date.now() - t0);
+        };
       };
     };
 
     this.update = promiseDebounce(async () => {
       const session = this.props.session;
-      const profiler = this.getProfiler(this.profileRender);
-      profiler.start();
+      const finishProfiling = this.getProfiler(this.profileRender)('Update took');
 
       const cursorsTree = new CursorsInfoTree(Path.rootRow());
       const cursor = session.cursor;
@@ -150,18 +146,17 @@ export default class SessionComponent extends React.Component<Props, State> {
         loaded: true,
       });
 
-      profiler.finish();
+      finishProfiling();
     });
   }
 
   private async fetchAndRerender() {
     const session = this.props.session;
-    const profiler = this.getProfiler(this.profileRender);
-    profiler.start();
+    const finishProfiling = this.getProfiler(this.profileRender)('Update took');
 
     await session.document.forceLoadTree(session.viewRoot.row, true);
 
-    profiler.finish();
+    finishProfiling();
     this.update();
   }
 
