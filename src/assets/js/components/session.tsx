@@ -24,10 +24,14 @@ type State = {
   cursorsTree?: CursorsInfoTree;
   crumbContents?: {[row: number]: string };
 };
+
+type Profiler = (profilerMessage: string) => () => void;
+
 export default class SessionComponent extends React.Component<Props, State> {
   private update: () => void; // this is promise debounced
 
   private profileRender: boolean; // for debugging
+  private getProfiler: (profileRender: boolean) => Profiler;
   private onCharClick: (path: Path, column: number, e: Event) => void;
   private onLineClick: (path: Path) => Promise<void>;
   private onBulletClick: (path: Path) => Promise<void>;
@@ -83,12 +87,23 @@ export default class SessionComponent extends React.Component<Props, State> {
     // make true to output time taken to get render contents
     this.profileRender = true;
 
+    this.getProfiler = (profileRender) => {
+      if (!profileRender) {
+        return () => () => null;
+      }
+
+      return (profilerMessage) => {
+        const t0 = Date.now();
+
+        return () => {
+          logger.info(profilerMessage, Date.now() - t0);
+        };
+      };
+    };
+
     this.update = promiseDebounce(async () => {
       const session = this.props.session;
-      let t;
-      if (this.profileRender) {
-        t = Date.now();
-      }
+      const finishProfiling = this.getProfiler(this.profileRender)('Update took');
 
       const cursorsTree = new CursorsInfoTree(Path.rootRow());
       const cursor = session.cursor;
@@ -129,25 +144,17 @@ export default class SessionComponent extends React.Component<Props, State> {
         loaded: true,
       });
 
-      if (this.profileRender) {
-        logger.info('Update took time', Date.now() - t);
-      }
+      finishProfiling();
     });
   }
 
   private async fetchAndRerender() {
     const session = this.props.session;
-    // await (new Promise((resolve) => {
-    //   setTimeout(resolve, 2000);
-    // }));
-    let t;
-    if (this.profileRender) {
-      t = Date.now();
-    }
+    const finishProfiling = this.getProfiler(this.profileRender)('forceLoadTree took');
+
     await session.document.forceLoadTree(session.viewRoot.row, true);
-    if (this.profileRender) {
-      logger.info('forceLoadTree took time', Date.now() - t);
-    }
+
+    finishProfiling();
     this.update();
   }
 

@@ -1,5 +1,5 @@
 import * as utils from '../utils';
-import keyDefinitions, { Action, SequenceAction } from '../keyDefinitions';
+import keyDefinitions, { Action, ActionContext, SequenceAction } from '../keyDefinitions';
 
 keyDefinitions.registerAction(new Action(
   'move-cursor-normal',
@@ -533,5 +533,41 @@ keyDefinitions.registerAction(new Action(
     const tmp = session.anchor.clone();
     await session.anchor.from(session.cursor);
     await session.cursor.from(tmp);
+  },
+));
+
+keyDefinitions.registerAction(new Action(
+  'swap-case',
+  'Swap case',
+  async function({ session }) {
+    await session.swapCaseAtCursor();
+  },
+));
+
+keyDefinitions.registerAction(new Action(
+  'visual-swap-case',
+  'Swap case in VISUAL mode',
+  async function({ session }) {
+    await session.swapCaseInVisual(session.cursor, session.anchor);
+    await session.setMode('NORMAL');
+  },
+));
+
+keyDefinitions.registerAction(new Action(
+  'visual-line-swap-case',
+  'Swap case in VISUAL_LINE mode',
+  async function({ session, visual_line }: ActionContext) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
+
+    const rows = (await session.document.getChildRange(
+      visual_line.parent, visual_line.start_i, visual_line.end_i
+    )).map(path => {
+      return path.row;
+    });
+
+    await session.swapCaseInVisualLine(rows);
+    await session.setMode('NORMAL');
   },
 ));

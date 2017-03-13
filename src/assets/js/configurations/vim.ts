@@ -124,6 +124,7 @@ export const NORMAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'zoom-root': [['shift+enter'], ['ctrl+shift+left']],
   'jump-prev': [['ctrl+o']],
   'jump-next': [['ctrl+i']],
+  'swap-case': [['~']],
 }, NORMAL_MOTION_MAPPINGS);
 
 export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
@@ -138,6 +139,7 @@ export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'visual-toggle-italic': [['ctrl+I']],
   'visual-toggle-underline': [['ctrl+U']],
   'visual-toggle-strikethrough': [['ctrl+enter']],
+  'visual-swap-case': [['~']],
 }, _.pick(NORMAL_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS));
 
 export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
@@ -156,6 +158,7 @@ export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'visual-line-toggle-underline': [['ctrl+U']],
   'visual-line-toggle-strikethrough': [['ctrl+enter']],
   'toggle-row-strikethrough': [['meta+enter']],
+  'visual-line-swap-case': [['~']],
 }, NORMAL_MOTION_MAPPINGS);
 
 export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
