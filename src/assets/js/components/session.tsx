@@ -92,10 +92,8 @@ export default class SessionComponent extends React.Component<Props, State> {
         return () => () => null;
       }
 
-      let t0 = Date.now();
-
       return (profilerMessage) => {
-        t0 = Date.now();
+        const t0 = Date.now();
 
         return () => {
           logger.info(profilerMessage, Date.now() - t0);
@@ -152,7 +150,7 @@ export default class SessionComponent extends React.Component<Props, State> {
 
   private async fetchAndRerender() {
     const session = this.props.session;
-    const finishProfiling = this.getProfiler(this.profileRender)('Update took');
+    const finishProfiling = this.getProfiler(this.profileRender)('forceLoadTree took');
 
     await session.document.forceLoadTree(session.viewRoot.row, true);
 
