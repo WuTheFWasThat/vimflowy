@@ -7,13 +7,14 @@ import Session from '../session';
 import { CachedRowInfo } from '../document';
 import Path from '../path';
 import { CursorsInfoTree } from '../cursor';
-// import { Col } from '../types';
+import { Col } from '../types';
+import { PartialScanner, Token } from '../utils/token_scanner';
 
 type RowProps = {
   session: Session;
   path: Path;
   cached: CachedRowInfo;
-  onCharClick: ((path: Path, column: number, e: Event) => void) | null;
+  onCharClick: ((path: Path, column: Col, e: Event) => void) | null;
   onClick: ((path: Path) => void) | null;
   style: React.CSSProperties;
   cursorsTree: CursorsInfoTree;
@@ -21,7 +22,7 @@ type RowProps = {
 };
 class RowComponent extends React.Component<RowProps, {}> {
   private onClick: (() => void) | undefined;
-  private onCharClick: ((column: number, e: Event) => void) | null;
+  private onCharClick: ((column: Col, e: Event) => void) | null;
 
   constructor(props: RowProps) {
     super(props);
@@ -41,7 +42,7 @@ class RowComponent extends React.Component<RowProps, {}> {
 
     this.onCharClick = null;
     if (props.onCharClick) {
-      this.onCharClick = (column: number, e: Event) => {
+      this.onCharClick = (column: Col, e: Event) => {
         if (!props.onCharClick) {
           throw new Error('onCharClick disappeared');
         }
@@ -82,9 +83,9 @@ class RowComponent extends React.Component<RowProps, {}> {
 
     const hooksInfo = { path, pluginData: this.props.cached.pluginData };
 
-    lineoptions.wordHook = (line, wordInfo) => {
-      return session.applyHook('renderLineWordHook', line, Object.assign({ wordInfo }, hooksInfo));
-    };
+    lineoptions.wordHook = session.applyHook(
+      'renderLineWordHook', PartialScanner.trivial<Token, React.ReactNode>(), hooksInfo
+    );
 
     lineoptions = session.applyHook('renderLineOptions', lineoptions, hooksInfo);
     let lineContents = [
@@ -117,7 +118,7 @@ type BlockProps = {
   cached: CachedRowInfo | null;
   cursorsTree: CursorsInfoTree;
   cursorBetween: boolean;
-  onCharClick: ((path: Path, column: number, e: Event) => void) | null;
+  onCharClick: ((path: Path, column: Col, e: Event) => void) | null;
   onLineClick: ((path: Path) => void) | null;
   onBulletClick: ((path: Path) => void) | undefined;
   topLevel: boolean;

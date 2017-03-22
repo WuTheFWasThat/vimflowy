@@ -13,6 +13,7 @@ import * as utils from '../../assets/js/utils';
 import { Logger } from '../../assets/js/logger';
 import Path from '../../assets/js/path';
 import { Row } from '../../assets/js/types';
+import { PartialScanner, Token, EmitFn } from '../../assets/js/utils/token_scanner';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/js/definitions/motions';
 import { INSERT_MOTION_MAPPINGS } from '../../assets/js/configurations/vim';
@@ -397,25 +398,28 @@ export class MarksPlugin {
       return lineContents;
     });
 
-    this.api.registerHook('session', 'renderLineWordHook', (line, info) => {
-      const { wordInfo } = info;
-
-      if (this.session.mode === 'NORMAL') {
-        if (wordInfo.word[0] === '@') {
-          const mark = wordInfo.word.slice(1).replace(/(\.|!|\?)+$/g, '');
-          const path = this.marks_to_paths[mark];
-          if (path) {
-            for (let i = wordInfo.start; i <= wordInfo.end; i++) {
-              line[i].renderOptions.type = 'a';
-              line[i].renderOptions.onClick = async () => {
-                await this.session.zoomInto(path);
-                this.session.save();
-              };
+    this.api.registerHook('session', 'renderLineWordHook', (tokenizer) => {
+      return tokenizer.chain(new PartialScanner<Token, React.ReactNode>((
+        token: Token, emitToken: EmitFn<Token>
+      ) => {
+        if (this.session.mode === 'NORMAL') {
+          if (token.text[0] === '@') {
+            const mark = token.text.slice(1).replace(/(\.|!|\?)+$/g, '');
+            const path = this.marks_to_paths[mark];
+            if (path) {
+              token.info.forEach((char_info) => {
+                char_info.renderOptions.divType = 'a';
+                char_info.renderOptions.classes['theme-text-link'] = true;
+                char_info.renderOptions.onClick = async () => {
+                  await this.session.zoomInto(path);
+                  this.session.save();
+                };
+              });
             }
           }
         }
-      }
-      return line;
+        emitToken(token);
+      }));
     });
 
     this.api.registerListener('document', 'afterDetach', async () => {
