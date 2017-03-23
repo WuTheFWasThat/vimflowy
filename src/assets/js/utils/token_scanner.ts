@@ -108,6 +108,7 @@ export type TokenizerFn<T> = ScannerFn<Token, T>;
 export type PartialTokenizer<T> = PartialScanner<Token, T>;
 export type PartialTokenizerFn<T> = PartialScannerFn<Token, T>;
 
+// captures first group of regex
 export function RegexTokenizerSplitter<T>(
   regex: RegExp, tryHandleMatch: PartialTokenizerFn<T>
 ): PartialTokenizer<T> {
@@ -116,14 +117,17 @@ export function RegexTokenizerSplitter<T>(
   ) => {
     let match = regex.exec(token.text);
     while (match) {
-      if (match.index > 0) {
+      // index of match, plus index of group in match
+      let index = match.index + match[0].indexOf(match[1]);
+
+      if (index > 0) {
         let filler_token;
-        [filler_token, token] = SplitToken(token, match.index);
+        [filler_token, token] = SplitToken(token, index);
         emitToken(filler_token);
       }
 
       let matched_token;
-      [matched_token, token] = SplitToken(token, match[0].length);
+      [matched_token, token] = SplitToken(token, match[1].length);
       tryHandleMatch(matched_token, emitToken, emit);
 
       match = regex.exec(token.text);

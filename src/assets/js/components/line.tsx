@@ -12,6 +12,7 @@ export type LineProps = {
   lineData: Line;
   cursors?: {[key: number]: boolean};
   highlights?: {[key: number]: boolean};
+  lineHook?: PartialScanner<Token, React.ReactNode>;
   wordHook?: PartialScanner<Token, React.ReactNode>;
   onCharClick?: ((col: Col, e: Event) => void) | null;
   cursorBetween?: boolean;
@@ -124,35 +125,15 @@ export default class LineComponent extends React.Component<LineProps, {}> {
 
     });
 
-    let wordHook;
-    if (this.props.wordHook) {
-      wordHook = this.props.wordHook;
+    let lineHook;
+    if (this.props.lineHook) {
+      lineHook = this.props.lineHook;
     } else {
-      wordHook = PartialScanner.trivial<Token, React.ReactNode>();
+      lineHook = PartialScanner.trivial<Token, React.ReactNode>();
     }
-    wordHook = wordHook.chain(new PartialScanner<Token, React.ReactNode>((
-      token: Token, emitToken: EmitFn<Token>
-    ) => {
-      if (utils.isLink(token.text)) {
-        token.info.forEach((char_info) => {
-          char_info.renderOptions.divType = 'a';
-          char_info.renderOptions.classes['theme-text-link'] = true;
-          char_info.renderOptions.onClick = null;
-          char_info.renderOptions.href = token.text;
-        });
-      }
-      emitToken(token);
-    }));
-
-    const WordTokenizer: PartialTokenizer<React.ReactNode> =
-      RegexTokenizerSplitter<React.ReactNode>(
-        new RegExp('([^' + word_boundary_chars + ']+)'),
-        wordHook.partial_fn
-      );
-
     const LineTokenizer: PartialTokenizer<React.ReactNode> =
       RegexTokenizerSplitter<React.ReactNode>(
-        new RegExp('\n'),
+        new RegExp('(\n)'),
         (token: Token, _emitToken: EmitFn<Token>, emit: EmitFn<React.ReactNode>) => {
           if (token.text.length !== 1) {
             throw new Error('Expected matched newline of length 1');
@@ -190,8 +171,36 @@ export default class LineComponent extends React.Component<LineProps, {}> {
         }
       );
 
-    let tokenizer = LineTokenizer.chain(WordTokenizer).finish(DefaultTokenizer);
+    let wordHook;
+    if (this.props.wordHook) {
+      wordHook = this.props.wordHook;
+    } else {
+      wordHook = PartialScanner.trivial<Token, React.ReactNode>();
+    }
+    wordHook = wordHook.chain(new PartialScanner<Token, React.ReactNode>((
+      token: Token, emitToken: EmitFn<Token>
+    ) => {
+      if (utils.isLink(token.text)) {
+        token.info.forEach((char_info) => {
+          char_info.renderOptions.divType = 'a';
+          char_info.renderOptions.classes['theme-text-link'] = true;
+          char_info.renderOptions.onClick = null;
+          char_info.renderOptions.href = token.text;
+        });
+      }
+      emitToken(token);
+    }));
 
+    const WordTokenizer: PartialTokenizer<React.ReactNode> =
+      RegexTokenizerSplitter<React.ReactNode>(
+        new RegExp('([^' + word_boundary_chars + ']+)'),
+        wordHook.partial_fn
+      );
+
+    let tokenizer = lineHook
+      .chain(LineTokenizer)
+      .chain(WordTokenizer)
+      .finish(DefaultTokenizer);
 
     // NOTE: this doesn't seem to work for the breadcrumbs, e.g. try visual selecting word at end
 

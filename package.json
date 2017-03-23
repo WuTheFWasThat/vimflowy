@@ -24,9 +24,11 @@
     "font-awesome": "^4.6.3",
     "immutable": "^3.8.1",
     "jquery": "^3.1.0",
+    "katex": "^0.7.1",
     "lodash": "^4.15.0",
     "react": "^15.3.1",
-    "react-dom": "^15.3.1"
+    "react-dom": "^15.3.1",
+    "react-katex": "^1.1.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.32",

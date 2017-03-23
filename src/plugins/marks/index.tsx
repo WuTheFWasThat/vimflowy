@@ -398,7 +398,7 @@ export class MarksPlugin {
       return lineContents;
     });
 
-    this.api.registerHook('session', 'renderLineWordHook', (tokenizer) => {
+    this.api.registerHook('session', 'renderWordTokenHook', (tokenizer) => {
       return tokenizer.chain(new PartialScanner<Token, React.ReactNode>((
         token: Token, emitToken: EmitFn<Token>
       ) => {
