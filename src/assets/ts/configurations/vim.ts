@@ -14,6 +14,8 @@ export const NORMAL_MOTION_MAPPINGS: HotkeyMapping = {
   'motion-right': [['right'], ['l']],
   'motion-up': [['up'], ['k']],
   'motion-down': [['down'], ['j']],
+  'motion-display-up': [['g', 'k']],
+  'motion-display-down': [['g', 'j']],
   'motion-line-beginning': [['home'], ['0'], ['^']],
   'motion-line-end': [['end'], ['$']],
   'motion-word-beginning': [['b']],
@@ -268,7 +270,7 @@ const defaultData: Array<SerializedBlock> = [
       ] },
       'Make new clones with yc, then p',
     ] },
-    { text: 'Rich text', collapsed: true, children: [
+    { text: 'Rich content', collapsed: true, children: [
       { text: 'Text formatting', collapsed: true, children: [
         '**Bold**, *italicized*, and _underlined_ text.  ** * _Emphatic_ * **!',
         {

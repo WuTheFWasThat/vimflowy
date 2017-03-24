@@ -104,6 +104,7 @@ class RowComponent extends React.Component<RowProps, {}> {
     let lineContents = [
       <LineComponent key='line'
         onCharClick={this.onCharClick}
+        path={path}
         {...lineoptions}
       />,
     ];

@@ -94,7 +94,6 @@ export function mimetypeLookup(filename: string): string | undefined {
   return extensionLookup[extension.toLowerCase()];
 }
 
-// TODO: get jquery typing to work?
 export function scrollDiv($elem: any, amount: number) {
   // # animate.  seems to not actually be great though
   // $elem.stop().animate({

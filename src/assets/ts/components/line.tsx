@@ -3,12 +3,14 @@ import * as _ from 'lodash';
 
 import * as utils from '../utils';
 import { Col, Line } from '../types';
+import Path from '../path';
 import {
   EmitFn, Token, Tokenizer, PartialTokenizer,
   RegexTokenizerSplitter, CharInfo, Unfolder, PartialUnfolder
 } from '../utils/token_unfolder';
 
 export type LineProps = {
+  path?: Path; // only used for data-attributes
   lineData: Line;
   cursors?: {[key: number]: boolean};
   highlights?: {[key: number]: boolean};
@@ -50,6 +52,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     const lineData = _.cloneDeep(this.props.lineData);
     const cursors = this.props.cursors || {};
     const highlights = this.props.highlights || {};
+    const pathString = this.props.path ? this.props.path.getAncestry().join(',') : '';
 
     // ideally this takes up space but is unselectable (uncopyable)
     const cursorChar = ' ';
@@ -105,6 +108,8 @@ export default class LineComponent extends React.Component<LineProps, {}> {
           React.createElement(
             divType,
             {
+              'data-column': column,
+              'data-path': pathString,
               key: `default-${column}`,
               className: classes.join(' '),
               onClick: onClick,
@@ -142,6 +147,8 @@ export default class LineComponent extends React.Component<LineProps, {}> {
               'span',
               {
                 key: `cursor-${token.index}`,
+                'data-column': token.index,
+                'data-path': pathString,
                 className: classes.join(' '),
                 onClick: undefined,
               } as React.DOMAttributes<any>,
@@ -154,6 +161,8 @@ export default class LineComponent extends React.Component<LineProps, {}> {
           'div',
           {
             key: `newline-${token.index}`,
+            'data-column': token.index,
+            'data-path': pathString,
             className: classes.join(' '),
             onClick: undefined,
           } as React.DOMAttributes<any>,
