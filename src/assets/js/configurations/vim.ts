@@ -109,8 +109,8 @@ export const NORMAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'indent-blocks': [['tab'], ['ctrl+l']],
   'swap-block-down': [['ctrl+j']],
   'swap-block-up': [['ctrl+k']],
-  'search-local': [['/'], ['ctrl+f']],
-  'search-global': [['ctrl+/']],
+  'search-local': [['ctrl+/'], ['ctrl+f']],
+  'search-global': [['/']],
   'toggle-row-bold': [['ctrl+B']],
   'toggle-row-italic': [['ctrl+I']],
   'toggle-row-underline': [['ctrl+U']],
@@ -269,25 +269,6 @@ const defaultData: Array<SerializedBlock> = [
         'Use tab and shift+tab to indent and unindent blocks',
         'Use < and > to indent and unindent just a single line',
       ] },
-      { text: 'Text formatting', collapsed: true, children: [
-        {
-          text:        'Bold, italicized, and underlined text.  Emphatic!',
-          properties: {
-            bold:      '....                                    ........ ',
-            italic:    '      ..........                        ........ ',
-            underline: '                      ..........        ........ ',
-          },
-        },
-        {
-          text:          'Strike through',
-          children: [ {
-            text:            'Useful for todo lists',
-            properties: {
-              strikethrough: '.....................',
-            },
-          } ],
-        },
-      ] },
     ] },
     { text: 'Vim features', collapsed: true, children: [
       'Most of vim\'s movement commands',
@@ -309,6 +290,36 @@ const defaultData: Array<SerializedBlock> = [
         { clone: 1 },
       ] },
       'Make new clones with yc, then p',
+    ] },
+    { text: 'Rich text', collapsed: true, children: [
+      { text: 'Text formatting', collapsed: true, children: [
+        {
+          text:        'Bold, italicized, and underlined text.  Emphatic!',
+          properties: {
+            bold:      '....                                    ........ ',
+            italic:    '      ..........                        ........ ',
+            underline: '                      ..........        ........ ',
+          },
+        },
+        {
+          text:          'Strike through',
+          children: [ {
+            text:            'Useful for todo lists',
+            properties: {
+              strikethrough: '.....................',
+            },
+          } ],
+        },
+      ] },
+      { text: 'LaTeX', collapsed: true, children: [
+        'Inline equations: $E = mc^2$ and $f(b) - f(a) = \\int_a^b f\'(t) dt$',
+        'Block equations: $$\\max_{x \\ge 0, Ax \\le b} c^T x = \\min_{y \\ge 0, A^ty \\ge c} b^T y$$',
+      ] },
+      { text: 'HTML', collapsed: true, children: [
+        'Inline arbitrary HTML, such as images: <img src="/images/vimflowy-32.png"/>',
+        'Or tables: <table><tr><th>Pros</th><th>Cons</th></tr><tr><td>Everything</td><td>Nothing</td></tr></table>',
+        'Or <span style=\'color: blue\'>colored</span> <span style=\'color: orange\'>text</span>',
+      ] },
     ] },
     { text: 'Customizability', collapsed: true, children: [
       { text: 'Plugins system', collapsed: true, children: [

@@ -4,3 +4,4 @@ import './examples';
 import './marks';
 import './time-tracking';
 import './latex';
+import './html';

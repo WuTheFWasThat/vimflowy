@@ -108,7 +108,7 @@ export default class AppComponent extends React.Component<Props, {}> {
 
           <div id='view'
             style={{flex: '1 1 auto', fontSize: 10}}
-            className={session.mode === 'SEARCH' ? 'hidden' : ''}
+            className={'theme-bg-primary' + (session.mode === 'SEARCH' ? ' hidden' : '')}
           >
             {/* NOTE: maybe always showing session would be nice?
               * Mostly works to never have 'hidden',

@@ -1,8 +1,8 @@
 /* globals describe, it */
 import TestCase from '../testcase';
 
-const globalSearchKey = 'ctrl+/';
-const localSearchKey = '/';
+const globalSearchKey = '/';
+const localSearchKey = 'ctrl+/';
 
 describe('global search', function() {
   it('works in basic cases', async function() {

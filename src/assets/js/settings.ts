@@ -21,7 +21,7 @@ const default_settings: SettingsType = {
   theme: 'default-theme',
   showKeyBindings: true,
   hotkeys: {},
-  enabledPlugins: ['Marks'],
+  enabledPlugins: ['Marks', 'HTML', 'LaTeX'],
 };
 
 type DocSettingsType = {
