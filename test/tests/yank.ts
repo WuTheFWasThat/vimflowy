@@ -387,6 +387,30 @@ describe('yank', function() {
       await t.done();
     });
 
+    it('pastes clones at collapsed view root', async function() {
+      let t = new TestCase([
+        'blah',
+        { text: 'herpy', children: [
+          { text: 'derpy', collapsed: true, children: [
+            'burpy',
+          ] },
+        ] },
+      ]);
+      t.sendKeys('ycjj');
+      t.sendKey('enter');
+      t.sendKeys('p');
+      t.expect([
+        { id: 1, text: 'blah' },
+        { text: 'herpy', children: [
+          { text: 'derpy', collapsed: true, children: [
+            { clone: 1 },
+            'burpy',
+          ] },
+        ] },
+      ]);
+      await t.done();
+    });
+
     it('yanks serialized (not cloned)', async function() {
       let t = new TestCase([
         { text: 'hey', collapsed: true, children: [
@@ -434,5 +458,66 @@ describe('yank', function() {
       t.expect([ 'pty dumptyhumpty dumpty' ]);
       await t.done();
     });
+
+    it('works at collapsed view root', async function() {
+      let t = new TestCase([
+        { text: 'herpy', children: [
+          { text: 'derpy', collapsed: true, children: [
+            'burpy',
+          ] },
+        ] },
+      ]);
+      t.sendKey('j');
+      t.sendKey('enter');
+      t.sendKeys('yyp');
+      t.expect([
+        { text: 'herpy', children: [
+          { text: 'derpy', collapsed: true, children: [
+            'derpy',
+            'burpy',
+          ] },
+        ] },
+      ]);
+      await t.done();
+    });
+
+    it('works at view root with no children', async function() {
+      let t = new TestCase([
+        { text: 'herpy', children: [
+          'derpy'
+        ] },
+      ]);
+      t.sendKey('j');
+      t.sendKey('enter');
+      t.sendKeys('yyp');
+      t.expect([
+        { text: 'herpy', children: [
+          { text: 'derpy', children: [
+            'derpy',
+          ] },
+        ] },
+      ]);
+      await t.done();
+    });
+
+    it('works at collapsed view root with no children', async function() {
+      let t = new TestCase([
+        { text: 'herpy', children: [
+          { text: 'derpy', collapsed: true },
+        ] },
+      ]);
+      t.sendKey('j');
+      t.sendKey('enter');
+      t.sendKeys('yyp');
+      t.expect([
+        { text: 'herpy', children: [
+          { text: 'derpy', collapsed: true, children: [
+            'derpy',
+          ] },
+        ] },
+      ]);
+      await t.done();
+    });
+
   });
 });

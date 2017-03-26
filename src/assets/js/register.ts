@@ -96,8 +96,9 @@ export default class Register {
     if (options.before) {
       await this.session.addBlocks(parent, index, serialized_rows, {setCursor: 'first'});
     } else {
-      const children = await this.session.document.getChildren(path);
-      if ((!await this.session.document.collapsed(path.row)) && (children.length > 0)) {
+      if (path.is(this.session.viewRoot) ||
+          ((!await this.session.document.collapsed(path.row)) &&
+           (await this.session.document.hasChildren(path.row)))) {
         await this.session.addBlocks(path, 0, serialized_rows, {setCursor: 'first'});
       } else {
         await this.session.addBlocks(parent, index + 1, serialized_rows, {setCursor: 'first'});
@@ -118,8 +119,9 @@ export default class Register {
     if (options.before) {
       await this.session.attachBlocks(parent, cloned_rows, index, {setCursor: 'first'});
     } else {
-      const children = await this.session.document.getChildren(path);
-      if ((!await this.session.document.collapsed(path.row)) && (children.length > 0)) {
+      if (path.is(this.session.viewRoot) ||
+          ((!await this.session.document.collapsed(path.row)) &&
+           (await this.session.document.hasChildren(path.row)))) {
         await this.session.attachBlocks(path, cloned_rows, 0, {setCursor: 'first'});
       } else {
         await this.session.attachBlocks(parent, cloned_rows, index + 1, {setCursor: 'first'});
