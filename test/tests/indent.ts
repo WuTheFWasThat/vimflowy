@@ -487,4 +487,70 @@ describe('row indent/unindent', function() {
     ]);
     await t.done();
   });
+
+  it('disallows unindenting row past viewroot', async function() {
+    let t = new TestCase([
+      { text: 'first', children: [
+        { text: 'second', children: [
+          'third',
+        ] },
+      ] },
+    ]);
+    t.sendKey('enter');
+    t.expectViewRoot(1);
+    t.sendKey('j');
+    t.sendKey('j');
+    t.sendKey(unindentRowKey);
+    t.expect([
+      { text: 'first', children: [
+        'second',
+        'third',
+      ] },
+    ]);
+    t.sendKey(unindentRowKey);
+    t.expect([
+      { text: 'first', children: [
+        'second',
+      ] },
+      'third',
+    ]);
+    t.expectViewRoot(0);
+    await t.done();
+  });
+
+  it('disallows unindenting block past viewroot', async function() {
+    let t = new TestCase([
+      { text: 'first', children: [
+        { text: 'second', children: [
+          { text: 'third', children: [
+            'fourth',
+          ] },
+        ] },
+      ] },
+    ]);
+    t.sendKey('enter');
+    t.expectViewRoot(1);
+    t.sendKey('j');
+    t.sendKey('j');
+    t.sendKey(unindentBlockKey);
+    t.expect([
+      { text: 'first', children: [
+        'second',
+        { text: 'third', children: [
+          'fourth',
+        ] },
+      ] },
+    ]);
+    t.sendKey(unindentBlockKey);
+    t.expect([
+      { text: 'first', children: [
+        'second',
+      ] },
+      { text: 'third', children: [
+        'fourth',
+      ] },
+    ]);
+    t.expectViewRoot(0);
+    await t.done();
+  });
 });

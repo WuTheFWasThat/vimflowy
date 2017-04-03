@@ -1228,6 +1228,9 @@ export default class Session extends EventEmitter {
       pp_i += 1;
       await this.moveBlock(sib, newparent, pp_i);
     }
+    if (parent.is(this.viewRoot)) {
+      await this.zoomInto(newparent);
+    }
     return newparent;
   }
 
