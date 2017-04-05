@@ -2,7 +2,6 @@
 // import * as DataStore from './datastore';
 import Session from './session';
 import { ActionName, ActionContext } from './keyDefinitions';
-import * as utils from './utils';
 
 import { ModeId, Key } from './types';
 
@@ -161,10 +160,7 @@ registerMode({
       key = transform_insert_key(key);
       if (key.length === 1) {
         // simply insert the key
-        await context.session.addCharsAtCursor([{
-          char: key,
-          properties: Object.assign({}, context.session.cursor.properties),
-        }]);
+        await context.session.addCharsAtCursor([key]);
         return [null, context];
       }
       return [key, context];
@@ -265,7 +261,7 @@ registerMode({
       }
       key = transform_insert_key(key);
       if (key.length === 1) {
-        await context.session.menu.session.addCharsAtCursor([utils.plainChar(key)]);
+        await context.session.menu.session.addCharsAtCursor([key]);
         await context.session.menu.update();
         context.keyStream.drop();
         return [null, context];

@@ -1,9 +1,6 @@
-import { CharTextProperties } from '../types';
-
 export type CharInfo = {
   highlight: boolean,
   cursor: boolean,
-  properties: CharTextProperties,
   renderOptions: {
     divType?: string,
     classes: {[key: string]: boolean},

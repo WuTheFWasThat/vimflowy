@@ -363,7 +363,7 @@ async function create_session(
             if (i !== 0) {
               await session.newLineAtCursor();
             }
-            const chars = line.split('').map(utils.plainChar);
+            const chars = line.split('');
             await session.addCharsAtCursor(chars);
           }
           session.save();

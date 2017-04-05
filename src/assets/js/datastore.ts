@@ -1,13 +1,11 @@
 import * as firebase from 'firebase';
 
-import * as _ from 'lodash';
-
 import EventEmitter from './eventEmitter';
 import * as errors from './errors';
 import * as utils from './utils';
 import logger from './logger';
 
-import { Row, Char, Line, EncodedLine, SerializedPath, MacroMap, TextProperties } from './types';
+import { Row, Line, SerializedPath, MacroMap } from './types';
 
 export type DataSource = 'local' | 'firebase' | 'inmemory';
 
@@ -27,28 +25,13 @@ const timeout = (ns: number) => {
 // const simulateDelay = 1;
 const simulateDelay: number = 0;
 
-const encodeLine: (line: Line) => EncodedLine = (line) => line.map((obj) => {
-  if (_.every(TextProperties.map(property => !obj.properties[property]))) {
-    return obj.char;
-  } else {
+const decodeLine: (line: Line) => Line = (line) => line.map((obj: any) => {
+  if (typeof obj === 'string') {
     return obj;
   }
-});
 
-const decodeLine: (line: EncodedLine) => Line = (line) => line.map((obj) => {
-  if (typeof obj === 'string') {
-    return utils.plainChar(obj);
-  }
-
-  const chr: Char = _.cloneDeep(obj);
-  chr.properties = chr.properties || {};
   // for backwards compatibility
-  TextProperties.map((property) => {
-    const old_obj = obj as any;
-    if (old_obj[property]) { chr.properties[property] = old_obj[property]; }
-  });
-
-  return chr;
+  return obj.char;
 });
 
 // for backwards compatibility, mainly
@@ -175,7 +158,7 @@ export default class DataStore {
   }
 
   public async setLine(row: Row, line: Line): Promise<void> {
-    return await this._set(this._lineKey_(row), line, encodeLine);
+    return await this._set(this._lineKey_(row), line);
   }
 
   public async getParents(row: Row): Promise<Array<Row>> {

@@ -7,8 +7,7 @@ import EventEmitter from './eventEmitter';
 import Path from './path';
 import DataStore from './datastore';
 import {
-  Row, Col, Char, Line,
-  SerializedLine, SerializedBlock, TextProperties, SerializedLineProperties,
+  Row, Col, Char, Line, SerializedLine, SerializedBlock
 } from './types';
 
 type RowInfo = {
@@ -304,17 +303,12 @@ export default class Document extends EventEmitter {
     return (await this.getInfo(row)).line;
   }
 
-  public async getChars(row: Row) {
-    return (await this.getLine(row)).map(obj => obj.char);
-  }
-
-  public async getText(row: Row): Promise<string> {
-    return (await this.getChars(row)).join('');
+  public async getText(row: Row) {
+    return (await this.getLine(row)).join('');
   }
 
   public async getChar(row: Row, col: Col) {
-    const charInfo = (await this.getLine(row))[col];
-    return charInfo && charInfo.char;
+    return (await this.getLine(row))[col];
   }
 
   public async setLine(row: Row, line: Line) {
@@ -325,7 +319,7 @@ export default class Document extends EventEmitter {
   // get word at this location
   // if on a whitespace character, return nothing
   public async getWord(row: Row, col: Col) {
-    const text = await this.getChars(row);
+    const text = await this.getLine(row);
 
     if (utils.isWhitespace(text[col])) {
       return '';
@@ -761,22 +755,11 @@ export default class Document extends EventEmitter {
 
   // important: serialized automatically garbage collects
   public async serializeRow(row = this.root.row): Promise<SerializedLine> {
-    const line = await this.getLine(row);
     const text = await this.getText(row);
-
-    const properties: SerializedLineProperties = {};
-    TextProperties.forEach((property) => {
-      if (_.some(line.map(obj => obj.properties[property]))) {
-        properties[property] = line.map(obj => obj.properties[property] ? '.' : ' ').join('');
-      }
-    });
 
     const struct: SerializedLine = {
       text,
     };
-    if (Object.keys(properties).length > 0) {
-      struct.properties = properties;
-    }
     if (await this.collapsed(row)) {
       struct.collapsed = true;
     }
@@ -820,7 +803,6 @@ export default class Document extends EventEmitter {
     if (options.pretty) {
       if ((children.length === 0) &&
           (!await this.isClone(row)) &&
-          (!struct.properties) &&
           (!struct.plugins)
          ) {
         return struct.text;
@@ -854,24 +836,12 @@ export default class Document extends EventEmitter {
     }
 
     if (typeof serialized === 'string') {
-      await this.setLine(path.row, serialized.split('').map(utils.plainChar));
+      await this.setLine(path.row, serialized.split(''));
     } else {
       if (serialized.id) {
         id_mapping[serialized.id] = path.row;
       }
-      const line = serialized.text.split('').map(utils.plainChar);
-      if (serialized.properties) {
-        TextProperties.forEach((property) => {
-          if (serialized.properties[property]) {
-            for (const i in serialized.properties[property]) {
-              const val = serialized.properties[property][i];
-              if (val === '.') {
-                line[i].properties[property] = true;
-              }
-            }
-          }
-        });
-      }
+      const line = serialized.text.split('');
 
       await Promise.all([
         this.setLine(path.row, line),

@@ -1,10 +1,6 @@
-import * as _ from 'lodash';
-
 import * as utils from './utils';
 import EventEmitter from './eventEmitter';
-import {
-  Row, Col, CharTextProperties, CursorOptions, TextProperties, TextProperty
-} from './types';
+import { Row, Col, CursorOptions } from './types';
 import Path from './path';
 import Document from './document';
 import Session from './session';
@@ -23,14 +19,13 @@ type WordMovementOptions = {
 // TODO: make a view class which includes viewRoot and cursor
 /*
    Cursor represents a cursor within a session
-   it handles movement logic, insert mode line properties (e.g. bold/italic)
+   Handles movement logic
  */
 export default class Cursor extends EventEmitter {
   public col: Col;
   public path: Path;
   public session: Session;
   public document: Document;
-  public properties: CharTextProperties;
 
   private moveCol: Col;
 
@@ -42,9 +37,6 @@ export default class Cursor extends EventEmitter {
     this.document = session.document;
     this.path = path;
     this.col = col;
-    this.properties = {};
-    // TODO
-    // this._getPropertiesFromContext(); // TODO: this is fire and forget...
 
     // -1 means last col
     this.moveCol = moveCol !== null ? moveCol : col;
@@ -73,7 +65,6 @@ export default class Cursor extends EventEmitter {
     await this._setPath(other.path);
     await this._setCol(other.col);
     this.moveCol = other.moveCol;
-    this.properties = _.cloneDeep(other.properties);
   }
 
   public async setPosition(path: Path, col: Col, cursorOptions?: CursorOptions) {
@@ -106,9 +97,6 @@ export default class Cursor extends EventEmitter {
       col = Math.max(0, Math.min(maxcol, this.moveCol));
     }
     await this._setCol(col);
-    if (!cursorOptions.keepProperties) {
-      await this._getPropertiesFromContext();
-    }
   }
 
   private async _left() {
@@ -462,37 +450,6 @@ export default class Cursor extends EventEmitter {
     if (nextsib !== null) {
       return await this.setPath(nextsib, cursorOptions);
     }
-  }
-
-  // cursor properties
-
-  public setProperty(property: TextProperty, value: boolean) {
-    return this.properties[property] = value;
-  }
-
-  public getProperty(property: TextProperty) {
-    return this.properties[property];
-  }
-
-  public toggleProperty(property: TextProperty) {
-    return this.setProperty(property, !this.getProperty(property));
-  }
-
-  // get whether the cursor should be bold/italic based on surroundings
-  // NOTE: only relevant for insert mode.
-  private async _getPropertiesFromContext() {
-    const line = await this.document.getLine(this.path.row);
-    let obj: CharTextProperties;
-    if (line.length === 0) {
-      obj = {};
-    } else if (this.col === 0) {
-      obj = line[this.col].properties || {};
-    } else {
-      obj = line[this.col - 1].properties || {};
-    }
-    TextProperties.forEach((property) => {
-      this.setProperty(property, !!obj[property]);
-    });
   }
 }
 

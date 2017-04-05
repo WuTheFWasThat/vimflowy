@@ -111,10 +111,7 @@ export const NORMAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'swap-block-up': [['ctrl+k']],
   'search-local': [['ctrl+/'], ['ctrl+f']],
   'search-global': [['/']],
-  'toggle-row-bold': [['ctrl+B']],
-  'toggle-row-italic': [['ctrl+I']],
-  'toggle-row-underline': [['ctrl+U']],
-  'toggle-row-strikethrough': [['ctrl+enter']],
+  'toggle-strikethrough': [['ctrl+enter']],
   'export-file': [['ctrl+s']],
   'zoom-prev-sibling': [['alt+k']],
   'zoom-next-sibling': [['alt+j']],
@@ -135,10 +132,6 @@ export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'visual-delete': [['d'], ['x']],
   'visual-change': [['c']],
   'visual-yank': [['y']],
-  'visual-toggle-bold': [['ctrl+B']],
-  'visual-toggle-italic': [['ctrl+I']],
-  'visual-toggle-underline': [['ctrl+U']],
-  'visual-toggle-strikethrough': [['ctrl+enter']],
   'visual-swap-case': [['~']],
 }, _.pick(NORMAL_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS));
 
@@ -153,11 +146,7 @@ export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'visual-line-yank-clone': [['Y']],
   'visual-line-indent': [['>'], ['tab'], ['ctrl+l']],
   'visual-line-unindent': [['<'], ['shift+tab'], ['ctrl+h']],
-  'visual-line-toggle-bold': [['ctrl+B']],
-  'visual-line-toggle-italic': [['ctrl+I']],
-  'visual-line-toggle-underline': [['ctrl+U']],
   'visual-line-toggle-strikethrough': [['ctrl+enter']],
-  'toggle-row-strikethrough': [['meta+enter']],
   'visual-line-swap-case': [['~']],
 }, NORMAL_MOTION_MAPPINGS);
 
@@ -187,10 +176,7 @@ export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'indent-blocks': [['tab']],
   'swap-block-down': [],
   'swap-block-up': [],
-  'toggle-cursor-bold': [['ctrl+B']],
-  'toggle-cursor-italic': [['ctrl+I']],
-  'toggle-cursor-underline': [['ctrl+U']],
-  'toggle-cursor-strikethrough': [['ctrl+enter']],
+  'toggle-strikethrough': [['ctrl+enter']],
   'zoom-prev-sibling': [['alt+k']],
   'zoom-next-sibling': [['alt+j']],
   'zoom-in': [['ctrl+right']],
@@ -239,11 +225,8 @@ export const WORKFLOWY_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'indent-blocks': [['tab']],
   'swap-block-down': [['meta+shift+up']],
   'swap-block-up': [['meta+shift+down']],
-  'toggle-cursor-bold': [['meta+b']],
-  'toggle-cursor-italic': [['meta+i']],
-  'toggle-cursor-underline': [['meta+u']],
   // NOTE: in workflowy, this also crosses out children
-  'toggle-cursor-strikethrough': [['meta+enter']],
+  'toggle-strikethrough': [['meta+enter']],
   'zoom-prev-sibling': [],
   'zoom-next-sibling': [],
   'zoom-in': [],
@@ -292,25 +275,15 @@ const defaultData: Array<SerializedBlock> = [
       'Make new clones with yc, then p',
     ] },
     { text: 'Rich text', collapsed: true, children: [
-      { text: 'Text formatting', collapsed: true, children: [
-        {
-          text:        'Bold, italicized, and underlined text.  Emphatic!',
-          properties: {
-            bold:      '....                                    ........ ',
-            italic:    '      ..........                        ........ ',
-            underline: '                      ..........        ........ ',
-          },
-        },
-        {
-          text:          'Strike through',
-          children: [ {
-            text:            'Useful for todo lists',
-            properties: {
-              strikethrough: '.....................',
-            },
-          } ],
-        },
-      ] },
+      // { text: 'Text formatting', collapsed: true, children: [
+      //   'Bold, italicized, and underlined text.  Emphatic!',
+      //   {
+      //     text:          'Strike through',
+      //     children: [ {
+      //       text:            'Useful for todo lists',
+      //     } ],
+      //   },
+      // ] },
       { text: 'LaTeX', collapsed: true, children: [
         'Inline equations: $E = mc^2$ and $f(b) - f(a) = \\int_a^b f\'(t) dt$',
         'Block equations: $$\\max_{x \\ge 0, Ax \\le b} c^T x = \\min_{y \\ge 0, A^ty \\ge c} b^T y$$',

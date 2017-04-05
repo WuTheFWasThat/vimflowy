@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 
 import * as utils from '../utils';
-import { Col, Line, TextProperties } from '../types';
+import { Col, Line } from '../types';
 import {
   EmitFn, Token, Tokenizer, PartialTokenizer,
   RegexTokenizerSplitter, CharInfo, Scanner, PartialScanner
@@ -20,14 +20,6 @@ export type LineProps = {
 
 export function getClassesFromInfo(info: CharInfo, cursorBetween: boolean): Array<string> {
   const classes: Array<string> = [];
-  // make sure .bold, .italic, .strikethrough, .underline correspond to the text properties
-  if (info.properties) {
-    TextProperties.forEach((property) => {
-      if (info.properties[property]) {
-        classes.push(property);
-      }
-    });
-  }
 
   if (info.cursor && !cursorBetween) {
     classes.push('cursor', 'theme-cursor');
@@ -64,7 +56,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
 
     // add cursor if at end
     if (lineData.length in cursors) {
-      lineData.push(utils.plainChar(cursorChar));
+      lineData.push(cursorChar);
     }
 
     if (lineData.length === 0) {
@@ -208,13 +200,11 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     // - allow custom "sentence" tokenization first
     // - then tokenize into words
     // - allow more custom "word" tokenization
-    // - then apply styles based on text properties
     const info: Array<CharInfo> = [];
     for (let i = 0; i < lineData.length; i++) {
       const char_info: CharInfo = {
         highlight: i in highlights,
         cursor: i in cursors,
-        properties: _.cloneDeep(lineData[i].properties),
         renderOptions: {
           classes: {},
         },
@@ -224,7 +214,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     let token: Token = {
       index: 0,
       length: lineData.length,
-      text: lineData.map((c) => c.char).join(''),
+      text: lineData.join(''),
       info: info,
     };
     const results = tokenizer.transduce(token);

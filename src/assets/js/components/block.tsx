@@ -83,11 +83,14 @@ class RowComponent extends React.Component<RowProps, {}> {
 
     const hooksInfo = { path, pluginData: this.props.cached.pluginData };
 
+    lineoptions.lineHook = PartialScanner.trivial<Token, React.ReactNode>();
     lineoptions.lineHook = session.applyHook(
-      'renderLineTokenHook', PartialScanner.trivial<Token, React.ReactNode>(), hooksInfo
+      'renderLineTokenHook', lineoptions.lineHook, hooksInfo
     );
+
+    lineoptions.wordHook = PartialScanner.trivial<Token, React.ReactNode>();
     lineoptions.wordHook = session.applyHook(
-      'renderWordTokenHook', PartialScanner.trivial<Token, React.ReactNode>(), hooksInfo
+      'renderWordTokenHook', lineoptions.wordHook, hooksInfo
     );
 
     lineoptions = session.applyHook('renderLineOptions', lineoptions, hooksInfo);

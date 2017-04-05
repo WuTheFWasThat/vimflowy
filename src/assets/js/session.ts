@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 import * as mutations from './mutations';
 import * as utils from './utils';
 import * as errors from './errors';
@@ -14,9 +12,7 @@ import Menu from './menu';
 
 import * as Modes from './modes';
 
-import {
-  TextProperty, ModeId, CursorOptions, Row, Col, Chars, SerializedBlock
-} from './types';
+import { ModeId, CursorOptions, Row, Col, Chars, SerializedBlock } from './types';
 
 type SessionOptions = {
   initialMode?: ModeId,
@@ -87,10 +83,8 @@ export default class Session extends EventEmitter {
   private downloadFile: (filename: string, mimetype: string, content: any) => void;
 
   private static swapCase(chars: Chars) {
-    return chars.map(function(char_obj) {
-      const new_char = _.clone(char_obj);
-      new_char.char = char_obj.char.toLowerCase() === char_obj.char ? char_obj.char.toUpperCase() : char_obj.char.toLowerCase();
-      return new_char;
+    return chars.map(function(chr) {
+      return chr.toLowerCase() === chr ? chr.toUpperCase() : chr.toLowerCase();
     });
   }
   constructor(doc: Document, options: SessionOptions = {}) {
@@ -813,11 +807,7 @@ export default class Session extends EventEmitter {
 
   public async replaceCharsAfterCursor(char: string, nchars: number) {
     const ndeleted = await this.changeChars(this.cursor.row, this.cursor.col, nchars, (chars =>
-      chars.map(function(char_obj) {
-        const new_obj = _.clone(char_obj);
-        new_obj.char = char;
-        return new_obj;
-      })
+      chars.map(function(_chr) { return char; })
     ));
     await this.cursor.setCol(this.cursor.col + ndeleted - 1);
   }
@@ -873,71 +863,6 @@ export default class Session extends EventEmitter {
     await this.delChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset, options);
   }
 
-  // TODO: fix a bunch of these to use rows (they're still actually paths)
-
-  // toggling text properties
-  // if new_value is null, should be inferred based on old values
-  private async toggleProperty(property: TextProperty, new_value: boolean | null, row: Row, col: Col, n: number) {
-    return await this.changeChars(row, col, n, function(deleted) {
-      let toggle_value: boolean;
-      if (new_value === null) {
-        const all_were_true = _.every(deleted.map(obj => obj.properties[property]));
-        toggle_value = !all_were_true;
-      } else {
-        toggle_value = new_value;
-      }
-
-      return deleted.map(function(char_obj) {
-        const new_obj = _.cloneDeep(char_obj);
-        new_obj.properties[property] = toggle_value;
-        return new_obj;
-      });
-    });
-  }
-
-  public async toggleRowsProperty(property: TextProperty, rows: Array<Row>) {
-    const all_were_true = _.every(
-      await Promise.all(
-        rows.map(async (row) => {
-          return _.every(
-            (await this.document.getLine(row)).map(obj => obj.properties[property])
-          );
-        })
-      )
-    );
-    const new_value = !all_were_true;
-    await Promise.all(
-      rows.map(async (row) => {
-        await this.toggleProperty(
-          property, new_value, row, 0,
-          await this.document.getLength(row)
-        );
-      })
-    );
-    return null;
-  }
-
-  public async toggleRowProperty(property: TextProperty, row = this.cursor.row) {
-    return await this.toggleProperty(
-      property, null, row, 0,
-      await this.document.getLength(row)
-    );
-  }
-
-  public async toggleRowPropertyBetween(property: TextProperty, cursor1: Cursor, cursor2: Cursor, options: {includeEnd?: boolean}) {
-    if (!(cursor2.path.is(cursor1.path))) {
-      logger.warn('Not yet implemented');
-      return;
-    }
-
-    if (cursor2.col < cursor1.col) {
-      [cursor1, cursor2] = [cursor2, cursor1];
-    }
-
-    const offset = options.includeEnd ? 1 : 0;
-    return await this.toggleProperty(property, null, cursor1.row, cursor1.col, cursor2.col - cursor1.col + offset);
-  }
-
   public async newLineBelow(
     options: {setCursor?: string, cursorOptions?: CursorOptions} = {}
   ) {
@@ -989,7 +914,7 @@ export default class Session extends EventEmitter {
   //     if the node has children, this is the new first child
   public async newLineAtCursor() {
     if (this.cursor.col === (await this.document.getLength(this.cursor.row))) {
-      await this.newLineBelow({cursorOptions: {keepProperties: true}});
+      await this.newLineBelow({cursorOptions: {}});
     } else {
       const mutation = new mutations.DelChars(this.cursor.row, 0, this.cursor.col);
       await this.do(mutation);
@@ -999,7 +924,7 @@ export default class Session extends EventEmitter {
       // cursor now is at inserted path, add the characters
       await this.addCharsAfterCursor(mutation.deletedChars);
       // restore cursor
-      await this.cursor.setPosition(path, 0, {keepProperties: true});
+      await this.cursor.setPosition(path, 0, {});
     }
   }
 
@@ -1018,8 +943,8 @@ export default class Session extends EventEmitter {
     const secondLine = await this.document.getLine(second.row);
     if (options.delimiter) {
       if (firstLine.length && secondLine.length) {
-        if (firstLine[firstLine.length - 1].char !== options.delimiter) {
-          if (secondLine[0].char !== options.delimiter) {
+        if (firstLine[firstLine.length - 1] !== options.delimiter) {
+          if (secondLine[0] !== options.delimiter) {
             addDelimiter = options.delimiter;
           }
         }
@@ -1031,7 +956,7 @@ export default class Session extends EventEmitter {
       await this.delBlock(second, { noNew: true, noSave: true });
       if (addDelimiter != null) {
         const mutation = new mutations.AddChars(
-          first.row, firstLine.length, [utils.plainChar(addDelimiter)]);
+          first.row, firstLine.length, [addDelimiter]);
         await this.do(mutation);
       }
       const mutation = new mutations.AddChars(
@@ -1054,7 +979,7 @@ export default class Session extends EventEmitter {
     await this.cursor.setPosition(second, 0);
     await this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter != null) {
-      const mutation = new mutations.AddChars(second.row, 0, [utils.plainChar(addDelimiter)]);
+      const mutation = new mutations.AddChars(second.row, 0, [addDelimiter]);
       await this.do(mutation);
     }
     const mutation = new mutations.AddChars(second.row, 0, firstLine);

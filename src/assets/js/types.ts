@@ -1,4 +1,3 @@
-// TODO: enum for text properties
 // TODO: enum for export mimetypes/extensions
 
 // keyboard key
@@ -16,45 +15,18 @@ export type CursorOptions = {
   // whether we consider the end of a word to be after the last letter
   // is true in normal mode (for de), false in visual (for vex)
   pastEndWord?: boolean,
-
-  // for movement, whether we should keep italic/bold state
-  keepProperties?: boolean,
 };
 
-export type CharTextProperties = {
-  bold?: boolean,
-  italic?: boolean,
-  underline?: boolean,
-  strikethrough?: boolean,
-};
-
-export type TextProperty = keyof CharTextProperties;
-// TODO: better way?
-export const TextProperties: Array<TextProperty> = [
-  'bold', 'italic', 'underline', 'strikethrough'
-];
-
-export type SerializedLineProperties = {
-  [P in keyof CharTextProperties]?: string
-};
-
-export type Char = {
-  char: string,
-  properties: CharTextProperties,
-};
-
+export type Char = string;
 export type Chars = Array<Char>;
 export type Line = Chars;
-export type EncodedLine = Array<Char | string>;
 export type SerializedLine = {
   text: string,
-  properties?: SerializedLineProperties,
   collapsed?: boolean,
   plugins?: any,
 };
 export type SerializedBlock = {
   text: string,
-  properties?: SerializedLineProperties,
   collapsed?: boolean,
   id?: Row,
   plugins?: any,

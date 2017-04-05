@@ -1,8 +1,6 @@
 import $ from 'jquery';
 import * as _ from 'lodash';
 
-import { Char } from './types';
-
 export function id<T>(x: T): T { return x; }
 
 // gets slice of an array, *inclusive*
@@ -58,11 +56,6 @@ export function promiseDebounce(fn: (...args: Array<any>) => Promise<void>) {
 // TODO: is quite silly to consider undefined as whitespace...
 export function isWhitespace(chr: string | undefined) {
   return (chr === ' ') || (chr === '\n') || (chr === undefined);
-}
-
-// a Char with no text formatting
-export function plainChar(chr: string): Char {
-  return { char: chr, properties: {} };
 }
 
 // NOTE: currently unused
