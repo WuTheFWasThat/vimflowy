@@ -18,20 +18,22 @@ export type Token = {
   info: Array<CharInfo>,
 };
 
+export function SliceToken(token: Token, start: number, end: number = 0): Token {
+  if (end <= 0) {
+    end = token.length + end;
+  }
+  return {
+    index: token.index + start,
+    length: end - start,
+    text: token.text.slice(start, end),
+    info: token.info.slice(start, end),
+  };
+}
+
 export function SplitToken(token: Token, split_index: number): [Token, Token] {
   return [
-    {
-      index: token.index,
-      length: split_index,
-      text: token.text.slice(0, split_index),
-      info: token.info.slice(0, split_index),
-    },
-    {
-      index: token.index + split_index,
-      length: token.length - split_index,
-      text: token.text.slice(split_index),
-      info: token.info.slice(split_index),
-    }
+    SliceToken(token, 0, split_index),
+    SliceToken(token, split_index)
   ];
 }
 
@@ -102,10 +104,9 @@ export class PartialUnfolder<A, B> {
 
 export type PartialTokenizer<T> = PartialUnfolder<Token, T>;
 
-// captures first group of regex
+// captures first group of regex and allows emitting based on the value
 export function RegexTokenizerSplitter<T>(
-  regex: RegExp,
-  tryHandleMatch: (input: Token, emit: EmitFn<T>, wrapped: Tokenizer<T>) => void,
+  regex: RegExp, match_tokenizer: PartialTokenizerFn<T>,
 ): PartialTokenizer<T> {
   return new PartialUnfolder<Token, T>((
     token: Token, emit: EmitFn<T>, wrapped: Tokenizer<T>
@@ -123,7 +124,7 @@ export function RegexTokenizerSplitter<T>(
 
       let matched_token;
       [matched_token, token] = SplitToken(token, match[1].length);
-      tryHandleMatch(matched_token, emit, wrapped);
+      match_tokenizer(matched_token, emit, wrapped);
 
       match = regex.exec(token.text);
     }

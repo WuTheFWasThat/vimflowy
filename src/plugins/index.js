@@ -1,7 +1,8 @@
-import './debug-mode';
-import './easy-motion';
+import './debug_mode';
+import './easy_motion';
 import './examples';
-import './marks';
-import './time-tracking';
-import './latex';
 import './html';
+import './latex';
+import './marks';
+import './text_formatting';
+import './time_tracking';
