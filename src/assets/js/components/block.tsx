@@ -62,14 +62,18 @@ class RowComponent extends React.Component<RowProps, {}> {
     const cursorsTree = this.props.cursorsTree;
 
     const cursors: {[col: number]: boolean} = {};
+    let has_cursor = false;
     const highlights: {[col: number]: boolean} = {};
+    let has_highlight = false;
 
     if (cursorsTree.cursor != null) {
       cursors[cursorsTree.cursor] = true;
+      has_cursor = true;
     }
     // TODO: Object.keys alternative that returns Array<number>?
     (Object.keys(cursorsTree.selected)).forEach((col: any) => {
       highlights[col] = true;
+      has_highlight = true;
     });
     // TODO: React.ReactNode vs React.ReactElement<any>?
     const results: Array<React.ReactNode> = [];
@@ -81,7 +85,10 @@ class RowComponent extends React.Component<RowProps, {}> {
       cursorBetween: this.props.cursorBetween,
     };
 
-    const hooksInfo = { path, pluginData: this.props.cached.pluginData };
+    const hooksInfo = {
+      path, pluginData: this.props.cached.pluginData,
+      has_cursor, has_highlight
+    };
 
     lineoptions.lineHook = PartialUnfolder.trivial<Token, React.ReactNode>();
     lineoptions.lineHook = session.applyHook(

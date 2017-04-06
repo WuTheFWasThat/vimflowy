@@ -32,18 +32,16 @@ registerPlugin<void>(
     `,
   },
   function(api) {
-    api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
+    api.registerHook('session', 'renderLineTokenHook', (tokenizer, info) => {
+      if (info.has_cursor) {
+        return tokenizer;
+      }
+      if (info.has_highlight) {
+        return tokenizer;
+      }
       return tokenizer.then(RegexTokenizerSplitter<React.ReactNode>(
         new RegExp(htmlRegex),
         (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
-          for (let i = 0; i < token.info.length; i++) {
-            if (token.info[i].cursor) {
-              return emit(...wrapped.unfold(token));
-            }
-            if (token.info[i].highlight) {
-              return emit(...wrapped.unfold(token));
-            }
-          }
           try {
             emit(<span
               key={`html-${token.index}`}

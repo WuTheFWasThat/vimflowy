@@ -21,18 +21,16 @@ registerPlugin<void>(
     `,
   },
   function(api) {
-    api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
+    api.registerHook('session', 'renderLineTokenHook', (tokenizer, info) => {
+      if (info.has_cursor) {
+        return tokenizer;
+      }
+      if (info.has_highlight) {
+        return tokenizer;
+      }
       return tokenizer.then(RegexTokenizerSplitter<React.ReactNode>(
         new RegExp(latexPreRegex + '(\\$\\$(\\n|.)+?\\$\\$)' + latexPostRegex),
         (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
-          for (let i = 0; i < token.info.length; i++) {
-            if (token.info[i].cursor) {
-              return emit(...wrapped.unfold(token));
-            }
-            if (token.info[i].highlight) {
-              return emit(...wrapped.unfold(token));
-            }
-          }
           try {
             const html = katex.renderToString(token.text.slice(2, -2), { displayMode: true });
             emit(<div key={`latex-${token.index}`} dangerouslySetInnerHTML={{__html: html}}/>);
@@ -44,14 +42,6 @@ registerPlugin<void>(
       )).then(RegexTokenizerSplitter<React.ReactNode>(
         new RegExp(latexPreRegex + '(\\$(\\n|.)+?\\$)' + latexPostRegex),
         (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
-          for (let i = 0; i < token.info.length; i++) {
-            if (token.info[i].cursor) {
-              return emit(...wrapped.unfold(token));
-            }
-            if (token.info[i].highlight) {
-              return emit(...wrapped.unfold(token));
-            }
-          }
           try {
             const html = katex.renderToString(token.text.slice(1, -1), { displayMode: false });
             emit(<span key={`latex-${token.index}`} dangerouslySetInnerHTML={{__html: html}}/>);
