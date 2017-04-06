@@ -12,7 +12,7 @@ import * as errors from '../../assets/js/errors';
 import { Logger } from '../../assets/js/logger';
 import Path from '../../assets/js/path';
 import { Row } from '../../assets/js/types';
-import { PartialScanner, Token, EmitFn } from '../../assets/js/utils/token_scanner';
+import { PartialUnfolder, Token, EmitFn, Tokenizer } from '../../assets/js/utils/token_unfolder';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/js/definitions/motions';
 import { INSERT_MOTION_MAPPINGS } from '../../assets/js/configurations/vim';
@@ -398,8 +398,8 @@ export class MarksPlugin {
     });
 
     this.api.registerHook('session', 'renderWordTokenHook', (tokenizer) => {
-      return tokenizer.chain(new PartialScanner<Token, React.ReactNode>((
-        token: Token, emitToken: EmitFn<Token>
+      return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
+        token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>
       ) => {
         if (this.session.mode === 'NORMAL') {
           if (token.text[0] === '@') {
@@ -417,7 +417,7 @@ export class MarksPlugin {
             }
           }
         }
-        emitToken(token);
+        emit(...wrapped.unfold(token));
       }));
     });
 

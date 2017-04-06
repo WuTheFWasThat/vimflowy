@@ -2,7 +2,7 @@ import React from 'react'; // tslint:disable-line no-unused-variable
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
-import { Token, RegexTokenizerSplitter, EmitFn } from '../../assets/js/utils/token_scanner';
+import { Tokenizer, Token, RegexTokenizerSplitter, EmitFn } from '../../assets/js/utils/token_unfolder';
 import { registerPlugin } from '../../assets/js/plugins';
 
 // ignore the group, allow whitespace, beginning of line, or open paren
@@ -22,15 +22,15 @@ registerPlugin<void>(
   },
   function(api) {
     api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
-      return tokenizer.chain(RegexTokenizerSplitter<React.ReactNode>(
+      return tokenizer.then(RegexTokenizerSplitter<React.ReactNode>(
         new RegExp(latexPreRegex + '(\\$\\$(\\n|.)+?\\$\\$)' + latexPostRegex),
-        (token: Token, emitToken: EmitFn<Token>, emit: EmitFn<React.ReactNode>) => {
+        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
           for (let i = 0; i < token.info.length; i++) {
             if (token.info[i].cursor) {
-              return emitToken(token);
+              return emit(...wrapped.unfold(token));
             }
             if (token.info[i].highlight) {
-              return emitToken(token);
+              return emit(...wrapped.unfold(token));
             }
           }
           try {
@@ -38,18 +38,18 @@ registerPlugin<void>(
             emit(<div key={`latex-${token.index}`} dangerouslySetInnerHTML={{__html: html}}/>);
           } catch (e) {
             api.session.showMessage(e.message, { text_class: 'error' });
-            emitToken(token);
+            emit(...wrapped.unfold(token));
           }
         }
-      )).chain(RegexTokenizerSplitter<React.ReactNode>(
+      )).then(RegexTokenizerSplitter<React.ReactNode>(
         new RegExp(latexPreRegex + '(\\$(\\n|.)+?\\$)' + latexPostRegex),
-        (token: Token, emitToken: EmitFn<Token>, emit: EmitFn<React.ReactNode>) => {
+        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
           for (let i = 0; i < token.info.length; i++) {
             if (token.info[i].cursor) {
-              return emitToken(token);
+              return emit(...wrapped.unfold(token));
             }
             if (token.info[i].highlight) {
-              return emitToken(token);
+              return emit(...wrapped.unfold(token));
             }
           }
           try {
@@ -57,7 +57,7 @@ registerPlugin<void>(
             emit(<span key={`latex-${token.index}`} dangerouslySetInnerHTML={{__html: html}}/>);
           } catch (e) {
             api.session.showMessage(e.message, { text_class: 'error' });
-            emitToken(token);
+            emit(...wrapped.unfold(token));
           }
         }
       ));

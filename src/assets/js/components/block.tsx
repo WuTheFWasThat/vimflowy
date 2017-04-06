@@ -8,7 +8,7 @@ import { CachedRowInfo } from '../document';
 import Path from '../path';
 import { CursorsInfoTree } from '../cursor';
 import { Col } from '../types';
-import { PartialScanner, Token } from '../utils/token_scanner';
+import { PartialUnfolder, Token } from '../utils/token_unfolder';
 
 type RowProps = {
   session: Session;
@@ -83,12 +83,12 @@ class RowComponent extends React.Component<RowProps, {}> {
 
     const hooksInfo = { path, pluginData: this.props.cached.pluginData };
 
-    lineoptions.lineHook = PartialScanner.trivial<Token, React.ReactNode>();
+    lineoptions.lineHook = PartialUnfolder.trivial<Token, React.ReactNode>();
     lineoptions.lineHook = session.applyHook(
       'renderLineTokenHook', lineoptions.lineHook, hooksInfo
     );
 
-    lineoptions.wordHook = PartialScanner.trivial<Token, React.ReactNode>();
+    lineoptions.wordHook = PartialUnfolder.trivial<Token, React.ReactNode>();
     lineoptions.wordHook = session.applyHook(
       'renderWordTokenHook', lineoptions.wordHook, hooksInfo
     );

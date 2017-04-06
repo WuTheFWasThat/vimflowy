@@ -5,15 +5,15 @@ import * as utils from '../utils';
 import { Col, Line } from '../types';
 import {
   EmitFn, Token, Tokenizer, PartialTokenizer,
-  RegexTokenizerSplitter, CharInfo, Scanner, PartialScanner
-} from '../utils/token_scanner';
+  RegexTokenizerSplitter, CharInfo, Unfolder, PartialUnfolder
+} from '../utils/token_unfolder';
 
 export type LineProps = {
   lineData: Line;
   cursors?: {[key: number]: boolean};
   highlights?: {[key: number]: boolean};
-  lineHook?: PartialScanner<Token, React.ReactNode>;
-  wordHook?: PartialScanner<Token, React.ReactNode>;
+  lineHook?: PartialUnfolder<Token, React.ReactNode>;
+  wordHook?: PartialUnfolder<Token, React.ReactNode>;
   onCharClick?: ((col: Col, e: Event) => void) | null;
   cursorBetween?: boolean;
 };
@@ -76,7 +76,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       );
     }
 
-    const DefaultTokenizer: Tokenizer<React.ReactNode> = new Scanner<Token, React.ReactNode>((
+    const DefaultTokenizer: Tokenizer<React.ReactNode> = new Unfolder<Token, React.ReactNode>((
       token: Token, emit: EmitFn<React.ReactNode>
     ) => {
       for (let i = 0; i < token.text.length; i++) {
@@ -121,12 +121,12 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     if (this.props.lineHook) {
       lineHook = this.props.lineHook;
     } else {
-      lineHook = PartialScanner.trivial<Token, React.ReactNode>();
+      lineHook = PartialUnfolder.trivial<Token, React.ReactNode>();
     }
     const LineTokenizer: PartialTokenizer<React.ReactNode> =
       RegexTokenizerSplitter<React.ReactNode>(
         new RegExp('(\n)'),
-        (token: Token, _emitToken: EmitFn<Token>, emit: EmitFn<React.ReactNode>) => {
+        (token: Token, emit: EmitFn<React.ReactNode>) => {
           if (token.text.length !== 1) {
             throw new Error('Expected matched newline of length 1');
           }
@@ -167,10 +167,10 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     if (this.props.wordHook) {
       wordHook = this.props.wordHook;
     } else {
-      wordHook = PartialScanner.trivial<Token, React.ReactNode>();
+      wordHook = PartialUnfolder.trivial<Token, React.ReactNode>();
     }
-    wordHook = wordHook.chain(new PartialScanner<Token, React.ReactNode>((
-      token: Token, emitToken: EmitFn<Token>
+    wordHook = wordHook.then(new PartialUnfolder<Token, React.ReactNode>((
+      token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>
     ) => {
       if (utils.isLink(token.text)) {
         token.info.forEach((char_info) => {
@@ -180,7 +180,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
           char_info.renderOptions.href = token.text;
         });
       }
-      emitToken(token);
+      emit(...wrapped.unfold(token));
     }));
 
     const WordTokenizer: PartialTokenizer<React.ReactNode> =
@@ -190,8 +190,8 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       );
 
     let tokenizer = lineHook
-      .chain(LineTokenizer)
-      .chain(WordTokenizer)
+      .then(LineTokenizer)
+      .then(WordTokenizer)
       .finish(DefaultTokenizer);
 
     // NOTE: this doesn't seem to work for the breadcrumbs, e.g. try visual selecting word at end
@@ -217,7 +217,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       text: lineData.join(''),
       info: info,
     };
-    const results = tokenizer.transduce(token);
+    const results = tokenizer.unfold(token);
     return (
       <span>
         {results}

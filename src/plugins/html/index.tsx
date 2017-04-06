@@ -1,6 +1,6 @@
 import React from 'react'; // tslint:disable-line no-unused-variable
 
-import { Token, RegexTokenizerSplitter, EmitFn } from '../../assets/js/utils/token_scanner';
+import { Token, RegexTokenizerSplitter, EmitFn, Tokenizer } from '../../assets/js/utils/token_unfolder';
 import { registerPlugin } from '../../assets/js/plugins';
 
 const htmlTypes: Array<string> = [
@@ -33,15 +33,15 @@ registerPlugin<void>(
   },
   function(api) {
     api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
-      return tokenizer.chain(RegexTokenizerSplitter<React.ReactNode>(
+      return tokenizer.then(RegexTokenizerSplitter<React.ReactNode>(
         new RegExp(htmlRegex),
-        (token: Token, emitToken: EmitFn<Token>, emit: EmitFn<React.ReactNode>) => {
+        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
           for (let i = 0; i < token.info.length; i++) {
             if (token.info[i].cursor) {
-              return emitToken(token);
+              return emit(...wrapped.unfold(token));
             }
             if (token.info[i].highlight) {
-              return emitToken(token);
+              return emit(...wrapped.unfold(token));
             }
           }
           try {
@@ -51,7 +51,7 @@ registerPlugin<void>(
             />);
           } catch (e) {
             api.session.showMessage(e.message, { text_class: 'error' });
-            emitToken(token);
+            emit(...wrapped.unfold(token));
           }
         }
       ));

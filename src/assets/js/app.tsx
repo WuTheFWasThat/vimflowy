@@ -249,6 +249,7 @@ async function create_session(
   // expose globals, for debugging
   window.Modes = Modes;
   window.session = session;
+  window.settings = settings;
   window.keyHandler = keyHandler;
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;
