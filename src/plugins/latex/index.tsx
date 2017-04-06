@@ -4,11 +4,7 @@ import 'katex/dist/katex.min.css';
 
 import { Tokenizer, Token, RegexTokenizerSplitter, EmitFn } from '../../assets/js/utils/token_unfolder';
 import { registerPlugin } from '../../assets/js/plugins';
-
-// ignore the group, allow whitespace or beginning of line, then open paren
-const latexPreRegex = '(?:\\s|^)(?:\\()*';
-// ignore the group, allow end parens, punctuation, then whitespace or end of line
-const latexPostRegex = '(?:\\))*(?:\\.|,|!|\\?)*(?:\\s|$)';
+import { matchWordRegex } from '../../assets/js/utils';
 
 registerPlugin<void>(
   {
@@ -29,7 +25,7 @@ registerPlugin<void>(
         return tokenizer;
       }
       return tokenizer.then(RegexTokenizerSplitter<React.ReactNode>(
-        new RegExp(latexPreRegex + '(\\$\\$(\\n|.)+?\\$\\$)' + latexPostRegex),
+        matchWordRegex('\\$\\$(\\n|.)+?\\$\\$'),
         (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
           try {
             const html = katex.renderToString(token.text.slice(2, -2), { displayMode: true });
@@ -40,7 +36,7 @@ registerPlugin<void>(
           }
         }
       )).then(RegexTokenizerSplitter<React.ReactNode>(
-        new RegExp(latexPreRegex + '(\\$(\\n|.)+?\\$)' + latexPostRegex),
+        matchWordRegex('\\$(\\n|.)+?\\$'),
         (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
           try {
             const html = katex.renderToString(token.text.slice(1, -1), { displayMode: false });

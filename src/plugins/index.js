@@ -6,3 +6,4 @@ import './latex';
 import './marks';
 import './text_formatting';
 import './time_tracking';
+import './todo';

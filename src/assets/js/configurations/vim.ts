@@ -275,15 +275,16 @@ const defaultData: Array<SerializedBlock> = [
       'Make new clones with yc, then p',
     ] },
     { text: 'Rich text', collapsed: true, children: [
-      // { text: 'Text formatting', collapsed: true, children: [
-      //   'Bold, italicized, and underlined text.  Emphatic!',
-      //   {
-      //     text:          'Strike through',
-      //     children: [ {
-      //       text:            'Useful for todo lists',
-      //     } ],
-      //   },
-      // ] },
+      { text: 'Text formatting', collapsed: true, children: [
+        '**Bold**, *italicized*, and _underlined_ text.  ** * _Emphatic_ * **!',
+        {
+          text: 'Strike through',
+          children: [
+            '~~Cross thing off todo list~~',
+            'Cross another thing off todo list',
+          ],
+        },
+      ] },
       { text: 'LaTeX', collapsed: true, children: [
         'Inline equations: $E = mc^2$ and $f(b) - f(a) = \\int_a^b f\'(t) dt$',
         'Block equations: $$\\max_{x \\ge 0, Ax \\le b} c^T x = \\min_{y \\ge 0, A^ty \\ge c} b^T y$$',

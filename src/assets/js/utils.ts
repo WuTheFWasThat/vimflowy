@@ -3,6 +3,21 @@ import * as _ from 'lodash';
 
 export function id<T>(x: T): T { return x; }
 
+// Helpers to build up regex that finds the start of a word
+// Ignore the groups, for the sake of matching (TODO: do that in the caller?)
+//
+// Allow whitespace or beginning of line, then open paren
+export const silentWordStartRegex = '(?:\\s|^)(?:\\()*';
+// Allow end parens, punctuation, then whitespace or end of line
+export const silentWordEndRegex = '(?:\\))*(?:\\.|,|!|\\?|\\:|\\;)*(?:\\s|$)';
+
+// Returns regex whose first match is a "word" with certain properties (according to a regex string).
+// Note the word needn't be a word in the sense of containing no whitespace - that is up to the regex_str to decide.
+// It just needs to start on something like a word-start and end on something like a word-end.
+export function matchWordRegex(regex_str: string) {
+  return new RegExp(silentWordStartRegex + '(' + regex_str + ')' + silentWordEndRegex);
+}
+
 // gets slice of an array, *inclusive*
 export function getSlice<T>(array: Array<T>, min: number, max: number): Array<T> {
   if (max === -1) {

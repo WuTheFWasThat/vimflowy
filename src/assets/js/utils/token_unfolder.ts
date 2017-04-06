@@ -135,3 +135,45 @@ export function RegexTokenizerSplitter<T>(
     }
   });
 };
+
+// captures first group of regex and allows modifying the tokens
+export function RegexTokenizerModifier<T>(
+  regex: RegExp, change_info: (info: Array<CharInfo>) => void
+): PartialTokenizer<T> {
+  return new PartialUnfolder<Token, T>((
+    token: Token, emit: EmitFn<T>, wrapped: Tokenizer<T>
+  ) => {
+    let index = 0;
+    while (true) {
+      let match = regex.exec(token.text.slice(index));
+      if (!match) { break; }
+
+      // index of match, plus index of group in match
+      let start = index + match.index + match[0].indexOf(match[1]);
+      let end = start + match[1].length;
+
+      change_info(token.info.slice(start, end));
+      index = end;
+    }
+
+    emit(...wrapped.unfold(token));
+  });
+};
+
+const hiddenClass = 'hidden';
+
+export function hideBorderAndModify(
+  left_border_to_hide_size: number, right_border_to_hide_size: number,
+  changeCharInfo: (char_info: CharInfo) => void,
+) {
+  return function(info: Array<CharInfo>) {
+    info.slice(0, left_border_to_hide_size).forEach((char_info) => {
+      char_info.renderOptions.classes[hiddenClass] = true;
+    });
+    info.slice(left_border_to_hide_size, -right_border_to_hide_size).forEach(changeCharInfo);
+    info.slice(-right_border_to_hide_size).forEach((char_info) => {
+      char_info.renderOptions.classes[hiddenClass] = true;
+    });
+  };
+}
+
