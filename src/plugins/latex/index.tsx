@@ -5,10 +5,10 @@ import 'katex/dist/katex.min.css';
 import { Tokenizer, Token, RegexTokenizerSplitter, EmitFn } from '../../assets/js/utils/token_unfolder';
 import { registerPlugin } from '../../assets/js/plugins';
 
-// ignore the group, allow whitespace, beginning of line, or open paren
-const latexPreRegex = '(?:\\s|^|\\()';
-// ignore the group, allow whitespace, end of line, punctuation, or close paren
-const latexPostRegex = '(?:\\s|$|\\.|,|!|\\?|\\))';
+// ignore the group, allow whitespace or beginning of line, then open paren
+const latexPreRegex = '(?:\\s|^)(?:\\()*';
+// ignore the group, allow end parens, punctuation, then whitespace or end of line
+const latexPostRegex = '(?:\\))*(?:\\.|,|!|\\?)*(?:\\s|$)';
 
 registerPlugin<void>(
   {
