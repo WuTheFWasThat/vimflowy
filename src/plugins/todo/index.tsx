@@ -33,6 +33,10 @@ registerPlugin<void>(
     });
 
     async function isStruckThrough(session: Session, row: Row) {
+      // for backwards compatibility
+      const isStruckThroughOldStyle = await session.document.store._isStruckThroughOldFormat(row);
+      if (isStruckThroughOldStyle) { return true; }
+
       const text = await session.document.getText(row);
       return (text.slice(0, 2) === '~~') && (text.slice(-2) === '~~');
     }

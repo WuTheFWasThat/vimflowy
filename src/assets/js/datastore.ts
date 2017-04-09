@@ -161,6 +161,19 @@ export default class DataStore {
     return await this._set(this._lineKey_(row), line);
   }
 
+  // for backwards compatibility - checks whether the line was struck through
+  // in the old-style format
+  public async _isStruckThroughOldFormat(row: Row): Promise<boolean> {
+    const line = await this._get<any>(this._lineKey_(row), []);
+    if (typeof line !== 'string' && line.length) {
+      let char_info = line[0];
+      if (char_info.properties && char_info.properties.strikethrough) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public async getParents(row: Row): Promise<Array<Row>> {
     return await this._get(this._parentsKey_(row), [], decodeParents);
   }
