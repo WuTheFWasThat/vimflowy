@@ -1,3 +1,4 @@
+import * as React from 'react';
 import * as _ from 'lodash';
 
 import { registerMode, deregisterMode, ModeMetadata } from './modes';
@@ -20,7 +21,7 @@ type PluginMetadata = {
   name: string;
   version?: number;
   author?: string;
-  description?: string;
+  description?: string | React.ReactNode;
 };
 
 type PluginEnableFn<V> = (api: PluginApi) => Promise<V> | V;
@@ -29,7 +30,7 @@ type RegisteredPlugin<V> = {
   name: string;
   version?: number;
   author?: string;
-  description?: string;
+  description?: string | React.ReactNode;
   enable: PluginEnableFn<V>;
   disable: PluginDisableFn<V>;
 };

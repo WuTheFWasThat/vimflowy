@@ -31,8 +31,8 @@ where
   - name: string
     This will be displayed to the user in options. It should not be changed!
   - version: number
-  - author: ?string
-  - description: ?string
+  - author?: string
+  - description?: string | React.ReactNode
 - `async enable(api)`:
   Called when the plugin is enabled
   Can optionally return a value, in which case other plugins that depend on yours will get access to it.

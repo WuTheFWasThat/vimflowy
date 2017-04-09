@@ -14,12 +14,16 @@ registerPlugin<void>(
   {
     name: 'Text Formatting',
     author: 'Jeff Wu',
-    description: `
-    Lets you:
-    - italicize text by surrounding with *asterisks*
-    - bold text by surrounding with **double asterisks**
-    - underline text by surrounding with _underscores_
-    `,
+    description: (
+      <div>
+      Lets you:
+      <ul>
+        <li> <span className='italic'>italicize</span> text by surrounding with *asterisks* </li>
+        <li> <span className='bold'>bold</span> text by surrounding with **double asterisks** </li>
+        <li> <span className='underline'>underline</span> text by surrounding with _underscores_ </li>
+      </ul>
+      </div>
+    ),
   },
   function(api) {
     api.registerHook('session', 'renderLineTokenHook', (tokenizer, hooksInfo) => {

@@ -16,7 +16,7 @@ registerPlugin<void>(
   {
     name: pluginName,
     author: 'Jeff Wu',
-    description: `Lets you strike out bullets`,
+    description: `Lets you strike out bullets (by default with ctrl+enter)`,
   },
   function(api) {
     api.registerHook('session', 'renderLineTokenHook', (tokenizer, hooksInfo) => {
