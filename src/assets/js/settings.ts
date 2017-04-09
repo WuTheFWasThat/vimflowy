@@ -21,6 +21,7 @@ const default_settings: SettingsType = {
   theme: 'default-theme',
   showKeyBindings: true,
   hotkeys: {},
+  // TODO import these names from the plugins
   enabledPlugins: ['Marks', 'HTML', 'LaTeX', 'Text Formatting', 'Todo'],
 };
 

@@ -45,6 +45,7 @@ export type ActionContext = {
     end_i: number,
     start: Path,
     end: Path,
+    selected: Array<Path>,
     parent: Path,
     num_rows: number,
   },

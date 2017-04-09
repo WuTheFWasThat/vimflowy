@@ -561,7 +561,7 @@ export class MarksPlugin {
 
 // NOTE: because listing marks filters, disabling is okay
 
-const pluginName = 'Marks';
+export const pluginName = 'Marks';
 
 registerPlugin<MarksPlugin>(
   {
@@ -578,5 +578,3 @@ registerPlugin<MarksPlugin>(
   },
   (api) => api.deregisterAll(),
 );
-
-export { pluginName };

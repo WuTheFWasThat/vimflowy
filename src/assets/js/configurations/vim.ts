@@ -6,7 +6,6 @@ import { motionKey } from '../keyDefinitions';
 import { SINGLE_LINE_MOTIONS } from '../definitions/motions';
 import Config from '../config';
 
-// TODO: 'swap-case': [['~']]
 // TODO: 'next-sentence': [[')']]
 // TODO: 'prev-sentence': [['(']]
 
@@ -111,7 +110,6 @@ export const NORMAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'swap-block-up': [['ctrl+k']],
   'search-local': [['ctrl+/'], ['ctrl+f']],
   'search-global': [['/']],
-  'toggle-strikethrough': [['ctrl+enter']],
   'export-file': [['ctrl+s']],
   'zoom-prev-sibling': [['alt+k']],
   'zoom-next-sibling': [['alt+j']],
@@ -146,7 +144,6 @@ export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'visual-line-yank-clone': [['Y']],
   'visual-line-indent': [['>'], ['tab'], ['ctrl+l']],
   'visual-line-unindent': [['<'], ['shift+tab'], ['ctrl+h']],
-  'visual-line-toggle-strikethrough': [['ctrl+enter']],
   'visual-line-swap-case': [['~']],
 }, NORMAL_MOTION_MAPPINGS);
 
@@ -176,7 +173,6 @@ export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'indent-blocks': [['tab']],
   'swap-block-down': [],
   'swap-block-up': [],
-  'toggle-strikethrough': [['ctrl+enter']],
   'zoom-prev-sibling': [['alt+k']],
   'zoom-next-sibling': [['alt+j']],
   'zoom-in': [['ctrl+right']],
@@ -225,8 +221,6 @@ export const WORKFLOWY_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'indent-blocks': [['tab']],
   'swap-block-down': [['meta+shift+up']],
   'swap-block-up': [['meta+shift+down']],
-  // NOTE: in workflowy, this also crosses out children
-  'toggle-strikethrough': [['meta+enter']],
   'zoom-prev-sibling': [],
   'zoom-next-sibling': [],
   'zoom-in': [],

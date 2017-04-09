@@ -731,7 +731,10 @@ export default class Session extends EventEmitter {
     return await this.document.getLength(this.cursor.row);
   }
 
-  private async addChars(row: Row, col: Col, chars: Chars) {
+  public async addChars(row: Row, col: Col, chars: Chars) {
+    if (col < 0) {
+      col = (await this.document.getLength(row)) + col + 1;
+    }
     await this.do(new mutations.AddChars(row, col, chars));
   }
 
@@ -747,11 +750,12 @@ export default class Session extends EventEmitter {
     await this.addChars(this.cursor.row, col, chars);
   }
 
-  private async delChars(path: Path, col: Col, nchars: number, options: DelCharsOptions = {}) {
-    const n = await this.document.getLength(path.row);
+  public async delChars(row: Row, col: Col, nchars: number, options: DelCharsOptions = {}) {
+    const n = await this.document.getLength(row);
     let deleted: Chars = [];
+    if (col < 0) { col = n + col; }
     if ((n > 0) && (nchars > 0) && (col < n)) {
-      const mutation = new mutations.DelChars(path.row, col, nchars);
+      const mutation = new mutations.DelChars(row, col, nchars);
       await this.do(mutation);
       deleted = mutation.deletedChars;
       if (options.yank) {
@@ -763,11 +767,11 @@ export default class Session extends EventEmitter {
 
   public async delCharsBeforeCursor(nchars: number, options: DelCharsOptions = {}) {
     nchars = Math.min(this.cursor.col, nchars);
-    return await this.delChars(this.cursor.path, this.cursor.col - nchars, nchars, options);
+    return await this.delChars(this.cursor.path.row, this.cursor.col - nchars, nchars, options);
   }
 
   public async delCharsAfterCursor(nchars: number, options: DelCharsOptions = {}) {
-    return await this.delChars(this.cursor.path, this.cursor.col, nchars, options);
+    return await this.delChars(this.cursor.path.row, this.cursor.col, nchars, options);
   }
 
   private async changeChars(row: Row, col: Col, nchars: number, change_fn: (chars: Chars) => Chars) {
@@ -817,7 +821,7 @@ export default class Session extends EventEmitter {
       // yank as a row, not chars
       await this.yankRowAtCursor();
     }
-    return await this.delChars(this.cursor.path, 0, await this.curLineLength());
+    return await this.delChars(this.cursor.path.row, 0, await this.curLineLength());
   }
 
   public async yankChars(path: Path, col: Col, nchars: number) {
@@ -860,7 +864,7 @@ export default class Session extends EventEmitter {
       [cursor1, cursor2] = [cursor2, cursor1];
     }
     const offset = options.includeEnd ? 1 : 0;
-    await this.delChars(cursor1.path, cursor1.col, cursor2.col - cursor1.col + offset, options);
+    await this.delChars(cursor1.path.row, cursor1.col, cursor2.col - cursor1.col + offset, options);
   }
 
   public async newLineBelow(

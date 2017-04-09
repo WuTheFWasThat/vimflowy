@@ -227,6 +227,7 @@ registerMode({
       start: children[index1],
       end: children[index2],
       parent: parent,
+      selected: children.slice(index1, index2 + 1),
       num_rows: (index2 - index1) + 1,
     };
     return context;

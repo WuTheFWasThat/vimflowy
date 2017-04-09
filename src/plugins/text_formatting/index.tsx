@@ -30,15 +30,28 @@ registerPlugin<void>(
         return tokenizer;
       }
       return tokenizer.then(RegexTokenizerModifier<React.ReactNode>(
-        matchWordRegex('\\*\\*(\\n|.)+?\\*\\*'),
-        hideBorderAndModify(2, 2, (char_info) => { char_info.renderOptions.classes[boldClass] = true; })
+        // triple asterisk means both bold and italic
+        matchWordRegex('\\*\\*\\*(\\n|.)+?\\*\\*\\*'),
+        hideBorderAndModify(3, 3, (char_info) => {
+          char_info.renderOptions.classes[italicsClass] = true;
+          char_info.renderOptions.classes[boldClass] = true;
+        })
       )).then(RegexTokenizerModifier<React.ReactNode>(
         // middle is either a single character, or both sides have a non-* character
         matchWordRegex('\\*((\\n|[^\\*])|[^\\*](\\n|.)+?[^\\*])?\\*'),
-        hideBorderAndModify(1, 1, (char_info) => { char_info.renderOptions.classes[italicsClass] = true; })
+        hideBorderAndModify(1, 1, (char_info) => {
+          char_info.renderOptions.classes[italicsClass] = true;
+        })
       )).then(RegexTokenizerModifier<React.ReactNode>(
-        matchWordRegex('_(\\n|.)+?_'),
-        hideBorderAndModify(1, 1, (char_info) => { char_info.renderOptions.classes[underlineClass] = true; })
+        matchWordRegex('\\*\\*(\\n|.)+?\\*\\*'),
+        hideBorderAndModify(2, 2, (char_info) => {
+          char_info.renderOptions.classes[boldClass] = true;
+        })
+      )).then(RegexTokenizerModifier<React.ReactNode>(
+        matchWordRegex('(?:[\\*]*)_(\\n|.)+?_(?:[\\*]*)'),
+        hideBorderAndModify(1, 1, (char_info) => {
+          char_info.renderOptions.classes[underlineClass] = true;
+        })
       ));
     });
   },
