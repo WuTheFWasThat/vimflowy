@@ -38,7 +38,7 @@ export class Logger {
     this.setStream(stream);
 
     const register_loglevel = (name: string, value: number) => {
-      return (this as any)[name.toLowerCase()] = function() {
+      return (this as any)[name.toLowerCase()] = function(this: Logger) {
         if (this.level <= value) {
           return this.log.apply(this, arguments);
         }

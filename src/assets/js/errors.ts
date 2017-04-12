@@ -1,36 +1,51 @@
 import * as _ from 'lodash';
 
-// takes a constructor and returns an error class
-const errorFactory = function(f: any, inheritClass = Error) {
-  const g: any = function() {
-    const e: any = new Error();
-    this.stack = e.stack;
-    return f.apply(this, arguments);
-  };
-  g.prototype = Object.create(inheritClass.prototype);
-  return g;
-};
+class ExtendableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+    this.stack = (new Error(message)).stack;
+  }
+}
 
-export const NotImplemented = errorFactory(function() { return this.message = 'Not implemented!'; });
-export const UnexpectedValue = errorFactory(function(name: string, value: any) {
-  return this.message = `Unexpected value for \`${name}\`: ${value}`;
-});
-export const GenericError = errorFactory(function(message: string) { this.message = message; });
-export const SchemaVersion = errorFactory(function(message: string) { this.message = message; });
+export class NotImplemented extends ExtendableError {
+  constructor(m = '') {
+    super(m ? `Not implemented: ${m}!` : 'Not implemented!');
+  }
+}
+
+export class UnexpectedValue extends ExtendableError {
+  constructor(name: string, value: any) {
+    super(`Unexpected value for \`${name}\`: ${value}`);
+  }
+}
+
+export class GenericError extends ExtendableError {
+  constructor(m: string) { super(m); }
+}
 
 // error class for errors that we can reasonably expect to happen
 // e.g. bad user input, multiple users
-export const ExpectedError = errorFactory(function(message: string) { this.message = message; });
-// is special because ignored by error handling in index.js
-export const MultipleUsersError = errorFactory(function(message: string) { this.message = message; }, ExpectedError);
+// is special because ignored by error handling in app.tsx
+export class ExpectedError extends ExtendableError {
+  constructor(m: string) { super(m); }
+}
+
+export class MultipleUsersError extends ExtendableError {
+  constructor() { super(
+    'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
+  ); }
+}
 
 ///////////
 // asserts
 ///////////
 
-export const AssertionError = errorFactory(function(message: string) {
-  this.message = `Assertion error: ${message}`;
-});
+export class AssertionError extends ExtendableError {
+  constructor(m: string) {
+    super(`Assertion error: ${m}`);
+  }
+}
 
 export function assert(a: boolean, message = 'assert error') {
   if (!a) {

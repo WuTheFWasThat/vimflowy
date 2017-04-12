@@ -151,7 +151,7 @@ export class PluginApi {
     } else if (who === 'session') {
       return this.session;
     } else {
-      throw new errors.GenericError `Unknown hook listener ${who}`;
+      throw new errors.GenericError(`Unknown hook listener ${who}`);
     }
   }
 

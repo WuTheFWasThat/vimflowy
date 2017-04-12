@@ -322,9 +322,7 @@ export class LocalStorageLazy extends DataStore {
   ): void {
     if (this.trackSaves) {
       if (this.getLastSave() > this.lastSave) {
-        throw new errors.MultipleUsersError(
-          'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
-        );
+        throw new errors.MultipleUsersError();
       }
 
       if (!options.doesNotAffectLastSave) {
@@ -384,9 +382,7 @@ export class FirebaseStore extends DataStore {
         throw new Error('Failed to get listRef');
       }
       if (snap.val() !== clientId) {
-        throw new errors.MultipleUsersError(
-          'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
-        );
+        throw new errors.MultipleUsersError();
       }
     });
   }
