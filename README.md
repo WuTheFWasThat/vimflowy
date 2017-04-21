@@ -3,7 +3,7 @@
 [![Join Gitter chat](https://badges.gitter.im/WuTheFWasThat/vimflowy.svg)](https://gitter.im/WuTheFWasThat/vimflowy)
 [![Build Status](https://travis-ci.org/WuTheFWasThat/vimflowy.svg?branch=master)](https://travis-ci.org/WuTheFWasThat/vimflowy)
 
-This is a productivity tool which draws great inspiration from workflowy and vim.
+This is a productivity tool which draws some inspiration from workflowy and vim.
 
 [Try it out!](https://vimflowy.bitballoon.com)
 
@@ -19,22 +19,23 @@ This is a productivity tool which draws great inspiration from workflowy and vim
   - (configurable) vim keybindings
   - modal editing
   - undo history, location history, macros, etc.
-- Extras
-  - data import/export
-  - loads data lazily (good for huge documents)
-  - search (not like vim's)
-  - cloning (bullets with multiple parents)
-  - different visual themes
 - Plugins system (see [plugins.md](docs/plugins.md))
   - marks (not like vim's)
   - easy-motion for moving between bullets quickly
   - time-tracking
+  - LaTeX and HTML rendering
+- Other
+  - data import/export
+  - loads data lazily (good for huge documents)
+  - search (not like vim's)
+  - cloning (bullets duplicated in multiple locations in a document)
+  - different visual themes
 
 ## LIMITATIONS
 
-- Currently, you can only edit from one tab at a time.
-  There will likely never be collaboration features.
 - Tested mostly in recent Chrome and Firefox.  You may need a relatively modern browser.
+- No collaborative editing
+- Global search is slow for large documents (so you'll want to use marks)
 
 ## DATA STORAGE
 
@@ -48,7 +49,7 @@ By default, the app is entirely local meaning:
 
 It uses HTML5's localStorage, so:
 - If you're going to have a very large document, use a browser with large localStorage limits, e.g. Firefox
-- Be warned: clearing localStorage will result in you losing all your data!
+- Be warned that if you don't set up remote storage, *clearing localStorage will result in you losing all your data!*
 
 ### Remote
 
@@ -72,28 +73,4 @@ MIT: https://wuthefwasthat.mit-license.org/
 
 ## FAQ (AKA questions I imagine people would ask me)
 
-#### Why vim?
-
-This is a productivity tool, and I find vim productive, once you get past the learning curve.
-Of course, vim isn't for everyone.  But if you do a lot of editing of text, I recommend giving it a try.
-
-#### Why workflowy?
-
-Again, it's not for everyone, but I like Workflowy for the simplicity and lack of clutter.
-
-#### I like this.  What else should I consider?
-
-If you like both vim and workflowy, the best alternative I know of is spacemacs with the org layer (i.e. emacs org mode with vim keybindings).
-Org mode is extremely powerful. I recommend trying it out.
-
-There are pros and cons compared to vimflowy, which is more tailored for my particular workflow.
-I'm curious how they compare for others, so if you try both, let me know what you think!
-
-#### Why doesn't *mumble* work like vim?
-
-My goal is to make Vimflowy feel like home to vim users. However:
-- Vim has a lot of commands, so there are some still missing.
-- Vimflowy intentionally differs in few ways, partially due to its Workflowy-inspired half.
-  Some known inconsistencies with vim are documented [here](docs/vim_inconsistencies.md).
-
-If you find that something is incongruous with your vim use, whether a bug or missing feature, let me know via a github issue. Or better yet, a pull request!
+[see here](docs/FAQ.md)
