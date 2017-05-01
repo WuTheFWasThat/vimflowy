@@ -10,7 +10,7 @@ const boldClass = 'bold';
 const italicsClass = 'italic';
 const underlineClass = 'underline';
 
-registerPlugin<void>(
+registerPlugin(
   {
     name: 'Text Formatting',
     author: 'Jeff Wu',
@@ -33,25 +33,25 @@ registerPlugin<void>(
       if (hooksInfo.has_highlight) {
         return tokenizer;
       }
-      return tokenizer.then(RegexTokenizerModifier<React.ReactNode>(
+      return tokenizer.then(RegexTokenizerModifier(
         // triple asterisk means both bold and italic
         matchWordRegex('\\*\\*\\*(\\n|.)+?\\*\\*\\*'),
         hideBorderAndModify(3, 3, (char_info) => {
           char_info.renderOptions.classes[italicsClass] = true;
           char_info.renderOptions.classes[boldClass] = true;
         })
-      )).then(RegexTokenizerModifier<React.ReactNode>(
+      )).then(RegexTokenizerModifier(
         // middle is either a single character, or both sides have a non-* character
         matchWordRegex('\\*((\\n|[^\\*])|[^\\*](\\n|.)+?[^\\*])?\\*'),
         hideBorderAndModify(1, 1, (char_info) => {
           char_info.renderOptions.classes[italicsClass] = true;
         })
-      )).then(RegexTokenizerModifier<React.ReactNode>(
+      )).then(RegexTokenizerModifier(
         matchWordRegex('\\*\\*(\\n|.)+?\\*\\*'),
         hideBorderAndModify(2, 2, (char_info) => {
           char_info.renderOptions.classes[boldClass] = true;
         })
-      )).then(RegexTokenizerModifier<React.ReactNode>(
+      )).then(RegexTokenizerModifier(
         matchWordRegex('(?:[\\*]*)_(\\n|.)+?_(?:[\\*]*)'),
         hideBorderAndModify(1, 1, (char_info) => {
           char_info.renderOptions.classes[underlineClass] = true;

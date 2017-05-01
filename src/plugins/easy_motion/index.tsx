@@ -9,7 +9,7 @@ type EasyMotionMappings = {
   path_to_key: {[serialized_path: string]: string},
 };
 
-registerPlugin<void>(
+registerPlugin(
   {
     name: 'Easy motion',
     author: 'Jeff Wu',

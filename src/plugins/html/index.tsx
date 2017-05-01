@@ -22,7 +22,7 @@ htmlTypes.forEach((htmltype) => {
 });
 const htmlRegex = '(' + htmlRegexParts.map((part) => '(' + part + ')').join('|') + ')';
 
-registerPlugin<void>(
+registerPlugin(
   {
     name: 'HTML',
     author: 'Jeff Wu',
@@ -39,9 +39,9 @@ registerPlugin<void>(
       if (info.has_highlight) {
         return tokenizer;
       }
-      return tokenizer.then(RegexTokenizerSplitter<React.ReactNode>(
+      return tokenizer.then(RegexTokenizerSplitter(
         new RegExp(htmlRegex),
-        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
+        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer) => {
           try {
             emit(<span
               key={`html-${token.index}`}

@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 export type CharInfo = {
   highlight: boolean,
   cursor: boolean,
@@ -63,12 +65,6 @@ export class Unfolder<A, B> {
   }
 }
 
-export type Tokenizer<T> = Unfolder<Token, T>;
-export type TokenizerFn<T> = UnfolderFn<Token, T>;
-
-export type PartialUnfolderFn<A, B> = (input: A, emit: EmitFn<B>, wrapped: Unfolder<A, B>) => void;
-export type PartialTokenizerFn<T> = PartialUnfolderFn<Token, T>;
-
 export class PartialUnfolder<A, B> {
   public partial_fn: PartialUnfolderFn<A, B>;
 
@@ -102,10 +98,16 @@ export class PartialUnfolder<A, B> {
   }
 }
 
-export type PartialTokenizer<T> = PartialUnfolder<Token, T>;
+export type Tokenizer<T = React.ReactNode> = Unfolder<Token, T>;
+export type TokenizerFn<T = React.ReactNode> = UnfolderFn<Token, T>;
+
+export type PartialUnfolderFn<A, B> = (input: A, emit: EmitFn<B>, wrapped: Unfolder<A, B>) => void;
+export type PartialTokenizerFn<T = React.ReactNode> = PartialUnfolderFn<Token, T>;
+
+export type PartialTokenizer<T = React.ReactNode> = PartialUnfolder<Token, T>;
 
 // captures first group of regex and allows emitting based on the value
-export function RegexTokenizerSplitter<T>(
+export function RegexTokenizerSplitter<T = React.ReactNode>(
   regex: RegExp, match_tokenizer: PartialTokenizerFn<T>,
 ): PartialTokenizer<T> {
   return new PartialUnfolder<Token, T>((
@@ -137,7 +139,7 @@ export function RegexTokenizerSplitter<T>(
 };
 
 // captures first group of regex and allows modifying the tokens
-export function RegexTokenizerModifier<T>(
+export function RegexTokenizerModifier<T = React.ReactNode>(
   regex: RegExp, change_info: (info: Array<CharInfo>) => void
 ): PartialTokenizer<T> {
   return new PartialUnfolder<Token, T>((

@@ -6,7 +6,7 @@ import { Tokenizer, Token, RegexTokenizerSplitter, EmitFn } from '../../assets/j
 import { registerPlugin } from '../../assets/js/plugins';
 import { matchWordRegex } from '../../assets/js/utils';
 
-registerPlugin<void>(
+registerPlugin(
   {
     name: 'LaTeX',
     author: 'Jeff Wu',
@@ -24,9 +24,9 @@ registerPlugin<void>(
       if (info.has_highlight) {
         return tokenizer;
       }
-      return tokenizer.then(RegexTokenizerSplitter<React.ReactNode>(
+      return tokenizer.then(RegexTokenizerSplitter(
         matchWordRegex('\\$\\$(\\n|.)+?\\$\\$'),
-        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
+        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer) => {
           try {
             const html = katex.renderToString(token.text.slice(2, -2), { displayMode: true });
             emit(<div key={`latex-${token.index}`} dangerouslySetInnerHTML={{__html: html}}/>);
@@ -35,9 +35,9 @@ registerPlugin<void>(
             emit(...wrapped.unfold(token));
           }
         }
-      )).then(RegexTokenizerSplitter<React.ReactNode>(
+      )).then(RegexTokenizerSplitter(
         matchWordRegex('\\$(\\n|.)+?\\$'),
-        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>) => {
+        (token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer) => {
           try {
             const html = katex.renderToString(token.text.slice(1, -1), { displayMode: false });
             emit(<span key={`latex-${token.index}`} dangerouslySetInnerHTML={{__html: html}}/>);

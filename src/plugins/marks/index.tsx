@@ -399,7 +399,7 @@ export class MarksPlugin {
 
     this.api.registerHook('session', 'renderWordTokenHook', (tokenizer) => {
       return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
-        token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>
+        token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
       ) => {
         if (this.session.mode === 'NORMAL') {
           if (token.text[0] === '@') {

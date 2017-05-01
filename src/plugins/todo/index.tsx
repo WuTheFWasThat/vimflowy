@@ -12,7 +12,7 @@ const strikethroughClass = 'strikethrough';
 
 export const pluginName = 'Todo';
 
-registerPlugin<void>(
+registerPlugin(
   {
     name: pluginName,
     author: 'Jeff Wu',
@@ -26,7 +26,7 @@ registerPlugin<void>(
       if (hooksInfo.has_highlight) {
         return tokenizer;
       }
-      return tokenizer.then(RegexTokenizerModifier<React.ReactNode>(
+      return tokenizer.then(RegexTokenizerModifier(
         matchWordRegex('\\~\\~(\\n|.)+?\\~\\~'),
         hideBorderAndModify(2, 2, (char_info) => { char_info.renderOptions.classes[strikethroughClass] = true; })
       ));

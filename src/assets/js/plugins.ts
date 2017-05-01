@@ -24,9 +24,9 @@ type PluginMetadata = {
   description?: string | React.ReactNode;
 };
 
-type PluginEnableFn<V> = (api: PluginApi) => Promise<V> | V;
-type PluginDisableFn<V> =  (api: PluginApi, value: V) => Promise<void> | void;
-type RegisteredPlugin<V> = {
+type PluginEnableFn<V = void> = (api: PluginApi) => Promise<V> | V;
+type PluginDisableFn<V = void> =  (api: PluginApi, value: V) => Promise<void> | void;
+type RegisteredPlugin<V = void> = {
   name: string;
   version?: number;
   author?: string;
@@ -318,7 +318,7 @@ export class PluginsManager extends EventEmitter {
   }
 }
 
-export const registerPlugin = function<V>(
+export const registerPlugin = function<V = void>(
   plugin_metadata: PluginMetadata,
   enable: PluginEnableFn<V>,
   disable: PluginDisableFn<V>,

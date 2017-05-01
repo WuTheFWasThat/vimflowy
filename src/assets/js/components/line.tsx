@@ -76,7 +76,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       );
     }
 
-    const DefaultTokenizer: Tokenizer<React.ReactNode> = new Unfolder<Token, React.ReactNode>((
+    const DefaultTokenizer: Tokenizer = new Unfolder<Token, React.ReactNode>((
       token: Token, emit: EmitFn<React.ReactNode>
     ) => {
       for (let i = 0; i < token.text.length; i++) {
@@ -123,45 +123,44 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     } else {
       lineHook = PartialUnfolder.trivial<Token, React.ReactNode>();
     }
-    const LineTokenizer: PartialTokenizer<React.ReactNode> =
-      RegexTokenizerSplitter<React.ReactNode>(
-        new RegExp('(\n)'),
-        (token: Token, emit: EmitFn<React.ReactNode>) => {
-          if (token.text.length !== 1) {
-            throw new Error('Expected matched newline of length 1');
-          }
-          if (token.info.length !== 1) {
-            throw new Error('Expected matched newline with info of length 1');
-          }
-          const char_info = token.info[0];
-          const classes = getClassesFromInfo(char_info, cursorBetween);
-          if (char_info.cursor) {
-            if (cursorBetween) {
-              emit(cursorBetweenDiv(token.index));
-            } else {
-              emit(React.createElement(
-                'span',
-                {
-                  key: `cursor-${token.index}`,
-                  className: classes.join(' '),
-                  onClick: undefined,
-                } as React.DOMAttributes<any>,
-                cursorChar as React.ReactNode
-              ));
-            }
-          }
-
-          emit(React.createElement(
-            'div',
-            {
-              key: `newline-${token.index}`,
-              className: classes.join(' '),
-              onClick: undefined,
-            } as React.DOMAttributes<any>,
-            '' as React.ReactNode
-          ));
+    const LineTokenizer: PartialTokenizer = RegexTokenizerSplitter(
+      new RegExp('(\n)'),
+      (token: Token, emit: EmitFn<React.ReactNode>) => {
+        if (token.text.length !== 1) {
+          throw new Error('Expected matched newline of length 1');
         }
-      );
+        if (token.info.length !== 1) {
+          throw new Error('Expected matched newline with info of length 1');
+        }
+        const char_info = token.info[0];
+        const classes = getClassesFromInfo(char_info, cursorBetween);
+        if (char_info.cursor) {
+          if (cursorBetween) {
+            emit(cursorBetweenDiv(token.index));
+          } else {
+            emit(React.createElement(
+              'span',
+              {
+                key: `cursor-${token.index}`,
+                className: classes.join(' '),
+                onClick: undefined,
+              } as React.DOMAttributes<any>,
+              cursorChar as React.ReactNode
+            ));
+          }
+        }
+
+        emit(React.createElement(
+          'div',
+          {
+            key: `newline-${token.index}`,
+            className: classes.join(' '),
+            onClick: undefined,
+          } as React.DOMAttributes<any>,
+          '' as React.ReactNode
+        ));
+      }
+    );
 
     let wordHook;
     if (this.props.wordHook) {
@@ -170,7 +169,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       wordHook = PartialUnfolder.trivial<Token, React.ReactNode>();
     }
     wordHook = wordHook.then(new PartialUnfolder<Token, React.ReactNode>((
-      token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer<React.ReactNode>
+      token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
     ) => {
       if (utils.isLink(token.text)) {
         token.info.forEach((char_info) => {
@@ -183,11 +182,10 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       emit(...wrapped.unfold(token));
     }));
 
-    const WordTokenizer: PartialTokenizer<React.ReactNode> =
-      RegexTokenizerSplitter<React.ReactNode>(
-        new RegExp('([^' + word_boundary_chars + ']+)'),
-        wordHook.partial_fn
-      );
+    const WordTokenizer: PartialTokenizer = RegexTokenizerSplitter(
+      new RegExp('([^' + word_boundary_chars + ']+)'),
+      wordHook.partial_fn
+    );
 
     let tokenizer = lineHook
       .then(LineTokenizer)
