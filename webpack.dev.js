@@ -1,6 +1,5 @@
 var webpack = require('webpack');
 var path = require('path');
-var AsyncAwaitPlugin = require('webpack-async-await') ;
 
 var SRC_DIR = path.join(__dirname, 'src');
 
@@ -14,11 +13,6 @@ module.exports = {
   ],
   module: {
     loaders: [
-      {
-        test: /\.jsx?$/,
-        loaders: ['react-hot', 'babel', 'eslint-loader'],
-        include: SRC_DIR,
-      },
       {
         test: /\.tsx?$/,
         loaders: [
@@ -42,7 +36,6 @@ module.exports = {
     publicPath: '/build/'
   },
   plugins: [
-    new AsyncAwaitPlugin({}),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.DefinePlugin({
       'process.env': {
@@ -57,8 +50,5 @@ module.exports = {
   tslint: {
     emitErrors: true,
     failOnHint: false
-  },
-  eslint: {
-    configFile: '.eslintrc'
   }
 };

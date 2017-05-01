@@ -1,6 +1,5 @@
 var path = require('path');
 var webpack = require('webpack');
-var AsyncAwaitPlugin = require('webpack-async-await') ;
 
 var SRC_DIR = path.join(__dirname, 'src');
 
@@ -9,11 +8,6 @@ module.exports = {
   entry: './src/assets/js/app.tsx',
   module: {
     loaders: [
-      {
-        test: /\.jsx?$/,
-        loaders: ['babel', 'eslint-loader'],
-        include: SRC_DIR,
-      },
       {
         test: /\.tsx?$/,
         loaders: [
@@ -37,7 +31,6 @@ module.exports = {
     publicPath: '/build/'
   },
   plugins: [
-    new AsyncAwaitPlugin({}),
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.DefinePlugin({
       'process.env': {
@@ -56,8 +49,5 @@ module.exports = {
   tslint: {
     emitErrors: true,
     failOnHint: true
-  },
-  eslint: {
-    configFile: '.eslintrc'
   }
 };

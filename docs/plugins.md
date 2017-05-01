@@ -7,14 +7,14 @@ Please feel free to contact the maintainers of this repository if you're thinkin
 
 First, see [here](./dev_setup.md) for details on development setup.
 
-To make a plugin, make a directory `src/plugins/[YOUR_PLUGIN_NAME]`, with a `index.js` or `index.ts` file.
-Then add an import of your directory to [src/plugins/index.js](../src/plugins/index.js).
+To make a plugin, make a directory `src/plugins/[YOUR_PLUGIN_NAME]`, with an `index.ts` file.
+Then add an import of your directory to [src/plugins/index.ts](../src/plugins/index.ts).
 
 In general, you should be making minimal changes outside your plugin folder.
 You may write your plugin in either Javascript or Typescript.
 For styles, you can simply import a CSS or SASS stylesheet from your index file.
 
-See the ["hello world" sample plugin](../src/plugins/examples/index.js) for an extremely minimal example.
+See the ["hello world" sample plugin](../src/plugins/examples/index.ts) for an extremely minimal example.
 More involved examples can be found [here](../src/plugins).
 
 # Plugin API
