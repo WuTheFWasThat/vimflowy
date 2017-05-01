@@ -18,8 +18,8 @@ NOTES:
   If it then gets re-attached, that time gets taken away from the old parent.
 */
 
-import $ from 'jquery';
-import React from 'react'; // tslint:disable-line no-unused-variable
+import * as $ from 'jquery';
+import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import { registerPlugin, PluginApi } from '../../assets/js/plugins';
 import { Logger } from '../../assets/js/logger';

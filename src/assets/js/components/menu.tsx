@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 import LineComponent from './line';
 import SpinnerComponent from './spinner';

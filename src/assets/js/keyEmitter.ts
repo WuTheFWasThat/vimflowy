@@ -1,4 +1,4 @@
-import $ from 'jquery';
+import * as $ from 'jquery';
 import * as _ from 'lodash';
 
 import logger from './logger';

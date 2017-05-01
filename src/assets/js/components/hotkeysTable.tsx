@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 import { HotkeyMapping } from '../keyMappings';
 import { KeyDefinitions, Motion, Action } from '../keyDefinitions';

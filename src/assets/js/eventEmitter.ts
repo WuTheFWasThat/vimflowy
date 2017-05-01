@@ -46,9 +46,9 @@ export default class EventEmitter {
   }
 
   public once(event: string, listener: Listener) {
-    const fn = () => {
+    const fn = (...args: Array<any>) => {
       this.removeListener(event, fn);
-      return listener(...arguments);
+      return listener(args);
     };
     this.on(event, fn);
     return this;

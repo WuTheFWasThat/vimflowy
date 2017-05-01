@@ -1,4 +1,4 @@
-import React from 'react'; // tslint:disable-line no-unused-variable
+import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import { Token, RegexTokenizerSplitter, EmitFn, Tokenizer } from '../../assets/js/utils/token_unfolder';
 import { registerPlugin } from '../../assets/js/plugins';

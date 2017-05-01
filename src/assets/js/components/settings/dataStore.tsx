@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 import { DataSource } from '../../datastore';
 import Settings from '../../settings';

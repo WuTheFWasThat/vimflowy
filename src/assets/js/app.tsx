@@ -8,9 +8,9 @@ initialize the main page
 - handle rendering logic
 */
 
-import $ from 'jquery';
-import React from 'react'; // tslint:disable-line no-unused-variable
-import ReactDOM from 'react-dom';
+import * as $ from 'jquery';
+import * as React from 'react'; // tslint:disable-line no-unused-variable
+import * as ReactDOM from 'react-dom';
 
 import 'font-awesome/css/font-awesome.css';
 import '../css/utils.sass';
@@ -462,11 +462,7 @@ $(document).ready(async () => {
   create_session(config, dataSource, settings, doc, to_load);
 
   // NOTE: problem is that this is very slow!
-  //   To restore:
-  //     - npm install --save bluebird
-  //     - npm install --save-dev babel-plugin-transform-promise-to-bluebird
-  //     - add this back to the top of babelrc
-  //       "transform-promise-to-bluebird",
+  //   Also, to make it work, needs bluebird
   // (Promise as any).onPossiblyUnhandledRejection(function(error) {
   //   throw error;
   // });

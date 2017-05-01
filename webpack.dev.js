@@ -16,7 +16,7 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loaders: [
-          'react-hot', 'babel', 'awesome-typescript-loader', 'tslint',
+          'react-hot', 'awesome-typescript-loader', 'tslint',
         ],
         include: SRC_DIR
       },

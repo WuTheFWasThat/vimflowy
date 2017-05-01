@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 import Session from '../session';
 import Path from '../path';

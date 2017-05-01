@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 import { PluginsManager, PluginStatus, names as PluginNames, getPlugin } from '../plugins';
 

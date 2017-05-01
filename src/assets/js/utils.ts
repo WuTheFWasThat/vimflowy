@@ -1,4 +1,4 @@
-import $ from 'jquery';
+import * as $ from 'jquery';
 import * as _ from 'lodash';
 
 export function id<T>(x: T): T { return x; }

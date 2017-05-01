@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import React from 'react'; // tslint:disable-line no-unused-variable
+import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import { registerPlugin, PluginApi } from '../../assets/js/plugins';
 import Menu from '../../assets/js/menu';

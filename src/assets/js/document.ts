@@ -252,7 +252,9 @@ export default class Document extends EventEmitter {
       return cached;
     }
 
-    const [ line, collapsed, children, parents, pluginData ] = await Promise.all([
+    const [
+      line, collapsed, children, parents, pluginData
+    ] = await Promise.all<Line, boolean, Array<Row>, Array<Row>, any>([
       this.store.getLine(row),
       this.store.getCollapsed(row),
       this.store.getChildren(row),

@@ -1,5 +1,5 @@
-import React from 'react';
-import _ from 'lodash';
+import * as React from 'react';
+import * as _ from 'lodash';
 
 import * as utils from '../utils';
 import logger from '../logger';

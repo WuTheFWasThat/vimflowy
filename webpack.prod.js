@@ -11,7 +11,7 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loaders: [
-          'babel', 'awesome-typescript-loader', 'tslint',
+          'awesome-typescript-loader', 'tslint',
         ],
         include: SRC_DIR
       },

@@ -1,4 +1,4 @@
-import React from 'react'; // tslint:disable-line no-unused-variable
+import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import { registerPlugin } from '../../assets/js/plugins';
 
