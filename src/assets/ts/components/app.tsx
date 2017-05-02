@@ -102,6 +102,7 @@ export default class AppComponent extends React.Component<Props, {}> {
                 if (session.menu) {
                   return <MenuComponent menu={session.menu} session={session}/>;
                 }
+                return null;
               })()
             }
           </div>

@@ -935,6 +935,7 @@ export default class Session extends EventEmitter {
   // can only join if either:
   // - first is previous sibling of second, AND has no children
   // - second is first child of first, AND has no children
+  // returns whether a join successfully happened
   private async _joinRows(first: Path, second: Path, options: {delimiter?: string} = {}) {
     if (first.parent == null) {
       throw new Error('Tried to join first as root?');
@@ -999,9 +1000,8 @@ export default class Session extends EventEmitter {
   public async joinAtCursor() {
     const path = this.cursor.path;
     const sib = await this.nextVisible(path);
-    if (sib !== null) {
-      return await this._joinRows(path, sib, {delimiter: ' '});
-    }
+    if (sib === null) { return false; }
+    return await this._joinRows(path, sib, {delimiter: ' '});
   }
 
   // implements proper "backspace" behavior
@@ -1169,7 +1169,8 @@ export default class Session extends EventEmitter {
       return;
     }
     if (await this.document.collapsed(path.row)) {
-      return await this.indentBlocks(path);
+      await this.indentBlocks(path);
+      return ;
     }
 
     const sib = await this.document.getSiblingBefore(path);
@@ -1179,9 +1180,7 @@ export default class Session extends EventEmitter {
     }
 
     const newparent = await this.indentBlocks(path);
-    if (newparent === null) {
-      return;
-    }
+    if (newparent === null) { return; }
 
     const children = await this.document.getChildren(path);
     for (let i = 0; i < children.length; i++) {
@@ -1202,7 +1201,8 @@ export default class Session extends EventEmitter {
     }
 
     if (await this.document.collapsed(path.row)) {
-      return await this.unindentBlocks(path);
+      await this.unindentBlocks(path);
+      return;
     }
 
     if (await this.document.hasChildren(path.row)) {
@@ -1213,9 +1213,7 @@ export default class Session extends EventEmitter {
     const p_i = await this.document.indexInParent(path);
 
     const newparent = await this.unindentBlocks(path);
-    if (newparent === null) {
-      return;
-    }
+    if (newparent === null) { return; }
 
     const later_siblings = (await this.document.getChildren(parent)).slice(p_i);
     for (let i = 0; i < later_siblings.length; i++) {
@@ -1226,9 +1224,7 @@ export default class Session extends EventEmitter {
 
   public async swapDown(path: Path = this.cursor.path) {
     const next = await this.nextVisible(await this.lastVisible(path));
-    if (next === null) {
-      return;
-    }
+    if (next === null) { return; }
     if (next.parent == null) {
       throw new Error('Next visible should never return root');
     }
@@ -1246,15 +1242,11 @@ export default class Session extends EventEmitter {
 
   public async swapUp(path = this.cursor.path) {
     const prev = await this.prevVisible(path);
-    if (prev === null) {
-      return;
-    }
+    if (prev === null) { return; }
     if (prev.parent == null) {
       throw new Error('Prev visible should never return root');
     }
-    if (prev.is(this.viewRoot)) {
-      return;
-    }
+    if (prev.is(this.viewRoot)) { return; }
 
     // make it the previous sibling
     const parent = prev.parent;

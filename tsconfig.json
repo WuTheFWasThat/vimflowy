@@ -7,10 +7,10 @@
     "types": [],
     "allowJs": false,
     "strict": true,
-    "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "noUnusedParameters": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "noImplicitReturns": true
   },
   "exclude": ["node_modules"]
 }

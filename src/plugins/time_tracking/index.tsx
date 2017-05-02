@@ -166,10 +166,9 @@ class TimeTrackingPlugin {
     );
 
     setInterval(() => {
-      if (this.currentPath !== null) {
-        let curTime = Date.now() - this.currentPath.time;
-        return $('.curtime').text(this.printTime(curTime));
-      }
+      if (this.currentPath === null) { return; }
+      let curTime = Date.now() - this.currentPath.time;
+      $('.curtime').text(this.printTime(curTime));
     }, 1000);
   }
 

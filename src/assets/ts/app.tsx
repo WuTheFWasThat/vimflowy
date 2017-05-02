@@ -344,7 +344,7 @@ async function create_session(
         if ($settingsDiv.hasClass('hidden')) {
           // if user is trying to copy, we don't want to blur
           if (!window.getSelection().toString()) {
-            return $pasteHack.focus();
+            $pasteHack.focus();
           }
         }
       });
