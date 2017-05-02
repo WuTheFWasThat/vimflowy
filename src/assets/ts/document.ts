@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import 'core-js/shim';
 
 import * as utils from './utils';
 import * as errors from './errors';
@@ -688,32 +689,22 @@ export default class Document extends EventEmitter {
     return path.child(row);
   }
 
-  private async traverseSubtree(
-    root: Path, yieldCb: (path: Path) => Promise<boolean>
-  ): Promise<void> {
+  private async* traverseSubtree(root: Path): AsyncIterableIterator<Path> {
     const visited_rows: {[row: number]: boolean} = {};
-    let done = false;
+    let that = this;
 
-    const helper = async (path: Path) => {
-      if (done) {
-        return;
-      }
+    async function* helper(path: Path): AsyncIterableIterator<Path> {
       if (path.row in visited_rows) {
         return;
       }
       visited_rows[path.row] = true;
-      const shouldStop = await yieldCb(path);
-      if (shouldStop) {
-        done = true;
-        return;
+      yield path;
+      const children = await that.getChildren(path);
+      for (let i = 0; i < children.length; i++) {
+        yield* await helper(children[i]);
       }
-      await Promise.all(
-        (await this.getChildren(path)).map(
-          async (child) => await helper(child)
-        )
-      );
-    };
-    await helper(root);
+    }
+    yield* await helper(root);
   }
 
   public async search(root: Path, query: string, options: SearchOptions = {}) {
@@ -731,8 +722,8 @@ export default class Document extends EventEmitter {
     const query_words =
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
-    await this.traverseSubtree(root, async (path: Path) => {
-
+    const paths = this.traverseSubtree(root);
+    for await (let path of paths) {
       const text = await this.getText(path.row);
       const line = canonicalize(text);
       const matches: Array<number> = [];
@@ -747,11 +738,9 @@ export default class Document extends EventEmitter {
         results.push({ path, matches });
       }
       if (nresults > 0 && results.length === nresults) {
-        // tell it to stop
-        return true;
+        break;
       }
-      return false;
-    });
+    }
     return results;
   };
 
