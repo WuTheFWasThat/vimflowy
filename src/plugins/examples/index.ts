@@ -1,4 +1,4 @@
-import { registerPlugin } from '../../assets/js/plugins';
+import { registerPlugin } from '../../assets/ts/plugins';
 
 registerPlugin({
   name: 'Hello World example',

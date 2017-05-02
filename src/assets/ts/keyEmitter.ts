@@ -11,7 +11,7 @@ A key corresponds to a keypress in the browser, including modifiers/special keys
 
 The core function is to take browser keypress events, and normalize the key to have a string representation.
 
-For more info, see its consumer, keyHandler.js, as well as keyBindings.js
+For more info, see its consumer, keyHandler.ts, as well as keyBindings.ts
 Note that one-character keys are treated specially, in that they are insertable in insert mode.
 */
 

@@ -1,6 +1,6 @@
 /* globals describe, it */
 import TestCase from '../testcase';
-import { RegisterTypes } from '../../src/assets/js/register';
+import { RegisterTypes } from '../../src/assets/ts/register';
 
 describe('yank', function() {
   describe('characters', function() {

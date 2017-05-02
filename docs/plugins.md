@@ -27,7 +27,7 @@ A plugin registers using
 Plugins.register(metadata, enable: fn, disable: ?fn)
 ```
 where
-- `metadata`:  For the detailed format, read the type definitions in [plugins.ts](../src/assets/js/plugins.ts)
+- `metadata`:  For the detailed format, read the type definitions in [plugins.ts](../src/assets/ts/plugins.ts)
   - name: string
     This will be displayed to the user in options. It should not be changed!
   - version: number
@@ -73,7 +73,7 @@ Actions may optionally accept motions and do something with the motion
 (e.g. move the cursor according to the movement, or delete text according to the movement).
 To accept a motion, an action's mapping must have a special key '<motion>' which means any sequence for a motion.
 
-For other example usages, see the folder [`src/assets/js/definitions`](../src/assets/js/definitions), and the easy-motion plugin.
+For other example usages, see the folder [`src/assets/ts/definitions`](../src/assets/ts/definitions), and the easy-motion plugin.
 
 ```
     api.registerMode(metadata) -> mode
@@ -94,7 +94,7 @@ You can also manually call each deregister, but this is not recomended
     api.deregisterDefaultMappings(mode, mappings)
 ```
 
-See [`keyDefinitions.ts`](../src/assets/js/keyDefinitions.ts) for detailed schema for the metadata of each of these.
+See [`keyDefinitions.ts`](../src/assets/ts/keyDefinitions.ts) for detailed schema for the metadata of each of these.
 
 #### vimflowy internals
 

@@ -1,6 +1,6 @@
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 
-import { registerPlugin } from '../../assets/js/plugins';
+import { registerPlugin } from '../../assets/ts/plugins';
 
 registerPlugin({
   name: 'ID Debug Mode',

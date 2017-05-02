@@ -1,22 +1,22 @@
 import * as _ from 'lodash';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 
-import { registerPlugin, PluginApi } from '../../assets/js/plugins';
-import Menu from '../../assets/js/menu';
-import * as DataStore from '../../assets/js/datastore';
-import Document from '../../assets/js/document';
-import Session from '../../assets/js/session';
-import LineComponent from '../../assets/js/components/line';
-import Mutation from '../../assets/js/mutations';
-import * as errors from '../../assets/js/errors';
-import { Logger } from '../../assets/js/logger';
-import Path from '../../assets/js/path';
-import { Row } from '../../assets/js/types';
-import { PartialUnfolder, Token, EmitFn, Tokenizer } from '../../assets/js/utils/token_unfolder';
+import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
+import Menu from '../../assets/ts/menu';
+import * as DataStore from '../../assets/ts/datastore';
+import Document from '../../assets/ts/document';
+import Session from '../../assets/ts/session';
+import LineComponent from '../../assets/ts/components/line';
+import Mutation from '../../assets/ts/mutations';
+import * as errors from '../../assets/ts/errors';
+import { Logger } from '../../assets/ts/logger';
+import Path from '../../assets/ts/path';
+import { Row } from '../../assets/ts/types';
+import { PartialUnfolder, Token, EmitFn, Tokenizer } from '../../assets/ts/utils/token_unfolder';
 
-import { SINGLE_LINE_MOTIONS } from '../../assets/js/definitions/motions';
-import { INSERT_MOTION_MAPPINGS } from '../../assets/js/configurations/vim';
-import { motionKey } from '../../assets/js/keyDefinitions';
+import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
+import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
+import { motionKey } from '../../assets/ts/keyDefinitions';
 
 // TODO: do this elsewhere
 declare const process: any;

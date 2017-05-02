@@ -2,11 +2,11 @@ import * as _ from 'lodash';
 
 import './index.sass';
 
-import { hideBorderAndModify, RegexTokenizerModifier } from '../../assets/js/utils/token_unfolder';
-import { registerPlugin } from '../../assets/js/plugins';
-import { matchWordRegex } from '../../assets/js/utils';
-import { Row } from '../../assets/js/types';
-import Session from '../../assets/js/session';
+import { hideBorderAndModify, RegexTokenizerModifier } from '../../assets/ts/utils/token_unfolder';
+import { registerPlugin } from '../../assets/ts/plugins';
+import { matchWordRegex } from '../../assets/ts/utils';
+import { Row } from '../../assets/ts/types';
+import Session from '../../assets/ts/session';
 
 const strikethroughClass = 'strikethrough';
 

@@ -3,21 +3,21 @@
 import 'mocha';
 import * as _ from 'lodash';
 
-import { InMemory } from '../src/assets/js/datastore';
-import Document from '../src/assets/js/document';
-import Session from '../src/assets/js/session';
-import Register, { RegisterTypes, SerializedRegister } from '../src/assets/js/register';
-import '../src/assets/js/definitions';
-import mainDefinitions from '../src/assets/js/keyDefinitions';
-import KeyBindings from '../src/assets/js/keyBindings';
-import Config from '../src/assets/js/config';
-import vimConfig from '../src/assets/js/configurations/vim';
-import KeyHandler from '../src/assets/js/keyHandler';
-import logger, * as Logger from '../src/assets/js/logger';
-import { PluginsManager, PluginStatus } from '../src/assets/js/plugins';
-import Cursor from '../src/assets/js/cursor';
-import Path from '../src/assets/js/path';
-import { SerializedBlock, Row, Col, Key } from '../src/assets/js/types';
+import { InMemory } from '../src/assets/ts/datastore';
+import Document from '../src/assets/ts/document';
+import Session from '../src/assets/ts/session';
+import Register, { RegisterTypes, SerializedRegister } from '../src/assets/ts/register';
+import '../src/assets/ts/definitions';
+import mainDefinitions from '../src/assets/ts/keyDefinitions';
+import KeyBindings from '../src/assets/ts/keyBindings';
+import Config from '../src/assets/ts/config';
+import vimConfig from '../src/assets/ts/configurations/vim';
+import KeyHandler from '../src/assets/ts/keyHandler';
+import logger, * as Logger from '../src/assets/ts/logger';
+import { PluginsManager, PluginStatus } from '../src/assets/ts/plugins';
+import Cursor from '../src/assets/ts/cursor';
+import Path from '../src/assets/ts/path';
+import { SerializedBlock, Row, Col, Key } from '../src/assets/ts/types';
 
 // logger.setLevel(Logger.LEVEL.DEBUG);
 logger.setStream(Logger.STREAM.QUEUE);

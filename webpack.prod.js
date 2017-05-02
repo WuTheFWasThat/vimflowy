@@ -5,7 +5,7 @@ var SRC_DIR = path.join(__dirname, 'src');
 
 module.exports = {
   devtool: 'source-map',
-  entry: './src/assets/js/app.tsx',
+  entry: './src/assets/ts/app.tsx',
   module: {
     loaders: [
       {

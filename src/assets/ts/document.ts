@@ -197,7 +197,7 @@ the document itself includes:
   - the parent/child relationships and collapsed-ness of lines
 also deals with loading the initial document from the datastore, and serializing the document to a string
 
-Currently, the separation between the Session and Document classes is not very good.  (see session.js)
+Currently, the separation between the Session and Document classes is not very good.  (see session.ts)
 */
 
 type SearchOptions = {nresults?: number, case_sensitive?: boolean};

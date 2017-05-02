@@ -1,8 +1,8 @@
 /* globals describe, it */
 import TestCase from '../testcase';
 import * as Marks from '../../src/plugins/marks';
-import '../../src/assets/js/plugins';
-import { Row } from '../../src/assets/js/types';
+import '../../src/assets/ts/plugins';
+import { Row } from '../../src/assets/ts/types';
 
 // Testing
 class MarksTestCase extends TestCase {

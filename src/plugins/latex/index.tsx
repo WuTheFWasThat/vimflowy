@@ -2,9 +2,9 @@ import * as React from 'react'; // tslint:disable-line no-unused-variable
 import * as katex from 'katex';
 import 'katex/dist/katex.min.css';
 
-import { Tokenizer, Token, RegexTokenizerSplitter, EmitFn } from '../../assets/js/utils/token_unfolder';
-import { registerPlugin } from '../../assets/js/plugins';
-import { matchWordRegex } from '../../assets/js/utils';
+import { Tokenizer, Token, RegexTokenizerSplitter, EmitFn } from '../../assets/ts/utils/token_unfolder';
+import { registerPlugin } from '../../assets/ts/plugins';
+import { matchWordRegex } from '../../assets/ts/utils';
 
 registerPlugin(
   {

@@ -7,7 +7,7 @@ import { ModeId, CursorOptions } from './types';
 
 // NOTE: this is a special key, which accepts any motion keys.
 // It causes definition functions to take an extra cursor argument.
-// For more info/context, see keyBindings.js and definitions of CHANGE/DELETE/YANK
+// For more info/context, see keyBindings.ts and definitions of CHANGE/DELETE/YANK
 export const motionKey = '<motion>';
 
 type MotionName = string;

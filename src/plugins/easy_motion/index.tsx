@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 
-import Path from '../../assets/js/path';
-import { registerPlugin } from '../../assets/js/plugins';
+import Path from '../../assets/ts/path';
+import { registerPlugin } from '../../assets/ts/plugins';
 
 type EasyMotionMappings = {
   key_to_path: {[key: string]: Path},
