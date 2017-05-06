@@ -12,8 +12,8 @@ I like the tree of bullets format, and the lack of clutter.
 ### Why did you make Vimflowy?
 
 I started working on Vimflowy after a conversation with a friend.
-I'd seen many similar apps, but the vim part was important to me.
-My friend, who also uses vim keybindings for everything, had a *huge* document on Workflowy which started getting very laggy for him.
+I'd seen many outlining apps, but the vim part was important to me.
+My friend, who also uses vim keybindings for everything, had a *huge* document on Workflowy which was very laggy to load.
 Vimflowy lazy loads, and deleting and pasting large subtrees is efficient, which went well with the vim concept.
 
 So it started out being a tool mainly for me and my friend, but I do hope others also find it useful!

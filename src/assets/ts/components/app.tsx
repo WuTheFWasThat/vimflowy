@@ -19,6 +19,7 @@ type Props = {
   session: Session;
   settings: Settings;
   config: Config;
+  message: { message: string, text_class: string } | null;
   showingKeyBindings: boolean;
   keyBindings: KeyBindings;
   initialTheme: string;
@@ -87,6 +88,9 @@ export default class AppComponent extends React.Component<Props, {}> {
     const session = this.props.session;
     const keyBindings = this.props.keyBindings;
     const settingsMode = session.mode === 'SETTINGS';
+    const userMessage: { message: string, text_class: string } =
+        this.props.message || { message: '', text_class: '' };
+
     return (
       <div>
         {/* hack for firefox paste */}
@@ -193,9 +197,9 @@ export default class AppComponent extends React.Component<Props, {}> {
                 </span>
               </div>
             </a>
-            <div id='message'
-              style={{flexBasis: 0, flexGrow: 1, overflowX: 'scroll'}}
-            >
+            <div style={{flexBasis: 0, flexGrow: 1, overflowX: 'scroll'}}
+              className={userMessage.text_class}>
+              {userMessage.message}
             </div>
             <div id='status'
               style={{flexBasis: 0, flexGrow: 0}}

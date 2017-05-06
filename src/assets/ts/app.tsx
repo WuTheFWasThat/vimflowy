@@ -102,7 +102,6 @@ function downloadFile(filename: string, mimetype: string, content: string) {
   exportDiv.attr('href', null as any);
 }
 
-const getMessageDiv = () => $('#message');
 const getStatusDiv = () => $('#status');
 const getMainDiv = () => $('#view');
 
@@ -111,6 +110,10 @@ async function create_session(
   dataSource: DataStore.DataSource, settings: Settings, doc: Document, to_load: Array<SerializedBlock>
 ) {
   let caughtErr: null | Error = null;
+  let userMessage: null | {
+    message: string,
+    text_class: string,
+  } = null;
 
   window.onerror = function(msg: string, url: string, line: number, _col: number, err: Error) {
     logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
@@ -164,27 +167,25 @@ async function create_session(
     showMessage: (() => {
       let messageDivTimeout: null | number = null;
       return (message: string, options: {time?: number, text_class?: string} = {}) => {
+        const { time = 5000, text_class = '' } = options;
 
-        const { time = 5000 } = options;
-
-        const $messageDiv = getMessageDiv();
         logger.info(`Showing message: ${message}`);
-        if ($messageDiv) {
-          if (messageDivTimeout !== null) {
-            clearTimeout(messageDivTimeout);
-          }
 
-          $messageDiv.text(message);
-          if (options.text_class) {
-            $messageDiv.addClass(`text-${options.text_class}`);
-          }
+        userMessage = {
+          message,
+          text_class: text_class ? 'text-' + text_class : '',
+        };
+        renderMain();
 
-          if (time !== 0) {
-            messageDivTimeout = setTimeout(() => {
-              $messageDiv.text('');
-              return $messageDiv.removeClass();
-            }, time);
-          }
+        if (messageDivTimeout !== null) {
+          clearTimeout(messageDivTimeout);
+        }
+
+        if (time !== 0) {
+          messageDivTimeout = setTimeout(() => {
+            userMessage = null;
+            renderMain();
+          }, time);
         }
       };
     })(),
@@ -266,6 +267,7 @@ async function create_session(
       ReactDOM.render(
         <AppComponent
           error={caughtErr}
+          message={userMessage}
           settings={settings}
           config={config}
           onThemeChange={changeStyle}
