@@ -123,6 +123,7 @@ class TimeTrackingPlugin {
     });
 
     this.api.registerListener('session', 'exit', async () => {
+      // NOTE: this probably doesn't work
       await this.onRowChange(null);
     });
 

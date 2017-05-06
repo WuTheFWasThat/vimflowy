@@ -46,7 +46,7 @@ import './definitions';
 import '../../plugins';
 import KeyBindings from './keyBindings';
 
-import AppComponent from './components/app';
+import AppComponent, { TextMessage } from './components/app';
 
 declare const window: any; // because we attach globals for debugging
 
@@ -74,25 +74,6 @@ ReactDOM.render(
   appEl
 );
 
-// TODO: jquery type?
-function scrollIntoView(el: Element, $within: any) {
-  const elemTop = el.getBoundingClientRect().top;
-  const elemBottom = el.getBoundingClientRect().bottom;
-
-  const margin = 50;
-  const top_margin = margin;
-  const bottom_margin = margin + $('#bottom-bar').height();
-
-  if (elemTop < top_margin) {
-    // scroll up
-    return utils.scrollDiv($within, elemTop - top_margin);
-  } else if (elemBottom > window.innerHeight - bottom_margin) {
-    // scroll down
-    return utils.scrollDiv($within,
-                           elemBottom - window.innerHeight + bottom_margin);
-  }
-}
-
 function downloadFile(filename: string, mimetype: string, content: string) {
   const exportDiv = $('#export');
   exportDiv.attr('download', filename);
@@ -102,18 +83,14 @@ function downloadFile(filename: string, mimetype: string, content: string) {
   exportDiv.attr('href', null as any);
 }
 
-const getStatusDiv = () => $('#status');
-const getMainDiv = () => $('#view');
-
 async function create_session(
   config: Config,
   dataSource: DataStore.DataSource, settings: Settings, doc: Document, to_load: Array<SerializedBlock>
 ) {
+  // random global state.  these things should be managed by redux maybe
   let caughtErr: null | Error = null;
-  let userMessage: null | {
-    message: string,
-    text_class: string,
-  } = null;
+  let userMessage: null | TextMessage = null;
+  let saveMessage: null | TextMessage = null;
 
   window.onerror = function(msg: string, url: string, line: number, _col: number, err: Error) {
     logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
@@ -135,6 +112,15 @@ async function create_session(
   const initialTheme = await settings.getSetting('theme');
   changeStyle(initialTheme);
   let showingKeyBindings = await settings.getSetting('showKeyBindings');
+
+  doc.store.events.on('saved', () => {
+    saveMessage = { message: 'Saved!', text_class: 'text-success' };
+    renderMain();
+  });
+  doc.store.events.on('unsaved', () => {
+    saveMessage = { message: 'Saving....', text_class: 'text-error' };
+    renderMain();
+  });
 
   // hotkeys and key bindings
   const saved_mappings = await settings.getSetting('hotkeys');
@@ -189,26 +175,6 @@ async function create_session(
         }
       };
     })(),
-    getVisiblePaths: async () => {
-      const paths: Array<Path> = [];
-      $.makeArray($('.bullet')).forEach((bullet) => {
-        if (!utils.isScrolledIntoView($(bullet), getMainDiv())) {
-          return;
-        }
-        if ($(bullet).hasClass('fa-clone')) {
-          return;
-        }
-        // NOTE: can't use $(x).data
-        // http://stackoverflow.com/questions/25876274/jquery-data-not-working
-        const ancestry = $(bullet).attr('data-ancestry');
-        if (!ancestry) { // as far as i know, this only happens because of menu mode
-          return;
-        }
-        const path = Path.loadFromAncestry(JSON.parse(ancestry));
-        paths.push(path);
-      });
-      return paths;
-    },
     toggleBindingsDiv: () => {
       showingKeyBindings = !showingKeyBindings;
       settings.setSetting('showKeyBindings', showingKeyBindings);
@@ -268,6 +234,7 @@ async function create_session(
         <AppComponent
           error={caughtErr}
           message={userMessage}
+          saveMessage={saveMessage}
           settings={settings}
           config={config}
           onThemeChange={changeStyle}
@@ -284,13 +251,10 @@ async function create_session(
       );
     }).then(() => {
       const $onto = $('#view');
-      // NOTE: not sure why this is necessary
-      setTimeout(() => {
-        const cursorDiv = $('.cursor', $onto)[0];
-        if (cursorDiv) {
-          scrollIntoView(cursorDiv, $onto);
-        }
-      }, 100);
+      const cursorDiv = $('.cursor', $onto)[0];
+      if (cursorDiv) {
+        utils.scrollIntoView(cursorDiv, $onto, 50);
+      }
     });
   }
 
@@ -319,8 +283,6 @@ async function create_session(
     keyHandler.on('handledKey', () => {
       renderMain();
     });
-
-    // prepare dom
 
     // render when ready
     $(document).ready(function() {
@@ -376,7 +338,7 @@ async function create_session(
     });
   });
 
-  return $(window).on('unload', () => {
+  $(window).on('unload', () => {
     session.exit();
     // NOTE: this is fire and forget
   });
@@ -428,12 +390,6 @@ $(document).ready(async () => {
       }
       datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
       await datastore.init(firebaseUserEmail || '', firebaseUserPassword || '');
-      datastore.events.on('saved', () => {
-        getStatusDiv().html('Saved!').removeClass().addClass('text-success');
-      });
-      datastore.events.on('unsaved', () => {
-        getStatusDiv().text('Saving...').removeClass().addClass('text-error');
-      });
     } catch (e) {
       alert(`
         Error loading firebase datastore:

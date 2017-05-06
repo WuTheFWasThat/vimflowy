@@ -19,7 +19,6 @@ type SessionOptions = {
   viewRoot?: Path,
   cursorPath?: Path,
   showMessage?: (message: string, options?: any) => void,
-  getVisiblePaths?: () => Promise<Array<Path>>,
   toggleBindingsDiv?: () => void,
   getLinesPerPage?: () => number,
   downloadFile?: (filename: string, mimetype: string, content: any) => void,
@@ -77,7 +76,6 @@ export default class Session extends EventEmitter {
   public jumpIndex: number;
 
   private getLinesPerPage: () => number;
-  public getVisiblePaths: () => Promise<Array<Path>>;
   public showMessage: (message: string, options?: any) => void;
   public toggleBindingsDiv: () => void;
   private downloadFile: (filename: string, mimetype: string, content: any) => void;
@@ -95,7 +93,6 @@ export default class Session extends EventEmitter {
     this.showMessage = options.showMessage || ((message) => {
       logger.info(`Showing message: ${message}`);
     });
-    this.getVisiblePaths = options.getVisiblePaths || (async () => []);
     this.toggleBindingsDiv = options.toggleBindingsDiv || (() => null);
     this.getLinesPerPage = options.getLinesPerPage || (() => 10);
     this.downloadFile = options.downloadFile || ((filename, mimetype, content) => {

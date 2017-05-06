@@ -103,6 +103,23 @@ export function scrollDiv($elem: any, amount: number) {
   return $elem.scrollTop($elem.scrollTop() + amount);
 }
 
+// TODO: get jquery typing to work?
+export function scrollIntoView(el: Element, $within: any, margin: number = 0) {
+  const elemTop = el.getBoundingClientRect().top;
+  const elemBottom = el.getBoundingClientRect().bottom;
+
+  const top_margin = margin;
+  const bottom_margin = margin + $('#bottom-bar').height();
+
+  if (elemTop < top_margin) {
+    // scroll up
+    return scrollDiv($within, elemTop - top_margin);
+  } else if (elemBottom > window.innerHeight - bottom_margin) {
+    // scroll down
+    return scrollDiv($within, elemBottom - window.innerHeight + bottom_margin);
+  }
+}
+
 export function isScrolledIntoView(elem: any, container: any) {
   const $elem = $(elem);
   const $container = $(container);

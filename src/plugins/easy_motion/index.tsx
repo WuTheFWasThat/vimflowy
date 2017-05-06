@@ -3,11 +3,34 @@ import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import Path from '../../assets/ts/path';
 import { registerPlugin } from '../../assets/ts/plugins';
+import * as utils from '../../assets/ts/utils';
 
 type EasyMotionMappings = {
   key_to_path: {[key: string]: Path},
   path_to_key: {[serialized_path: string]: string},
 };
+
+async function getVisiblePaths() {
+  const paths: Array<Path> = [];
+  $.makeArray($('.bullet')).forEach((bullet) => {
+    // TODO: more proper way to expose $('#view') in API
+    if (!utils.isScrolledIntoView($(bullet), $('#view'))) {
+      return;
+    }
+    if ($(bullet).hasClass('fa-clone')) {
+      return;
+    }
+    // NOTE: can't use $(x).data
+    // http://stackoverflow.com/questions/25876274/jquery-data-not-working
+    const ancestry = $(bullet).attr('data-ancestry');
+    if (!ancestry) { // as far as i know, this only happens because of menu mode
+      return;
+    }
+    const path = Path.loadFromAncestry(JSON.parse(ancestry));
+    paths.push(path);
+  });
+  return paths;
+}
 
 registerPlugin(
   {
@@ -27,7 +50,7 @@ registerPlugin(
       'easy-motion',
       'Jump to a visible row (based on EasyMotion)',
       async function({ session, keyStream, keyHandler }) {
-        let paths: Array<Path> = (await session.getVisiblePaths()).filter(
+        let paths: Array<Path> = (await getVisiblePaths()).filter(
           path => !path.is(session.cursor.path)
         );
 

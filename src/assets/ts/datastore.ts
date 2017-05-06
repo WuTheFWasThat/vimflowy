@@ -47,12 +47,14 @@ export default class DataStore {
   private docname: string;
   private lastId: number | null;
   private cache: {[key: string]: any};
+  public events: EventEmitter;
 
   constructor(docname = '') {
     this.docname = docname;
     this.prefix = `${docname}save`;
     this.lastId = null;
     this.cache = {};
+    this.events = new EventEmitter();
   }
 
   private _lastIDKey_() {
@@ -352,7 +354,6 @@ export class LocalStorageLazy extends DataStore {
 export class FirebaseStore extends DataStore {
   private fbase: firebase.database.Database;
   private numPendingSaves: number;
-  public events: EventEmitter;
 
   constructor(docname = '', dbName: string, apiKey: string) {
     super(docname);
@@ -361,7 +362,6 @@ export class FirebaseStore extends DataStore {
       databaseURL: `https://${dbName}.firebaseio.com`,
     }).database();
 
-    this.events = new EventEmitter();
     this.numPendingSaves = 0;
     // this.fbase.authWithCustomToken(token, (err, authdata) => {})
   }

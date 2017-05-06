@@ -14,12 +14,15 @@ import Session from '../session';
 import Config from '../config';
 import KeyBindings from '../keyBindings';
 
+export type TextMessage = { message?: string, text_class?: string };
+
 type Props = {
   pluginManager: PluginsManager;
   session: Session;
   settings: Settings;
   config: Config;
-  message: { message: string, text_class: string } | null;
+  message: TextMessage | null;
+  saveMessage: TextMessage | null;
   showingKeyBindings: boolean;
   keyBindings: KeyBindings;
   initialTheme: string;
@@ -28,6 +31,7 @@ type Props = {
   onExport: () => void;
   error: Error | null;
 };
+
 export default class AppComponent extends React.Component<Props, {}> {
   public render() {
     if (this.props.error !== null) {
@@ -88,8 +92,8 @@ export default class AppComponent extends React.Component<Props, {}> {
     const session = this.props.session;
     const keyBindings = this.props.keyBindings;
     const settingsMode = session.mode === 'SETTINGS';
-    const userMessage: { message: string, text_class: string } =
-        this.props.message || { message: '', text_class: '' };
+    const userMessage: TextMessage = this.props.message || {};
+    const saveMessage: TextMessage = this.props.saveMessage || {};
 
     return (
       <div>
@@ -172,38 +176,27 @@ export default class AppComponent extends React.Component<Props, {}> {
           >
             <a className='center theme-bg-secondary'
               onClick={async () => {
-                if (settingsMode) {
-                  await session.setMode('NORMAL');
-                } else {
-                  await session.setMode('SETTINGS');
-                }
+                await session.setMode(settingsMode ? 'NORMAL' : 'SETTINGS');
               }}
               style={{
                 flexBasis: 100, flexGrow: 0,
                 cursor: 'pointer', textDecoration: 'none',
               }}
             >
-              <div className={settingsMode ? 'hidden' : ''}>
-                <span style={{marginRight: 10}} className='fa fa-cog'>
+              <div>
+                <span style={{marginRight: 10}}
+                  className={`fa ${settingsMode ? 'fa-arrow-left' : 'fa-cog'}`}>
                 </span>
-                <span>Settings
-                </span>
-              </div>
-              <div className={settingsMode ? '' : 'hidden'}>
-                <span style={{marginRight: 10}} className='fa fa-arrow-left'>
-                </span>
-                <span>
-                  Back
-                </span>
+                <span>{settingsMode ? 'Back' : 'Settings'}</span>
               </div>
             </a>
             <div style={{flexBasis: 0, flexGrow: 1, overflowX: 'scroll'}}
               className={userMessage.text_class}>
               {userMessage.message}
             </div>
-            <div id='status'
-              style={{flexBasis: 0, flexGrow: 0}}
-            >
+            <div style={{flexBasis: 0, flexGrow: 0}}
+              className={saveMessage.text_class}>
+              {saveMessage.message}
             </div>
             {/* should be wide enough to fit the words 'VISUAL LINE'*/}
             <div className='center theme-bg-secondary'
