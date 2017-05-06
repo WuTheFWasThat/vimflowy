@@ -154,12 +154,12 @@ export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'fold-toggle': [['ctrl+space']],
   'fold-open': [['meta+down']],
   'fold-close': [['meta+up']],
-  'delete-blocks': [['meta+shift+delete']],
+  'delete-blocks': [['ctrl+delete'], ['ctrl+backspace']],
   'delete-char-after': [['delete']],
   'delete-char-before': [['backspace'], ['shift+backspace']],
   'delete-to-line-beginning': [['ctrl+u']],
   'delete-to-line-end': [['ctrl+k']],
-  'delete-to-word-beginning': [['ctrl+w']],
+  'delete-to-word-beginning': [['ctrl+w'], ['alt+delete']],
   // NOTE: paste-after doesn't make much sense for insert mode
   'paste-before': [['ctrl+y']],
   'split-line': [['enter']],
@@ -321,6 +321,7 @@ const defaultData: Array<SerializedBlock> = [
 ];
 
 const config: Config = {
+  type: 'vim',
   defaultMode: 'NORMAL',
   defaultData: defaultData,
   // TODO: get the keys from modes.ts
