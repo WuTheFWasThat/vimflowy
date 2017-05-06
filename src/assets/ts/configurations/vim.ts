@@ -231,13 +231,15 @@ export const WORKFLOWY_MODE_MAPPINGS: HotkeyMapping = Object.assign({
 
 const defaultData: Array<SerializedBlock> = [
   'Welcome to vimflowy!',
-  'I hope you know to use j and k to move up and down!  If not, the cheat sheet on the right will be your friend',
+  'I hope you know to use j and k to move up and down!',
+  'If not, the cheat sheet on the right will be your friend.  Once you become an expert, you\'ll know to use ? to hide it',
   { text: 'Features', children: [
     { text: 'Workflowy features', children: [
       { text: 'Nested bullets', children: [
-        'Bullets with children can be collapsed',
+        'Bullets with children can be collapsed to avoid clutter',
         { text: 'Use enter to zoom into any bullet.  Try on this one', collapsed: true, children: [
-          'And shift+enter to zoom all the way back out',
+          'This bullet had children, but you can zoom into bullets with no children to start expanding upon them',
+          'Use shift+enter to zoom all the way back out',
           'Use ] and [ to zoom in and out just one level',
         ] },
         { text: 'Use z to toggle collapsedness', collapsed: true, children: [
@@ -250,7 +252,8 @@ const defaultData: Array<SerializedBlock> = [
     { text: 'Vim features', collapsed: true, children: [
       'Most of vim\'s movement commands',
       'Modal editing (note visual mode only works on one line)',
-      'Undo/redo, repeat, and macros',
+      'Undo/redo, jump history (ctrl+o to jump to previous location, ctrl+i to jump forward)',
+      'Repeat commands with . and record macros with q',
       'Let the vimflowy devs know if anything major is missing',
     ] },
     'Press / to start searching for text',
@@ -289,14 +292,13 @@ const defaultData: Array<SerializedBlock> = [
         'Or <span style=\'color: blue\'>colored</span> <span style=\'color: orange\'>text</span>',
       ] },
     ] },
-    { text: 'Customizability', collapsed: true, children: [
+    { text: 'Customizability (see Settings menu)', collapsed: true, children: [
       { text: 'Plugins system', collapsed: true, children: [
-        'See the settings menu to turn on some plugins!',
         'If you\'re interested in writing plugins, see here: ' +
         'https://github.com/WuTheFWasThat/vimflowy/blob/master/docs/plugins.md',
       ] },
       'Customizable hotkeys (via downloading/uploading a json file)',
-      'Different color themes (see Settings)',
+      'Different color themes',
     ] },
   ] },
   { text: 'Data', collapsed: true, children: [
@@ -313,11 +315,6 @@ const defaultData: Array<SerializedBlock> = [
       'Check out settings for more information.',
       'You can regularly export your data in JSON format, as a form of backup',
     ] },
-  ] },
-  { text: 'Tips', collapsed: true, children: [
-    'Collapse things often to avoid clutter.  Zoom into collapsed bullets',
-    'Want to go back to where you were?  ctrl+o jumps back in your location history (ctrl+i jumps forward)',
-    'Check out the cheat sheet on the right.  Once you become an expert, you can hide it',
   ] },
   'Press i to enter insert mode and start adding your own content!',
   'For more info, visit https://github.com/WuTheFWasThat/vimflowy (visit links under the cursor with gx)',

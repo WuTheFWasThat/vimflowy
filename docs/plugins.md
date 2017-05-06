@@ -1,5 +1,4 @@
-NOTE: *Plugins is currently a work in progress.  The API is unstable.*
-
+NOTE: The plugins API is generally subject to change.
 However, once a plugin is on the master branch, it'll continue to be maintained.
 Please feel free to contact the maintainers of this repository if you're thinking about making a plugin.
 
@@ -11,7 +10,7 @@ To make a plugin, make a directory `src/plugins/[YOUR_PLUGIN_NAME]`, with an `in
 Then add an import of your directory to [src/plugins/index.ts](../src/plugins/index.ts).
 
 In general, you should be making minimal changes outside your plugin folder.
-You may write your plugin in either Javascript or Typescript.
+You may write your plugin in either Javascript or Typescript, but Typescript should be preferred.
 For styles, you can simply import a CSS or SASS stylesheet from your index file.
 
 See the ["hello world" sample plugin](../src/plugins/examples/index.ts) for an extremely minimal example.
@@ -31,19 +30,21 @@ where
   - name: string
     This will be displayed to the user in options. It should not be changed!
   - version: number
+    Not used, at the moment
   - author?: string
   - description?: string | React.ReactNode
 - `async enable(api)`:
   Called when the plugin is enabled
-  Can optionally return a value, in which case other plugins that depend on yours will get access to it.
-- `async disable(api)`:
+  Can optionally return a value which is accessible to other plugins.
+- `async disable(api, value)`:
   Called if the plugin is ever disabled by the user.
   If unimplemented, disabling will simply advise the user to refresh the page.
   If implemented, make sure that the plugin can be disabled and re-enabled multiple times (i.e. enable followed by disabled should not leave state).
 
 Plugins are generally disabled by default.
 
-You can enable your plugin from the plugins section of the settings menu within vimflowy.
+In the UI, you can enable your plugin from the plugins section of the Settings menu.
+You can make it enabled by default, in [settings.ts](../src/assets/ts/settings.ts).
 
 ## Using the API
 
@@ -60,7 +61,7 @@ The API object (passed to the callbacks) includes the following:
 
 First, some terminology:
 
-A **mode** is an editing mode, ala modal editing.
+A **mode** is an editing mode, e.g. 'INSERT', 'NORMAL', and 'VISUAL'.
 Commands are always executed in the context of a mode.
 The function `session.setMode(mode)` changes what mode you're in.
 
@@ -99,20 +100,23 @@ See [`keyDefinitions.ts`](../src/assets/ts/keyDefinitions.ts) for detailed schem
 #### vimflowy internals
 
 ```
-    api.session:   A reference of the internal @session object in vimflowy
-                   A session tracks the cursor, history, as well as the actual document
-    api.cursor:    A reference of the internal @cursor object in vimflowy
-    api.document:  A reference of the internal @document object in vimflowy
+    api.document:  A reference of the internal Document object in vimflowy
+                   The Document corresponds to a vimflowy text file, and exposes methods
+                   for querying and mutating it.
+    api.cursor:    A reference of the internal Cursor object in vimflowy
+    api.session:   A reference of the internal Session object in vimflowy
+                   A session tracks the cursor, viewRoot, document, and mutation history
 ```
 
-This section will be documented better in the future, when the API is better and more stable
+This section's documentation will be expanded upon when the API is better and more stable
 
 #### helpers
 ```
-    async api.panic(message):  Report a fatal problem in the plugin
+    async api.panic(message):
+      Report a fatal problem in the plugin
       Shows a message to the user, then unloads and disables the plugin.
-    api.logger:  Log message from your plugin using methods on this object
-      Call one of: api.logger.debug, api.logger.info, api.logger.warn, api.logger.error, api.logger.fatal
+    api.logger:
+      An object with the methods logger.debug, logger.info, logger.warn, logger.error, and logger.fatal
       The default output is to the javascript console.
 ```
 
@@ -159,11 +163,14 @@ The data API is a simple key-value store:
 The keys should always be strings.  The values can be anything JSON-serializable.
 
 Keep in mind:
-- Reads are cached.  It's assumed nobody else is writing data.
+- Reads are cached on the key level.  You can assume nobody else will write to your data.
 - Small changes to a large object result in a large write to store
-- Document and version your storage schema when appropriate. Data migrations may be implemented eventually.
 
 # Feedback
 
-Please let the vimflowy dev team know if you need help, want additional features, think the API and/or documentation could be made better in some way, etc.
+Please let the vimflowy dev team know if you:
+- need help
+- want additional features
+- think the API and/or documentation sucks
+
 Contact us on github: https://github.com/WuTheFWasThat/vimflowy

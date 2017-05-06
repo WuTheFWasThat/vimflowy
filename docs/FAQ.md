@@ -9,7 +9,18 @@ Vim isn't for everyone, but if you edit text a lot, I recommend giving it a try.
 
 I like the tree of bullets format, and the lack of clutter.
 
-### I like this.  What else should I consider?
+### Why did you make Vimflowy?
+
+I started working on Vimflowy after a conversation with a friend.
+I'd seen many similar apps, but the vim part was important to me.
+My friend, who also uses vim keybindings for everything, had a *huge* document on Workflowy which started getting very laggy for him.
+Vimflowy lazy loads, and deleting and pasting large subtrees is efficient, which went well with the vim concept.
+
+So it started out being a tool mainly for me and my friend, but I do hope others also find it useful!
+I've especially tried to make it so that developers can write plugins to customize it, without much trouble.
+I would consider making a second set of non-vim bindings out of the box if enough people seem to like it.
+
+### I do like this.  What else should I consider?
 
 If you like both vim and workflowy, the best alternative I know of is spacemacs with the org layer (i.e. emacs org mode with vim keybindings).
 Org mode is extremely powerful. I recommend trying it out.
