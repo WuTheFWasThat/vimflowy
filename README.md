@@ -33,9 +33,9 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
 
 ## LIMITATIONS
 
-- Tested mostly in recent Chrome and Firefox.  You may need a relatively modern browser.
-- No collaborative editing
 - Global search is slow for large documents (so you'll want to use marks)
+- No collaborative editing
+- You may need a relatively modern browser.  It should at least support HTML5 LocalStorage and Flexbox.  I test only in recent versions of Chrome and Firefox.
 
 ## DATA STORAGE
 

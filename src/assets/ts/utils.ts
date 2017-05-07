@@ -155,3 +155,20 @@ export function downloadFile(filename: string, content: string, mimetype: string
 export async function timeout(ns: number) {
   await new Promise((resolve) => setTimeout(resolve, ns));
 }
+
+declare var window: any;
+// tslint:disable:no-string-literal
+// SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
+export const isOpera: boolean = !!window['opera'] || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
+export const isSafari: boolean = Object.prototype.toString.call(window['HTMLElement']).indexOf('Constructor') > 0; // Safari 3+
+export const isChrome: boolean = !!window['chrome'] && !isOpera; // Chrome 1+
+declare var InstallTrigger: any;
+export const isFirefox: boolean = typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
+// tslint:enable:no-string-literal
+
+export function cancel(ev: Event) {
+  ev.stopPropagation();
+  ev.preventDefault();
+  return false;
+}
+

@@ -85,6 +85,8 @@ $(document).ready(async () => {
   let datastore;
   let doc;
 
+  // TODO: consider using modernizr for feature detection
+  // probably also want to check flexbox support
   if (noLocalStorage) {
     alert('You need local storage support for data to be persisted!');
     settings = new Settings(new DataStore.InMemory());

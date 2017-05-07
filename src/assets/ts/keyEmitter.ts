@@ -1,6 +1,7 @@
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
+import * as utils from './utils';
 import logger from './logger';
 import EventEmitter from './eventEmitter';
 import { Key } from './types';
@@ -14,26 +15,6 @@ The core function is to take browser keypress events, and normalize the key to h
 For more info, see its consumer, keyHandler.ts, as well as keyBindings.ts
 Note that one-character keys are treated specially, in that they are insertable in insert mode.
 */
-
-declare var window: any;
-// tslint:disable:no-string-literal
-// SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
-const isOpera: boolean = !!window['opera'] || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
-const isSafari: boolean = Object.prototype.toString.call(window['HTMLElement']).indexOf('Constructor') > 0; // Safari 3+
-const isChrome: boolean = !!window['chrome'] && !isOpera; // Chrome 1+
-declare var InstallTrigger: any;
-const isFirefox: boolean = typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
-// tslint:enable:no-string-literal
-
-if (!isChrome && !isFirefox && !isSafari) {
-  alert('Unsupported browser!  Please use a recent Chrome, Firefox, or Safari');
-}
-
-function cancel(ev: Event) {
-  ev.stopPropagation();
-  ev.preventDefault();
-  return false;
-}
 
 const shiftMap: {[key: string]: Key} = {
   '`': '~',
@@ -116,7 +97,7 @@ for (let j = 1; j <= 26; j++) {
   shiftMap[lower] = letter;
 }
 
-if (isFirefox) {
+if (utils.isFirefox) {
   keyCodeMap[173] = '-';
 }
 
@@ -162,7 +143,7 @@ export default class KeyEmitter extends EventEmitter {
       const results = this.emit('keydown', key);
       // return false to stop propagation, if any handler handled the key
       if (_.some(results)) {
-        return cancel(e);
+        return utils.cancel(e);
       }
       return true;
     });
