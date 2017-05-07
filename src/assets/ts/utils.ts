@@ -141,3 +141,13 @@ export function getParameterByName(name: string) {
   if (!results[2]) { return ''; }
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+export function downloadFile(filename: string, content: string, mimetype: string) {
+  const exportDiv = $('<a>').addClass('hidden').appendTo($('body'));
+  exportDiv.attr('download', filename);
+  exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
+  exportDiv[0].click();
+  exportDiv.attr('download', null as any);
+  exportDiv.attr('href', null as any);
+  exportDiv.remove();
+}

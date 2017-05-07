@@ -4,6 +4,7 @@ import * as Modes from '../modes';
 import * as errors from '../errors';
 import { DataSource } from '../datastore';
 import Settings from '../settings';
+import * as utils from '../utils';
 
 import SettingsComponent from './settings';
 import SessionComponent from './session';
@@ -28,7 +29,6 @@ type Props = {
   initialTheme: string;
   initialDataSource: DataSource;
   onThemeChange: (theme: string) => void;
-  onExport: () => void;
   error: Error | null;
 };
 
@@ -157,7 +157,7 @@ export default class AppComponent extends React.Component<Props, {}> {
 
           <div id='settings' className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
             <SettingsComponent
-              session={this.props.session}
+              session={session}
               settings={this.props.settings}
               config={this.props.config}
               keyBindings={keyBindings}
@@ -167,7 +167,12 @@ export default class AppComponent extends React.Component<Props, {}> {
               onThemeChange={(theme) => {
                 this.props.onThemeChange(theme);
               }}
-              onExport={this.props.onExport}
+              onExport={() => {
+                const filename = 'vimflowy_hotkeys.json';
+                const content = JSON.stringify(keyBindings.mappings.serialize(), null, 2);
+                utils.downloadFile(filename, content, 'application/json');
+                session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
+              }}
             />
           </div>
 
@@ -205,8 +210,6 @@ export default class AppComponent extends React.Component<Props, {}> {
               {Modes.getMode(session.mode).name}
             </div>
           </div>
-
-          <a id='export' className='hidden'> </a>
         </div>
     );
   }

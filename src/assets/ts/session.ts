@@ -21,7 +21,6 @@ type SessionOptions = {
   showMessage?: (message: string, options?: any) => void,
   toggleBindingsDiv?: () => void,
   getLinesPerPage?: () => number,
-  downloadFile?: (filename: string, mimetype: string, content: any) => void,
 };
 type ViewState = {
   cursor: Cursor,
@@ -78,7 +77,6 @@ export default class Session extends EventEmitter {
   private getLinesPerPage: () => number;
   public showMessage: (message: string, options?: any) => void;
   public toggleBindingsDiv: () => void;
-  private downloadFile: (filename: string, mimetype: string, content: any) => void;
 
   private static swapCase(chars: Chars) {
     return chars.map(function(chr) {
@@ -95,10 +93,6 @@ export default class Session extends EventEmitter {
     });
     this.toggleBindingsDiv = options.toggleBindingsDiv || (() => null);
     this.getLinesPerPage = options.getLinesPerPage || (() => 10);
-    this.downloadFile = options.downloadFile || ((filename, mimetype, content) => {
-      logger.info(`Would download file to ${filename}, mimetype ${mimetype}`);
-      logger.debug(content);
-    });
 
     this.register = new Register(this);
 
@@ -297,7 +291,7 @@ export default class Session extends EventEmitter {
       throw new Error('Invalid export type');
     }
     const content = await this.exportContent(mimetype);
-    this.downloadFile(filename, mimetype, content);
+    utils.downloadFile(filename, content, mimetype);
     this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
   }
 

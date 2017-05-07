@@ -73,17 +73,7 @@ ReactDOM.render(
   appEl
 );
 
-function downloadFile(filename: string, mimetype: string, content: string) {
-  const exportDiv = $('#export');
-  exportDiv.attr('download', filename);
-  exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
-  exportDiv[0].click();
-  exportDiv.attr('download', null as any);
-  exportDiv.attr('href', null as any);
-}
-
 $(document).ready(async () => {
-
   let docname: string = utils.getParameterByName('doc') || '';
   if (!docname) { docname = window.location.pathname.split('/')[1]; }
   if (!docname) { docname = window.location.hash.substr(1); }
@@ -253,7 +243,6 @@ $(document).ready(async () => {
       const page_height = $(document).height();
       return page_height / line_height;
     },
-    downloadFile: downloadFile,
   });
 
   // load plugins
@@ -287,13 +276,6 @@ $(document).ready(async () => {
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;
 
-  const onExport = () => {
-    const filename = 'vimflowy_hotkeys.json';
-    const content = JSON.stringify(mappings.serialize(), null, 2);
-    downloadFile(filename, 'application/json', content);
-    session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
-  };
-
   async function renderMain() {
     await new Promise((resolve) => {
       ReactDOM.render(
@@ -310,7 +292,6 @@ $(document).ready(async () => {
           keyBindings={keyBindings}
           initialDataSource={dataSource}
           initialTheme={initialTheme}
-          onExport={onExport}
         />,
         appEl,
         resolve
