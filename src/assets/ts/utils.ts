@@ -1,6 +1,9 @@
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
+// needed for the browser checks
+declare var window: any;
+
 export function id<T>(x: T): T { return x; }
 
 // Helpers to build up regex that finds the start of a word
@@ -156,15 +159,20 @@ export async function timeout(ns: number) {
   await new Promise((resolve) => setTimeout(resolve, ns));
 }
 
-declare var window: any;
-// tslint:disable:no-string-literal
 // SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
-export const isOpera: boolean = !!window['opera'] || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
-export const isSafari: boolean = Object.prototype.toString.call(window['HTMLElement']).indexOf('Constructor') > 0; // Safari 3+
-export const isChrome: boolean = !!window['chrome'] && !isOpera; // Chrome 1+
+export function isOpera(): boolean {
+  return !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+
+}
+export function isSafari(): boolean {
+  return Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0; // Safari 3+
+}
+export function isChrome(): boolean {
+  return !!window.chrome && !isOpera; // Chrome 1+
+}
 declare var InstallTrigger: any;
-export const isFirefox: boolean = typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
-// tslint:enable:no-string-literal
+export function isFirefox(): boolean {
+  return typeof InstallTrigger !== 'undefined'; // Firefox 1.0+
+}
 
 export function cancel(ev: Event) {
   ev.stopPropagation();

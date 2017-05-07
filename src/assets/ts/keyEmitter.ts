@@ -97,7 +97,7 @@ for (let j = 1; j <= 26; j++) {
   shiftMap[lower] = letter;
 }
 
-if (utils.isFirefox) {
+if (utils.isFirefox()) {
   keyCodeMap[173] = '-';
 }
 
