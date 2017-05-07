@@ -299,6 +299,7 @@ $(document).ready(async () => {
     });
 
     // TODO: understand why this is necessary
+    // weirdly happens on bitballoon but not dev mode?
     await utils.timeout(100);
 
     const $mainDiv = $('#view');
