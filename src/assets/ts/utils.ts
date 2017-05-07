@@ -151,3 +151,7 @@ export function downloadFile(filename: string, content: string, mimetype: string
   exportDiv.attr('href', null as any);
   exportDiv.remove();
 }
+
+export async function timeout(ns: number) {
+  await new Promise((resolve) => setTimeout(resolve, ns));
+}

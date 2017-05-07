@@ -298,6 +298,9 @@ $(document).ready(async () => {
       );
     });
 
+    // TODO: understand why this is necessary
+    await utils.timeout(100);
+
     const $mainDiv = $('#view');
     const cursorDiv = $('.cursor', $mainDiv)[0];
     if (cursorDiv) {
