@@ -1,9 +1,9 @@
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
-import logger from './logger';
 import * as browser_utils from './utils/browser';
 import EventEmitter from './utils/eventEmitter';
+import logger from './utils/logger';
 import { Key } from './types';
 
 /*

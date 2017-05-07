@@ -1,10 +1,10 @@
 import * as browser_utils from './utils/browser';
+import * as errors from './utils/errors';
 import EventEmitter from './utils/eventEmitter';
-import * as errors from './errors';
+import logger from './utils/logger';
 import * as mutations from './mutations';
 import Cursor from './cursor';
 import Register from './register';
-import logger from './logger';
 import Path from './path';
 import Document from './document';
 import Mutation from './mutations';

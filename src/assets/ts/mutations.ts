@@ -23,7 +23,8 @@ the mutation may also optionally implement
 */
 
 import * as _ from 'lodash';
-import * as errors from './errors';
+
+import * as errors from './utils/errors';
 import Session from './session';
 import Cursor from './cursor';
 import { AttachedChildInfo } from './document';

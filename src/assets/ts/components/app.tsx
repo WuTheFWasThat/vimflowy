@@ -1,19 +1,19 @@
 import * as React from 'react';
 
+import * as browser_utils from '../utils/browser';
+import * as errors from '../utils/errors';
 import * as Modes from '../modes';
-import * as errors from '../errors';
 import { DataSource } from '../datastore';
 import Settings from '../settings';
-import * as browser_utils from '../utils/browser';
+import { PluginsManager } from '../plugins';
+import Session from '../session';
+import Config from '../config';
+import KeyBindings from '../keyBindings';
 
 import SettingsComponent from './settings';
 import SessionComponent from './session';
 import MenuComponent from './menu';
 import HotkeysTableComponent from './hotkeysTable';
-import { PluginsManager } from '../plugins';
-import Session from '../session';
-import Config from '../config';
-import KeyBindings from '../keyBindings';
 
 export type TextMessage = { message?: string, text_class?: string };
 

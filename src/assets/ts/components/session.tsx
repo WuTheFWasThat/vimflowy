@@ -1,16 +1,16 @@
 import * as React from 'react';
 
-import * as Modes from '../modes';
+import { promiseDebounce } from '../utils/functional';
+import logger from '../utils/logger';
 
+import * as Modes from '../modes';
 import BreadcrumbsComponent from './breadcrumbs';
 import BlockComponent from './block';
 import Spinner from './spinner';
 import Session from '../session';
 import { Col } from '../types';
 import Path from '../path';
-import logger from '../logger';
 import { CursorsInfoTree } from '../cursor';
-import { promiseDebounce } from '../utils/functional';
 
 // TODO: move mode-specific logic into mode render functions
 

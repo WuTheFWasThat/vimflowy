@@ -1,9 +1,9 @@
 import * as firebase from 'firebase';
 
+import * as errors from './utils/errors';
 import EventEmitter from './utils/eventEmitter';
-import * as errors from './errors';
 import * as fn_utils from './utils/functional';
-import logger from './logger';
+import logger from './utils/logger';
 
 import { Row, Line, SerializedPath, MacroMap } from './types';
 

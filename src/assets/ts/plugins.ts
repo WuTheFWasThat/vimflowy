@@ -1,10 +1,10 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 
-import { registerMode, deregisterMode, ModeMetadata } from './modes';
-import logger, { Logger } from './logger';
-import * as errors from './errors';
+import * as errors from './utils/errors';
 import EventEmitter, { Listener, Hook } from './utils/eventEmitter';
+import logger, { Logger } from './utils/logger';
+import { registerMode, deregisterMode, ModeMetadata } from './modes';
 import Document from './document';
 import Cursor from './cursor';
 import Session from './session';

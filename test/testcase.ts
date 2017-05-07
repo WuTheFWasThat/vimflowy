@@ -13,7 +13,7 @@ import KeyBindings from '../src/assets/ts/keyBindings';
 import Config from '../src/assets/ts/config';
 import vimConfig from '../src/assets/ts/configurations/vim';
 import KeyHandler from '../src/assets/ts/keyHandler';
-import logger, * as Logger from '../src/assets/ts/logger';
+import logger, * as Logger from '../src/assets/ts/utils/logger';
 import { PluginsManager, PluginStatus } from '../src/assets/ts/plugins';
 import Cursor from '../src/assets/ts/cursor';
 import Path from '../src/assets/ts/path';

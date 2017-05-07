@@ -1,6 +1,10 @@
 import * as _ from 'lodash';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 
+import * as errors from '../../assets/ts/utils/errors';
+import { Logger } from '../../assets/ts/utils/logger';
+import { PartialUnfolder, Token, EmitFn, Tokenizer } from '../../assets/ts/utils/token_unfolder';
+
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
 import Menu from '../../assets/ts/menu';
 import * as DataStore from '../../assets/ts/datastore';
@@ -8,11 +12,8 @@ import Document from '../../assets/ts/document';
 import Session from '../../assets/ts/session';
 import LineComponent from '../../assets/ts/components/line';
 import Mutation from '../../assets/ts/mutations';
-import * as errors from '../../assets/ts/errors';
-import { Logger } from '../../assets/ts/logger';
 import Path from '../../assets/ts/path';
 import { Row } from '../../assets/ts/types';
-import { PartialUnfolder, Token, EmitFn, Tokenizer } from '../../assets/ts/utils/token_unfolder';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
 import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';

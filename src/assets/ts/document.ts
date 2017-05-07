@@ -1,11 +1,11 @@
 import * as _ from 'lodash';
 import 'core-js/shim';
 
-import * as fn_utils from './utils/functional';
-import { isWhitespace } from './utils/text';
-import * as errors from './errors';
-// import logger from './logger';
+import * as errors from './utils/errors';
 import EventEmitter from './utils/eventEmitter';
+import * as fn_utils from './utils/functional';
+// import logger from './utils/logger';
+import { isWhitespace } from './utils/text';
 import Path from './path';
 import DataStore from './datastore';
 import {

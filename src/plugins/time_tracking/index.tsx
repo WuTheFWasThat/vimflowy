@@ -22,7 +22,7 @@ import * as $ from 'jquery';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
-import { Logger } from '../../assets/ts/logger';
+import { Logger } from '../../assets/ts/utils/logger';
 import Path from '../../assets/ts/path';
 import { Row } from '../../assets/ts/types';
 

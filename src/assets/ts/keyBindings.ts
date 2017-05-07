@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 
-import * as errors from './errors';
-import logger from './logger';
+import * as errors from './utils/errors';
 import EventEmitter from './utils/eventEmitter';
+import logger from './utils/logger';
 import { KeyDefinitions, Motion, Action, motionKey } from './keyDefinitions';
 import KeyMappings, { HotkeyMapping } from './keyMappings';
 import { Key } from './types';

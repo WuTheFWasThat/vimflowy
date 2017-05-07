@@ -1,3 +1,8 @@
+// Unfolders do the opposite of folding: they take a type A and go to Array<B>.
+// For the case of Vimflowy rendering, we are interested in the special case of
+// taking a Token and getting Array<React.ReactNode> - in this case, we call it a Tokenizer.
+// This file contains the definitions and some useful combinators for these unfolders.
+
 import * as React from 'react';
 
 export type CharInfo = {

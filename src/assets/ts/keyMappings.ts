@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
-import logger from './logger';
 
 import EventEmitter from './utils/eventEmitter';
+import logger from './utils/logger';
 import { Key } from './types';
 
 export type HotkeyMapping = {

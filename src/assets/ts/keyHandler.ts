@@ -19,16 +19,16 @@ It maintains custom logic for this, for each mode.
 // or when the command awaits from keyStream
 
 import EventEmitter from './utils/eventEmitter';
+import logger from './utils/logger';
+import Queue from './utils/queue';
 import Session from './session';
 import KeyBindings, { KeyBindingsTree } from './keyBindings';
 import { Motion, Action, ActionContext, motionKey, SequenceAction } from './keyDefinitions';
 // import Menu from './menu';
 import * as Modes from './modes';
-import Queue from './utils/queue';
 // import * as constants from './constants';
 
 import { Key } from './types';
-import logger from './logger';
 
 // Simple stream class where you can
 // enqueue synchronously, and dequeue asynchronously

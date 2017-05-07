@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 
 import * as browser_utils from '../utils/browser';
-import logger from '../logger';
+import logger from '../utils/logger';
 import { MODES } from '../modes';
 
 import Settings from '../settings';

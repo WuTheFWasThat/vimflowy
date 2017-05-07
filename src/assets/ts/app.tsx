@@ -21,10 +21,10 @@ import '../css/themes/dark.sass';
 import '../css/themes/solarized_dark.sass';
 import '../css/themes/solarized_light.sass';
 
-import * as errors from './errors';
-import * as fn_utils from './utils/functional';
 import * as browser_utils from './utils/browser';
-import logger from './logger';
+import * as errors from './utils/errors';
+import * as fn_utils from './utils/functional';
+import logger from './utils/logger';
 
 import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';

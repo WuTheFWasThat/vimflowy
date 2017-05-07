@@ -1,3 +1,5 @@
+// grab bag of random functions, basically
+
 import * as _ from 'lodash';
 
 export function id<T>(x: T): T { return x; }
