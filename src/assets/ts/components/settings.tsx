@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 
-import * as utils from '../utils';
+import * as browser_utils from '../utils/browser';
 import logger from '../logger';
 import { MODES } from '../modes';
 
@@ -119,7 +119,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                   session.showMessage(`Reading in file ${filename}...`);
                 }}
                 onLoad={async (filename, contents) => {
-                  const mimetype = utils.mimetypeLookup(filename);
+                  const mimetype = browser_utils.mimetypeLookup(filename);
                   if (!mimetype) {
                     session.showMessage('Invalid filetype!', { time: 0 });
                     return;

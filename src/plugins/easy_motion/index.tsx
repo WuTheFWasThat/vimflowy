@@ -3,7 +3,7 @@ import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import Path from '../../assets/ts/path';
 import { registerPlugin } from '../../assets/ts/plugins';
-import * as utils from '../../assets/ts/utils';
+import * as browser_utils from '../../assets/ts/utils/browser';
 
 type EasyMotionMappings = {
   key_to_path: {[key: string]: Path},
@@ -14,7 +14,7 @@ async function getVisiblePaths() {
   const paths: Array<Path> = [];
   $.makeArray($('.bullet')).forEach((bullet) => {
     // TODO: more proper way to expose $('#view') in API
-    if (!utils.isScrolledIntoView($(bullet), $('#view'))) {
+    if (!browser_utils.isScrolledIntoView($(bullet), $('#view'))) {
       return;
     }
     if ($(bullet).hasClass('fa-clone')) {

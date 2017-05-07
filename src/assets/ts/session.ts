@@ -1,10 +1,10 @@
-import * as mutations from './mutations';
-import * as utils from './utils';
+import * as browser_utils from './utils/browser';
+import EventEmitter from './utils/eventEmitter';
 import * as errors from './errors';
+import * as mutations from './mutations';
 import Cursor from './cursor';
 import Register from './register';
 import logger from './logger';
-import EventEmitter from './utils/eventEmitter';
 import Path from './path';
 import Document from './document';
 import Mutation from './mutations';
@@ -286,12 +286,12 @@ export default class Session extends EventEmitter {
                    `vimflowy.${type}` :
                    `${this.document.name}.${type}` ;
     // Infer mimetype from file extension
-    const mimetype = utils.mimetypeLookup(filename);
+    const mimetype = browser_utils.mimetypeLookup(filename);
     if (!mimetype) {
       throw new Error('Invalid export type');
     }
     const content = await this.exportContent(mimetype);
-    utils.downloadFile(filename, content, mimetype);
+    browser_utils.downloadFile(filename, content, mimetype);
     this.showMessage(`Exported to ${filename}!`, {text_class: 'success'});
   }
 

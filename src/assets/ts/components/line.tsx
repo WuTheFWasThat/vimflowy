@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 
-import * as utils from '../utils';
+import * as text_utils from '../utils/text';
 import { Col, Line } from '../types';
 import {
   EmitFn, Token, Tokenizer, PartialTokenizer,
@@ -171,7 +171,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     wordHook = wordHook.then(new PartialUnfolder<Token, React.ReactNode>((
       token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
     ) => {
-      if (utils.isLink(token.text)) {
+      if (text_utils.isLink(token.text)) {
         token.info.forEach((char_info) => {
           char_info.renderOptions.divType = 'a';
           char_info.renderOptions.classes['theme-text-link'] = true;

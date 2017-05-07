@@ -22,7 +22,8 @@ import '../css/themes/solarized_dark.sass';
 import '../css/themes/solarized_light.sass';
 
 import * as errors from './errors';
-import * as utils from './utils';
+import * as fn_utils from './utils/functional';
+import * as browser_utils from './utils/browser';
 import logger from './logger';
 
 import * as Modes from './modes';
@@ -74,7 +75,7 @@ ReactDOM.render(
 );
 
 $(document).ready(async () => {
-  let docname: string = utils.getParameterByName('doc') || '';
+  let docname: string = browser_utils.getParameterByName('doc') || '';
   if (!docname) { docname = window.location.pathname.split('/')[1]; }
   if (!docname) { docname = window.location.hash.substr(1); }
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
@@ -302,12 +303,12 @@ $(document).ready(async () => {
 
     // TODO: understand why this is necessary
     // weirdly happens on bitballoon but not dev mode?
-    await utils.timeout(100);
+    await fn_utils.timeout(100);
 
     const $mainDiv = $('#view');
     const cursorDiv = $('.cursor', $mainDiv)[0];
     if (cursorDiv) {
-      utils.scrollIntoView(cursorDiv, $mainDiv, 50);
+      browser_utils.scrollIntoView(cursorDiv, $mainDiv, 50);
     }
   }
 
@@ -316,7 +317,7 @@ $(document).ready(async () => {
   const $mainDiv = $('#view');
   session.on('scroll', (numlines) => {
     const line_height = getLineHeight();
-    utils.scrollDiv($mainDiv, line_height * numlines);
+    browser_utils.scrollDiv($mainDiv, line_height * numlines);
   });
 
   session.on('importFinished', renderMain); // fire and forget

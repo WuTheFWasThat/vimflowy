@@ -1,4 +1,4 @@
-import * as utils from '../utils';
+import { isLink } from '../utils/text';
 import keyDefinitions, { Action, ActionContext, SequenceAction } from '../keyDefinitions';
 
 keyDefinitions.registerAction(new Action(
@@ -139,7 +139,7 @@ keyDefinitions.registerAction(new Action(
   'Visit the link indicated by the cursor, in a new tab',
   async function({ session }) {
     const word = await session.document.getWord(session.cursor.row, session.cursor.col);
-    if (utils.isLink(word)) {
+    if (isLink(word)) {
       window.open(word);
     } else {
       session.showMessage(`Tried to open non-link: ${word}`, {text_class: 'error'});

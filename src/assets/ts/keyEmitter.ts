@@ -1,8 +1,8 @@
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
-import * as utils from './utils';
 import logger from './logger';
+import * as browser_utils from './utils/browser';
 import EventEmitter from './utils/eventEmitter';
 import { Key } from './types';
 
@@ -97,7 +97,7 @@ for (let j = 1; j <= 26; j++) {
   shiftMap[lower] = letter;
 }
 
-if (utils.isFirefox()) {
+if (browser_utils.isFirefox()) {
   keyCodeMap[173] = '-';
 }
 
@@ -143,7 +143,7 @@ export default class KeyEmitter extends EventEmitter {
       const results = this.emit('keydown', key);
       // return false to stop propagation, if any handler handled the key
       if (_.some(results)) {
-        return utils.cancel(e);
+        return browser_utils.cancel(e);
       }
       return true;
     });

@@ -10,7 +10,7 @@ import { Col } from '../types';
 import Path from '../path';
 import logger from '../logger';
 import { CursorsInfoTree } from '../cursor';
-import { promiseDebounce } from '../utils';
+import { promiseDebounce } from '../utils/functional';
 
 // TODO: move mode-specific logic into mode render functions
 

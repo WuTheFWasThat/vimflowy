@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import 'core-js/shim';
 
-import * as utils from './utils';
+import * as fn_utils from './utils/functional';
+import { isWhitespace } from './utils/text';
 import * as errors from './errors';
 // import logger from './logger';
 import EventEmitter from './utils/eventEmitter';
@@ -324,16 +325,16 @@ export default class Document extends EventEmitter {
   public async getWord(row: Row, col: Col) {
     const text = await this.getLine(row);
 
-    if (utils.isWhitespace(text[col])) {
+    if (isWhitespace(text[col])) {
       return '';
     }
 
     let start = col;
     let end = col;
-    while ((start > 0) && !utils.isWhitespace(text[start - 1])) {
+    while ((start > 0) && !isWhitespace(text[start - 1])) {
       start -= 1;
     }
-    while ((end < text.length - 1) && !utils.isWhitespace(text[end + 1])) {
+    while ((end < text.length - 1) && !isWhitespace(text[end + 1])) {
       end += 1;
     }
     let word = text.slice(start, end + 1).join('');
@@ -364,7 +365,7 @@ export default class Document extends EventEmitter {
 
   public async _getChildren(row: Row, min = 0, max = -1): Promise<Array<Row>> {
     const info = await this.getInfo(row);
-    return utils.getSlice(info.childRows, min, max);
+    return fn_utils.getSlice(info.childRows, min, max);
   }
 
   private async _setChildren(row: Row, children: Array<Row>) {
@@ -456,7 +457,7 @@ export default class Document extends EventEmitter {
     if (parents.length < 2) { // for efficiency reasons
       return false;
     }
-    const attachedParents = await utils.asyncFilter(
+    const attachedParents = await fn_utils.asyncFilter(
       parents, async (parent) => await this.isAttached(parent));
     return attachedParents.length > 1;
   }
@@ -670,7 +671,7 @@ export default class Document extends EventEmitter {
       this.getSiblings(path),
     ]);
     if (index + max_offset < 0) { return []; }
-    const arr = utils.getSlice(
+    const arr = fn_utils.getSlice(
       siblings,
       Math.max(index + min_offset, 0),
       index + max_offset,

@@ -1,4 +1,4 @@
-import * as utils from './utils';
+import { isWhitespace } from './utils/text';
 import EventEmitter from './utils/eventEmitter';
 import { Row, Col, CursorOptions } from './types';
 import Path from './path';
@@ -218,16 +218,16 @@ export default class Cursor extends EventEmitter {
 
   public async isInWhitespace(path: Path, col: Col) {
     const char = await this.document.getChar(path.row, col);
-    return utils.isWhitespace(char);
+    return isWhitespace(char);
   }
 
   public async isInWord(path: Path, col: Col, matchChar: string) {
-    if (utils.isWhitespace(matchChar)) {
+    if (isWhitespace(matchChar)) {
       return false;
     }
 
     const char = await this.document.getChar(path.row, col);
-    if (utils.isWhitespace(char)) {
+    if (isWhitespace(char)) {
       return false;
     }
 

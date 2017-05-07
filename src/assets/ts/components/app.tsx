@@ -4,7 +4,7 @@ import * as Modes from '../modes';
 import * as errors from '../errors';
 import { DataSource } from '../datastore';
 import Settings from '../settings';
-import * as utils from '../utils';
+import * as browser_utils from '../utils/browser';
 
 import SettingsComponent from './settings';
 import SessionComponent from './session';
@@ -170,7 +170,7 @@ export default class AppComponent extends React.Component<Props, {}> {
               onExport={() => {
                 const filename = 'vimflowy_hotkeys.json';
                 const content = JSON.stringify(keyBindings.mappings.serialize(), null, 2);
-                utils.downloadFile(filename, content, 'application/json');
+                browser_utils.downloadFile(filename, content, 'application/json');
                 session.showMessage(`Downloaded hotkeys to ${filename}!`, {text_class: 'success'});
               }}
             />

@@ -4,7 +4,7 @@ import './index.sass';
 
 import { hideBorderAndModify, RegexTokenizerModifier } from '../../assets/ts/utils/token_unfolder';
 import { registerPlugin } from '../../assets/ts/plugins';
-import { matchWordRegex } from '../../assets/ts/utils';
+import { matchWordRegex } from '../../assets/ts/utils/text';
 
 const boldClass = 'bold';
 const italicsClass = 'italic';

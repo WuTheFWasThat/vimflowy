@@ -2,7 +2,7 @@ import * as firebase from 'firebase';
 
 import EventEmitter from './utils/eventEmitter';
 import * as errors from './errors';
-import * as utils from './utils';
+import * as fn_utils from './utils/functional';
 import logger from './logger';
 
 import { Row, Line, SerializedPath, MacroMap } from './types';
@@ -100,7 +100,7 @@ export default class DataStore {
   private async _get<T>(
     key: string,
     default_value: T,
-    decode: (value: any) => T = utils.id
+    decode: (value: any) => T = fn_utils.id
   ): Promise<T> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
 
@@ -137,7 +137,7 @@ export default class DataStore {
   }
 
   private async _set(
-    key: string, value: any, encode: (value: any) => any = utils.id
+    key: string, value: any, encode: (value: any) => any = fn_utils.id
   ): Promise<void> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
 

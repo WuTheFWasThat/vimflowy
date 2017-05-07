@@ -4,7 +4,7 @@ import './index.sass';
 
 import { hideBorderAndModify, RegexTokenizerModifier } from '../../assets/ts/utils/token_unfolder';
 import { registerPlugin } from '../../assets/ts/plugins';
-import { matchWordRegex } from '../../assets/ts/utils';
+import { matchWordRegex } from '../../assets/ts/utils/text';
 import { Row } from '../../assets/ts/types';
 import Session from '../../assets/ts/session';
 

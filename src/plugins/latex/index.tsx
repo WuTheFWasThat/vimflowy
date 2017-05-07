@@ -4,7 +4,7 @@ import 'katex/dist/katex.min.css';
 
 import { Tokenizer, Token, RegexTokenizerSplitter, EmitFn } from '../../assets/ts/utils/token_unfolder';
 import { registerPlugin } from '../../assets/ts/plugins';
-import { matchWordRegex } from '../../assets/ts/utils';
+import { matchWordRegex } from '../../assets/ts/utils/text';
 
 registerPlugin(
   {
