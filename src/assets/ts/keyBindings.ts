@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 
 import * as errors from './errors';
 import logger from './logger';
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 import { KeyDefinitions, Motion, Action, motionKey } from './keyDefinitions';
 import KeyMappings, { HotkeyMapping } from './keyMappings';
 import { Key } from './types';

@@ -1,6 +1,6 @@
 import * as firebase from 'firebase';
 
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 import * as errors from './errors';
 import * as utils from './utils';
 import logger from './logger';

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 
 import * as utils from './utils';
 import logger from './logger';
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 import { Key } from './types';
 
 /*

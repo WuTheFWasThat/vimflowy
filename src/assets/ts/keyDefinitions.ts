@@ -1,4 +1,4 @@
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 import Session from './session';
 import KeyHandler, { KeyStream } from './keyHandler';
 import Cursor from './cursor';

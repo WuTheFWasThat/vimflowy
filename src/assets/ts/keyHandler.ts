@@ -18,7 +18,7 @@ It maintains custom logic for this, for each mode.
 // the commands not being serializable (e.g. in the case where arguments are motions)
 // or when the command awaits from keyStream
 
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 import Session from './session';
 import KeyBindings, { KeyBindingsTree } from './keyBindings';
 import { Motion, Action, ActionContext, motionKey, SequenceAction } from './keyDefinitions';

@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import { registerMode, deregisterMode, ModeMetadata } from './modes';
 import logger, { Logger } from './logger';
 import * as errors from './errors';
-import EventEmitter, { Listener, Hook } from './eventEmitter';
+import EventEmitter, { Listener, Hook } from './utils/eventEmitter';
 import Document from './document';
 import Cursor from './cursor';
 import Session from './session';

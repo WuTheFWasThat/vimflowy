@@ -4,7 +4,7 @@ import 'core-js/shim';
 import * as utils from './utils';
 import * as errors from './errors';
 // import logger from './logger';
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 import Path from './path';
 import DataStore from './datastore';
 import {

@@ -1,5 +1,5 @@
 import * as utils from './utils';
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 import { Row, Col, CursorOptions } from './types';
 import Path from './path';
 import Document from './document';

@@ -4,7 +4,7 @@ import * as errors from './errors';
 import Cursor from './cursor';
 import Register from './register';
 import logger from './logger';
-import EventEmitter from './eventEmitter';
+import EventEmitter from './utils/eventEmitter';
 import Path from './path';
 import Document from './document';
 import Mutation from './mutations';
