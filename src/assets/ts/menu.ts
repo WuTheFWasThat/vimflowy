@@ -1,6 +1,6 @@
 import Session from './session';
 import Document from './document';
-import * as DataStore from './datastore';
+import { InMemoryDataStore } from './datastore';
 import { Line } from './types';
 
 /*
@@ -37,7 +37,7 @@ export default class Menu {
   constructor(searchFn: SearchFn) {
     this.searchFn = searchFn;
 
-    const doc = new Document(new DataStore.InMemory());
+    const doc = new Document(new InMemoryDataStore());
     doc.loadEmpty(); // NOTE: should be async but is okay since in-memory
 
     // a bit of a overkill-y hack, use an entire session object internally

@@ -3,8 +3,8 @@ import * as React from 'react';
 import * as browser_utils from '../utils/browser';
 import * as errors from '../utils/errors';
 import * as Modes from '../modes';
-import { DataSource } from '../datastore';
-import Settings from '../settings';
+import { BackendType } from '../data_backend';
+import DataStore from '../datastore';
 import { PluginsManager } from '../plugins';
 import Session from '../session';
 import Config from '../config';
@@ -20,14 +20,14 @@ export type TextMessage = { message?: string, text_class?: string };
 type Props = {
   pluginManager: PluginsManager;
   session: Session;
-  settings: Settings;
+  settings: DataStore;
   config: Config;
   message: TextMessage | null;
   saveMessage: TextMessage | null;
   showingKeyBindings: boolean;
   keyBindings: KeyBindings;
   initialTheme: string;
-  initialDataSource: DataSource;
+  initialBackendType: BackendType;
   onThemeChange: (theme: string) => void;
   error: Error | null;
 };
@@ -163,7 +163,7 @@ export default class AppComponent extends React.Component<Props, {}> {
               keyBindings={keyBindings}
               pluginManager={pluginManager}
               initialTheme={this.props.initialTheme}
-              initialDataSource={this.props.initialDataSource}
+              initialBackendType={this.props.initialBackendType}
               onThemeChange={(theme) => {
                 this.props.onThemeChange(theme);
               }}

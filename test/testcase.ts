@@ -3,7 +3,7 @@
 import 'mocha';
 import * as _ from 'lodash';
 
-import { InMemory } from '../src/assets/ts/datastore';
+import { InMemoryDataStore } from '../src/assets/ts/datastore';
 import Document from '../src/assets/ts/document';
 import Session from '../src/assets/ts/session';
 import Register, { RegisterTypes, SerializedRegister } from '../src/assets/ts/register';
@@ -33,7 +33,7 @@ type TestCaseOptions = {
 };
 
 class TestCase {
-  public store: InMemory;
+  public store: InMemoryDataStore;
   protected document: Document;
   protected plugins: Array<string>;
   protected session: Session;
@@ -43,7 +43,7 @@ class TestCase {
   protected prom: Promise<void>;
 
   constructor(serialized: Array<SerializedBlock> = [''], options: TestCaseOptions = {}) {
-    this.store = new InMemory();
+    this.store = new InMemoryDataStore();
     this.document = new Document(this.store);
 
     this.plugins = options.plugins || [];

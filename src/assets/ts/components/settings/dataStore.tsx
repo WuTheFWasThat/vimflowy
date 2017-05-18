@@ -1,14 +1,14 @@
 import * as React from 'react';
 
-import { DataSource } from '../../datastore';
-import Settings from '../../settings';
+import { BackendType } from '../../data_backend';
+import DataStore from '../../datastore';
 
 type Props = {
-  settings: Settings;
-  initialDataSource: DataSource;
+  settings: DataStore;
+  initialBackendType: BackendType;
 };
 type State = {
-  dataSource: DataSource,
+  backendType: BackendType,
   firebaseId: string,
   firebaseApiKey: string,
   firebaseUserEmail: string,
@@ -18,7 +18,7 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
   constructor(props: Props) {
     super(props);
     this.state = {
-      dataSource: props.initialDataSource,
+      backendType: props.initialBackendType,
       firebaseId: '',
       firebaseApiKey: '',
       firebaseUserEmail: '',
@@ -44,9 +44,9 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
 
   private async saveDataSettings() {
     const settings = this.props.settings;
-    const dataSource = this.state.dataSource;
-    await settings.setDocSetting('dataSource', dataSource);
-    if (dataSource === 'firebase') {
+    const backendType = this.state.backendType;
+    await settings.setDocSetting('dataSource', backendType);
+    if (backendType === 'firebase') {
       const firebaseId = this.state.firebaseId;
       const firebaseApiKey = this.state.firebaseApiKey;
       const firebaseUserEmail = this.state.firebaseUserEmail;
@@ -59,9 +59,9 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
     window.location.reload();
   }
 
-  private setDataSource(dataSource: DataSource) {
+  private setBackendType(backendType: BackendType) {
     this.setState({
-      dataSource,
+      backendType,
     } as State);
   }
 
@@ -92,10 +92,10 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
   public render() {
     const firebaseBaseUrl = `https://console.firebase.google.com/project/${this.state.firebaseId || '${firebaseProjectId}'}`;
 
-    const dataSources: Array<{
+    const backendTypes: Array<{
       name: string,
       type: 'Remote' | 'Local',
-      value: DataSource,
+      value: BackendType,
       info: React.ReactElement<any> | string,
       config?: React.ReactElement<any>,
     }> = [
@@ -253,34 +253,34 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
           <tbody>
             { (() => {
               const rows: Array<React.ReactElement<any>> = [];
-              dataSources.forEach((dataSourceInfo) => {
-                const selected = this.state.dataSource === dataSourceInfo.value;
+              backendTypes.forEach((backendTypeInfo) => {
+                const selected = this.state.backendType === backendTypeInfo.value;
                 rows.push(
-                  <tr key={dataSourceInfo.value}>
+                  <tr key={backendTypeInfo.value}>
                     <td style={{padding: 10}}>
-                      <input type='radio' name='dataSource'
-                        value={dataSourceInfo.value} checked={selected} readOnly
-                        onClick={(ev) => this.setDataSource((ev.target as HTMLInputElement).value as DataSource)}
+                      <input type='radio' name='backendType'
+                        value={backendTypeInfo.value} checked={selected} readOnly
+                        onClick={(ev) => this.setBackendType((ev.target as HTMLInputElement).value as BackendType)}
                       />
                     </td>
                     <td style={{padding: 10}}>
-                      <b>{dataSourceInfo.name}</b>
+                      <b>{backendTypeInfo.name}</b>
                     </td>
                     <td style={{padding: 10}}>
-                      {dataSourceInfo.type}
+                      {backendTypeInfo.type}
                     </td>
                     <td style={{padding: 10}}>
-                      {dataSourceInfo.info}
+                      {backendTypeInfo.info}
                     </td>
                   </tr>
                 );
 
-                if (selected && dataSourceInfo.config) {
+                if (selected && backendTypeInfo.config) {
                   rows.push(
                     <tr key='selected'>
                       <td></td>
                       <td colSpan={999}>
-                        {dataSourceInfo.config}
+                        {backendTypeInfo.config}
                       </td>
                     </tr>
                   );

@@ -5,13 +5,13 @@ import * as browser_utils from '../utils/browser';
 import logger from '../utils/logger';
 import { MODES } from '../modes';
 
-import Settings from '../settings';
 import Session from '../session';
 import Config from '../config';
 import KeyBindings from '../keyBindings';
 import KeyMappings from '../keyMappings';
 import { PluginsManager } from '../plugins';
-import { DataSource } from '../datastore';
+import DataStore from '../datastore';
+import { BackendType } from '../data_backend';
 
 import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
@@ -26,12 +26,12 @@ enum TABS {
 
 type Props = {
   session: Session;
-  settings: Settings;
+  settings: DataStore;
   config: Config;
   keyBindings: KeyBindings;
   pluginManager: PluginsManager;
   initialTheme: string;
-  initialDataSource: DataSource;
+  initialBackendType: BackendType;
   onThemeChange: (theme: string) => void;
   onExport: () => void;
 };
@@ -76,7 +76,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
             <div className='settings-content'>
               <DataStoreSettingsComponent
                 settings={this.props.settings}
-                initialDataSource={this.props.initialDataSource}
+                initialBackendType={this.props.initialBackendType}
               />
             </div>
 

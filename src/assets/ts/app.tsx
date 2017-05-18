@@ -4,7 +4,7 @@ Initialize the main page.  Rather messy logic for a bunch of stuff:
 - handle clipboard paste
 - handle errors
 - load document from localStorage (fall back to plain in-memory datastructures)
-- initialize objects (session, settings, etc.)
+- initialize objects (session, etc.)
 - handle rendering logic
 */
 
@@ -30,9 +30,9 @@ import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';
 import KeyHandler from './keyHandler';
 import KeyMappings from './keyMappings';
-import * as DataStore from './datastore';
+import DataStore, { InMemoryDataStore } from './datastore';
+import * as DataBackends from './data_backend';
 import Document from './document';
-import Settings from './settings';
 import { PluginsManager } from './plugins';
 import Path from './path';
 import Session from './session';
@@ -81,8 +81,8 @@ $(document).ready(async () => {
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
 
   const noLocalStorage = (typeof localStorage === 'undefined' || localStorage === null);
-  let settings: Settings;
-  let dataSource: DataStore.DataSource;
+  let settings: DataStore;
+  let backend_type: DataBackends.BackendType;
   let datastore;
   let doc;
 
@@ -90,16 +90,16 @@ $(document).ready(async () => {
   // probably also want to check flexbox support
   if (noLocalStorage) {
     alert('You need local storage support for data to be persisted!');
-    settings = new Settings(new DataStore.InMemory());
-    dataSource = 'inmemory';
+    settings = new InMemoryDataStore();
+    backend_type = 'inmemory';
   } else {
-    settings = new Settings(new DataStore.LocalStorageLazy(docname));
-    dataSource = await settings.getDocSetting('dataSource');
+    settings = new DataStore(new DataBackends.LocalStorageLazy(), docname);
+    backend_type = await settings.getDocSetting('dataSource');
   }
 
   const config: Config = vimConfig;
 
-  if (dataSource === 'firebase') {
+  if (backend_type === 'firebase') {
     const [
       firebaseId,
       firebaseApiKey,
@@ -119,8 +119,9 @@ $(document).ready(async () => {
       if (!firebaseApiKey) {
         throw new Error('No firebase API key found');
       }
-      datastore = new DataStore.FirebaseStore(docname, firebaseId, firebaseApiKey);
-      await datastore.init(firebaseUserEmail || '', firebaseUserPassword || '');
+      const fb_backend = new DataBackends.FirebaseBackend(docname, firebaseId, firebaseApiKey);
+      datastore = new DataStore(fb_backend, docname);
+      await fb_backend.init(firebaseUserEmail || '', firebaseUserPassword || '');
     } catch (e) {
       alert(`
         Error loading firebase datastore:
@@ -132,13 +133,13 @@ $(document).ready(async () => {
         Falling back to localStorage default.
       `);
 
-      dataSource = 'local';
-      datastore = new DataStore.LocalStorageLazy(docname, true);
+      backend_type = 'local';
+      datastore = new DataStore(new DataBackends.LocalStorageLazy(docname, true), docname);
     }
-  } else if (dataSource === 'inmemory') {
-    datastore = new DataStore.InMemory();
+  } else if (backend_type === 'inmemory') {
+    datastore = new InMemoryDataStore();
   } else {
-    datastore = new DataStore.LocalStorageLazy(docname, true);
+    datastore = new DataStore(new DataBackends.LocalStorageLazy(docname, true), docname);
   }
 
   doc = new Document(datastore, docname);
@@ -293,7 +294,7 @@ $(document).ready(async () => {
           pluginManager={pluginManager}
           showingKeyBindings={showingKeyBindings}
           keyBindings={keyBindings}
-          initialDataSource={dataSource}
+          initialBackendType={backend_type}
           initialTheme={initialTheme}
         />,
         appEl,

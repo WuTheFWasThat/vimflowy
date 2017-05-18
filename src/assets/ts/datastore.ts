@@ -1,13 +1,9 @@
-import * as firebase from 'firebase';
-
-import * as errors from './utils/errors';
 import EventEmitter from './utils/eventEmitter';
 import * as fn_utils from './utils/functional';
 import logger from './utils/logger';
+import DataBackend, * as DataBackends from './data_backend';
 
 import { Row, Line, SerializedPath, MacroMap } from './types';
-
-export type DataSource = 'local' | 'firebase' | 'inmemory';
 
 /*
 DataStore abstracts the data layer, so that it can be swapped out.
@@ -15,6 +11,43 @@ There are many methods the each type of DataStore should implement to satisfy th
 However, in the case of a key-value store, one can simply implement `get` and `set` methods.
 Currently, DataStore has a synchronous API.  This may need to change eventually...  :(
 */
+
+// TODO: an enum for themes
+
+type SettingsType = {
+  theme: string;
+  showKeyBindings: boolean;
+  hotkeys: any; // TODO
+  enabledPlugins: Array<string>,
+};
+
+type SettingType = keyof SettingsType;
+
+const default_settings: SettingsType = {
+  theme: 'default-theme',
+  showKeyBindings: true,
+  hotkeys: {},
+  // TODO import these names from the plugins
+  enabledPlugins: ['Marks', 'HTML', 'LaTeX', 'Text Formatting', 'Todo'],
+};
+
+type DocSettingsType = {
+  dataSource: DataBackends.BackendType;
+  firebaseId: string | null;
+  firebaseApiKey: string | null;
+  firebaseUserEmail: string | null;
+  firebaseUserPassword: string | null;
+};
+
+type DocSettingType = keyof DocSettingsType;
+
+const default_doc_settings: DocSettingsType = {
+  dataSource: 'local',
+  firebaseId: null,
+  firebaseApiKey: null,
+  firebaseUserEmail: null,
+  firebaseUserPassword: null,
+};
 
 const timeout = (ns: number) => {
   return new Promise((resolve) => {
@@ -48,8 +81,10 @@ export default class DataStore {
   private lastId: number | null;
   private cache: {[key: string]: any};
   public events: EventEmitter;
+  private backend: DataBackend;
 
-  constructor(docname = '') {
+  constructor(backend: DataBackend, docname = '') {
+    this.backend = backend;
     this.docname = docname;
     this.prefix = `${docname}save`;
     this.lastId = null;
@@ -107,7 +142,7 @@ export default class DataStore {
     if (key in this.cache) {
       return this.cache[key];
     }
-    let value: any = await this.get(key);
+    let value: any = await this.backend.get(key);
     if (value != null) {
       // NOTE: only need try catch for backwards compatibility
       try {
@@ -132,10 +167,6 @@ export default class DataStore {
     return decodedValue;
   }
 
-  protected async get(_key: string): Promise<string | null> {
-    throw new errors.NotImplemented();
-  }
-
   private async _set(
     key: string, value: any, encode: (value: any) => any = fn_utils.id
   ): Promise<void> {
@@ -145,13 +176,7 @@ export default class DataStore {
     const encodedValue = encode(value);
     logger.debug('setting to storage', key, encodedValue);
     // NOTE: fire and forget
-    this.set(key, JSON.stringify(encodedValue));
-  }
-
-  protected async set(
-    _key: string, _value: string
-  ): Promise<void> {
-    throw new errors.NotImplemented();
+    this.backend.set(key, JSON.stringify(encodedValue));
   }
 
   // get and set values for a given row
@@ -215,22 +240,20 @@ export default class DataStore {
     return await this._set(this._macrosKey_(), macros);
   }
 
-  // get global settings (data not specific to a document)
-  public async getSetting(
-    setting: string, default_value: any = undefined
-  ): Promise<any> {
-    return await this._get(this._settingKey_(setting), default_value);
+  public async getSetting<S extends SettingType>(setting: S): Promise<SettingsType[S]> {
+    return await this._get(this._settingKey_(setting), default_settings[setting]);
   }
-  public async setSetting(setting: string, value: any): Promise<void> {
+
+  public async setSetting<S extends SettingType>(setting: S, value: SettingsType[S]): Promise<void> {
     return await this._set(this._settingKey_(setting), value);
   }
-  // get document specific settings
-  public async getDocSetting(
-    setting: string, default_value: any = undefined
-  ): Promise<any> {
+
+  public async getDocSetting<S extends DocSettingType>(setting: S): Promise<DocSettingsType[S]> {
+    const default_value = default_doc_settings[setting];
     return await this._get(this._docSettingKey_(setting), default_value);
   }
-  public async setDocSetting(setting: string, value: any): Promise<void> {
+
+  public async setDocSetting<S extends DocSettingType>(setting: S, value: DocSettingsType[S]): Promise<void> {
     return await this._set(this._docSettingKey_(setting), value);
   }
 
@@ -280,153 +303,8 @@ export default class DataStore {
   }
 }
 
-export class InMemory extends DataStore {
+export class InMemoryDataStore extends DataStore {
   constructor() {
-    super('');
-  }
-
-  protected async get(_key: string): Promise<string | null> {
-    return null;
-  }
-
-  protected async set(_key: string, _value: string): Promise<void> {
-    // do nothing
-  }
-}
-
-export class LocalStorageLazy extends DataStore {
-  private lastSave: number;
-  private trackSaves: boolean;
-
-  protected _lastSaveKey_(): string {
-    return `${this.prefix}:lastSave`;
-  }
-
-  constructor(docname = '', trackSaves = false) {
-    super(docname);
-    this.trackSaves = trackSaves;
-    if (this.trackSaves) {
-      this.lastSave = Date.now();
-    }
-  }
-
-  protected async get(key: string): Promise<string | null> {
-    return this._getLocalStorage_(key);
-  }
-
-  protected async set(key: string, value: string): Promise<void> {
-    return this._setLocalStorage_(key, value);
-  }
-
-  private _setLocalStorage_(
-    key: string, value: any,
-    options: {doesNotAffectLastSave?: boolean} = {}
-  ): void {
-    if (this.trackSaves) {
-      if (this.getLastSave() > this.lastSave) {
-        throw new errors.MultipleUsersError();
-      }
-
-      if (!options.doesNotAffectLastSave) {
-        this.lastSave = Date.now();
-        localStorage.setItem(this._lastSaveKey_(), this.lastSave + '');
-      }
-    }
-
-    return localStorage.setItem(key, value);
-  }
-
-  private _getLocalStorage_(key: string): any | null {
-    const val = localStorage.getItem(key);
-    if ((val == null) || (val === 'undefined')) {
-      return null;
-    }
-    return val;
-  }
-
-  // determine last time saved (for multiple tab detection)
-  // note that this doesn't cache!
-  public getLastSave(): number {
-    return JSON.parse(this._getLocalStorage_(this._lastSaveKey_()) || '0');
-  }
-}
-
-export class FirebaseStore extends DataStore {
-  private fbase: firebase.database.Database;
-  private numPendingSaves: number;
-
-  constructor(docname = '', dbName: string, apiKey: string) {
-    super(docname);
-    this.fbase = firebase.initializeApp({
-      apiKey: apiKey,
-      databaseURL: `https://${dbName}.firebaseio.com`,
-    }).database();
-
-    this.numPendingSaves = 0;
-    // this.fbase.authWithCustomToken(token, (err, authdata) => {})
-  }
-
-  public async init(email: string, password: string) {
-    this.events.emit('saved');
-
-    await this.auth(email, password);
-
-    const clientId = Date.now() + '-' + ('' + Math.random()).slice(2);
-    const lastClientRef = this.fbase.ref('lastClient');
-
-    await lastClientRef.set(clientId);
-
-    // Number of online users is the number of objects in the presence list.
-    lastClientRef.on('value', function(snap) {
-      if (snap == null) {
-        throw new Error('Failed to get listRef');
-      }
-      if (snap.val() !== clientId) {
-        throw new errors.MultipleUsersError();
-      }
-    });
-  }
-
-  public async auth(email: string, password: string) {
-    return await firebase.auth().signInWithEmailAndPassword(email, password);
-  }
-
-  protected get(key: string): Promise<string | null> {
-    logger.debug('Firebase: getting', key);
-    return new Promise((resolve: (result: string | null) => void, reject) => {
-      this.fbase.ref(key).once(
-        'value',
-        (data) => {
-          const exists = data.exists();
-          if (!exists) {
-            return resolve(null);
-          }
-          return resolve(data.val());
-        },
-        (err: Error) => {
-          return reject(err);
-        }
-      );
-    });
-  }
-
-  protected set(key: string, value: string): Promise<void> {
-    if (this.numPendingSaves === 0) {
-      this.events.emit('unsaved');
-    }
-    logger.debug('Firebase: setting', key, 'to', value);
-    this.numPendingSaves++;
-    // TODO: buffer these and batch them?
-    this.fbase.ref(key).set(
-      value,
-      (err) => {
-        if (err) { throw err; }
-        this.numPendingSaves--;
-        if (this.numPendingSaves === 0) {
-          this.events.emit('saved');
-        }
-      }
-    );
-    return Promise.resolve();
+    super(new DataBackends.InMemory());
   }
 }
