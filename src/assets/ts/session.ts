@@ -2,11 +2,13 @@ import * as browser_utils from './utils/browser';
 import * as errors from './utils/errors';
 import EventEmitter from './utils/eventEmitter';
 import logger from './utils/logger';
+import { ClientStore } from './datastore';
+import { InMemory } from './data_backend';
 import * as mutations from './mutations';
 import Cursor from './cursor';
 import Register from './register';
 import Path from './path';
-import Document from './document';
+import Document, { InMemoryDocument } from './document';
 import Mutation from './mutations';
 import Menu from './menu';
 
@@ -59,6 +61,7 @@ Ideally, session shouldn't do much more than handle cursors and history
 export default class Session extends EventEmitter {
   public mode: ModeId;
 
+  public clientStore: ClientStore;
   public document: Document;
   public register: Register;
   public cursor: Cursor;
@@ -83,8 +86,10 @@ export default class Session extends EventEmitter {
       return chr.toLowerCase() === chr ? chr.toUpperCase() : chr.toLowerCase();
     });
   }
-  constructor(doc: Document, options: SessionOptions = {}) {
+  constructor(clientStore: ClientStore, doc: Document, options: SessionOptions = {}) {
     super();
+
+    this.clientStore = clientStore;
 
     this.document = doc;
 
@@ -547,7 +552,7 @@ export default class Session extends EventEmitter {
   public async changeViewRoot(path: Path) {
     this.viewRoot = path;
     // NOTE: should this be fire and forget instead?
-    await this.document.store.setLastViewRoot(path.getAncestry());
+    await this.clientStore.setLastViewRoot(path.getAncestry());
   }
 
   public reset_jump_history() {
@@ -1337,5 +1342,15 @@ export default class Session extends EventEmitter {
     }
 
     this.emit('scroll', numlines);
+  }
+}
+
+export class InMemorySession extends Session {
+  constructor(options: SessionOptions = {}) {
+    const doc = new InMemoryDocument();
+    doc.loadEmpty(); // NOTE: should be async but is okay since in-memory
+    super(
+      new ClientStore(new InMemory()), doc, options
+    );
   }
 }

@@ -7,7 +7,8 @@ import * as fn_utils from './utils/functional';
 // import logger from './utils/logger';
 import { isWhitespace } from './utils/text';
 import Path from './path';
-import DataStore from './datastore';
+import { DocumentStore } from './datastore';
+import { InMemory } from './data_backend';
 import {
   Row, Col, Char, Line, SerializedLine, SerializedBlock
 } from './types';
@@ -206,11 +207,11 @@ type SearchOptions = {nresults?: number, case_sensitive?: boolean};
 
 export default class Document extends EventEmitter {
   public cache: DocumentCache;
-  public store: DataStore;
+  public store: DocumentStore;
   public name: string;
   public root: Path;
 
-  constructor(store: DataStore, name = '') {
+  constructor(store: DocumentStore, name = '') {
     super();
     this.cache = new DocumentCache();
     this.store = store;
@@ -863,5 +864,11 @@ export default class Document extends EventEmitter {
 
   public async loadEmpty() {
     this.load(['']);
+  }
+}
+
+export class InMemoryDocument extends Document {
+  constructor() {
+    super(new DocumentStore(new InMemory()));
   }
 }

@@ -717,7 +717,7 @@ describe('basic multiline tests', function() {
     t.sendKeys('uu');
     t.expect([ 'a row' ]);
     // to demonstrate we're not relying on getId behavior
-    t.store.getId = (() => {
+    t.docStore.getId = (() => {
       let id = 100;
       return async function() {
         id++;
@@ -748,7 +748,7 @@ describe('basic multiline tests', function() {
     t.sendKeys('uu');
     t.expect([ 'a row' ]);
     // to demonstrate we're not relying on getId behavior
-    t.store.getId = (() => {
+    t.docStore.getId = (() => {
       let id = 100;
       return async function() {
         id++;

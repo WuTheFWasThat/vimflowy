@@ -14,24 +14,27 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 
 // TODO: an enum for themes
 
-type SettingsType = {
+// ClientSettings: settings specific to a client (stored locally, not per document)
+// LocalDocSettings: settings specific to a client and document name (stored locally, per document)
+// DocSettings: settings specific to a document (stored remotely, per document)
+
+// TODO: plugin enabling should get to choose if local or remote
+
+export type ClientSettings = {
   theme: string;
   showKeyBindings: boolean;
   hotkeys: any; // TODO
-  enabledPlugins: Array<string>,
 };
 
-type SettingType = keyof SettingsType;
+type ClientSetting = keyof ClientSettings;
 
-const default_settings: SettingsType = {
+const default_client_settings: ClientSettings = {
   theme: 'default-theme',
   showKeyBindings: true,
   hotkeys: {},
-  // TODO import these names from the plugins
-  enabledPlugins: ['Marks', 'HTML', 'LaTeX', 'Text Formatting', 'Todo'],
 };
 
-type DocSettingsType = {
+export type LocalDocSettings = {
   dataSource: DataBackends.BackendType;
   firebaseId: string | null;
   firebaseApiKey: string | null;
@@ -39,14 +42,25 @@ type DocSettingsType = {
   firebaseUserPassword: string | null;
 };
 
-type DocSettingType = keyof DocSettingsType;
+type LocalDocSetting = keyof LocalDocSettings;
 
-const default_doc_settings: DocSettingsType = {
+const default_local_doc_settings: LocalDocSettings = {
   dataSource: 'local',
   firebaseId: null,
   firebaseApiKey: null,
   firebaseUserEmail: null,
   firebaseUserPassword: null,
+};
+
+export type DocSettings = {
+  enabledPlugins: Array<string>,
+};
+
+type DocSetting = keyof DocSettings;
+
+const default_doc_settings: DocSettings = {
+  // TODO import these names from the plugins
+  enabledPlugins: ['Marks', 'HTML', 'LaTeX', 'Text Formatting', 'Todo'],
 };
 
 const timeout = (ns: number) => {
@@ -75,10 +89,9 @@ const decodeParents = (parents: number | Array<number>): Array<number> => {
   return parents;
 };
 
-export default class DataStore {
+class DataStore {
   protected prefix: string;
-  private docname: string;
-  private lastId: number | null;
+  protected docname: string;
   private cache: {[key: string]: any};
   public events: EventEmitter;
   private backend: DataBackend;
@@ -87,52 +100,11 @@ export default class DataStore {
     this.backend = backend;
     this.docname = docname;
     this.prefix = `${docname}save`;
-    this.lastId = null;
     this.cache = {};
     this.events = new EventEmitter();
   }
 
-  private _lastIDKey_() {
-    return `${this.prefix}:lastID`;
-  }
-  private _lineKey_(row: Row): string {
-    return `${this.prefix}:${row}:line`;
-  }
-  private _parentsKey_(row: Row): string {
-    return `${this.prefix}:${row}:parent`;
-  }
-  private _childrenKey_(row: Row): string {
-    return `${this.prefix}:${row}:children`;
-  }
-  private _detachedParentKey_(row: Row): string {
-    return `${this.prefix}:${row}:detached_parent`;
-  }
-  private _collapsedKey_(row: Row): string {
-    return `${this.prefix}:${row}:collapsed`;
-  }
-
-  private _pluginDataKey_(plugin: string, key: string): string {
-    return `${this.prefix}:plugin:${plugin}:data:${key}`;
-  }
-
-  // no prefix, meaning it's global
-  private _settingKey_(setting: string): string {
-    return `settings:${setting}`;
-  }
-
-  // not using regular prefix, for backwards compatibility
-  private _docSettingKey_(setting: string): string {
-    return `settings:${this.docname}:${setting}`;
-  }
-
-  private _lastViewrootKey_(): string {
-    return `${this.prefix}:lastviewroot2`;
-  }
-  private _macrosKey_(): string {
-    return `${this.prefix}:macros`;
-  }
-
-  private async _get<T>(
+  protected async _get<T>(
     key: string,
     default_value: T,
     decode: (value: any) => T = fn_utils.id
@@ -167,7 +139,7 @@ export default class DataStore {
     return decodedValue;
   }
 
-  private async _set(
+  protected async _set(
     key: string, value: any, encode: (value: any) => any = fn_utils.id
   ): Promise<void> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
@@ -177,6 +149,102 @@ export default class DataStore {
     logger.debug('setting to storage', key, encodedValue);
     // NOTE: fire and forget
     this.backend.set(key, JSON.stringify(encodedValue));
+  }
+}
+
+export class ClientStore extends DataStore {
+  constructor(backend: DataBackend, docname = '') {
+    super(backend, docname);
+  }
+
+  // TODO: also have local pluginData
+
+  // no prefix, meaning it's global
+  private _settingKey_(setting: string): string {
+    return `settings:${setting}`;
+  }
+
+  // not using regular prefix, for backwards compatibility
+  private _docSettingKey_(setting: string): string {
+    return `settings:${this.docname}:${setting}`;
+  }
+
+  private _lastViewrootKey_(): string {
+    return `${this.prefix}:lastviewroot2`;
+  }
+  private _macrosKey_(): string {
+    return `${this.prefix}:macros`;
+  }
+
+  // get mapping of macro_key -> macro
+  public async getMacros(): Promise<MacroMap> {
+    return await this._get(this._macrosKey_(), {});
+  }
+
+  // set mapping of macro_key -> macro
+  public async setMacros(macros: MacroMap): Promise<void> {
+    return await this._set(this._macrosKey_(), macros);
+  }
+
+  public async getClientSetting<S extends ClientSetting>(setting: S): Promise<ClientSettings[S]> {
+    return await this._get(this._settingKey_(setting), default_client_settings[setting]);
+  }
+
+  public async setClientSetting<S extends ClientSetting>(setting: S, value: ClientSettings[S]): Promise<void> {
+    return await this._set(this._settingKey_(setting), value);
+  }
+
+  public async getDocSetting<S extends LocalDocSetting>(setting: S): Promise<LocalDocSettings[S]> {
+    const default_value = default_local_doc_settings[setting];
+    return await this._get(this._docSettingKey_(setting), default_value);
+  }
+
+  public async setDocSetting<S extends LocalDocSetting>(setting: S, value: LocalDocSettings[S]): Promise<void> {
+    return await this._set(this._docSettingKey_(setting), value);
+  }
+
+  // get last view (for page reload)
+  public async setLastViewRoot(ancestry: SerializedPath): Promise<void> {
+    await this._set(this._lastViewrootKey_(), ancestry);
+  }
+  public async getLastViewRoot(): Promise<SerializedPath> {
+    return await this._get(this._lastViewrootKey_(), []);
+  }
+}
+
+export class DocumentStore extends DataStore {
+  private lastId: number | null;
+
+  constructor(backend: DataBackend, docname = '') {
+    super(backend, docname);
+    this.lastId = null;
+  }
+
+  private _lastIDKey_() {
+    return `${this.prefix}:lastID`;
+  }
+  private _lineKey_(row: Row): string {
+    return `${this.prefix}:${row}:line`;
+  }
+  private _parentsKey_(row: Row): string {
+    return `${this.prefix}:${row}:parent`;
+  }
+  private _childrenKey_(row: Row): string {
+    return `${this.prefix}:${row}:children`;
+  }
+  private _detachedParentKey_(row: Row): string {
+    return `${this.prefix}:${row}:detached_parent`;
+  }
+  private _collapsedKey_(row: Row): string {
+    return `${this.prefix}:${row}:collapsed`;
+  }
+
+  private _pluginDataKey_(plugin: string, key: string): string {
+    return `${this.prefix}:plugin:${plugin}:data:${key}`;
+  }
+
+  private _settingKey_(setting: string): string {
+    return `${this.prefix}:settings:${setting}`;
   }
 
   // get and set values for a given row
@@ -230,39 +298,13 @@ export default class DataStore {
     return await this._set(this._collapsedKey_(row), collapsed || false);
   }
 
-  // get mapping of macro_key -> macro
-  public async getMacros(): Promise<MacroMap> {
-    return await this._get(this._macrosKey_(), {});
-  }
-
-  // set mapping of macro_key -> macro
-  public async setMacros(macros: MacroMap): Promise<void> {
-    return await this._set(this._macrosKey_(), macros);
-  }
-
-  public async getSetting<S extends SettingType>(setting: S): Promise<SettingsType[S]> {
-    return await this._get(this._settingKey_(setting), default_settings[setting]);
-  }
-
-  public async setSetting<S extends SettingType>(setting: S, value: SettingsType[S]): Promise<void> {
-    return await this._set(this._settingKey_(setting), value);
-  }
-
-  public async getDocSetting<S extends DocSettingType>(setting: S): Promise<DocSettingsType[S]> {
+  public async getSetting<S extends DocSetting>(setting: S): Promise<DocSettings[S]> {
     const default_value = default_doc_settings[setting];
-    return await this._get(this._docSettingKey_(setting), default_value);
+    return await this._get(this._settingKey_(setting), default_value);
   }
 
-  public async setDocSetting<S extends DocSettingType>(setting: S, value: DocSettingsType[S]): Promise<void> {
-    return await this._set(this._docSettingKey_(setting), value);
-  }
-
-  // get last view (for page reload)
-  public async setLastViewRoot(ancestry: SerializedPath): Promise<void> {
-    await this._set(this._lastViewrootKey_(), ancestry);
-  }
-  public async getLastViewRoot(): Promise<SerializedPath> {
-    return await this._get(this._lastViewrootKey_(), []);
+  public async setSetting<S extends DocSetting>(setting: S, value: DocSettings[S]): Promise<void> {
+    return await this._set(this._settingKey_(setting), value);
   }
 
   public async setPluginData(
@@ -300,11 +342,5 @@ export default class DataStore {
       this.setCollapsed(id, false),
     ]);
     return id;
-  }
-}
-
-export class InMemoryDataStore extends DataStore {
-  constructor() {
-    super(new DataBackends.InMemory());
   }
 }

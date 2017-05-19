@@ -18,6 +18,8 @@ More involved examples can be found [here](../src/plugins).
 
 # Plugin API
 
+Currently, all plugins are per-document.  (This is sometimes awkward, since, for example, easy-motion should probably be per-client.  Please let us know if you need per-client plugins.)
+
 ## Registering a plugin
 
 A plugin registers using

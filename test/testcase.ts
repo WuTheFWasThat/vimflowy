@@ -3,7 +3,8 @@
 import 'mocha';
 import * as _ from 'lodash';
 
-import { InMemoryDataStore } from '../src/assets/ts/datastore';
+import { DocumentStore, ClientStore } from '../src/assets/ts/datastore';
+import * as DataBackends from '../src/assets/ts/data_backend';
 import Document from '../src/assets/ts/document';
 import Session from '../src/assets/ts/session';
 import Register, { RegisterTypes, SerializedRegister } from '../src/assets/ts/register';
@@ -33,7 +34,8 @@ type TestCaseOptions = {
 };
 
 class TestCase {
-  public store: InMemoryDataStore;
+  public docStore: DocumentStore;
+  private clientStore: ClientStore;
   protected document: Document;
   protected plugins: Array<string>;
   protected session: Session;
@@ -43,12 +45,13 @@ class TestCase {
   protected prom: Promise<void>;
 
   constructor(serialized: Array<SerializedBlock> = [''], options: TestCaseOptions = {}) {
-    this.store = new InMemoryDataStore();
-    this.document = new Document(this.store);
+    this.docStore = new DocumentStore(new DataBackends.InMemory());
+    this.document = new Document(this.docStore);
+    this.clientStore = new ClientStore(new DataBackends.InMemory());
 
     this.plugins = options.plugins || [];
 
-    this.session = new Session(this.document, {
+    this.session = new Session(this.clientStore, this.document, {
       viewRoot: Path.root(),
     });
 

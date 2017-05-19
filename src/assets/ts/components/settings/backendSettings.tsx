@@ -1,10 +1,10 @@
 import * as React from 'react';
 
 import { BackendType } from '../../data_backend';
-import DataStore from '../../datastore';
+import { ClientStore } from '../../datastore';
 
 type Props = {
-  settings: DataStore;
+  clientStore: ClientStore;
   initialBackendType: BackendType;
 };
 type State = {
@@ -14,7 +14,7 @@ type State = {
   firebaseUserEmail: string,
   firebaseUserPassword: string,
 };
-export default class DataStoreSettingsComponent extends React.Component<Props, State> {
+export default class BackendSettingsComponent extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -28,11 +28,11 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
 
   public componentDidMount() {
     (async () => {
-      const settings = this.props.settings;
-      const firebaseId = await settings.getDocSetting('firebaseId');
-      const firebaseApiKey = await settings.getDocSetting('firebaseApiKey');
-      const firebaseUserEmail = await settings.getDocSetting('firebaseUserEmail');
-      const firebaseUserPassword = await settings.getDocSetting('firebaseUserPassword');
+      const clientStore = this.props.clientStore;
+      const firebaseId = await clientStore.getDocSetting('firebaseId');
+      const firebaseApiKey = await clientStore.getDocSetting('firebaseApiKey');
+      const firebaseUserEmail = await clientStore.getDocSetting('firebaseUserEmail');
+      const firebaseUserPassword = await clientStore.getDocSetting('firebaseUserPassword');
       this.setState({
         firebaseId,
         firebaseApiKey,
@@ -43,18 +43,18 @@ export default class DataStoreSettingsComponent extends React.Component<Props, S
   }
 
   private async saveDataSettings() {
-    const settings = this.props.settings;
+    const clientStore = this.props.clientStore;
     const backendType = this.state.backendType;
-    await settings.setDocSetting('dataSource', backendType);
+    await clientStore.setDocSetting('dataSource', backendType);
     if (backendType === 'firebase') {
       const firebaseId = this.state.firebaseId;
       const firebaseApiKey = this.state.firebaseApiKey;
       const firebaseUserEmail = this.state.firebaseUserEmail;
       const firebaseUserPassword = this.state.firebaseUserPassword;
-      await settings.setDocSetting('firebaseId', firebaseId);
-      await settings.setDocSetting('firebaseApiKey', firebaseApiKey);
-      await settings.setDocSetting('firebaseUserEmail', firebaseUserEmail);
-      await settings.setDocSetting('firebaseUserPassword', firebaseUserPassword);
+      await clientStore.setDocSetting('firebaseId', firebaseId);
+      await clientStore.setDocSetting('firebaseApiKey', firebaseApiKey);
+      await clientStore.setDocSetting('firebaseUserEmail', firebaseUserEmail);
+      await clientStore.setDocSetting('firebaseUserPassword', firebaseUserPassword);
     }
     window.location.reload();
   }

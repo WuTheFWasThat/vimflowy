@@ -10,12 +10,11 @@ import Config from '../config';
 import KeyBindings from '../keyBindings';
 import KeyMappings from '../keyMappings';
 import { PluginsManager } from '../plugins';
-import DataStore from '../datastore';
 import { BackendType } from '../data_backend';
 
 import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
-import DataStoreSettingsComponent from './settings/dataStore';
+import BackendSettingsComponent from './settings/backendSettings';
 import FileInput from './fileInput';
 
 enum TABS {
@@ -26,7 +25,6 @@ enum TABS {
 
 type Props = {
   session: Session;
-  settings: DataStore;
   config: Config;
   keyBindings: KeyBindings;
   pluginManager: PluginsManager;
@@ -74,8 +72,8 @@ export default class SettingsComponent extends React.Component<Props, State> {
               Data storage
             </div>
             <div className='settings-content'>
-              <DataStoreSettingsComponent
-                settings={this.props.settings}
+              <BackendSettingsComponent
+                clientStore={session.clientStore}
                 initialBackendType={this.props.initialBackendType}
               />
             </div>
@@ -218,7 +216,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                       session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
                     }
                     // NOTE: this is fire and forget
-                    this.props.settings.setSetting('hotkeys', hotkey_settings);
+                    session.clientStore.setClientSetting('hotkeys', hotkey_settings);
                   }}
                   onError={(error) => {
                     logger.error('Hotkeys file input error', error);

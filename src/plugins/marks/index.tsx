@@ -7,9 +7,8 @@ import { PartialUnfolder, Token, EmitFn, Tokenizer } from '../../assets/ts/utils
 
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
 import Menu from '../../assets/ts/menu';
-import { InMemoryDataStore } from '../../assets/ts/datastore';
 import Document from '../../assets/ts/document';
-import Session from '../../assets/ts/session';
+import Session, { InMemorySession } from '../../assets/ts/session';
 import LineComponent from '../../assets/ts/components/line';
 import Mutation from '../../assets/ts/mutations';
 import Path from '../../assets/ts/path';
@@ -142,10 +141,8 @@ export class MarksPlugin {
       within_row: true,
       enter: async (session /*, newMode?: ModeId */) => {
         // initialize marks stuff
-        const doc = new Document(new InMemoryDataStore());
-        await doc.loadEmpty();
         this.markstate = {
-          session: new Session(doc),
+          session: new InMemorySession(),
           path: session.cursor.path,
         };
         await this.markstate.session.setMode('INSERT');

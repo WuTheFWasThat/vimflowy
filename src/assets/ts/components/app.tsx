@@ -4,7 +4,6 @@ import * as browser_utils from '../utils/browser';
 import * as errors from '../utils/errors';
 import * as Modes from '../modes';
 import { BackendType } from '../data_backend';
-import DataStore from '../datastore';
 import { PluginsManager } from '../plugins';
 import Session from '../session';
 import Config from '../config';
@@ -20,7 +19,6 @@ export type TextMessage = { message?: string, text_class?: string };
 type Props = {
   pluginManager: PluginsManager;
   session: Session;
-  settings: DataStore;
   config: Config;
   message: TextMessage | null;
   saveMessage: TextMessage | null;
@@ -158,7 +156,6 @@ export default class AppComponent extends React.Component<Props, {}> {
           <div id='settings' className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
             <SettingsComponent
               session={session}
-              settings={this.props.settings}
               config={this.props.config}
               keyBindings={keyBindings}
               pluginManager={pluginManager}

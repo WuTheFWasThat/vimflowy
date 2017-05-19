@@ -30,7 +30,7 @@ import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';
 import KeyHandler from './keyHandler';
 import KeyMappings from './keyMappings';
-import DataStore, { InMemoryDataStore } from './datastore';
+import { ClientStore, DocumentStore } from './datastore';
 import * as DataBackends from './data_backend';
 import Document from './document';
 import { PluginsManager } from './plugins';
@@ -81,20 +81,20 @@ $(document).ready(async () => {
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
 
   const noLocalStorage = (typeof localStorage === 'undefined' || localStorage === null);
-  let settings: DataStore;
+  let clientStore: ClientStore;
+  let docStore: DocumentStore;
   let backend_type: DataBackends.BackendType;
-  let datastore;
   let doc;
 
   // TODO: consider using modernizr for feature detection
   // probably also want to check flexbox support
   if (noLocalStorage) {
     alert('You need local storage support for data to be persisted!');
-    settings = new InMemoryDataStore();
+    clientStore = new ClientStore(new DataBackends.InMemory());
     backend_type = 'inmemory';
   } else {
-    settings = new DataStore(new DataBackends.LocalStorageLazy(), docname);
-    backend_type = await settings.getDocSetting('dataSource');
+    clientStore = new ClientStore(new DataBackends.LocalStorageLazy(), docname);
+    backend_type = await clientStore.getDocSetting('dataSource');
   }
 
   const config: Config = vimConfig;
@@ -106,10 +106,10 @@ $(document).ready(async () => {
       firebaseUserEmail,
       firebaseUserPassword,
     ] = await Promise.all([
-      settings.getDocSetting('firebaseId'),
-      settings.getDocSetting('firebaseApiKey'),
-      settings.getDocSetting('firebaseUserEmail'),
-      settings.getDocSetting('firebaseUserPassword'),
+      clientStore.getDocSetting('firebaseId'),
+      clientStore.getDocSetting('firebaseApiKey'),
+      clientStore.getDocSetting('firebaseUserEmail'),
+      clientStore.getDocSetting('firebaseUserPassword'),
     ]);
 
     try {
@@ -120,7 +120,7 @@ $(document).ready(async () => {
         throw new Error('No firebase API key found');
       }
       const fb_backend = new DataBackends.FirebaseBackend(docname, firebaseId, firebaseApiKey);
-      datastore = new DataStore(fb_backend, docname);
+      docStore = new DocumentStore(fb_backend, docname);
       await fb_backend.init(firebaseUserEmail || '', firebaseUserPassword || '');
     } catch (e) {
       alert(`
@@ -134,18 +134,18 @@ $(document).ready(async () => {
       `);
 
       backend_type = 'local';
-      datastore = new DataStore(new DataBackends.LocalStorageLazy(docname, true), docname);
+      docStore = new DocumentStore(new DataBackends.LocalStorageLazy(docname, true), docname);
     }
   } else if (backend_type === 'inmemory') {
-    datastore = new InMemoryDataStore();
+    docStore = new DocumentStore(new DataBackends.InMemory());
   } else {
-    datastore = new DataStore(new DataBackends.LocalStorageLazy(docname, true), docname);
+    docStore = new DocumentStore(new DataBackends.LocalStorageLazy(docname, true), docname);
   }
 
-  doc = new Document(datastore, docname);
+  doc = new Document(docStore, docname);
 
   let to_load: any = null;
-  if ((await datastore.getChildren(Path.rootRow())).length === 0) {
+  if ((await docStore.getChildren(Path.rootRow())).length === 0) {
     to_load = config.defaultData;
   }
 
@@ -169,11 +169,11 @@ $(document).ready(async () => {
   const changeStyle = (theme: string) => {
     // $('body').removeClass().addClass(theme);
     $('body').attr('id', theme);
-    settings.setSetting('theme', theme);
+    clientStore.setClientSetting('theme', theme);
   };
-  const initialTheme = await settings.getSetting('theme');
+  const initialTheme = await clientStore.getClientSetting('theme');
   changeStyle(initialTheme);
-  let showingKeyBindings = await settings.getSetting('showKeyBindings');
+  let showingKeyBindings = await clientStore.getClientSetting('showKeyBindings');
 
   doc.store.events.on('saved', () => {
     saveMessage = { message: 'Saved!', text_class: 'text-success' };
@@ -185,7 +185,7 @@ $(document).ready(async () => {
   });
 
   // hotkeys and key bindings
-  const saved_mappings = await settings.getSetting('hotkeys');
+  const saved_mappings = await clientStore.getClientSetting('hotkeys');
   const mappings = KeyMappings.merge(config.defaultMappings, new KeyMappings(saved_mappings));
   const keyBindings = new KeyBindings(keyDefinitions, mappings);
 
@@ -194,7 +194,7 @@ $(document).ready(async () => {
     // HACKY: should load the actual data now, but since plugins aren't enabled...
     await doc.loadEmpty();
   }
-  const viewRoot = Path.loadFromAncestry(await doc.store.getLastViewRoot());
+  const viewRoot = Path.loadFromAncestry(await clientStore.getLastViewRoot());
   // TODO: if we ever support multi-user case, ensure last view root is valid
   let cursorPath;
   if (viewRoot.isRoot()) {
@@ -209,7 +209,7 @@ $(document).ready(async () => {
     return line_height;
   }
 
-  const session = new Session(doc, {
+  const session = new Session(clientStore, doc, {
     viewRoot: viewRoot,
     cursorPath: cursorPath,
     showMessage: (() => {
@@ -239,7 +239,7 @@ $(document).ready(async () => {
     })(),
     toggleBindingsDiv: () => {
       showingKeyBindings = !showingKeyBindings;
-      settings.setSetting('showKeyBindings', showingKeyBindings);
+      clientStore.setClientSetting('showKeyBindings', showingKeyBindings);
       renderMain(); // fire and forget
     },
     getLinesPerPage: () => {
@@ -252,7 +252,7 @@ $(document).ready(async () => {
   // load plugins
 
   const pluginManager = new PluginsManager(session, config, keyBindings);
-  let enabledPlugins = await settings.getSetting('enabledPlugins');
+  let enabledPlugins = await docStore.getSetting('enabledPlugins');
   if (typeof enabledPlugins.slice === 'undefined') { // for backwards compatibility
     enabledPlugins = Object.keys(enabledPlugins);
   }
@@ -275,7 +275,6 @@ $(document).ready(async () => {
   // expose globals, for debugging
   window.Modes = Modes;
   window.session = session;
-  window.settings = settings;
   window.keyHandler = keyHandler;
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;
@@ -287,7 +286,6 @@ $(document).ready(async () => {
           error={caughtErr}
           message={userMessage}
           saveMessage={saveMessage}
-          settings={settings}
           config={config}
           onThemeChange={changeStyle}
           session={session}
@@ -336,14 +334,14 @@ $(document).ready(async () => {
   session.on('modeChange', renderMain); // fire and forget
 
   keyBindings.on('applied_hotkey_settings', (hotkey_settings) => {
-    settings.setSetting('hotkeys', hotkey_settings);
+    clientStore.setClientSetting('hotkeys', hotkey_settings);
     renderMain(); // fire and forget
   });
 
   pluginManager.on('status', renderMain); // fire and forget
 
   pluginManager.on('enabledPluginsChange', function(enabled) {
-    settings.setSetting('enabledPlugins', enabled);
+    docStore.setSetting('enabledPlugins', enabled);
     renderMain(); // fire and forget
   });
 

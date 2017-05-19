@@ -52,7 +52,7 @@ const RECORDING_LISTENER = (key: Key) => {
 keyDefinitions.registerAction(new Action(
   'record-macro',
   'Begin/stop recording a macro',
-  async function({ session, keyStream }) {
+  async function({ keyStream, session }) {
     if (RECORDING === null) {
       const key = await keyStream.dequeue();
       RECORDING = {
@@ -63,10 +63,10 @@ keyDefinitions.registerAction(new Action(
     } else {
       // pop off the RECORD_MACRO itself
       RECORDING.macro.pop();
-      const macros = await session.document.store.getMacros();
+      const macros = await session.clientStore.getMacros();
       const macro = RECORDING.macro;
       macros[RECORDING.key] = macro;
-      await session.document.store.setMacros(macros);
+      await session.clientStore.setMacros(macros);
       RECORDING = null;
       keyStream.off('dequeue', RECORDING_LISTENER);
     }
@@ -79,7 +79,7 @@ keyDefinitions.registerAction(new Action(
   'Play a macro',
   async function({ keyStream, keyHandler, repeat, session }) {
     const key = await keyStream.dequeue();
-    const macros = await session.document.store.getMacros();
+    const macros = await session.clientStore.getMacros();
     const recording = macros[key];
     if (recording == null) {
       keyStream.drop();
