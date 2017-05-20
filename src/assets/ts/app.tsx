@@ -230,7 +230,7 @@ $(document).ready(async () => {
         }
 
         if (time !== 0) {
-          messageDivTimeout = setTimeout(() => {
+          messageDivTimeout = window.setTimeout(() => {
             userMessage = null;
             renderMain(); // fire and forget
           }, time);
