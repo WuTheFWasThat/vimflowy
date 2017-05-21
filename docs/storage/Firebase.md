@@ -1,3 +1,5 @@
+# Firebase for vimflowy
+
 ## Info
 
 Firebase is a cloud service ran by Google.
@@ -59,25 +61,6 @@ and hit `Load Data Settings`.
 This should refresh the page automatically.
 Assuming configuration was correct and no errors occurred,
 you should now be using Firebase!
-
-#### Manual configuration (alternative, optional)
-
-Alternatively, you can manually configure from the Javascript console:
-
-```
-var firebaseId = 'something-fiery-2222'
-var firebaseApiKey = 'some-key'
-var firebaseUserEmail = 'your-email-from-earlier'
-var firebaseUserPassword = 'your-password-from-earlier'
-
-window.session.settings.setSetting('dataSource', 'firebase')
-window.session.settings.setSetting('firebaseId', firebaseId)
-window.session.settings.setSetting('firebaseApiKey', firebaseApiKey)
-window.session.settings.setSetting('firebaseUserEmail', firebaseUserEmail)
-window.session.settings.setSetting('firebaseUserPassword', firebaseUserPassword)
-```
-
-and then manually refresh the page!
 
 ### Verify
 

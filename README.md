@@ -41,26 +41,9 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
 
 Vimflowy was designed to work with multiple storage backends.
 
-### Local
+You can keep the data on your computer, let Google host it for you, or host it yourself.
 
-By default, the app is entirely local meaning:
-- Your data is never sent over the internet, so you can only use it in one browser on one device
-- Vimflowy works offline
-
-It uses HTML5's localStorage, so:
-- If you're going to have a very large document, use a browser with large localStorage limits, e.g. Firefox
-- Be warned that if you don't set up remote storage, *clearing localStorage will result in you losing all your data!*
-
-### Remote
-
-If you enable a remote storage backend, then:
-- You can access your document from multiple devices
-- You cannot edit offline
-
-Currently, the only storage backend implemented is Firebase.
-See [here](docs/storage/Firebase.md) for details on how to set this up.
-
-Please contact the dev team if you are interested in other storage backends.
+[See here for more info](docs/storage/index.md).
 
 ## NOTES FOR DEVELOPERS
 

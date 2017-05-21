@@ -40,6 +40,8 @@ export type LocalDocSettings = {
   firebaseApiKey: string | null;
   firebaseUserEmail: string | null;
   firebaseUserPassword: string | null;
+  socketServerHost: string | null;
+  socketServerPassword: string | null;
 };
 
 type LocalDocSetting = keyof LocalDocSettings;
@@ -50,6 +52,8 @@ const default_local_doc_settings: LocalDocSettings = {
   firebaseApiKey: null,
   firebaseUserEmail: null,
   firebaseUserPassword: null,
+  socketServerHost: null,
+  socketServerPassword: null,
 };
 
 export type DocSettings = {
@@ -99,16 +103,15 @@ const decodeParents = (parents: number | Array<number>): Array<number> => {
 class DataStore {
   protected prefix: string;
   protected docname: string;
-  private cache: {[key: string]: any};
-  public events: EventEmitter;
+  private cache: {[key: string]: any} = {};
+  private use_cache: boolean = true;
+  public events: EventEmitter = new EventEmitter();
   private backend: DataBackend;
 
   constructor(backend: DataBackend, docname = '') {
     this.backend = backend;
     this.docname = docname;
     this.prefix = `${docname}save`;
-    this.cache = {};
-    this.events = new EventEmitter();
   }
 
   protected async _get<T>(
@@ -118,8 +121,10 @@ class DataStore {
   ): Promise<T> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
 
-    if (key in this.cache) {
-      return this.cache[key];
+    if (this.use_cache) {
+      if (key in this.cache) {
+        return this.cache[key];
+      }
     }
     let value: any = await this.backend.get(key);
     if (value != null) {
@@ -142,7 +147,9 @@ class DataStore {
       decodedValue = decode(value);
       logger.debug('got from storage', key, decodedValue);
     }
-    this.cache[key] = decodedValue;
+    if (this.use_cache) {
+      this.cache[key] = decodedValue;
+    }
     return decodedValue;
   }
 
@@ -151,7 +158,9 @@ class DataStore {
   ): Promise<void> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
 
-    this.cache[key] = value;
+    if (this.use_cache) {
+      this.cache[key] = value;
+    }
     const encodedValue = encode(value);
     logger.debug('setting to storage', key, encodedValue);
     // NOTE: fire and forget
@@ -159,6 +168,7 @@ class DataStore {
   }
 }
 
+// TODO: make this API synchronous
 export class ClientStore extends DataStore {
   constructor(backend: DataBackend, docname = '') {
     super(backend, docname);

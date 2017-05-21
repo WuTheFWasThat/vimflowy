@@ -80,6 +80,23 @@ $(document).ready(async () => {
   if (!docname) { docname = window.location.hash.substr(1); }
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
 
+  // random global state.  these things should be managed by redux maybe
+  let caughtErr: null | Error = null;
+  let userMessage: null | TextMessage = null;
+  let saveMessage: null | TextMessage = null;
+
+  window.onerror = function(msg: string, url: string, line: number, _col: number, err: Error) {
+    logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
+    if (err) {
+      logger.error('Error: ', msg, err, err.stack, JSON.stringify(err));
+      caughtErr = err;
+    } else {
+      logger.error('Error: ', msg, JSON.stringify(msg));
+      caughtErr = new Error(msg);
+    }
+    renderMain(); // fire and forget
+  };
+
   const noLocalStorage = (typeof localStorage === 'undefined' || localStorage === null);
   let clientStore: ClientStore;
   let docStore: DocumentStore;
@@ -138,6 +155,36 @@ $(document).ready(async () => {
     }
   } else if (backend_type === 'inmemory') {
     docStore = new DocumentStore(new DataBackends.InMemory());
+  } else if (backend_type === 'socketserver') {
+    const [
+      socketServerHost,
+      socketServerPassword,
+    ] = await Promise.all([
+      clientStore.getDocSetting('socketServerHost'),
+      clientStore.getDocSetting('socketServerPassword'),
+    ]);
+
+    try {
+      if (!socketServerHost) {
+        throw new Error('No socket server host found');
+      }
+      const socket_backend = new DataBackends.ClientSocketBackend(docname);
+      docStore = new DocumentStore(socket_backend, docname);
+      await socket_backend.init(socketServerHost, socketServerPassword || '');
+    } catch (e) {
+      alert(`
+        Error loading socket server datastore:
+
+        ${e.message}
+
+        ${e.stack}
+
+        Falling back to localStorage default.
+      `);
+
+      backend_type = 'local';
+      docStore = new DocumentStore(new DataBackends.LocalStorageLazy(docname, true), docname);
+    }
   } else {
     docStore = new DocumentStore(new DataBackends.LocalStorageLazy(docname, true), docname);
   }
@@ -148,23 +195,6 @@ $(document).ready(async () => {
   if ((await docStore.getChildren(Path.rootRow())).length === 0) {
     to_load = config.defaultData;
   }
-
-  // random global state.  these things should be managed by redux maybe
-  let caughtErr: null | Error = null;
-  let userMessage: null | TextMessage = null;
-  let saveMessage: null | TextMessage = null;
-
-  window.onerror = function(msg: string, url: string, line: number, _col: number, err: Error) {
-    logger.error(`Caught error: '${msg}' from  ${url}:${line}`);
-    if (err) {
-      logger.error('Error: ', msg, err, err.stack, JSON.stringify(err));
-      caughtErr = err;
-    } else {
-      logger.error('Error: ', msg, JSON.stringify(msg));
-      caughtErr = new Error(msg);
-    }
-    renderMain(); // fire and forget
-  };
 
   const changeStyle = (theme: string) => {
     // $('body').removeClass().addClass(theme);
@@ -275,6 +305,7 @@ $(document).ready(async () => {
   // expose globals, for debugging
   window.Modes = Modes;
   window.session = session;
+  window.logger = logger;
   window.keyHandler = keyHandler;
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;

@@ -13,6 +13,8 @@ type State = {
   firebaseApiKey: string,
   firebaseUserEmail: string,
   firebaseUserPassword: string,
+  socketServerHost: string,
+  socketServerPassword: string,
 };
 export default class BackendSettingsComponent extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -23,6 +25,8 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
       firebaseApiKey: '',
       firebaseUserEmail: '',
       firebaseUserPassword: '',
+      socketServerHost: '',
+      socketServerPassword: '',
     };
   }
 
@@ -33,11 +37,15 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
       const firebaseApiKey = await clientStore.getDocSetting('firebaseApiKey');
       const firebaseUserEmail = await clientStore.getDocSetting('firebaseUserEmail');
       const firebaseUserPassword = await clientStore.getDocSetting('firebaseUserPassword');
+      const socketServerHost = await clientStore.getDocSetting('socketServerHost');
+      const socketServerPassword = await clientStore.getDocSetting('socketServerPassword');
       this.setState({
         firebaseId,
         firebaseApiKey,
         firebaseUserEmail,
         firebaseUserPassword,
+        socketServerHost,
+        socketServerPassword,
       } as State);
     })();
   }
@@ -51,43 +59,51 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
       const firebaseApiKey = this.state.firebaseApiKey;
       const firebaseUserEmail = this.state.firebaseUserEmail;
       const firebaseUserPassword = this.state.firebaseUserPassword;
-      await clientStore.setDocSetting('firebaseId', firebaseId);
-      await clientStore.setDocSetting('firebaseApiKey', firebaseApiKey);
-      await clientStore.setDocSetting('firebaseUserEmail', firebaseUserEmail);
-      await clientStore.setDocSetting('firebaseUserPassword', firebaseUserPassword);
+      await Promise.all([
+        clientStore.setDocSetting('firebaseId', firebaseId),
+        clientStore.setDocSetting('firebaseApiKey', firebaseApiKey),
+        clientStore.setDocSetting('firebaseUserEmail', firebaseUserEmail),
+        clientStore.setDocSetting('firebaseUserPassword', firebaseUserPassword),
+      ]);
+    } else if (backendType === 'socketserver') {
+      const socketServerHost = this.state.socketServerHost;
+      const socketServerPassword = this.state.socketServerPassword;
+      await Promise.all([
+        clientStore.setDocSetting('socketServerHost', socketServerHost),
+        clientStore.setDocSetting('socketServerPassword', socketServerPassword),
+      ]);
     }
     window.location.reload();
   }
 
   private setBackendType(backendType: BackendType) {
-    this.setState({
-      backendType,
-    } as State);
+    this.setState({ backendType } as State);
   }
 
   private setFirebaseId(firebaseId: string) {
-    this.setState({
-      firebaseId,
-    } as State);
+    this.setState({ firebaseId } as State);
   }
 
   private setFirebaseApiKey(firebaseApiKey: string) {
-    this.setState({
-      firebaseApiKey,
-    } as State);
+    this.setState({ firebaseApiKey } as State);
   }
 
   private setFirebaseUserEmail(firebaseUserEmail: string) {
-    this.setState({
-      firebaseUserEmail,
-    } as State);
+    this.setState({ firebaseUserEmail } as State);
   }
 
   private setFirebaseUserPassword(firebaseUserPassword: string) {
-    this.setState({
-      firebaseUserPassword,
-    } as State);
+    this.setState({ firebaseUserPassword } as State);
   }
+
+  private setSocketServerHost(socketServerHost: string) {
+    this.setState({ socketServerHost } as State);
+  }
+
+  private setSocketServerPassword(socketServerPassword: string) {
+    this.setState({ socketServerPassword } as State);
+  }
+
 
   public render() {
     const firebaseBaseUrl = `https://console.firebase.google.com/project/${this.state.firebaseId || '${firebaseProjectId}'}`;
@@ -135,7 +151,7 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
         ),
         config: (
           <div>
-            For details on configuration, <a href={'https://github.com/WuTheFWasThat/vimflowy/tree/master/docs/storage/Firebase.md'}>
+            For details on configuration, <a href={'https://github.com/WuTheFWasThat/vimflowy/tree/master/docs/storage/firebase.md'}>
               see here
             </a>.
             <br/>
@@ -196,6 +212,51 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
                   <input type='password'
                     value={this.state.firebaseUserPassword}
                     onChange={(ev) => this.setFirebaseUserPassword((ev.target as HTMLInputElement).value)}
+                    style={{float: 'right'}}
+                  />
+                </td>
+              </tr>
+            </tbody></table>
+            <br/>
+          </div>
+        ),
+      },
+      {
+        name: 'Vimflowy server',
+        type: 'Remote',
+        value: 'socketserver',
+        info: `
+          Client talks to a server over websockets.
+          Server stores data in SQLite.
+        `,
+        config: (
+          <div>
+            For details on configuration, <a href={'https://github.com/WuTheFWasThat/vimflowy/tree/master/docs/storage/socket_server.md'}>
+              see here
+            </a>.
+            <br/>
+            <table><tbody>
+              <tr>
+                <td>
+                  Server
+                </td>
+                <td>
+                  <input type='text'
+                    value={this.state.socketServerHost}
+                    placeholder='e.g. ws://localhost:3000 or wss://54.0.0.1:3000'
+                    onChange={(ev) => this.setSocketServerHost((ev.target as HTMLInputElement).value)}
+                    style={{float: 'right'}}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Password
+                </td>
+                <td>
+                  <input type='password'
+                    value={this.state.socketServerPassword}
+                    onChange={(ev) => this.setSocketServerPassword((ev.target as HTMLInputElement).value)}
                     style={{float: 'right'}}
                   />
                 </td>
