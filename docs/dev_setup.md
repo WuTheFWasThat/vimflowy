@@ -19,15 +19,25 @@ Simply run:
 
 After a short wait, you should see the app at `http://localhost:3000/`
 
-When source code changes, assets should be automatically recompiled and tests automatically re-ran.
+To use a different port, you can do
+
+    npm start -- --port 2002
+
+When source code changes, assets should be automatically (incrementally) recompiled.
 
 Note that you may make new documents simply by visiting `http://localhost:3000?doc=<documentname>`
 
 ### Tests
 
-Tests are run automatically with `npm start`.
+To run unit tests automatically (when files change) from the development server, add the `test` flag:
 
-To run unit tests manually and get a more detailed report, run:
+    npm start -- --test
+
+To run a separate continuous process that monitors and runs tests when files change:
+
+    npm run watchtest
+
+To run unit tests manually once (and get a more detailed report):
 
     npm test
 
@@ -56,6 +66,6 @@ However, though the results will be less realistic, you can also profile unit te
 
 Just send a pull request.  Remember to write tests when appropriate!
 
-For any questions, don't hesitate to submit an issue or contact me at [githubusername]@gmail.com.
+For any questions, don't hesitate to submit an issue or contact me at [githubusername]@gmail.com.  Let me know especially if you plan on adding new features!  I'm happy to chat about design, give pointers for where to start reading code, etc.
 
 I've marked a number of github issues with the label `small_task`, which could be good places to start.

@@ -1,15 +1,18 @@
 import * as path from 'path';
 import { spawn } from 'child_process';
 
+import * as minimist from 'minimist';
 import * as webpack from 'webpack';
 import * as WebpackDevServer from 'webpack-dev-server';
 
 import { setupApp } from './setup';
 
+const args = minimist(process.argv.slice(2));
+
 const config = require('../../webpack.dev');
 const staticDir = path.join(__dirname, '../../', 'static');
 
-const port = process.env.PORT || 3000;
+const port = args.port || 3000;
 
 const server = new WebpackDevServer(webpack(config), {
   publicPath: config.output.publicPath,
@@ -28,6 +31,6 @@ server.listen(port, 'localhost', (err: Error) => {
   console.log(`Listening at http://localhost:${port}`);
 });
 
-if (process.env.TEST) {
-  spawn('npm', [ 'watchtest' ], {stdio: 'inherit'});
+if (args.test) {
+  spawn('npm', ['run', 'watchtest'], {stdio: 'inherit'});
 }
