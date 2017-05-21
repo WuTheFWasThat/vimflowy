@@ -863,7 +863,7 @@ export default class Document extends EventEmitter {
   }
 
   public async loadEmpty() {
-    this.load(['']);
+    await this.load(['']);
   }
 }
 
