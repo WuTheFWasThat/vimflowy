@@ -7,7 +7,7 @@
     "npm": "3.10.x"
   },
   "scripts": {
-    "build": "NODE_ENV=production webpack --config webpack.prod.js --progress",
+    "build": "ts-node src/server/build_prod.ts",
     "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx'",
     "start": "ts-node src/server/dev_server.ts",
     "test": "mocha --opts test/mocha.opts",
@@ -53,7 +53,7 @@
     "tslint": "^4.0.2",
     "tslint-loader": "^3.3.0",
     "typescript": "^2.3.2",
-    "webpack": "^1.12.15",
+    "webpack": "^2.6.0",
     "webpack-dev-server": "^1.12.1"
   }
 }
