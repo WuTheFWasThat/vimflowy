@@ -72,14 +72,21 @@ const timeout = (ns: number) => {
 // const simulateDelay = 1;
 const simulateDelay: number = 0;
 
-const decodeLine: (line: Line) => Line = (line) => line.map((obj: any) => {
-  if (typeof obj === 'string') {
-    return obj;
+const decodeLine: (line: Line) => Line = (line: any) => {
+  if (typeof line === 'string') {
+    return line.split('');
   }
+  return line.map((obj: any) => {
+    if (typeof obj === 'string') {
+      return obj;
+    }
 
-  // for backwards compatibility
-  return obj.char;
-});
+    // for backwards compatibility
+    return obj.char;
+  });
+};
+
+const encodeLine: (line: Line) => string = (line) => line.join('');
 
 // for backwards compatibility, mainly
 const decodeParents = (parents: number | Array<number>): Array<number> => {
@@ -253,7 +260,7 @@ export class DocumentStore extends DataStore {
   }
 
   public async setLine(row: Row, line: Line): Promise<void> {
-    return await this._set(this._lineKey_(row), line);
+    return await this._set(this._lineKey_(row), line, encodeLine);
   }
 
   // for backwards compatibility - checks whether the line was struck through
