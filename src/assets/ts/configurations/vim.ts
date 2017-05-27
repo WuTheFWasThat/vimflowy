@@ -125,7 +125,7 @@ export const NORMAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
 export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'move-cursor-visual': [[motionKey]],
   'toggle-help': [['?']],
-  'exit-mode': [['esc'], ['ctrl+c']],
+  'exit-mode': [['esc'], ['ctrl+c'], ['ctrl+[']],
   'swap-visual-cursor': [['o'], ['O']],
   'visual-delete': [['d'], ['x']],
   'visual-change': [['c']],
@@ -136,7 +136,7 @@ export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
 export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'move-cursor-visual-line': [[motionKey]],
   'toggle-help': [['?']],
-  'exit-mode': [['esc'], ['ctrl+c']],
+  'exit-mode': [['esc'], ['ctrl+c'], ['ctrl+[']],
   'swap-visual-cursor': [['o'], ['O']],
   'visual-line-delete': [['d'], ['x']],
   'visual-line-change': [['c']],
@@ -150,7 +150,7 @@ export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
 export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'move-cursor-insert': [[motionKey]],
   'toggle-help': [['ctrl+?']],
-  'exit-mode': [['esc'], ['ctrl+c']],
+  'exit-mode': [['esc'], ['ctrl+c'], ['ctrl+[']],
   'fold-toggle': [['ctrl+space']],
   'fold-open': [['meta+down']],
   'fold-close': [['meta+up']],
@@ -184,7 +184,7 @@ export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
 export const SEARCH_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'move-cursor-search': [[motionKey]],
   'toggle-help': [['ctrl+?']],
-  'exit-mode': [['esc'], ['ctrl+c']],
+  'exit-mode': [['esc'], ['ctrl+c'], ['ctrl+[']],
   'search-delete-char-after': [['delete']],
   'search-delete-char-before': [['backspace'], ['shift+backspace']],
   'search-select': [['enter']],
@@ -193,7 +193,7 @@ export const SEARCH_MODE_MAPPINGS: HotkeyMapping = Object.assign({
 }, _.pick(INSERT_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS));
 
 export const SETTINGS_MODE_MAPPINGS: HotkeyMapping = {
-  'exit-mode': [['esc'], ['ctrl+c']],
+  'exit-mode': [['esc'], ['ctrl+c'], ['ctrl+[']],
 };
 
 export const WORKFLOWY_MODE_MAPPINGS: HotkeyMapping = Object.assign({
