@@ -28,7 +28,7 @@ export default async function makeSocketServer(server: http.Server, options: Soc
     if (options.db === 'sqlite') {
       let filename;
       if (options.dbfolder) {
-        filename = `${options.dbfolder}/${docname || 'vimflowy'}.db`;
+        filename = `${options.dbfolder}/${docname || 'vimflowy'}.sqlite`;
         logger.info('Using sqlite database: ', filename);
       } else {
         filename = ':memory:';

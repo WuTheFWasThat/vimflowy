@@ -43,7 +43,7 @@ Vimflowy was designed to work with multiple storage backends.
 
 You can keep the data on your computer, let Google host it for you, or host it yourself.
 
-[See here for more info](docs/storage/index.md).
+[See here for more info](docs/storage/README.md).
 
 ## NOTES FOR DEVELOPERS
 
