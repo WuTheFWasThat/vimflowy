@@ -61,6 +61,7 @@ keyDefinitions.registerAction(new Action(
   'search-global',
   'Search within entire document',
   async function({ session }) {
+    // TODO: try hitting backend?
     await start_search(session.document.root, session);
   },
 ));
