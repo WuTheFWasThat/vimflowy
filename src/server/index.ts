@@ -31,7 +31,8 @@ async function main(args: any) {
             Any other value currently defaults to an in-memory backend.
           --password: password to protect database with (defaults to empty)
 
-          --filename: For sqlite backend only.  File for sqlite to use (defaults to in-memory)
+          --dbfolder: For sqlite backend only.  Folder for sqlite to store data
+            (defaults to in-memory if unspecified)
 
     `, () => {
       process.exit(0);
@@ -56,15 +57,15 @@ async function main(args: any) {
     if (args.db) {
       const options = {
         db: args.db,
-        filename: args.filename,
+        dbfolder: args.dbfolder,
         password: args.password,
         path: '/socket',
       };
       makeSocketServer(server, options);
     }
     server.listen(port, 'localhost', (err: Error) => {
-      if (err) { return console.log(err); }
-      console.log('Listening on %d', server.address().port);
+      if (err) { return logger.error(err); }
+      logger.info('Listening on %d', server.address().port);
     });
   } else {
     logger.info('Starting development server');
@@ -80,13 +81,13 @@ async function main(args: any) {
       const server = http.createServer(express());
       const options = {
         db: args.db,
-        filename: args.filename,
+        dbfolder: args.dbfolder,
         password: args.password,
       };
       makeSocketServer(server, options);
       server.listen(wsPort, 'localhost', (err: Error) => {
-        if (err) { return console.log(err); }
-        console.log('Internal server listening on %d', server.address().port);
+        if (err) { return logger.error(err); }
+        logger.info('Internal server listening on %d', server.address().port);
       });
     }
     makeDevServer(port, webpack_options);

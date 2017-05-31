@@ -27,10 +27,11 @@ Build assets
 
 Then, run the server.
 
-    npm start -- --prod --db sqlite --filename ${somefile} --password ${somepassword}
+    npm start -- --prod --db sqlite --dbfolder ${somefolder} --password ${somepassword}
 
-The password flag is optional.
-Of course, it's wise to set one if you're using a widely accessible server, but pointless if you're hosting on your personal computer.
+The `dbfolder` flag says where to store/load data.  If left empty, an in-memory database is used.
+
+The `password` flag is optional.  Of course, it's wise to set one if you're using a widely accessible server, but pointless if you're hosting on your personal computer.
 
 You can also change the port (from the default of 3000) with the `--port ${portnumber}` flag.
 
@@ -43,6 +44,7 @@ Select the `Vimflowy server` option under `Data Storage`.
 
 Under the `Server` form field, you'll want to enter an address to connect to.  It should be `ws://localhost:3000`, if you ran locally, and something like `wss://yourwebsite.com:3000`, or `wss://54.0.0.1:3000` otherwise.
 Under `Password`, enter a password if you configured one.
+Under the `Document` form field, you can optionally enter the name of the document.
 
 Then hit `Load Data Settings`.
 This should refresh the page automatically.
@@ -52,7 +54,7 @@ If you see no errors, everything should be successful!
 
 Check the settings menu again and you should see that the `Vimflowy server` option is already selected.
 
-You can try writing something and then inspect the SQLite file to be sure.
+You should also inspect the SQLite file in the `dbfolder` specified, and make sure it contains data.
 
 ## Backups
 

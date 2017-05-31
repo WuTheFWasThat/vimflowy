@@ -199,16 +199,14 @@ export class ClientSocketBackend extends DataBackend {
   private callback_table: {[id: string]: (result: any) => void} = {};
 
   private ws: WebSocket;
-  private docname: string;
   private clientId: string;
 
-  constructor(docname = '') {
+  constructor() {
     super();
-    this.docname = docname;
     this.clientId = Date.now() + '-' + ('' + Math.random()).slice(2);
   }
 
-  public async init(host: string, password: string) {
+  public async init(host: string, password: string, docname = '') {
     this.events.emit('saved');
 
     logger.info('Trying to connect', host);
@@ -240,15 +238,18 @@ export class ClientSocketBackend extends DataBackend {
         delete this.callback_table[id];
         callback(message.result);
       } else if (message.type === 'joined') {
-        if (message.clientId !== this.clientId) {
-          throw new errors.MultipleUsersError();
+        if (message.docname === docname) {
+          if (message.clientId !== this.clientId) {
+            throw new errors.MultipleUsersError();
+          }
         }
       }
     };
 
     await this.sendMessage({
       type: 'join',
-      password: password
+      password: password,
+      docname: docname,
     });
   }
 

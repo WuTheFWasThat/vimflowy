@@ -159,18 +159,23 @@ $(document).ready(async () => {
     const [
       socketServerHost,
       socketServerPassword,
+      socketServerDocument,
     ] = await Promise.all([
       clientStore.getDocSetting('socketServerHost'),
       clientStore.getDocSetting('socketServerPassword'),
+      clientStore.getDocSetting('socketServerDocument'),
     ]);
 
     try {
       if (!socketServerHost) {
         throw new Error('No socket server host found');
       }
-      const socket_backend = new DataBackends.ClientSocketBackend(docname);
-      docStore = new DocumentStore(socket_backend, docname);
-      await socket_backend.init(socketServerHost, socketServerPassword || '');
+      const socket_backend = new DataBackends.ClientSocketBackend();
+      // NOTE: we don't pass docname to DocumentStore since we want keys
+      // to not have prefixes
+      docStore = new DocumentStore(socket_backend);
+      await socket_backend.init(
+        socketServerHost, socketServerPassword || '', socketServerDocument || '');
     } catch (e) {
       alert(`
         Error loading socket server datastore:
