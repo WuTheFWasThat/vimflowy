@@ -27,6 +27,10 @@ When source code changes, assets should be automatically (incrementally) recompi
 
 Note that you may make new documents simply by visiting `http://localhost:3000?doc=<documentname>`
 
+For a full set of options, see
+
+    npm start -- --help
+
 ### Tests
 
 To run unit tests automatically (when files change) from the development server, add the `test` flag:
