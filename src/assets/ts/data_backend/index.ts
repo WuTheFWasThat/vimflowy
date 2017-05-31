@@ -4,7 +4,7 @@ import * as errors from '../utils/errors';
 import EventEmitter from '../utils/eventEmitter';
 import logger from '../utils/logger';
 
-export type BackendType = 'local' | 'firebase' | 'inmemory';
+export type BackendType = 'local' | 'firebase' | 'inmemory' | 'socketserver';
 
 /*
 DataBackend abstracts the data layer, so that it can be swapped out.
@@ -33,16 +33,20 @@ export default class DataBackend {
 }
 
 export class InMemory extends DataBackend {
+  private cache: {[key: string]: any} = {};
   constructor() {
     super();
   }
 
-  public async get(_key: string): Promise<string | null> {
+  public async get(key: string): Promise<string | null> {
+    if (key in this.cache) {
+      return this.cache[key];
+    }
     return null;
   }
 
-  public async set(_key: string, _value: string): Promise<void> {
-    // do nothing
+  public async set(key: string, value: string): Promise<void> {
+    this.cache[key] = value;
   }
 }
 
@@ -106,21 +110,19 @@ export class LocalStorageLazy extends DataBackend {
 }
 
 export class FirebaseBackend extends DataBackend {
+  public events: EventEmitter = new EventEmitter();
+
   private fbase: firebase.database.Database;
-  private numPendingSaves: number;
+  private numPendingSaves: number = 0;
   private docname: string;
-  public events: EventEmitter;
 
   constructor(docname = '', dbName: string, apiKey: string) {
     super();
     this.docname = docname;
-    this.events = new EventEmitter();
     this.fbase = firebase.initializeApp({
       apiKey: apiKey,
       databaseURL: `https://${dbName}.firebaseio.com`,
     }).database();
-
-    this.numPendingSaves = 0;
     // this.fbase.authWithCustomToken(token, (err, authdata) => {})
   }
 
@@ -168,6 +170,8 @@ export class FirebaseBackend extends DataBackend {
     });
   }
 
+  // TODO: make this set proper, and do the pending thing elsewhere
+  // same with for socket backend
   public set(key: string, value: string): Promise<void> {
     if (this.numPendingSaves === 0) {
       this.events.emit('unsaved');
@@ -185,6 +189,113 @@ export class FirebaseBackend extends DataBackend {
         }
       }
     );
+    return Promise.resolve();
+  }
+}
+
+export class ClientSocketBackend extends DataBackend {
+  public events: EventEmitter = new EventEmitter();
+  private numPendingSaves: number = 0;
+  private callback_table: {[id: string]: (result: any) => void} = {};
+
+  private ws: WebSocket;
+  private docname: string;
+  private clientId: string;
+
+  constructor(docname = '') {
+    super();
+    this.docname = docname;
+    this.clientId = Date.now() + '-' + ('' + Math.random()).slice(2);
+  }
+
+  public async init(host: string, password: string) {
+    this.events.emit('saved');
+
+    logger.info('Trying to connect', host);
+    this.ws = new WebSocket(`${host}/socket`);
+    this.ws.onerror = (err) => {
+      throw new Error(`Socket connection error: ${err}`);
+    };
+    this.ws.onclose = () => {
+      throw new Error('Socket connection closed!');
+    };
+
+    await new Promise((resolve, reject) => {
+      this.ws.onopen = resolve;
+      setTimeout(() => {
+        reject('Timed out trying to connect!');
+      }, 5000);
+    });
+    logger.info('Connected', host);
+
+    this.ws.onmessage = (event) => {
+      // tslint:disable-next-line no-console
+      const message = JSON.parse(event.data);
+      if (message.type === 'callback') {
+        const id: string = message.id;
+        if (!(id in this.callback_table)) {
+          throw new Error(`ID ${id} not found in callback table`);
+        }
+        const callback = this.callback_table[id];
+        delete this.callback_table[id];
+        callback(message.result);
+      } else if (message.type === 'joined') {
+        if (message.clientId !== this.clientId) {
+          throw new errors.MultipleUsersError();
+        }
+      }
+    };
+
+    await this.sendMessage({
+      type: 'join',
+      password: password
+    });
+  }
+
+  private async sendMessage(message: Object): Promise<string | null> {
+    return new Promise((resolve: (result: string | null) => void, reject) => {
+      const id = Date.now() + '-' + ('' + Math.random()).slice(2);
+      if (id in this.callback_table) { throw new Error('Duplicate IDs!?'); }
+      this.callback_table[id] = (result) => {
+        if (result.error) {
+          reject(result.error);
+        } else {
+          resolve(result.value);
+        }
+      };
+      this.ws.send(JSON.stringify({
+        ...message,
+        id: id,
+        clientId: this.clientId
+      }));
+    });
+  }
+
+  public async get(key: string): Promise<string | null> {
+    logger.debug('Socket client: getting', key);
+    return await this.sendMessage({
+      type: 'get',
+      key: key,
+    });
+  }
+
+  public set(key: string, value: string): Promise<void> {
+    if (this.numPendingSaves === 0) {
+      this.events.emit('unsaved');
+    }
+    logger.debug('Socket client: setting', key, 'to', value);
+    this.numPendingSaves++;
+
+    this.sendMessage({
+      type: 'set',
+      key: key,
+      value: value,
+    }).then(() => {
+      this.numPendingSaves--;
+      if (this.numPendingSaves === 0) {
+        this.events.emit('saved');
+      }
+    });
     return Promise.resolve();
   }
 }
