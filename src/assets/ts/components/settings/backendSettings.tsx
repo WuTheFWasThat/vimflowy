@@ -15,6 +15,7 @@ type State = {
   firebaseUserPassword: string,
   socketServerHost: string,
   socketServerPassword: string,
+  socketServerDocument: string,
 };
 export default class BackendSettingsComponent extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -27,18 +28,25 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
       firebaseUserPassword: '',
       socketServerHost: '',
       socketServerPassword: '',
+      socketServerDocument: '',
     };
   }
 
   public componentDidMount() {
     (async () => {
       const clientStore = this.props.clientStore;
-      const firebaseId = await clientStore.getDocSetting('firebaseId');
-      const firebaseApiKey = await clientStore.getDocSetting('firebaseApiKey');
-      const firebaseUserEmail = await clientStore.getDocSetting('firebaseUserEmail');
-      const firebaseUserPassword = await clientStore.getDocSetting('firebaseUserPassword');
-      const socketServerHost = await clientStore.getDocSetting('socketServerHost');
-      const socketServerPassword = await clientStore.getDocSetting('socketServerPassword');
+      const [
+        firebaseId, firebaseApiKey, firebaseUserEmail, firebaseUserPassword,
+        socketServerHost, socketServerPassword, socketServerDocument,
+      ] = await Promise.all([
+        clientStore.getDocSetting('firebaseId'),
+        clientStore.getDocSetting('firebaseApiKey'),
+        clientStore.getDocSetting('firebaseUserEmail'),
+        clientStore.getDocSetting('firebaseUserPassword'),
+        clientStore.getDocSetting('socketServerHost'),
+        clientStore.getDocSetting('socketServerPassword'),
+        clientStore.getDocSetting('socketServerDocument'),
+      ]);
       this.setState({
         firebaseId,
         firebaseApiKey,
@@ -46,6 +54,7 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
         firebaseUserPassword,
         socketServerHost,
         socketServerPassword,
+        socketServerDocument,
       } as State);
     })();
   }
@@ -68,9 +77,11 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
     } else if (backendType === 'socketserver') {
       const socketServerHost = this.state.socketServerHost;
       const socketServerPassword = this.state.socketServerPassword;
+      const socketServerDocument = this.state.socketServerDocument;
       await Promise.all([
         clientStore.setDocSetting('socketServerHost', socketServerHost),
         clientStore.setDocSetting('socketServerPassword', socketServerPassword),
+        clientStore.setDocSetting('socketServerDocument', socketServerDocument),
       ]);
     }
     window.location.reload();
@@ -104,6 +115,9 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
     this.setState({ socketServerPassword } as State);
   }
 
+  private setSocketServerDocument(socketServerDocument: string) {
+    this.setState({ socketServerDocument } as State);
+  }
 
   public render() {
     const firebaseBaseUrl = `https://console.firebase.google.com/project/${this.state.firebaseId || '${firebaseProjectId}'}`;
@@ -257,6 +271,18 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
                   <input type='password'
                     value={this.state.socketServerPassword}
                     onChange={(ev) => this.setSocketServerPassword((ev.target as HTMLInputElement).value)}
+                    style={{float: 'right'}}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Document
+                </td>
+                <td>
+                  <input type='text'
+                    value={this.state.socketServerDocument}
+                    onChange={(ev) => this.setSocketServerDocument((ev.target as HTMLInputElement).value)}
                     style={{float: 'right'}}
                   />
                 </td>

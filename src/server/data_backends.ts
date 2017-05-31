@@ -12,7 +12,7 @@ export class SQLiteBackend extends DataBackend {
     super();
   }
 
-  public async init(filename = ':memory:'): Promise<void> {
+  public async init(filename: string): Promise<void> {
     await new Promise((resolve, reject) => {
       this.db = new sqlite.Database(filename, (err) => {
         if (err) { reject(err); } else { resolve(); }

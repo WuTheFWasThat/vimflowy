@@ -42,6 +42,7 @@ export type LocalDocSettings = {
   firebaseUserPassword: string | null;
   socketServerHost: string | null;
   socketServerPassword: string | null;
+  socketServerDocument: string | null,
 };
 
 type LocalDocSetting = keyof LocalDocSettings;
@@ -54,6 +55,7 @@ const default_local_doc_settings: LocalDocSettings = {
   firebaseUserPassword: null,
   socketServerHost: null,
   socketServerPassword: null,
+  socketServerDocument: null,
 };
 
 export type DocSettings = {

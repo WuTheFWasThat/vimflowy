@@ -9,38 +9,52 @@ import * as serverBackends from './data_backends';
 
 type SocketServerOptions = {
   db?: string,
-  filename?: string,
+  dbfolder?: string,
   password?: string,
   path?: string,
 };
 
 export default async function makeSocketServer(server: http.Server, options: SocketServerOptions) {
   const wss = new WebSocket.Server({ server, path: options.path });
-  let db: DataBackend;
-  if (options.db === 'sqlite') {
-    if (options.filename) {
-      logger.info('Using sqlite database: ', options.filename);
-    } else {
-      logger.warn('Using in-memory sqlite database');
+
+  const dbs: {[docname: string]: DataBackend} = {};
+  const clients: {[docname: string]: string} = {};
+
+  async function getBackend(docname: string): Promise<DataBackend> {
+    if (docname in dbs) {
+      return dbs[docname];
     }
-    const sql_db = new serverBackends.SQLiteBackend();
-    await sql_db.init(options.filename);
-    db = sql_db;
-  } else {
-    logger.info('Using in-memory database');
-    db = new dataBackends.InMemory();
+    let db: DataBackend;
+    if (options.db === 'sqlite') {
+      let filename;
+      if (options.dbfolder) {
+        filename = `${options.dbfolder}/${docname || 'vimflowy'}.db`;
+        logger.info('Using sqlite database: ', filename);
+      } else {
+        filename = ':memory:';
+        logger.warn('Using in-memory sqlite database');
+      }
+      const sql_db = new serverBackends.SQLiteBackend();
+      await sql_db.init(filename);
+      db = sql_db;
+    } else {
+      logger.info('Using in-memory database');
+      db = new dataBackends.InMemory();
+    }
+    dbs[docname] = db;
+    return db;
   }
 
   function broadcast(message: Object): void {
     wss.clients.forEach(client => {
       client.send(JSON.stringify(message));
     });
-  };
-
-  let current_client: string | null;
+  }
 
   wss.on('connection', function connection(ws) {
+    logger.info('New socket connection!');
     let authed = false;
+    let docname: string | null = null;
     ws.on('message', async (msg_string) => {
       logger.debug('received message: %s', msg_string);
       const msg = JSON.parse(msg_string);
@@ -60,10 +74,13 @@ export default async function makeSocketServer(server: http.Server, options: Soc
           }
         }
         authed = true;
-        current_client = msg.clientId;
+        docname = msg.docname;
+        clients[msg.docname] = msg.clientId;
+        // TODO: only broadcast to client on this document?
         broadcast({
           type: 'joined',
           clientId: msg.clientId,
+          docname: msg.docname,
         });
         return respond({ error: null });
       }
@@ -71,19 +88,28 @@ export default async function makeSocketServer(server: http.Server, options: Soc
       if (!authed) {
         return respond({ error: 'Not authenticated!' });
       }
-      if (msg.clientId !== current_client) {
+      if (docname == null) {
+        throw new Error('No docname!');
+      }
+      if (msg.clientId !== clients[docname]) {
         return respond({ error: 'Other client connected!' });
       }
+      const db = await getBackend(docname);
 
       if (msg.type === 'get') {
         const value = await db.get(msg.key);
         logger.debug('got', msg.key, value);
-        respond({ value: value, error: null })
+        respond({ value: value, error: null });
       } else if (msg.type === 'set') {
         await db.set(msg.key, msg.value);
         logger.debug('set', msg.key, msg.value);
-        respond({ error: null })
+        respond({ error: null });
       }
+    });
+
+    ws.on('close', () => {
+      logger.info('Socket connection closed!');
+      // TODO: clean up stuff?
     });
   });
   return server;
