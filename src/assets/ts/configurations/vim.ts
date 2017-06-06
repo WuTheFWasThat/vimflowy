@@ -308,6 +308,7 @@ const defaultData: Array<SerializedBlock> = [
       'By default, all data is entirely local',
       'There are no backups, and it is never sent over the internet',
       'However, remote data storage is supported',
+      'For more details, visit https://github.com/WuTheFWasThat/vimflowy/blob/master/docs/storage/README.md',
       'To manage your data, visit the Settings menu',
     ] },
     { text: 'Importing and exporting data', children: [

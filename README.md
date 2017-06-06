@@ -7,8 +7,6 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
 
 [Try it out!](https://vimflowy.bitballoon.com)
 
-(Video coming eventually...)
-
 ## FEATURES
 
 - Workflowy features
@@ -25,7 +23,7 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
   - time-tracking
   - LaTeX and HTML rendering
 - Other
-  - data import/export
+  - data import from or export as text file (native Vimflowy format or Workflowy-compatible format)
   - loads data lazily (good for huge documents)
   - search (not like vim's)
   - cloning (bullets duplicated in multiple locations in a document)
