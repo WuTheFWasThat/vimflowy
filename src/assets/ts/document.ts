@@ -635,13 +635,18 @@ export default class Document extends EventEmitter {
   public async getCommonAncestor(path1: Path, path2: Path): Promise<[Path, Array<Path>, Array<Path>]> {
     const ancestors1: Array<Path> = path1.getAncestryPaths();
     const ancestors2: Array<Path> = path2.getAncestryPaths();
+
     const commonAncestry = _.takeWhile(
       _.zip(ancestors1, ancestors2),
       pair => (pair[0] && pair[1] && pair[0].is(pair[1]))
-    );
-    const common = _.last(commonAncestry)[0];
+    ).map((pair) => pair[0]);
+
+    const lastCommon = _.last(commonAncestry);
+    if (lastCommon == null) {
+        throw new Error(`No common ancestor found between ${path1} and ${path2}`);
+    }
     const firstDifference = commonAncestry.length;
-    return [common, ancestors1.slice(firstDifference), ancestors2.slice(firstDifference)];
+    return [lastCommon, ancestors1.slice(firstDifference), ancestors2.slice(firstDifference)];
   }
 
   // returns whether an row is actually reachable from the root node
