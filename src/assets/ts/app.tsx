@@ -299,7 +299,10 @@ $(document).ready(async () => {
   // load data
   if (to_load !== null) {
     await doc.load(to_load);
-    // a bit hack.  without this, you can undo initial marks, for example
+    // a bit hacky.  without this, you can undo initial marks, for example
+    session.cursor.setPosition(
+      (await doc.getChildren(viewRoot))[0], 0
+    );
     session.reset_history();
     session.reset_jump_history();
   }
