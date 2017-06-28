@@ -7,7 +7,7 @@ import KeyMappings from './keyMappings';
 
 type Config = {
   defaultMode: ModeId;
-  defaultData: Array<SerializedBlock>;
+  getDefaultData: () => Array<SerializedBlock>;
   // NOTE: can be mutated when there's a mode registered
   defaultMappings: KeyMappings;
 };

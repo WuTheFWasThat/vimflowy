@@ -551,8 +551,7 @@ export default class Session extends EventEmitter {
 
   public async changeViewRoot(path: Path) {
     this.viewRoot = path;
-    // NOTE: should this be fire and forget instead?
-    await this.clientStore.setLastViewRoot(path.getAncestry());
+    this.emit('changeViewRoot', path);
   }
 
   public reset_jump_history() {

@@ -76,8 +76,6 @@ ReactDOM.render(
 
 $(document).ready(async () => {
   let docname: string = browser_utils.getParameterByName('doc') || '';
-  if (!docname) { docname = window.location.pathname.split('/')[1]; }
-  if (!docname) { docname = window.location.hash.substr(1); }
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
 
   // random global state.  these things should be managed by redux maybe
@@ -198,7 +196,7 @@ $(document).ready(async () => {
 
   let to_load: any = null;
   if ((await docStore.getChildren(Path.rootRow())).length === 0) {
-    to_load = config.defaultData;
+    to_load = config.getDefaultData();
   }
 
   const changeStyle = (theme: string) => {
@@ -229,7 +227,19 @@ $(document).ready(async () => {
     // HACKY: should load the actual data now, but since plugins aren't enabled...
     await doc.loadEmpty();
   }
-  const viewRoot = Path.loadFromAncestry(await clientStore.getLastViewRoot());
+
+  let viewRootAncestry;
+  if (window.location.hash.length > 1) {
+    try {
+      viewRootAncestry = window.location.hash.slice(1).split(',').map((x: string) => parseInt(x, 10));
+    } catch (e) {
+      logger.error(`Invalid hash: ${window.location.hash}`);
+    }
+  }
+  if (!viewRootAncestry) {
+    viewRootAncestry = await clientStore.getLastViewRoot();
+  }
+  const viewRoot = Path.loadFromAncestry(viewRootAncestry);
   // TODO: if we ever support multi-user case, ensure last view root is valid
   let cursorPath;
   if (viewRoot.isRoot()) {
@@ -305,6 +315,7 @@ $(document).ready(async () => {
     );
     session.reset_history();
     session.reset_jump_history();
+    await renderMain();
   }
 
   const keyHandler = new KeyHandler(session, keyBindings);
@@ -359,6 +370,12 @@ $(document).ready(async () => {
   });
 
   session.on('importFinished', renderMain); // fire and forget
+
+  session.on('changeViewRoot', async (path: Path) => {
+    const ancestry = path.getAncestry();
+    await clientStore.setLastViewRoot(ancestry);
+    window.location.hash = `#${ancestry.join(',')}`;
+  });
 
   keyEmitter.listen();
   keyEmitter.on('keydown', (key) => {

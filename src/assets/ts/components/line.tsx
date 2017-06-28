@@ -34,10 +34,10 @@ export function getClassesFromInfo(info: CharInfo, cursorBetween: boolean): Arra
 }
 
 
-// NOTE: hacky! we don't include .:/ since urls contain it
+// NOTE: hacky! we don't include .:/?= since urls contain it
 // should instead make tokenizer for URLs
 // also not including @ for marks
-const word_boundary_chars = '\t\r\n ,?!()\"\'*+\\;<=>\\[\\]`{}|';
+const word_boundary_chars = '\t\r\n ,!()\"\'*+\\;<>\\[\\]`{}|';
 
 export default class LineComponent extends React.Component<LineProps, {}> {
 

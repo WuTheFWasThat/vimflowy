@@ -25,7 +25,8 @@ To use a different port, you can do
 
 When source code changes, assets should be automatically (incrementally) recompiled.
 
-Note that you may make new documents simply by visiting `http://localhost:3000?doc=<documentname>`
+Note that you may make new documents simply by visiting
+`http://localhost:3000?doc=<documentname>#`
 
 For a full set of options, see
 
