@@ -228,18 +228,20 @@ $(document).ready(async () => {
     await doc.loadEmpty();
   }
 
-  let viewRootAncestry;
+  let viewRoot;
   if (window.location.hash.length > 1) {
     try {
-      viewRootAncestry = window.location.hash.slice(1).split(',').map((x: string) => parseInt(x, 10));
+      const row = parseInt(window.location.hash.slice(1), 10);
+      if (await doc.isAttached(row)) {
+        viewRoot = await doc.canonicalPath(row);
+      }
     } catch (e) {
       logger.error(`Invalid hash: ${window.location.hash}`);
     }
   }
-  if (!viewRootAncestry) {
-    viewRootAncestry = await clientStore.getLastViewRoot();
+  if (!viewRoot) {
+    viewRoot = Path.loadFromAncestry(await clientStore.getLastViewRoot());
   }
-  let viewRoot = Path.loadFromAncestry(viewRootAncestry);
   let cursorPath;
   if (viewRoot.isRoot() || !await doc.isValidPath(viewRoot)) {
     viewRoot = Path.root();
@@ -373,9 +375,8 @@ $(document).ready(async () => {
   session.on('importFinished', renderMain); // fire and forget
 
   session.on('changeViewRoot', async (path: Path) => {
-    const ancestry = path.getAncestry();
-    await clientStore.setLastViewRoot(ancestry);
-    window.location.hash = `#${ancestry.join(',')}`;
+    await clientStore.setLastViewRoot(path.getAncestry());
+    window.location.hash = `#${path.row}`;
   });
 
   keyEmitter.listen();
