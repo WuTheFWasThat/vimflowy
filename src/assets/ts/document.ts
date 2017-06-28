@@ -393,6 +393,10 @@ export default class Document extends EventEmitter {
     return (await this._getChildren(row)).length > 0;
   }
 
+  public async hasChild(parent_row: Row, row: Row): Promise<boolean> {
+    return (await this._getChildren(parent_row)).indexOf(row) !== -1;
+  }
+
   public async getSiblings(path: Path) {
     if (path.parent == null) { // i.e. (path.isRoot())
       return [path];
@@ -653,6 +657,19 @@ export default class Document extends EventEmitter {
   // if something is not detached, it will have a parent, but the parent wont mention it as a child
   public async isAttached(row: Row) {
     return (await this.allAncestors(row, {inclusive: true})).indexOf(this.root.row) !== -1;
+  }
+
+  public async isValidPath(path: Path) {
+    let parent_row: Row = 0;
+    const ancestry = path.getAncestry();
+    for (let i = 0; i < ancestry.length; i++) {
+      const row = ancestry[i];
+      if (!await this.hasChild(parent_row, row)) {
+        return false;
+      }
+      parent_row = row;
+    }
+    return true;
   }
 
   public async getSiblingBefore(path: Path) {

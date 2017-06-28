@@ -239,11 +239,12 @@ $(document).ready(async () => {
   if (!viewRootAncestry) {
     viewRootAncestry = await clientStore.getLastViewRoot();
   }
-  const viewRoot = Path.loadFromAncestry(viewRootAncestry);
-  // TODO: if we ever support multi-user case, ensure last view root is valid
+  let viewRoot = Path.loadFromAncestry(viewRootAncestry);
   let cursorPath;
-  if (viewRoot.isRoot()) {
+  if (viewRoot.isRoot() || !await doc.isValidPath(viewRoot)) {
+    viewRoot = Path.root();
     cursorPath = (await doc.getChildren(viewRoot))[0];
+    window.location.hash = '';
   } else {
     cursorPath = viewRoot;
   }
