@@ -226,7 +226,7 @@ export default class SessionComponent extends React.Component<Props, State> {
                 onCrumbClick={onCrumbClick}
                 crumbContents={crumbContents}
               />,
-              <hr key='bar' style={{opacity: 0.5, marginBottom: 20}}/>,
+              <hr key='bar' style={{opacity: 0.5, marginBottom: 10}}/>,
             ];
           })()
         }

@@ -26,9 +26,9 @@ type MarksToRows = {[key: string]: Row};
 type RowsToMarks = {[key: number]: Mark};
 
 const markStyle = {
-  padding: '0px 10px',
-  marginRight: 10,
-  borderRadius: 6,
+  padding: '0px 8px',
+  marginRight: 8,
+  borderRadius: 5,
 };
 
 /*
@@ -270,7 +270,7 @@ export class MarksPlugin {
                     return (
                       <span>
                         <span key={`mark_${mark}`} style={markStyle}
-                              className='theme-bg-secondary theme-trim'>
+                              className='theme-bg-tertiary theme-trim'>
                           {mark}
                         </span>
                         {lineDiv}
@@ -370,8 +370,7 @@ export class MarksPlugin {
       if (pluginData.marks) {
         if (pluginData.marks.marking) {
           lineContents.unshift(
-            <span style={markStyle} key='mark'
-                  className='theme-bg-secondary theme-trim-accent'>
+            <span style={markStyle} key='mark' className='theme-bg-tertiary theme-trim-accent'>
               <LineComponent
                 lineData={pluginData.marks.markText}
                 cursors={{
@@ -385,7 +384,7 @@ export class MarksPlugin {
           const mark = pluginData.marks.mark;
           if (mark) {
             lineContents.unshift(
-              <span style={markStyle} key='mark' className='theme-bg-secondary theme-trim'>
+              <span style={markStyle} key='mark' className='theme-bg-tertiary'>
                 {mark}
               </span>
             );
