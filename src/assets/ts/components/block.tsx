@@ -9,6 +9,7 @@ import Path from '../path';
 import { CursorsInfoTree } from '../cursor';
 import { Col } from '../types';
 import { PartialUnfolder, Token } from '../utils/token_unfolder';
+import { getStyles } from '../themes';
 
 type RowProps = {
   session: Session;
@@ -81,7 +82,11 @@ class RowComponent extends React.Component<RowProps, {}> {
     let lineoptions: LineProps = {
       lineData,
       cursors,
+      cursorStyle: getStyles(session.clientStore, ['theme-cursor']),
       highlights,
+      highlightStyle: getStyles(session.clientStore, ['theme-bg-highlight']),
+      linksStyle: getStyles(session.clientStore, ['theme-link']),
+      accentStyle: getStyles(session.clientStore, ['theme-text-accent']),
       cursorBetween: this.props.cursorBetween,
     };
 
@@ -300,12 +305,12 @@ export default class BlockComponent extends React.Component<BlockProps, {}> {
       );
     }
 
-    let className = 'node';
+    const style = {};
     if (cursorsTree.visual) {
-      className += ' theme-bg-highlight';
+      Object.assign(style, getStyles(session.clientStore, ['theme-bg-highlight']));
     }
     return (
-      <div className={className}>
+      <div className='node' style={style}>
         {pathElements}
       </div>
     );

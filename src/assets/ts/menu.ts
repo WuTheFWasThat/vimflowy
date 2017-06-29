@@ -14,7 +14,9 @@ export type MenuResult = {
   fn: any; // TODO
 
   // props for rendering LineComponent
-  renderOptions?: any; // TODO
+  renderOptions?: {
+    accents: {[column: number]: boolean}
+  };
 
   // hook for rendering search result contents
   renderHook?: (line: any) => any; // TODO

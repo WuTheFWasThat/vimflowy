@@ -11,28 +11,17 @@ import {
 export type LineProps = {
   lineData: Line;
   cursors?: {[key: number]: boolean};
+  cursorStyle: React.CSSProperties;
   highlights?: {[key: number]: boolean};
+  highlightStyle: React.CSSProperties;
+  accents?: {[key: number]: boolean};
+  accentStyle: React.CSSProperties;
+  linksStyle: React.CSSProperties;
   lineHook?: PartialUnfolder<Token, React.ReactNode>;
   wordHook?: PartialUnfolder<Token, React.ReactNode>;
   onCharClick?: ((col: Col, e: Event) => void) | null;
   cursorBetween?: boolean;
 };
-
-export function getClassesFromInfo(info: CharInfo, cursorBetween: boolean): Array<string> {
-  const classes: Array<string> = [];
-
-  if (info.cursor && !cursorBetween) {
-    classes.push('cursor', 'theme-cursor');
-  }
-  if (info.highlight) {
-    classes.push('theme-bg-highlight');
-  }
-  Object.keys(info.renderOptions.classes).forEach((cls) => {
-    classes.push(cls);
-  });
-  return classes;
-}
-
 
 // NOTE: hacky! we don't include .:/?= since urls contain it
 // should instead make tokenizer for URLs
@@ -50,6 +39,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     const lineData = _.cloneDeep(this.props.lineData);
     const cursors = this.props.cursors || {};
     const highlights = this.props.highlights || {};
+    const accents = this.props.accents || {};
 
     // ideally this takes up space but is unselectable (uncopyable)
     const cursorChar = ' ';
@@ -63,48 +53,63 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       return <span></span>;
     }
 
-    function cursorBetweenDiv(i: number) {
+    const cursorBetweenDiv = (i: number) => {
       return (
         <div key={`insert-cursor-${i}`}
-          className='cursor theme-cursor blink-background'
+          className='cursor blink-background'
           style={{
             display: 'inline-block',
             height: '1.2em', width: 2, marginLeft: -1, marginRight: -1,
+            ...this.props.cursorStyle,
           }}>
           {' '}
         </div>
       );
-    }
+    };
 
     const DefaultTokenizer: Tokenizer = new Unfolder<Token, React.ReactNode>((
       token: Token, emit: EmitFn<React.ReactNode>
     ) => {
       for (let i = 0; i < token.text.length; i++) {
-        const info = token.info[i];
-        const classes = getClassesFromInfo(info, cursorBetween);
-        if (cursorBetween && info.cursor) {
-          emit(cursorBetweenDiv(token.index + i));
+        const char_info = token.info[i];
+        const classes = Object.keys(char_info.renderOptions.classes);
+
+        const style: React.CSSProperties = char_info.renderOptions.style || {};
+        if (char_info.highlight) {
+          Object.assign(style, this.props.highlightStyle);
+        }
+        if (char_info.accent) {
+          Object.assign(style, this.props.accentStyle);
+        }
+        if (char_info.cursor) {
+          if (cursorBetween) {
+            emit(cursorBetweenDiv(token.index + i));
+          } else {
+            classes.push('cursor');
+            Object.assign(style, this.props.cursorStyle);
+          }
         }
 
         const column = token.index + i;
         let href = null;
-        if (info.renderOptions.href) {
-          href = info.renderOptions.href;
+        if (char_info.renderOptions.href) {
+          href = char_info.renderOptions.href;
         }
 
         let onClick = null;
         if (href == null) {
-          if (info.renderOptions.onClick !== undefined) {
-            onClick = info.renderOptions.onClick;
+          if (char_info.renderOptions.onClick !== undefined) {
+            onClick = char_info.renderOptions.onClick;
           } else if (this.props.onCharClick) {
             onClick = this.props.onCharClick.bind(this, column);
           }
         }
-        const divType = info.renderOptions.divType || 'span';
+        const divType = char_info.renderOptions.divType || 'span';
         emit(
           React.createElement(
             divType,
             {
+              style: style,
               key: `default-${column}`,
               className: classes.join(' '),
               onClick: onClick,
@@ -133,14 +138,24 @@ export default class LineComponent extends React.Component<LineProps, {}> {
           throw new Error('Expected matched newline with info of length 1');
         }
         const char_info = token.info[0];
-        const classes = getClassesFromInfo(char_info, cursorBetween);
+        const style: React.CSSProperties = char_info.renderOptions.style || {};
+        const classes = Object.keys(char_info.renderOptions.classes);
+        if (char_info.highlight) {
+          Object.assign(style, this.props.highlightStyle);
+        }
+        if (char_info.accent) {
+          Object.assign(style, this.props.accentStyle);
+        }
         if (char_info.cursor) {
           if (cursorBetween) {
             emit(cursorBetweenDiv(token.index));
           } else {
+            classes.push('cursor');
+            Object.assign(style, this.props.cursorStyle);
             emit(React.createElement(
               'span',
               {
+                style: style,
                 key: `cursor-${token.index}`,
                 className: classes.join(' '),
                 onClick: undefined,
@@ -174,7 +189,8 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       if (text_utils.isLink(token.text)) {
         token.info.forEach((char_info) => {
           char_info.renderOptions.divType = 'a';
-          char_info.renderOptions.classes['theme-text-link'] = true;
+          char_info.renderOptions.style = char_info.renderOptions.style || {};
+          Object.assign(char_info.renderOptions.style, this.props.linksStyle);
           char_info.renderOptions.onClick = null;
           char_info.renderOptions.href = token.text;
         });
@@ -203,6 +219,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
       const char_info: CharInfo = {
         highlight: i in highlights,
         cursor: i in cursors,
+        accent: i in accents,
         renderOptions: {
           classes: {},
         },

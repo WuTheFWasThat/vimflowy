@@ -5,6 +5,7 @@ import SpinnerComponent from './spinner';
 import Session from '../session';
 import Menu from '../menu';
 import { Line } from '../types';
+import { getStyles } from '../themes';
 
 type Props = {
   session: Session;
@@ -39,9 +40,12 @@ export default class MenuComponent extends React.Component<Props, State> {
   public render() {
     const menu = this.props.menu;
     const query = this.state.query;
+    const session = this.props.session;
 
     const searchBox = (
-      <div className='searchBox theme-trim'>
+      <div className='searchBox' style={{
+        ...getStyles(session.clientStore, ['theme-trim']),
+      }}>
         <i className='fa fa-search' style={{'marginRight': 10}}/>
         <span>
           {
@@ -54,6 +58,10 @@ export default class MenuComponent extends React.Component<Props, State> {
                   cursors={{
                     [menu.session.cursor.col]: true,
                   }}
+                  cursorStyle={getStyles(session.clientStore, ['theme-cursor'])}
+                  highlightStyle={getStyles(session.clientStore, ['theme-bg-highlight'])}
+                  linksStyle={getStyles(session.clientStore, ['theme-link'])}
+                  accentStyle={getStyles(session.clientStore, ['theme-text-accent'])}
                   cursorBetween={true}
                 />;
               }
@@ -85,6 +93,10 @@ export default class MenuComponent extends React.Component<Props, State> {
         let contents = (
           <LineComponent key={`line_${i}`}
             lineData={result.contents}
+            cursorStyle={getStyles(session.clientStore, ['theme-cursor'])}
+            highlightStyle={getStyles(session.clientStore, ['theme-bg-highlight'])}
+            linksStyle={getStyles(session.clientStore, ['theme-link'])}
+            accentStyle={getStyles(session.clientStore, ['theme-text-accent'])}
             {...renderOptions}
           />
         );
@@ -92,12 +104,14 @@ export default class MenuComponent extends React.Component<Props, State> {
           contents = result.renderHook(contents);
         }
 
-        const className = selected ? 'theme-bg-selection' : '';
-        const icon = selected ? 'fa-arrow-circle-right' : 'fa-circle';
+        const style = { marginBottom: 10 };
+        if (selected) {
+          Object.assign(style, getStyles(session.clientStore, ['theme-bg-highlight']));
+        }
         return (
-          <div key={i} style={{marginBottom: 10}} className={className}>
-            <i className={`fa ${icon} bullet`} style={{marginRight: 20}}>
-            </i>
+          <div key={i} style={style}>
+            <i style={{marginRight: 20}}
+              className={`fa ${selected ? 'fa-arrow-circle-right' : 'fa-circle'} bullet`}/>
             {contents}
           </div>
         );

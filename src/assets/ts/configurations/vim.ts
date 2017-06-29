@@ -299,7 +299,7 @@ function getDefaultData(): Array<SerializedBlock> {
             'https://github.com/WuTheFWasThat/vimflowy/blob/master/docs/plugins.md',
         ] },
         'Customizable hotkeys (via downloading/uploading a json file)',
-        'Different color themes',
+        'Customizable color theme',
       ] },
     ] },
     { text: 'Data', collapsed: true, children: [

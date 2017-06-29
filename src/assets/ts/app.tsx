@@ -16,10 +16,6 @@ import 'font-awesome/css/font-awesome.css';
 import '../css/utils.sass';
 import '../css/index.sass';
 import '../css/view.sass';
-import '../css/themes/default.sass';
-import '../css/themes/dark.sass';
-import '../css/themes/solarized_dark.sass';
-import '../css/themes/solarized_light.sass';
 
 import * as browser_utils from './utils/browser';
 import * as errors from './utils/errors';
@@ -189,13 +185,6 @@ $(document).ready(async () => {
     to_load = config.getDefaultData();
   }
 
-  const changeStyle = (theme: string) => {
-    // $('body').removeClass().addClass(theme);
-    $('body').attr('id', theme);
-    clientStore.setClientSetting('theme', theme);
-  };
-  const initialTheme = clientStore.getClientSetting('theme');
-  changeStyle(initialTheme);
   let showingKeyBindings = clientStore.getClientSetting('showKeyBindings');
 
   doc.store.events.on('saved', () => {
@@ -330,13 +319,11 @@ $(document).ready(async () => {
           message={userMessage}
           saveMessage={saveMessage}
           config={config}
-          onThemeChange={changeStyle}
           session={session}
           pluginManager={pluginManager}
           showingKeyBindings={showingKeyBindings}
           keyBindings={keyBindings}
           initialBackendType={backend_type}
-          initialTheme={initialTheme}
         />,
         appEl,
         resolve

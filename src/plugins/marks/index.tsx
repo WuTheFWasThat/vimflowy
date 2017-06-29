@@ -13,6 +13,7 @@ import LineComponent from '../../assets/ts/components/line';
 import Mutation from '../../assets/ts/mutations';
 import Path from '../../assets/ts/path';
 import { Row } from '../../assets/ts/types';
+import { getStyles } from '../../assets/ts/themes';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
 import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
@@ -269,8 +270,12 @@ export class MarksPlugin {
                   renderHook(lineDiv: React.ReactElement<any>) {
                     return (
                       <span>
-                        <span key={`mark_${mark}`} style={markStyle}
-                              className='theme-bg-tertiary theme-trim'>
+                        <span key={`mark_${mark}`}
+                          style={{
+                            ...getStyles(session.clientStore, ['theme-bg-tertiary', 'theme-trim']),
+                            ...markStyle
+                          }}
+                        >
                           {mark}
                         </span>
                         {lineDiv}
@@ -370,12 +375,21 @@ export class MarksPlugin {
       if (pluginData.marks) {
         if (pluginData.marks.marking) {
           lineContents.unshift(
-            <span style={markStyle} key='mark' className='theme-bg-tertiary theme-trim-accent'>
+            <span key='mark'
+              style={{
+                ...getStyles(this.api.session.clientStore, ['theme-bg-tertiary', 'theme-trim-accent']),
+                ...markStyle
+              }}
+            >
               <LineComponent
                 lineData={pluginData.marks.markText}
                 cursors={{
                   [pluginData.marks.markCol]: true,
                 }}
+                cursorStyle={getStyles(this.api.session.clientStore, ['theme-cursor'])}
+                highlightStyle={getStyles(this.api.session.clientStore, ['theme-bg-highlight'])}
+                linksStyle={getStyles(this.api.session.clientStore, ['theme-link'])}
+                accentStyle={getStyles(this.api.session.clientStore, ['theme-text-accent'])}
                 cursorBetween={true}
               />
             </span>
@@ -384,7 +398,12 @@ export class MarksPlugin {
           const mark = pluginData.marks.mark;
           if (mark) {
             lineContents.unshift(
-              <span style={markStyle} key='mark' className='theme-bg-tertiary'>
+              <span key='mark'
+                style={{
+                  ...getStyles(this.api.session.clientStore, ['theme-bg-tertiary']),
+                  ...markStyle
+                }}
+              >
                 {mark}
               </span>
             );
@@ -405,7 +424,8 @@ export class MarksPlugin {
             if (path) {
               token.info.forEach((char_info) => {
                 char_info.renderOptions.divType = 'a';
-                char_info.renderOptions.classes['theme-text-link'] = true;
+                char_info.renderOptions.style = char_info.renderOptions.style || {};
+                Object.assign(char_info.renderOptions.style, getStyles(this.session.clientStore, ['theme-link']));
                 char_info.renderOptions.onClick = async () => {
                   await this.session.zoomInto(path);
                   this.session.save();

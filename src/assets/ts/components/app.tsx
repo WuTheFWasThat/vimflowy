@@ -8,6 +8,7 @@ import { PluginsManager } from '../plugins';
 import Session from '../session';
 import Config from '../config';
 import KeyBindings from '../keyBindings';
+import { getStyles } from '../themes';
 
 import SettingsComponent from './settings';
 import SessionComponent from './session';
@@ -24,9 +25,7 @@ type Props = {
   saveMessage: TextMessage | null;
   showingKeyBindings: boolean;
   keyBindings: KeyBindings;
-  initialTheme: string;
   initialBackendType: BackendType;
-  onThemeChange: (theme: string) => void;
   error: Error | null;
 };
 
@@ -94,12 +93,16 @@ export default class AppComponent extends React.Component<Props, {}> {
     const saveMessage: TextMessage = this.props.saveMessage || {};
 
     return (
-      <div>
+      <div style={{
+          ...getStyles(session.clientStore, ['theme-text-primary'])
+      }}>
         {/* hack for firefox paste */}
         <div id='paste-hack' contentEditable={true} className='offscreen'>
         </div>
 
-        <div id='contents'>
+        <div id='contents' style={{
+          ...getStyles(session.clientStore, ['theme-bg-primary'])
+        }}>
           <div id='menu'
             className={session.mode === 'SEARCH' ? '' : 'hidden'}
           >
@@ -114,8 +117,11 @@ export default class AppComponent extends React.Component<Props, {}> {
           </div>
 
           <div id='view'
-            style={{flex: '1 1 auto', fontSize: 10}}
-            className={'theme-bg-primary' + (session.mode === 'SEARCH' ? ' hidden' : '')}
+            style={{
+              flex: '1 1 auto', fontSize: 10,
+              ...getStyles(session.clientStore, ['theme-bg-primary'])
+            }}
+            className={session.mode === 'SEARCH' ? ' hidden' : ''}
           >
             {/* NOTE: maybe always showing session would be nice?
               * Mostly works to never have 'hidden',
@@ -127,25 +133,18 @@ export default class AppComponent extends React.Component<Props, {}> {
             </div>
 
             <div
-              className={'theme-bg-secondary transition-ease-width'}
-              style={
-                (() => {
-                  const style: React.CSSProperties = {
-                    overflowY: 'auto',
-                    height: '100%',
-                    flex: '0 1 auto',
-                    position: 'relative',
-                  };
-                  if (this.props.showingKeyBindings) {
-                    style.width = 500;
-                  } else {
-                    style.width = '0%';
-                  }
-                  return style;
-                })()
-              }
+              className='transition-ease-width'
+              style={{
+                overflowY: 'auto',
+                height: '100%',
+                flex: '0 1 auto',
+                position: 'relative',
+                width: this.props.showingKeyBindings ? 500 : '0%',
+                ...getStyles(session.clientStore, ['theme-bg-secondary'])
+              }}
             >
               <HotkeysTableComponent
+                clientStore={session.clientStore}
                 keyMap={keyBindings.mappings.mappings[session.mode]}
                 definitions={keyBindings.definitions}
                 ignoreEmpty={true}
@@ -153,16 +152,22 @@ export default class AppComponent extends React.Component<Props, {}> {
             </div>
           </div>
 
-          <div id='settings' className={'theme-bg-primary ' + (settingsMode ? '' : 'hidden')}>
+          <div id='settings' className={settingsMode ? '' : 'hidden'}
+            style={{
+              ...getStyles(session.clientStore, ['theme-bg-primary'])
+            }}>
+
             <SettingsComponent
               session={session}
               config={this.props.config}
               keyBindings={keyBindings}
               pluginManager={pluginManager}
-              initialTheme={this.props.initialTheme}
               initialBackendType={this.props.initialBackendType}
-              onThemeChange={(theme) => {
-                this.props.onThemeChange(theme);
+              rerenderAll={() => {
+                // TODO: this doesn't actually update everything.. use a better way to do this?
+                // See: https://github.com/facebook/react/issues/3038
+                // Maybe could do session.document.cache.clear(), but that's inefficient
+                this.forceUpdate();
               }}
               onExport={() => {
                 const filename = 'vimflowy_hotkeys.json';
@@ -173,16 +178,19 @@ export default class AppComponent extends React.Component<Props, {}> {
             />
           </div>
 
-          <div id='bottom-bar' className='theme-bg-primary theme-trim'
-            style={{ display: 'flex' }}
-          >
-            <a className='center theme-bg-secondary'
+          <div id='bottom-bar'
+            style={{
+              display: 'flex',
+              ...getStyles(session.clientStore, ['theme-bg-primary', 'theme-trim'])
+            }}>
+            <a className='center'
               onClick={async () => {
                 await session.setMode(settingsMode ? 'NORMAL' : 'SETTINGS');
               }}
               style={{
                 flexBasis: 100, flexGrow: 0,
                 cursor: 'pointer', textDecoration: 'none',
+                ...getStyles(session.clientStore, ['theme-bg-secondary'])
               }}
             >
               <div>
@@ -201,8 +209,11 @@ export default class AppComponent extends React.Component<Props, {}> {
               {saveMessage.message}
             </div>
             {/* should be wide enough to fit the words 'VISUAL LINE'*/}
-            <div className='center theme-bg-secondary'
-              style={{flexBasis: 80, flexGrow: 0}}
+            <div className='center'
+              style={{
+                flexBasis: 80, flexGrow: 0,
+                ...getStyles(session.clientStore, ['theme-bg-secondary'])
+              }}
             >
               {Modes.getMode(session.mode).name}
             </div>

@@ -8,8 +8,10 @@ import * as React from 'react';
 export type CharInfo = {
   highlight: boolean,
   cursor: boolean,
+  accent: boolean,
   renderOptions: {
     divType?: string,
+    style?: React.CSSProperties,
     classes: {[key: string]: boolean},
     href?: string,
     onClick?: null | (() => void),

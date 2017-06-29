@@ -2,19 +2,21 @@ import * as React from 'react';
 
 import Path from '../path';
 import Session from '../session';
+import { getStyles } from '../themes';
 
 type CrumbProps = {
   onClick: ((...args: any[]) => void) | undefined,
+  session: Session,
 };
 class CrumbComponent extends React.PureComponent<CrumbProps, {}> {
   public render() {
-    let className = '';
+    const style = {};
     if (this.props.onClick) {
-      className = 'theme-text-link';
+      Object.assign(style, getStyles(this.props.session.clientStore, ['theme-link']));
     }
     return (
       <span>
-        <span className={className} onClick={this.props.onClick}>
+        <span style={style} onClick={this.props.onClick}>
           {this.props.children}
         </span>
         <i className='fa fa-angle-right'
@@ -61,7 +63,7 @@ export default class BreadcrumbsComponent extends React.Component<BreadcrumbsPro
       };
 
       crumbNodes.push(
-        <CrumbComponent key={path.row}
+        <CrumbComponent key={path.row} session={session}
           onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
         >
         {
@@ -76,7 +78,7 @@ export default class BreadcrumbsComponent extends React.Component<BreadcrumbsPro
       path = path.parent;
     }
     crumbNodes.push(
-      <CrumbComponent key={path.row}
+      <CrumbComponent key={path.row} session={session}
         onClick={this.props.onCrumbClick && this.props.onCrumbClick.bind(this, path)}
       >
         <i className='fa fa-home'/>

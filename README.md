@@ -27,7 +27,7 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
   - loads data lazily (good for huge documents)
   - search (not like vim's)
   - cloning (bullets duplicated in multiple locations in a document)
-  - different visual themes
+  - customizable visual themes
 
 ## LIMITATIONS
 

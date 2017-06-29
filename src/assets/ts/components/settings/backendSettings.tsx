@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import { BackendType } from '../../data_backend';
 import { ClientStore } from '../../datastore';
+import { getStyles } from '../../themes';
 
 type Props = {
   clientStore: ClientStore;
@@ -290,13 +291,22 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
           <thead>
             <tr>
               <th></th>
-              <th className='theme-trim' style={{padding: 10}}>
+              <th style={{
+                padding: 10,
+                ...getStyles(this.props.clientStore, ['theme-trim'])
+              }}>
                 Storage Type
               </th>
-              <th className='theme-trim' style={{padding: 10}}>
+              <th style={{
+                padding: 10,
+                ...getStyles(this.props.clientStore, ['theme-trim'])
+              }}>
                 Local/Remote
               </th>
-              <th className='theme-trim' style={{padding: 10}}>
+              <th style={{
+                padding: 10,
+                ...getStyles(this.props.clientStore, ['theme-trim'])
+              }}>
                 Info
               </th>
             </tr>
@@ -342,7 +352,10 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
           </tbody>
         </table>
 
-        <div className='btn theme-bg-secondary theme-trim'
+        <div className='btn'
+          style={{
+            ...getStyles(this.props.clientStore, ['theme-bg-tertiary', 'theme-trim'])
+          }}
           onClick={() => this.saveDataSettings()} >
           Load Data Settings
         </div>

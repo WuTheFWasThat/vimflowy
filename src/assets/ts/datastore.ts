@@ -2,6 +2,7 @@ import EventEmitter from './utils/eventEmitter';
 import * as fn_utils from './utils/functional';
 import logger from './utils/logger';
 import DataBackend, * as DataBackends from './data_backend';
+import { Theme, defaultTheme } from './themes';
 
 import { Row, Line, SerializedPath, MacroMap } from './types';
 
@@ -12,27 +13,24 @@ However, in the case of a key-value store, one can simply implement `get` and `s
 Currently, DataStore has a synchronous API.  This may need to change eventually...  :(
 */
 
-// TODO: an enum for themes
-
 // ClientSettings: settings specific to a client (stored locally, not per document)
 // LocalDocSettings: settings specific to a client and document name (stored locally, per document)
 // DocSettings: settings specific to a document (stored remotely, per document)
 
 // TODO: plugin enabling should get to choose if local or remote
 
-export type ClientSettings = {
-  theme: string;
+export type ClientSettings = Theme & {
   showKeyBindings: boolean;
   hotkeys: any; // TODO
 };
 
 type ClientSetting = keyof ClientSettings;
 
-const default_client_settings: ClientSettings = {
-  theme: 'default-theme',
-  showKeyBindings: true,
-  hotkeys: {},
-};
+const default_client_settings: ClientSettings =
+  Object.assign({}, defaultTheme, {
+    showKeyBindings: true,
+    hotkeys: {},
+  });
 
 export type LocalDocSettings = {
   dataSource: DataBackends.BackendType;

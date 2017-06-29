@@ -2,8 +2,11 @@ import * as React from 'react';
 
 import { HotkeyMapping } from '../keyMappings';
 import { KeyDefinitions, Motion, Action } from '../keyDefinitions';
+import { getStyles } from '../themes';
+import { ClientStore } from '../datastore';
 
 type HotkeysTableProps = {
+  clientStore: ClientStore;
   keyMap: HotkeyMapping | null;
   definitions: KeyDefinitions;
   ignoreEmpty?: boolean;
@@ -52,8 +55,8 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
                       sequence.map((key, j) => {
                         return (
                           <span key={j}
-                            className='theme-trim theme-bg-primary'
                             style={{
+                              ...getStyles(this.props.clientStore, ['theme-trim', 'theme-bg-primary']),
                               padding: 1,
                               borderRadius: 3,
                               margin: 1,
@@ -97,8 +100,11 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
                   {label}
                 </h5>
                 ,
-                <table key={label + '_table'} className='theme-bg-secondary'
-                       style={{width: '100%'}}
+                <table key={label + '_table'}
+                  style={{
+                    width: '100%',
+                    ...getStyles(this.props.clientStore, ['theme-bg-secondary'])
+                  }}
                 >
                   <tbody>
                     {rows}

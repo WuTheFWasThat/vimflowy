@@ -1,8 +1,11 @@
 import * as React from 'react';
 
 import { PluginsManager, PluginStatus, names as PluginNames, getPlugin } from '../plugins';
+import { getStyles } from '../themes';
+import { ClientStore } from '../datastore';
 
 type Props = {
+  clientStore: ClientStore;
   pluginManager: PluginsManager;
 };
 export default class PluginsTableComponent extends React.Component<Props, {}> {
@@ -12,22 +15,38 @@ export default class PluginsTableComponent extends React.Component<Props, {}> {
       <table style={{width: '100%', borderCollapse: 'collapse'}}>
         <thead>
           <tr>
-            <th className='theme-trim'>
+            <th style={{
+              ...getStyles(this.props.clientStore, ['theme-trim']),
+            }}>
               Plugin
             </th>
-            <th className='theme-trim'>
+            <th style={{
+              ...getStyles(this.props.clientStore, ['theme-trim']),
+            }}>
               Description
             </th>
-            <th className='theme-trim' style={{maxWidth: '10%'}}>
+            <th style={{
+              ...getStyles(this.props.clientStore, ['theme-trim']),
+              maxWidth: '10%',
+            }}>
               Version
             </th>
-            <th className='theme-trim' style={{maxWidth: '15%'}}>
+            <th style={{
+              ...getStyles(this.props.clientStore, ['theme-trim']),
+              maxWidth: '15%',
+            }}>
               Author
             </th>
-            <th className='theme-trim' style={{maxWidth: '10%'}}>
+            <th style={{
+              ...getStyles(this.props.clientStore, ['theme-trim']),
+              maxWidth: '10%',
+            }}>
               Status
             </th>
-            <th className='theme-trim' style={{maxWidth: '20%'}}>
+            <th style={{
+              ...getStyles(this.props.clientStore, ['theme-trim']),
+              maxWidth: '20%',
+            }}>
               Actions
             </th>
           </tr>
@@ -53,8 +72,12 @@ export default class PluginsTableComponent extends React.Component<Props, {}> {
                 }
                 if (btnText) {
                   actions.push(
-                    <div key={btnText} onClick={btnClick}
-                      className='btn theme-trim' style={{width: 60}}>
+                    <div key={btnText} onClick={btnClick} className='btn'
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-trim']),
+                        width: 60
+                      }}
+                    >
                       {btnText}
                     </div>
                   );
@@ -87,34 +110,59 @@ export default class PluginsTableComponent extends React.Component<Props, {}> {
                 const plugin = getPlugin(name) || {};
                 const tdStyle = { padding: 5};
                 return (
-                  <tr key={name} className='theme-bg-secondary'>
-                    <td className='center theme-trim plugin-name'
-                      style={tdStyle}
+                  <tr key={name}
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-bg-secondary'])
+                      }}
+                  >
+                    <td className='center plugin-name'
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-trim']),
+                        ...tdStyle,
+                      }}
                     >
                       { name }
                     </td>
-                    <td className='theme-trim'
-                      style={Object.assign({fontSize: 12}, tdStyle)}
+                    <td
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-trim']),
+                        ...tdStyle,
+                        fontSize: 12
+                      }}
                     >
                       { plugin.description || '' }
                     </td>
-                    <td className='center theme-trim'
-                      style={tdStyle}
+                    <td className='center'
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-trim']),
+                        ...tdStyle
+                      }}
                     >
                       { (plugin.version || '') + '' }
                     </td>
-                    <td className='center theme-trim'
-                      style={Object.assign({fontSize: 12}, tdStyle)}
+                    <td className='center'
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-trim']),
+                        ...tdStyle,
+                        fontSize: 12
+                      }}
                     >
                       { plugin.author || '' }
                     </td>
-                    <td className='center theme-trim'
-                      style={Object.assign({boxShadow: `inset 0px 0px 0px 2px ${color}`}, tdStyle)}
+                    <td className='center'
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-trim']),
+                        ...tdStyle,
+                       boxShadow: `inset 0px 0px 0px 2px ${color}`
+                      }}
                     >
                       {statusText}
                     </td>
-                    <td className='center theme-trim'
-                      style={tdStyle}
+                    <td className='center'
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-trim']),
+                        ...tdStyle,
+                      }}
                     >
                       {actions}
                     </td>

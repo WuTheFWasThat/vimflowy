@@ -5,6 +5,7 @@ import * as $ from 'jquery';
 import Path from '../../assets/ts/path';
 import { registerPlugin } from '../../assets/ts/plugins';
 import * as browser_utils from '../../assets/ts/utils/browser';
+import { getStyles } from '../../assets/ts/themes';
 
 type EasyMotionMappings = {
   key_to_path: {[key: string]: Path},
@@ -128,8 +129,9 @@ registerPlugin(
       if (EASY_MOTION_MAPPINGS !== null) {
         if (ancestry_str in EASY_MOTION_MAPPINGS.path_to_key) {
           bullet = (
-            <span key='easymotion' style={{fontWeight: 'bold'}}
-                  className='bullet theme-text-accent'>
+            <span key='easymotion' className='bullet' style={{
+              ...getStyles(api.session.clientStore, ['theme-text-accent'])
+            }}>
               {EASY_MOTION_MAPPINGS.path_to_key[ancestry_str]}
             </span>
           );

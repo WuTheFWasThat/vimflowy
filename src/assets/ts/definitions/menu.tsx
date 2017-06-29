@@ -11,9 +11,9 @@ async function start_search(searchRoot: Path, session: Session) {
     const results = await session.document.search(searchRoot, text);
     return Promise.all(
       results.map(async ({ path, matches }) => {
-        const highlights: {[column: number]: boolean} = {};
+        const accents: {[column: number]: boolean} = {};
         matches.forEach((i) => {
-          highlights[i] = true;
+          accents[i] = true;
         });
         return {
           contents: await session.document.getLine(path.row),
@@ -38,7 +38,7 @@ async function start_search(searchRoot: Path, session: Session) {
               </span>
             );
           },
-          renderOptions: { highlights },
+          renderOptions: { accents },
           fn: async () => {
             await session.zoomInto(path);
             await session.cursor.setPath(path);
