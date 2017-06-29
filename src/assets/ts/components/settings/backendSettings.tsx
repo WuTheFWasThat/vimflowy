@@ -20,69 +20,33 @@ type State = {
 export default class BackendSettingsComponent extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
+
+    const clientStore = props.clientStore;
     this.state = {
       backendType: props.initialBackendType,
-      firebaseId: '',
-      firebaseApiKey: '',
-      firebaseUserEmail: '',
-      firebaseUserPassword: '',
-      socketServerHost: '',
-      socketServerPassword: '',
-      socketServerDocument: '',
+      firebaseId: clientStore.getDocSetting('firebaseId') || '',
+      firebaseApiKey: clientStore.getDocSetting('firebaseApiKey') || '',
+      firebaseUserEmail: clientStore.getDocSetting('firebaseUserEmail') || '',
+      firebaseUserPassword: clientStore.getDocSetting('firebaseUserPassword') || '',
+      socketServerHost: clientStore.getDocSetting('socketServerHost') || '',
+      socketServerPassword: clientStore.getDocSetting('socketServerPassword') || '',
+      socketServerDocument: clientStore.getDocSetting('socketServerDocument') || '',
     };
-  }
-
-  public componentDidMount() {
-    (async () => {
-      const clientStore = this.props.clientStore;
-      const [
-        firebaseId, firebaseApiKey, firebaseUserEmail, firebaseUserPassword,
-        socketServerHost, socketServerPassword, socketServerDocument,
-      ] = await Promise.all([
-        clientStore.getDocSetting('firebaseId'),
-        clientStore.getDocSetting('firebaseApiKey'),
-        clientStore.getDocSetting('firebaseUserEmail'),
-        clientStore.getDocSetting('firebaseUserPassword'),
-        clientStore.getDocSetting('socketServerHost'),
-        clientStore.getDocSetting('socketServerPassword'),
-        clientStore.getDocSetting('socketServerDocument'),
-      ]);
-      this.setState({
-        firebaseId,
-        firebaseApiKey,
-        firebaseUserEmail,
-        firebaseUserPassword,
-        socketServerHost,
-        socketServerPassword,
-        socketServerDocument,
-      } as State);
-    })();
   }
 
   private async saveDataSettings() {
     const clientStore = this.props.clientStore;
     const backendType = this.state.backendType;
-    await clientStore.setDocSetting('dataSource', backendType);
+    clientStore.setDocSetting('dataSource', backendType);
     if (backendType === 'firebase') {
-      const firebaseId = this.state.firebaseId;
-      const firebaseApiKey = this.state.firebaseApiKey;
-      const firebaseUserEmail = this.state.firebaseUserEmail;
-      const firebaseUserPassword = this.state.firebaseUserPassword;
-      await Promise.all([
-        clientStore.setDocSetting('firebaseId', firebaseId),
-        clientStore.setDocSetting('firebaseApiKey', firebaseApiKey),
-        clientStore.setDocSetting('firebaseUserEmail', firebaseUserEmail),
-        clientStore.setDocSetting('firebaseUserPassword', firebaseUserPassword),
-      ]);
+      clientStore.setDocSetting('firebaseId', this.state.firebaseId);
+      clientStore.setDocSetting('firebaseApiKey', this.state.firebaseApiKey);
+      clientStore.setDocSetting('firebaseUserEmail', this.state.firebaseUserEmail);
+      clientStore.setDocSetting('firebaseUserPassword', this.state.firebaseUserPassword);
     } else if (backendType === 'socketserver') {
-      const socketServerHost = this.state.socketServerHost;
-      const socketServerPassword = this.state.socketServerPassword;
-      const socketServerDocument = this.state.socketServerDocument;
-      await Promise.all([
-        clientStore.setDocSetting('socketServerHost', socketServerHost),
-        clientStore.setDocSetting('socketServerPassword', socketServerPassword),
-        clientStore.setDocSetting('socketServerDocument', socketServerDocument),
-      ]);
+      clientStore.setDocSetting('socketServerHost', this.state.socketServerHost);
+      clientStore.setDocSetting('socketServerPassword', this.state.socketServerPassword);
+      clientStore.setDocSetting('socketServerDocument', this.state.socketServerDocument);
     }
     window.location.reload();
   }

@@ -215,7 +215,6 @@ export default class SettingsComponent extends React.Component<Props, State> {
                     } else {
                       session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
                     }
-                    // NOTE: this is fire and forget
                     session.clientStore.setClientSetting('hotkeys', hotkey_settings);
                   }}
                   onError={(error) => {

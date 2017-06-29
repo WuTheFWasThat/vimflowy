@@ -25,76 +25,61 @@ export default class DataBackend {
     throw new errors.NotImplemented();
   }
 
-  public async set(
-    _key: string, _value: string
-  ): Promise<void> {
+  public async set(_key: string, _value: string): Promise<void> {
     throw new errors.NotImplemented();
   }
 }
 
-export class InMemory extends DataBackend {
+export class SynchronousDataBackend {
+  public get(_key: string): string | null {
+    throw new errors.NotImplemented();
+  }
+
+  public set(_key: string, _value: string): void {
+    throw new errors.NotImplemented();
+  }
+}
+
+export class SynchronousInMemory extends SynchronousDataBackend {
   private cache: {[key: string]: any} = {};
   constructor() {
     super();
   }
 
-  public async get(key: string): Promise<string | null> {
+  public get(key: string): string | null {
     if (key in this.cache) {
       return this.cache[key];
     }
     return null;
   }
 
-  public async set(key: string, value: string): Promise<void> {
+  public set(key: string, value: string): void {
     this.cache[key] = value;
   }
 }
 
-export class LocalStorageLazy extends DataBackend {
-  private lastSave: number;
-  private trackSaves: boolean;
-  private docname: string;
-
-  public _lastSaveKey_(): string {
-    return `${internalPrefix}${this.docname}:lastSave`;
-  }
-
-  constructor(docname = '', trackSaves = false) {
+export class InMemory extends DataBackend {
+  private sync_backend: SynchronousInMemory;
+  constructor() {
     super();
-    this.docname = docname;
-    this.trackSaves = trackSaves;
-    if (this.trackSaves) {
-      this.lastSave = Date.now();
-    }
+    this.sync_backend = new SynchronousInMemory();
   }
 
   public async get(key: string): Promise<string | null> {
-    return this._getLocalStorage_(key);
+    return this.sync_backend.get(key);
   }
 
   public async set(key: string, value: string): Promise<void> {
-    return this._setLocalStorage_(key, value);
+    this.sync_backend.set(key, value);
+  }
+}
+
+export class SynchronousLocalStorageBackend extends SynchronousDataBackend {
+  constructor() {
+    super();
   }
 
-  private _setLocalStorage_(
-    key: string, value: any,
-    options: {doesNotAffectLastSave?: boolean} = {}
-  ): void {
-    if (this.trackSaves) {
-      if (this.getLastSave() > this.lastSave) {
-        throw new errors.MultipleUsersError();
-      }
-
-      if (!options.doesNotAffectLastSave) {
-        this.lastSave = Date.now();
-        localStorage.setItem(this._lastSaveKey_(), this.lastSave + '');
-      }
-    }
-
-    return localStorage.setItem(key, value);
-  }
-
-  private _getLocalStorage_(key: string): any | null {
+  public get(key: string): string | null {
     const val = localStorage.getItem(key);
     if ((val == null) || (val === 'undefined')) {
       return null;
@@ -102,10 +87,44 @@ export class LocalStorageLazy extends DataBackend {
     return val;
   }
 
+  public set(key: string, value: string): void {
+    return localStorage.setItem(key, value);
+  }
+}
+
+export class LocalStorageBackend extends DataBackend {
+  private lastSave: number;
+  private docname: string;
+  private sync_backend: SynchronousLocalStorageBackend;
+
+  private _lastSaveKey_(): string {
+    return `${internalPrefix}${this.docname}:lastSave`;
+  }
+
+  constructor(docname = '') {
+    super();
+    this.docname = docname;
+    this.lastSave = Date.now();
+    this.sync_backend = new SynchronousLocalStorageBackend();
+  }
+
+  public async get(key: string): Promise<string | null> {
+    return this.sync_backend.get(key);
+  }
+
+  public async set(key: string, value: string): Promise<void> {
+    if (this.getLastSave() > this.lastSave) {
+      throw new errors.MultipleUsersError();
+    }
+    this.lastSave = Date.now();
+    this.sync_backend.set(this._lastSaveKey_(), this.lastSave + '');
+    this.sync_backend.set(key, value);
+  }
+
   // determine last time saved (for multiple tab detection)
   // note that this doesn't cache!
   public getLastSave(): number {
-    return JSON.parse(this._getLocalStorage_(this._lastSaveKey_()) || '0');
+    return JSON.parse(this.sync_backend.get(this._lastSaveKey_()) || '0');
   }
 }
 

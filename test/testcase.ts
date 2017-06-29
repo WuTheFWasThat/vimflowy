@@ -4,7 +4,7 @@ import 'mocha';
 import * as _ from 'lodash';
 
 import { DocumentStore, ClientStore } from '../src/assets/ts/datastore';
-import * as DataBackends from '../src/assets/ts/data_backend';
+import { InMemory, SynchronousInMemory } from '../src/assets/ts/data_backend';
 import Document from '../src/assets/ts/document';
 import Session from '../src/assets/ts/session';
 import Register, { RegisterTypes, SerializedRegister } from '../src/assets/ts/register';
@@ -45,9 +45,9 @@ class TestCase {
   protected prom: Promise<void>;
 
   constructor(serialized: Array<SerializedBlock> = [''], options: TestCaseOptions = {}) {
-    this.docStore = new DocumentStore(new DataBackends.InMemory());
+    this.docStore = new DocumentStore(new InMemory());
     this.document = new Document(this.docStore);
-    this.clientStore = new ClientStore(new DataBackends.InMemory());
+    this.clientStore = new ClientStore(new SynchronousInMemory());
 
     this.plugins = options.plugins || [];
 

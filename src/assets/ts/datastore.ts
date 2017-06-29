@@ -58,6 +58,104 @@ const default_local_doc_settings: LocalDocSettings = {
   socketServerDocument: null,
 };
 
+export class ClientStore {
+  private prefix: string;
+  private docname: string;
+  private backend: DataBackends.SynchronousDataBackend;
+  private cache: {[key: string]: any} = {};
+  private use_cache: boolean = true;
+
+  constructor(backend: DataBackends.SynchronousDataBackend, docname = '') {
+    this.backend = backend;
+    this.docname = docname;
+    this.prefix = `${docname}save`;
+  }
+
+  private _get<T>(key: string, default_value: T): T {
+    if (this.use_cache) {
+      if (key in this.cache) {
+        return this.cache[key];
+      }
+    }
+    let value: any = this.backend.get(key);
+    try {
+      value = JSON.parse(value);
+    } catch (e) { /* do nothing - this shouldn't happen */ }
+    if (value === null) {
+      value = default_value;
+      logger.debug('tried getting', key, 'defaulted to', default_value);
+    } else {
+      logger.debug('got from storage', key, value);
+    }
+    if (this.use_cache) {
+      this.cache[key] = value;
+    }
+    return value;
+  }
+
+  private _set(key: string, value: any): void {
+    if (this.use_cache) {
+      this.cache[key] = value;
+    }
+    logger.debug('setting to storage', key, value);
+    this.backend.set(key, JSON.stringify(value));
+  }
+
+  // TODO: also have local pluginData
+
+  // no prefix, meaning it's global
+  private _settingKey_(setting: string): string {
+    return `settings:${setting}`;
+  }
+
+  // not using regular prefix, for backwards compatibility
+  private _docSettingKey_(setting: string): string {
+    return `settings:${this.docname}:${setting}`;
+  }
+
+  private _lastViewrootKey_(): string {
+    return `${this.prefix}:lastviewroot2`;
+  }
+  private _macrosKey_(): string {
+    return `${this.prefix}:macros`;
+  }
+
+  // get mapping of macro_key -> macro
+  public getMacros(): MacroMap {
+    return this._get(this._macrosKey_(), {});
+  }
+
+  // set mapping of macro_key -> macro
+  public setMacros(macros: MacroMap) {
+    this._set(this._macrosKey_(), macros);
+  }
+
+  public getClientSetting<S extends ClientSetting>(setting: S): ClientSettings[S] {
+    return this._get(this._settingKey_(setting), default_client_settings[setting]);
+  }
+
+  public setClientSetting<S extends ClientSetting>(setting: S, value: ClientSettings[S]) {
+    this._set(this._settingKey_(setting), value);
+  }
+
+  public getDocSetting<S extends LocalDocSetting>(setting: S): LocalDocSettings[S] {
+    const default_value = default_local_doc_settings[setting];
+    return this._get(this._docSettingKey_(setting), default_value);
+  }
+
+  public setDocSetting<S extends LocalDocSetting>(setting: S, value: LocalDocSettings[S]) {
+    this._set(this._docSettingKey_(setting), value);
+  }
+
+  // get last view (for page reload)
+  public setLastViewRoot(ancestry: SerializedPath) {
+    this._set(this._lastViewrootKey_(), ancestry);
+  }
+  public getLastViewRoot(): SerializedPath {
+    return this._get(this._lastViewrootKey_(), []);
+  }
+}
+
 export type DocSettings = {
   enabledPlugins: Array<string>,
 };
@@ -102,9 +200,10 @@ const decodeParents = (parents: number | Array<number>): Array<number> => {
   return parents;
 };
 
-class DataStore {
-  protected prefix: string;
-  protected docname: string;
+export class DocumentStore {
+  private lastId: number | null;
+  private prefix: string;
+  private docname: string;
   private cache: {[key: string]: any} = {};
   private use_cache: boolean = true;
   public events: EventEmitter = new EventEmitter();
@@ -114,9 +213,10 @@ class DataStore {
     this.backend = backend;
     this.docname = docname;
     this.prefix = `${docname}save`;
+    this.lastId = null;
   }
 
-  protected async _get<T>(
+  private async _get<T>(
     key: string,
     default_value: T,
     decode: (value: any) => T = fn_utils.id
@@ -129,18 +229,13 @@ class DataStore {
       }
     }
     let value: any = await this.backend.get(key);
-    if (value != null) {
-      // NOTE: only need try catch for backwards compatibility
-      try {
-        // need typeof check because of backwards compatibility plus stupidness like
-        // JSON.parse([106]) === 106
-        if (typeof value === 'string') {
-          value = JSON.parse(value);
-        }
-      } catch (e) {
-        // do nothing
+    try {
+      // need typeof check because of backwards compatibility plus stupidness like
+      // JSON.parse([106]) === 106
+      if (typeof value === 'string') {
+        value = JSON.parse(value);
       }
-    }
+    } catch (e) { /* do nothing - this should only happen for historical reasons */ }
     let decodedValue: T;
     if (value === null) {
       decodedValue = default_value;
@@ -155,7 +250,7 @@ class DataStore {
     return decodedValue;
   }
 
-  protected async _set(
+  private async _set(
     key: string, value: any, encode: (value: any) => any = fn_utils.id
   ): Promise<void> {
     if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
@@ -166,77 +261,9 @@ class DataStore {
     const encodedValue = encode(value);
     logger.debug('setting to storage', key, encodedValue);
     // NOTE: fire and forget
-    this.backend.set(key, JSON.stringify(encodedValue));
-  }
-}
-
-// TODO: make this API synchronous
-export class ClientStore extends DataStore {
-  constructor(backend: DataBackend, docname = '') {
-    super(backend, docname);
-  }
-
-  // TODO: also have local pluginData
-
-  // no prefix, meaning it's global
-  private _settingKey_(setting: string): string {
-    return `settings:${setting}`;
-  }
-
-  // not using regular prefix, for backwards compatibility
-  private _docSettingKey_(setting: string): string {
-    return `settings:${this.docname}:${setting}`;
-  }
-
-  private _lastViewrootKey_(): string {
-    return `${this.prefix}:lastviewroot2`;
-  }
-  private _macrosKey_(): string {
-    return `${this.prefix}:macros`;
-  }
-
-  // get mapping of macro_key -> macro
-  public async getMacros(): Promise<MacroMap> {
-    return await this._get(this._macrosKey_(), {});
-  }
-
-  // set mapping of macro_key -> macro
-  public async setMacros(macros: MacroMap): Promise<void> {
-    return await this._set(this._macrosKey_(), macros);
-  }
-
-  public async getClientSetting<S extends ClientSetting>(setting: S): Promise<ClientSettings[S]> {
-    return await this._get(this._settingKey_(setting), default_client_settings[setting]);
-  }
-
-  public async setClientSetting<S extends ClientSetting>(setting: S, value: ClientSettings[S]): Promise<void> {
-    return await this._set(this._settingKey_(setting), value);
-  }
-
-  public async getDocSetting<S extends LocalDocSetting>(setting: S): Promise<LocalDocSettings[S]> {
-    const default_value = default_local_doc_settings[setting];
-    return await this._get(this._docSettingKey_(setting), default_value);
-  }
-
-  public async setDocSetting<S extends LocalDocSetting>(setting: S, value: LocalDocSettings[S]): Promise<void> {
-    return await this._set(this._docSettingKey_(setting), value);
-  }
-
-  // get last view (for page reload)
-  public async setLastViewRoot(ancestry: SerializedPath): Promise<void> {
-    await this._set(this._lastViewrootKey_(), ancestry);
-  }
-  public async getLastViewRoot(): Promise<SerializedPath> {
-    return await this._get(this._lastViewrootKey_(), []);
-  }
-}
-
-export class DocumentStore extends DataStore {
-  private lastId: number | null;
-
-  constructor(backend: DataBackend, docname = '') {
-    super(backend, docname);
-    this.lastId = null;
+    this.backend.set(key, JSON.stringify(encodedValue)).catch((err) => {
+      setTimeout(() => { throw err; });
+    });
   }
 
   private _lastIDKey_() {

@@ -31,7 +31,10 @@ import KeyEmitter from './keyEmitter';
 import KeyHandler from './keyHandler';
 import KeyMappings from './keyMappings';
 import { ClientStore, DocumentStore } from './datastore';
-import * as DataBackends from './data_backend';
+import {
+  BackendType, SynchronousInMemory, SynchronousLocalStorageBackend,
+  InMemory, LocalStorageBackend, FirebaseBackend, ClientSocketBackend
+} from './data_backend';
 import Document from './document';
 import { PluginsManager } from './plugins';
 import Path from './path';
@@ -98,34 +101,27 @@ $(document).ready(async () => {
   const noLocalStorage = (typeof localStorage === 'undefined' || localStorage === null);
   let clientStore: ClientStore;
   let docStore: DocumentStore;
-  let backend_type: DataBackends.BackendType;
+  let backend_type: BackendType;
   let doc;
 
   // TODO: consider using modernizr for feature detection
   // probably also want to check flexbox support
   if (noLocalStorage) {
     alert('You need local storage support for data to be persisted!');
-    clientStore = new ClientStore(new DataBackends.InMemory());
+    clientStore = new ClientStore(new SynchronousInMemory());
     backend_type = 'inmemory';
   } else {
-    clientStore = new ClientStore(new DataBackends.LocalStorageLazy(), docname);
-    backend_type = await clientStore.getDocSetting('dataSource');
+    clientStore = new ClientStore(new SynchronousLocalStorageBackend(), docname);
+    backend_type = clientStore.getDocSetting('dataSource');
   }
 
   const config: Config = vimConfig;
 
   if (backend_type === 'firebase') {
-    const [
-      firebaseId,
-      firebaseApiKey,
-      firebaseUserEmail,
-      firebaseUserPassword,
-    ] = await Promise.all([
-      clientStore.getDocSetting('firebaseId'),
-      clientStore.getDocSetting('firebaseApiKey'),
-      clientStore.getDocSetting('firebaseUserEmail'),
-      clientStore.getDocSetting('firebaseUserPassword'),
-    ]);
+    const firebaseId = clientStore.getDocSetting('firebaseId');
+    const firebaseApiKey = clientStore.getDocSetting('firebaseApiKey');
+    const firebaseUserEmail = clientStore.getDocSetting('firebaseUserEmail');
+    const firebaseUserPassword = clientStore.getDocSetting('firebaseUserPassword');
 
     try {
       if (!firebaseId) {
@@ -134,7 +130,7 @@ $(document).ready(async () => {
       if (!firebaseApiKey) {
         throw new Error('No firebase API key found');
       }
-      const fb_backend = new DataBackends.FirebaseBackend(docname, firebaseId, firebaseApiKey);
+      const fb_backend = new FirebaseBackend(docname, firebaseId, firebaseApiKey);
       docStore = new DocumentStore(fb_backend, docname);
       await fb_backend.init(firebaseUserEmail || '', firebaseUserPassword || '');
     } catch (e) {
@@ -149,26 +145,20 @@ $(document).ready(async () => {
       `);
 
       backend_type = 'local';
-      docStore = new DocumentStore(new DataBackends.LocalStorageLazy(docname, true), docname);
+      docStore = new DocumentStore(new LocalStorageBackend(docname), docname);
     }
   } else if (backend_type === 'inmemory') {
-    docStore = new DocumentStore(new DataBackends.InMemory());
+    docStore = new DocumentStore(new InMemory());
   } else if (backend_type === 'socketserver') {
-    const [
-      socketServerHost,
-      socketServerPassword,
-      socketServerDocument,
-    ] = await Promise.all([
-      clientStore.getDocSetting('socketServerHost'),
-      clientStore.getDocSetting('socketServerPassword'),
-      clientStore.getDocSetting('socketServerDocument'),
-    ]);
+    const socketServerHost = clientStore.getDocSetting('socketServerHost');
+    const socketServerPassword = clientStore.getDocSetting('socketServerPassword');
+    const socketServerDocument = clientStore.getDocSetting('socketServerDocument');
 
     try {
       if (!socketServerHost) {
         throw new Error('No socket server host found');
       }
-      const socket_backend = new DataBackends.ClientSocketBackend();
+      const socket_backend = new ClientSocketBackend();
       // NOTE: we don't pass docname to DocumentStore since we want keys
       // to not have prefixes
       docStore = new DocumentStore(socket_backend);
@@ -186,10 +176,10 @@ $(document).ready(async () => {
       `);
 
       backend_type = 'local';
-      docStore = new DocumentStore(new DataBackends.LocalStorageLazy(docname, true), docname);
+      docStore = new DocumentStore(new LocalStorageBackend(docname), docname);
     }
   } else {
-    docStore = new DocumentStore(new DataBackends.LocalStorageLazy(docname, true), docname);
+    docStore = new DocumentStore(new LocalStorageBackend(docname), docname);
   }
 
   doc = new Document(docStore, docname);
@@ -204,9 +194,9 @@ $(document).ready(async () => {
     $('body').attr('id', theme);
     clientStore.setClientSetting('theme', theme);
   };
-  const initialTheme = await clientStore.getClientSetting('theme');
+  const initialTheme = clientStore.getClientSetting('theme');
   changeStyle(initialTheme);
-  let showingKeyBindings = await clientStore.getClientSetting('showKeyBindings');
+  let showingKeyBindings = clientStore.getClientSetting('showKeyBindings');
 
   doc.store.events.on('saved', () => {
     saveMessage = { message: 'Saved!', text_class: 'text-success' };
@@ -218,7 +208,7 @@ $(document).ready(async () => {
   });
 
   // hotkeys and key bindings
-  const saved_mappings = await clientStore.getClientSetting('hotkeys');
+  const saved_mappings = clientStore.getClientSetting('hotkeys');
   const mappings = KeyMappings.merge(config.defaultMappings, new KeyMappings(saved_mappings));
   const keyBindings = new KeyBindings(keyDefinitions, mappings);
 

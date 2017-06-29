@@ -3,7 +3,7 @@ import * as errors from './utils/errors';
 import EventEmitter from './utils/eventEmitter';
 import logger from './utils/logger';
 import { ClientStore } from './datastore';
-import { InMemory } from './data_backend';
+import { SynchronousInMemory } from './data_backend';
 import * as mutations from './mutations';
 import Cursor from './cursor';
 import Register from './register';
@@ -1349,7 +1349,7 @@ export class InMemorySession extends Session {
     const doc = new InMemoryDocument();
     doc.loadEmpty(); // NOTE: should be async but is okay since in-memory
     super(
-      new ClientStore(new InMemory()), doc, options
+      new ClientStore(new SynchronousInMemory()), doc, options
     );
   }
 }
