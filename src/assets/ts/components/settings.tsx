@@ -12,6 +12,7 @@ import Document from '../document';
 import { DocumentStore, ClientStore } from '../datastore';
 import { InMemory } from '../data_backend';
 import Session from '../session';
+import Menu from '../menu';
 import Config from '../config';
 import KeyBindings from '../keyBindings';
 import KeyMappings from '../keyMappings';
@@ -21,6 +22,7 @@ import { Theme, getStyles, themes } from '../themes';
 
 import SessionComponent from './session';
 import SpinnerComponent from './spinner';
+import MenuComponent from './menu';
 import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
 import BackendSettingsComponent from './settings/backendSettings';
@@ -59,6 +61,7 @@ function getCurrentTheme(clientStore: ClientStore) {
 export default class SettingsComponent extends React.Component<Props, State> {
   private keyBindingsUpdate: () => void;
   private preview_session: Session;
+  private preview_menu: Menu;
   private initial_theme: Theme;
 
   constructor(props: Props) {
@@ -99,6 +102,30 @@ export default class SettingsComponent extends React.Component<Props, State> {
       await this.preview_session.setMode('VISUAL');
       await this.preview_session.anchor.setPosition(cursorPath, 4);
       this.preview_session.document.cache.clear();
+
+      function makeAccents(min: number, max: number) {
+        const accents: {[key: number]: boolean} = {};
+        for (let i = min; i <= max; i++) { accents[i] = true; }
+        return accents;
+      }
+
+      this.preview_menu = new Menu(async (_query) => {
+        return [
+          {
+            contents: 'Some blah result'.split(''),
+            renderOptions: { accents: makeAccents(5, 8) },
+            fn: () => null
+          },
+          {
+            contents: 'Another blah result'.split(''),
+            renderOptions: { accents: makeAccents(8, 11) },
+            fn: () => null
+          },
+        ];
+      });
+      await this.preview_menu.session.addCharsAtCursor('blah'.split(''));
+      await this.preview_menu.update();
+
       this.forceUpdate();
     })();
   }
@@ -404,6 +431,18 @@ export default class SettingsComponent extends React.Component<Props, State> {
               }}>
                 { this.preview_session ?
                   <SessionComponent
+                    session={this.preview_session}
+                  /> : <SpinnerComponent/>
+                }
+              </div>
+
+              <div className='settings-content' style={{
+                ...getStyles(session.clientStore, ['theme-trim-accent']),
+                padding: 10, marginTop: 10, pointerEvents: 'none'
+              }}>
+                { this.preview_menu ?
+                  <MenuComponent
+                    menu={this.preview_menu}
                     session={this.preview_session}
                   /> : <SpinnerComponent/>
                 }
