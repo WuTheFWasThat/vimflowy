@@ -29,10 +29,11 @@ import BackendSettingsComponent from './settings/backendSettings';
 import FileInput from './fileInput';
 
 enum TABS {
-  MAIN,
+  DATA,
   THEME,
   HOTKEYS,
   PLUGIN,
+  ABOUT,
 };
 
 type Props = {
@@ -67,7 +68,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      currentTab: TABS.MAIN,
+      currentTab: TABS.DATA,
       themeProperty: 'theme-bg-primary',
       presetTheme: 'Default',
     };
@@ -184,8 +185,8 @@ export default class SettingsComponent extends React.Component<Props, State> {
 
     const tabs_info = [
       {
-        tab: TABS.MAIN,
-        heading: 'General settings',
+        tab: TABS.DATA,
+        heading: 'Data',
         div: (
           <div>
             <div className='settings-header'
@@ -280,23 +281,6 @@ export default class SettingsComponent extends React.Component<Props, State> {
                   Import from file
                 </div>
               </FileInput>
-            </div>
-
-            <div className='settings-header'
-              style={{
-                ...getStyles(session.clientStore, ['theme-bg-secondary', 'theme-trim'])
-              }}
-              >
-              Info
-            </div>
-            <div className='settings-content'>
-              For more info, or to contact the maintainers, please visit
-              {' '}
-              <a href='https://github.com/WuTheFWasThat/vimflowy' style={{
-                ...getStyles(session.clientStore, ['theme-link'])
-              }}>
-                the github website
-              </a>.
             </div>
           </div>
         ),
@@ -542,6 +526,21 @@ export default class SettingsComponent extends React.Component<Props, State> {
             clientStore={session.clientStore}
             pluginManager={this.props.pluginManager}
           />
+        ),
+      },
+      {
+        tab: TABS.ABOUT,
+        heading: 'About',
+        div: (
+          <div>
+            For more info, or to contact the maintainers, please visit
+            {' '}
+            <a href='https://github.com/WuTheFWasThat/vimflowy' style={{
+              ...getStyles(session.clientStore, ['theme-link'])
+            }}>
+              the github website
+            </a>.
+          </div>
         ),
       },
     ];
