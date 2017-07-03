@@ -20,6 +20,9 @@ export default class Queue<T> {
   public dequeue(): Promise<T> {
     if (!this.empty()) {
       const val = this.queue.shift();
+      if (val === undefined) {
+        throw new Error('Unexpected empty queue');
+      }
       return Promise.resolve(val);
     }
 

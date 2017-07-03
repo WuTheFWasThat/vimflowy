@@ -3,14 +3,13 @@
     "target": "ES5",
     "lib": ["dom", "es2015", "esnext.asynciterable"],
     "jsx": "react",
-    "moduleResolution": "node",
     "types": [],
+    "moduleResolution": "node",
     "allowJs": false,
     "strict": true,
     "experimentalDecorators": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "noImplicitReturns": true
-  },
-  "exclude": ["node_modules"]
+  }
 }
