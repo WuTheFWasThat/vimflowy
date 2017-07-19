@@ -28,6 +28,11 @@ When source code changes, assets should be automatically (incrementally) recompi
 Note that you may make new documents simply by visiting
 `http://localhost:3000?doc=<documentname>#`
 
+You may notice that the development version is a bit slow.
+If you're looking to run vimflowy for personal usage (not development), you'll want to compile the assets in production mode:
+
+    npm start -- --build --prod
+
 For a full set of options, see
 
     npm start -- --help
