@@ -29,7 +29,7 @@ This is the default option, storing data using modern browsers' HTML5 localStora
 With Firebase, you can let Google host your data for you remotely.
 Firebase is free, but you have to pay once your document is huge, or if you want automated backups.
 
-See [here](docs/storage/Firebase.md) for details on how to set this up.
+See [here](Firebase.md) for details on how to set this up.
 
 ### SQLite (self-hosting)
 
@@ -38,7 +38,7 @@ You can choose to host it on your own computer, or on a remote server (if you wa
 
 Currently, the vimflowy server stores the data in SQLite (which stores data in a file), but other methods could be added in the future.
 
-See [here](docs/storage/SQLite.md) for details on how to set this up.
+See [here](SQLite.md) for details on how to set this up.
 
 ## Other backends
 
