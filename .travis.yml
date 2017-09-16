@@ -1,11 +1,26 @@
+sudo: true
+dist: trusty
 language: node_js
 node_js:
   - "6"
   - "6.1"
-install:
-- npm install
-script:
-- npm run lint
-- npm run typecheck
-- npm test
-- npm run build
+
+jobs:
+  include:
+    - stage: Test
+      install:
+        - npm install
+      script:
+        - npm run lint
+        - npm run typecheck
+        - npm test
+        - npm run build
+    - stage: Build docker image
+      script:
+        - docker build -t vimflowy/vimflowy .
+        - docker images
+    - stage: Deploy docker image
+      script:
+        - docker tag  "vimflowy/vimflowy:latest" "vimflowy/vimflowy:$(jq .version package.json)"
+        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        - docker push vimflowy/vimflowy
