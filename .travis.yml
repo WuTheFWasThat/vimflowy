@@ -2,28 +2,30 @@ sudo: true
 dist: trusty
 language: node_js
 node_js:
-  - "6"
-  - "6.1"
-
+- '6'
+- '6.1'
 jobs:
   include:
-    - stage: Test
-      install:
-        - npm install
-      script:
-        - npm run lint
-        - npm run typecheck
-        - npm test
-        - npm run build
-    - stage: Build docker image
-      before_install: skip
-      script:
-        - docker build -t vimflowy/vimflowy .
-        - docker images
-    - stage: Deploy docker image
-      before_install: skip
-      script: skip
-      deploy:
-        - docker tag  "vimflowy/vimflowy:latest" "vimflowy/vimflowy:$(jq -r .version package.json)"
-        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker push vimflowy/vimflowy
+  - stage: Test
+    install:
+    - npm install
+    script:
+    - npm run lint
+    - npm run typecheck
+    - npm test
+    - npm run build
+  - stage: Build docker image
+    before_install: skip
+    script:
+    - docker build -t vimflowy/vimflowy .
+    - docker images
+  - stage: Deploy docker image
+    before_install: skip
+    script:
+    - docker tag  "vimflowy/vimflowy:latest" "vimflowy/vimflowy:$(jq -r .version package.json)"
+    - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+    - docker push vimflowy/vimflowy
+env:
+  global:
+    secure: 
+      JKq2iD0cLHleu+dhXzj7UqGEkqc46xxaJqUMahQRMAXPM9JFINaLE4UgG6ZcxtDDsQ1YCrHjCZDwAL1dktNzE1DXCZ/nv/vX9EeNuJSh0JaQuTh3TSAuYZ/Sip7lRLnDoluahpz1xU/I2aKrBUN7yTB5CRB1C3qBa6pfhcgfrch4TjsK4RIHms5Vx8f9933CIeelVgJsi/5da24K/MhBvzPyY13wqLt9Ja3T4VXZMIiM1iV70YPDeI2t23wIHm1/4OWHUeISrZQmsnN8wLiH20W5dq2Kz5xony6fuvUaev/5llF4Q6kQ2G7Nm+Fl+EBY5UIalpo2MvpJ5ggwRwN9BjjdxOjug3153BKGyU1Lglhvc1b9E+U1zlcS0Vjecm1hIbE64jHqsYrX9Sh9tEELbS9WgVH5G7qaeLBxkkGyr8QmQx9iEXn+VOZFxtkSjnSGaC2ruOIJESzqnHhbv6ruo/gERBfaTNKG46MQSUS9AmvpmSNkvvhHdAfVTgyfABt2XZlFQ4ZoOoNFd9TkRD9yAqPKXRBWm0v+6GC/+Tsp/P3FgsvcppXYIwKn5cxtVV0G7BHLCdoRHfpQZo52SzvGPEe0HnBLJoCR8WALhzowhobkfm7D1YUx7lzzQxiRgsOd1S4O6Oayw5AdhKE64IjDjF6dYz1b9C82tD+cPZNJC2Q=
