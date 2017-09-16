@@ -14,14 +14,12 @@ jobs:
     - npm run typecheck
     - npm test
     - npm run build
-  - stage: Build docker image
+    - docker build -t vimflowy/vimflowy .
+  - stage: 'Build & deploy docker image'
     before_install: skip
     script:
     - docker build -t vimflowy/vimflowy .
     - docker images
-  - stage: Deploy docker image
-    before_install: skip
-    script:
     - docker tag  "vimflowy/vimflowy:latest" "vimflowy/vimflowy:$(jq -r .version package.json)"
     - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
     - docker push vimflowy/vimflowy
