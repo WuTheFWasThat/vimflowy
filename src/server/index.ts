@@ -90,7 +90,7 @@ async function main(args: any) {
         password: args.password,
       };
       makeSocketServer(server, options);
-      server.listen(wsPort, (err: Error) => {
+      server.listen(wsPort, 'localhost', (err: Error) => {
         if (err) { return logger.error(err); }
         logger.info('Internal server listening on http://localhost:%d', server.address().port);
       });

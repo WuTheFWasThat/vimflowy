@@ -1,5 +1,5 @@
 node_modules
 npm-debug.log
-static
+static/build
 dist
 .sass-cache
