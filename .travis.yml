@@ -1,7 +1,7 @@
 language: node_js
 node_js:
-  - "6"
-  - "6.1"
+- '6'
+- '6.1'
 install:
 - npm install
 script:
@@ -9,3 +9,6 @@ script:
 - npm run typecheck
 - npm test
 - npm run build
+env:
+  matrix:
+  - secure: RfPC7UfHy73t2nRXTMKNfksRJVNvl1khYS8DUHb5E+E2/lySBDCjMr6VQMiNpUVR3ookmTNKb4K37HFWUtu71zWK/wlH+iGC51v8n6MLvquuY3jxc/bhHtvWJtmD/iLjjQIqn6SIGGyWBXYJcIntG2QnlG+q8DqvWb2jf9/fWsfB83ENVRIYNDdovJPUf047KHfpfBC2qy6WUbWvQzux9R2HNbtIjdJBbh+77/Ngi51//9SuywM/MjTaswv11l7HEGBUF9SPdnM00rArkLMHugaUXCt6LpSkSvzUZQ8psCnI7/0T//z9V3PtuMlTREXAUrmzVOeruS9IE5Ce8UxOngESJHcrrJRYpsUyfigm4rEU76hCe3nY749YnejKFnk4tCq5imr3meJ6VrBdv2+yiRo1NRQM7/N5NqrEJVww8ZjnlocZOZDH/Wzh38jf7w3qIa/hieYcc+bXS1mbHU+0GpdVeOzXBgs/BCGxsZmNWEv/xVGlLrHh0tZcSzQ/K5cMDXRhaWQ3NQyagO1w5V96O3ihVX6EOMtO7CvHMH2FEi0ntbUqaMAzB+gHF2mOG+Pvw2pZ3oIWIMo9JsbKXuBOKLx7uLdsF7X8jXly8Lef0+DoXX90ZC6cWhcHj3ZB/5AEjlm6OPWZJx5sCvshThYbsBNOAYaxDMxBMeVoEzcme14=
