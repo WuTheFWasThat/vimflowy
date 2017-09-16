@@ -1,4 +1,4 @@
-FROM node:6-stretch as build
+FROM node:6-stretch
 LABEL maintainer="will.price94@gmail.com"
 LABEL version="0.0.1"
 RUN apt-get update -qq && \
@@ -8,10 +8,7 @@ COPY package.json package-lock.json /app/
 RUN npm install
 COPY . /app/
 RUN npm run build
-RUN npm test
 
-FROM node:6-stretch
-COPY --from=build /app /app
 WORKDIR /app
 VOLUME /app/db
 EXPOSE 3000
