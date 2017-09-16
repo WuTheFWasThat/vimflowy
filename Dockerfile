@@ -4,6 +4,7 @@ LABEL version="0.0.1"
 
 RUN apt-get update -qq && \
     apt-get install -y python
+RUN npm install -g yarn
 
 
 ENV HOME=/app
@@ -11,11 +12,11 @@ RUN mkdir -p $HOME
 RUN chown node:node $HOME
 WORKDIR $HOME
 
-USER node
-COPY package.json package-lock.json $HOME/
-RUN npm install
-COPY . $HOME # drop the line below and add --chown=node:node when 17.09 lands
-RUN chown -r node:node $HOME/static
+COPY package.json yarn.lock $HOME/
+RUN yarn
+
+# TODO (when 17.09 lands): drop the line below the COPY and add --chown=node:node
+COPY . $HOME
 RUN npm run build
 RUN npm run typecheck
 RUN npm test
@@ -25,6 +26,7 @@ ENV VIMFLOWY_PASSWORD=vimflowy123
 
 VOLUME $DB_DIR
 
+USER node
 EXPOSE 3000
 ENTRYPOINT npm start -- \
     --prod \
