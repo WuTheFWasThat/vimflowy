@@ -70,8 +70,8 @@ async function main(args: any) {
       logger.info('Listening on http://%s:%d', server.address().address, server.address().port);
     });
   } else {
-    if (host != 'localhost') {
-      logger.warn('--host can only be set in a production context; ignoring and using localhost')
+    if (host !== 'localhost') {
+      logger.warn('--host can only be set in a production context; ignoring and using localhost');
     }
     logger.info('Starting development server');
     const webpack_options: any = {};
