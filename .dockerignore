@@ -3,3 +3,4 @@ npm-debug.log
 static/build
 dist
 .sass-cache
+Dockerfile
