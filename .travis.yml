@@ -16,15 +16,13 @@ cache:
     - node_modules
 jobs:
   include:
-  - stage: install deps
-    install: npm install
-    script: skip
+  - stage: compile
+    script:
+    - npm run lint
+    - npm run build
 
-  - stage: compile
-    script: npm run lint
-  - stage: compile
-    script: npm run build
-  - stage: compile
+  # npm test is also run by default, see comment above `node_js` key
+  - stage: test
     script: docker build -t vimflowy/vimflowy .
 
   - stage: deploy
@@ -36,7 +34,6 @@ jobs:
     - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
     - docker push vimflowy/vimflowy
 stages:
-  - install deps
   - compile
   - test
   - name: deploy
