@@ -7,12 +7,11 @@ RUN apt-get update -qq && \
 RUN npm config set loglevel=warn && \
     npm config set progress=false
 WORKDIR /app/
-COPY package.json package-lock.json /app/
+COPY package.json package-lock.json .
 RUN npm install
-COPY . /app/
+COPY . .
 RUN npm run build
 
-WORKDIR /app
 VOLUME /app/db
 EXPOSE 3000
 ENV VIMFLOWY_PASSWORD=vimflowy123
