@@ -7,7 +7,7 @@ RUN apt-get update -qq && \
 RUN npm config set loglevel=warn && \
     npm config set progress=false
 WORKDIR /app/
-COPY package.json package-lock.json .
+COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
 RUN npm run build
