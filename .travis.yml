@@ -21,23 +21,21 @@ jobs:
     - npm run lint
     - npm run build
 
-  # npm test is also run by default, see comment above `node_js` key
-  - stage: test
-    script: docker build -t vimflowy/vimflowy .
-
   - stage: deploy
     before_install: skip
     script:
     - docker build -t vimflowy/vimflowy .
     - docker images
     - docker tag  "vimflowy/vimflowy:latest" "vimflowy/vimflowy:$(jq -r .version package.json)"
-    - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-    - docker push vimflowy/vimflowy
+    after_success: |
+      if [[ "$TRAVIS_BRANCH" = "master" ]]; then
+        docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        docker push vimflowy/vimflowy
+      fi
 stages:
   - compile
   - test
-  - name: deploy
-    if: branch = master
+  - deploy
 env:
   global:
   - DOCKER_USERNAME=vimflowytravis
