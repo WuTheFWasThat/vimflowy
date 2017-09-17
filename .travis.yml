@@ -6,16 +6,15 @@ node_js:
 - '6.1'
 jobs:
   include:
-  - stage: Test
-    install:
-    - npm install
+  - stage: compile
+    install: npm install
+    script: npm run lint
+    script: npm run build
+    script: docker build -t vimflowy/vimflowy .
+  - stage: test
     script:
-    - npm run lint
-    - npm run typecheck
     - npm test
-    - npm run build
-    - docker build -t vimflowy/vimflowy .
-  - stage: 'Build & deploy docker image'
+  - stage: 'build & deploy docker image'
     before_install: skip
     script:
     - docker build -t vimflowy/vimflowy .
@@ -23,6 +22,10 @@ jobs:
     - docker tag  "vimflowy/vimflowy:latest" "vimflowy/vimflowy:$(jq -r .version package.json)"
     - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
     - docker push vimflowy/vimflowy
+stages:
+  - compile
+  - test
+  - 'build & deploy docker image'
 env:
   global:
   - DOCKER_USERNAME=vimflowytravis
