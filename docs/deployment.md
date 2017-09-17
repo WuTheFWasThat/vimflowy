@@ -42,5 +42,4 @@ Launch vimflowy with `docker-compose up`
 
 You can override certain aspects of the container through environment variables that (specified in `-e` options in the `docker run` command).
 
-* `VIMFLOWY_PASSWORD`: The server password, specified by the user in *Settings
-> Data Storage > Vimflowy Server*
+* `VIMFLOWY_PASSWORD`: The server password, specified by the user in *Settings > Data Storage > Vimflowy Server*
