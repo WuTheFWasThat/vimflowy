@@ -22,7 +22,7 @@ jobs:
     - npm run build
 
   - stage: deploy
-    before_install: skip
+    install: skip
     script:
     - docker build -t vimflowy/vimflowy .
     - docker images
