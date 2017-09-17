@@ -19,6 +19,7 @@ jobs:
   - stage: compile
     script:
     - npm run lint
+    - npm run typecheck
     - npm run build
 
   - stage: deploy
