@@ -43,6 +43,11 @@ You can keep the data on your computer, let Google host it for you, or host it y
 
 [See here for more info](docs/storage/README.md).
 
+## DEPLOYMENT
+
+See the [deployment](docs/deployment.md) documentation for details on how to
+run under docker.
+
 ## NOTES FOR DEVELOPERS
 
 Contributions are very welcome!
