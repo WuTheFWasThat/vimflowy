@@ -3,7 +3,9 @@ LABEL maintainer="will.price94@gmail.com"
 LABEL version="0.0.1"
 RUN apt-get update -qq && \
     apt-get install -y python
-RUN npm config set loglevel warn
+# Prevent npm from spamming
+RUN npm config set loglevel=warn && \
+    npm config set progress=false
 WORKDIR /app/
 COPY package.json package-lock.json /app/
 RUN npm install
