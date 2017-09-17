@@ -27,7 +27,7 @@ jobs:
   - stage: compile
     script: docker build -t vimflowy/vimflowy .
 
-  - stage: 'build & deploy docker image'
+  - stage: deploy
     before_install: skip
     script:
     - docker build -t vimflowy/vimflowy .
@@ -39,7 +39,8 @@ stages:
   - install deps
   - compile
   - test
-  - 'build & deploy docker image'
+  - name: deploy
+    if: branch = master
 env:
   global:
   - DOCKER_USERNAME=vimflowytravis
