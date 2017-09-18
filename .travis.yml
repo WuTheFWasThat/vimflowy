@@ -1,14 +1,42 @@
+sudo: true
+dist: trusty
 language: node_js
+
+# The specification of multiple node versions
+# adds implicit jobs to the test stage (so we don't have to explicitly
+# add them), see
+# https://docs.travis-ci.com/user/build-stages/#Build-Stages-and-Build-Matrix-Expansion
+# for details
 node_js:
 - '6'
 - '6.1'
-install:
-- npm install
-script:
-- npm run lint
-- npm run typecheck
-- npm test
-- npm run build
+
+cache:
+  directories:
+    - node_modules
+jobs:
+  include:
+  - stage: compile
+    script:
+    - npm run lint
+    - npm run typecheck
+    - npm run build
+
+  - stage: deploy
+    install: skip
+    script:
+    - docker build -t vimflowy/vimflowy .
+    - docker images
+    - docker tag  "vimflowy/vimflowy:latest" "vimflowy/vimflowy:$(jq -r .version package.json)"
+    after_success: |
+      if [[ "$TRAVIS_BRANCH" = "master" ]]; then
+        docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        docker push vimflowy/vimflowy
+      fi
+stages:
+  - compile
+  - test
+  - deploy
 env:
   global:
   - DOCKER_USERNAME=vimflowytravis

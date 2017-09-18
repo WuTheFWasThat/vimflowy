@@ -1,0 +1,8 @@
+*
+!package.json
+!package-lock.json
+!tsconfig.json
+!tslint.json
+!src/**
+!static
+static/build

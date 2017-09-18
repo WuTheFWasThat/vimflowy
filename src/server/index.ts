@@ -17,6 +17,7 @@ async function main(args: any) {
       Usage: ./node_modules/.bin/ts-node ${process.argv[1]}
           -h, --help: help menu
 
+          --host $hostname: Host to listen on (must use --prod)
           --port $portnumber: Port to run on
           --prod: Production mode. Serve static files instead of webpack dev server.
             Defaults to off, dev mode.
@@ -41,6 +42,7 @@ async function main(args: any) {
   }
 
   let port: number = args.port || 3000;
+  let host: string = args.host || 'localhost';
 
   if (args.prod) {
     if (args.build) {
@@ -63,11 +65,14 @@ async function main(args: any) {
       };
       makeSocketServer(server, options);
     }
-    server.listen(port, 'localhost', (err: Error) => {
+    server.listen(port, host, (err: Error) => {
       if (err) { return logger.error(err); }
-      logger.info('Listening on %d', server.address().port);
+      logger.info('Listening on http://%s:%d', server.address().address, server.address().port);
     });
   } else {
+    if (host !== 'localhost') {
+      logger.warn('--host can only be set in a production context; ignoring and using localhost');
+    }
     logger.info('Starting development server');
     const webpack_options: any = {};
     if (args.db) {
@@ -87,7 +92,7 @@ async function main(args: any) {
       makeSocketServer(server, options);
       server.listen(wsPort, 'localhost', (err: Error) => {
         if (err) { return logger.error(err); }
-        logger.info('Internal server listening on %d', server.address().port);
+        logger.info('Internal server listening on http://localhost:%d', server.address().port);
       });
     }
     makeDevServer(port, webpack_options);
