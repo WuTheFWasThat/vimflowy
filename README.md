@@ -5,7 +5,9 @@
 
 This is a productivity tool which draws some inspiration from workflowy and vim.
 
-[![Bitballoon logo](/docs/media/bitballoon-logo.png) Try it out!](https://vimflowy.bitballoon.com) or [![Docker logo](/docs/media/docker-logo.png) Deploy with docker](https://hub.docker.com/r/vimflowy/vimflowy/)
+[![Bitballoon logo](/docs/media/bitballoon-logo.png) Try it out!](https://vimflowy.bitballoon.com)
+
+[![Docker logo](/docs/media/docker-logo.png) Deploy with docker!](https://hub.docker.com/r/vimflowy/vimflowy/)
 
 ## FEATURES
 
@@ -43,10 +45,12 @@ You can keep the data on your computer, let Google host it for you, or host it y
 
 [See here for more info](docs/storage/README.md).
 
-## DEPLOYMENT
+### SELF-HOSTING
 
-See the [deployment](docs/deployment.md) documentation for details on how to
-deploy with docker.
+See the [deployment documentation](docs/deployment.md) for details on how to deploy with docker.
+
+You can also build Vimflowy yourself from source.
+See the [dev setup](docs/dev_setup.md) documentation for details.
 
 ## NOTES FOR DEVELOPERS
 
