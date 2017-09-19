@@ -41,16 +41,15 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
 
 Vimflowy was designed to work with multiple storage backends.
 
-You can keep the data on your computer, let Google host it for you, or host it yourself.
+By default, you own your own data, as it is stored locally on your computer.
+However, you can let Google host it for you, or host it yourself.
 
 [See here for more info](docs/storage/README.md).
 
 ### SELF-HOSTING
 
-See the [deployment documentation](docs/deployment.md) for details on how to deploy with docker.
-
-You can also build Vimflowy yourself from source.
-See the [dev setup](docs/dev_setup.md) documentation for details.
+See the [deployment documentation](docs/deployment.md) for details.
+You can deploy with docker, or build yourself from source.
 
 ## NOTES FOR DEVELOPERS
 

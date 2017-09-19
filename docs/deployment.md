@@ -40,4 +40,9 @@ You can override certain aspects of the container through environment variables 
 
 ## From source
 
-Of course, you can also deploy from source yourself.  Either build from our Dockerfile, or follow the [dev setup](/docs/dev_setup.md) instructions.
+Of course, you can also deploy from source yourself.
+
+- Build from our [`Dockerfile`](/Dockerfile), if you want to deploy in a container
+- Follow the [dev setup](/docs/dev_setup.md) instructions, otherwise.
+  You will likely want to run the server enabling the [SQLite backend](storage/SQLite.md). 
+

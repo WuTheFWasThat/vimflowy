@@ -38,7 +38,8 @@ You can choose to host it on your own computer, or on a remote server (if you wa
 
 Currently, the vimflowy server stores the data in SQLite (which stores data in a file), but other methods could be added in the future.
 
-See [here](SQLite.md) for details on how to set this up.
+The easiest way to set this up is to [use docker](/docs/deployment.md).
+However, it is not hard to set up manually.  See [here](SQLite.md) for details. 
 
 ## Other backends
 

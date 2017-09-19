@@ -37,6 +37,9 @@ For a full set of options, see
 
     npm start -- --help
 
+Notably, you can run a SQLite backend, for persistence to your server. 
+[See here for more info](docs/storage/SQLite.md).
+
 ### Tests
 
 To run unit tests automatically (when files change) from the development server, add the `test` flag:
