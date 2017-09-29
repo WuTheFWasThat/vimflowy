@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 
-import * as errors from '../../assets/ts/utils/errors';
-import { Logger } from '../../assets/ts/utils/logger';
+import * as errors from '../../shared/utils/errors';
+import { Logger } from '../../shared/utils/logger';
 import { PartialUnfolder, Token, EmitFn, Tokenizer } from '../../assets/ts/utils/token_unfolder';
 
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';

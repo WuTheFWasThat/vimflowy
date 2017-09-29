@@ -1,7 +1,7 @@
 import * as minimist from 'minimist';
 import * as webpack from 'webpack';
 
-import logger from '../assets/ts/utils/logger';
+import { getProdConfig } from './webpack_configs';
 
 export async function buildProd() {
   await new Promise((resolve, reject) => {
@@ -18,7 +18,6 @@ async function main(args: any) {
     process.stdout.write(`
       Usage: ./node_modules/.bin/ts-node ${process.argv[1]}
           -h, --help: help menu
-
     `, () => {
       process.exit(0);
     });

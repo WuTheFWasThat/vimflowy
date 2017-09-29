@@ -2,10 +2,10 @@ import * as http from 'http';
 
 import * as WebSocket from 'ws';
 
-import DataBackend, * as dataBackends from '../assets/ts/data_backend';
-import logger from '../assets/ts/utils/logger';
+import DataBackend, { InMemory } from '../shared/data_backend';
+import logger from '../shared/utils/logger';
 
-import * as serverBackends from './data_backends';
+import { SQLiteBackend } from './data_backends';
 
 type SocketServerOptions = {
   db?: string,
@@ -34,12 +34,12 @@ export default async function makeSocketServer(server: http.Server, options: Soc
         filename = ':memory:';
         logger.warn('Using in-memory sqlite database');
       }
-      const sql_db = new serverBackends.SQLiteBackend();
+      const sql_db = new SQLiteBackend();
       await sql_db.init(filename);
       db = sql_db;
     } else {
       logger.info('Using in-memory database');
-      db = new dataBackends.InMemory();
+      db = new InMemory();
     }
     dbs[docname] = db;
     return db;

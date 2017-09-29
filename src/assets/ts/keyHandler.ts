@@ -19,7 +19,7 @@ It maintains custom logic for this, for each mode.
 // or when the command awaits from keyStream
 
 import EventEmitter from './utils/eventEmitter';
-import logger from './utils/logger';
+import logger from '../../shared/utils/logger';
 import Queue from './utils/queue';
 import Session from './session';
 import KeyBindings, { KeyBindingsTree } from './keyBindings';

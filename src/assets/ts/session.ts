@@ -1,9 +1,9 @@
 import * as browser_utils from './utils/browser';
-import * as errors from './utils/errors';
+import * as errors from '../../shared/utils/errors';
 import EventEmitter from './utils/eventEmitter';
-import logger from './utils/logger';
+import logger from '../../shared/utils/logger';
 import { ClientStore } from './datastore';
-import { SynchronousInMemory } from './data_backend';
+import { SynchronousInMemory } from '../../shared/data_backend';
 import * as mutations from './mutations';
 import Cursor from './cursor';
 import Register from './register';

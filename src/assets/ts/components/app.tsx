@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import * as browser_utils from '../utils/browser';
-import * as errors from '../utils/errors';
+import * as errors from '../../../shared/utils/errors';
 import * as Modes from '../modes';
 import { BackendType } from '../data_backend';
 import { PluginsManager } from '../plugins';

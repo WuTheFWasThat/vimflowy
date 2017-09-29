@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as express from 'express';
 import * as minimist from 'minimist';
 
-import logger from '../assets/ts/utils/logger';
+import logger from '../shared/utils/logger';
 
 import makeSocketServer from './socket_server';
 import { staticDir, buildDir } from './webpack_configs';

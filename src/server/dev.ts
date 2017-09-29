@@ -6,7 +6,7 @@ import * as minimist from 'minimist';
 import * as webpack from 'webpack';
 import * as WebpackDevServer from 'webpack-dev-server';
 
-import logger from '../assets/ts/utils/logger';
+import logger from '../shared/utils/logger';
 
 import { getDevConfig, staticDir, publicPath } from './webpack_configs';
 import makeSocketServer from './socket_server';

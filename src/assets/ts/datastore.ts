@@ -1,7 +1,8 @@
 import EventEmitter from './utils/eventEmitter';
 import * as fn_utils from './utils/functional';
-import logger from './utils/logger';
-import DataBackend, * as DataBackends from './data_backend';
+import logger from '../../shared/utils/logger';
+import DataBackend, { SynchronousDataBackend } from '../../shared/data_backend';
+import * as ClientDataBackends from './data_backend';
 import { Theme, defaultTheme } from './themes';
 
 import { Row, Line, SerializedPath, MacroMap } from './types';
@@ -33,7 +34,7 @@ const default_client_settings: ClientSettings =
   });
 
 export type LocalDocSettings = {
-  dataSource: DataBackends.BackendType;
+  dataSource: ClientDataBackends.BackendType;
   firebaseId: string | null;
   firebaseApiKey: string | null;
   firebaseUserEmail: string | null;
@@ -59,11 +60,11 @@ const default_local_doc_settings: LocalDocSettings = {
 export class ClientStore {
   private prefix: string;
   private docname: string;
-  private backend: DataBackends.SynchronousDataBackend;
+  private backend: SynchronousDataBackend;
   private cache: {[key: string]: any} = {};
   private use_cache: boolean = true;
 
-  constructor(backend: DataBackends.SynchronousDataBackend, docname = '') {
+  constructor(backend: SynchronousDataBackend, docname = '') {
     this.backend = backend;
     this.docname = docname;
     this.prefix = `${docname}save`;

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 
-import * as errors from './utils/errors';
+import * as errors from '../../shared/utils/errors';
 import EventEmitter, { Listener, Hook } from './utils/eventEmitter';
-import logger, { Logger } from './utils/logger';
+import logger, { Logger } from '../../shared/utils/logger';
 import { registerMode, deregisterMode, ModeMetadata } from './modes';
 import Document from './document';
 import Cursor from './cursor';

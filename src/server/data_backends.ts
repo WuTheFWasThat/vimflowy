@@ -1,6 +1,6 @@
 import * as sqlite from 'sqlite3';
 
-import DataBackend from '../assets/ts/data_backend';
+import DataBackend from '../shared/data_backend';
 
 export class SQLiteBackend extends DataBackend {
   private db: sqlite.Database;

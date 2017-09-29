@@ -1,4 +1,4 @@
-import * as errors from './utils/errors';
+import * as errors from '../../shared/utils/errors';
 
 import { Row, SerializedPath } from './types';
 

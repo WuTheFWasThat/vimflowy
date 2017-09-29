@@ -4,7 +4,7 @@ import 'mocha';
 import * as _ from 'lodash';
 
 import { DocumentStore, ClientStore } from '../src/assets/ts/datastore';
-import { InMemory, SynchronousInMemory } from '../src/assets/ts/data_backend';
+import { InMemory, SynchronousInMemory } from '../src/shared/data_backend';
 import Document from '../src/assets/ts/document';
 import Session from '../src/assets/ts/session';
 import Register, { RegisterTypes, SerializedRegister } from '../src/assets/ts/register';
@@ -14,7 +14,7 @@ import KeyBindings from '../src/assets/ts/keyBindings';
 import Config from '../src/assets/ts/config';
 import vimConfig from '../src/assets/ts/configurations/vim';
 import KeyHandler from '../src/assets/ts/keyHandler';
-import logger, * as Logger from '../src/assets/ts/utils/logger';
+import logger, * as Logger from '../src/shared/utils/logger';
 import { PluginsManager, PluginStatus } from '../src/assets/ts/plugins';
 import Cursor from '../src/assets/ts/cursor';
 import Path from '../src/assets/ts/path';

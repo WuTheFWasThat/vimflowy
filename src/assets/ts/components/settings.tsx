@@ -4,13 +4,13 @@ import * as _ from 'lodash';
 import { ChromePicker } from 'react-color';
 
 import * as browser_utils from '../utils/browser';
-import logger from '../utils/logger';
+import logger from '../../../shared/utils/logger';
 import { MODES } from '../modes';
 
 import Path from '../path';
 import Document from '../document';
 import { DocumentStore, ClientStore } from '../datastore';
-import { InMemory } from '../data_backend';
+import { InMemory } from '../../../shared/data_backend';
 import Session from '../session';
 import Menu from '../menu';
 import Config from '../config';

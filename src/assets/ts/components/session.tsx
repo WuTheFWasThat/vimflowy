@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { promiseDebounce } from '../utils/functional';
-import logger from '../utils/logger';
+import logger from '../../../shared/utils/logger';
 
 import * as Modes from '../modes';
 import BreadcrumbsComponent from './breadcrumbs';

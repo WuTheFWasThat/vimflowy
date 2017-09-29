@@ -18,18 +18,19 @@ import '../css/index.sass';
 import '../css/view.sass';
 
 import * as browser_utils from './utils/browser';
-import * as errors from './utils/errors';
+import * as errors from '../../shared/utils/errors';
 import * as fn_utils from './utils/functional';
-import logger from './utils/logger';
+import logger from '../../shared/utils/logger';
 
 import * as Modes from './modes';
 import KeyEmitter from './keyEmitter';
 import KeyHandler from './keyHandler';
 import KeyMappings from './keyMappings';
 import { ClientStore, DocumentStore } from './datastore';
+import { SynchronousInMemory, InMemory } from '../../shared/data_backend';
 import {
-  BackendType, SynchronousInMemory, SynchronousLocalStorageBackend,
-  InMemory, LocalStorageBackend, FirebaseBackend, ClientSocketBackend
+  BackendType, SynchronousLocalStorageBackend,
+  LocalStorageBackend, FirebaseBackend, ClientSocketBackend
 } from './data_backend';
 import Document from './document';
 import { PluginsManager } from './plugins';

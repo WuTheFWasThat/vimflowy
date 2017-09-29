@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-class ExtendableError extends Error {
+export class ExtendableError extends Error {
   constructor(message: string) {
     super(message);
     this.name = this.constructor.name;
@@ -29,12 +29,6 @@ export class GenericError extends ExtendableError {
 // is special because ignored by error handling in app.tsx
 export class ExpectedError extends ExtendableError {
   constructor(m: string) { super(m); }
-}
-
-export class MultipleUsersError extends ExtendableError {
-  constructor() { super(
-    'This document has been modified (in another tab) since opening it in this tab. Please refresh to continue!'
-  ); }
 }
 
 ///////////

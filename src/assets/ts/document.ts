@@ -1,14 +1,14 @@
 import * as _ from 'lodash';
 import 'core-js/shim';
 
-import * as errors from './utils/errors';
+import * as errors from '../../shared/utils/errors';
 import EventEmitter from './utils/eventEmitter';
 import * as fn_utils from './utils/functional';
 // import logger from './utils/logger';
 import { isWhitespace } from './utils/text';
 import Path from './path';
 import { DocumentStore } from './datastore';
-import { InMemory } from './data_backend';
+import { InMemory } from '../../shared/data_backend';
 import {
   Row, Col, Char, Line, SerializedLine, SerializedBlock
 } from './types';
