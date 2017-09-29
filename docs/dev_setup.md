@@ -18,24 +18,24 @@ Simply run:
     npm start
 
 After a short wait, you should see the app at `http://localhost:3000/`
+When source code changes, assets should be automatically (incrementally) recompiled.
 
 To use a different port, you can do
 
     npm start -- --port 2002
 
-When source code changes, assets should be automatically (incrementally) recompiled.
+For a full set of options, see
+
+    npm start -- --help
 
 Note that you may make new documents simply by visiting
 `http://localhost:3000?doc=<documentname>#`
 
-You may notice that the development version is a bit slow.
+NOTE: You may notice that the development version is a bit slow.
 If you're looking to run vimflowy for personal usage (not development), you'll want to compile the assets in production mode:
 
-    npm start -- --build --prod
-
-For a full set of options, see
-
-    npm start -- --help
+    npm run build
+    npm run startprod
 
 Notably, you can run a SQLite backend, for persistence to your server. 
 [See here for more info](docs/storage/SQLite.md).

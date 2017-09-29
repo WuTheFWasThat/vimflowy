@@ -317,7 +317,7 @@ function getDefaultData(): Array<SerializedBlock> {
         'Check out settings for more information.',
         'You can regularly export your data in JSON format, as a form of backup',
       ] },
-      'To make a new document with separate, just add the "doc" query parameter. ' +
+      'To make a new document with separate data, just add the "doc" query parameter. ' +
         `For example, ${window.location.origin}/?doc=newdocname#`,
     ] },
     'Press i to enter insert mode and start adding your own content!',

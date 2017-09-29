@@ -27,7 +27,7 @@ Build assets
 
 Then, run the server.
 
-    npm start -- --prod --db sqlite --dbfolder ${somefolder} --password ${somepassword}
+    npm run startprod -- --db sqlite --dbfolder ${somefolder} --password ${somepassword}
 
 The `dbfolder` flag says where to store/load data.  If left empty, an in-memory database is used.
 

@@ -7,9 +7,10 @@
     "npm": "3.10.x"
   },
   "scripts": {
-    "build": "ts-node src/server/build_prod.ts",
+    "build": "ts-node src/server/build.ts",
     "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx'",
-    "start": "ts-node src/server",
+    "start": "ts-node src/server/dev.ts",
+    "startprod": "ts-node src/server/prod.ts",
     "test": "mocha --opts test/mocha.opts",
     "watchtest": "mocha --opts test/mocha.opts --reporter dot --watch",
     "typecheck": "tsc -p . --noEmit",
