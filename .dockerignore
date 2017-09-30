@@ -4,5 +4,5 @@
 !tsconfig.json
 !tslint.json
 !src/**
-!static
-static/build
+!static/images/**
+!static/index.html

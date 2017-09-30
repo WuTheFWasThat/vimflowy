@@ -43,6 +43,9 @@ You can override certain aspects of the container through environment variables 
 Of course, you can also deploy from source yourself.
 
 - Build from our [`Dockerfile`](/Dockerfile), if you want to deploy in a container
+  ```
+  docker build .  -t vimflowy:dev
+  ```
 - Follow the [dev setup](/docs/dev_setup.md) instructions, otherwise.
   You will likely want to run the server enabling the [SQLite backend](storage/SQLite.md). 
 
