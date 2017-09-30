@@ -8,7 +8,8 @@ import * as WebpackDevServer from 'webpack-dev-server';
 
 import logger from '../shared/utils/logger';
 
-import { getDevConfig, staticDir, publicPath } from './webpack_configs';
+import { getDevConfig } from './webpack_configs';
+import { defaultStaticDir, publicPath } from './constants';
 import makeSocketServer from './socket_server';
 
 export function makeDevServer(port: number, extraConf: any = {}) {
@@ -21,7 +22,7 @@ export function makeDevServer(port: number, extraConf: any = {}) {
   });
 
   const app: express.Application = (server as any).app;
-  app.use(express.static(staticDir));
+  app.use(express.static(defaultStaticDir));
 
   server.listen(port, 'localhost', (err: Error) => {
     if (err) { return logger.error(err); }

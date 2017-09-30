@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as fs from 'fs';
+import * as path from 'path';
 
 import * as express from 'express';
 import * as minimist from 'minimist';
@@ -7,7 +8,7 @@ import * as minimist from 'minimist';
 import logger from '../shared/utils/logger';
 
 import makeSocketServer from './socket_server';
-import { staticDir, buildDir } from './webpack_configs';
+import { defaultStaticDir, publicPath } from './constants';
 
 async function main(args: any) {
   if (args.help || args.h) {
@@ -26,6 +27,9 @@ async function main(args: any) {
 
           --dbfolder: For sqlite backend only.  Folder for sqlite to store data
             (defaults to in-memory if unspecified)
+ 
+          --staticDir: Where static assets should be served from.  Defaults to the \`static\`
+            folder at the repo root.
 
     `, () => {
       process.exit(0);
@@ -33,13 +37,14 @@ async function main(args: any) {
     return;
   }
 
-  // TODO: configurable staticDir?
-  //
+  const staticDir = path.resolve(args.staticDir || defaultStaticDir);
+  const buildDir = path.join(staticDir, publicPath);
+
   let port: number = args.port || 3000;
   let host: string = args.host || 'localhost';
 
   if (!fs.existsSync(buildDir)) {
-    logger.info(`No assets found at ${buildDir}.  Try running \`npm run build\` first.`);
+    logger.info(`No assets found at ${buildDir}.  Try running \`npm run build -- --outdir ${buildDir}\` first.`);
     return;
   }
   logger.info('Starting production server');

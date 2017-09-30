@@ -1,20 +1,22 @@
-import * as path from 'path';
-
 import * as webpack from 'webpack';
+import { CheckerPlugin } from 'awesome-typescript-loader';
 
-const SRC_DIR = path.join(__dirname, '../../src');
+import { publicPath, defaultBuildDir, defaultSrcDir } from './constants';
 
-export const staticDir = path.join(__dirname, '../../', 'static');
-export const publicPath = '/build/';
-export const buildDir = path.join(staticDir, 'build');
+type BuildConfig = {
+  outdir?: string,
+  srcdir?: string,
+};
 
-export function getDevConfig(): webpack.Configuration {
+export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
+  const srcdir = config.srcdir || defaultSrcDir;
+  const outdir = config.outdir || defaultBuildDir;
   return {
     devtool: 'eval',
     entry: [
       'webpack-dev-server/client?http://localhost:3000',
       'webpack/hot/only-dev-server',
-      `${SRC_DIR}/assets/ts/app.tsx`
+      `${srcdir}/assets/ts/app.tsx`
     ],
     module: {
       rules: [
@@ -23,7 +25,7 @@ export function getDevConfig(): webpack.Configuration {
           use: [
             'react-hot-loader', 'awesome-typescript-loader', 'tslint-loader',
           ],
-          include: SRC_DIR
+          include: srcdir 
         },
         {
           test: /\.(sass|css)$/,
@@ -37,10 +39,11 @@ export function getDevConfig(): webpack.Configuration {
     },
     output: {
       filename: 'app.js',
-      path: buildDir,
-      publicPath: '/build/'
+      path: outdir,
+      publicPath: publicPath
     },
     plugins: [
+      new CheckerPlugin(),
       new webpack.HotModuleReplacementPlugin(),
       new webpack.DefinePlugin({
         'process.env': {
@@ -67,10 +70,12 @@ export function getDevConfig(): webpack.Configuration {
   };
 };
 
-export function getProdConfig(): webpack.Configuration {
+export function getProdConfig(config: BuildConfig = {}): webpack.Configuration {
+  const srcdir = config.srcdir || defaultSrcDir;
+  const outdir = config.outdir || defaultBuildDir;
   return {
     devtool: 'source-map',
-    entry: `${SRC_DIR}/assets/ts/app.tsx`,
+    entry: `${srcdir}/assets/ts/app.tsx`,
     module: {
       rules: [
         {
@@ -78,7 +83,7 @@ export function getProdConfig(): webpack.Configuration {
           use: [
             'awesome-typescript-loader', 'tslint-loader',
           ],
-          include: SRC_DIR
+          include: srcdir
         },
         {
           test: /\.(sass|css)$/,
@@ -92,10 +97,11 @@ export function getProdConfig(): webpack.Configuration {
     },
     output: {
       filename: 'app.js',
-      path: buildDir,
-      publicPath: '/build/'
+      path: outdir,
+      publicPath: publicPath
     },
     plugins: [
+      new CheckerPlugin(),
       new webpack.DefinePlugin({
         'process.env': {
           'NODE_ENV': JSON.stringify('production')
