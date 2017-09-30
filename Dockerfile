@@ -3,16 +3,18 @@ LABEL maintainer="will.price94@gmail.com"
 LABEL version="0.0.1"
 # Prevent npm from spamming
 ENV NPM_CONFIG_LOGLEVEL=warn
-RUN npm config set progress=false
+RUN npm config set loglevel=warn && \
+    npm config set progress=false
 WORKDIR /app/
 COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
-RUN mkdir -p /build/{client, server}
-RUN npm run build -- --outdir /build/client --socketserver
+RUN mkdir -p /build/client
+RUN npm run build -- --outdir /build/client
+RUN mkdir -p /build/server
 RUN npm run buildserver -- --outdir /build/server
 
-FROM node:6-alpine
+FROM node:6-stretch
 WORKDIR /app
 COPY --from=build /app/package.json /app/package-lock.json ./
 RUN npm install --production
@@ -30,3 +32,4 @@ ENTRYPOINT node /app/server.js \
     --db sqlite \
     --dbfolder /app/db \
     --password $VIMFLOWY_PASSWORD
+
