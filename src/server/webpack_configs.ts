@@ -26,7 +26,7 @@ export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
           use: [
             'react-hot-loader', 'awesome-typescript-loader', 'tslint-loader',
           ],
-          include: srcdir 
+          include: srcdir
         },
         {
           test: /\.(sass|css)$/,

@@ -44,7 +44,11 @@ async function main(args: any) {
   let host: string = args.host || 'localhost';
 
   if (!fs.existsSync(buildDir)) {
-    logger.info(`No assets found at ${buildDir}.  Try running \`npm run build -- --outdir ${buildDir}\` first.  Or specify where they should be found with --staticDir $somedir.`);
+    logger.info(`
+        No assets found at ${buildDir}!
+        Try running \`npm run build -- --outdir ${buildDir}\` first.  
+        Or specify where they should be found with --staticDir $somedir.
+    `);
     return;
   }
   logger.info('Starting production server');
