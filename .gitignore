@@ -13,3 +13,7 @@ npm-debug.log
 
 /todo
 .DS_Store
+
+
+# For the sake of mtsg development
+/mochawesome-report
