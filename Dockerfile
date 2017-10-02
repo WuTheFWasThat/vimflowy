@@ -14,7 +14,7 @@ RUN npm run build -- --outdir /build/client
 RUN mkdir -p /build/server
 RUN npm run buildserver -- --outdir /build/server
 
-FROM node:6-slim
+FROM node:6-alpine
 WORKDIR /app
 COPY --from=build /app/package.json /app/package-lock.json ./
 RUN npm install --production
