@@ -27,7 +27,7 @@ async function main(args: any) {
 
           --dbfolder: For sqlite backend only.  Folder for sqlite to store data
             (defaults to in-memory if unspecified)
- 
+
           --staticDir: Where static assets should be served from.  Defaults to the \`static\`
             folder at the repo root.
 
@@ -46,7 +46,7 @@ async function main(args: any) {
   if (!fs.existsSync(buildDir)) {
     logger.info(`
         No assets found at ${buildDir}!
-        Try running \`npm run build -- --outdir ${buildDir}\` first.  
+        Try running \`npm run build -- --outdir ${buildDir}\` first.
         Or specify where they should be found with --staticDir $somedir.
     `);
     return;

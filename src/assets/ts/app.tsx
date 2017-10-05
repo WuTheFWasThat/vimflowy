@@ -38,6 +38,7 @@ import Path from './path';
 import Session from './session';
 import Config from './config';
 import vimConfig from './configurations/vim';
+import { SERVER_CONFIG } from './constants';
 
 import keyDefinitions from './keyDefinitions';
 // load actual definitions
@@ -109,27 +110,85 @@ $(document).ready(async () => {
     backend_type = 'inmemory';
   } else {
     clientStore = new ClientStore(new SynchronousLocalStorageBackend(), docname);
-    backend_type = clientStore.getDocSetting('dataSource');
+    if (SERVER_CONFIG.socketserver) {
+      backend_type = 'socketserver';
+    } else {
+      backend_type = clientStore.getDocSetting('dataSource');
+    }
   }
 
   const config: Config = vimConfig;
 
-  if (backend_type === 'firebase') {
+  function getLocalStore(): DocumentStore {
+     return new DocumentStore(new LocalStorageBackend(docname), docname);
+  }
+
+  async function getFirebaseStore(): Promise<DocumentStore> {
     const firebaseId = clientStore.getDocSetting('firebaseId');
     const firebaseApiKey = clientStore.getDocSetting('firebaseApiKey');
     const firebaseUserEmail = clientStore.getDocSetting('firebaseUserEmail');
     const firebaseUserPassword = clientStore.getDocSetting('firebaseUserPassword');
 
+    if (!firebaseId) {
+      throw new Error('No firebase ID found');
+    }
+    if (!firebaseApiKey) {
+      throw new Error('No firebase API key found');
+    }
+    const fb_backend = new FirebaseBackend(docname, firebaseId, firebaseApiKey);
+    const dStore = new DocumentStore(fb_backend, docname);
+    await fb_backend.init(firebaseUserEmail || '', firebaseUserPassword || '');
+
+    logger.info(`Successfully initialized firebase connection: ${firebaseId}`);
+    return dStore;
+  }
+
+  async function getSocketServerStore(): Promise<DocumentStore> {
+    let socketServerHost;
+    let socketServerDocument;
+    let socketServerPassword;
+    if (SERVER_CONFIG.socketserver) { // server is fixed!
+      socketServerHost = window.location.origin.replace(/^http/, 'ws');
+      socketServerDocument = docname;
+      socketServerPassword = clientStore.getDocSetting('socketServerPassword');
+    } else {
+      socketServerHost = clientStore.getDocSetting('socketServerHost');
+      socketServerDocument = clientStore.getDocSetting('socketServerDocument');
+      socketServerPassword = clientStore.getDocSetting('socketServerPassword');
+    }
+
+    if (!socketServerHost) {
+      throw new Error('No socket server host found');
+    }
+    const socket_backend = new ClientSocketBackend();
+    // NOTE: we don't pass docname to DocumentStore since we want keys
+    // to not have prefixes
+    const dStore = new DocumentStore(socket_backend);
+    while (true) {
+      try {
+        await socket_backend.init(
+          socketServerHost, socketServerPassword || '', socketServerDocument || '');
+        break;
+      } catch (e) {
+        if (e === 'Wrong password!') {
+          socketServerPassword = prompt(
+            socketServerPassword ?
+              'Password incorrect!  Please try again: ' :
+              'Please enter the password',
+            '');
+        } else {
+          throw e;
+        }
+      }
+    }
+    clientStore.setDocSetting('socketServerPassword', socketServerPassword);
+    logger.info(`Successfully initialized socked connection: ${socketServerHost}`);
+    return dStore;
+  }
+
+  if (backend_type === 'firebase') {
     try {
-      if (!firebaseId) {
-        throw new Error('No firebase ID found');
-      }
-      if (!firebaseApiKey) {
-        throw new Error('No firebase API key found');
-      }
-      const fb_backend = new FirebaseBackend(docname, firebaseId, firebaseApiKey);
-      docStore = new DocumentStore(fb_backend, docname);
-      await fb_backend.init(firebaseUserEmail || '', firebaseUserPassword || '');
+      docStore = await getFirebaseStore();
     } catch (e) {
       alert(`
         Error loading firebase datastore:
@@ -141,26 +200,14 @@ $(document).ready(async () => {
         Falling back to localStorage default.
       `);
 
+      docStore = getLocalStore();
       backend_type = 'local';
-      docStore = new DocumentStore(new LocalStorageBackend(docname), docname);
     }
   } else if (backend_type === 'inmemory') {
     docStore = new DocumentStore(new InMemory());
   } else if (backend_type === 'socketserver') {
-    const socketServerHost = clientStore.getDocSetting('socketServerHost');
-    const socketServerPassword = clientStore.getDocSetting('socketServerPassword');
-    const socketServerDocument = clientStore.getDocSetting('socketServerDocument');
-
     try {
-      if (!socketServerHost) {
-        throw new Error('No socket server host found');
-      }
-      const socket_backend = new ClientSocketBackend();
-      // NOTE: we don't pass docname to DocumentStore since we want keys
-      // to not have prefixes
-      docStore = new DocumentStore(socket_backend);
-      await socket_backend.init(
-        socketServerHost, socketServerPassword || '', socketServerDocument || '');
+      docStore = await getSocketServerStore();
     } catch (e) {
       alert(`
         Error loading socket server datastore:
@@ -172,11 +219,13 @@ $(document).ready(async () => {
         Falling back to localStorage default.
       `);
 
+      clientStore.setDocSetting('socketServerPassword', '');
+      docStore = getLocalStore();
       backend_type = 'local';
-      docStore = new DocumentStore(new LocalStorageBackend(docname), docname);
     }
   } else {
-    docStore = new DocumentStore(new LocalStorageBackend(docname), docname);
+    docStore = getLocalStore();
+    backend_type = 'local';
   }
 
   doc = new Document(docStore, docname);

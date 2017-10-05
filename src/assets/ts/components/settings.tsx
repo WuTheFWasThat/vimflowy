@@ -19,6 +19,7 @@ import KeyMappings from '../keyMappings';
 import { PluginsManager } from '../plugins';
 import { BackendType } from '../data_backend';
 import { Theme, getStyles, themes } from '../themes';
+import { SERVER_CONFIG } from '../constants';
 
 import SessionComponent from './session';
 import SpinnerComponent from './spinner';
@@ -189,19 +190,34 @@ export default class SettingsComponent extends React.Component<Props, State> {
         heading: 'Data',
         div: (
           <div>
-            <div className='settings-header'
-              style={{
-                ...getStyles(session.clientStore, ['theme-bg-secondary', 'theme-trim'])
-              }}
-              >
-              Data storage
-            </div>
-            <div className='settings-content'>
-              <BackendSettingsComponent
-                clientStore={session.clientStore}
-                initialBackendType={this.props.initialBackendType}
-              />
-            </div>
+            {
+              SERVER_CONFIG.socketserver ? (
+                <div style={{
+                  marginBottom: 20, padding: 10,
+                  ...getStyles(session.clientStore, ['theme-trim-accent'])
+                }}>
+                  NOTE: Since you are using a Vimflowy server,
+                  you can simply back up the data server-side,
+                  assuming you have access to the server.
+                </div>
+              ) : (
+                <div>
+                  <div className='settings-header'
+                    style={{
+                      ...getStyles(session.clientStore, ['theme-bg-secondary', 'theme-trim'])
+                    }}
+                    >
+                    Data storage
+                  </div>
+                  <div className='settings-content'>
+                    <BackendSettingsComponent
+                      clientStore={session.clientStore}
+                      initialBackendType={this.props.initialBackendType}
+                    />
+                  </div>
+                </div>
+              )
+            }
 
             <div className='settings-header'
               style={{

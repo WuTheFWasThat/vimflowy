@@ -3,10 +3,12 @@ import * as fs from 'fs';
 import * as webpack from 'webpack';
 
 import { publicPath, defaultBuildDir, defaultSrcDir } from './constants';
+import { ServerConfig } from '../shared/server_config';
 
-type BuildConfig = {
+export type BuildConfig = {
   outdir?: string,
   srcdir?: string,
+  server_config?: ServerConfig,
 };
 
 export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
@@ -49,6 +51,7 @@ export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
         'process.env': {
           'NODE_ENV': JSON.stringify('development')
         },
+        'INJECTED_SERVER_CONFIG': JSON.stringify(config.server_config || {}),
       }),
       new webpack.LoaderOptionsPlugin({
         options: {
@@ -105,6 +108,7 @@ export function getProdConfig(config: BuildConfig = {}): webpack.Configuration {
         'process.env': {
           'NODE_ENV': JSON.stringify('production')
         },
+        'INJECTED_SERVER_CONFIG': JSON.stringify(config.server_config || {}),
       }),
       new webpack.optimize.UglifyJsPlugin({
         compress: {
@@ -128,7 +132,7 @@ export function getProdConfig(config: BuildConfig = {}): webpack.Configuration {
       extensions: ['.jsx', '.js', '.tsx', '.ts']
     },
   };
-};
+}
 
 // For more information, on using webpack with node, see:
 // http://jlongster.com/Backend-Apps-with-Webpack--Part-I
@@ -180,4 +184,4 @@ export function getProdServerConfig(config: BuildConfig = {}): webpack.Configura
       extensions: ['.js', '.ts']
     },
   };
-};
+}
