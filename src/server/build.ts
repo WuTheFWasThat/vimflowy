@@ -5,10 +5,11 @@ import * as webpack from 'webpack';
 
 import { defaultBuildDir } from './constants';
 import { getProdConfig } from './webpack_configs';
+import { ServerConfig } from '../shared/server_config';
 
-export async function buildProd(outdir: string = defaultBuildDir) {
+export async function buildProd(server_config: ServerConfig = {}, outdir: string = defaultBuildDir) {
   await new Promise((resolve, reject) => {
-    webpack(getProdConfig({ outdir }), function(err) {
+    webpack(getProdConfig({ outdir, server_config }), function(err) {
       if (err) { return reject(err); }
       resolve();
     });
@@ -21,12 +22,20 @@ async function main(args: any) {
       Usage: ./node_modules/.bin/ts-node ${process.argv[1]}
           -h, --help: help menu
           --outdir $outdir: Where build output should go
+          --socketserver: Whether this is a socketserver
     `, () => {
       process.exit(0);
     });
     return;
   }
-  await buildProd(path.resolve(args.outdir || defaultBuildDir));
+  const server_config: ServerConfig = {};
+  if (args.socketserver) {
+    server_config.socketserver = true;
+  }
+  await buildProd(
+    server_config,
+    path.resolve(args.outdir || defaultBuildDir)
+  );
 
 }
 

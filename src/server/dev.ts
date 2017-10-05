@@ -9,26 +9,9 @@ import * as WebpackDevServer from 'webpack-dev-server';
 import logger from '../shared/utils/logger';
 
 import { getDevConfig } from './webpack_configs';
+import { ServerConfig } from '../shared/server_config';
 import { defaultStaticDir, publicPath } from './constants';
 import makeSocketServer from './socket_server';
-
-export function makeDevServer(port: number, extraConf: any = {}) {
-  const server = new WebpackDevServer(webpack(getDevConfig()), {
-    publicPath: publicPath,
-    hot: true,
-    stats: false,
-    historyApiFallback: true,
-    ...extraConf
-  });
-
-  const app: express.Application = (server as any).app;
-  app.use(express.static(defaultStaticDir));
-
-  server.listen(port, 'localhost', (err: Error) => {
-    if (err) { return logger.error(err); }
-    logger.info(`Listening at http://localhost:${port}`);
-  });
-}
 
 async function main(args: any) {
   if (args.help || args.h) {
@@ -58,7 +41,15 @@ async function main(args: any) {
   let port: number = args.port || 3000;
 
   logger.info('Starting development server');
-  const webpack_options: any = {};
+  const webpack_options: any = {
+    publicPath: publicPath,
+    hot: true,
+    stats: false,
+    historyApiFallback: true,
+  };
+
+  const server_config: ServerConfig = {};
+
   if (args.db) {
     const wsPort = port + 1;
     webpack_options.proxy = {
@@ -67,6 +58,7 @@ async function main(args: any) {
          ws: true
       },
     };
+    server_config.socketserver = true;
     const server = http.createServer(express());
     const options = {
       db: args.db,
@@ -79,7 +71,21 @@ async function main(args: any) {
       logger.info('Internal server listening on http://localhost:%d', server.address().port);
     });
   }
-  makeDevServer(port, webpack_options);
+
+  const server = new WebpackDevServer(
+    webpack(getDevConfig({
+      server_config: server_config
+    })),
+    webpack_options);
+
+  const app: express.Application = (server as any).app;
+  app.use(express.static(defaultStaticDir));
+
+  server.listen(port, 'localhost', (err: Error) => {
+    if (err) { return logger.error(err); }
+    logger.info(`Listening at http://localhost:${port}`);
+  });
+
   if (args.test) {
     spawn('npm', ['run', 'watchtest'], {stdio: 'inherit'});
   }

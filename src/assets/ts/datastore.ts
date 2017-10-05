@@ -14,6 +14,7 @@ However, in the case of a key-value store, one can simply implement `get` and `s
 Currently, DataStore has a synchronous API.  This may need to change eventually...  :(
 */
 
+// TODO: think this through more clearly.  for server case, we may want controlled behavior of how documents are stored
 // ClientSettings: settings specific to a client (stored locally, not per document)
 // LocalDocSettings: settings specific to a client and document name (stored locally, per document)
 // DocSettings: settings specific to a document (stored remotely, per document)

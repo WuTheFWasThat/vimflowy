@@ -9,7 +9,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
 RUN mkdir -p /build/{client, server}
-RUN npm run build -- --outdir /build/client
+RUN npm run build -- --outdir /build/client --socketserver
 RUN npm run buildserver -- --outdir /build/server
 
 FROM node:6-alpine
@@ -30,4 +30,3 @@ ENTRYPOINT node /app/server.js \
     --db sqlite \
     --dbfolder /app/db \
     --password $VIMFLOWY_PASSWORD
-
