@@ -96,7 +96,7 @@ export default class KeyHandler extends EventEmitter {
   private session: Session;
   private keyBindings: KeyBindings;
   public keyStream: KeyStream;
-  private processQueue: Promise<any>;
+  private processQueue: Promise<void>;
 
   constructor(session: Session, keyBindings: KeyBindings) {
     super();
@@ -120,11 +120,11 @@ export default class KeyHandler extends EventEmitter {
 
   // general handling
 
-  public queueKey(key: Key) {
+  public async queueKey(key: Key): Promise<void> {
     logger.info('Handling key:', key);
     const hadWaiting = this.keyStream.enqueue(key);
     if (!hadWaiting) {
-      this.processKeys(); // FIRE AND FORGET
+      await this.processKeys(); // FIRE AND FORGET
     }
   }
 
@@ -168,13 +168,13 @@ export default class KeyHandler extends EventEmitter {
     }
   }
 
-  public queue(next: () => void | Promise<void>) {
-    this.processQueue = this.processQueue.then(next);
-    return this.processQueue;
+  public async queue(next: () => void | Promise<void>): Promise<void> {
+    return this.processQueue = this.processQueue.then(next);
+
   }
 
-  public processKeys() {
-    this.queue(async () => {
+  private async processKeys() {
+    await this.queue(async () => {
       await this._processKeys(this.keyStream);
     }).catch((err) => {
       // expose any errors
