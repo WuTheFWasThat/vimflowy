@@ -1,8 +1,8 @@
 /* globals describe, it */
 import TestCase from '../testcase';
 
-describe('backspace', function() {
-  it('works in simple case', async function() {
+describe('backspace', function () {
+  it('works in simple case', async function () {
     const t = new TestCase(['abc']);
     t.sendKey('A');
     t.sendKey('backspace');
@@ -11,7 +11,7 @@ describe('backspace', function() {
     await t.done();
   });
 
-  it('works deleting from second line', async function() {
+  it('works deleting from second line', async function () {
     const t = new TestCase(['abc', 'def']);
     t.sendKeys('jli');
     t.sendKey('backspace');
@@ -32,7 +32,7 @@ describe('backspace', function() {
     await t.done();
   });
 
-  it('works at end of line', async function() {
+  it('works at end of line', async function () {
     const t = new TestCase(['ab', 'cd']);
     t.sendKeys('jA');
     t.sendKey('backspace');
@@ -45,63 +45,81 @@ describe('backspace', function() {
     await t.done();
   });
 
-  it('works from children', async function() {
+  it('works from children', async function () {
     const t = new TestCase([
-      { text: 'ab', children: [
-        'bc',
-      ] },
-      { text: 'cd', children: [
-        'de',
-      ] },
+      {
+        text: 'ab', children: [
+          'bc',
+        ]
+      },
+      {
+        text: 'cd', children: [
+          'de',
+        ]
+      },
     ]);
     t.sendKeys('jji');
     t.sendKey('backspace');
     // did nothing due to child of 'ab'
     t.expect([
-      { text: 'ab', children: [
-        'bc',
-      ] },
-      { text: 'cd', children: [
-        'de',
-      ] },
+      {
+        text: 'ab', children: [
+          'bc',
+        ]
+      },
+      {
+        text: 'cd', children: [
+          'de',
+        ]
+      },
     ]);
     t.sendKey('esc');
     t.sendKeys('kddj');
     t.expect([
       'ab',
-      { text: 'cd', children: [
-        'de',
-      ] },
+      {
+        text: 'cd', children: [
+          'de',
+        ]
+      },
     ]);
     t.sendKeys('i');
     t.sendKey('backspace');
     t.expect([
-      { text: 'abcd', children: [
-        'de',
-      ] },
+      {
+        text: 'abcd', children: [
+          'de',
+        ]
+      },
     ]);
     t.sendKey('backspace');
     t.sendKey('backspace');
     t.sendKey('backspace');
     t.expect([
-      { text: 'cd', children: [
-        'de',
-      ] },
+      {
+        text: 'cd', children: [
+          'de',
+        ]
+      },
     ]);
     t.sendKey('backspace');
     t.expect([
-      { text: 'cd', children: [
-        'de',
-      ] },
+      {
+        text: 'cd', children: [
+          'de',
+        ]
+      },
     ]);
     await t.done();
   });
 
-  it('works with undo/redo', async function() {
+  it('works with undo/redo', async function () {
     const t = new TestCase([
-      { text: 'ab', children: [
-        'cd',
-      ] },
+      {
+        text: 'ab', children: [
+          'cd',
+        ]
+      },
     ]);
     t.sendKeys('ji');
     t.sendKey('backspace');
@@ -117,9 +135,11 @@ describe('backspace', function() {
     t.expectCursor(1, 1);
     t.sendKeys('u');
     t.expect([
-      { text: 'ab', children: [
-        'cd',
-      ] },
+      {
+        text: 'ab', children: [
+          'cd',
+        ]
+      },
     ]);
     t.sendKey('ctrl+r');
     t.expect([
@@ -133,53 +153,69 @@ describe('backspace', function() {
     await t.done();
   });
 
-  it('fails when both rows have children', async function() {
+  it('fails when both rows have children', async function () {
     const t = new TestCase([
-      { text: 'ab', children: [
-        'cd',
-      ] },
-      { text: 'ab', children: [
-        'cd',
-      ] },
+      {
+        text: 'ab', children: [
+          'cd',
+        ]
+      },
+      {
+        text: 'ab', children: [
+          'cd',
+        ]
+      },
     ]);
     t.sendKeys('jji');
     t.sendKey('backspace');
     t.expect([
-      { text: 'ab', children: [
-        'cd',
-      ] },
-      { text: 'ab', children: [
-        'cd',
-      ] },
+      {
+        text: 'ab', children: [
+          'cd',
+        ]
+      },
+      {
+        text: 'ab', children: [
+          'cd',
+        ]
+      },
     ]);
     t.sendKey('esc');
     t.sendKeys('kdd');
     t.expect([
       'ab',
-      { text: 'ab', children: [
-        'cd',
-      ] },
+      {
+        text: 'ab', children: [
+          'cd',
+        ]
+      },
     ]);
     t.sendKeys('ji');
     t.sendKey('backspace');
     t.expect([
-      { text: 'abab', children: [
-        'cd',
-      ] },
+      {
+        text: 'abab', children: [
+          'cd',
+        ]
+      },
     ]);
     t.sendKey('backspace');
     t.expect([
-      { text: 'aab', children: [
-        'cd',
-      ] },
+      {
+        text: 'aab', children: [
+          'cd',
+        ]
+      },
     ]);
     t.sendKey('esc');
     t.sendKeys('u');
     t.expect([
       'ab',
-      { text: 'ab', children: [
-        'cd',
-      ] },
+      {
+        text: 'ab', children: [
+          'cd',
+        ]
+      },
     ]);
     await t.done();
   });
@@ -187,7 +223,7 @@ describe('backspace', function() {
 
 
 describe('delete', () =>
-  it('works in basic case', async function() {
+  it('works in basic case', async function () {
     const t = new TestCase(['ab', 'cd']);
     t.sendKeys('i');
     t.sendKey('delete');
