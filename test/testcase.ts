@@ -122,6 +122,7 @@ class TestCase {
     if (actual !== expected) {
       logger.flush();
       console.error(`
+        \n${message}
         \nExpected:
         \n${expected}
         \nBut got:
