@@ -72,6 +72,9 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * Need to understand.
+   */
   it('tests o and O undo and redo', async function () {
     let threeRows = [
       {
@@ -347,6 +350,9 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * Is empty trail line attached by default?
+   */
   it('tests deletion moves cursor properly', async function () {
     let t = new TestCase([
       {
@@ -499,6 +505,9 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * When parent deleted, all decendants were also deleted.
+   */
   it('creates a new row when last sibling is deleted', async function () {
     let t = new TestCase([
       {
@@ -542,13 +551,16 @@ describe('basic multiline tests', function () {
 
   it('handles deletion of everything', async function () {
     let t = new TestCase(['row', 'row', 'row your boat']);
-    t.sendKeys('4dd');
+    t.sendKeys('3dd');
     t.expect(['']);
     t.sendKey('u');
     t.expect(['row', 'row', 'row your boat']);
     await t.done();
   });
 
+  /**
+   * cc only affects parent itself.
+   */
   it('basic change row works', async function () {
     let t = new TestCase([
       {
@@ -598,6 +610,9 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * cr affects parent and its decendants.
+   */
   it('basic recursive change row works', async function () {
     let t = new TestCase([
       {
@@ -688,6 +703,9 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * "u" restore not only state but also cursor point.
+   */
   it('tests cursor returns to where it was', async function () {
     let t = new TestCase([
       'top row',
@@ -705,6 +723,9 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * "ctrl + r" also restore not only state but also cursor point.
+   */
   it('tests cursor returns to where it was after undo+redo+undo', async function () {
     let t = new TestCase([
       'top row',
@@ -714,7 +735,7 @@ describe('basic multiline tests', function () {
     t.sendKeys('dd');
     t.sendKeys('jj');
     t.sendKeys('u');
-    t.sendKey('ctrl+r');
+    t.sendKey(redoKey);
     t.sendKeys('ux');
     t.expect([
       'op row',
@@ -724,12 +745,16 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * cr moves cursor to last point of line.
+   */
   it('tests redo in tricky case removing last row', async function () {
     let t = new TestCase(['a row']);
     t.sendKeys('cr');
     t.sendKeys('new row');
     t.sendKey('esc');
     t.expect(['new row']);
+    t.expectCursor(2, 6);
     t.sendKeys('u');
     t.sendKey('ctrl+r');
     t.sendKeys('x');
@@ -824,6 +849,9 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * Is "{n}cr" actually equal to "cr"?
+   */
   it('tests undo on change', async function () {
     let t = new TestCase([
       {
@@ -895,6 +923,9 @@ describe('basic multiline tests', function () {
     await t.done();
   });
 
+  /**
+   * When "p" executed, cursor point is in head of line.
+   */
   it('tests redo in tricky case making sure redo paste re-creates the same row', async function () {
     let t = new TestCase(['a row']);
     t.sendKeys('yyp');
@@ -959,11 +990,23 @@ describe('basic multiline tests', function () {
     t.sendKeys('j');
     t.sendKey('enter');
     t.expectViewRoot(2);
-    t.sendKeys('dd');
-    t.expectViewRoot(1);
+    t.sendKeys('cc');
+    t.sendKeys('edited');
+    t.sendKey('esc');
+    t.expectViewRoot(2);
+    t.expect([
+      {
+        text: 'here', children: [
+          'edited',
+        ]
+      },
+    ]);
     await t.done();
   });
 
+  /**
+   * This is important.
+   */
   it('cannot do new line above at view root', async function () {
     let t = new TestCase([
       {
