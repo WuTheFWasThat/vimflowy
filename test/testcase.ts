@@ -80,7 +80,7 @@ class TestCase {
     });
   }
 
-  protected _chain(next: () => void, waitKeyHandler = true) {
+  protected _chain(next: () => void, waitKeyHandler = true): this {
     this.prom = this.prom.then(async () => {
       if (waitKeyHandler) {
         await this.keyhandler.queue(async () => {
@@ -118,7 +118,7 @@ class TestCase {
     }
   }
 
-  protected _expectEqual<T>(actual: T, expected: T, message: string) {
+  protected _expectEqual<T>(actual: T, expected: T, message: string): void {
     if (actual !== expected) {
       logger.flush();
       console.error(`
@@ -179,7 +179,7 @@ class TestCase {
     });
   }
 
-  public expectViewRoot(expected: Row) {
+  public expectViewRoot(expected: Row): this {
     return this._chain(() => {
       this._expectEqual(this.session.viewRoot.row, expected,
         'Unexpected view root');
