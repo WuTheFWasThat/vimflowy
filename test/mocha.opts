@@ -2,4 +2,5 @@
 --require ignore-styles
 --watch-extensions tsx,ts
 --timeout 60000
-test/tests/*.ts
+--reporter mochawesome
+test/tests/*.ts 
