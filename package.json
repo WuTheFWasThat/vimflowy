@@ -31,7 +31,7 @@
     "@types/lodash": "^4.14.62",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^2.2.32",
-    "@types/react": "^15.0.34",
+    "@types/react": "^15.6.12",
     "@types/react-dom": "^0.14.18",
     "@types/sqlite3": "^2.2.33",
     "@types/webpack": "^2.2.15",
