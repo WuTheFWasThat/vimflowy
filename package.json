@@ -28,7 +28,7 @@
     "@types/express": "^4.0.35",
     "@types/jquery": "^2.0.34",
     "@types/katex": "^0.5.0",
-    "@types/lodash": "^4.14.62",
+    "@types/lodash": "^4.14.102",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^2.2.32",
     "@types/react": "^15.6.12",
@@ -58,7 +58,7 @@
     "ts-node": "^3.1.0",
     "tslint": "^4.5.1",
     "tslint-loader": "^3.5.3",
-    "typescript": "^2.5.3",
+    "typescript": "^2.7.1",
     "webpack": "^2.6.0",
     "webpack-dev-server": "^1.12.1"
   }

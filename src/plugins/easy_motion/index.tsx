@@ -85,7 +85,7 @@ registerPlugin(
           path_to_key: {},
         };
         // NOTE: _.zip has a stupid type definition
-        _.zip<Path | string>(paths, keys).forEach((pair: [any, any]) => {
+        _.zip<Path | string>(paths, keys).forEach((pair: any) => {
           const [path, jump_key]: [Path, string] = pair;
           mappings.key_to_path[jump_key] = path;
           mappings.path_to_key[JSON.stringify(path.getAncestry())] = jump_key;

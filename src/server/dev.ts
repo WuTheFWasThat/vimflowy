@@ -59,16 +59,16 @@ async function main(args: any) {
       },
     };
     server_config.socketserver = true;
-    const server = http.createServer(express());
+    const http_server = http.createServer(express() as any);
     const options = {
       db: args.db,
       dbfolder: args.dbfolder,
       password: args.password,
     };
-    makeSocketServer(server, options);
-    server.listen(wsPort, 'localhost', (err: Error) => {
+    makeSocketServer(http_server, options);
+    http_server.listen(wsPort, 'localhost', (err: Error) => {
       if (err) { return logger.error(err); }
-      logger.info('Internal server listening on http://localhost:%d', server.address().port);
+      logger.info('Internal server listening on http://localhost:%d', http_server.address().port);
     });
   }
 

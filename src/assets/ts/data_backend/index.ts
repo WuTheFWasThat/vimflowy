@@ -162,7 +162,8 @@ export class ClientSocketBackend extends DataBackend {
   private numPendingSaves: number = 0;
   private callback_table: {[id: string]: (result: any) => void} = {};
 
-  private ws: WebSocket;
+  // init is like async constructor
+  private ws!: WebSocket;
   private clientId: string;
 
   constructor() {

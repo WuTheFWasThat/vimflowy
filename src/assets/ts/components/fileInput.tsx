@@ -8,7 +8,7 @@ type Props = {
   style?: React.CSSProperties;
 };
 
-export const load_file = function(file: File) {
+export const load_file = function(file: File): Promise<{name: string, contents: string}> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsText(file, 'UTF-8');
@@ -46,7 +46,7 @@ export default class FileInput extends React.Component<Props, {}> {
         this.props.onLoad(name, contents);
       }
       $(`#${this.id}`).val('');
-    }).catch((err) => {
+    }).catch((err: string) => {
       if (this.props.onError) {
         this.props.onError(err);
       }
@@ -74,5 +74,4 @@ export default class FileInput extends React.Component<Props, {}> {
       </div>
     );
   }
-};
-
+}

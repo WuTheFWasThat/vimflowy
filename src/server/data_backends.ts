@@ -3,9 +3,11 @@ import * as sqlite from 'sqlite3';
 import DataBackend from '../shared/data_backend';
 
 export class SQLiteBackend extends DataBackend {
-  private db: sqlite.Database;
-  private setStatement: sqlite.Statement;
-  private getStatement: sqlite.Statement;
+  // init is basically like async constructor
+  private db!: sqlite.Database;
+  private setStatement!: sqlite.Statement;
+  private getStatement!: sqlite.Statement;
+
   private tableName: string = 'vimflowy';
 
   constructor() {

@@ -22,8 +22,8 @@ type RowProps = {
   cursorBetween: boolean;
 };
 class RowComponent extends React.Component<RowProps, {}> {
-  private onClick: (() => void) | undefined;
-  private onCharClick: ((column: Col, e: Event) => void) | null;
+  private onClick: (() => void) | undefined = undefined;
+  private onCharClick: ((column: Col, e: Event) => void) | null = null;
 
   constructor(props: RowProps) {
     super(props);
@@ -31,7 +31,6 @@ class RowComponent extends React.Component<RowProps, {}> {
   }
 
   private init(props: RowProps) {
-    this.onClick = undefined;
     if (props.onClick) {
       this.onClick = () => {
         if (!props.onClick) {
@@ -41,7 +40,6 @@ class RowComponent extends React.Component<RowProps, {}> {
       };
     }
 
-    this.onCharClick = null;
     if (props.onCharClick) {
       this.onCharClick = (column: Col, e: Event) => {
         if (!props.onCharClick) {

@@ -642,7 +642,7 @@ export default class Document extends EventEmitter {
 
     const commonAncestry = _.takeWhile(
       _.zip(ancestors1, ancestors2),
-      pair => (pair[0] && pair[1] && pair[0].is(pair[1]))
+      (pair: any) => (pair[0] && pair[1] && pair[0].is(pair[1]))
     ).map((pair) => pair[0]);
 
     const lastCommon = _.last(commonAncestry);
@@ -792,8 +792,8 @@ export default class Document extends EventEmitter {
     serialized: {[row: number]: SerializedBlock} = {}
   ): Promise<SerializedBlock> {
     if (row in serialized) {
-      const struct: any = serialized[row];
-      struct.id = row;
+      const clone_struct: any = serialized[row];
+      clone_struct.id = row;
       return { clone: row };
     }
 
@@ -835,9 +835,9 @@ export default class Document extends EventEmitter {
       // NOTE: this assumes we load in the same order we serialize
       errors.assert(serialized.clone in id_mapping);
       const row = id_mapping[serialized.clone];
-      const path = parent_path.child(row);
-      await this.attachChild(parent_path, path, index);
-      return path;
+      const clone_path = parent_path.child(row);
+      await this.attachChild(parent_path, clone_path, index);
+      return clone_path;
     }
 
     const children = await this.getChildren(parent_path);

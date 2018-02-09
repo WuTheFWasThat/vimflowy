@@ -49,22 +49,23 @@ export class MarksPlugin {
   private markstate: {
     session: Session,
     path: Path,
-  } | null;
-  public SetMark: new(row: Row, mark: Mark) => Mutation;
-  public UnsetMark: new(row: Row) => Mutation;
+  } | null = null;
+  // hacky, these are only used when enabled
+  public SetMark!: new(row: Row, mark: Mark) => Mutation;
+  public UnsetMark!: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
 
   constructor(api: PluginApi) {
     this.api = api;
+    this.logger = this.api.logger;
+    this.session = this.api.session;
+    this.document = this.session.document;
     // NOTE: this may not be initialized correctly at first
     // this only affects rendering @marklinks for now
     this.marks_to_paths = {};
   }
 
   public async enable() {
-    this.logger = this.api.logger;
-    this.session = this.api.session;
-    this.document = this.session.document;
     const that = this;
 
     class SetMark extends Mutation {
@@ -93,7 +94,7 @@ export class MarksPlugin {
 
     class UnsetMark extends Mutation {
       private row: Row;
-      private mark: Mark;
+      private mark: Mark | null = null;
 
       constructor(row: Row) {
         super();
@@ -108,6 +109,9 @@ export class MarksPlugin {
         await that.api.updatedDataForRender(this.row);
       }
       public async rewind(/* session */) {
+        if (this.mark === null) {
+          throw new Error('Rewinding before mutating: UnsetMark');
+        }
         return [
           new SetMark(this.row, this.mark),
         ];

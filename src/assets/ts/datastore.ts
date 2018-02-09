@@ -212,7 +212,7 @@ export class DocumentStore {
   constructor(backend: DataBackend, docname = '') {
     this.backend = backend;
     this.docname = docname;
-    this.prefix = `${docname}save`;
+    this.prefix = `${this.docname}save`;
     this.lastId = null;
   }
 

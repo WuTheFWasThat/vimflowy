@@ -44,7 +44,7 @@ export enum PluginStatus {
   DISABLED = 2,
   ENABLING = 3,
   ENABLED = 4,
-};
+}
 
 type Emitter = 'document' | 'session';
 
@@ -194,7 +194,7 @@ export class PluginApi {
   }
 
   public async panic() {
-    // await this.pluginManager.disable(this.name);
+    this.pluginManager.disable(this.name); // Fire and forget
     throw new Error(
       `Plugin '${this.name}' has encountered a major problem.
       Please report this problem to the plugin author.`

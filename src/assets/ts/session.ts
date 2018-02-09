@@ -69,13 +69,13 @@ export default class Session extends EventEmitter {
 
   public viewRoot: Path;
 
-  public menu: Menu | null;
+  public menu: Menu | null = null;
 
-  private mutations: Array<Mutation>;
-  private history: Array<HistoryLogEntry>;
-  private historyIndex: number;
-  public jumpHistory: Array<JumpLogEntry>;
-  public jumpIndex: number;
+  private mutations: Array<Mutation> = [];
+  private history: Array<HistoryLogEntry> = [];
+  private historyIndex: number = 0;
+  public jumpHistory: Array<JumpLogEntry> = [];
+  public jumpIndex: number = 0;
 
   private getLinesPerPage: () => number;
   public showMessage: (message: string, options?: any) => void;
@@ -559,7 +559,7 @@ export default class Session extends EventEmitter {
       viewRoot: this.viewRoot,
       cursor_before: this.cursor.clone(),
     }];
-    return this.jumpIndex = 0; // index into jump history
+    this.jumpIndex = 0; // index into jump history
   }
 
   // jump_fn is just some function that changes

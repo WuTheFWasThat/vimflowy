@@ -19,12 +19,12 @@ export enum STREAM {
   STDOUT,
   STDERR,
   QUEUE,
-};
+}
 
 export class Logger {
-  private stream: STREAM;
-  private level: LEVEL;
-  private queue: Array<any>;
+  private stream!: STREAM;
+  private level!: LEVEL;
+  private queue: Array<any> = [];
 
   // hack since we add the methods dynamically
   public info: any;

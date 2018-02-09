@@ -32,7 +32,7 @@ export default class Menu {
 
   public session: Session;
 
-  private lastQuery: Query;
+  private lastQuery: Query | null = null;
 
   constructor(searchFn: SearchFn) {
     this.searchFn = searchFn;

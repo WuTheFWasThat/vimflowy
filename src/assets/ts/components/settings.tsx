@@ -35,7 +35,7 @@ enum TABS {
   HOTKEYS,
   PLUGIN,
   ABOUT,
-};
+}
 
 type Props = {
   session: Session;
@@ -54,16 +54,16 @@ type State = {
 
 function getCurrentTheme(clientStore: ClientStore) {
   const theme: Theme = {} as Theme;
-  Object.keys(themes.Default).forEach((theme_property: keyof Theme) => {
-    theme[theme_property] = clientStore.getClientSetting(theme_property);
+  Object.keys(themes.Default).forEach((theme_property: string) => {
+    theme[theme_property as keyof Theme] = clientStore.getClientSetting(theme_property as keyof Theme);
   });
   return theme;
 }
 
 export default class SettingsComponent extends React.Component<Props, State> {
   private keyBindingsUpdate: () => void;
-  private preview_session: Session;
-  private preview_menu: Menu;
+  private preview_session: Session | null = null;
+  private preview_menu: Menu | null = null;
   private initial_theme: Theme;
 
   constructor(props: Props) {
@@ -146,12 +146,14 @@ export default class SettingsComponent extends React.Component<Props, State> {
     const keyBindings = this.props.keyBindings;
 
     const updateAll = () => {
-      this.preview_session.document.cache.clear();
+      if (this.preview_session) {
+        this.preview_session.document.cache.clear();
+      }
       this.props.rerenderAll();
     };
     const applyTheme = (theme: Theme) => {
-      Object.keys(theme).forEach((theme_prop: keyof Theme) => {
-        session.clientStore.setClientSetting(theme_prop, theme[theme_prop]);
+      Object.keys(theme).forEach((theme_prop: string) => {
+        session.clientStore.setClientSetting(theme_prop as keyof Theme, theme[theme_prop as keyof Theme]);
       });
       updateAll();
     };
@@ -440,7 +442,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 ...getStyles(session.clientStore, ['theme-trim-accent']),
                 padding: 10, marginTop: 10, pointerEvents: 'none'
               }}>
-                { this.preview_menu ?
+                { (this.preview_menu && this.preview_session) ?
                   <MenuComponent
                     menu={this.preview_menu}
                     session={this.preview_session}

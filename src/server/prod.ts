@@ -54,7 +54,7 @@ async function main(args: any) {
   logger.info('Starting production server');
   const app = express();
   app.use(express.static(staticDir));
-  const server = http.createServer(app);
+  const server = http.createServer(app as any);
   if (args.db) {
     const options = {
       db: args.db,

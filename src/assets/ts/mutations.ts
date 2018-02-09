@@ -117,7 +117,7 @@ export class DelChars extends Mutation {
   private row: Row;
   private col: Col;
   private nchars: number;
-  public deletedChars: Line;
+  public deletedChars: Line = [];
 
   constructor(row: Row, col: Col, nchars: number) {
     super();
@@ -160,8 +160,8 @@ export class ChangeChars extends Mutation {
   private nchars: number;
   private transform?: (chars: Chars) => Chars;
   private newChars?: Array<Char>;
-  private deletedChars: Array<Char>;
-  public ncharsDeleted: number;
+  private deletedChars: Array<Char> = [];
+  public ncharsDeleted: number = 0;
 
   constructor(
     row: Row, col: Col, nchars: number,
@@ -217,7 +217,7 @@ export class MoveBlock extends Mutation {
   private parent: Path;
   private old_parent: Path;
   private index: number;
-  private old_index: number;
+  private old_index: number = -1;
 
   constructor(path: Path, parent: Path, index: number) {
     super();
@@ -318,9 +318,9 @@ export class DetachBlocks extends Mutation {
   private parent: Row;
   private index: number;
   private nrows: number;
-  public deleted: Array<Row>;
-  private next: SerializedPath;
-  private created_info: AttachedChildInfo | null;
+  public deleted: Array<Row> = [];
+  private next: SerializedPath = [];
+  private created_info: AttachedChildInfo | null = null;
   private options: DetachBlocksOptions;
 
   constructor(parent: Row, index: number, nrows: number = 1, options: DetachBlocksOptions = {}) {
@@ -418,7 +418,7 @@ export class AddBlocks extends Mutation {
   private serialized_rows: Array<SerializedBlock>;
   private index: number;
   private nrows: number;
-  public added_rows: Array<Path>;
+  public added_rows: Array<Path> = [];
 
   constructor(parent: Path, index: number, serialized_rows: Array<SerializedBlock>) {
     super();

@@ -15,7 +15,7 @@ type State = {
   query: Line | null;
 };
 export default class MenuComponent extends React.Component<Props, State> {
-  private updateFn: () => Promise<void>;
+  private updateFn?: () => Promise<void>;
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -34,6 +34,9 @@ export default class MenuComponent extends React.Component<Props, State> {
   }
 
   public componentWillUnmount() {
+    if (!this.updateFn) {
+      throw new Error('Unmounting before mounting!?');
+    }
     this.props.session.off('handledKey', this.updateFn);
   }
 

@@ -23,8 +23,8 @@ type PasteOptions = {before?: boolean};
 
 export default class Register {
   private session: Session;
-  private type: RegisterTypes;
-  private saved: RegisterValue;
+  private type: RegisterTypes = RegisterTypes.NONE;
+  private saved: RegisterValue = null;
 
   constructor(session: Session) {
     this.session = session;

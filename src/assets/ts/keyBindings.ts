@@ -130,9 +130,9 @@ function makeBindings(definitions: KeyDefinitions, mappings: KeyMappings) {
 }
 
 export default class KeyBindings extends EventEmitter {
-  public bindings: {[mode: string]: KeyBindingsTree};
   public definitions: KeyDefinitions;
-  public mappings: KeyMappings;
+  public bindings: {[mode: string]: KeyBindingsTree} = {};
+  public mappings!: KeyMappings;
 
   private update: () => void;
 

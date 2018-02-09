@@ -361,6 +361,8 @@ $(document).ready(async () => {
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;
 
+  const $mainDiv = $('#view');
+
   async function renderMain() {
     await new Promise((resolve) => {
       ReactDOM.render(
@@ -384,7 +386,6 @@ $(document).ready(async () => {
     // weirdly happens on bitballoon but not dev mode?
     await fn_utils.timeout(100);
 
-    const $mainDiv = $('#view');
     const cursorDiv = $('.cursor', $mainDiv)[0];
     if (cursorDiv) {
       browser_utils.scrollIntoView(cursorDiv, $mainDiv, 50);
@@ -393,7 +394,6 @@ $(document).ready(async () => {
 
   await renderMain();
 
-  const $mainDiv = $('#view');
   session.on('scroll', (numlines) => {
     const line_height = getLineHeight();
     browser_utils.scrollDiv($mainDiv, line_height * numlines);
