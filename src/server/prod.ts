@@ -64,7 +64,7 @@ async function main(args: any) {
     };
     makeSocketServer(server, options);
   }
-  server.listen(port, host, (err: Error) => {
+  server.listen(port, host, (err?: Error) => {
     if (err) { return logger.error(err); }
     logger.info('Listening on http://%s:%d', server.address().address, server.address().port);
   });

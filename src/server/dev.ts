@@ -81,7 +81,7 @@ async function main(args: any) {
   const app: express.Application = (server as any).app;
   app.use(express.static(defaultStaticDir));
 
-  server.listen(port, 'localhost', (err: Error) => {
+  server.listen(port, 'localhost', (err?: Error) => {
     if (err) { return logger.error(err); }
     logger.info(`Listening at http://localhost:${port}`);
   });
