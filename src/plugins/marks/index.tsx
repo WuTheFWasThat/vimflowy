@@ -67,6 +67,7 @@ export class MarksPlugin {
 
   public async enable() {
     const that = this;
+    this.logger.debug('Enabling marks');
 
     class SetMark extends Mutation {
       private row: Row;
