@@ -766,7 +766,7 @@ export default class Document extends EventEmitter {
       }
     }
     return results;
-  };
+  }
 
   // important: serialized automatically garbage collects
   public async serializeRow(row = this.root.row): Promise<SerializedLine> {

@@ -26,7 +26,6 @@ export const NORMAL_MOTION_MAPPINGS: HotkeyMapping = {
   'motion-visible-beginning': [['g', 'g']],
   'motion-visible-end': [['G'], ['g', 'G']],
   'motion-parent': [['g', 'p']],
-  'motion-next-clone': [['g', 'c']],
   'motion-next-sibling': [['}']],
   'motion-prev-sibling': [['{']],
   // NOTE: should these work in insert mode also?
@@ -53,7 +52,6 @@ export const INSERT_MOTION_MAPPINGS: HotkeyMapping = {
   'motion-visible-beginning': [['meta+home']],
   'motion-visible-end': [['meta+end']],
   'motion-parent': [['ctrl+g', 'p']],
-  'motion-next-clone': [['ctrl+g', 'c']],
   'motion-next-sibling': [['alt+down']],
   'motion-prev-sibling': [['alt+up']],
 };
@@ -120,6 +118,7 @@ export const NORMAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'jump-prev': [['ctrl+o']],
   'jump-next': [['ctrl+i']],
   'swap-case': [['~']],
+  'go-next-clone': [['g', 'c']],
 }, NORMAL_MOTION_MAPPINGS);
 
 export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({

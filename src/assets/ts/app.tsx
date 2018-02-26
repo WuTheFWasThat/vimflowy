@@ -391,6 +391,7 @@ $(document).ready(async () => {
       browser_utils.scrollIntoView(cursorDiv, $mainDiv, 50);
     }
   }
+  window.renderMain = renderMain;
 
   await renderMain();
 

@@ -654,7 +654,7 @@ export default class Session extends EventEmitter {
   // fails if there is no child
   // records in jump history
   private async changeView(path: Path) {
-    if (path.row === this.viewRoot.row) {
+    if (path.is(this.viewRoot)) {
       return; // not moving, do nothing
     }
     await this._addToJumpHistory(async () => {
@@ -955,13 +955,11 @@ export default class Session extends EventEmitter {
       await this.cursor.setPosition(first, -1);
       await this.delBlock(second, { noNew: true, noSave: true });
       if (addDelimiter != null) {
-        const mutation = new mutations.AddChars(
-          first.row, firstLine.length, [addDelimiter]);
-        await this.do(mutation);
+        await this.do(new mutations.AddChars(
+          first.row, firstLine.length, [addDelimiter]));
       }
-      const mutation = new mutations.AddChars(
-        first.row, firstLine.length + (addDelimiter == null ? 0 : 1), secondLine);
-      await this.do(mutation);
+      await this.do(new mutations.AddChars(
+        first.row, firstLine.length + (addDelimiter == null ? 0 : 1), secondLine));
       await this.cursor.setPosition(first, firstLine.length);
       return true;
     }
@@ -979,11 +977,9 @@ export default class Session extends EventEmitter {
     await this.cursor.setPosition(second, 0);
     await this.delBlock(first, {noNew: true, noSave: true});
     if (addDelimiter != null) {
-      const mutation = new mutations.AddChars(second.row, 0, [addDelimiter]);
-      await this.do(mutation);
+      await this.do(new mutations.AddChars(second.row, 0, [addDelimiter]));
     }
-    const mutation = new mutations.AddChars(second.row, 0, firstLine);
-    await this.do(mutation);
+    await this.do(new mutations.AddChars(second.row, 0, firstLine));
 
     if (addDelimiter != null) {
       await this.cursor.left();

@@ -570,3 +570,15 @@ keyDefinitions.registerAction(new Action(
     await session.setMode('NORMAL');
   },
 ));
+
+keyDefinitions.registerAction(new Action(
+  'go-next-clone',
+  'Go to next copy of this clone',
+  async function({ session }) {
+    const newPath = await session.document.nextClone(session.cursor.path);
+    await session.cursor.setPath(newPath);
+    if (!(await session.isVisible(newPath))) {
+      await session.zoomInto(newPath);
+    }
+  },
+));

@@ -157,25 +157,6 @@ keyDefinitions.registerMotion(new Motion(
 ));
 
 keyDefinitions.registerMotion(new Motion(
-  'motion-next-clone',
-  'Go to next copy of this clone',
-  async function({ session }) {
-    return async (cursor) => {
-      if (session.mode !== 'NORMAL') {
-        // TODO fix this
-        // doesn't work for visual_line mode due to zoomInto
-        return;
-      }
-      const newPath = await session.document.nextClone(cursor.path);
-      await cursor.setPath(newPath);
-      if (!(await session.isVisible(newPath))) {
-        await session.zoomInto(newPath);
-      }
-    };
-  },
-));
-
-keyDefinitions.registerMotion(new Motion(
   'motion-next-sibling',
   'Move cursor to the next sibling of the current line',
   async function() {
