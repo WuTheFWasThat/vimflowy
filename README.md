@@ -5,9 +5,9 @@
 
 This is a productivity tool which draws some inspiration from workflowy and vim.
 
-[Try it out!](https://vimflowy.netlify.com)
+[Try it out now!](https://vimflowy.netlify.com)
 
-[![Docker logo](/docs/media/docker-logo.png) Deploy with docker!](https://hub.docker.com/r/vimflowy/vimflowy/)
+[Deploy yourself with docker!](https://hub.docker.com/r/vimflowy/vimflowy/)
 
 ## FEATURES
 
