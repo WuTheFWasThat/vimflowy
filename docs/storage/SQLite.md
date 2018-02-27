@@ -38,7 +38,7 @@ You can also change the port (from the default of 3000) with the `--port ${portn
 ### Configure Vimflowy
 
 Now open Vimflowy in your browser.
-You can use vimflowy.bitballoon.com, but the server you ran will also host a version fo the website.
+You can use vimflowy.netlify.com, but the server you ran will also host a version of the website.
 On the page, click Settings in the lower right.
 Select the `Vimflowy server` option under `Data Storage`.
 

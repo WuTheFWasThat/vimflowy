@@ -1,7 +1,6 @@
 /dist/
 /static/build/
 .sass-cache
-.bitballoon
 
 node_modules/
 npm-debug.log

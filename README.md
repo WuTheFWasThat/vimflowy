@@ -5,7 +5,7 @@
 
 This is a productivity tool which draws some inspiration from workflowy and vim.
 
-[![Bitballoon logo](/docs/media/bitballoon-logo.png) Try it out!](https://vimflowy.bitballoon.com)
+[Try it out!](https://vimflowy.netlify.com)
 
 [![Docker logo](/docs/media/docker-logo.png) Deploy with docker!](https://hub.docker.com/r/vimflowy/vimflowy/)
 
