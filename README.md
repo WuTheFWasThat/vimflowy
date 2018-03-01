@@ -22,7 +22,7 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
 - Plugins system (see [plugins.md](docs/plugins.md))
   - marks (not like vim's)
   - easy-motion for moving between bullets quickly
-  - time-tracking
+  - time tracking
   - LaTeX and HTML rendering
 - Other
   - data import from or export as text file (native Vimflowy format or Workflowy-compatible format)
@@ -33,9 +33,9 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
 
 ## LIMITATIONS
 
-- Global search is slow for large documents (so you'll want to use marks)
 - No collaborative editing
-- You may need a relatively modern browser.  It should at least support HTML5 LocalStorage and Flexbox.  I test only in recent versions of Chrome and Firefox.
+- Global search is slow for large documents (so you'll want to use marks)
+- You may need a relatively modern browser (minimally HTML5 LocalStorage and Flexbox).  I test only in recent versions of Chrome and Firefox.
 
 ## DATA STORAGE
 
@@ -49,7 +49,7 @@ However, you can let Google host it for you, or host it yourself.
 ### SELF-HOSTING
 
 See the [deployment documentation](docs/deployment.md) for details.
-You can deploy with docker, or build yourself from source.
+You can deploy with docker, or build from source yourself.
 
 ## NOTES FOR DEVELOPERS
 
