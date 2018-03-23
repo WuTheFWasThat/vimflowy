@@ -19,7 +19,6 @@ import '../css/view.sass';
 
 import * as browser_utils from './utils/browser';
 import * as errors from '../../shared/utils/errors';
-import * as fn_utils from './utils/functional';
 import logger from '../../shared/utils/logger';
 
 import * as Modes from './modes';
@@ -361,8 +360,6 @@ $(document).ready(async () => {
   window.keyEmitter = keyEmitter;
   window.keyBindings = keyBindings;
 
-  const $mainDiv = $('#view');
-
   async function renderMain() {
     await new Promise((resolve) => {
       ReactDOM.render(
@@ -382,13 +379,9 @@ $(document).ready(async () => {
       );
     });
 
-    // TODO: understand why this is necessary
-    // weirdly happens on bitballoon but not dev mode?
-    await fn_utils.timeout(100);
-
-    const cursorDiv = $('.cursor', $mainDiv)[0];
+    const cursorDiv = $('#view .cursor')[0];
     if (cursorDiv) {
-      browser_utils.scrollIntoView(cursorDiv, $mainDiv, 50);
+      browser_utils.scrollIntoView(cursorDiv, $('#view'), 50);
     }
   }
   window.renderMain = renderMain;
@@ -397,7 +390,7 @@ $(document).ready(async () => {
 
   session.on('scroll', (numlines) => {
     const line_height = getLineHeight();
-    browser_utils.scrollDiv($mainDiv, line_height * numlines);
+    browser_utils.scrollDiv($('#view'), line_height * numlines);
   });
 
   session.on('importFinished', renderMain); // fire and forget
