@@ -33,6 +33,8 @@ export function scrollIntoView(el: Element, $within: any, margin: number = 0) {
 export function isScrolledIntoView(elem: any, container: any) {
   const $elem = $(elem);
   const $container = $(container);
+  if (!$elem) { throw new Error('No element to scroll!'); }
+  if (!$container) { throw new Error('No container element to scroll within!'); }
 
   const docViewTop = $container.offset().top;
   const docViewBottom = docViewTop + $container.outerHeight();
