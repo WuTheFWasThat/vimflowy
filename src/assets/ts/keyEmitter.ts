@@ -109,7 +109,9 @@ export default class KeyEmitter extends EventEmitter {
   public listen() {
     // IME event
     $(document).on('compositionend', (e: any) => {
-      this.emit('keydown', e.originalEvent.data);
+      e.originalEvent.data.split('').forEach((key) => {
+        this.emit('keydown', key);
+      });
     });
 
     return $(document).keydown(e => {
