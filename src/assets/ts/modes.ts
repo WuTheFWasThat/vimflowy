@@ -162,10 +162,6 @@ registerMode({
         // simply insert the key
         await context.session.addCharsAtCursor([key]);
         return [null, context];
-      } else if (!/\w+/.test(key)) {
-        // key is IME input value
-        await context.session.addCharsAtCursor(key.split(''));
-        return [null, context];
       }
       return [key, context];
     },
