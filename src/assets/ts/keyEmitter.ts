@@ -107,7 +107,18 @@ export default class KeyEmitter extends EventEmitter {
   }
 
   public listen() {
+    // IME event
+    $(document).on('compositionend', (e: any) => {
+      e.originalEvent.data.split('').forEach((key) => {
+        this.emit('keydown', key);
+      });
+    });
+
     return $(document).keydown(e => {
+      // IME input keycode is 229
+      if (e.keyCode === 229) {
+        return false;
+      }
       if (e.keyCode in ignoreMap) {
         return true;
       }
