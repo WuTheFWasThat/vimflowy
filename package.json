@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "express": "^4.15.2",
-    "hoek": "^5.0.3",
     "lodash": "^4.15.0",
     "minimist": "^1.2.0",
     "sqlite3": "^3.1.8",
