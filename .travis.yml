@@ -9,7 +9,7 @@ language: node_js
 # for details
 node_js:
 - 'node'
-- '7'
+- '8'
 
 cache:
   directories:
