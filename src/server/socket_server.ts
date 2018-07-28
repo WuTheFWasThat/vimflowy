@@ -14,7 +14,7 @@ type SocketServerOptions = {
   path?: string,
 };
 
-export default async function makeSocketServer(server: http.Server, options: SocketServerOptions) {
+export default function makeSocketServer(server: http.Server, options: SocketServerOptions) {
   const wss = new WebSocket.Server({ server, path: options.path });
 
   const dbs: {[docname: string]: DataBackend} = {};
