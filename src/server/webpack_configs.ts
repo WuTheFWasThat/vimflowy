@@ -1,9 +1,11 @@
 import * as fs from 'fs';
 
 import * as webpack from 'webpack';
+import { CheckerPlugin } from 'awesome-typescript-loader';
 
 import { publicPath, defaultBuildDir, defaultSrcDir } from './constants';
 import { ServerConfig } from '../shared/server_config';
+
 
 export type BuildConfig = {
   outdir?: string,
@@ -53,6 +55,7 @@ export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
         },
         'INJECTED_SERVER_CONFIG': JSON.stringify(config.server_config || {}),
       }),
+      new CheckerPlugin(),
       new webpack.LoaderOptionsPlugin({
         options: {
           tslint: {
