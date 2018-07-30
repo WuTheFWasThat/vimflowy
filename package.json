@@ -35,7 +35,7 @@
     "@types/react-dom": "^0.14.18",
     "@types/sqlite3": "^2.2.33",
     "@types/tapable": "^0.2.5",
-    "@types/webpack": "^2.2.16",
+    "@types/webpack": "^4.4.8",
     "@types/webpack-dev-server": "^2.4.0",
     "@types/ws": "0.0.41",
     "awesome-typescript-loader": "^3.1.3",

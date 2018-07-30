@@ -71,7 +71,7 @@ export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
       extensions: ['.jsx', '.js', '.tsx', '.ts']
     },
   };
-};
+}
 
 export function getProdConfig(config: BuildConfig = {}): webpack.Configuration {
   const srcdir = config.srcdir || defaultSrcDir;
@@ -103,17 +103,15 @@ export function getProdConfig(config: BuildConfig = {}): webpack.Configuration {
       path: outdir,
       publicPath: publicPath
     },
+    optimization: {
+      minimize: true
+    },
     plugins: [
       new webpack.DefinePlugin({
         'process.env': {
           'NODE_ENV': JSON.stringify('production')
         },
         'INJECTED_SERVER_CONFIG': JSON.stringify(config.server_config || {}),
-      }),
-      new webpack.optimize.UglifyJsPlugin({
-        compress: {
-          warnings: false
-        }
       }),
       new webpack.LoaderOptionsPlugin({
         options: {
@@ -165,12 +163,10 @@ export function getProdServerConfig(config: BuildConfig = {}): webpack.Configura
       filename: 'server.js',
       path: outdir,
     },
+    optimization: {
+      minimize: true
+    },
     plugins: [
-      new webpack.optimize.UglifyJsPlugin({
-        compress: {
-          warnings: false
-        }
-      }),
       new webpack.LoaderOptionsPlugin({
         options: {
           tslint: {
