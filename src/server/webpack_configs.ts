@@ -116,6 +116,7 @@ export function getProdConfig(config: BuildConfig = {}): webpack.Configuration {
         },
         'INJECTED_SERVER_CONFIG': JSON.stringify(config.server_config || {}),
       }),
+      new CheckerPlugin(),
       new webpack.LoaderOptionsPlugin({
         options: {
           tslint: {
@@ -170,6 +171,7 @@ export function getProdServerConfig(config: BuildConfig = {}): webpack.Configura
       minimize: true
     },
     plugins: [
+      new CheckerPlugin(),
       new webpack.LoaderOptionsPlugin({
         options: {
           tslint: {
