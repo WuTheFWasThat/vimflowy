@@ -27,8 +27,18 @@ export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
       rules: [
         {
           test: /\.tsx?$/,
+          enforce: 'pre',
           use: [
-            'react-hot-loader', 'awesome-typescript-loader', 'tslint-loader',
+            {
+              loader: 'tslint-loader',
+              options: { emitErrors: false, failOnHint: false, }
+            },
+          ],
+        },
+        {
+          test: /\.tsx?$/,
+          use: [
+            'react-hot-loader', 'awesome-typescript-loader',
           ],
           include: srcdir
         },
@@ -58,10 +68,6 @@ export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
       new CheckerPlugin(),
       new webpack.LoaderOptionsPlugin({
         options: {
-          tslint: {
-            emitErrors: true,
-            failOnHint: true
-          },
           css: {
             sourceMap: true,
             root: '/build',
@@ -73,6 +79,7 @@ export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
     resolve: {
       extensions: ['.jsx', '.js', '.tsx', '.ts']
     },
+    stats: 'verbose'
   };
 }
 
@@ -86,8 +93,18 @@ export function getProdConfig(config: BuildConfig = {}): webpack.Configuration {
       rules: [
         {
           test: /\.tsx?$/,
+          enforce: 'pre',
           use: [
-            'awesome-typescript-loader', 'tslint-loader',
+            {
+              loader: 'tslint-loader',
+              options: { emitErrors: true, failOnHint: true, }
+            },
+          ],
+        },
+        {
+          test: /\.tsx?$/,
+          use: [
+            'awesome-typescript-loader',
           ],
           include: srcdir
         },
@@ -119,10 +136,6 @@ export function getProdConfig(config: BuildConfig = {}): webpack.Configuration {
       new CheckerPlugin(),
       new webpack.LoaderOptionsPlugin({
         options: {
-          tslint: {
-            emitErrors: true,
-            failOnHint: true
-          },
           css: {
             sourceMap: true,
             root: '/build',
@@ -154,9 +167,19 @@ export function getProdServerConfig(config: BuildConfig = {}): webpack.Configura
     module: {
       rules: [
         {
+          test: /\.tsx?$/,
+          enforce: 'pre',
+          use: [
+            {
+              loader: 'tslint-loader',
+              options: { emitErrors: true, failOnHint: true, }
+            },
+          ],
+        },
+        {
           test: /\.ts$/,
           use: [
-            'awesome-typescript-loader', 'tslint-loader',
+            'awesome-typescript-loader'
           ],
           include: srcdir
         },
@@ -172,14 +195,6 @@ export function getProdServerConfig(config: BuildConfig = {}): webpack.Configura
     },
     plugins: [
       new CheckerPlugin(),
-      new webpack.LoaderOptionsPlugin({
-        options: {
-          tslint: {
-            emitErrors: true,
-            failOnHint: true
-          },
-        }
-      }),
     ],
     resolve: {
       extensions: ['.js', '.ts']
