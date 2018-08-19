@@ -57,6 +57,8 @@ const keyCodeMap: {[keyCode: number]: Key} = {
 
   33: 'page up',
   34: 'page down',
+  35: 'end',
+  36: 'home',
   37: 'left',
   38: 'up',
   39: 'right',
