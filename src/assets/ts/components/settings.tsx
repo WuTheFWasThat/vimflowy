@@ -492,12 +492,14 @@ export default class SettingsComponent extends React.Component<Props, State> {
                       session.showMessage(`Failed to parse JSON: ${e}`, {text_class: 'error'});
                       return;
                     }
-                    const err = keyBindings.setMappings(new KeyMappings(hotkey_settings));
-                    if (err) {
-                      session.showMessage(err, {text_class: 'error'});
-                    } else {
-                      session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
-                    }
+                    const mappings = new KeyMappings(hotkey_settings);
+                    keyBindings.setMappings(mappings);
+                    // TODO: validation of mappings?
+                    // if (err) {
+                    //   session.showMessage(err, {text_class: 'error'});
+                    // } else {
+                    //   session.showMessage('Loaded new hotkey settings!', {text_class: 'success'});
+                    // }
                     session.clientStore.setClientSetting('hotkeys', hotkey_settings);
                   }}
                   onError={(error) => {

@@ -53,7 +53,7 @@ export function downloadFile(filename: string, content: string, mimetype: string
   const exportDiv = $('<a>').addClass('hidden').appendTo($('body'));
   exportDiv.attr('download', filename);
   exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
-  exportDiv[0].click();
+  (exportDiv[0] as HTMLElement).click();
   exportDiv.attr('download', null as any);
   exportDiv.attr('href', null as any);
   exportDiv.remove();

@@ -674,22 +674,19 @@ export default class Session extends EventEmitter {
 
   public async zoomOut() {
     if (this.viewRoot.parent != null) {
-      return await this.zoomInto(this.viewRoot.parent);
+      await this.zoomInto(this.viewRoot.parent);
     }
   }
 
   public async zoomIn() {
     if (this.cursor.path.is(this.viewRoot)) {
-      return false;
+      return;
     }
     const newroot = await this.oldestVisibleAncestor(this.cursor.path);
     if (newroot == null) {
       throw new Error('Got error zooming in to cursor');
     }
-    if (await this.zoomInto(newroot)) {
-      return true;
-    }
-    return false;
+    await this.zoomInto(newroot);
   }
 
   public async zoomDown() {
@@ -698,7 +695,7 @@ export default class Session extends EventEmitter {
       this.showMessage('No next sibling to zoom down to', {text_class: 'error'});
       return;
     }
-    return await this.zoomInto(sib);
+    await this.zoomInto(sib);
   }
 
   public async zoomUp() {
@@ -707,7 +704,7 @@ export default class Session extends EventEmitter {
       this.showMessage('No previous sibling to zoom up to', {text_class: 'error'});
       return;
     }
-    return await this.zoomInto(sib);
+    await this.zoomInto(sib);
   }
 
   ////////////////////////////////

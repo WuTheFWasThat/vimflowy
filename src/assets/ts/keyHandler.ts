@@ -122,10 +122,8 @@ export default class KeyHandler extends EventEmitter {
 
   public queueKey(key: Key) {
     logger.info('Handling key:', key);
-    const hadWaiting = this.keyStream.enqueue(key);
-    if (!hadWaiting) {
-      this.processKeys(); // FIRE AND FORGET
-    }
+    this.keyStream.enqueue(key);
+    this.processKeys(); // FIRE AND FORGET
   }
 
   private async handleRecord(keyStream: KeyStream, record: ActionRecord) {
