@@ -5,6 +5,7 @@ import './marks';
 import './text_formatting';
 import './time_tracking';
 import './todo';
+import './recursive_expand';
 
 // for developers: uncomment the following lines
 /*
