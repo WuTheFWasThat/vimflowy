@@ -13,12 +13,10 @@ In general, you should be making minimal changes outside your plugin folder.
 You may write your plugin in either Javascript or Typescript, but Typescript should be preferred.
 For styles, you can simply import a CSS or SASS stylesheet from your index file.
 
-See the ["hello world" sample plugin](../src/plugins/examples/index.ts) for an extremely minimal example.
+Probably the easiest way to start writing a plugin is to look at some existing ones!  See the ["hello world" sample plugin](../src/plugins/examples/index.ts) for an extremely minimal example.
 More involved examples can be found [here](../src/plugins).
 
 # Plugin API
-
-Currently, all plugins are per-document.  (This is sometimes awkward, since, for example, easy-motion should probably be per-client.  Please let us know if you need per-client plugins.)
 
 ## Registering a plugin
 
@@ -167,6 +165,7 @@ The keys should always be strings.  The values can be anything JSON-serializable
 Keep in mind:
 - Reads are cached on the key level.  You can assume nobody else will write to your data.
 - Small changes to a large object result in a large write to store
+- Currently, all plugin data is per-document.  This is sometimes awkward, especially since many "settings"-type data should probably be global (i.e. for all documents in a given client).  Please let us know if this is an issue!
 
 # Feedback
 
