@@ -42,7 +42,7 @@ registerPlugin(
         api.registerDefaultMappings(
             'NORMAL',
             {
-                'toggle-expand': [['ctrl+e']],
+                'toggle-expand': [['Z']],
             },
         );
     },
