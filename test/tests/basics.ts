@@ -126,18 +126,18 @@ describe('random set of basic tests', function() {
     await t.done();
   });
 
-  it("tests the cursor can move to start and end of line", async function() {
+  it('tests the cursor can move to start and end of line', async function() {
     let t = new TestCase(['012345']);
     t.expectCursor(1, 0);
-    t.sendKeys('$')
+    t.sendKeys('$');
     t.expectCursor(1, 5);
-    t.sendKeys('^')
+    t.sendKeys('^');
     t.expectCursor(1, 0);
-    t.sendKeys('end')
+    t.sendKeys('end');
     t.expectCursor(0, 5);
-    t.sendKeys('home')
+    t.sendKeys('home');
     t.expectCursor(1, 0);
-  })
+  });
 
   it("tests the cursor doesn't go before line", async function() {
     let t = new TestCase(['blahblah']);
