@@ -841,6 +841,7 @@ export default class Session extends EventEmitter {
 
   public async yankRowAtCursor() {
     const serialized_row = await this.document.serializeRow(this.cursor.row);
+    copyToClipboard(serialized_row.text);
     return this.register.saveSerializedRows([serialized_row]);
   }
 
@@ -1345,4 +1346,26 @@ export class InMemorySession extends Session {
       new ClientStore(new SynchronousInMemory()), doc, options
     );
   }
+}
+
+function copyToClipboard(text: string) {
+    // https://stackoverflow.com/a/33928558/5937230
+    if (document.queryCommandSupported && document.queryCommandSupported('copy')) {
+        let textarea = document.createElement('textarea');
+        textarea.textContent = text;
+        // Prevent scrolling to bottom of page in MS Edge.
+        textarea.style.position = 'fixed';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            // Security exception may be thrown by some browsers.
+            return document.execCommand('copy');
+        } catch (ex) {
+            console.warn('Copy to clipboard failed.', ex);
+            return false;
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }
+    return false;
 }
