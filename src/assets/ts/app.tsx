@@ -393,6 +393,16 @@ $(document).ready(async () => {
     browser_utils.scrollDiv($('#view'), line_height * numlines);
   });
 
+  session.on('yank', (content) => {
+    if(clientStore.getClientSetting('copyToClipboard')) {
+      if (typeof content === "string") {
+        copyToClipboard(content);
+        session.showMessage("Copied to clipboard: "
+          + (content.length > 10 ? content.substr(0, 10) + "..." : content));
+      }
+    }
+  });
+
   session.on('importFinished', renderMain); // fire and forget
 
   session.on('changeViewRoot', async (path: Path) => {
@@ -466,3 +476,27 @@ $(document).ready(async () => {
   //   throw error;
   // });
 });
+
+function copyToClipboard(text: string) {
+  // https://stackoverflow.com/a/33928558/5937230
+  if (window.clipboardData && window.clipboardData.setData) {
+    // IE specific code path to prevent textarea being shown while dialog is visible.
+    return window.clipboardData.setData("Text", text);
+
+  } else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+    var textarea = document.createElement("textarea");
+    textarea.textContent = text;
+    textarea.style.position = "fixed";  // Prevent scrolling to bottom of page in MS Edge.
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      return document.execCommand("copy");  // Security exception may be thrown by some browsers.
+    } catch (ex) {
+      console.warn("Copy to clipboard failed.", ex);
+      return false;
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
+  return false;
+}

@@ -248,7 +248,7 @@ export default class Document extends EventEmitter {
     return info;
   }
 
-  private async getInfo(row: Row): Promise<CachedRowInfo> {
+  public async getInfo(row: Row): Promise<CachedRowInfo> {
     errors.assert(row != null, 'Cannot get info for undefined');
     const cached = this.cache.get(row);
     if (cached !== null) {

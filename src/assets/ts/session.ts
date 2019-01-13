@@ -841,7 +841,7 @@ export default class Session extends EventEmitter {
 
   public async yankRowAtCursor() {
     const serialized_row = await this.document.serializeRow(this.cursor.row);
-    copyToClipboard(serialized_row.text);
+    this.emit('yank', serialized_row.text);
     return this.register.saveSerializedRows([serialized_row]);
   }
 
@@ -1062,6 +1062,31 @@ export default class Session extends EventEmitter {
     const serialized = await Promise.all(siblings.map(
       async (x) => await this.document.serialize(x.row)
     ));
+    if(this.clientStore.getClientSetting('copyToClipboard')) {
+      const clip: string[] = [];
+      // depth, collapsed, path
+      const ls: [number, boolean, Path][] = [];
+      const recurse: (p: [number, Path]) => void = async (p: [number, Path]) => {
+        const collapsed = (await this.document.getInfo(p[1].row)).collapsed;
+        ls.push([p[0], collapsed, p[1]]);
+        if(collapsed) {
+          return;
+        }
+        const children = await this.document.getChildren(p[1]);
+        for (let k = 0; k < children.length; k++) {
+          await recurse([p[0] + 1, children[k]]);
+        }
+      }
+      for (let k = 0; k < siblings.length; k++) {
+        await recurse([0, siblings[k]]);
+      }
+      for (let k = 0; k < ls.length; k++) {
+        const p: [number, boolean, Path] = ls[k];
+        const txt = ' '.repeat(p[0] * 4) + (p[1] ? '+ ' : '- ') + (await this.document.serializeRow(p[2].row)).text;
+        clip.push(txt);
+      }
+      this.emit('yank', clip.join('\n'));
+    }
     this.register.saveSerializedRows(serialized);
   }
 
@@ -1348,24 +1373,3 @@ export class InMemorySession extends Session {
   }
 }
 
-function copyToClipboard(text: string) {
-    // https://stackoverflow.com/a/33928558/5937230
-    if (document.queryCommandSupported && document.queryCommandSupported('copy')) {
-        let textarea = document.createElement('textarea');
-        textarea.textContent = text;
-        // Prevent scrolling to bottom of page in MS Edge.
-        textarea.style.position = 'fixed';
-        document.body.appendChild(textarea);
-        textarea.select();
-        try {
-            // Security exception may be thrown by some browsers.
-            return document.execCommand('copy');
-        } catch (ex) {
-            console.warn('Copy to clipboard failed.', ex);
-            return false;
-        } finally {
-            document.body.removeChild(textarea);
-        }
-    }
-    return false;
-}

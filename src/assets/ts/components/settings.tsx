@@ -28,10 +28,12 @@ import HotkeysTableComponent from './hotkeysTable';
 import PluginsTableComponent from './pluginTable';
 import BackendSettingsComponent from './settings/backendSettings';
 import FileInput from './fileInput';
+import BehaviorSettingsComponent from './settings/behaviorSettings';
 
 enum TABS {
   DATA,
   THEME,
+  BEHAVIOR,
   HOTKEYS,
   PLUGIN,
   ABOUT,
@@ -450,6 +452,21 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 }
               </div>
             </div>
+          </div>
+        ),
+      },
+      {
+        tab: TABS.BEHAVIOR,
+        heading: 'Behavior',
+        div: (
+          <div>
+            {
+              <div className='settings-content'>
+                <BehaviorSettingsComponent
+                  clientStore={session.clientStore}
+                />
+              </div>
+            }
           </div>
         ),
       },

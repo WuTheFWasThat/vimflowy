@@ -24,6 +24,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 export type ClientSettings = Theme & {
   showKeyBindings: boolean;
   hotkeys: any; // TODO
+  copyToClipboard: boolean;
 };
 
 type ClientSetting = keyof ClientSettings;
@@ -32,6 +33,7 @@ const default_client_settings: ClientSettings =
   Object.assign({}, defaultTheme, {
     showKeyBindings: true,
     hotkeys: {},
+    copyToClipboard: true,
   });
 
 export type LocalDocSettings = {
