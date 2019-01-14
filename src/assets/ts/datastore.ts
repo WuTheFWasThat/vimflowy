@@ -25,6 +25,7 @@ export type ClientSettings = Theme & {
   showKeyBindings: boolean;
   hotkeys: any; // TODO
   copyToClipboard: boolean;
+  formattedCopy: boolean;
 };
 
 type ClientSetting = keyof ClientSettings;
@@ -34,6 +35,7 @@ const default_client_settings: ClientSettings =
     showKeyBindings: true,
     hotkeys: {},
     copyToClipboard: true,
+    formattedCopy: false,
   });
 
 export type LocalDocSettings = {

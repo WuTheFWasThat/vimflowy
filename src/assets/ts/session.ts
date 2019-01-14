@@ -819,7 +819,6 @@ export default class Session extends EventEmitter {
   public async yankChars(path: Path, col: Col, nchars: number) {
     const line = await this.document.getLine(path.row);
     if (line.length > 0) {
-      console.log("yanking: " + line.join('').slice(col, col + nchars))
       this.emit('yank', line.join('').slice(col, col + nchars));
       this.register.saveChars(line.slice(col, col + nchars));
     }
@@ -1064,7 +1063,7 @@ export default class Session extends EventEmitter {
     const serialized = await Promise.all(siblings.map(
       async (x) => await this.document.serialize(x.row)
     ));
-    if(this.clientStore.getClientSetting('copyToClipboard')) {
+    if (this.clientStore.getClientSetting('copyToClipboard')) {
       const clip: string[] = [];
       // depth, collapsed, path
       const ls: [number, boolean, Path][] = [];
@@ -1072,7 +1071,7 @@ export default class Session extends EventEmitter {
       const recurse: (p: [number, Path]) => void = async (p: [number, Path]) => {
         const collapsed = (await this.document.getInfo(p[1].row)).collapsed;
         ls.push([p[0], collapsed, p[1]]);
-        if(collapsed) {
+        if (collapsed) {
           return;
         }
         const children = await this.document.getChildren(p[1]);
@@ -1080,9 +1079,12 @@ export default class Session extends EventEmitter {
           hasDepth = true;
           await recurse([p[0] + 1, children[k]]);
         }
-      }
+      };
       for (let k = 0; k < siblings.length; k++) {
         await recurse([0, siblings[k]]);
+      }
+      if (!this.clientStore.getClientSetting('formattedCopy')) {
+        hasDepth = false;
       }
       for (let k = 0; k < ls.length; k++) {
         const p: [number, boolean, Path] = ls[k];
