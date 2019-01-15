@@ -40,16 +40,19 @@ export default class Register {
   public saveChars(save: Line) {
     this.type = RegisterTypes.CHARS;
     this.saved = save;
+    this.session.emit('yank', {type: this.type, saved: this.saved});
   }
 
   public saveSerializedRows(save: Array<SerializedBlock>) {
     this.type = RegisterTypes.SERIALIZED_ROWS;
     this.saved = save;
+    this.session.emit('yank', {type: this.type, saved: this.saved});
   }
 
   public saveClonedRows(save: Array<Row>) {
     this.type = RegisterTypes.CLONED_ROWS;
     this.saved = save;
+    this.session.emit('yank', {type: this.type, saved: this.saved});
   }
 
   public serialize() {

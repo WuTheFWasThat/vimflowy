@@ -39,9 +39,6 @@ export default class BehaviorSettingsComponent extends React.Component<Props, St
   public render() {
     return (
       <div style={{ fontSize: '1.3em' }}>
-        <div style={{ marginBottom: 10 }}>
-          These settings modify various aspects of the default Vimflowy behavior.
-        </div>
         <SettingsCheckbox id={'copyToClipboard'}
           fn={this.setCopyToClipboard}
           checked={this.state.copyToClipboard}

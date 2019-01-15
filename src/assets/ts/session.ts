@@ -187,8 +187,8 @@ export default class Session extends EventEmitter {
           line: line.replace(/^\s*"(.*)"$/, '$1'),
           annotation: true,
         });
-      } else {
-        // TODO: record whether COMPLETE and strikethrough line if so?
+      // } else {
+      //   // TODO: record whether COMPLETE and strikethrough line if so?
         lines.push({
           indent,
           line: line.replace(whitespace, '').replace(/^(?:-\s*)?(?:\[COMPLETE\] )?/, ''),
@@ -819,7 +819,6 @@ export default class Session extends EventEmitter {
   public async yankChars(path: Path, col: Col, nchars: number) {
     const line = await this.document.getLine(path.row);
     if (line.length > 0) {
-      this.emit('yank', line.join('').slice(col, col + nchars));
       this.register.saveChars(line.slice(col, col + nchars));
     }
   }
@@ -842,7 +841,6 @@ export default class Session extends EventEmitter {
 
   public async yankRowAtCursor() {
     const serialized_row = await this.document.serializeRow(this.cursor.row);
-    this.emit('yank', serialized_row.text);
     return this.register.saveSerializedRows([serialized_row]);
   }
 
@@ -1063,39 +1061,6 @@ export default class Session extends EventEmitter {
     const serialized = await Promise.all(siblings.map(
       async (x) => await this.document.serialize(x.row)
     ));
-    if (this.clientStore.getClientSetting('copyToClipboard')) {
-      const clip: string[] = [];
-      // depth, collapsed, path
-      const ls: [number, boolean, Path][] = [];
-      let hasDepth = false;
-      const recurse: (p: [number, Path]) => void = async (p: [number, Path]) => {
-        const collapsed = (await this.document.getInfo(p[1].row)).collapsed;
-        ls.push([p[0], collapsed, p[1]]);
-        if (collapsed) {
-          return;
-        }
-        const children = await this.document.getChildren(p[1]);
-        for (let k = 0; k < children.length; k++) {
-          hasDepth = true;
-          await recurse([p[0] + 1, children[k]]);
-        }
-      };
-      for (let k = 0; k < siblings.length; k++) {
-        await recurse([0, siblings[k]]);
-      }
-      if (!this.clientStore.getClientSetting('formattedCopy')) {
-        hasDepth = false;
-      }
-      for (let k = 0; k < ls.length; k++) {
-        const p: [number, boolean, Path] = ls[k];
-        if (hasDepth) {
-          clip.push(' '.repeat(p[0] * 4) + (p[1] ? '+ ' : '- ') + (await this.document.serializeRow(p[2].row)).text);
-        } else {
-          clip.push((await this.document.serializeRow(p[2].row)).text);
-        }
-      }
-      this.emit('yank', clip.join('\n'));
-    }
     this.register.saveSerializedRows(serialized);
   }
 

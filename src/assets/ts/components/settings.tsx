@@ -457,7 +457,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
       },
       {
         tab: TABS.BEHAVIOR,
-        heading: 'Behavior',
+        heading: 'Yank behavior',
         div: (
           <div>
             {
