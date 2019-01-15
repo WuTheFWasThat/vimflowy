@@ -398,26 +398,26 @@ $(document).ready(async () => {
   session.on('yank', (info) => {
     if (clientStore.getClientSetting('copyToClipboard')) {
       let content: string;
-      if (info.type == RegisterTypes.CHARS) {
+      if (info.type === RegisterTypes.CHARS) {
         content = info.saved.join('');
-      } else if (info.type == RegisterTypes.SERIALIZED_ROWS) {
+      } else if (info.type === RegisterTypes.SERIALIZED_ROWS) {
         const formatted = clientStore.getClientSetting('formattedCopy');
         const contents: Array<string> = [];
         const cache: {[id: number]: SerializedBlock} = {};
         const recurse = (p: any, depth: number) => {
-          if (typeof p === 'string') { throw new Error('Expected non-pretty serialization'); }
-          else if (p.clone) { p = cache[p.clone]; }
-          else { cache[p.id] = p; } // in case it's cloned
+          if (typeof p === 'string') { throw new Error('Expected non-pretty serialization');
+          } else if (p.clone) { p = cache[p.clone];
+          } else { cache[p.id] = p; } // in case it's cloned
 
-          if (formatted) { contents.push(' '.repeat(depth * 4) + (p.collapsed ? '+ ' : '- ') + p.text); }
-          else { contents.push(p.text) }
+          if (formatted) { contents.push(' '.repeat(depth * 4) + (p.collapsed ? '+ ' : '- ') + p.text);
+          } else { contents.push(p.text); }
 
           if (p.collapsed || !p.children) { return; }
           p.children.forEach((child: SerializedBlock) => recurse(child, depth + 1));
         };
         info.saved.forEach((p: SerializedBlock) => recurse(p, 0));
         content = contents.join('\n');
-      } else if (info.type == RegisterTypes.CLONED_ROWS) {
+      } else if (info.type === RegisterTypes.CLONED_ROWS) {
         // For now, this does not copy, for efficiency reasons
         return;
       } else {
