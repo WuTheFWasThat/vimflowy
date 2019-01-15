@@ -187,8 +187,8 @@ export default class Session extends EventEmitter {
           line: line.replace(/^\s*"(.*)"$/, '$1'),
           annotation: true,
         });
-      // } else {
-      //   // TODO: record whether COMPLETE and strikethrough line if so?
+      } else {
+        // TODO: record whether COMPLETE and strikethrough line if so?
         lines.push({
           indent,
           line: line.replace(whitespace, '').replace(/^(?:-\s*)?(?:\[COMPLETE\] )?/, ''),
