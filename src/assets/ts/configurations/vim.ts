@@ -158,7 +158,7 @@ export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'delete-char-before': [['backspace'], ['shift+backspace']],
   'delete-to-line-beginning': [['ctrl+u']],
   'delete-to-line-end': [['ctrl+k']],
-  'delete-to-word-beginning': [['ctrl+w']],
+  'delete-to-word-beginning': [['ctrl+w'], ['ctrl+backspace']],
   // NOTE: paste-after doesn't make much sense for insert mode
   'paste-before': [['ctrl+y']],
   'split-line': [['enter']],
@@ -206,7 +206,7 @@ export const WORKFLOWY_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'delete-char-before': [['backspace'], ['shift+backspace']],
   'delete-to-line-beginning': [['ctrl+u']],
   'delete-to-line-end': [['ctrl+k']],
-  'delete-to-word-beginning': [['ctrl+w']],
+  'delete-to-word-beginning': [['ctrl+w'], ['ctrl+backspace']],
   // NOTE: paste-after doesn't make much sense for insert mode
   'paste-before': [['ctrl+y']],
   'split-line': [['enter']],
