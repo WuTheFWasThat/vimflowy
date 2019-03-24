@@ -41,6 +41,18 @@ registerPlugin(
           char_info.renderOptions.classes[boldClass] = true;
         })
       )).then(RegexTokenizerModifier(
+        matchWordRegex('(?:(\\*\\*_)|(_\\*\\*))(\\n|.)+?(?:(\\*\\*_)|(_\\*\\*))'),
+        hideBorderAndModify(3, 3, (char_info) => {
+          char_info.renderOptions.classes[boldClass] = true;
+          char_info.renderOptions.classes[underlineClass] = true;
+        })
+      )).then(RegexTokenizerModifier(
+        matchWordRegex('(?:(\\*_)|(_\\*))(\\n|.)+?(?:(\\*_)|(_\\*))'),
+        hideBorderAndModify(2, 2, (char_info) => {
+          char_info.renderOptions.classes[italicsClass] = true;
+          char_info.renderOptions.classes[underlineClass] = true;
+        })
+      )).then(RegexTokenizerModifier(
         // middle is either a single character, or both sides have a non-* character
         matchWordRegex('\\*((\\n|[^\\*])|[^\\*](\\n|.)+?[^\\*])?\\*'),
         hideBorderAndModify(1, 1, (char_info) => {
