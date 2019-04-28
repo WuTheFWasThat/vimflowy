@@ -8,8 +8,8 @@ language: node_js
 # https://docs.travis-ci.com/user/build-stages/#Build-Stages-and-Build-Matrix-Expansion
 # for details
 node_js:
-- 'node'
-- '8'
+- 'lts/*'
+- '10'
 
 cache:
   directories:
