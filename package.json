@@ -40,13 +40,13 @@
     "@types/ws": "0.0.41",
     "awesome-typescript-loader": "^5.2.1",
     "core-js": "^2.5.7",
-    "css-loader": "^0.23.1",
+    "css-loader": "^2.1.1",
     "file-loader": "^0.9.0",
     "firebase": "^5.10.1",
     "font-awesome": "^4.6.3",
     "ignore-styles": "^5.0.1",
     "immutable": "^3.8.2",
-    "jquery": "^3.3.1",
+    "jquery": "^3.4.1",
     "katex": "^0.7.1",
     "mocha": "^5.2.0",
     "node-sass": "^4.11.0",
@@ -61,6 +61,6 @@
     "tslint-loader": "^3.6.0",
     "typescript": "^3.1.6",
     "webpack": "^4.25.1",
-    "webpack-dev-server": "^3.1.10"
+    "webpack-dev-server": "^3.4.1"
   }
 }
