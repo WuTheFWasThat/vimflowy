@@ -8,7 +8,8 @@ language: node_js
 # https://docs.travis-ci.com/user/build-stages/#Build-Stages-and-Build-Matrix-Expansion
 # for details
 node_js:
-- 'lts/*'
+# NOTE: node v12 doesnt work https://stackoverflow.com/questions/55960396/how-to-fix-npm-install-sqlite-build-fail
+# - 'lts/*'
 - '10'
 
 cache:
