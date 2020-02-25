@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import * as browser_utils from './utils/browser';
 import EventEmitter from './utils/eventEmitter';
 import logger from '../../shared/utils/logger';
-import { Key } from './types';
+import {Key} from './types';
 
 /*
 KeyEmitter is an EventEmitter that emits keys
@@ -16,39 +16,16 @@ For more info, see its consumer, keyHandler.ts, as well as keyBindings.ts
 Note that one-character keys are treated specially, in that they are insertable in insert mode.
 */
 
-const shiftMap: {[key: string]: Key} = {
-  '`': '~',
-  '1': '!',
-  '2': '@',
-  '3': '#',
-  '4': '$',
-  '5': '%',
-  '6': '^',
-  '7': '&',
-  '8': '*',
-  '9': '(',
-  '0': ')',
-  '-': '_',
-  '=': '+',
-  '[': '{',
-  ']': '}',
-  ';': ':',
-  '\'': '"',
-  '\\': '|',
-  '.': '>',
-  ',': '<',
-  '/': '?',
-};
-
-const ignoreMap: {[keyCode: number]: string} = {
+const ignoreMap: { [keyCode: number]: string } = {
   16: 'shift alone',
   17: 'ctrl alone',
   18: 'alt alone',
+  225: 'right alt alone',
   91: 'left command alone',
   93: 'right command alone',
 };
 
-const keyCodeMap: {[keyCode: number]: Key} = {
+const specials: { [keyCode: number]: Key } = {
   8: 'backspace',
   9: 'tab',
   13: 'enter',
@@ -65,43 +42,7 @@ const keyCodeMap: {[keyCode: number]: Key} = {
   40: 'down',
 
   46: 'delete',
-
-  48: '0',
-  49: '1',
-  50: '2',
-  51: '3',
-  52: '4',
-  53: '5',
-  54: '6',
-  55: '7',
-  56: '8',
-  57: '9',
-
-  186: ';',
-  187: '=',
-  188: ',',
-  189: '-',
-  190: '.',
-  191: '/',
-  192: '`',
-
-  219: '[',
-  220: '\\',
-  221: ']',
-  222: '\'',
 };
-
-for (let j = 1; j <= 26; j++) {
-  const keyCode = j + 64;
-  const letter = String.fromCharCode(keyCode);
-  const lower = letter.toLowerCase();
-  keyCodeMap[keyCode] = lower;
-  shiftMap[lower] = letter;
-}
-
-if (browser_utils.isFirefox()) {
-  keyCodeMap[173] = '-';
-}
 
 export default class KeyEmitter extends EventEmitter {
   constructor() {
@@ -109,6 +50,7 @@ export default class KeyEmitter extends EventEmitter {
   }
 
   public listen() {
+
     // IME event
     $(document).on('compositionend', (e: any) => {
       e.originalEvent.data.split('').forEach((key: string) => {
@@ -116,49 +58,44 @@ export default class KeyEmitter extends EventEmitter {
       });
     });
 
-    return $(document).keydown(e => {
-      // IME input keycode is 229
+    $(document).keydown(e => {
+
+      // IME input keycode is 229, handled above
       if (e.keyCode === 229) {
         return false;
       }
+      // Ignore isolated special keys
       if (e.keyCode in ignoreMap) {
         return true;
       }
+
       let key;
-      if (e.keyCode in keyCodeMap) {
-        key = keyCodeMap[e.keyCode];
-      } else {
-        // this is necessary for typing stuff..
-        key = String.fromCharCode(e.keyCode);
-      }
-
-      if (e.shiftKey) {
-        if (key in shiftMap) {
-          key = shiftMap[key];
+      if (e.keyCode in specials) {
+        if (e.shiftKey) {
+          key = `shift+${specials[e.keyCode]}`;
+        } else if (e.altKey) {
+          key = `alt+${String.fromCharCode(e.keyCode)}`;
+        } else if (e.ctrlKey) {
+          key = `ctrl+${String.fromCharCode(e.keyCode)}`;
+        } else if (e.metaKey) {
+          key = `meta+${String.fromCharCode(e.keyCode)}`;
         } else {
-          key = `shift+${key}`;
+          key = specials[e.keyCode];
         }
+      } else {
+        key = e.key;
       }
 
-      if (e.altKey) {
-        key = `alt+${key}`;
-      }
+      logger.debug(`key pressed: ${key}, keycode: ${e.keyCode}`);
 
-      if (e.ctrlKey) {
-        key = `ctrl+${key}`;
-      }
-
-      if (e.metaKey) {
-        key = `meta+${key}`;
-      }
-
-      logger.debug('keycode', e.keyCode, 'key', key);
       const results = this.emit('keydown', key);
       // return false to stop propagation, if any handler handled the key
       if (_.some(results)) {
         return browser_utils.cancel(e);
       }
+
       return true;
     });
+
   }
 }
