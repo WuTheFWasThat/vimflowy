@@ -17,7 +17,7 @@ export function getDevConfig(config: BuildConfig = {}): webpack.Configuration {
   const srcdir = config.srcdir || defaultSrcDir;
   const outdir = config.outdir || defaultBuildDir;
   return {
-    devtool: 'eval-source-map',
+    devtool: 'eval',
     entry: [
       'webpack-dev-server/client?http://localhost:3000',
       'webpack/hot/only-dev-server',
