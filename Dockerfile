@@ -1,4 +1,4 @@
-FROM node:8-stretch AS build
+FROM node:10-stretch AS build
 LABEL maintainer="will.price94@gmail.com"
 LABEL version="0.0.1"
 # Prevent npm from spamming
@@ -12,7 +12,7 @@ RUN mkdir -p /build/{client, server}
 RUN npm run build -- --outdir /build/client --socketserver
 RUN npm run buildserver -- --outdir /build/server
 
-FROM node:8-alpine
+FROM node:10-alpine
 WORKDIR /app
 COPY --from=build /app/package.json /app/package-lock.json ./
 RUN npm install --production
