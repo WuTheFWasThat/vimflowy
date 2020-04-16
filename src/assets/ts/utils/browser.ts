@@ -1,5 +1,6 @@
 /* Utilities for stuff related to being in the browser */
 import * as $ from 'jquery';
+import { saveAs } from 'file-saver';
 
 // needed for the browser checks
 declare var window: any;
@@ -50,13 +51,8 @@ export function getParameterByName(name: string) {
 }
 
 export function downloadFile(filename: string, content: string, mimetype: string) {
-  const exportDiv = $('<a>').addClass('hidden').appendTo($('body'));
-  exportDiv.attr('download', filename);
-  exportDiv.attr('href', `data: ${mimetype};charset=utf-8,${encodeURIComponent(content)}`);
-  (exportDiv[0] as HTMLElement).click();
-  exportDiv.attr('download', null as any);
-  exportDiv.attr('href', null as any);
-  exportDiv.remove();
+  const blob = new Blob([content], {type: `${mimetype};charset=utf-8`});
+  saveAs(blob, filename);
 }
 
 // SEE: http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
