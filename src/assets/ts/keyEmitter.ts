@@ -91,13 +91,13 @@ const keyCodeMap: {[keyCode: number]: Key} = {
   222: '\'',
 };
 
-for (let j = 1; j <= 26; j++) {
+/*for (let j = 1; j <= 26; j++) {
   const keyCode = j + 64;
   const letter = String.fromCharCode(keyCode);
   const lower = letter.toLowerCase();
   keyCodeMap[keyCode] = lower;
   shiftMap[lower] = letter;
-}
+}*/
 
 if (browser_utils.isFirefox()) {
   keyCodeMap[173] = '-';
@@ -129,14 +129,22 @@ export default class KeyEmitter extends EventEmitter {
         key = keyCodeMap[e.keyCode];
       } else {
         // this is necessary for typing stuff..
-        key = String.fromCharCode(e.keyCode);
+        if(e.key) {
+          key = e.key;
+        } else {
+          key = String.fromCharCode(e.keyCode);
+        }
       }
 
       if (e.shiftKey) {
         if (key in shiftMap) {
           key = shiftMap[key];
         } else {
-          key = `shift+${key}`;
+          if((e.keyCode >= 65 && e.keyCode < 91) || (e.keyCode >= 97 && e.keyCode < 123)) {
+            // nothing?
+          } else {
+            key = `shift+${key}`;
+          }
         }
       }
 
