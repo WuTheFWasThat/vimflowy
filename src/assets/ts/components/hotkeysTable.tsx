@@ -32,7 +32,7 @@ export default class HotkeysTableComponent extends React.Component<HotkeysTableP
         return;
       }
 
-      const cellStyle = { fontSize: 10, border: '1px solid', padding: 5 };
+      const cellStyle = { fontSize: 12, border: '1px solid', padding: 5 };
 
       const el = (
         <tr key={name}>
