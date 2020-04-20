@@ -129,7 +129,7 @@ export default class KeyEmitter extends EventEmitter {
         key = keyCodeMap[e.keyCode];
       } else {
         // this is necessary for typing stuff..
-        if(e.key) {
+        if (e.key) {
           key = e.key;
         } else {
           key = String.fromCharCode(e.keyCode);
@@ -140,7 +140,7 @@ export default class KeyEmitter extends EventEmitter {
         if (key in shiftMap) {
           key = shiftMap[key];
         } else {
-          if((e.keyCode >= 65 && e.keyCode < 91) || (e.keyCode >= 97 && e.keyCode < 123)) {
+          if ((e.keyCode >= 65 && e.keyCode < 91) || (e.keyCode >= 97 && e.keyCode < 123)) {
             // nothing?
           } else {
             key = `shift+${key}`;
