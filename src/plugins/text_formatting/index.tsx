@@ -9,6 +9,7 @@ import { matchWordRegex } from '../../assets/ts/utils/text';
 const boldClass = 'bold';
 const italicsClass = 'italic';
 const underlineClass = 'underline';
+const codeClass = 'code';
 
 registerPlugin(
   {
@@ -21,6 +22,7 @@ registerPlugin(
         <li> <span className='italic'>italicize</span> text by surrounding with *asterisks* </li>
         <li> <span className='bold'>bold</span> text by surrounding with **double asterisks** </li>
         <li> <span className='underline'>underline</span> text by surrounding with _underscores_ </li>
+        <li> <span className='code'>code</span> text by surrounding with `back-ticks` </li>
       </ul>
       </div>
     ),
@@ -68,6 +70,12 @@ registerPlugin(
         hideBorderAndModify(1, 1, (char_info) => {
           char_info.renderOptions.classes[underlineClass] = true;
         })
+        )).then(RegexTokenizerModifier(
+          // code
+          matchWordRegex('\\`(\\n|.)+?\\`'),
+          hideBorderAndModify(1, 1, (char_info) => {
+            char_info.renderOptions.classes[codeClass] = true;
+          })
       ));
     });
   },
