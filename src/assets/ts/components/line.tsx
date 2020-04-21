@@ -92,8 +92,10 @@ export default class LineComponent extends React.Component<LineProps, {}> {
 
         const column = token.index + i;
         let href = null;
+        let target = null;
         if (char_info.renderOptions.href) {
           href = char_info.renderOptions.href;
+          target = '_blank';
         }
 
         let onClick = null;
@@ -114,6 +116,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
               className: classes.join(' '),
               onClick: onClick,
               href: href,
+              target: target
             } as React.DOMAttributes<any>,
             token.text[i] as React.ReactNode
           )
