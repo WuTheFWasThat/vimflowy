@@ -76,19 +76,6 @@ const keyCodeMap: {[keyCode: number]: Key} = {
   55: '7',
   56: '8',
   57: '9',
-
-  186: ';',
-  187: '=',
-  188: ',',
-  189: '-',
-  190: '.',
-  191: '/',
-  192: '`',
-
-  219: '[',
-  220: '\\',
-  221: ']',
-  222: '\'',
 };
 
 /*for (let j = 1; j <= 26; j++) {
@@ -140,7 +127,11 @@ export default class KeyEmitter extends EventEmitter {
         if (key in shiftMap) {
           key = shiftMap[key];
         } else {
-          if ((e.keyCode >= 65 && e.keyCode < 91) || (e.keyCode >= 97 && e.keyCode < 123)) {
+          if ((e.keyCode >= 65 && e.keyCode <= 90) ||
+              (e.keyCode >= 186 && e.keyCode <= 190) ||
+              (e.keyCode >= 97 && e.keyCode < 123) ||
+              [192, 219, 221, 222].indexOf(e.keyCode) > -1
+              ) {
             // nothing?
           } else {
             key = `shift+${key}`;
