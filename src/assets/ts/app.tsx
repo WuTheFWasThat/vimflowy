@@ -352,7 +352,7 @@ $(document).ready(async () => {
   }
 
   const keyHandler = new KeyHandler(session, keyBindings);
-  const keyEmitter = new KeyEmitter();
+  const keyEmitter = new KeyEmitter(session);
 
   // expose globals, for debugging
   window.Modes = Modes;
