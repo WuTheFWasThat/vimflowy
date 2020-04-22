@@ -32,7 +32,8 @@ registerPlugin(
             })
           );
 
-          result = resultArr.join('\n');
+          const resultArrClear = resultArr.map(function(x) { return x.replace(/(?:\r\n|\r|\n)/g, ''); });
+          result = resultArrClear.join('\n');
 
           if (result) {
             // const line = result.split('');
