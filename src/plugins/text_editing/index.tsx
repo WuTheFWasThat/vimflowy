@@ -32,7 +32,7 @@ registerPlugin(
             })
           );
 
-          const resultArrClear = resultArr.map(function(x) { return x.replace(/(?:\r\n|\r|\n)/g, ''); });
+          const resultArrClear = resultArr.map(function(x) { return x.replace(/(?:\r)/g, ''); });
           result = resultArrClear.join('\n');
 
           if (result) {
