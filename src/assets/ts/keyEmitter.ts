@@ -158,10 +158,10 @@ export default class KeyEmitter extends EventEmitter {
       if (e.keyCode in ignoreMap) {
         return true;
       }
-      
+
       let key;
 
-      if (this.session.mode == "INSERT") {
+      if (this.session.mode === 'INSERT') {
         if (e.altKey || e.ctrlKey || e.metaKey) {
           if (e.keyCode in keyCodeMap) {
             key = keyCodeMap[e.keyCode];
@@ -173,11 +173,11 @@ export default class KeyEmitter extends EventEmitter {
           if (e.altKey) {
             key = `alt+${key}`;
           }
-  
+
           if (e.ctrlKey) {
             key = `ctrl+${key}`;
           }
-  
+
           if (e.metaKey) {
             key = `meta+${key}`;
           }
@@ -188,7 +188,7 @@ export default class KeyEmitter extends EventEmitter {
               key = `shift+${key}`;
             }
           } else {
-            if(e.key) {
+            if (e.key) {
               key = e.key;
             } else {
               key = String.fromCharCode(e.keyCode);
