@@ -161,7 +161,7 @@ export default class KeyEmitter extends EventEmitter {
 
       let key;
 
-      if (this.session.mode === 'INSERT') {
+      if (this.session.mode === 'INSERT' || this.session.mode === 'SEARCH') {
         if (e.altKey || e.ctrlKey || e.metaKey) {
           if (e.keyCode in keyCodeMap) {
             key = keyCodeMap[e.keyCode];

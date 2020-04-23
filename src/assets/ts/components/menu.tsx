@@ -103,6 +103,7 @@ export default class MenuComponent extends React.Component<Props, State> {
             {...renderOptions}
           />
         );
+        let contentsParent = result.contentsParent;
         if (result.renderHook) {
           contents = result.renderHook(contents);
         }
@@ -113,6 +114,7 @@ export default class MenuComponent extends React.Component<Props, State> {
         }
         return (
           <div key={i} style={style}>
+            <div style={{'fontWeight': 'bold', 'fontSize': 18}}>{contentsParent}</div>
             <i style={{marginRight: 20}}
               className={`fa ${selected ? 'fa-arrow-circle-right' : 'fa-circle'} bullet`}/>
             {contents}
