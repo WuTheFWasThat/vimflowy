@@ -4,6 +4,7 @@ import * as _ from 'lodash';
 import * as browser_utils from './utils/browser';
 import EventEmitter from './utils/eventEmitter';
 import logger from '../../shared/utils/logger';
+import Session from './session';
 import { Key } from './types';
 
 /*
@@ -91,6 +92,36 @@ const keyCodeMap: {[keyCode: number]: Key} = {
   222: '\'',
 };
 
+const specialKeyCodeMap: {[keyCode: number]: Key} = {
+  8: 'backspace',
+  9: 'tab',
+  13: 'enter',
+  27: 'esc',
+  32: 'space',
+
+  33: 'page up',
+  34: 'page down',
+  35: 'end',
+  36: 'home',
+  37: 'left',
+  38: 'up',
+  39: 'right',
+  40: 'down',
+
+  46: 'delete',
+
+  48: '0',
+  49: '1',
+  50: '2',
+  51: '3',
+  52: '4',
+  53: '5',
+  54: '6',
+  55: '7',
+  56: '8',
+  57: '9'
+};
+
 for (let j = 1; j <= 26; j++) {
   const keyCode = j + 64;
   const letter = String.fromCharCode(keyCode);
@@ -104,8 +135,11 @@ if (browser_utils.isFirefox()) {
 }
 
 export default class KeyEmitter extends EventEmitter {
-  constructor() {
+  private session: Session;
+
+  constructor(session: Session) {
     super();
+    this.session = session;
   }
 
   public listen() {
@@ -124,32 +158,70 @@ export default class KeyEmitter extends EventEmitter {
       if (e.keyCode in ignoreMap) {
         return true;
       }
+
       let key;
-      if (e.keyCode in keyCodeMap) {
-        key = keyCodeMap[e.keyCode];
-      } else {
-        // this is necessary for typing stuff..
-        key = String.fromCharCode(e.keyCode);
-      }
 
-      if (e.shiftKey) {
-        if (key in shiftMap) {
-          key = shiftMap[key];
+      if (this.session.mode === 'INSERT') {
+        if (e.altKey || e.ctrlKey || e.metaKey) {
+          if (e.keyCode in keyCodeMap) {
+            key = keyCodeMap[e.keyCode];
+          } else {
+            // this is necessary for typing stuff..
+            key = String.fromCharCode(e.keyCode);
+          }
+
+          if (e.altKey) {
+            key = `alt+${key}`;
+          }
+
+          if (e.ctrlKey) {
+            key = `ctrl+${key}`;
+          }
+
+          if (e.metaKey) {
+            key = `meta+${key}`;
+          }
         } else {
-          key = `shift+${key}`;
+          if (e.keyCode in specialKeyCodeMap) {
+            key = specialKeyCodeMap[e.keyCode];
+            if (e.shiftKey) {
+              key = `shift+${key}`;
+            }
+          } else {
+            if (e.key) {
+              key = e.key;
+            } else {
+              key = String.fromCharCode(e.keyCode);
+            }
+          }
         }
-      }
+      } else {
+        if (e.keyCode in keyCodeMap) {
+          key = keyCodeMap[e.keyCode];
+        } else {
+          // this is necessary for typing stuff..
+          key = String.fromCharCode(e.keyCode);
+        }
 
-      if (e.altKey) {
-        key = `alt+${key}`;
-      }
+        if (e.shiftKey) {
+          if (key in shiftMap) {
+            key = shiftMap[key];
+          } else {
+            key = `shift+${key}`;
+          }
+        }
 
-      if (e.ctrlKey) {
-        key = `ctrl+${key}`;
-      }
+        if (e.altKey) {
+          key = `alt+${key}`;
+        }
 
-      if (e.metaKey) {
-        key = `meta+${key}`;
+        if (e.ctrlKey) {
+          key = `ctrl+${key}`;
+        }
+
+        if (e.metaKey) {
+          key = `meta+${key}`;
+        }
       }
 
       logger.debug('keycode', e.keyCode, 'key', key);
