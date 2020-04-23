@@ -36,12 +36,8 @@ registerPlugin(
           result = resultArrClear.join('\n');
 
           if (result) {
-            // const line = result.split('');
-            // const row_length = await session.document.getLength(visual_line.start_i);
             await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: false});
             await session.addBlocks(visual_line.parent, visual_line.start_i, [result]);
-            /*await session.delChars(visual_line.start.row, 0, row_length);
-            await session.addChars(visual_line.start.row, 0, line);*/
           }
         }
 
