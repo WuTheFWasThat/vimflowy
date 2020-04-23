@@ -116,7 +116,7 @@ export default class MenuComponent extends React.Component<Props, State> {
           Object.assign(style, getStyles(session.clientStore, ['theme-bg-highlight']));
         }
         let needParentDiv = false;
-        if(lastParent !== contentsParent) {
+        if (lastParent !== contentsParent) {
           needParentDiv = true;
           lastParent = contentsParent;
         } else {
