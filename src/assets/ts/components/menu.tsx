@@ -4,7 +4,7 @@ import LineComponent from './line';
 import SpinnerComponent from './spinner';
 import Session from '../session';
 import Menu from '../menu';
-import { Line } from '../types';
+import { Line, Chars } from '../types';
 import { getStyles } from '../themes';
 
 type Props = {
@@ -89,6 +89,9 @@ export default class MenuComponent extends React.Component<Props, State> {
         </div>
       );
     } else {
+
+      menu.results.sort((a, b) => a.contentsParent.toString().localeCompare(b.contentsParent.toString()));
+      let lastParent: Chars;
       searchResults = menu.results.map((result, i) => {
         const selected = i === menu.selection;
 
@@ -112,12 +115,23 @@ export default class MenuComponent extends React.Component<Props, State> {
         if (selected) {
           Object.assign(style, getStyles(session.clientStore, ['theme-bg-highlight']));
         }
+        let needParentDiv = false;
+        if(lastParent !== contentsParent) {
+          needParentDiv = true;
+          lastParent = contentsParent;
+        } else {
+          needParentDiv = false;
+        }
         return (
-          <div key={i} style={style}>
-            <div style={{'fontWeight': 'bold', 'fontSize': 18}}>{contentsParent}</div>
-            <i style={{marginRight: 20}}
-              className={`fa ${selected ? 'fa-arrow-circle-right' : 'fa-circle'} bullet`}/>
-            {contents}
+          <div key={`parent_${i}`}>
+            {needParentDiv && (
+              <div style={{ 'fontWeight': 'bold', 'fontSize': 18, marginBottom: 10 }}>{contentsParent}</div>
+            )}
+            <div key={i} style={style}>
+              <i style={{marginRight: 20}}
+                className={`fa ${selected ? 'fa-arrow-circle-right' : 'fa-circle'} bullet`}/>
+              {contents}
+            </div>
           </div>
         );
       });
