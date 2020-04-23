@@ -117,7 +117,7 @@ export default class MenuComponent extends React.Component<Props, State> {
         }
 
         let needParentDiv = false;
-        lastParent.toString().localeCompare(contentsParent.toString()) ? needParentDiv = true : needParentDiv = false;
+        lastParent !== contentsParent ? needParentDiv = true : needParentDiv = false;
         lastParent = contentsParent;
 
         return (
