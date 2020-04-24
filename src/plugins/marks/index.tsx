@@ -272,6 +272,7 @@ export class MarksPlugin {
                 const line = await session.document.getLine(path.row);
                 return {
                   contents: line,
+                  contentsParent: path.parent ? await session.document.getLine(path.parent.row) : [],
                   renderHook(lineDiv: React.ReactElement<any>) {
                     return (
                       <span>
