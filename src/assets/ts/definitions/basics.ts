@@ -255,6 +255,33 @@ keyDefinitions.registerAction(new Action(
   },
 ));
 
+keyDefinitions.registerAction(new Action(
+  'visual-line-join',
+  'Join all selected rows',
+  async function({ session, visual_line }) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
+
+    if (visual_line.num_rows >= 1) {
+      const resultArr = await Promise.all(
+        visual_line.selected.map(async (path) => {
+          return await session.getTextRecusive(path);
+        })
+      );
+
+      const resultArrClear = resultArr.map(function(x) { return x.replace(/(?:\r)/g, ''); });
+      const result = resultArrClear.join('\n');
+
+      if (result) {
+        await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: false});
+        await session.addBlocks(visual_line.parent, visual_line.start_i, [result]);
+      }
+    }
+    await session.setMode('NORMAL');
+  },
+));
+
 // TODO: support repeat?
 keyDefinitions.registerAction(new Action(
   'change-line',
