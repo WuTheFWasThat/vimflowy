@@ -732,7 +732,7 @@ export default class Document extends EventEmitter {
   }
 
   public async search(root: Path, query: string, options: SearchOptions = {}) {
-    const { nresults = 10, case_sensitive = false } = options;
+    const { nresults = 20, case_sensitive = false } = options;
     const results: Array<{
       path: Path,
       matches: Array<number>,
