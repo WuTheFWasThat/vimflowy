@@ -1335,6 +1335,33 @@ export default class Session extends EventEmitter {
 
     this.emit('scroll', numlines);
   }
+
+  public async getTextRecusive(path: Path) {
+    let result: string[] = [];
+
+    if (await this.document.collapsed(path.row)) {
+      throw new Error('Some blocks are folded!');
+    }
+
+    const text = await this.document.getText(path.row);
+    result.push(text);
+
+    if (await this.document.hasChildren(path.row)) {
+      let children = await this.document.getChildren(path);
+
+      const resultChildren = await Promise.all(
+        children.map(async (childrenPath) => {
+          return await this.getTextRecusive(childrenPath);
+        })
+      );
+
+      for (let item in resultChildren) {
+        result.push(resultChildren[item]);
+      }
+    }
+
+    return result.join('\n');
+  }
 }
 
 export class InMemorySession extends Session {
