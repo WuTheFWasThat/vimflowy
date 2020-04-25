@@ -263,25 +263,31 @@ keyDefinitions.registerAction(new Action(
       throw new Error('Visual_line mode arguments missing');
     }
 
-    if (visual_line.num_rows >= 1) {
-      try {
-        const resultArr = await Promise.all(
-          visual_line.selected.map(async (path) => {
-            return await session.getTextRecusive(path);
-          })
-        );
+    if (visual_line.num_rows < 1) {
+      return session.showMessage('No lines selected!?', {text_class: 'error'});
+    }
 
-        // Remove \r (Carriage Return) from each line
-        const resultArrClear = resultArr.map(function(x) { return x.replace(/(?:\r)/g, ''); });
-        const result = resultArrClear.join('\n');
+    const resultArr = await Promise.all(
+      visual_line.selected.map(async (path) => {
+        return await session.getTextRecusive(path);
+      })
+    );
 
-        if (result) {
-          await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: false});
-          await session.addBlocks(visual_line.parent, visual_line.start_i, [result]);
-        }
-      } catch (e) {
-        session.showMessage(e.message, {text_class: 'error'});
+    let result: string[] = [];
+    for (let [childErr, childResult] of resultArr) {
+      if (childErr !== null) {
+        return session.showMessage(childErr, {text_class: 'error'});
+      } else {
+        result.push(...(childResult as Array<string>));
       }
+    }
+    // Remove \r (Carriage Return) from each line
+    result = result.map(function(x) { return x.replace(/(?:\r)/g, ''); });
+    const result_str = result.join('\n');
+
+    if (result) {
+      await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: false});
+      await session.addBlocks(visual_line.parent, visual_line.start_i, [result_str]);
     }
 
     await session.setMode('NORMAL');

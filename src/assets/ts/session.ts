@@ -1336,11 +1336,12 @@ export default class Session extends EventEmitter {
     this.emit('scroll', numlines);
   }
 
-  public async getTextRecusive(path: Path) {
+  public async getTextRecusive(path: Path): Promise<[null, Array<string>] | [string, null]> {
     let result: string[] = [];
 
+    let err: string | null = null;
     if (await this.document.collapsed(path.row)) {
-      throw new Error('Some blocks are folded!');
+        return ['Some blocks are folded!', null];
     }
 
     const text = await this.document.getText(path.row);
@@ -1355,12 +1356,21 @@ export default class Session extends EventEmitter {
         })
       );
 
-      for (let item in resultChildren) {
-        result.push(resultChildren[item]);
+      for (let [childErr, childResult] of resultChildren) {
+        if (childErr !== null) {
+          err = childErr;
+        } else {
+          result.push(...(childResult as Array<string>));
+        }
       }
+
     }
 
-    return result.join('\n');
+    if (err === null) {
+      return [null, result];
+    } else {
+      return [err, null];
+    }
   }
 }
 
