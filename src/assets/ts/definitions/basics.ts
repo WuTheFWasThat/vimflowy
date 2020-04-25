@@ -264,20 +264,25 @@ keyDefinitions.registerAction(new Action(
     }
 
     if (visual_line.num_rows >= 1) {
-      const resultArr = await Promise.all(
-        visual_line.selected.map(async (path) => {
-          return await session.getTextRecusive(path);
-        })
-      );
+      try {
+        const resultArr = await Promise.all(
+          visual_line.selected.map(async (path) => {
+            return await session.getTextRecusive(path);
+          })
+        );
 
-      const resultArrClear = resultArr.map(function(x) { return x.replace(/(?:\r)/g, ''); });
-      const result = resultArrClear.join('\n');
+        const resultArrClear = resultArr.map(function(x) { return x.replace(/(?:\r)/g, ''); });
+        const result = resultArrClear.join('\n');
 
-      if (result) {
-        await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: false});
-        await session.addBlocks(visual_line.parent, visual_line.start_i, [result]);
+        if (result) {
+          await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: false});
+          await session.addBlocks(visual_line.parent, visual_line.start_i, [result]);
+        }
+      } catch (e) {
+        session.showMessage(e.message, {text_class: 'error'});
       }
     }
+
     await session.setMode('NORMAL');
   },
 ));
