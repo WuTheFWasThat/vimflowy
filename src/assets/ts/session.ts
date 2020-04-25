@@ -1340,7 +1340,7 @@ export default class Session extends EventEmitter {
     let result: string[] = [];
 
     if (await this.document.collapsed(path.row)) {
-      throw new Error('Some blocks is folded!');
+      throw new Error('Some blocks are folded!');
     }
 
     const text = await this.document.getText(path.row);

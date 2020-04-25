@@ -271,6 +271,7 @@ keyDefinitions.registerAction(new Action(
           })
         );
 
+        // Remove \r (Carriage Return) from each line
         const resultArrClear = resultArr.map(function(x) { return x.replace(/(?:\r)/g, ''); });
         const result = resultArrClear.join('\n');
 
