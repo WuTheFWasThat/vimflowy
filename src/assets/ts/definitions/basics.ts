@@ -255,6 +255,45 @@ keyDefinitions.registerAction(new Action(
   },
 ));
 
+keyDefinitions.registerAction(new Action(
+  'visual-line-join',
+  'Join all selected rows',
+  async function({ session, visual_line }) {
+    if (visual_line == null) {
+      throw new Error('Visual_line mode arguments missing');
+    }
+
+    if (visual_line.num_rows < 1) {
+      return session.showMessage('No lines selected!?', {text_class: 'error'});
+    }
+
+    const resultArr = await Promise.all(
+      visual_line.selected.map(async (path) => {
+        return await session.getTextRecusive(path);
+      })
+    );
+
+    let result: string[] = [];
+    for (let [childErr, childResult] of resultArr) {
+      if (childErr !== null) {
+        return session.showMessage(childErr, {text_class: 'error'});
+      } else {
+        result.push(...(childResult as Array<string>));
+      }
+    }
+    // Remove \r (Carriage Return) from each line
+    result = result.map(function(x) { return x.replace(/(?:\r)/g, ''); });
+    const result_str = result.join('\n');
+
+    if (result) {
+      await session.delBlocks(visual_line.parent.row, visual_line.start_i, visual_line.num_rows, {addNew: false});
+      await session.addBlocks(visual_line.parent, visual_line.start_i, [result_str]);
+    }
+
+    await session.setMode('NORMAL');
+  },
+));
+
 // TODO: support repeat?
 keyDefinitions.registerAction(new Action(
   'change-line',
