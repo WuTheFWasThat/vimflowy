@@ -394,4 +394,49 @@ describe('visual line mode', function() {
     ]);
     await t.done();
   });
+
+  it('visual line join works', async function() {
+    let t = new TestCase([
+      'yay',
+      'woo',
+      { text: 'hip', children: [
+        { text: 'hop', collapsed: true, children: [
+          'hoop',
+        ] },
+      ] },
+      'hooray!',
+    ]);
+    // some rows are folded, can't join
+    t.sendKeys('Vjj');
+    t.sendKeys('J');
+    t.expect([
+      'yay',
+      'woo',
+      { text: 'hip', children: [
+        { text: 'hop', collapsed: true, children: [
+          'hoop',
+        ] },
+      ] },
+      'hooray!',
+    ]);
+    await t.done();
+    // now can join
+    t = new TestCase([
+      'yay',
+      'woo',
+      { text: 'hip', children: [
+        { text: 'hop', children: [
+          'hoop',
+        ] },
+      ] },
+      'hooray!',
+    ]);
+    t.sendKeys('Vjj');
+    t.sendKeys('J');
+    t.expect([
+      'yay\nwoo\nhip\nhop\nhoop',
+      'hooray!',
+    ]);
+    await t.done();
+  });
 });
