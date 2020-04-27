@@ -362,7 +362,7 @@ export default class Document extends EventEmitter {
     const line = await this.getLine(row);
     if (col != null && col < line.length - 1) {
       const ind = line.indexOf('\n', col);
-      return ind == -1 ? line.length : ind;
+      return ind === -1 ? line.length : ind;
     } else {
       return line.length;
     }
@@ -370,7 +370,7 @@ export default class Document extends EventEmitter {
 
   public async isMultiline(row: Row) {
     const line = await this.getLine(row);
-    return !(line.indexOf('\n') == -1);
+    return !(line.indexOf('\n') === -1);
   }
 
   // structure

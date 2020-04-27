@@ -111,16 +111,18 @@ export default class Cursor extends EventEmitter {
     const line = await this.session.document.getLine(this.row);
     let lb = line.lastIndexOf('\n', this.col);
     let le = line.indexOf('\n', this.col);
-    lb == -1 ? lb = 0 : lb++;
-    le == -1 ? le = line.length - 1 : le--;
-    
+    lb === -1 ? lb = 0 : lb++;
+    le === -1 ? le = line.length - 1 : le--;
+
     let lbn = le + 2;
     let len = line.indexOf('\n', lbn);
-    len == -1 ? len = line.length - 1 : len--;
+    len === -1 ? len = line.length - 1 : len--;
 
     const cp = this.col - lb;
     let np = lbn + cp;
-    np > len ? np = len : null;
+    if (np > len) {
+      np = len;
+    }
 
     await this._setCol(np);
   }
@@ -129,17 +131,19 @@ export default class Cursor extends EventEmitter {
     const line = await this.session.document.getLine(this.row);
     let lb = line.lastIndexOf('\n', this.col);
     let le = line.indexOf('\n', this.col);
-    lb == -1 ? lb = 0 : lb++;
-    le == -1 ? le = line.length - 1 : le--;
+    lb === -1 ? lb = 0 : lb++;
+    le === -1 ? le = line.length - 1 : le--;
 
     let lbn = line.lastIndexOf('\n', lb - 2);
     let len = lb - 1;
     lbn < 0 ? lbn = 0 : lbn++;
-    len == -1 ? len = line.length - 1 : --len;
-    
+    len === -1 ? len = line.length - 1 : --len;
+
     const cp = this.col - lb;
     let np = lbn + cp;
-    np > len ? np = len : null;
+    if (np > len) {
+      np = len;
+    }
 
     await this._setCol(np);
   }
@@ -452,9 +456,11 @@ export default class Cursor extends EventEmitter {
     if (await this.session.document.isMultiline(this.path.row)) {
       const line = await this.session.document.getLine(this.row);
       let fn = line.indexOf('\n');
-      if (fn !== -1 && this.col >= fn) isFirst = false;
+      if (fn !== -1 && this.col >= fn) {
+        isFirst = false;
+      }
     }
-    
+
     if (!isFirst) {
       await this._up();
     } else {
@@ -470,10 +476,14 @@ export default class Cursor extends EventEmitter {
     if (await this.session.document.isMultiline(this.path.row)) {
       const line = await this.session.document.getLine(this.row);
       let ln = line.lastIndexOf('\n');
-      if (ln !== -1) ln++;
-      if (ln !== -1 && this.col < ln) isLast = false;
+      if (ln !== -1) {
+        ln++;
+      }
+      if (ln !== -1 && this.col < ln) {
+        isLast = false;
+      }
     }
-    
+
     if (!isLast) {
       await this._down();
     } else {
