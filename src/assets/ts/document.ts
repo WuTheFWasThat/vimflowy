@@ -358,8 +358,19 @@ export default class Document extends EventEmitter {
     return deleted;
   }
 
-  public async getLength(row: Row) {
-    return (await this.getLine(row)).length;
+  public async getLength(row: Row, col?: Col) {
+    const line = await this.getLine(row);
+    if (col != null && col < line.length - 1) {
+      const ind = line.indexOf('\n', col);
+      return ind == -1 ? line.length : ind;
+    } else {
+      return line.length;
+    }
+  }
+
+  public async isMultiline(row: Row) {
+    const line = await this.getLine(row);
+    return !(line.indexOf('\n') == -1);
   }
 
   // structure

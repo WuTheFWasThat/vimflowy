@@ -88,7 +88,7 @@ export default class Cursor extends EventEmitter {
   }
 
   private async _fromMoveCol(cursorOptions: CursorOptions = {}) {
-    const len = await this.document.getLength(this.path.row);
+    const len = await this.document.getLength(this.path.row, this.col);
     const maxcol = len - (cursorOptions.pastEnd ? 0 : 1);
     let col;
     if (this.moveCol < 0) {
@@ -105,6 +105,43 @@ export default class Cursor extends EventEmitter {
 
   private async _right() {
     await this.setCol(this.col + 1);
+  }
+
+  private async _down() {
+    const line = await this.session.document.getLine(this.row);
+    let lb = line.lastIndexOf('\n', this.col);
+    let le = line.indexOf('\n', this.col);
+    lb == -1 ? lb = 0 : lb++;
+    le == -1 ? le = line.length - 1 : le--;
+    
+    let lbn = le + 2;
+    let len = line.indexOf('\n', lbn);
+    len == -1 ? len = line.length - 1 : len--;
+
+    const cp = this.col - lb;
+    let np = lbn + cp;
+    np > len ? np = len : null;
+
+    await this._setCol(np);
+  }
+
+  private async _up() {
+    const line = await this.session.document.getLine(this.row);
+    let lb = line.lastIndexOf('\n', this.col);
+    let le = line.indexOf('\n', this.col);
+    lb == -1 ? lb = 0 : lb++;
+    le == -1 ? le = line.length - 1 : le--;
+
+    let lbn = line.lastIndexOf('\n', lb - 2);
+    let len = lb - 1;
+    lbn < 0 ? lbn = 0 : lbn++;
+    len == -1 ? len = line.length - 1 : --len;
+    
+    const cp = this.col - lb;
+    let np = lbn + cp;
+    np > len ? np = len : null;
+
+    await this._setCol(np);
   }
 
   public async left() {
@@ -411,16 +448,39 @@ export default class Cursor extends EventEmitter {
   }
 
   public async up(cursorOptions: CursorOptions = {}) {
-    const path = await this.session.prevVisible(this.path);
-    if (path !== null) {
-      await this.setPath(path, cursorOptions);
+    let isFirst = true;
+    if (await this.session.document.isMultiline(this.path.row)) {
+      const line = await this.session.document.getLine(this.row);
+      let fn = line.indexOf('\n');
+      if (fn !== -1 && this.col >= fn) isFirst = false;
+    }
+    
+    if (!isFirst) {
+      await this._up();
+    } else {
+      const path = await this.session.prevVisible(this.path);
+      if (path !== null) {
+        await this.setPath(path, cursorOptions);
+      }
     }
   }
 
   public async down(cursorOptions: CursorOptions = {}) {
-    const path = await this.session.nextVisible(this.path);
-    if (path !== null) {
-      await this.setPath(path, cursorOptions);
+    let isLast = true;
+    if (await this.session.document.isMultiline(this.path.row)) {
+      const line = await this.session.document.getLine(this.row);
+      let ln = line.lastIndexOf('\n');
+      if (ln !== -1) ln++;
+      if (ln !== -1 && this.col < ln) isLast = false;
+    }
+    
+    if (!isLast) {
+      await this._down();
+    } else {
+      const path = await this.session.nextVisible(this.path);
+      if (path !== null) {
+        await this.setPath(path, cursorOptions);
+      }
     }
   }
 
