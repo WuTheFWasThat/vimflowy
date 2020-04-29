@@ -36,7 +36,7 @@ class DailyNotesPlugin {
     this.logger = this.api.logger;
     this.logger.info('Loading Daily notes');
     this.isLogging = true;
-    this.createDailyMarks();
+    this.initDailyMarks();
 
     this.api.cursor.on('rowChange', async () => {
       this.log('rowChange');
@@ -52,7 +52,7 @@ class DailyNotesPlugin {
     });*/
   }
 
-  private createDailyMarks() {
+  private initDailyMarks() {
     let dt = new Date();
     let dt_tomorrow = new Date();
     dt_tomorrow.setDate(dt.getDate() + 1);
@@ -66,10 +66,28 @@ class DailyNotesPlugin {
     ];
   }
 
+  private async checkDailyMarks() {
+    this.log('checkDailyMarks');
+    const paths = this.traverseSubtree(await this.getDailyNotesRoot());
+    for await (let path of paths) {
+      const info = await this.api.session.document.getInfo(path.row);
+      if (info.pluginData.marks && info.pluginData.marks.mark && info.pluginData.marks.mark !== '') {
+        const found = this.dailyMarks.find((e: any) => {
+          return e.mark === info.pluginData.marks.mark;
+        });
+
+        if (found) {
+          this.log('checkDailyMarks', 'Clear mark', found.mark);
+          await this.setMark(path, '');
+        }
+      }
+    }
+  }
+
   private getNodeText(dt: Date, mode: string) {
     const year = dt.getFullYear().toString();
-    const month = ("0" + (dt.getMonth() + 1).toString()).slice(-2);
-    const day = ("0" + dt.getDate().toString()).slice(-2);
+    const month = ('0' + (dt.getMonth() + 1).toString()).slice(-2);
+    const day = ('0' + dt.getDate().toString()).slice(-2);
     if (mode === 'year') {
       return year;
     } else if (mode === 'month') {
@@ -78,9 +96,10 @@ class DailyNotesPlugin {
       return [year, month, day].join('-');
     }
   }
-  
+
   public async init() {
     this.log('init');
+    await this.checkDailyMarks();
     for (let mark in this.dailyMarks) {
       await this.createDailyNode(this.dailyMarks[mark].date, this.dailyMarks[mark].mark);
     }
@@ -122,7 +141,7 @@ class DailyNotesPlugin {
     }
     return null;
   }
-  
+
   private async getDailyNotesRoot() {
     this.log('getDailyNotesRoot');
     let dailyNotesRoot = await this.getNodeWithText(this.api.session.document.root, 'Daily Notes');
@@ -136,25 +155,14 @@ class DailyNotesPlugin {
     return dailyNotesRoot;
   }
 
-  private async setMark(path: Path, row: number, mark: string) {
-    this.log('setMark', row, mark);
-    let info = await this.api.session.document.getInfo(row);
+  private async setMark(path: Path, mark: string) {
+    this.log('setMark', path, mark);
+    let info = await this.api.session.document.getInfo(path.row);
     if (info.pluginData && info.pluginData.marks && info.pluginData.marks.mark !== mark) {
-      this.log('Change mark', row, mark);
-      this.log('setMark before', info);
+      this.log('Change mark', path, mark);
       info.pluginData.marks.mark = mark;
-      
-      //this.api.session.document.cache.setPluginData(info.row, info.pluginData);
-      //await this.api.session.document.updateCachedPluginData(row);
-
-      //this.api.session.document.loadTo(['test'], path.parent!, 0, {}, true);
       await this.api.session.document.emitAsync('loadRow', path, info.pluginData.marks || {});
-
-      //info = await this.api.session.document.getInfo(row);
-      //this.log('setMark after', info);
-      //info = await this.api.session.document.getInfo(row);
-      //this.log('setMark after update', info);
-      await this.api.updatedDataForRender(row);
+      await this.api.updatedDataForRender(path.row);
     }
   }
 
@@ -178,7 +186,7 @@ class DailyNotesPlugin {
     if (document.hasChildren(root.row)) {
       const children = await document.getChildren(root);
       for await (let child of children) {
-        
+
       }
     }*/
 
@@ -210,12 +218,12 @@ class DailyNotesPlugin {
     /*const paths = this.api.session.document.traverseSubtree(root);
     for await (let path of paths) {
       const text = await this.api.session.document.getText(path.row);
-      
+
     }
-    
+
     const line = await session.document.getLine(path.row);*/
   }
-  
+
   private async createBlock(path: Path, text: string, isCollapsed: boolean = true, plugins?: any) {
     this.log('createBlock');
     let serialzed_row: SerializedBlock = {
@@ -261,7 +269,7 @@ class DailyNotesPlugin {
     if (!dayPath) {
       dayPath = await this.createBlock(monthPath, dayNode, true, { mark: mark });
     } else {
-      this.setMark(dayPath, dayPath.row, mark);
+      this.setMark(dayPath, mark);
     }
   }
 }
