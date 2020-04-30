@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
 import { Logger } from '../../shared/utils/logger';
 import Path from '../../assets/ts/path';
@@ -20,7 +21,6 @@ registerPlugin<DailyNotesPlugin>(
     } else {
       await api.setData('isLogging', true);
     }
-    await dailyNotes.init();
     return dailyNotes;
   },
   (api => api.deregisterAll())
@@ -31,12 +31,14 @@ class DailyNotesPlugin {
   private logger: Logger;
   private isLogging: boolean;
   private dailyMarks: any;
+  private childAddedArr: Object;
 
   constructor(api: PluginApi) {
     this.api = api;
     this.logger = this.api.logger;
     this.logger.info('Loading Daily notes');
     this.isLogging = false;
+    this.childAddedArr = {};
 
     this.setLogging();
     this.initDailyMarks();
@@ -46,9 +48,30 @@ class DailyNotesPlugin {
       this.checkNewDay();
     });
 
+    this.api.registerListener('document', 'childAdded', async ({ row }) => {
+      this.log('childAdded', row);
+      this.childAddedArr.(row);
+      this.childAddedArr.push(row);
+    });
+
+    this.api.registerListener('document', 'loadRow', async (path, serialized) => {
+      
+      const ci = _.findIndex(this.childAddedArr, sib => sib === path.row);
+      errors.assert(ci !== -1);
+      children.splice(ci, 1);
+
+      if (this.childAddedArr.includes(path.row)) {
+        this.log('loadRow', path, serialized);
+        delete this.childAddedArr[path.row];
+        this.addCreatedToday(path.row);
+      }
+    });
+
     /*this.api.registerListener('session', 'exit', async () => {
       this.log('exit');
     });*/
+
+    this.init();
   }
 
   public async setLogging() {
@@ -58,9 +81,9 @@ class DailyNotesPlugin {
   public async init() {
     this.log('init');
     await this.checkDailyMarks();
-    for (let mark in this.dailyMarks) {
-      await this.createDailyNode(this.dailyMarks[mark].date, this.dailyMarks[mark].mark);
-    }
+    this.dailyMarks.forEach(async (item: any) => {
+      await this.createDailyNode(item.date, item.mark);
+    });
   }
 
   private initDailyMarks() {
@@ -72,7 +95,7 @@ class DailyNotesPlugin {
 
     this.dailyMarks = [
       { mark: 'tomorrow', date: dt_tomorrow },
-      { mark: 'today', date: dt },
+      { mark: 'today', date: dt, node: null },
       { mark: 'yesterday', date: dt_yesterday },
     ];
   }
@@ -105,6 +128,36 @@ class DailyNotesPlugin {
     } else {
       throw new Error('Can\'t get dates');
     }
+  }
+
+  private async addCreatedToday(row: number) {
+    this.log('addCreatedToday', row);
+
+    let info = await this.api.session.document.getInfo(row);
+    let can = await this.api.session.document.canonicalPath(row);
+    this.log('test', info);
+    this.log('test2', can);
+
+    /*let rowsToClone: number[] = [];
+    rowsToClone.push(row);
+    const dailyNode = await this.getTodayNode();
+    this.api.session.attachBlocks(dailyNode, rowsToClone, 0);*/
+  }
+
+  private getTodayNode() {
+    this.log('getTodayNode');
+    const found = this.dailyMarks.find((e: any) => {
+      return e.mark === 'today';
+    });
+    return found.node;
+  }
+
+  private setTodayNode(path: Path) {
+    this.log('setTodayNode', path);
+    const found = this.dailyMarks.find((e: any) => {
+      return e.mark === 'today';
+    });
+    found.node = path;
   }
 
   private async checkDailyMarks() {
@@ -251,6 +304,7 @@ class DailyNotesPlugin {
     } else {
       this.setMark(dayPath, mark);
     }
+    this.setTodayNode(dayPath);
   }
 }
 
