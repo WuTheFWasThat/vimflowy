@@ -34,7 +34,7 @@ class DailyNotesPlugin {
     this.api = api;
     this.logger = this.api.logger;
     this.logger.info('Loading Daily notes');
-    this.isLogging = true;
+    this.isLogging = false;
     this.initDailyMarks();
 
     this.api.cursor.on('rowChange', async () => {
