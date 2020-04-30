@@ -15,9 +15,11 @@ registerPlugin<DailyNotesPlugin>(
   async (api) => {
     const dailyNotes = new DailyNotesPlugin(api);
     // Initial setup
-    await dailyNotes.toggleLogging(
-      await api.getData('isLogging', true)
-    );
+    if (process.env.NODE_ENV === 'production') {
+      await api.setData('isLogging', false);
+    } else {
+      await api.setData('isLogging', true);
+    }
     await dailyNotes.init();
     return dailyNotes;
   },
@@ -34,7 +36,9 @@ class DailyNotesPlugin {
     this.api = api;
     this.logger = this.api.logger;
     this.logger.info('Loading Daily notes');
-    this.isLogging = true;
+    this.isLogging = false;
+
+    this.setLogging();
     this.initDailyMarks();
 
     this.api.cursor.on('rowChange', async () => {
@@ -45,6 +49,18 @@ class DailyNotesPlugin {
     /*this.api.registerListener('session', 'exit', async () => {
       this.log('exit');
     });*/
+  }
+
+  public async setLogging() {
+    this.isLogging = await this.api.getData('isLogging', false);
+  }
+
+  public async init() {
+    this.log('init');
+    await this.checkDailyMarks();
+    for (let mark in this.dailyMarks) {
+      await this.createDailyNode(this.dailyMarks[mark].date, this.dailyMarks[mark].mark);
+    }
   }
 
   private initDailyMarks() {
@@ -120,31 +136,6 @@ class DailyNotesPlugin {
     } else {
       return [year, month, day].join('-');
     }
-  }
-
-  public async init() {
-    this.log('init');
-    await this.checkDailyMarks();
-    for (let mark in this.dailyMarks) {
-      await this.createDailyNode(this.dailyMarks[mark].date, this.dailyMarks[mark].mark);
-    }
-  }
-
-  public async toggleLogging(forceValue?: boolean) {
-    // toggle, by default
-    let isLogging = !this.isLogging;
-    if (forceValue != null) {
-      isLogging = forceValue;
-    }
-
-    if (isLogging) {
-      this.logger.info('Turning logging on');
-      await this.api.setData('isLogging', true);
-    } else {
-      this.logger.info('Turning logging off');
-      await this.api.setData('isLogging', false);
-    }
-    this.isLogging = isLogging;
   }
 
   public async log(...args: any[]) {
