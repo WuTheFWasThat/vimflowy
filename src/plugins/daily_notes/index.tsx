@@ -2,7 +2,6 @@ import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
 import { Logger } from '../../shared/utils/logger';
 import Path from '../../assets/ts/path';
 import { SerializedBlock } from '../../assets/ts/types';
-import e = require('express');
 
 registerPlugin<DailyNotesPlugin>(
   {
@@ -40,20 +39,16 @@ class DailyNotesPlugin {
 
     this.api.cursor.on('rowChange', async () => {
       this.log('rowChange');
+      this.checkNewDay();
     });
 
-    this.api.registerListener('session', 'exit', async () => {
+    /*this.api.registerListener('session', 'exit', async () => {
       this.log('exit');
-    });
-
-    /*this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
-      this.log(obj, row);
-      return obj;
     });*/
   }
 
   private initDailyMarks() {
-    let dt = new Date();
+    const dt = new Date();
     let dt_tomorrow = new Date();
     dt_tomorrow.setDate(dt.getDate() + 1);
     let dt_yesterday = new Date();
@@ -64,6 +59,36 @@ class DailyNotesPlugin {
       { mark: 'today', date: dt },
       { mark: 'yesterday', date: dt_yesterday },
     ];
+  }
+
+  private async checkNewDay() {
+    this.log('checkNewDay');
+    if (this.isNewDay()) {
+      this.log('New day comes');
+      this.initDailyMarks();
+      await this.init();
+    } else {
+      this.log('Same day');
+    }
+  }
+
+  private isNewDay() {
+    this.log('isNewDay');
+    const te = this.dailyMarks.find((e: any) => {
+      return e.mark === 'today';
+    });
+    let dt = new Date();
+    let dt2 = te.date;
+
+    if (dt && dt2) {
+      if (dt.setHours(0, 0, 0, 0) === dt2.setHours(0, 0, 0, 0)) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      throw new Error('Can\'t get dates');
+    }
   }
 
   private async checkDailyMarks() {
@@ -166,32 +191,6 @@ class DailyNotesPlugin {
     }
   }
 
-  private async getMarks() {
-    const paths = this.traverseSubtree(await this.getDailyNotesRoot());
-    for await (let path of paths) {
-      let info = await this.api.session.document.getInfo(path.row);
-      this.log(info);
-      if (info.pluginData.marks && info.pluginData.marks.mark && info.pluginData.marks.mark === 'today') {
-        const text = await this.api.session.document.getText(path.row);
-        this.log('text', text);
-        this.log('info before', info);
-        info.pluginData.marks.mark = 'today3';
-        this.api.session.document.cache.setPluginData(info.row, info.pluginData);
-        info = await this.api.session.document.getInfo(path.row);
-        this.log('info after', info);
-      }
-    }
-    /*const document = this.api.session.document;
-    const root = await this.getDailyNotesRoot();
-    if (document.hasChildren(root.row)) {
-      const children = await document.getChildren(root);
-      for await (let child of children) {
-
-      }
-    }*/
-
-  }
-
   private async* traverseSubtree(root: Path): AsyncIterableIterator<Path> {
     const visited_rows: {[row: number]: boolean} = {};
     let that = this;
@@ -214,24 +213,14 @@ class DailyNotesPlugin {
     return (await this.api.session.document.getChildren(parent_path)).map(path => parent_path.child(path.row));
   }
 
-  private async deleteMark() {
-    /*const paths = this.api.session.document.traverseSubtree(root);
-    for await (let path of paths) {
-      const text = await this.api.session.document.getText(path.row);
-
-    }
-
-    const line = await session.document.getLine(path.row);*/
-  }
-
   private async createBlock(path: Path, text: string, isCollapsed: boolean = true, plugins?: any) {
-    this.log('createBlock');
     let serialzed_row: SerializedBlock = {
       text: text,
       collapsed: isCollapsed,
       plugins: plugins,
       children: [],
     };
+    this.log('createBlock', path, text, isCollapsed, plugins, serialzed_row);
     await this.api.session.addBlocks(path, 0, [serialzed_row]);
     const result = await this.getNodeWithText(path, text);
     this.log('Block created', path, text);
