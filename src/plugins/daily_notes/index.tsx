@@ -195,13 +195,13 @@ class DailyNotesPlugin {
     }
   }
 
-  private getNode(id: string) {
+  /*private getNode(id: string) {
     this.log('getNode', id);
     const found = this.dailyMarks.find((e: any) => {
       return e.id === id;
     });
     return found.node;
-  }
+  }*/
 
   private setNode(id: string, path: Path) {
     this.log('setNode', id, path);
