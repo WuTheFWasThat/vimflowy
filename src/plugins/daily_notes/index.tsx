@@ -3,6 +3,7 @@ import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
 import { Logger } from '../../shared/utils/logger';
 import Path from '../../assets/ts/path';
 import { SerializedBlock } from '../../assets/ts/types';
+import { CachedRowInfo } from '../../assets/ts/document';
 
 registerPlugin<DailyNotesPlugin>(
   {
@@ -21,6 +22,7 @@ registerPlugin<DailyNotesPlugin>(
     } else {
       await api.setData('isLogging', true);
     }
+    await dailyNotes.init();
     return dailyNotes;
   },
   (api => api.deregisterAll())
@@ -31,17 +33,18 @@ class DailyNotesPlugin {
   private logger: Logger;
   private isLogging: boolean;
   private dailyMarks: any;
-  private childAddedArr: Object;
+  private childAddedArr: Array<number>;
+  private dailyNotesRoot: Path | null;
 
   constructor(api: PluginApi) {
     this.api = api;
     this.logger = this.api.logger;
     this.logger.info('Loading Daily notes');
     this.isLogging = false;
-    this.childAddedArr = {};
+    this.childAddedArr = [];
+    this.dailyNotesRoot = null;
 
     this.setLogging();
-    this.initDailyMarks();
 
     this.api.cursor.on('rowChange', async () => {
       this.log('rowChange');
@@ -50,28 +53,25 @@ class DailyNotesPlugin {
 
     this.api.registerListener('document', 'childAdded', async ({ row }) => {
       this.log('childAdded', row);
-      this.childAddedArr.(row);
       this.childAddedArr.push(row);
     });
 
     this.api.registerListener('document', 'loadRow', async (path, serialized) => {
-      
-      const ci = _.findIndex(this.childAddedArr, sib => sib === path.row);
-      errors.assert(ci !== -1);
-      children.splice(ci, 1);
-
-      if (this.childAddedArr.includes(path.row)) {
+      const ci = _.findIndex(this.childAddedArr, ce => ce === path.row);
+      if (ci !== -1) {
         this.log('loadRow', path, serialized);
-        delete this.childAddedArr[path.row];
+        this.childAddedArr.splice(ci, 1);
         this.addCreatedToday(path.row);
       }
+    });
+
+    this.api.registerListener('document', 'afterDetach', async (info) => {
+      await this.checkDeleted(info);
     });
 
     /*this.api.registerListener('session', 'exit', async () => {
       this.log('exit');
     });*/
-
-    this.init();
   }
 
   public async setLogging() {
@@ -80,13 +80,17 @@ class DailyNotesPlugin {
 
   public async init() {
     this.log('init');
+    await this.initDailyMarks();
     await this.checkDailyMarks();
-    this.dailyMarks.forEach(async (item: any) => {
-      await this.createDailyNode(item.date, item.mark);
-    });
+
+    for (const item of this.dailyMarks) {
+      if (item.date && item.mark) {
+        await this.createDailyNode(item.id, item.date, item.mark);
+      }
+    }
   }
 
-  private initDailyMarks() {
+  private async initDailyMarks() {
     const dt = new Date();
     let dt_tomorrow = new Date();
     dt_tomorrow.setDate(dt.getDate() + 1);
@@ -94,9 +98,9 @@ class DailyNotesPlugin {
     dt_yesterday.setDate(dt.getDate() - 1);
 
     this.dailyMarks = [
-      { mark: 'tomorrow', date: dt_tomorrow },
-      { mark: 'today', date: dt, node: null },
-      { mark: 'yesterday', date: dt_yesterday },
+      { id: 'tomorrow', mark: 'tomorrow', date: dt_tomorrow, node: null, linkedNode: null },
+      { id: 'today', mark: 'today', date: dt, node: null, linkedNode: null },
+      { id: 'yesterday', mark: 'yesterday', date: dt_yesterday, node: null,  linkedNode: null },
     ];
   }
 
@@ -114,7 +118,7 @@ class DailyNotesPlugin {
   private isNewDay() {
     this.log('isNewDay');
     const te = this.dailyMarks.find((e: any) => {
-      return e.mark === 'today';
+      return e.id === 'today';
     });
     let dt = new Date();
     let dt2 = te.date;
@@ -130,34 +134,97 @@ class DailyNotesPlugin {
     }
   }
 
-  private async addCreatedToday(row: number) {
-    this.log('addCreatedToday', row);
-
-    let info = await this.api.session.document.getInfo(row);
-    let can = await this.api.session.document.canonicalPath(row);
-    this.log('test', info);
-    this.log('test2', can);
-
-    /*let rowsToClone: number[] = [];
-    rowsToClone.push(row);
-    const dailyNode = await this.getTodayNode();
-    this.api.session.attachBlocks(dailyNode, rowsToClone, 0);*/
+  private async checkDeleted(info: CachedRowInfo) {
+    this.log('checkDeleted', info);
+    let needReInit = false;
+    const root = await this.getDailyNotesRoot();
+    for (const item of this.dailyMarks) {
+      if (item.node) {
+        if(info.row == item.node.row) {
+          needReInit = true;
+        }
+      }
+      if (item.linkedNode) {
+        if(info.row == item.linkedNode.row) {
+          needReInit = true;
+        }
+      }
+    }
+    if (root) {
+      if(info.row == root.row) {
+        needReInit = true;
+      }
+    }
+    if (needReInit) {
+      this.log('needReInit', true);
+      this.dailyNotesRoot = null;
+      await this.init();
+    }
   }
 
-  private getTodayNode() {
-    this.log('getTodayNode');
+  private isHasRow(path: Path | null, searchRow: number): any {
+    if (path) {
+      if (path.row == searchRow) {
+        return true;
+      } else {
+        if (path.parent) {
+          return this.isHasRow(path.parent, searchRow);
+        } else {
+          return false;
+        }
+      }
+    } else {
+      return false;
+    }
+  }
+
+  private async addCreatedToday(row: number) {
+    this.log('addCreatedToday', row);
+    let can = await this.api.session.document.canonicalPath(row);
+    const root = await this.getDailyNotesRoot();
+    const found = this.isHasRow(can, root.row);
+
+    if (!found) {
+      this.log('Create clone', row);
+      let rowsToClone: number[] = [];
+      rowsToClone.push(row);
+      const dailyNode = this.getLinkedNode('today');
+      if (dailyNode) {
+        this.api.session.attachBlocks(dailyNode, rowsToClone, 0);
+      }
+    }
+  }
+
+  private getNode(id: string) {
+    this.log('getNode', id);
     const found = this.dailyMarks.find((e: any) => {
-      return e.mark === 'today';
+      return e.id === id;
     });
     return found.node;
   }
 
-  private setTodayNode(path: Path) {
-    this.log('setTodayNode', path);
+  private setNode(id: string, path: Path) {
+    this.log('setNode', id, path);
     const found = this.dailyMarks.find((e: any) => {
-      return e.mark === 'today';
+      return e.id === id;
     });
     found.node = path;
+  }
+
+  private getLinkedNode(id: string) {
+    this.log('getLinkedNode', id);
+    const found = this.dailyMarks.find((e: any) => {
+      return e.id === id;
+    });
+    return found.linkedNode;
+  }
+
+  private setLinkedNode(id: string, path: Path) {
+    this.log('setLinkedNode', id, path);
+    const found = this.dailyMarks.find((e: any) => {
+      return e.id === id;
+    });
+    found.linkedNode = path;
   }
 
   private async checkDailyMarks() {
@@ -200,7 +267,7 @@ class DailyNotesPlugin {
   private async getNodeWithText(root: Path, text: String): Promise<Path | null> {
     this.log('getNodeWithText', root, text);
     const document = this.api.session.document;
-    if (document.hasChildren(root.row)) {
+    if (await document.hasChildren(root.row)) {
       const children = await document.getChildren(root);
       for await (let child of children) {
         if (await document.getText(child.row) === text) {
@@ -213,15 +280,21 @@ class DailyNotesPlugin {
 
   private async getDailyNotesRoot() {
     this.log('getDailyNotesRoot');
-    let dailyNotesRoot = await this.getNodeWithText(this.api.session.document.root, 'Daily Notes');
-    if (!dailyNotesRoot) {
-      await this.createDailyNotesRoot();
-      dailyNotesRoot = await this.getNodeWithText(this.api.session.document.root, 'Daily Notes');
+    if (this.dailyNotesRoot && this.api.session.document.isValidPath(this.dailyNotesRoot!)) {
+      this.log('getDailyNotesRoot from cache');
+      return this.dailyNotesRoot!;
+    } else {
+      let dailyNotesRoot = await this.getNodeWithText(this.api.session.document.root, 'Daily Notes');
       if (!dailyNotesRoot) {
-        throw new Error('Error while creating node');
+        await this.createDailyNotesRoot();
+        dailyNotesRoot = await this.getNodeWithText(this.api.session.document.root, 'Daily Notes');
+        if (!dailyNotesRoot) {
+          throw new Error('Error while creating node');
+        }
       }
+      this.dailyNotesRoot = dailyNotesRoot;
+      return dailyNotesRoot!;
     }
-    return dailyNotesRoot;
   }
 
   private async setMark(path: Path, mark: string) {
@@ -280,7 +353,7 @@ class DailyNotesPlugin {
     await this.createBlock(this.api.session.document.root, 'Daily Notes');
   }
 
-  private async createDailyNode(dt: Date, mark: string) {
+  private async createDailyNode(id: string, dt: Date, mark: string) {
     this.log('createDailyNode', dt, mark);
     const root = await this.getDailyNotesRoot();
 
@@ -304,7 +377,13 @@ class DailyNotesPlugin {
     } else {
       this.setMark(dayPath, mark);
     }
-    this.setTodayNode(dayPath);
+    this.setNode(id, dayPath);
+
+    let linkedPath = await this.getNodeWithText(dayPath, 'Linked');
+    if (!linkedPath) {
+      linkedPath = await this.createBlock(dayPath, 'Linked', true);
+    }
+    this.setLinkedNode(id, linkedPath);
   }
 }
 
