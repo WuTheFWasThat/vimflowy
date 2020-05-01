@@ -140,18 +140,18 @@ class DailyNotesPlugin {
     const root = await this.getDailyNotesRoot();
     for (const item of this.dailyMarks) {
       if (item.node) {
-        if(info.row == item.node.row) {
+        if (info.row === item.node.row) {
           needReInit = true;
         }
       }
       if (item.linkedNode) {
-        if(info.row == item.linkedNode.row) {
+        if (info.row === item.linkedNode.row) {
           needReInit = true;
         }
       }
     }
     if (root) {
-      if(info.row == root.row) {
+      if (info.row === root.row) {
         needReInit = true;
       }
     }
@@ -164,7 +164,7 @@ class DailyNotesPlugin {
 
   private isHasRow(path: Path | null, searchRow: number): any {
     if (path) {
-      if (path.row == searchRow) {
+      if (path.row === searchRow) {
         return true;
       } else {
         if (path.parent) {
