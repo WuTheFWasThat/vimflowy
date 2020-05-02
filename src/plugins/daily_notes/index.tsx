@@ -4,6 +4,7 @@ import { Logger } from '../../shared/utils/logger';
 import Path from '../../assets/ts/path';
 import { SerializedBlock } from '../../assets/ts/types';
 import { CachedRowInfo } from '../../assets/ts/document';
+import { matchWordRegex } from '../../assets/ts/utils/text';
 
 registerPlugin<DailyNotesPlugin>(
   {
@@ -35,6 +36,7 @@ class DailyNotesPlugin {
   private dailyMarks: any;
   private childAddedArr: Array<number>;
   private dailyNotesRoot: Path | null;
+  private lastRowText: string | null;
 
   constructor(api: PluginApi) {
     this.api = api;
@@ -43,12 +45,14 @@ class DailyNotesPlugin {
     this.isLogging = false;
     this.childAddedArr = [];
     this.dailyNotesRoot = null;
+    this.lastRowText = null;
 
     this.setLogging();
 
-    this.api.cursor.on('rowChange', async () => {
-      this.log('rowChange');
+    this.api.cursor.on('rowChange', async (_oldPath: Path, newPath: Path) => {
+      this.log('rowChange', _oldPath, newPath);
       this.checkNewDay();
+      this.checkRowTextChanged(_oldPath, newPath);
     });
 
     this.api.registerListener('document', 'childAdded', async ({ row }) => {
@@ -134,6 +138,52 @@ class DailyNotesPlugin {
     }
   }
 
+  private async checkRowTextChanged(oldPath: Path, newPath: Path) {
+    if (oldPath !== newPath) {
+      const rowTextOld = await this.api.session.document.getText(oldPath.row);
+      if (this.lastRowText !== null && this.lastRowText !== rowTextOld) {
+        this.log('Row text changed', oldPath);
+        this.checkForDates(oldPath, rowTextOld);
+      }
+      this.lastRowText = await this.api.session.document.getText(newPath.row);
+    }
+  }
+
+  private isValidDate(year: number, month: number, day: number) {
+    const d = new Date(year, month, day);
+    if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
+        return true;
+    }
+    return false;
+  }
+
+  private async checkForDates(path: Path, text?: string) {
+    if (!text) {
+      text = await this.api.session.document.getText(path.row);
+    }
+    if (!text) {
+      return;
+    }
+    const regex = matchWordRegex('\\d{4}\\-\\d{2}\\-\\d{2}');
+    let match = regex.exec(text);
+    if (match) {
+      this.log('Matched', match);
+      const dateStr = match[1];
+      const date = new Date(Date.parse(dateStr));
+      const d = match[1].split('-');
+      if (d.length === 3) {
+        const isValidDate = this.isValidDate(Number.parseInt(d[0]), Number.parseInt(d[1]), Number.parseInt(d[2]));
+        if (isValidDate) {
+          const newDay = { id: dateStr, mark: null, date: date, node: null,  linkedNode: null };
+          this.dailyMarks.push(newDay);
+          await this.createDailyNode(dateStr, date, null);
+          const linkedNode = this.getLinkedNode(dateStr);
+          await this.addLinked(linkedNode, path.row, true);
+        }
+      }
+    }
+  }
+
   private async checkDeleted(info: CachedRowInfo) {
     this.log('checkDeleted', info);
     let needReInit = false;
@@ -171,7 +221,6 @@ class DailyNotesPlugin {
           break;
         }
       }
-      
       if (isFound) {
         return true;
       } else {
@@ -186,27 +235,37 @@ class DailyNotesPlugin {
     }
   }
 
-  private async addCreatedToday(row: number) {
-    this.log('addCreatedToday', row);
+  private async addLinked(linkedNode: Path, row: number, createInDailyNode: boolean = false) {
+    this.log('addLinked', row);
+    let foundInDailyNode = false;
     let can = await this.api.session.document.canonicalPath(row);
-    const rootNode = await this.getDailyNotesRoot();
-    const found = this.isHasRows(can, [rootNode.row]);
 
-    const linkedNode = this.getLinkedNode('today');
+    // Check row in Daily node
+    if (!createInDailyNode) {
+      const rootNode = await this.getDailyNotesRoot();
+      foundInDailyNode = this.isHasRows(can, [rootNode.row]);
+    }
+
+    // Check row in Linked node
     let linkedNodeChildren = await this.getChildren(linkedNode);
     let linkedNodeChildrenArr: number[] = [];
     linkedNodeChildren.map(element => linkedNodeChildrenArr.push(element.row));
     const foundLinked = this.isHasRows(can, linkedNodeChildrenArr);
 
-    if (!found && !foundLinked) {
+    if (!foundInDailyNode && !foundLinked) {
       this.log('Create clone', row);
       let rowsToClone: number[] = [];
       rowsToClone.push(row);
-      const dailyNode = this.getLinkedNode('today');
-      if (dailyNode) {
-        this.api.session.attachBlocks(dailyNode, rowsToClone, 0);
+      if (linkedNode) {
+        this.api.session.attachBlocks(linkedNode, rowsToClone, 0);
       }
     }
+  }
+
+  private async addCreatedToday(row: number) {
+    this.log('addCreatedToday', row);
+    const linkedNode = this.getLinkedNode('today');
+    await this.addLinked(linkedNode, row);
   }
 
   /*private getNode(id: string) {
@@ -367,7 +426,7 @@ class DailyNotesPlugin {
     await this.createBlock(this.api.session.document.root, 'Daily Notes');
   }
 
-  private async createDailyNode(id: string, dt: Date, mark: string) {
+  private async createDailyNode(id: string, dt: Date, mark: string | null) {
     this.log('createDailyNode', dt, mark);
     const root = await this.getDailyNotesRoot();
 
@@ -389,7 +448,9 @@ class DailyNotesPlugin {
     if (!dayPath) {
       dayPath = await this.createBlock(monthPath, dayNode, true, { mark: mark });
     } else {
-      this.setMark(dayPath, mark);
+      if (mark) {
+        this.setMark(dayPath, mark);
+      }
     }
     this.setNode(id, dayPath);
 
@@ -400,5 +461,3 @@ class DailyNotesPlugin {
     this.setLinkedNode(id, linkedPath);
   }
 }
-
-
