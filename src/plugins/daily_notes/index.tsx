@@ -162,13 +162,21 @@ class DailyNotesPlugin {
     }
   }
 
-  private isHasRow(path: Path | null, searchRow: number): any {
+  private isHasRows(path: Path | null, searchRows: number[]): any {
     if (path) {
-      if (path.row === searchRow) {
+      let isFound = false;
+      for (const element of searchRows) {
+        if (path.row === element) {
+          isFound = true;
+          break;
+        }
+      }
+      
+      if (isFound) {
         return true;
       } else {
         if (path.parent) {
-          return this.isHasRow(path.parent, searchRow);
+          return this.isHasRows(path.parent, searchRows);
         } else {
           return false;
         }
@@ -181,10 +189,16 @@ class DailyNotesPlugin {
   private async addCreatedToday(row: number) {
     this.log('addCreatedToday', row);
     let can = await this.api.session.document.canonicalPath(row);
-    const root = await this.getDailyNotesRoot();
-    const found = this.isHasRow(can, root.row);
+    const rootNode = await this.getDailyNotesRoot();
+    const found = this.isHasRows(can, [rootNode.row]);
 
-    if (!found) {
+    const linkedNode = this.getLinkedNode('today');
+    let linkedNodeChildren = await this.getChildren(linkedNode);
+    let linkedNodeChildrenArr: number[] = [];
+    linkedNodeChildren.map(element => linkedNodeChildrenArr.push(element.row));
+    const foundLinked = this.isHasRows(can, linkedNodeChildrenArr);
+
+    if (!found && !foundLinked) {
       this.log('Create clone', row);
       let rowsToClone: number[] = [];
       rowsToClone.push(row);
