@@ -140,18 +140,18 @@ class DailyNotesPlugin {
     const root = await this.getDailyNotesRoot();
     for (const item of this.dailyMarks) {
       if (item.node) {
-        if(info.row == item.node.row) {
+        if (info.row === item.node.row) {
           needReInit = true;
         }
       }
       if (item.linkedNode) {
-        if(info.row == item.linkedNode.row) {
+        if (info.row === item.linkedNode.row) {
           needReInit = true;
         }
       }
     }
     if (root) {
-      if(info.row == root.row) {
+      if (info.row === root.row) {
         needReInit = true;
       }
     }
@@ -162,13 +162,21 @@ class DailyNotesPlugin {
     }
   }
 
-  private isHasRow(path: Path | null, searchRow: number): any {
+  private isHasRows(path: Path | null, searchRows: number[]): any {
     if (path) {
-      if (path.row == searchRow) {
+      let isFound = false;
+      for (const element of searchRows) {
+        if (path.row === element) {
+          isFound = true;
+          break;
+        }
+      }
+      
+      if (isFound) {
         return true;
       } else {
         if (path.parent) {
-          return this.isHasRow(path.parent, searchRow);
+          return this.isHasRows(path.parent, searchRows);
         } else {
           return false;
         }
@@ -181,10 +189,16 @@ class DailyNotesPlugin {
   private async addCreatedToday(row: number) {
     this.log('addCreatedToday', row);
     let can = await this.api.session.document.canonicalPath(row);
-    const root = await this.getDailyNotesRoot();
-    const found = this.isHasRow(can, root.row);
+    const rootNode = await this.getDailyNotesRoot();
+    const found = this.isHasRows(can, [rootNode.row]);
 
-    if (!found) {
+    const linkedNode = this.getLinkedNode('today');
+    let linkedNodeChildren = await this.getChildren(linkedNode);
+    let linkedNodeChildrenArr: number[] = [];
+    linkedNodeChildren.map(element => linkedNodeChildrenArr.push(element.row));
+    const foundLinked = this.isHasRows(can, linkedNodeChildrenArr);
+
+    if (!found && !foundLinked) {
       this.log('Create clone', row);
       let rowsToClone: number[] = [];
       rowsToClone.push(row);
@@ -195,13 +209,13 @@ class DailyNotesPlugin {
     }
   }
 
-  private getNode(id: string) {
+  /*private getNode(id: string) {
     this.log('getNode', id);
     const found = this.dailyMarks.find((e: any) => {
       return e.id === id;
     });
     return found.node;
-  }
+  }*/
 
   private setNode(id: string, path: Path) {
     this.log('setNode', id, path);
@@ -386,5 +400,3 @@ class DailyNotesPlugin {
     this.setLinkedNode(id, linkedPath);
   }
 }
-
-
