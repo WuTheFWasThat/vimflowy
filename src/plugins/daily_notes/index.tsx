@@ -456,7 +456,7 @@ class DailyNotesPlugin {
 
     let linkedPath = await this.getNodeWithText(dayPath, 'Linked');
     if (!linkedPath) {
-      linkedPath = await this.createBlock(dayPath, 'Linked', true);
+      linkedPath = await this.createBlock(dayPath, 'Linked', false);
     }
     this.setLinkedNode(id, linkedPath);
   }
