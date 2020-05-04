@@ -5,6 +5,7 @@ import EventEmitter from '../utils/eventEmitter';
 import DataBackend, { SynchronousDataBackend } from '../../../shared/data_backend';
 import { ExtendableError } from '../../../shared/utils/errors';
 import logger from '../../../shared/utils/logger';
+import { isThisTypeNode } from 'typescript';
 
 export type BackendType = 'local' | 'firebase' | 'inmemory' | 'socketserver';
 
@@ -183,15 +184,20 @@ export class ClientSocketBackend extends DataBackend {
     logger.info('Trying to connect', host);
     this.ws = new WebSocket(`${host}/socket`);
     this.ws.onerror = (err) => {
-      throw new Error(`Socket connection error: ${err}`);
+      // throw new Error(`Socket connection error: ${err}`);
+      logger.info(`Socket connection error: ${err}`);
+      logger.info('Trying to reconnect...');
+      setTimeout(async function() {
+        await that.connect(host, password, docname);
+      }, 5000);
     };
     let that = this;
     this.ws.onclose = async () => {
+      // throw new Error('Socket connection closed!');
       logger.info('Socket connection closed! Trying to reconnect...');
       setTimeout(async function() {
         await that.connect(host, password, docname);
       }, 5000);
-      // throw new Error('Socket connection closed!');
     };
 
     await new Promise((resolve, reject) => {
