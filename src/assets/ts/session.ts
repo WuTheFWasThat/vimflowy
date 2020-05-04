@@ -243,6 +243,7 @@ export default class Session extends EventEmitter {
 
   // TODO: make this use replace_empty = true?
   public async importContent(content: string, mimetype: string) {
+    content = content.replace(/(?:\r)/g, '');  // Remove \r (Carriage Return) from each line
     const root = this.parseContent(content, mimetype);
     if (!root) { return false; }
     const { path } = this.cursor;

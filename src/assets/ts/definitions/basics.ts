@@ -281,8 +281,6 @@ keyDefinitions.registerAction(new Action(
         result.push(...(childResult as Array<string>));
       }
     }
-    // Remove \r (Carriage Return) from each line
-    result = result.map(function(x) { return x.replace(/(?:\r)/g, ''); });
     const result_str = result.join('\n');
 
     if (result) {

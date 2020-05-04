@@ -48,7 +48,7 @@
     "font-awesome": "^4.6.3",
     "ignore-styles": "^5.0.1",
     "immutable": "^3.8.2",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "katex": "^0.7.1",
     "mocha": "^5.2.0",
     "node-sass": "^4.11.0",
