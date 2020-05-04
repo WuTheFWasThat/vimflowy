@@ -179,6 +179,16 @@ export class ClientSocketBackend extends DataBackend {
     this.clientId = Date.now() + '-' + ('' + Math.random()).slice(2);
   }
 
+  private async reconnect(ws: WebSocket, host: string) {
+    await new Promise((resolve, reject) => {
+      ws.onopen = resolve;
+      setTimeout(() => {
+        reject('Timed out trying to connect!');
+      }, 5000);
+    });
+    logger.info('Reconnected', host);
+  }
+
   public async init(host: string, password: string, docname = '') {
     this.events.emit('saved');
 
@@ -187,8 +197,10 @@ export class ClientSocketBackend extends DataBackend {
     this.ws.onerror = (err) => {
       throw new Error(`Socket connection error: ${err}`);
     };
-    this.ws.onclose = () => {
-      throw new Error('Socket connection closed!');
+    this.ws.onclose = async () => {
+      logger.info('Socket connection closed! Trying to reconnect...');
+      await this.reconnect(this.ws, host);
+      //throw new Error('Socket connection closed!');
     };
 
     await new Promise((resolve, reject) => {
