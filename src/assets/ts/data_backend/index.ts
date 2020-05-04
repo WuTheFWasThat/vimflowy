@@ -5,7 +5,6 @@ import EventEmitter from '../utils/eventEmitter';
 import DataBackend, { SynchronousDataBackend } from '../../../shared/data_backend';
 import { ExtendableError } from '../../../shared/utils/errors';
 import logger from '../../../shared/utils/logger';
-import { isThisTypeNode } from 'typescript';
 
 export type BackendType = 'local' | 'firebase' | 'inmemory' | 'socketserver';
 
