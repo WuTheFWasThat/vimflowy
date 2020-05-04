@@ -182,6 +182,7 @@ export class ClientSocketBackend extends DataBackend {
 
   private async connect(host: string, password: string, docname: string) {
     logger.info('Trying to connect', host);
+    let that = this;
     this.ws = new WebSocket(`${host}/socket`);
     this.ws.onerror = (err) => {
       // throw new Error(`Socket connection error: ${err}`);
@@ -191,7 +192,6 @@ export class ClientSocketBackend extends DataBackend {
         await that.connect(host, password, docname);
       }, 5000);
     };
-    let that = this;
     this.ws.onclose = async () => {
       // throw new Error('Socket connection closed!');
       logger.info('Socket connection closed! Trying to reconnect...');
