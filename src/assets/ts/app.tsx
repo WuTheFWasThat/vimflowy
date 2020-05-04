@@ -476,7 +476,8 @@ $(document).ready(async () => {
     if (session.mode === 'SETTINGS') { return; }
 
     e.preventDefault();
-    const text: string = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
+    let text: string = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
+    text = text.replace(/(?:\r)/g, '');  // Remove \r (Carriage Return) from each line
     await keyHandler.queue(async () => {
       // TODO: deal with this better when there are multiple lines
       // maybe put in insert mode?
