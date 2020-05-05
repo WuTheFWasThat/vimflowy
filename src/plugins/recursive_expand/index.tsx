@@ -11,7 +11,7 @@ registerPlugin(
     {
         name: pluginName,
         author: 'Nikhil Sonti',
-        description: `Lets you recurisively expand or collapse a node`,
+        description: `Lets you recursively expand or collapse a node`,
     },
     function (api) {
 

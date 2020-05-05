@@ -15,12 +15,10 @@ registerPlugin<DailyNotesPlugin>(
     <div>
     How to use:
     <ul>
-        <li> The plugin automatically create "Daily Notes" node at root and subtree with YYYY, YYYY-MM and YYYY-MM-DD date format</li>
-        <li> It will create three dates everyday, if they does not created yet</li>
-        <li> Marks plugin must be enabled for easy navigation between today, tommorrow and yersterday nodes,
-        it creates them everyday automatically</li>
-        <li> Adding date in format YYYY-MM-DD will create this day in Daily Notes subtree as Linked node</li>
-        <li> All new records will be automatically cloned in today node</li>
+        <li> This plugin automatically creates "Daily Notes" node at the root with sub-nodes at paths with YYYY, YYYY-MM and YYYY-MM-DD date formats.  These are created automatically every day (if missing, they can also be manually created)</li>
+        <li> Marks plugin required: easy navigation between today, tommorrow and yesterday nodes (created every day automatically)</li>
+        <li> All new records will be automatically cloned in the today node</li>
+        <li> Adding a date in format YYYY-MM-DD will create that day in the Daily Notes subtree as a Linked node</li>
     </ul>
     </div>
     ),
