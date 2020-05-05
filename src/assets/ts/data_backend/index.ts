@@ -179,16 +179,24 @@ export class ClientSocketBackend extends DataBackend {
     this.clientId = Date.now() + '-' + ('' + Math.random()).slice(2);
   }
 
-  public async init(host: string, password: string, docname = '') {
-    this.events.emit('saved');
-
+  private async connect(host: string, password: string, docname: string) {
     logger.info('Trying to connect', host);
+    let that = this;
     this.ws = new WebSocket(`${host}/socket`);
     this.ws.onerror = (err) => {
-      throw new Error(`Socket connection error: ${err}`);
+      // throw new Error(`Socket connection error: ${err}`);
+      logger.info(`Socket connection error: ${err}`);
+      logger.info('Trying to reconnect...');
+      setTimeout(async function() {
+        await that.connect(host, password, docname);
+      }, 5000);
     };
-    this.ws.onclose = () => {
-      throw new Error('Socket connection closed!');
+    this.ws.onclose = async () => {
+      // throw new Error('Socket connection closed!');
+      logger.info('Socket connection closed! Trying to reconnect...');
+      setTimeout(async function() {
+        await that.connect(host, password, docname);
+      }, 5000);
     };
 
     await new Promise((resolve, reject) => {
@@ -224,6 +232,11 @@ export class ClientSocketBackend extends DataBackend {
       password: password,
       docname: docname,
     });
+  }
+
+  public async init(host: string, password: string, docname = '') {
+    this.events.emit('saved');
+    await this.connect(host, password, docname);
   }
 
   private async sendMessage(message: Object): Promise<string | null> {
