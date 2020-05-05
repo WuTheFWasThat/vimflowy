@@ -37,6 +37,7 @@ class DailyNotesPlugin {
   private childAddedArr: Array<number>;
   private dailyNotesRoot: Path | null;
   private lastRowText: string | null;
+  private detachTimer: any;
 
   constructor(api: PluginApi) {
     this.api = api;
@@ -46,6 +47,7 @@ class DailyNotesPlugin {
     this.childAddedArr = [];
     this.dailyNotesRoot = null;
     this.lastRowText = null;
+    this.detachTimer = null;
 
     this.setLogging();
 
@@ -70,7 +72,13 @@ class DailyNotesPlugin {
     });
 
     this.api.registerListener('document', 'afterDetach', async (info) => {
-      await this.checkDeleted(info);
+      let that = this;
+      if (this.detachTimer) {
+        clearTimeout(this.detachTimer);
+      }
+      this.detachTimer = setTimeout(async function() {
+        await that.checkDeleted(info);
+      }, 1000);
     });
 
     /*this.api.registerListener('session', 'exit', async () => {
@@ -247,10 +255,13 @@ class DailyNotesPlugin {
     }
 
     // Check row in Linked node
+    let foundLinked = false;
     let linkedNodeChildren = await this.getChildren(linkedNode);
-    let linkedNodeChildrenArr: number[] = [];
-    linkedNodeChildren.map(element => linkedNodeChildrenArr.push(element.row));
-    const foundLinked = this.isHasRows(can, linkedNodeChildrenArr);
+    if (linkedNodeChildren) {
+      let linkedNodeChildrenArr: number[] = [];
+      linkedNodeChildren.map(element => linkedNodeChildrenArr.push(element.row));
+      foundLinked = this.isHasRows(can, linkedNodeChildrenArr);
+    }
 
     if (!foundInDailyNode && !foundLinked) {
       this.log('Create clone', row);
@@ -400,6 +411,9 @@ class DailyNotesPlugin {
   }
 
   public async getChildren(parent_path: Path): Promise<Array<Path>> {
+    if (!parent_path) {
+      return [];
+    }
     return (await this.api.session.document.getChildren(parent_path)).map(path => parent_path.child(path.row));
   }
 
