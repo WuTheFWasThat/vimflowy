@@ -200,6 +200,10 @@ export class PluginApi {
       Please report this problem to the plugin author.`
     );
   }
+
+  public showAlert(message: string) {
+    alert(message);
+  }
 }
 
 export class PluginsManager extends EventEmitter {

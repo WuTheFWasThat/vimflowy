@@ -6,6 +6,7 @@ import './text_formatting';
 import './time_tracking';
 import './todo';
 import './recursive_expand';
+import './gtd_helper';
 
 // for developers: uncomment the following lines
 /*
