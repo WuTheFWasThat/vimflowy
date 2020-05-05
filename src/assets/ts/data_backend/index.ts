@@ -187,14 +187,14 @@ export class ClientSocketBackend extends DataBackend {
       // throw new Error(`Socket connection error: ${err}`);
       logger.info(`Socket connection error: ${err}`);
       logger.info('Trying to reconnect...');
-      setTimeout(async function() {
-        await that.connect(host, password, docname);
+      setTimeout(async() => {
+        await this.connect(host, password, docname);
       }, 5000);
     };
     this.ws.onclose = async () => {
       // throw new Error('Socket connection closed!');
       logger.info('Socket connection closed! Trying to reconnect...');
-      setTimeout(async function() {
+      setTimeout(async() => {
         await that.connect(host, password, docname);
       }, 5000);
     };
