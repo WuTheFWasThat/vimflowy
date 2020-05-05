@@ -131,7 +131,7 @@ export class MarksPlugin {
     });
 
     this.api.registerListener('document', 'loadRow', async (path, serialized) => {
-      if (serialized.mark) {
+      if (serialized.mark != null) {
         const err = await this.updateMark(path.row, serialized.mark);
         if (err) { return this.session.showMessage(err, {text_class: 'error'}); }
       }
