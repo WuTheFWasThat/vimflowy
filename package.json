@@ -51,7 +51,7 @@
     "jquery": "^3.5.0",
     "katex": "^0.7.1",
     "mocha": "^5.2.0",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.13.1",
     "react": "^15.6.2",
     "react-color": "^2.14.1",
     "react-dom": "^15.6.2",
