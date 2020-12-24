@@ -423,7 +423,9 @@ $(document).ready(async () => {
         info.saved.forEach((p: SerializedBlock) => recurse(p, 0));
         content = contents.join('\n');
         richContents.push('</ul>');
-        richContent = richContents.join('\n');
+        if (contents.length <= 1) { richContent = content; } else {
+          richContent = richContents.join('\n');
+        }
       } else if (info.type === RegisterTypes.CLONED_ROWS) {
         // For now, this does not copy, for efficiency reasons
         return;
