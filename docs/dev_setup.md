@@ -38,7 +38,7 @@ If you're looking to run vimflowy for personal usage (not development), you'll w
     npm run startprod
 
 Notably, you can run a SQLite backend, for persistence to your server. 
-[See here for more info](docs/storage/SQLite.md).
+[See here for more info](storage/SQLite.md).
 
 ### Tests
 
