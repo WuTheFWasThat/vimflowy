@@ -8,11 +8,11 @@ Initialize the main page.  Rather messy logic for a bunch of stuff:
 - handle rendering logic
 */
 
-import * as $ from 'jquery';
+import $ from 'jquery';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 import * as ReactDOM from 'react-dom';
 
-import 'font-awesome/css/font-awesome.css';
+import 'font-awesome/css/font-awesome.min.css';
 import '../css/utils.sass';
 import '../css/index.sass';
 import '../css/view.sass';
@@ -322,7 +322,7 @@ $(document).ready(async () => {
     },
     getLinesPerPage: () => {
       const line_height = getLineHeight();
-      const page_height = $(document).height();
+      const page_height = $(document).height() as number;
       return page_height / line_height;
     },
   });
@@ -375,9 +375,9 @@ $(document).ready(async () => {
           showingKeyBindings={showingKeyBindings}
           keyBindings={keyBindings}
           initialBackendType={backend_type}
-        />,
+        /> as any, // TODO
         appEl,
-        resolve
+        resolve as any // TODO
       );
     });
 
@@ -519,6 +519,9 @@ function copyToClipboard(text: string, richText?: string) {
 
   // https://stackoverflow.com/questions/23934656/javascript-copy-rich-text-contents-to-clipboard
   function listener(e: ClipboardEvent) {
+    if (!e.clipboardData) {
+      return;
+    }
     if (richText) {
       e.clipboardData.setData('text/html', richText);
     }

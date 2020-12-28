@@ -19,7 +19,7 @@ export type LineProps = {
   linksStyle: React.CSSProperties;
   lineHook?: PartialUnfolder<Token, React.ReactNode>;
   wordHook?: PartialUnfolder<Token, React.ReactNode>;
-  onCharClick?: ((col: Col, e: Event) => void) | null;
+  onCharClick?: ((col: Col, e: Event) => void) | undefined;
   cursorBetween?: boolean;
 };
 
@@ -98,7 +98,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
           target = '_blank';
         }
 
-        let onClick = null;
+        let onClick = undefined;
         if (href == null) {
           if (char_info.renderOptions.onClick !== undefined) {
             onClick = char_info.renderOptions.onClick;

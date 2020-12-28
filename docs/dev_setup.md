@@ -20,9 +20,7 @@ Simply run:
 After a short wait, you should see the app at `http://localhost:3000/`
 When source code changes, assets should be automatically (incrementally) recompiled.
 
-To use a different port, you can do
-
-    npm start -- --port 2002
+To use a different port, you set the`PORT` environment variable.
 
 For a full set of options, see
 
@@ -37,7 +35,7 @@ If you're looking to run vimflowy for personal usage (not development), you'll w
     npm run build
     npm run startprod
 
-Notably, you can run a SQLite backend, for persistence to your server. 
+Notably, you can run a SQLite backend, for persistence to your server.
 [See here for more info](storage/SQLite.md).
 
 ### Tests
