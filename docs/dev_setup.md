@@ -20,11 +20,7 @@ Simply run:
 After a short wait, you should see the app at `http://localhost:3000/`
 When source code changes, assets should be automatically (incrementally) recompiled.
 
-To use a different port, you set the`PORT` environment variable.
-
-For a full set of options, see
-
-    npm start -- --help
+This uses [Create React App](https://create-react-app.dev/docs/getting-started), so most of that documentation applies.  For example, to use a different port, you set the`PORT` environment variable.
 
 Note that you may make new documents simply by visiting
 `http://localhost:3000?doc=<documentname>#`
@@ -40,11 +36,7 @@ Notably, you can run a SQLite backend, for persistence to your server.
 
 ### Tests
 
-To run unit tests automatically (when files change) from the development server, add the `test` flag:
-
-    npm start -- --test
-
-To run a separate continuous process that monitors and runs tests when files change:
+To run a process that monitors and runs tests when files change:
 
     npm run watchtest
 

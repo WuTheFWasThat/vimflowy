@@ -26,6 +26,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --opts test/mocha.opts",
+    "watchtest": "npm test -- --reporter dot --watch",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
