@@ -61,7 +61,7 @@ To manually lint the project:
 For profiling, you should use browser profiling when possible.
 However, though the results will be less realistic, you can also profile unit tests.  Something like:
 
-    mocha --prof --opts test/mocha.opts
+    npm run profiletest
     node-tick-processor *-v8.log > processed_log
     less processed_log
 

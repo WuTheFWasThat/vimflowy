@@ -14,4 +14,7 @@ npm-debug.log
 .DS_Store
 .vscode/*
 
+# profiling stuff
+*-v8.log
+
 .eslintcache
