@@ -25,7 +25,7 @@
   "scripts": {
     "buildserver": "ts-node server/build_server.ts",
     "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx'",
-    "startprod": "ts-node server/prod.ts",
+    "startprod": "ts-node --compilerOptions '{\"module\":\"commonjs\"}' server/prod.ts",
     "typecheck": "tsc -p . --noEmit",
     "verify": "npm run lint && npm run typecheck && npm test",
     "start": "react-scripts start",
@@ -54,13 +54,17 @@
     ]
   },
   "devDependencies": {
+    "@types/express": "^4.16.0",
     "@types/jquery": "^3.5.5",
     "@types/katex": "^0.11.0",
     "@types/lodash": "^4.14.166",
+    "@types/minimist": "^1.2.0",
     "@types/mocha": "^2.2.48",
     "@types/react": "^16.14.2",
     "@types/react-color": "^3.0.4",
+    "express": "^4.16.4",
     "ignore-styles": "^5.0.1",
+    "minimist": "^1.2.2",
     "mocha": "^5.2.0",
     "ts-node": "^3.3.0",
     "tslint": "^4.5.1"

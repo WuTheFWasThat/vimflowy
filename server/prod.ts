@@ -1,11 +1,12 @@
 import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
+import { AddressInfo } from 'net';
 
-import * as express from 'express';
-import * as minimist from 'minimist';
+import express from 'express';
+import minimist from 'minimist';
 
-import logger from '../shared/utils/logger';
+import logger from '../src/shared/utils/logger';
 
 import makeSocketServer from './socket_server';
 import { defaultStaticDir, publicPath } from './constants';
@@ -66,7 +67,8 @@ async function main(args: any) {
   }
   server.listen(port, host, (err?: Error) => {
     if (err) { return logger.error(err); }
-    logger.info('Listening on http://%s:%d', server.address().address, server.address().port);
+    const address_info: AddressInfo = server.address() as AddressInfo;
+    logger.info('Listening on http://%s:%d', address_info.address, address_info.port);
   });
 }
 
