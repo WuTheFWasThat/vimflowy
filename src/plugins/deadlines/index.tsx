@@ -10,14 +10,14 @@ import { matchWordRegex } from '../../assets/ts/utils/text';
 registerPlugin<DeadlinesPlugin>(
   {
     name: 'Deadlines',
-    author: 'platers',
+    author: 'Victor Tao',
     description: (
     <div>
     How to use:
     <ul>
-        <li> This plugin automatically creates a "Deadlines" node at the root.</li>
-        <li> Add a deadline by adding a child of the form "due YYYY-MM-DD"</li>
-        <li> All new deadlines will be automatically cloned in the Deadlines node</li>
+        <li> Creates a "Deadlines" node at the root.</li>
+        <li> Add a deadline to a node by adding a child of the form "due YYYY-MM-DD" or "due MM-DD"</li>
+        <li> All new deadlines will be automatically cloned in the Deadlines node in sorted order</li>
     </ul>
     </div>
     ),
