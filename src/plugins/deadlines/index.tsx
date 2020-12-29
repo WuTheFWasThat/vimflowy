@@ -79,14 +79,6 @@ class DeadlinesPlugin {
     this.getDeadlinesRoot();
   }
 
-  private isValidDate(year: number, month: number, day: number) {
-    const d = new Date(year, month, day);
-    if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
-        return true;
-    }
-    return false;
-  }
-
   private async checkForDates(path: Path, text?: string) {
     this.log('checkForDates', path);
     if (!text) {
@@ -161,17 +153,15 @@ class DeadlinesPlugin {
     let match = regex.exec(text.toLowerCase());
     if (match) {
       this.log('Matched', match);
-      const dateStr = match[2];
-      const d = dateStr.split('-').map((Number));
-      const today = new Date();
+      const d = match[2].split('-').map((Number));
+      let dateStr = match[2];
       if (d.length === 2) {
-        d.unshift(today.getFullYear());
+        const today = new Date();
+        dateStr = today.getFullYear().toString() + '-' + dateStr;
       }
       const date = new Date(Date.parse(dateStr));
-      if (d.length === 3) {
-        const isValidDate = this.isValidDate(d[0], d[1], d[2]);
-        if (isValidDate) return date;
-      }
+      this.log('parseFullDate', d, date);
+      return date;
     }
     return null;
   }
