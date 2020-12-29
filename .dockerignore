@@ -1,8 +1,2 @@
-*
-!package.json
-!package-lock.json
-!tsconfig.json
-!tslint.json
-!src/**
-!static/images/**
-!static/index.html
+test/**
+node_modules/**
