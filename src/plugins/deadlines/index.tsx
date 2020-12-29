@@ -97,7 +97,7 @@ class DeadlinesPlugin {
   }
 
   private async inDeadlines(row: Row) {
-    //check if row is in top level of deadlines
+    // check if row is in top level of deadlines
     this.log('inDeadlines', row);
     const root = await this.getDeadlinesRoot();
     const children = await this.getChildren(root);
@@ -128,7 +128,7 @@ class DeadlinesPlugin {
   }
 
   private async getDate(path: Path) {
-    //get date of a deadline
+    // get date of a deadline
     this.log('getDate', path);
     const children = await this.getChildren(path);
     for (const child of children) {
@@ -142,9 +142,9 @@ class DeadlinesPlugin {
   }
 
   private async parseDate(text: string) {
-    //return Date or null if invalid
+    // return Date or null if invalid
     this.log('parseDate', text);
-    return this.parseFullDate(text);  //might add more parse options
+    return this.parseFullDate(text);  // might add more parse options
   }
 
   private async parseFullDate(text: string) {
@@ -155,11 +155,16 @@ class DeadlinesPlugin {
       this.log('Matched', match);
       const d = match[2].split('-').map((Number));
       let dateStr = match[2];
+      const today = new Date();
       if (d.length === 2) {
-        const today = new Date();
         dateStr = today.getFullYear().toString() + '-' + dateStr;
       }
       const date = new Date(Date.parse(dateStr));
+      const lastWeek = new Date(today);
+      lastWeek.setDate(today.getDate() - 7);
+      if (d.length === 2 && date < lastWeek) {
+        date.setFullYear(date.getFullYear() + 1);
+      }
       this.log('parseFullDate', d, date);
       return date;
     }
@@ -170,7 +175,6 @@ class DeadlinesPlugin {
     this.log('checkDeleted', info);
     let needReInit = false;
     const root = await this.getDeadlinesRoot();
-    
     if (root) {
       if (info.row === root.row) {
         needReInit = true;
@@ -251,6 +255,4 @@ class DeadlinesPlugin {
     this.log('createDeadlines');
     await this.createBlock(this.api.session.document.root, 'Deadlines');
   }
-
-  
 }
