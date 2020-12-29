@@ -4,9 +4,6 @@
   "private": true,
   "homepage": "./",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.11.6",
-    "@testing-library/react": "^11.2.2",
-    "@testing-library/user-event": "^12.6.0",
     "@types/file-saver": "^2.0.1",
     "@types/jest": "^26.0.19",
     "@types/node": "^12.19.11",
@@ -28,7 +25,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --opts test/mocha.opts",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -53,7 +50,11 @@
     "@types/jquery": "^3.5.5",
     "@types/katex": "^0.11.0",
     "@types/lodash": "^4.14.166",
+    "@types/mocha": "^2.2.48",
     "@types/react": "^16.14.2",
-    "@types/react-color": "^3.0.4"
+    "@types/react-color": "^3.0.4",
+    "ignore-styles": "^5.0.1",
+    "mocha": "^5.2.0",
+    "ts-node": "^3.3.0"
   }
 }
