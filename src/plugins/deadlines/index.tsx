@@ -150,16 +150,26 @@ class DeadlinesPlugin {
   }
 
   private async parseDate(text: string) {
+    //return Date or null if invalid
     this.log('parseDate', text);
-    const regex = matchWordRegex('due (\\d{4}\\-\\d{2}\\-\\d{2})');
+    return this.parseFullDate(text);  //might add more parse options
+  }
+
+  private async parseFullDate(text: string) {
+    this.log('parseFullDate', text);
+    const regex = matchWordRegex('due ((\\d+\\-)?\\d+\\-\\d+)');
     let match = regex.exec(text.toLowerCase());
     if (match) {
       this.log('Matched', match);
       const dateStr = match[2];
+      const d = dateStr.split('-').map((Number));
+      const today = new Date();
+      if (d.length === 2) {
+        d.unshift(today.getFullYear());
+      }
       const date = new Date(Date.parse(dateStr));
-      const d = dateStr.split('-');
       if (d.length === 3) {
-        const isValidDate = this.isValidDate(Number.parseInt(d[0]), Number.parseInt(d[1]), Number.parseInt(d[2]));
+        const isValidDate = this.isValidDate(d[0], d[1], d[2]);
         if (isValidDate) return date;
       }
     }
