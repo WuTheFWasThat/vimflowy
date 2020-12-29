@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
-import * as $ from 'jquery';
+import $ from 'jquery';
 
 import Path from '../../assets/ts/path';
 import { registerPlugin } from '../../assets/ts/plugins';

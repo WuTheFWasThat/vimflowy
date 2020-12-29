@@ -1,14 +1,15 @@
 import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
+import { AddressInfo } from 'net';
 
-import * as express from 'express';
-import * as minimist from 'minimist';
+import express from 'express';
+import minimist from 'minimist';
 
-import logger from '../shared/utils/logger';
+import logger from '../src/shared/utils/logger';
 
 import makeSocketServer from './socket_server';
-import { defaultStaticDir, publicPath } from './constants';
+import { defaultBuildDir } from './constants';
 
 async function main(args: any) {
   if (args.help || args.h) {
@@ -28,7 +29,7 @@ async function main(args: any) {
           --dbfolder: For sqlite backend only.  Folder for sqlite to store data
             (defaults to in-memory if unspecified)
 
-          --staticDir: Where static assets should be served from.  Defaults to the \`static\`
+          --buildDir: Where build assets should be served from.  Defaults to the \`build\`
             folder at the repo root.
 
     `, () => {
@@ -37,8 +38,7 @@ async function main(args: any) {
     return;
   }
 
-  const staticDir = path.resolve(args.staticDir || defaultStaticDir);
-  const buildDir = path.join(staticDir, publicPath);
+  const buildDir = path.resolve(args.buildDir || defaultBuildDir);
 
   let port: number = args.port || 3000;
   let host: string = args.host || 'localhost';
@@ -47,13 +47,13 @@ async function main(args: any) {
     logger.info(`
         No assets found at ${buildDir}!
         Try running \`npm run build -- --outdir ${buildDir}\` first.
-        Or specify where they should be found with --staticDir $somedir.
+        Or specify where they should be found with --buildDir $somedir.
     `);
     return;
   }
   logger.info('Starting production server');
   const app = express();
-  app.use(express.static(staticDir));
+  app.use(express.static(buildDir));
   const server = http.createServer(app as any);
   if (args.db) {
     const options = {
@@ -66,7 +66,8 @@ async function main(args: any) {
   }
   server.listen(port, host, (err?: Error) => {
     if (err) { return logger.error(err); }
-    logger.info('Listening on http://%s:%d', server.address().address, server.address().port);
+    const address_info: AddressInfo = server.address() as AddressInfo;
+    logger.info('Listening on http://%s:%d', address_info.address, address_info.port);
   });
 }
 

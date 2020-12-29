@@ -1,4 +1,4 @@
-import * as $ from 'jquery';
+import $ from 'jquery';
 import * as _ from 'lodash';
 
 import * as browser_utils from './utils/browser';
@@ -156,7 +156,10 @@ export default class KeyEmitter extends EventEmitter {
       const results = this.emit('keydown', key);
       // return false to stop propagation, if any handler handled the key
       if (_.some(results)) {
-        return browser_utils.cancel(e);
+        e.stopPropagation();
+        e.preventDefault();
+        return false;
+        // return browser_utils.cancel(e);
       }
       return true;
     });

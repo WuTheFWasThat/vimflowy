@@ -1,15 +1,31 @@
 {
   "compilerOptions": {
     "target": "ES5",
-    "lib": ["dom", "es2015", "esnext.asynciterable"],
-    "jsx": "react",
+    "lib": [
+      "dom",
+      "es2015",
+      "esnext.asynciterable"
+    ],
+    "jsx": "react-jsx",
     "types": [],
     "moduleResolution": "node",
     "allowJs": false,
     "strict": true,
     "experimentalDecorators": true,
+    "esModuleInterop": true,
     "noUnusedParameters": true,
-    "noUnusedLocals": true,
-    "noImplicitReturns": true
-  }
+    "noUnusedLocals": false,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": [
+    "src"
+  ]
 }

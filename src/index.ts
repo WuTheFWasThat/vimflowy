@@ -1,0 +1,2 @@
+import './assets/ts/app';
+

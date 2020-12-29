@@ -1,5 +1,5 @@
 /* Utilities for stuff related to being in the browser */
-import * as $ from 'jquery';
+import $ from 'jquery';
 import { saveAs } from 'file-saver';
 
 // needed for the browser checks
@@ -20,7 +20,7 @@ export function scrollIntoView(el: Element, $within: any, margin: number = 0) {
   const elemBottom = el.getBoundingClientRect().bottom;
 
   const top_margin = margin;
-  const bottom_margin = margin + $('#bottom-bar').height();
+  const bottom_margin = margin + ($('#bottom-bar').height() as number);
 
   if (elemTop < top_margin) {
     // scroll up

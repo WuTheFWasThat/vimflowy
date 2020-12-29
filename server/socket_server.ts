@@ -2,8 +2,8 @@ import * as http from 'http';
 
 import * as WebSocket from 'ws';
 
-import DataBackend, { InMemory } from '../shared/data_backend';
-import logger from '../shared/utils/logger';
+import DataBackend, { InMemory } from '../src/shared/data_backend';
+import logger from '../src/shared/utils/logger';
 
 import { SQLiteBackend } from './data_backends';
 

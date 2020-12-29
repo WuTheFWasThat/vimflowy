@@ -1,5 +1,5 @@
 /dist/
-/static/build/
+/build/
 .sass-cache
 
 node_modules/
@@ -13,3 +13,8 @@ npm-debug.log
 /todo
 .DS_Store
 .vscode/*
+
+# profiling stuff
+*-v8.log
+
+.eslintcache

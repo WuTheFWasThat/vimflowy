@@ -195,8 +195,8 @@ export default class SessionComponent extends React.Component<Props, State> {
 
     const cursorBetween = this.cursorBetween();
 
-    let onLineClick: ((path: Path) => void) | null = null;
-    let onCharClick: ((path: Path, column: number, e: Event) => void) | null = null;
+    let onLineClick: ((path: Path) => void) | undefined = undefined;
+    let onCharClick: ((path: Path, column: number, e: Event) => void) | undefined = undefined;
     if (mode === 'NORMAL' ||
         mode === 'INSERT' ||
         mode === 'VISUAL' ||
@@ -206,7 +206,7 @@ export default class SessionComponent extends React.Component<Props, State> {
       onLineClick = this.onLineClick;
     }
 
-    let onCrumbClick: ((...args: any[]) => void) | null = null;
+    let onCrumbClick: ((...args: any[]) => void) | undefined = undefined;
     if (mode === 'NORMAL') {
       onCrumbClick = this.onCrumbClick;
     }
