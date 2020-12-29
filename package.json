@@ -23,6 +23,11 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
+    "buildserver": "ts-node server/build_server.ts",
+    "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx'",
+    "startprod": "ts-node server/prod.ts",
+    "typecheck": "tsc -p . --noEmit",
+    "verify": "npm run lint && npm run typecheck && npm test",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --opts test/mocha.opts",
@@ -56,6 +61,7 @@
     "@types/react-color": "^3.0.4",
     "ignore-styles": "^5.0.1",
     "mocha": "^5.2.0",
-    "ts-node": "^3.3.0"
+    "ts-node": "^3.3.0",
+    "tslint": "^4.5.1"
   }
 }
