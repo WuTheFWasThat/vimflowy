@@ -9,7 +9,7 @@ import minimist from 'minimist';
 import logger from '../src/shared/utils/logger';
 
 import makeSocketServer from './socket_server';
-import { defaultStaticDir, publicPath } from './constants';
+import { defaultBuildDir } from './constants';
 
 async function main(args: any) {
   if (args.help || args.h) {
@@ -29,7 +29,7 @@ async function main(args: any) {
           --dbfolder: For sqlite backend only.  Folder for sqlite to store data
             (defaults to in-memory if unspecified)
 
-          --staticDir: Where static assets should be served from.  Defaults to the \`static\`
+          --buildDir: Where build assets should be served from.  Defaults to the \`build\`
             folder at the repo root.
 
     `, () => {
@@ -38,8 +38,7 @@ async function main(args: any) {
     return;
   }
 
-  const staticDir = path.resolve(args.staticDir || defaultStaticDir);
-  const buildDir = path.join(staticDir, publicPath);
+  const buildDir = path.resolve(args.buildDir || defaultBuildDir);
 
   let port: number = args.port || 3000;
   let host: string = args.host || 'localhost';
@@ -48,13 +47,13 @@ async function main(args: any) {
     logger.info(`
         No assets found at ${buildDir}!
         Try running \`npm run build -- --outdir ${buildDir}\` first.
-        Or specify where they should be found with --staticDir $somedir.
+        Or specify where they should be found with --buildDir $somedir.
     `);
     return;
   }
   logger.info('Starting production server');
   const app = express();
-  app.use(express.static(staticDir));
+  app.use(express.static(buildDir));
   const server = http.createServer(app as any);
   if (args.db) {
     const options = {
