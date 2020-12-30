@@ -30,7 +30,7 @@ type BreadcrumbsProps = {
   session: Session;
   viewRoot: Path;
   crumbContents: {[row: number]: string};
-  onCrumbClick: ((...args: any[]) => void) | null;
+  onCrumbClick: ((...args: any[]) => void) | undefined;
 };
 type BreadcrumbsState = {
   loaded: boolean;

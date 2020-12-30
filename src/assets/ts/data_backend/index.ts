@@ -1,5 +1,5 @@
-import * as firebase from 'firebase';
-import UserCredential = firebase.auth.UserCredential;
+import firebase from 'firebase';
+// import "firebase/auth";
 
 import EventEmitter from '../utils/eventEmitter';
 import DataBackend, { SynchronousDataBackend } from '../../../shared/data_backend';
@@ -112,7 +112,7 @@ export class FirebaseBackend extends DataBackend {
     });
   }
 
-  public async auth(email: string, password: string): Promise<UserCredential | undefined> {
+  public async auth(email: string, password: string) { // : Promise<UserCredential | undefined>
     try {
         let credential = await firebase.auth().signInWithEmailAndPassword(email, password);
         logger.info('Authenticated against Firebase.');

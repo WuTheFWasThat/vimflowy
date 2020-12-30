@@ -40,7 +40,7 @@ export class Logger {
     const register_loglevel = (name: string, value: number) => {
       return (this as any)[name.toLowerCase()] = function(this: Logger) {
         if (this.level <= value) {
-          return this.log.apply(this, arguments);
+          return this.log.apply(this, arguments as any);
         }
       };
     };
@@ -54,9 +54,9 @@ export class Logger {
   // tslint:disable-next-line no-unused-variable
   public log() {
     if (this.stream === STREAM.STDOUT) {
-      return console.log.apply(console, arguments);
+      return console.log.apply(console, arguments as any);
     } else if (this.stream === STREAM.STDERR) {
-      return console.error.apply(console, arguments);
+      return console.error.apply(console, arguments as any);
     } else if (this.stream === STREAM.QUEUE) {
       return this.queue.push(arguments);
     }

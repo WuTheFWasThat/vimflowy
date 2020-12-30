@@ -1,6 +1,6 @@
 import * as sqlite from 'sqlite3';
 
-import DataBackend from '../shared/data_backend';
+import DataBackend from '../src/shared/data_backend';
 
 export class SQLiteBackend extends DataBackend {
   // init is basically like async constructor
@@ -15,13 +15,13 @@ export class SQLiteBackend extends DataBackend {
   }
 
   public async init(filename: string): Promise<void> {
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       this.db = new sqlite.Database(filename, (err) => {
         if (err) { reject(err); } else { resolve(); }
       });
     });
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       this.db.run(
         `CREATE TABLE IF NOT EXISTS ${this.tableName} (id string PRIMARY KEY, value string)`,
         (err) => {

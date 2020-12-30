@@ -20,13 +20,7 @@ Simply run:
 After a short wait, you should see the app at `http://localhost:3000/`
 When source code changes, assets should be automatically (incrementally) recompiled.
 
-To use a different port, you can do
-
-    npm start -- --port 2002
-
-For a full set of options, see
-
-    npm start -- --help
+This uses [Create React App](https://create-react-app.dev/docs/getting-started), so most of that documentation applies.  For example, to use a different port, you set the`PORT` environment variable.
 
 Note that you may make new documents simply by visiting
 `http://localhost:3000?doc=<documentname>#`
@@ -37,16 +31,12 @@ If you're looking to run vimflowy for personal usage (not development), you'll w
     npm run build
     npm run startprod
 
-Notably, you can run a SQLite backend, for persistence to your server. 
-[See here for more info](docs/storage/SQLite.md).
+Notably, you can run a SQLite backend, for persistence to your server.
+[See here for more info](storage/SQLite.md).
 
 ### Tests
 
-To run unit tests automatically (when files change) from the development server, add the `test` flag:
-
-    npm start -- --test
-
-To run a separate continuous process that monitors and runs tests when files change:
+To run a process that monitors and runs tests when files change:
 
     npm run watchtest
 
@@ -71,7 +61,7 @@ To manually lint the project:
 For profiling, you should use browser profiling when possible.
 However, though the results will be less realistic, you can also profile unit tests.  Something like:
 
-    mocha --prof --opts test/mocha.opts
+    npm run profiletest
     node-tick-processor *-v8.log > processed_log
     less processed_log
 

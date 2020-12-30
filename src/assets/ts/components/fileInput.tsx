@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as $ from 'jquery';
+import $ from 'jquery';
 
 type Props = {
   onSelect?: (filename: string) => void;

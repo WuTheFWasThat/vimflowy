@@ -1,68 +1,75 @@
 {
   "name": "vimflowy",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": "10.x",
-    "npm": "6.4.x"
-  },
-  "scripts": {
-    "build": "ts-node src/server/build.ts",
-    "buildserver": "ts-node src/server/build_server.ts",
-    "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx'",
-    "start": "ts-node src/server/dev.ts",
-    "startprod": "ts-node src/server/prod.ts",
-    "test": "mocha --opts test/mocha.opts",
-    "watchtest": "mocha --opts test/mocha.opts --reporter dot --watch",
-    "typecheck": "tsc -p . --noEmit",
-    "verify": "npm run lint && npm run typecheck && npm test"
-  },
+  "homepage": "./",
   "dependencies": {
-    "@types/react-color": "^2.13.6",
+    "@types/file-saver": "^2.0.1",
+    "@types/jest": "^26.0.19",
+    "@types/node": "^12.19.11",
+    "@types/react-dom": "^16.9.10",
+    "@types/express": "^4.16.0",
+    "@types/sqlite3": "^2.2.33",
+    "@types/ws": "0.0.41",
     "express": "^4.16.4",
-    "file-saver": "^2.0.2",
-    "lodash": "^4.17.15",
-    "minimist": "^1.2.2",
+    "file-saver": "^2.0.5",
+    "firebase": "^8.2.1",
+    "font-awesome": "^4.7.0",
+    "jquery": "^3.5.1",
+    "katex": "^0.12.0",
+    "lodash": "^4.17.20",
+    "node-sass": "^4.14.1",
+    "react": "^17.0.1",
+    "react-color": "^2.19.3",
+    "react-dom": "^17.0.1",
+    "react-scripts": "4.0.1",
     "sqlite3": "^4.1.1",
+    "ts-node": "^3.3.0",
+    "typescript": "^4.1.3",
+    "web-vitals": "^0.2.4",
     "ws": "^6.1.2"
   },
+  "scripts": {
+    "lint": "tslint --exclude 'node_modules/**/*' '**/*.ts' '**/*.tsx'",
+    "startprod": "ts-node --compilerOptions '{\"module\":\"commonjs\"}' server/prod.ts",
+    "typecheck": "tsc -p . --noEmit",
+    "verify": "npm run lint && npm run typecheck && npm test",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha --opts test/mocha.opts",
+    "watchtest": "npm test -- --reporter dot --watch",
+    "profiletest": "npm test -- --prof",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
   "devDependencies": {
-    "@types/express": "^4.16.0",
-    "@types/file-saver": "^2.0.1",
-    "@types/jquery": "^2.0.51",
-    "@types/katex": "^0.5.0",
-    "@types/lodash": "^4.14.118",
+    "@types/jquery": "^3.5.5",
+    "@types/katex": "^0.11.0",
+    "@types/lodash": "^4.14.166",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^2.2.48",
-    "@types/react": "^15.6.20",
-    "@types/react-dom": "^0.14.18",
-    "@types/sqlite3": "^2.2.33",
-    "@types/webpack": "^4.4.27",
-    "@types/webpack-dev-server": "^3.1.5",
-    "@types/ws": "0.0.41",
-    "awesome-typescript-loader": "^5.2.1",
-    "core-js": "^2.5.7",
-    "css-loader": "^2.1.1",
-    "file-loader": "^0.9.0",
-    "firebase": "^5.10.1",
-    "font-awesome": "^4.6.3",
+    "@types/react": "^16.14.2",
+    "@types/react-color": "^3.0.4",
     "ignore-styles": "^5.0.1",
-    "immutable": "^3.8.2",
-    "jquery": "^3.5.0",
-    "katex": "^0.7.1",
+    "minimist": "^1.2.2",
     "mocha": "^5.2.0",
-    "node-sass": "^4.11.0",
-    "react": "^15.6.2",
-    "react-color": "^2.14.1",
-    "react-dom": "^15.6.2",
-    "react-hot-loader": "^1.3.0",
-    "sass-loader": "^4.0.0",
-    "style-loader": "^0.13.1",
-    "ts-node": "^3.3.0",
-    "tslint": "^4.5.1",
-    "tslint-loader": "^3.6.0",
-    "typescript": "^3.1.6",
-    "webpack": "^4.25.1",
-    "webpack-dev-server": "^3.4.1"
+    "tslint": "^4.5.1"
   }
 }
