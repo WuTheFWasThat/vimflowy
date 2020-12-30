@@ -100,13 +100,10 @@ class DeadlinesPlugin {
     // check if row is in top level of deadlines
     this.log('inDeadlines', row);
     const root = await this.getDeadlinesRoot();
-    const children = await this.getChildren(root);
-    for (const child of children) {
-      if (child.row === row) {
-        return true;
-      }
-    }
-    return false;
+    const document = this.api.session.document;
+    const info = await document.getInfo(row);
+    const parents = info.parentRows;
+    return parents.includes(root.row);
   }
 
   private async createDeadlineClone(row: Row, thisDate: Date) {
