@@ -223,6 +223,17 @@ class DeadlinesPlugin {
     }
   }
 
+  private async setMark(path: Path, mark: string) {
+    this.log('setMark', path, mark);
+    let info = await this.api.session.document.getInfo(path.row);
+    if (info.pluginData && info.pluginData.marks && info.pluginData.marks.mark !== mark) {
+      this.log('Change mark', path, mark);
+      info.pluginData.marks.mark = mark;
+      await this.api.session.document.emitAsync('loadRow', path, info.pluginData.marks || {});
+      await this.api.updatedDataForRender(path.row);
+    }
+  }
+
   public async getChildren(parent_path: Path): Promise<Array<Path>> {
     if (!parent_path) {
       return [];
@@ -250,6 +261,9 @@ class DeadlinesPlugin {
 
   private async createDeadlinesRoot() {
     this.log('createDeadlines');
-    await this.createBlock(this.api.session.document.root, 'Deadlines');
+    const path = await this.createBlock(this.api.session.document.root, 'Deadlines');
+    if (path) {
+      this.setMark(path, 'deadlines');
+    }
   }
 }
