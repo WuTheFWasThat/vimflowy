@@ -95,7 +95,7 @@ export class MarksPlugin {
 
     class UnsetMark extends Mutation {
       private row: Row;
-      private mark: Mark | null = null;
+      private mark: Mark | null | undefined = undefined;
 
       constructor(row: Row) {
         super();
@@ -105,13 +105,18 @@ export class MarksPlugin {
         return `row ${this.row}`;
       }
       public async mutate(/* session */) {
-        this.mark = await that._getMark(this.row);
-        await that._unsetMark(this.row, this.mark);
-        await that.api.updatedDataForRender(this.row);
+        this.mark = await that.getMark(this.row);
+        if (this.mark !== null) {
+          await that._unsetMark(this.row, this.mark);
+          await that.api.updatedDataForRender(this.row);
+        }
       }
       public async rewind(/* session */) {
-        if (this.mark === null) {
+        if (this.mark === undefined) {
           throw new Error('Rewinding before mutating: UnsetMark');
+        }
+        if (this.mark === null) {
+          return [];
         }
         return [
           new SetMark(this.row, this.mark),
@@ -123,7 +128,7 @@ export class MarksPlugin {
     // Serialization #
 
     this.api.registerHook('document', 'serializeRow', async (struct, info) => {
-      const mark = await this._getMark(info.row);
+      const mark = await this.getMark(info.row);
       if (mark) {
         struct.mark = mark;
       }
@@ -132,7 +137,7 @@ export class MarksPlugin {
 
     this.api.registerListener('document', 'loadRow', async (path, serialized) => {
       if (serialized.mark != null) {
-        const err = await this.updateMark(path.row, serialized.mark);
+        const err = await this.setMark(path.row, serialized.mark);
         if (err) { return this.session.showMessage(err, {text_class: 'error'}); }
       }
     });
@@ -203,7 +208,7 @@ export class MarksPlugin {
         }
         const mark = await that.markstate.session.curText();
         const markedRow = that.markstate.path.row;
-        const err = await that.updateMark(markedRow, mark);
+        const err = await that.setMark(markedRow, mark);
         if (err) { session.showMessage(err, {text_class: 'error'}); }
         await session.setMode('NORMAL');
         keyStream.save();
@@ -236,7 +241,7 @@ export class MarksPlugin {
       'delete-mark',
       'Delete mark at cursor',
       async function({ session, keyStream }) {
-        const err = await that.updateMark(session.cursor.row, '');
+        const err = await that.setMark(session.cursor.row, '');
         if (err) { session.showMessage(err, {text_class: 'error'}); }
         keyStream.save();
       },
@@ -356,7 +361,7 @@ export class MarksPlugin {
     );
 
     this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
-      const mark = await this._getMark(row);
+      const mark = await this.getMark(row);
       const marking = this.markstate && (this.markstate.path.row === row);
       obj.marks = { mark, marking };
       if (this.markstate && marking) {
@@ -485,9 +490,9 @@ export class MarksPlugin {
   }
 
   // get mark for an row, '' if it doesn't exist
-  private async _getMark(row: Row) {
+  public async getMark(row: Row): Promise<Mark | null> {
     const marks = await this._getRowsToMarks();
-    return marks[row] || '';
+    return marks[row] || null;
   }
 
   private async _setMark(row: Row, mark: Mark) {
@@ -547,7 +552,7 @@ export class MarksPlugin {
 
   // Set the mark for row
   // Returns whether setting mark succeeded
-  private async updateMark(row: Row, mark: Mark = '') {
+  public async setMark(row: Row, mark: Mark | null = null) {
     const marks_to_rows = await this._getMarksToRows();
     const rows_to_marks = await this._getRowsToMarks();
     const oldmark = rows_to_marks[row];
@@ -556,7 +561,7 @@ export class MarksPlugin {
       return 'No mark to delete!';
     }
 
-    if (mark in marks_to_rows) {
+    if (mark && (mark in marks_to_rows)) {
       if (marks_to_rows[mark] === row) {
         return 'Already marked, nothing to do!';
       }
