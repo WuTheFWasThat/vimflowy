@@ -22,6 +22,7 @@ type PluginMetadata = {
   version?: number;
   author?: string;
   description?: string | React.ReactNode;
+  dependencies?: Array<string>;
 };
 
 type PluginEnableFn<V = void> = (api: PluginApi) => Promise<V> | V;
@@ -31,6 +32,7 @@ type RegisteredPlugin<V = void> = {
   version?: number;
   author?: string;
   description?: string | React.ReactNode;
+  dependencies?: Array<string>;
   enable: PluginEnableFn<V>;
   disable: PluginDisableFn<V>;
 };
@@ -51,7 +53,7 @@ type Emitter = 'document' | 'session';
 // class for exposing plugin API
 export class PluginApi {
   public session: Session;
-  private metadata: PluginMetadata;
+  public metadata: PluginMetadata;
   private pluginManager: PluginsManager;
   private name: string;
   private document: Document;
@@ -78,6 +80,25 @@ export class PluginApi {
     this.definitions = this.bindings.definitions;
 
     this.registrations = [];
+  }
+
+  // get the API for another plugin
+  public getPlugin(name: string): any {
+    let found = false;
+    for (let dependency of (this.metadata.dependencies || [])) {
+      if (dependency === name) {
+        found = true;
+      }
+    }
+    if (!found) {
+      throw new errors.GenericError(`Plugin ${this.metadata.name} asked for plugin ${name} but did not list it as a dependency`);
+    }
+    const info = this.pluginManager.getInfo(name);
+    if (info.status !== PluginStatus.ENABLED) {
+      throw new errors.GenericError(`Plugin ${name} was not enabled but required by ${this.metadata.name}??`);
+    }
+    // return (info.api as PluginApi);
+    return (info.value as any);
   }
 
   public async setData(key: string, value: any) {
@@ -270,10 +291,16 @@ export class PluginsManager extends EventEmitter {
       throw new errors.GenericError(`Plugin ${name} is already enabled`);
     }
 
+    const plugin = PLUGINS[name];
+    for (let dependency of plugin.dependencies || []) {
+      const dependency_status = this.getStatus(dependency);
+      if (dependency_status !== PluginStatus.ENABLED) {
+        throw new errors.GenericError(`Plugin ${name} requires ${dependency} to be enabled`);
+      }
+    }
     errors.assert(status === PluginStatus.DISABLED);
     this.setStatus(name, PluginStatus.ENABLING);
 
-    const plugin = PLUGINS[name];
     const api = new PluginApi(this.config, this.session, this.bindings, plugin, this);
     const value = await plugin.enable(api);
 
@@ -295,6 +322,17 @@ export class PluginsManager extends EventEmitter {
     }
     if (status === PluginStatus.DISABLED) {
       throw new errors.GenericError(`Plugin ${name} already disabled`);
+    }
+
+    for (const other_plugin_name in this.plugin_infos) {
+      if ((this.getStatus(other_plugin_name)) === PluginStatus.ENABLED) {
+        const other_plugin = (this.plugin_infos[other_plugin_name].api as PluginApi).metadata;
+        for (let dependency of other_plugin.dependencies || []) {
+          if (name === dependency) {
+            throw new errors.GenericError(`Cannot disable ${name} because ${other_plugin_name} requires it`);
+          }
+        }
+      }
     }
 
     // TODO: require that no other plugin has this as a dependency, notify user otherwise

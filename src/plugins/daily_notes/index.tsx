@@ -6,6 +6,7 @@ import Path from '../../assets/ts/path';
 import { SerializedBlock } from '../../assets/ts/types';
 import { CachedRowInfo } from '../../assets/ts/document';
 import { matchWordRegex } from '../../assets/ts/utils/text';
+import { pluginName as marksPluginName } from '../marks';
 
 registerPlugin<DailyNotesPlugin>(
   {
@@ -27,6 +28,7 @@ registerPlugin<DailyNotesPlugin>(
     </div>
     ),
     version: 1,
+    dependencies: [marksPluginName],
   },
   async (api) => {
     const dailyNotes = new DailyNotesPlugin(api);

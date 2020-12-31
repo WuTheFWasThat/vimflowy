@@ -27,6 +27,11 @@ export default class PluginsTableComponent extends React.Component<Props, {}> {
             </th>
             <th style={{
               ...getStyles(this.props.clientStore, ['theme-trim']),
+            }}>
+              Dependencies
+            </th>
+            <th style={{
+              ...getStyles(this.props.clientStore, ['theme-trim']),
               maxWidth: '10%',
             }}>
               Version
@@ -131,6 +136,14 @@ export default class PluginsTableComponent extends React.Component<Props, {}> {
                       }}
                     >
                       { plugin.description || '' }
+                    </td>
+                    <td className='center'
+                      style={{
+                        ...getStyles(this.props.clientStore, ['theme-trim']),
+                        ...tdStyle
+                      }}
+                    >
+                      { (plugin.dependencies || []).join(', ') }
                     </td>
                     <td className='center'
                       style={{
