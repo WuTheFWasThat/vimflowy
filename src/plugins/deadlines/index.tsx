@@ -6,6 +6,7 @@ import Path from '../../assets/ts/path';
 import { SerializedBlock, Row } from '../../assets/ts/types';
 import { CachedRowInfo } from '../../assets/ts/document';
 import { matchWordRegex } from '../../assets/ts/utils/text';
+import { pluginName as marksPluginName, MarksPlugin } from '../marks';
 
 registerPlugin<DeadlinesPlugin>(
   {
@@ -22,6 +23,7 @@ registerPlugin<DeadlinesPlugin>(
     </div>
     ),
     version: 1,
+    dependencies: [marksPluginName],
   },
   async (api) => {
     const deadlines = new DeadlinesPlugin(api);
@@ -190,18 +192,12 @@ class DeadlinesPlugin {
     }
   }
 
-  private async getNodeWithText(root: Path, text: String): Promise<Path | null> {
-    this.log('getNodeWithText', root, text);
-    const document = this.api.session.document;
-    if (await document.hasChildren(root.row)) {
-      const children = await document.getChildren(root);
-      for await (let child of children) {
-        if (await document.getText(child.row) === text) {
-          return child;
-        }
-      }
-    }
-    return null;
+  private async getMarkPath(mark: string): Promise<Path | null> {
+    this.log('getMarkPath', mark);
+    const marksPlugin = this.api.getPlugin(marksPluginName) as MarksPlugin;
+    const marks = await marksPlugin.listMarks();
+    this.log('getMarkPath', marks, mark);
+    return marks[mark];
   }
 
   private async getDeadlinesRoot() {
@@ -210,10 +206,10 @@ class DeadlinesPlugin {
       this.log('getDeadlinesRoot from cache');
       return this.deadlinesRoot!;
     } else {
-      let deadlinesRoot = await this.getNodeWithText(this.api.session.document.root, 'Deadlines');
+      let deadlinesRoot = await this.getMarkPath('deadlines');
       if (!deadlinesRoot) {
         await this.createDeadlinesRoot();
-        deadlinesRoot = await this.getNodeWithText(this.api.session.document.root, 'Deadlines');
+        deadlinesRoot = await this.getMarkPath('deadlines');
         if (!deadlinesRoot) {
           throw new Error('Error while creating node');
         }
@@ -225,13 +221,9 @@ class DeadlinesPlugin {
 
   private async setMark(path: Path, mark: string) {
     this.log('setMark', path, mark);
-    let info = await this.api.session.document.getInfo(path.row);
-    if (info.pluginData && info.pluginData.marks && info.pluginData.marks.mark !== mark) {
-      this.log('Change mark', path, mark);
-      info.pluginData.marks.mark = mark;
-      await this.api.session.document.emitAsync('loadRow', path, info.pluginData.marks || {});
-      await this.api.updatedDataForRender(path.row);
-    }
+    const marksPlugin = this.api.getPlugin(marksPluginName) as MarksPlugin;
+    const setMark = await marksPlugin.setMark(path.row, mark);
+    this.log('setMark', setMark);
   }
 
   public async getChildren(parent_path: Path): Promise<Array<Path>> {
@@ -249,21 +241,21 @@ class DeadlinesPlugin {
       children: [],
     };
     this.log('createBlock', path, text, isCollapsed, plugins, serialzed_row);
-    await this.api.session.addBlocks(path, 0, [serialzed_row]);
-    const result = await this.getNodeWithText(path, text);
-    this.log('Block created', path, text);
-    if (!result) {
+    const paths = await this.api.session.addBlocks(path, 0, [serialzed_row]);
+    if (paths.length > 0) {
+      this.log('Block created', path, text);
+      await this.api.updatedDataForRender(path.row);
+      return paths[0];
+    } else {
       throw new Error('Error while creating block');
     }
-    await this.api.updatedDataForRender(path.row);
-    return result;
   }
 
   private async createDeadlinesRoot() {
     this.log('createDeadlines');
     const path = await this.createBlock(this.api.session.document.root, 'Deadlines');
     if (path) {
-      this.setMark(path, 'deadlines');
+      await this.setMark(path, 'deadlines');
     }
   }
 }
