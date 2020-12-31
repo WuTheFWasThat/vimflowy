@@ -6,6 +6,7 @@ import Path from '../../assets/ts/path';
 import { SerializedBlock } from '../../assets/ts/types';
 import { CachedRowInfo } from '../../assets/ts/document';
 import { matchWordRegex } from '../../assets/ts/utils/text';
+import { pluginName as marksPluginName, MarksPlugin } from '../marks';
 
 registerPlugin<DailyNotesPlugin>(
   {
@@ -27,6 +28,7 @@ registerPlugin<DailyNotesPlugin>(
     </div>
     ),
     version: 1,
+    dependencies: [marksPluginName],
   },
   async (api) => {
     const dailyNotes = new DailyNotesPlugin(api);
@@ -326,17 +328,18 @@ class DailyNotesPlugin {
 
   private async checkDailyMarks() {
     this.log('checkDailyMarks');
+    const marksPlugin = this.api.getPlugin(marksPluginName) as MarksPlugin;
     const paths = this.traverseSubtree(await this.getDailyNotesRoot());
     for await (let path of paths) {
-      const info = await this.api.session.document.getInfo(path.row);
-      if (info.pluginData.marks && info.pluginData.marks.mark && info.pluginData.marks.mark !== '') {
+      const mark = await marksPlugin.getMark(path.row);
+      if (mark !== null) {
         const found = this.dailyMarks.find((e: any) => {
-          return e.mark === info.pluginData.marks.mark;
+          return e.mark === mark;
         });
 
         if (found) {
           this.log('checkDailyMarks', 'Clear mark', found.mark);
-          await this.setMark(path, '');
+          await this.setMark(path, null);
         }
       }
     }
@@ -394,15 +397,10 @@ class DailyNotesPlugin {
     }
   }
 
-  private async setMark(path: Path, mark: string) {
+  private async setMark(path: Path, mark: string | null) {
     this.log('setMark', path, mark);
-    let info = await this.api.session.document.getInfo(path.row);
-    if (info.pluginData && info.pluginData.marks && info.pluginData.marks.mark !== mark) {
-      this.log('Change mark', path, mark);
-      info.pluginData.marks.mark = mark;
-      await this.api.session.document.emitAsync('loadRow', path, info.pluginData.marks || {});
-      await this.api.updatedDataForRender(path.row);
-    }
+    const marksPlugin = this.api.getPlugin(marksPluginName) as MarksPlugin;
+    await marksPlugin.setMark(path.row, mark);
   }
 
   private async* traverseSubtree(root: Path): AsyncIterableIterator<Path> {
