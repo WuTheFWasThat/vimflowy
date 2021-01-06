@@ -14,11 +14,11 @@ registerPlugin<DeadlinesPlugin>(
     author: 'Victor Tao',
     description: (
     <div>
-    How to use:
     <ul>
-        <li> Creates a "Deadlines" node at the root.</li>
+        <li> Creates a "Deadlines" node at the root</li>
         <li> Add a deadline to a node by adding a child of the form "due YYYY-MM-DD" or "due MM-DD"</li>
         <li> All new deadlines will be automatically cloned in the Deadlines node in sorted order</li>
+        <li> Requires marks plugin to mark the "Deadlines" node </li>
     </ul>
     </div>
     ),
@@ -54,7 +54,7 @@ class DeadlinesPlugin {
     this.deadlinesRoot = null;
     this.detachTimer = null;
 
-    this.setLogging();
+    // this.setLogging();
 
     this.api.cursor.on('rowChange', async (_oldPath: Path, newPath: Path) => {
       this.log('rowChange', _oldPath, newPath);
