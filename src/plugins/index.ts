@@ -7,6 +7,7 @@ import './time_tracking';
 import './todo';
 import './recursive_expand';
 import './daily_notes';
+import './deadlines';
 
 // for developers: uncomment the following lines
 /*

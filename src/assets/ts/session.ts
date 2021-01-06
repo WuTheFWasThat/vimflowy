@@ -1055,6 +1055,7 @@ export default class Session extends EventEmitter {
     } else if (options.setCursor === 'last') {
       await this.cursor.setPosition(mutation.added_rows[mutation.added_rows.length - 1], 0, options.cursorOptions);
     }
+    return mutation.added_rows;
   }
 
   public async yankBlocks(path: Path, nrows: number) {
