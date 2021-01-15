@@ -31,7 +31,7 @@ import { ClientStore, DocumentStore } from './datastore';
 import { SynchronousInMemory, InMemory } from '../../shared/data_backend';
 import {
   BackendType, SynchronousLocalStorageBackend,
-  LocalStorageBackend, FirebaseBackend, ClientSocketBackend
+  LocalStorageBackend, FirebaseBackend, ClientSocketBackend, IndexedDBBackend
 } from './data_backend';
 import Document from './document';
 import { PluginsManager } from './plugins';
@@ -121,7 +121,7 @@ $(document).ready(async () => {
   const config: Config = vimConfig;
 
   function getLocalStore(): DocumentStore {
-     return new DocumentStore(new LocalStorageBackend(docname), docname);
+     return new DocumentStore(new IndexedDBBackend(docname), docname);
   }
 
   async function getFirebaseStore(): Promise<DocumentStore> {
