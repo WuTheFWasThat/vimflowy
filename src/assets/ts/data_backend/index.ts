@@ -100,6 +100,7 @@ export class IndexedDBBackend extends DataBackend {
     this.lastSave = Date.now();
     await localForage.setItem(this._lastSaveKey_(), this.lastSave + '');
     await localForage.setItem(key, value);
+    return Promise.resolve();
   }
 
   // determine last time saved (for multiple tab detection)
