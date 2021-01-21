@@ -167,9 +167,9 @@ export class TagsPlugin {
         if (!this.tagstate) {
           throw new Error('Tag state null during exit');
         }
-        const tagedRow = this.tagstate.path.row;
+        const taggedRow = this.tagstate.path.row;
         this.tagstate = null;
-        await this.api.updatedDataForRender(tagedRow);
+        await this.api.updatedDataForRender(taggedRow);
       },
       every: async (/*session*/) => {
         if (!this.tagstate) {
@@ -211,8 +211,8 @@ export class TagsPlugin {
           throw new Error('Tag state null in tag mode');
         }
         const tag = await that.tagstate.session.curText();
-        const tagedRow = that.tagstate.path.row;
-        const err = await that.addTag(tagedRow, tag);
+        const taggedRow = that.tagstate.path.row;
+        const err = await that.addTag(taggedRow, tag);
         if (err) { session.showMessage(err, {text_class: 'error'}); }
         await session.setMode('NORMAL');
         keyStream.save();
@@ -224,18 +224,24 @@ export class TagsPlugin {
       'Delete tag at cursor',
       async function({ session, keyStream }) {
         let err = null;
-        const key = await keyStream.dequeue();
-        if (key >= '1' && key <= '9') {
-          const idx = parseInt(key) - 1;
-          const rowsToTags = await that._getRowsToTags();
-          const tagedRow = session.cursor.row;
-          if (idx >= rowsToTags[tagedRow].length) {
-            err = 'Index out of range';
-          } else {
-            err = await that.removeTag(session.cursor.row, rowsToTags[tagedRow][idx]);
-          }
-        } else {
+        const rowsToTags = await that._getRowsToTags();
+        const taggedRow = session.cursor.row;
+        if (rowsToTags[taggedRow].length === 0) {
           err = 'Key not a number from 1-9';
+        } else if (rowsToTags[taggedRow].length === 1) {
+          err = await that.removeTag(session.cursor.row, rowsToTags[taggedRow][0]);
+        } else {
+          const key = await keyStream.dequeue();
+          if (key >= '1' && key <= '9') {
+            const idx = parseInt(key) - 1;
+            if (idx >= rowsToTags[taggedRow].length) {
+              err = 'Index out of range';
+            } else {
+              err = await that.removeTag(session.cursor.row, rowsToTags[taggedRow][idx]);
+            }
+          } else {
+            err = 'Key not a number from 1-9';
+          }
         }
         if (err) { session.showMessage(err, {text_class: 'error'}); }
         await session.setMode('NORMAL');
@@ -297,15 +303,14 @@ export class TagsPlugin {
       {
         'begin-tag': [['#']],
         'delete-tag': [['d', '#']],
-        'search-tags': [['-']]
       },
     );
 
     this.api.registerHook('document', 'pluginRowContents', async (obj, { row }) => {
       const tags = await this.getTags(row);
-      const taging = this.tagstate && (this.tagstate.path.row === row);
-      obj.tags = { tags, taging };
-      if (this.tagstate && taging) {
+      const tagging = this.tagstate && (this.tagstate.path.row === row);
+      obj.tags = { tags, tagging };
+      if (this.tagstate && tagging) {
         obj.tags.tagText = await this.tagstate.session.document.getLine(
           this.tagstate.session.cursor.path.row
         );
@@ -315,7 +320,7 @@ export class TagsPlugin {
     });
 
     this.api.registerHook('session', 'renderLineOptions', (options, info) => {
-      if (info.pluginData.tags && info.pluginData.tags.taging) {
+      if (info.pluginData.tags && info.pluginData.tags.tagging) {
         options.cursors = {};
       }
       return options;
@@ -340,7 +345,7 @@ export class TagsPlugin {
               );
           }
         }
-        if (pluginData.tags.taging) {
+        if (pluginData.tags.tagging) {
           lineContents.push(
             <span key='editingTag'
               style={{
@@ -373,15 +378,15 @@ export class TagsPlugin {
   }
 
   // maintain global tags data structures
-  //   a map: row -> tag
-  //   and a second map: tag -> row
+  //   a map: row -> tags
+  //   and a second map: tag -> rows
   private async _getRowsToTags(): Promise<RowsToTags> {
     return await this.api.getData('ids_to_tags', {});
   }
   private async _setRowsToTags(rows_to_tags: RowsToTags) {
     return await this.api.setData('ids_to_tags', rows_to_tags);
   }
-  private async _getTagssToRows(): Promise<TagsToRows> {
+  private async _getTagsToRows(): Promise<TagsToRows> {
     return await this.api.getData('tags_to_ids', {});
   }
   private async _setTagsToRows(tag_to_rows: TagsToRows) {
@@ -396,7 +401,7 @@ export class TagsPlugin {
       tags_to_rows,
       rows_to_tags,
     ] = await Promise.all([
-      this._getTagssToRows(),
+      this._getTagsToRows(),
       this._getRowsToTags(),
     ]);
     const tags_to_rows2: TagsToRows = {};
@@ -426,7 +431,7 @@ export class TagsPlugin {
 
   private async _setTag(row: Row, tag: Tag) {
     await this._sanityCheckTags();
-    const tags_to_rows = await this._getTagssToRows();
+    const tags_to_rows = await this._getTagsToRows();
     const rows_to_tags = await this._getRowsToTags();
     errors.assert(!tags_to_rows.hasOwnProperty(tag) || !tags_to_rows[tag].includes(row));
     errors.assert(!rows_to_tags.hasOwnProperty(row) || !rows_to_tags[row].includes(tag));
@@ -446,7 +451,7 @@ export class TagsPlugin {
 
   private async _unsetTag(row: Row, tag: Tag) {
     await this._sanityCheckTags();
-    const tags_to_rows = await this._getTagssToRows();
+    const tags_to_rows = await this._getTagsToRows();
     const rows_to_tags = await this._getRowsToTags();
     errors.assert(tags_to_rows[tag].includes(row));
     errors.assert(rows_to_tags[row].includes(tag));
@@ -476,7 +481,7 @@ export class TagsPlugin {
 
   public async listTags(): Promise<{[tag: string]: Path}> {
     await this._sanityCheckTags();
-    const tags_to_rows = await this._getTagssToRows();
+    const tags_to_rows = await this._getTagsToRows();
 
     const all_tags: {[tag: string]: Path} = {};
     await Promise.all(
@@ -498,12 +503,12 @@ export class TagsPlugin {
   // Set the tag for row
   // Returns whether setting tag succeeded
   public async addTag(row: Row, tag: Tag) {
-    const tags_to_rows = await this._getTagssToRows();
+    const tags_to_rows = await this._getTagsToRows();
     const rows_to_tags = await this._getRowsToTags();
 
     if (tag in tags_to_rows) {
       if (tags_to_rows[tag].includes(row)) {
-        return 'Already taged, nothing to do!';
+        return 'Already tagged, nothing to do!';
       }
     }
 
@@ -536,7 +541,7 @@ export class TagsPlugin {
 
   // Returns whether setting tag succeeded
   public async setTags(row: Row, tags: Tags) {
-    const tags_to_rows = await this._getTagssToRows();
+    const tags_to_rows = await this._getTagsToRows();
     const rows_to_tags = await this._getRowsToTags();
 
     let err = null;
@@ -599,7 +604,7 @@ export class TagsPlugin {
   }
   private async getTagRoot(tag: Tag): Promise<Path> {
     let root = this.tagRoot[tag];
-    if (root && this.api.session.document.isValidPath(root)) {
+    if (root && await this.api.session.document.isValidPath(root) && await this.api.session.document.isAttached(root.row)) {
       return root;
     } else {
       root = await this.getMarkPath(tag);
@@ -646,9 +651,13 @@ export class TagsPlugin {
 
   private async createTagRoot(tag: Tag) {
     const path = await this.createBlock(this.api.session.document.root, tag);
-    console.log('createroot', path);
     if (path) {
       await this.setMark(path, tag);
+    }
+    const tagsToRows = await this._getTagsToRows();
+    const document = this.api.session.document;
+    for (let row of tagsToRows[tag]) {
+      await this.createClone(row, tag);
     }
   }
 }
@@ -656,7 +665,6 @@ export class TagsPlugin {
 
 
 
-// NOTE: because listing tags filters, disabling is okay
 
 export const pluginName = 'Tags';
 
