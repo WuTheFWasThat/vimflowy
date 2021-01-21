@@ -3,10 +3,8 @@ import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import * as errors from '../../shared/utils/errors';
 import { Logger } from '../../shared/utils/logger';
-import { PartialUnfolder, Token, EmitFn, Tokenizer } from '../../assets/ts/utils/token_unfolder';
 
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
-import Menu from '../../assets/ts/menu';
 import Document from '../../assets/ts/document';
 import Session, { InMemorySession } from '../../assets/ts/session';
 import LineComponent from '../../assets/ts/components/line';
@@ -233,7 +231,7 @@ export class TagsPlugin {
         } else {
           const key = await keyStream.dequeue();
           if (key >= '1' && key <= '9') {
-            const idx = parseInt(key) - 1;
+            const idx = parseInt(key, 10) - 1;
             if (idx >= rowsToTags[taggedRow].length) {
               err = 'Index out of range';
             } else {
@@ -455,8 +453,8 @@ export class TagsPlugin {
     const rows_to_tags = await this._getRowsToTags();
     errors.assert(tags_to_rows[tag].includes(row));
     errors.assert(rows_to_tags[row].includes(tag));
-    tags_to_rows[tag] = tags_to_rows[tag].filter((el) => { return el !== row });
-    rows_to_tags[row] = rows_to_tags[row].filter((el) => { return el !== tag });
+    tags_to_rows[tag] = tags_to_rows[tag].filter((el) => { return el !== row; });
+    rows_to_tags[row] = rows_to_tags[row].filter((el) => { return el !== tag; });
     if (tags_to_rows[tag].length === 0) {
       delete tags_to_rows[tag];
     }
@@ -494,7 +492,7 @@ export class TagsPlugin {
               all_tags[tag] = path;
             }
           })
-        )
+        );
       })
     );
     return all_tags;
@@ -551,25 +549,21 @@ export class TagsPlugin {
         err = await this.removeTag(row, tag);
       }
     }
-
     if (err) {
       return err;
     }
-
     for (let tag of tags) {
       err = await this.addTag(row, tag);
     }
-
     if (err) {
       return err;
     }
-
     return null;
   }
 
 
 
-  // Cloning 
+  // Cloning
 
   private async inTagRoot(row: Row, tag: Tag) {
     // check if row is in top level of tag root
@@ -592,8 +586,7 @@ export class TagsPlugin {
     if (!root) {
       return;
     }
-    await document._detach(row, root.row); 
-    
+    await document._detach(row, root.row);
     await this.api.updatedDataForRender(row);
   }
 
@@ -655,7 +648,6 @@ export class TagsPlugin {
       await this.setMark(path, tag);
     }
     const tagsToRows = await this._getTagsToRows();
-    const document = this.api.session.document;
     for (let row of tagsToRows[tag]) {
       await this.createClone(row, tag);
     }
