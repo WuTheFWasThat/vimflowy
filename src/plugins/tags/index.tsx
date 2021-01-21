@@ -61,8 +61,6 @@ export class TagsPlugin {
   // hacky, these are only used when enabled
   public SetTag!: new(row: Row, tag: Tag) => Mutation;
   public UnsetTag!: new(row: Row, tag: Tag) => Mutation;
-  private tags_to_paths: {[tag: string]: Path[] | null};
-  private tagRoot: {[tag: string]: Path | null};
 
   constructor(api: PluginApi) {
     this.api = api;
@@ -71,8 +69,6 @@ export class TagsPlugin {
     this.document = this.session.document;
     // NOTE: this may not be initialized correctly at first
     // this only affects rendering @taglinks for now
-    this.tags_to_paths = {};
-    this.tagRoot = {};
   }
 
   public async enable() {
@@ -432,23 +428,18 @@ export class TagsPlugin {
       }
       return lineContents;
     });
-
-    this.api.registerListener('document', 'afterDetach', async () => {
-      this.computeTagsToPaths(); // FIRE AND FORGET
-    });
-    this.computeTagsToPaths(); // FIRE AND FORGET
   }
 
   // maintain global tags data structures
   //   a map: row -> tags
   //   and a second map: tag -> rows
-  private async _getRowsToTags(): Promise<RowsToTags> {
+  public async _getRowsToTags(): Promise<RowsToTags> {
     return await this.api.getData('ids_to_tags', {});
   }
   private async _setRowsToTags(rows_to_tags: RowsToTags) {
     return await this.api.setData('ids_to_tags', rows_to_tags);
   }
-  private async _getTagsToRows(): Promise<TagsToRows> {
+  public async _getTagsToRows(): Promise<TagsToRows> {
     return await this.api.getData('tags_to_ids', {});
   }
   private async _setTagsToRows(tag_to_rows: TagsToRows) {
@@ -508,7 +499,6 @@ export class TagsPlugin {
     await this._setTagsToRows(tags_to_rows);
     await this._setRowsToTags(rows_to_tags);
     await this._sanityCheckTags();
-    this.computeTagsToPaths();
   }
 
   private async _unsetTag(row: Row, tag: Tag) {
@@ -528,18 +518,8 @@ export class TagsPlugin {
     await this._setTagsToRows(tags_to_rows);
     await this._setRowsToTags(rows_to_tags);
     await this._sanityCheckTags();
-    this.computeTagsToPaths();
   }
 
-  // compute set of paths, used for rendering
-  // this is a fire and forget function.
-  // this.tags_to_paths  is used only for the tags word hook
-  // so we don't care if it's a bit out of date
-  private computeTagsToPaths() {
-    (async () => {
-      this.tags_to_paths = await this.listTags();
-    })();
-  }
 
   public async listTags(): Promise<{[tag: string]: Path[]}> {
     await this._sanityCheckTags();
@@ -577,9 +557,7 @@ export class TagsPlugin {
 
     await this.session.do(new this.SetTag(row, tag));
 
-    if (!await this.inTagRoot(row, tag)) {
-      await this.createClone(row, tag);
-    }
+    this.document.emitAsync('tagAdded', { tag, row });
     return null;
   }
 
@@ -595,9 +573,7 @@ export class TagsPlugin {
 
     await this.session.do(new this.UnsetTag(row, tag));
 
-    if (await this.inTagRoot(row, tag)) {
-      await this.deleteClone(row, tag);
-    }
+    this.document.emitAsync('tagRemoved', { tag, row });
     return null;
   }
   // Set the tag for row
@@ -625,102 +601,7 @@ export class TagsPlugin {
     }
     return null;
   }
-
-
-
-  // Cloning
-
-  private async inTagRoot(row: Row, tag: Tag) {
-    // check if row is in top level of tag root
-    const root = await this.getTagRoot(tag);
-    const document = this.api.session.document;
-    const info = await document.getInfo(row);
-    const parents = info.parentRows;
-    return parents.includes(root.row);
-  }
-
-  private async createClone(row: Row, tag: Tag) {
-    const root = await this.getTagRoot(tag);
-    await this.api.session.attachBlocks(root, [row], 0);
-    await this.api.updatedDataForRender(row);
-  }
-
-  private async deleteClone(row: Row, tag: Tag) {
-    const root = await this.getTagRoot(tag);
-    const document = this.api.session.document;
-    if (!root) {
-      return;
-    }
-    await document._detach(row, root.row);
-    await this.api.updatedDataForRender(row);
-  }
-
-  private async getMarkPath(mark: string): Promise<Path | null> {
-    const marksPlugin = this.api.getPlugin(marksPluginName) as MarksPlugin;
-    const marks = await marksPlugin.listMarks();
-    return marks[mark];
-  }
-  private async getTagRoot(tag: Tag): Promise<Path> {
-    let root = this.tagRoot[tag];
-    if (root && await this.api.session.document.isValidPath(root) && await this.api.session.document.isAttached(root.row)) {
-      return root;
-    } else {
-      root = await this.getMarkPath(tag);
-      console.log('getTagRoot', root);
-      if (!root) {
-        await this.createTagRoot(tag);
-        root = await this.getMarkPath(tag);
-        if (!root) {
-          throw new Error('Error while creating node');
-        }
-      }
-      this.tagRoot[tag] = root;
-      return root;
-    }
-  }
-
-  private async setMark(path: Path, mark: string) {
-    const marksPlugin = this.api.getPlugin(marksPluginName) as MarksPlugin;
-    await marksPlugin.setMark(path.row, mark);
-  }
-
-  public async getChildren(parent_path: Path): Promise<Array<Path>> {
-    if (!parent_path) {
-      return [];
-    }
-    return (await this.api.session.document.getChildren(parent_path)).map(path => parent_path.child(path.row));
-  }
-
-  private async createBlock(path: Path, text: string, isCollapsed: boolean = true, plugins?: any) {
-    let serialzed_row: SerializedBlock = {
-      text: text,
-      collapsed: isCollapsed,
-      plugins: plugins,
-      children: [],
-    };
-    const paths = await this.api.session.addBlocks(path, 0, [serialzed_row]);
-    if (paths.length > 0) {
-      await this.api.updatedDataForRender(path.row);
-      return paths[0];
-    } else {
-      throw new Error('Error while creating block');
-    }
-  }
-
-  private async createTagRoot(tag: Tag) {
-    const path = await this.createBlock(this.api.session.document.root, tag);
-    if (path) {
-      await this.setMark(path, tag);
-    }
-    const tagsToRows = await this._getTagsToRows();
-    for (let row of tagsToRows[tag]) {
-      await this.createClone(row, tag);
-    }
-  }
 }
-
-
-
 
 
 export const pluginName = 'Tags';
@@ -731,8 +612,7 @@ registerPlugin<TagsPlugin>(
     author: 'Victor Tao',
     description:
       `Similar to Marks, but each row can have multiple tags and tags can be reused.
-      Tagged rows are cloned to a node with mark [TAGNAME]. 
-      Press '#' to add a new tag, 'd#[number]' to remove a tag.
+      Press '#' to add a new tag, 'd#[number]' to remove a tag, and '-' to search tags.
    `,
     version: 1,
     dependencies: [marksPluginName],

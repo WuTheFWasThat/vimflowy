@@ -9,6 +9,7 @@ import './recursive_expand';
 import './daily_notes';
 import './deadlines';
 import './tags';
+import './clone_tags';
 
 // for developers: uncomment the following lines
 /*
