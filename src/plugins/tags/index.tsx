@@ -17,6 +17,7 @@ import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
 import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
 import { motionKey } from '../../assets/ts/keyDefinitions';
 import { pluginName as marksPluginName, MarksPlugin } from '../marks';
+import Menu from '../../assets/ts/menu';
 
 // TODO: do this elsewhere
 declare const process: any;
@@ -30,6 +31,12 @@ type RowsToTags = {[key: number]: Tags};
 const tagStyle = {
   padding: '0px 8px',
   marginLeft: 8,
+  borderRadius: 5,
+};
+
+const tagSearchStyle = {
+  padding: '0px 8px',
+  marginRight: 8,
   borderRadius: 5,
 };
 
@@ -54,7 +61,7 @@ export class TagsPlugin {
   // hacky, these are only used when enabled
   public SetTag!: new(row: Row, tag: Tag) => Mutation;
   public UnsetTag!: new(row: Row, tag: Tag) => Mutation;
-  private tags_to_paths: {[tag: string]: Path | null};
+  private tags_to_paths: {[tag: string]: Path[] | null};
   private tagRoot: {[tag: string]: Path | null};
 
   constructor(api: PluginApi) {
@@ -284,6 +291,62 @@ export class TagsPlugin {
       },
     );
 
+    this.api.registerAction(
+      'search-tags',
+      'List tagged rows',
+      async function({ session }) {
+        await session.setMode('SEARCH');
+        const tags = await that.listTags();
+        session.menu = new Menu(async (text) => {
+          // find tags that start with the prefix
+          const findTags = async (_document: Document, prefix: string, nresults = 10) => {
+            const results: Array<{
+              path: Path, tag: Tag,
+            }> = []; // list of paths
+            for (const tag in tags) {
+              if (tag.indexOf(prefix) === 0) {
+                const paths = tags[tag];
+                for (const path of paths) {
+                  results.push({ path, tag });
+                  if (nresults > 0 && results.length === nresults) {
+                    break;
+                  }
+                }
+              }
+            }
+            return results;
+          };
+
+          return await Promise.all(
+            (await findTags(session.document, text)).map(
+              async ({ path, tag }) => {
+                const line = await session.document.getLine(path.row);
+                return {
+                  contents: line,
+                  renderHook(lineDiv: React.ReactElement<any>) {
+                    return (
+                      <span>
+                        <span key={`tag_${tag}`}
+                          style={{
+                            ...getStyles(session.clientStore, ['theme-bg-tertiary', 'theme-trim']),
+                            ...tagSearchStyle
+                          }}
+                        >
+                          {tag}
+                        </span>
+                        {lineDiv}
+                      </span>
+                    );
+                  },
+                  fn: async () => await session.zoomInto(path),
+                };
+              }
+            )
+          );
+        });
+      }
+    );
+
     this.api.registerDefaultMappings(
       'TAG',
       Object.assign({
@@ -301,6 +364,7 @@ export class TagsPlugin {
       {
         'begin-tag': [['#']],
         'delete-tag': [['d', '#']],
+        'search-tags': [['-']],
       },
     );
 
@@ -477,19 +541,20 @@ export class TagsPlugin {
     })();
   }
 
-  public async listTags(): Promise<{[tag: string]: Path}> {
+  public async listTags(): Promise<{[tag: string]: Path[]}> {
     await this._sanityCheckTags();
     const tags_to_rows = await this._getTagsToRows();
 
-    const all_tags: {[tag: string]: Path} = {};
+    const all_tags: {[tag: string]: Path[]} = {};
     await Promise.all(
       Object.keys(tags_to_rows).map(async (tag) => {
         const rows = tags_to_rows[tag];
+        all_tags[tag] = [];
         await Promise.all(
           rows.map(async (row) => {
             const path = await this.document.canonicalPath(row);
             if (path !== null) {
-              all_tags[tag] = path;
+              all_tags[tag].push(path);
             }
           })
         );
