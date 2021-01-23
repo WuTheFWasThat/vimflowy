@@ -321,8 +321,8 @@ export class TagsPlugin {
                   contents: line,
                   renderHook(lineDiv: React.ReactElement<any>) {
                     return (
-                      <span>
-                        <span key={`tag_${tag}`}
+                      <span key={`tag_${tag}`}>
+                        <span 
                           style={{
                             ...getStyles(session.clientStore, ['theme-bg-tertiary', 'theme-trim']),
                             ...tagSearchStyle
@@ -580,7 +580,6 @@ export class TagsPlugin {
 
   // Returns whether setting tag succeeded
   public async setTags(row: Row, tags: Tags) {
-    const tags_to_rows = await this._getTagsToRows();
     const rows_to_tags = await this._getRowsToTags();
 
     let err = null;
@@ -615,7 +614,6 @@ registerPlugin<TagsPlugin>(
       Press '#' to add a new tag, 'd#[number]' to remove a tag, and '-' to search tags.
    `,
     version: 1,
-    dependencies: [marksPluginName],
   },
   async (api) => {
     const tagsPlugin = new TagsPlugin(api);
