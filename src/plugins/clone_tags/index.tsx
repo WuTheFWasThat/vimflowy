@@ -183,7 +183,7 @@ registerPlugin<CloneTagsPlugin>(
       `Creates a root node for every tag with mark [TAGNAME]. Tagged rows are cloned to to this node.
    `,
     version: 1,
-    dependencies: [tagsPluginName],
+    dependencies: [tagsPluginName, marksPluginName],
   },
   async (api) => {
     const clonetagsPlugin = new CloneTagsPlugin(api);
