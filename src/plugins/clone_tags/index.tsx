@@ -40,12 +40,12 @@ export class CloneTagsPlugin {
   public async enable() {
     this.logger.debug('Enabling cloning tags');
 
-    this.api.registerListener('document', 'tagAdded', async ({ tag, row }) => {
-      this.createClone(row, tag);
+    this.api.registerHook('document', 'tagAdded', async (_struct, { tag, row }) => {
+      await this.createClone(row, tag);
     });
 
-    this.api.registerListener('document', 'tagDeleted', async ({ tag, row }) => {
-      this.deleteClone(row, tag);
+    this.api.registerHook('document', 'tagRemoved', async (_struct, { tag, row }) => {
+      await this.deleteClone(row, tag);
     });
   }
 
@@ -65,7 +65,7 @@ export class CloneTagsPlugin {
   }
 
   public async deleteClone(row: Row, tag: Tag) {
-    if (!this.inTagRoot(row, tag)) {
+    if (!await this.inTagRoot(row, tag)) {
       return;
     }
     const root = await this.getTagRoot(tag);
@@ -89,7 +89,6 @@ export class CloneTagsPlugin {
       return root;
     } else {
       root = await this.getMarkPath(tag);
-      console.log('getTagRoot', root);
       if (!root) {
         await this.createTagRoot(tag);
         root = await this.getMarkPath(tag);
@@ -105,13 +104,6 @@ export class CloneTagsPlugin {
   private async setMark(path: Path, mark: string) {
     const marksPlugin = this.api.getPlugin(marksPluginName) as MarksPlugin;
     await marksPlugin.setMark(path.row, mark);
-  }
-
-  private async getChildren(parent_path: Path): Promise<Array<Path>> {
-    if (!parent_path) {
-      return [];
-    }
-    return (await this.api.session.document.getChildren(parent_path)).map(path => parent_path.child(path.row));
   }
 
   private async createBlock(path: Path, text: string, isCollapsed: boolean = true, plugins?: any) {
@@ -136,8 +128,11 @@ export class CloneTagsPlugin {
       await this.setMark(path, tag);
     }
     const tagsToRows = await this.tagsPlugin._getTagsToRows();
+    const document = this.api.session.document;
     for (let row of tagsToRows[tag]) {
-      await this.createClone(row, tag);
+      if (await document.isAttached(row)) {
+        await this.createClone(row, tag);
+      }
     }
   }
 }
