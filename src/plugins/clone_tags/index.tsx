@@ -60,8 +60,10 @@ export class CloneTagsPlugin {
 
   public async createClone(row: Row, tag: Tag) {
     const root = await this.getTagRoot(tag);
-    await this.api.session.attachBlocks(root, [row], 0);
-    await this.api.updatedDataForRender(row);
+    if (!await this.inTagRoot(row, tag)) {
+      await this.api.session.attachBlocks(root, [row], 0);
+      await this.api.updatedDataForRender(row);
+    }
   }
 
   public async deleteClone(row: Row, tag: Tag) {
