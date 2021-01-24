@@ -223,10 +223,10 @@ export class TagsPlugin {
         let err = null;
         const rowsToTags = await that._getRowsToTags();
         const taggedRow = session.cursor.row;
+        const key = await keyStream.dequeue();
         if (rowsToTags[taggedRow] == null || rowsToTags[taggedRow].length === 0) {
           err = 'Row is not tagged';
         } else {
-          const key = await keyStream.dequeue();
           if (key >= '1' && key <= '9') {
             const idx = parseInt(key, 10) - 1;
             if (idx >= rowsToTags[taggedRow].length) {
