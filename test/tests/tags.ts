@@ -123,6 +123,33 @@ describe('tags', function() {
       'another line',
     ]);
 
+    t.sendKey('ctrl+r');
+    t.expectTags({'tagtest': [1]});
+    t.expect([
+      { text: 'a line', plugins: {tags: ['tagtest']} },
+      'another line',
+    ]);
+
+    t.sendKeys('d#');
+    t.expectTags({});
+    t.expect([
+      'a line',
+      'another line',
+    ]);
+
+    t.sendKey('u');
+    t.expectTags({'tagtest': [1]});
+    t.expect([
+      { text: 'a line', plugins: {tags: ['tagtest']} },
+      'another line',
+    ]);
+
+    t.sendKey('ctrl+r');
+    t.expectTags({});
+    t.expect([
+      'a line',
+      'another line',
+    ]);
     await t.done();
   });
   it('can be disabled', async function() {
