@@ -63,7 +63,7 @@ describe('tags', function() {
       { text: 'another line', plugins: {tags: ['test3']} },
     ]);
 
-    t.sendKeys('kd#');
+    t.sendKeys('kd#1');
     t.expectTags({'test3': [2]});
     t.expect([
       'a line',
@@ -102,6 +102,19 @@ describe('tags', function() {
     ]);
     await t.done();
   });
+  it('can repeat', async function() {
+    let t = new TagsTestCase([
+      { text: 'hi', plugins: {tags: ['test3', 'tag']} },
+      { text: 'dog', plugins: {tags: ['test2']} },
+    ], {plugins: [Tags.pluginName]});
+    t.sendKeys('d#1.');
+    t.expectTags({'test2': [2]});
+    t.expect([
+      'hi',
+      { text: 'dog', plugins: {tags: ['test2']} },
+    ]);
+    await t.done();
+  });
   it('can undo', async function() {
     let t = new TagsTestCase([
       'a line',
@@ -130,7 +143,7 @@ describe('tags', function() {
       'another line',
     ]);
 
-    t.sendKeys('d#');
+    t.sendKeys('d#1');
     t.expectTags({});
     t.expect([
       'a line',

@@ -116,10 +116,7 @@ export class TagsPlugin {
         }
       }
       public async rewind(/* session */) {
-        const tags = await that.getTags(this.row);
-        if (tags !== null && tags.includes(this.tag)) {
-          return [];
-        }
+        console.log('unset undo', this.tag);
         return [
           new SetTag(this.row, this.tag),
         ];
@@ -224,10 +221,8 @@ export class TagsPlugin {
         let err = null;
         const rowsToTags = await that._getRowsToTags();
         const taggedRow = session.cursor.row;
-        if (rowsToTags[taggedRow].length === 0) {
-          err = 'Key not a number from 1-9';
-        } else if (rowsToTags[taggedRow].length === 1) {
-          err = await that.removeTag(session.cursor.row, rowsToTags[taggedRow][0]);
+        if (rowsToTags[taggedRow] == null || rowsToTags[taggedRow].length === 0) {
+          err = 'Row is not tagged';
         } else {
           const key = await keyStream.dequeue();
           if (key >= '1' && key <= '9') {
