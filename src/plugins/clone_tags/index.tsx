@@ -4,8 +4,6 @@ import * as React from 'react'; // tslint:disable-line no-unused-variable
 import { Logger } from '../../shared/utils/logger';
 
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
-import Document from '../../assets/ts/document';
-import Session, { InMemorySession } from '../../assets/ts/session';
 import Path from '../../assets/ts/path';
 import { Row, SerializedBlock } from '../../assets/ts/types';
 
