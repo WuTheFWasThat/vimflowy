@@ -30,13 +30,11 @@ type RowsToTags = {[key: number]: Tags};
 const tagStyle = {
   padding: '0px 8px',
   marginLeft: 8,
-  borderRadius: 5,
 };
 
 const tagSearchStyle = {
   padding: '0px 8px',
   marginRight: 8,
-  borderRadius: 5,
 };
 
 /*
@@ -119,7 +117,7 @@ export class TagsPlugin {
       }
       public async rewind(/* session */) {
         const tags = await that.getTags(this.row);
-        if (tags === null || !tags.includes(this.tag)) {
+        if (tags !== null && tags.includes(this.tag)) {
           return [];
         }
         return [
@@ -321,7 +319,7 @@ export class TagsPlugin {
                   renderHook(lineDiv: React.ReactElement<any>) {
                     return (
                       <span key={`tag_${tag}`}>
-                        <span 
+                        <span
                           style={{
                             ...getStyles(session.clientStore, ['theme-bg-tertiary', 'theme-trim']),
                             ...tagSearchStyle
