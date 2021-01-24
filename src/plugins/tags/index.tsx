@@ -490,6 +490,8 @@ export class TagsPlugin {
     }
     tags_to_rows[tag].push(row);
     rows_to_tags[row].push(tag);
+    tags_to_rows[tag].sort();
+    rows_to_tags[row].sort();
     await this._setTagsToRows(tags_to_rows);
     await this._setRowsToTags(rows_to_tags);
     await this._sanityCheckTags();
