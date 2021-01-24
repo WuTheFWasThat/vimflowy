@@ -87,6 +87,7 @@ export class TagsPlugin {
       public async mutate(/* session */) {
         await that._setTag(this.row, this.tag);
         await that.api.updatedDataForRender(this.row);
+        await that.document.applyHookAsync('tagAdded', {}, { tag: this.tag, row: this.row });
       }
       public async rewind(/* session */) {
         return [
@@ -113,6 +114,7 @@ export class TagsPlugin {
         if (tags !== null && tags.includes(this.tag)) {
           await that._unsetTag(this.row, this.tag);
           await that.api.updatedDataForRender(this.row);
+          await that.document.applyHookAsync('tagRemoved', {}, { tag: this.tag, row: this.row });
         }
       }
       public async rewind(/* session */) {
@@ -549,7 +551,6 @@ export class TagsPlugin {
 
     await this.session.do(new this.SetTag(row, tag));
 
-    this.document.emitAsync('tagAdded', { tag, row });
     return null;
   }
 
@@ -565,7 +566,6 @@ export class TagsPlugin {
 
     await this.session.do(new this.UnsetTag(row, tag));
 
-    this.document.emitAsync('tagRemoved', { tag, row });
     return null;
   }
   // Set the tag for row
