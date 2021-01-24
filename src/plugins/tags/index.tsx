@@ -10,13 +10,12 @@ import Session, { InMemorySession } from '../../assets/ts/session';
 import LineComponent from '../../assets/ts/components/line';
 import Mutation from '../../assets/ts/mutations';
 import Path from '../../assets/ts/path';
-import { Row, SerializedBlock } from '../../assets/ts/types';
+import { Row } from '../../assets/ts/types';
 import { getStyles } from '../../assets/ts/themes';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
 import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
 import { motionKey } from '../../assets/ts/keyDefinitions';
-import { pluginName as marksPluginName, MarksPlugin } from '../marks';
 import Menu from '../../assets/ts/menu';
 
 // TODO: do this elsewhere
