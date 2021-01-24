@@ -1,45 +1,21 @@
 import * as _ from 'lodash';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 
-import * as errors from '../../shared/utils/errors';
 import { Logger } from '../../shared/utils/logger';
 
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
 import Document from '../../assets/ts/document';
 import Session, { InMemorySession } from '../../assets/ts/session';
-import LineComponent from '../../assets/ts/components/line';
-import Mutation from '../../assets/ts/mutations';
 import Path from '../../assets/ts/path';
 import { Row, SerializedBlock } from '../../assets/ts/types';
-import { getStyles } from '../../assets/ts/themes';
 
-import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
-import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
-import { motionKey } from '../../assets/ts/keyDefinitions';
 import { pluginName as marksPluginName, MarksPlugin } from '../marks';
 import { pluginName as tagsPluginName, TagsPlugin } from '../tags';
-import Menu from '../../assets/ts/menu';
 
 // TODO: do this elsewhere
 declare const process: any;
 
 type Tag = string;
-type Tags = Tag[];
-type Rows = Row[];
-type TagsToRows = {[key: string]: Rows};
-type RowsToTags = {[key: number]: Tags};
-
-const tagStyle = {
-  padding: '0px 8px',
-  marginLeft: 8,
-  borderRadius: 5,
-};
-
-const tagSearchStyle = {
-  padding: '0px 8px',
-  marginRight: 8,
-  borderRadius: 5,
-};
 
 /*
  * ALGORITHMIC NOTE: maintaining the set of tags
@@ -53,22 +29,17 @@ const tagSearchStyle = {
 export class CloneTagsPlugin {
   private api: PluginApi;
   private logger: Logger;
-  private session: Session;
-  private document: Document;
   private tagRoot: {[tag: string]: Path | null};
   private tagsPlugin: TagsPlugin;
 
   constructor(api: PluginApi) {
     this.api = api;
     this.logger = this.api.logger;
-    this.session = this.api.session;
-    this.document = this.session.document;
     this.tagRoot = {};
     this.tagsPlugin = this.api.getPlugin(tagsPluginName) as TagsPlugin;
   }
 
   public async enable() {
-    const that = this;
     this.logger.debug('Enabling cloning tags');
 
     this.api.registerListener('document', 'tagAdded', async ({ tag, row }) => {
@@ -180,8 +151,7 @@ registerPlugin<CloneTagsPlugin>(
     name: pluginName,
     author: 'Victor Tao',
     description:
-      `Creates a root node for every tag with mark [TAGNAME]. Tagged rows are cloned to to this node.
-   `,
+      `Creates a root node for every tag with mark [TAGNAME]. Tagged rows are cloned to to this node.`,
     version: 1,
     dependencies: [tagsPluginName, marksPluginName],
   },
