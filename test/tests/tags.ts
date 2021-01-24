@@ -15,7 +15,7 @@ class TagsTestCase extends TestCase {
   }
 }
 
-describe('tags', function() {
+describe.only('tags', function() {
   it('works in basic cases', async function() {
     let t = new TagsTestCase([
       'a line',
@@ -74,14 +74,14 @@ describe('tags', function() {
   });
   it('can be searched for', async function() {
     let t = new TagsTestCase([
-      { text: 'hi', plugins: {tags: ['test3', 'tag']} },
+      { text: 'hi', plugins: {tags: ['tag', 'test3']} },
       { text: 'dog', plugins: {tags: ['test2']} },
     ], {plugins: [Tags.pluginName]});
     t.sendKeys('-test3');
     t.sendKey('enter');
     t.sendKeys('x');
     t.expect([
-      { text: 'i', plugins: {tags: ['test3', 'tag']} },
+      { text: 'i', plugins: {tags: ['tag', 'test3']} },
       { text: 'dog', plugins: {tags: ['test2']} },
     ]);
 
@@ -89,7 +89,7 @@ describe('tags', function() {
     t.sendKey('enter');
     t.sendKeys('x');
     t.expect([
-      { text: '', plugins: {tags: ['test3', 'tag']} },
+      { text: '', plugins: {tags: ['tag', 'test3']} },
       { text: 'dog', plugins: {tags: ['test2']} },
     ]);
 
@@ -97,14 +97,14 @@ describe('tags', function() {
     t.sendKey('enter');
     t.sendKeys('x');
     t.expect([
-      { text: '', plugins: {tags: ['test3', 'tag']} },
+      { text: '', plugins: {tags: ['tag', 'test3']} },
       { text: 'og', plugins: {tags: ['test2']} },
     ]);
     await t.done();
   });
   it('can repeat', async function() {
     let t = new TagsTestCase([
-      { text: 'hi', plugins: {tags: ['test3', 'tag']} },
+      { text: 'hi', plugins: {tags: ['tag', 'test3']} },
       { text: 'dog', plugins: {tags: ['test2']} },
     ], {plugins: [Tags.pluginName]});
     t.sendKeys('d#1.');
@@ -167,7 +167,7 @@ describe('tags', function() {
   });
   it('can be disabled', async function() {
     let t = new TagsTestCase([
-      { text: 'hi', plugins: {tags: ['test3', 'tag']} },
+      { text: 'hi', plugins: {tags: ['tag', 'test3']} },
       { text: 'dog', plugins: {tags: ['test2']} },
     ], {plugins: [Tags.pluginName]});
 
@@ -180,7 +180,7 @@ describe('tags', function() {
     // RE-ENABLE WORKS
     t.enablePlugin(Tags.pluginName);
     t.expect([
-      { text: 'hi', plugins: {tags: ['test3', 'tag']} },
+      { text: 'hi', plugins: {tags: ['tag', 'test3']} },
       { text: 'dog', plugins: {tags: ['test2']} },
     ]);
     await t.done();
