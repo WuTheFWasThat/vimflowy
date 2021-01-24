@@ -75,11 +75,13 @@ export class TagsPlugin {
     class SetTag extends Mutation {
       private row: Row;
       private tag: Tag;
+      private undo: boolean;
 
-      constructor(row: Row, tag: Tag) {
+      constructor(row: Row, tag: Tag, undo = false) {
         super();
         this.row = row;
         this.tag = tag;
+        this.undo = undo;
       }
       public str() {
         return `row ${this.row}, tag ${this.tag}`;
@@ -87,11 +89,13 @@ export class TagsPlugin {
       public async mutate(/* session */) {
         await that._setTag(this.row, this.tag);
         await that.api.updatedDataForRender(this.row);
-        await that.document.applyHookAsync('tagAdded', {}, { tag: this.tag, row: this.row });
+        if (!this.undo) {
+          await that.document.applyHookAsync('tagAdded', {}, { tag: this.tag, row: this.row });
+        }
       }
       public async rewind(/* session */) {
         return [
-          new UnsetTag(this.row, this.tag),
+          new UnsetTag(this.row, this.tag, true),
         ];
       }
     }
@@ -100,11 +104,13 @@ export class TagsPlugin {
     class UnsetTag extends Mutation {
       private row: Row;
       private tag: Tag;
+      private undo: boolean;
 
-      constructor(row: Row, tag: Tag) {
+      constructor(row: Row, tag: Tag, undo = false) {
         super();
         this.row = row;
         this.tag = tag;
+        this.undo = undo;
       }
       public str() {
         return `row ${this.row}, tag ${this.tag}`;
@@ -114,7 +120,9 @@ export class TagsPlugin {
         if (tags !== null && tags.includes(this.tag)) {
           await that._unsetTag(this.row, this.tag);
           await that.api.updatedDataForRender(this.row);
-          await that.document.applyHookAsync('tagRemoved', {}, { tag: this.tag, row: this.row });
+          if (!this.undo) {
+            await that.document.applyHookAsync('tagRemoved', {}, { tag: this.tag, row: this.row });
+          }
         }
       }
       public async rewind(/* session */) {
