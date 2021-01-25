@@ -10,7 +10,7 @@ import Session, { InMemorySession } from '../../assets/ts/session';
 import LineComponent from '../../assets/ts/components/line';
 import Mutation from '../../assets/ts/mutations';
 import Path from '../../assets/ts/path';
-import { Row } from '../../assets/ts/types';
+import { Char, Row } from '../../assets/ts/types';
 import { getStyles } from '../../assets/ts/themes';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
@@ -231,10 +231,15 @@ export class TagsPlugin {
         let err = null;
         const rowsToTags = await that._getRowsToTags();
         const taggedRow = session.cursor.row;
-        const key = await keyStream.dequeue();
         if (rowsToTags[taggedRow] == null || rowsToTags[taggedRow].length === 0) {
           err = 'Row is not tagged';
         } else {
+          let key: Char;
+          if (rowsToTags[taggedRow].length === 1) {
+            key = '1';
+          } else {
+            key = await keyStream.dequeue();
+          }
           if (key >= '1' && key <= '9') {
             const idx = parseInt(key, 10) - 1;
             if (idx >= rowsToTags[taggedRow].length) {
