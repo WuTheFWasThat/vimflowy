@@ -1,9 +1,9 @@
 import * as _ from 'lodash';
 
 export class ExtendableError extends Error {
-  constructor(message: string) {
+  constructor(message: string, name?: string) {
     super(message);
-    this.name = this.constructor.name;
+    this.name = name || this.constructor.name;
     this.stack = (new Error(message)).stack;
   }
 }
