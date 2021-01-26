@@ -1,5 +1,4 @@
 import * as React from 'react'; // tslint:disable-line no-unused-variable
-import * as _ from 'lodash';
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
 import { Logger } from '../../shared/utils/logger';
 import Path from '../../assets/ts/path';

@@ -1,6 +1,3 @@
-import * as _ from 'lodash';
-import * as React from 'react'; // tslint:disable-line no-unused-variable
-
 import { Logger } from '../../shared/utils/logger';
 
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
@@ -9,9 +6,6 @@ import { Row, SerializedBlock } from '../../assets/ts/types';
 
 import { pluginName as marksPluginName, MarksPlugin } from '../marks';
 import { pluginName as tagsPluginName, TagsPlugin } from '../tags';
-
-// TODO: do this elsewhere
-declare const process: any;
 
 type Tag = string;
 

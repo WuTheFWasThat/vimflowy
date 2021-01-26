@@ -21,14 +21,14 @@ export class UnexpectedValue extends ExtendableError {
 }
 
 export class GenericError extends ExtendableError {
-  constructor(m: string) { super(m); }
+  // constructor(m: string) { super(m); }
 }
 
 // error class for errors that we can reasonably expect to happen
 // e.g. bad user input, multiple users
 // is special because ignored by error handling in app.tsx
 export class ExpectedError extends ExtendableError {
-  constructor(m: string) { super(m); }
+  // constructor(m: string) { super(m); }
 }
 
 ///////////

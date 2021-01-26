@@ -271,7 +271,7 @@ export default class KeyHandler extends EventEmitter {
       if (motion === null) {
         return null;
       }
-      motion = motion;
+      // motion = motion;
     }
 
     return {

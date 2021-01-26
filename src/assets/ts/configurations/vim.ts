@@ -338,12 +338,12 @@ const config: Config = {
   // TODO: get the keys from modes.ts
   defaultMappings:
     new KeyMappings({
-      [ 'NORMAL' ]: NORMAL_MODE_MAPPINGS,
-      [ 'INSERT' ]: INSERT_MODE_MAPPINGS,
-      [ 'VISUAL' ]: VISUAL_MODE_MAPPINGS,
-      [ 'VISUAL_LINE' ]: VISUAL_LINE_MODE_MAPPINGS,
-      [ 'SEARCH' ]: SEARCH_MODE_MAPPINGS,
-      [ 'SETTINGS' ]: SETTINGS_MODE_MAPPINGS,
+       NORMAL : NORMAL_MODE_MAPPINGS,
+       INSERT : INSERT_MODE_MAPPINGS,
+       VISUAL : VISUAL_MODE_MAPPINGS,
+       VISUAL_LINE : VISUAL_LINE_MODE_MAPPINGS,
+       SEARCH : SEARCH_MODE_MAPPINGS,
+       SETTINGS : SETTINGS_MODE_MAPPINGS,
     }),
 };
 export default config;
