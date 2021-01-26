@@ -63,7 +63,7 @@ describe.only('tags', function() {
       { text: 'another line', plugins: {tags: ['test3']} },
     ]);
 
-    t.sendKeys('kd#1');
+    t.sendKeys('kd#');
     t.expectTags({'test3': [2]});
     t.expect([
       'a line',
@@ -107,7 +107,7 @@ describe.only('tags', function() {
       { text: 'hi', plugins: {tags: ['tag', 'test3']} },
       { text: 'dog', plugins: {tags: ['test2']} },
     ], {plugins: [Tags.pluginName]});
-    t.sendKeys('d#1.');
+    t.sendKeys('d#1.j');
     t.expectTags({'test2': [2]});
     t.expect([
       'hi',
@@ -143,7 +143,7 @@ describe.only('tags', function() {
       'another line',
     ]);
 
-    t.sendKeys('d#1');
+    t.sendKeys('d#');
     t.expectTags({});
     t.expect([
       'a line',
