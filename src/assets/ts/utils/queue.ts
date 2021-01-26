@@ -1,7 +1,7 @@
 import { ExtendableError } from '../../../shared/utils/errors';
 
 export class QueueStoppedError extends ExtendableError {
-  constructor(m = '', name='QueueStoppedError') {
+  constructor(m = '', name = 'QueueStoppedError') {
     super(m ? `Queue stopped: ${m}!` : 'Queue stopped!', name);
   }
 }
@@ -52,7 +52,7 @@ export default class Queue<T> {
     this.nextProm = new Promise((resolve) => {
       let real_resolve = (val: T) => {
         resolve(val);
-      }
+      };
       this.resolveNext = real_resolve;
     });
     return this.nextProm;

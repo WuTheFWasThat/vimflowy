@@ -30,27 +30,27 @@ describe('tags_clone', function() {
     t.expectTags({'tagtest': [1]});
     t.expect([
       {
-        "text": "tagtest",
-        "collapsed": true,
-        "plugins": {
-          "mark": "tagtest"
+      'text': 'tagtest',
+        'collapsed': true,
+        'plugins': {
+          'mark': 'tagtest'
         },
-        "children": [
+        'children': [
           {
-            "text": "a line",
-            "plugins": {
-              "tags": [
-                "tagtest"
+            'text': 'a line',
+            'plugins': {
+              'tags': [
+                'tagtest'
               ]
             },
-            "id": 1
+            'id': 1
           }
         ]
       },
       {
-        "clone": 1
+        'clone': 1
       },
-      "another line"
+      'another line'
     ]
     );
 
