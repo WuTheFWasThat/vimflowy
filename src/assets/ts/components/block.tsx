@@ -141,10 +141,9 @@ type BlockProps = {
   fetchData: () => void;
 };
 export default class BlockComponent extends React.Component<BlockProps, {}> {
-
-  constructor(props: BlockProps) {
-    super(props);
-  }
+  // constructor(props: BlockProps) {
+  //   super(props);
+  // }
 
   public shouldComponentUpdate(nextProps: BlockProps) {
     if (this.props.cursorsTree.hasSelection) {

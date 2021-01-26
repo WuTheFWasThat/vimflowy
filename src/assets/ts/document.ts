@@ -340,8 +340,8 @@ export default class Document extends EventEmitter {
     }
     let word = text.slice(start, end + 1).join('');
     // remove leading and trailing punctuation
-    word = word.replace(/^[-.,()&$#!\[\]{}"']+/g, '');
-    word = word.replace(/[-.,()&$#!\[\]{}"']+$/g, '');
+    word = word.replace(/^[-.,()&$#![\]{}"']+/g, '');
+    word = word.replace(/[-.,()&$#![\]{}"']+$/g, '');
     return word;
   }
 

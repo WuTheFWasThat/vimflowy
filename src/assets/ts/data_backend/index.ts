@@ -21,9 +21,9 @@ export class MultipleUsersError extends ExtendableError {
 const internalPrefix: string = 'internal:';
 
 export class SynchronousLocalStorageBackend extends SynchronousDataBackend {
-  constructor() {
-    super();
-  }
+  // constructor() {
+  //   super();
+  // }
 
   public get(key: string): string | null {
     const val = localStorage.getItem(key);

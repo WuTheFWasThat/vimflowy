@@ -556,7 +556,7 @@ export class TagsPlugin {
   // Returns whether setting tag succeeded
   public async addTag(row: Row, tag: Tag) {
     const tags_to_rows = await this._getTagsToRows();
-    const rows_to_tags = await this._getRowsToTags();
+    // const rows_to_tags = await this._getRowsToTags();
 
     if (tag in tags_to_rows) {
       if (tags_to_rows[tag].includes(row)) {
