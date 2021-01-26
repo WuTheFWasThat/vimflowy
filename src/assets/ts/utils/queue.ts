@@ -1,8 +1,8 @@
 import { ExtendableError } from '../../../shared/utils/errors';
 
 export class QueueStoppedError extends ExtendableError {
-  constructor(m = '') {
-    super(m ? `Queue stopped: ${m}!` : 'Queue stopped!');
+  constructor(m = '', name='QueueStoppedError') {
+    super(m ? `Queue stopped: ${m}!` : 'Queue stopped!', name);
   }
 }
 
