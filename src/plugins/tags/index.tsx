@@ -126,9 +126,8 @@ export class TagsPlugin {
         }
       }
       public async rewind(/* session */) {
-        console.log('unset undo', this.tag);
         return [
-          new SetTag(this.row, this.tag),
+          new SetTag(this.row, this.tag, true),
         ];
       }
     }

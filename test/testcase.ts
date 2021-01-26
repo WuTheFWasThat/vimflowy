@@ -97,7 +97,7 @@ class TestCase {
     this.keyhandler.queue(async() => {
       this.prom = this.prom.then(async () => {
         if (this.plugins) {
-          for (let i = 0; i < this.plugins.length; i++) {
+          for (let i = this.plugins.length - 1; i >= 0; i--) {
             const pluginName = this.plugins[i];
             if (this.pluginManager.getStatus(pluginName) === PluginStatus.ENABLED) {
               await this.pluginManager.disable(pluginName);
