@@ -1,4 +1,5 @@
 import firebase from 'firebase';
+import localForage from 'localforage'
 // import "firebase/auth";
 
 import EventEmitter from '../utils/eventEmitter';
@@ -71,6 +72,41 @@ export class LocalStorageBackend extends DataBackend {
   // note that this doesn't cache!
   public getLastSave(): number {
     return JSON.parse(this.sync_backend.get(this._lastSaveKey_()) || '0');
+  }
+}
+
+export class IndexedDBBackend extends DataBackend {
+  private lastSave: number;
+  private docname: string;
+
+  private _lastSaveKey_(): string {
+    return `${internalPrefix}${this.docname}:lastSave`;
+  }
+
+  constructor(docname = '') {
+    super();
+    this.docname = docname;
+    this.lastSave = Date.now();
+  }
+
+  public async get(key: string): Promise<string | null> {
+    return localForage.getItem(key);
+  }
+
+  public async set(key: string, value: string): Promise<void> {
+    if (await this.getLastSave() > this.lastSave) {
+      throw new MultipleUsersError();
+    }
+    this.lastSave = Date.now();
+    await localForage.setItem(this._lastSaveKey_(), this.lastSave + '');
+    await localForage.setItem(key, value);
+    return Promise.resolve();
+  }
+
+  // determine last time saved (for multiple tab detection)
+  // note that this doesn't cache!
+  public async getLastSave(): Promise<number> {
+    return JSON.parse(await localForage.getItem(this._lastSaveKey_()) || '0');
   }
 }
 
