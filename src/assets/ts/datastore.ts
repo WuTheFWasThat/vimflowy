@@ -204,6 +204,83 @@ const decodeParents = (parents: number | Array<number>): Array<number> => {
   return parents;
 };
 
+export class SearchStore {
+  private prefix: string;
+  private docname: string;
+  private backend: DataBackend;
+  private cache: {[key: string]: any} = {};
+  private use_cache: boolean = true;
+
+  constructor(backend: DataBackend, docname = '') {
+    this.backend = backend;
+    this.docname = docname;
+    this.prefix = `${docname}save`;
+  }
+
+  private async _get<T>(
+    key: string,
+    default_value: T,
+    decode: (value: any) => T = fn_utils.id
+  ): Promise<T> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
+
+    if (this.use_cache) {
+      if (key in this.cache) {
+        return this.cache[key];
+      }
+    }
+    let value: any = await this.backend.get(key);
+    try {
+      // need typeof check because of backwards compatibility plus stupidness like
+      // JSON.parse([106]) === 106
+      if (typeof value === 'string') {
+        value = JSON.parse(value);
+      }
+    } catch (e) { /* do nothing - this should only happen for historical reasons */ }
+    let decodedValue: T;
+    if (value === null) {
+      decodedValue = default_value;
+      logger.debug('tried getting', key, 'defaulted to', decodedValue);
+    } else {
+      decodedValue = decode(value);
+      logger.debug('got from storage', key, decodedValue);
+    }
+    if (this.use_cache) {
+      this.cache[key] = decodedValue;
+    }
+    return decodedValue;
+  }
+
+  private async _set(
+    key: string, value: any, encode: (value: any) => any = fn_utils.id
+  ): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
+
+    if (this.use_cache) {
+      this.cache[key] = value;
+    }
+    const encodedValue = encode(value);
+    logger.debug('setting to storage', key, encodedValue);
+    // NOTE: fire and forget
+    this.backend.set(key, JSON.stringify(encodedValue)).catch((err) => {
+      setTimeout(() => { throw err; });
+    });
+  }
+
+  private _rowsKey_(token: string): string {
+    return `${this.prefix}:rows_${token}`;
+  }
+
+
+  // get last view (for page reload)
+  public async setRows(token: string, rows: Set<Row>) {
+    return this._set(this._rowsKey_(token), rows);
+  }
+
+  public async getRows(token: string) {
+    return this._get(this._rowsKey_(token), new Set<Row>());
+  }
+}
 export class DocumentStore {
   private lastId: number | null;
   private prefix: string;

@@ -7,11 +7,12 @@ import * as fn_utils from './utils/functional';
 // import logger from './utils/logger';
 import { isWhitespace } from './utils/text';
 import Path from './path';
-import { DocumentStore } from './datastore';
+import { DocumentStore, SearchStore } from './datastore';
 import { InMemory } from '../../shared/data_backend';
 import {
   Row, Col, Char, Line, SerializedLine, SerializedBlock
 } from './types';
+import { Searcher } from './searcher';
 
 type RowInfo = {
   readonly line: Line;
@@ -210,13 +211,15 @@ export default class Document extends EventEmitter {
   public store: DocumentStore;
   public name: string;
   public root: Path;
+  private searcher: Searcher;
 
-  constructor(store: DocumentStore, name = '') {
+  constructor(store: DocumentStore, searchStore: SearchStore, name = '') {
     super();
     this.cache = new DocumentCache();
     this.store = store;
     this.name = name;
     this.root = Path.root();
+    this.searcher = new Searcher(searchStore);
     return this;
   }
 
@@ -746,9 +749,13 @@ export default class Document extends EventEmitter {
     const query_words =
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
-    const paths = this.traverseSubtree(root);
-    for await (let path of paths) {
-      const text = await this.getText(path.row);
+    const possibleRows = await this.searcher.search(query_words);
+    if (possibleRows === null) {
+      return results;
+    }
+    const possibleRowsArr = Array.from(possibleRows);
+    for await (let row of possibleRowsArr) {
+      const text = await this.getText(row);
       const line = canonicalize(text);
       const matches: Array<number> = [];
       if (_.every(query_words.map((word) => {
@@ -759,7 +766,10 @@ export default class Document extends EventEmitter {
         }
         return true;
       }))) {
-        results.push({ path, matches });
+        const path = await this.canonicalPath(row);
+        if (path) {
+          results.push({ path, matches });
+        }
       }
       if (nresults > 0 && results.length === nresults) {
         break;
