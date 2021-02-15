@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 // import 'core-js/shim';
 
 import { SearchStore } from './datastore';
+import { all } from './plugins';
 import {
   Row, Chars 
 } from './types';

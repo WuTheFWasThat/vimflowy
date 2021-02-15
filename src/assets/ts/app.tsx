@@ -27,8 +27,8 @@ import { RegisterTypes } from './register';
 import KeyEmitter from './keyEmitter';
 import KeyHandler from './keyHandler';
 import KeyMappings from './keyMappings';
-import { ClientStore, DocumentStore } from './datastore';
-import { SynchronousInMemory, InMemory } from '../../shared/data_backend';
+import { ClientStore, DocumentStore, SearchStore } from './datastore';
+import DataBackend, { SynchronousInMemory, InMemory } from '../../shared/data_backend';
 import {
   BackendType, SynchronousLocalStorageBackend,
   LocalStorageBackend, FirebaseBackend, ClientSocketBackend
@@ -97,9 +97,14 @@ $(document).ready(async () => {
     renderMain(); // fire and forget
   };
 
+  type Stores = {
+    docStore: DocumentStore,
+    searchStore: SearchStore
+  }
+
   const noLocalStorage = (typeof localStorage === 'undefined' || localStorage === null);
   let clientStore: ClientStore;
-  let docStore: DocumentStore;
+  let docStore: Stores;
   let backend_type: BackendType;
   let doc;
 
@@ -120,11 +125,15 @@ $(document).ready(async () => {
 
   const config: Config = vimConfig;
 
-  function getLocalStore(): DocumentStore {
-     return new DocumentStore(new LocalStorageBackend(docname), docname);
+  function getStores(backend: DataBackend, docname = '') {
+    return { docStore: new DocumentStore(backend, docname), searchStore: new SearchStore(backend, docname) };
   }
 
-  async function getFirebaseStore(): Promise<DocumentStore> {
+  function getLocalStore(): Stores {
+     return getStores(new LocalStorageBackend(docname), docname);
+  }
+
+  async function getFirebaseStore(): Promise<Stores> {
     const firebaseId = clientStore.getDocSetting('firebaseId');
     const firebaseApiKey = clientStore.getDocSetting('firebaseApiKey');
     const firebaseUserEmail = clientStore.getDocSetting('firebaseUserEmail');
@@ -137,14 +146,13 @@ $(document).ready(async () => {
       throw new Error('No firebase API key found');
     }
     const fb_backend = new FirebaseBackend(docname, firebaseId, firebaseApiKey);
-    const dStore = new DocumentStore(fb_backend, docname);
     await fb_backend.init(firebaseUserEmail || '', firebaseUserPassword || '');
 
     logger.info(`Successfully initialized firebase connection: ${firebaseId}`);
-    return dStore;
+    return getStores(fb_backend, docname);
   }
 
-  async function getSocketServerStore(): Promise<DocumentStore> {
+  async function getSocketServerStore(): Promise<Stores> {
     let socketServerHost;
     let socketServerDocument;
     let socketServerPassword;
@@ -164,7 +172,7 @@ $(document).ready(async () => {
     const socket_backend = new ClientSocketBackend();
     // NOTE: we don't pass docname to DocumentStore since we want keys
     // to not have prefixes
-    const dStore = new DocumentStore(socket_backend);
+    const dStore = getStores(socket_backend);
     while (true) {
       try {
         await socket_backend.init(
@@ -205,7 +213,7 @@ $(document).ready(async () => {
       backend_type = 'local';
     }
   } else if (backend_type === 'inmemory') {
-    docStore = new DocumentStore(new InMemory());
+    docStore = getStores(new InMemory());
   } else if (backend_type === 'socketserver') {
     try {
       docStore = await getSocketServerStore();
@@ -229,10 +237,10 @@ $(document).ready(async () => {
     backend_type = 'local';
   }
 
-  doc = new Document(docStore, docname);
+  doc = new Document(docStore.docStore, docStore.searchStore, docname);
 
   let to_load: any = null;
-  if ((await docStore.getChildren(Path.rootRow())).length === 0) {
+  if ((await docStore.docStore.getChildren(Path.rootRow())).length === 0) {
     to_load = config.getDefaultData();
   }
 
@@ -330,7 +338,7 @@ $(document).ready(async () => {
   // load plugins
 
   const pluginManager = new PluginsManager(session, config, keyBindings);
-  let enabledPlugins = await docStore.getSetting('enabledPlugins');
+  let enabledPlugins = await docStore.docStore.getSetting('enabledPlugins');
   if (typeof enabledPlugins.slice === 'undefined') { // for backwards compatibility
     enabledPlugins = Object.keys(enabledPlugins);
   }
@@ -466,7 +474,7 @@ $(document).ready(async () => {
   pluginManager.on('status', renderMain); // fire and forget
 
   pluginManager.on('enabledPluginsChange', function(enabled) {
-    docStore.setSetting('enabledPlugins', enabled);
+    docStore.docStore.setSetting('enabledPlugins', enabled);
     renderMain(); // fire and forget
   });
 

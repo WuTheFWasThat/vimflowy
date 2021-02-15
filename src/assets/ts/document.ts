@@ -320,6 +320,8 @@ export default class Document extends EventEmitter {
   }
 
   public async setLine(row: Row, line: Line) {
+    const oldLine = await this.getText(row);
+    await this.searcher.update(row, oldLine, line.join(''));
     this.cache.setLine(row, line);
     await this.store.setLine(row, line);
   }
@@ -734,7 +736,8 @@ export default class Document extends EventEmitter {
     yield* await helper(root);
   }
 
-  public async search(root: Path, query: string, options: SearchOptions = {}) {
+  public async search(_root: Path, query: string, options: SearchOptions = {}) {
+    // TODO: implement local search
     const { nresults = 10, case_sensitive = false } = options;
     const results: Array<{
       path: Path,
@@ -901,6 +904,7 @@ export default class Document extends EventEmitter {
 
 export class InMemoryDocument extends Document {
   constructor() {
-    super(new DocumentStore(new InMemory()));
+    const backend = new InMemory();
+    super(new DocumentStore(backend), new SearchStore(backend));
   }
 }
