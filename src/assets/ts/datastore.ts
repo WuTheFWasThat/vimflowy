@@ -267,18 +267,39 @@ export class SearchStore {
     });
   }
 
-  private _rowsKey_(token: string): string {
-    return `${this.prefix}:rows_${token}`;
+  private hash(token: string) {
+    // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+    let hash = 0, i, chr;
+    for (i = 0; i < token.length; i++) {
+      chr = token.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
   }
 
+  private _rowsKey_(token: string): string {
+    return `${this.prefix}:rows_${this.hash(token)}`;
+  }
 
-  // get last view (for page reload)
+  private _lastRowKey_(): string {
+    return `${this.prefix}:lastRow`;
+  }
+
   public async setRows(token: string, rows: Set<Row>) {
-    return this._set(this._rowsKey_(token), rows);
+    return this._set(this._rowsKey_(token), Array.from(rows));
+  }
+
+  public async setLastRow(last: number) {
+    return this._set(this._lastRowKey_(), last);
   }
 
   public async getRows(token: string) {
-    return this._get(this._rowsKey_(token), new Set<Row>());
+    return new Set(await this._get(this._rowsKey_(token), new Array<Row>()));
+  }
+
+  public async getLastRow() {
+    return this._get(this._lastRowKey_(), -1);
   }
 }
 export class DocumentStore {
@@ -443,6 +464,10 @@ export class DocumentStore {
     plugin: string, key: string, default_value: any = undefined
   ): Promise<any> {
     return await this._get(this._pluginDataKey_(plugin, key), default_value);
+  }
+
+  public async getLastIDKey() {
+    return await this._get(this._lastIDKey_(), 0);
   }
 
   // get next row ID

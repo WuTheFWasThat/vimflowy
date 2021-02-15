@@ -220,6 +220,8 @@ export default class Document extends EventEmitter {
     this.name = name;
     this.root = Path.root();
     this.searcher = new Searcher(searchStore);
+
+    this.initSearcher();
     return this;
   }
 
@@ -734,6 +736,16 @@ export default class Document extends EventEmitter {
       }
     }
     yield* await helper(root);
+  }
+
+  private async initSearcher() {
+    const lastInserted = await this.searcher.searchStore.getLastRow();
+    const lastRow = await this.store.getLastIDKey();
+    for (let i = lastInserted + 1; i <= lastRow; i++) {
+      console.log(i, lastRow);
+      await this.searcher.update(i, '', await this.getText(i));
+      await this.searcher.searchStore.setLastRow(i);
+    }
   }
 
   public async search(_root: Path, query: string, options: SearchOptions = {}) {

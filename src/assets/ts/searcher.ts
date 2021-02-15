@@ -7,8 +7,12 @@ import {
   Row, Chars 
 } from './types';
 
+// remove punctuation https://stackoverflow.com/questions/4328500/how-can-i-strip-all-punctuation-from-a-string-in-javascript-using-regex
+const punctRE = /[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g;
+const spaceRE = /\s+/g;
+
 export class Searcher {
-    private searchStore: SearchStore;
+    public searchStore: SearchStore;
     private maxRowsStored: number;
     constructor(searchStore: SearchStore) {
         this.searchStore = searchStore;
@@ -17,15 +21,20 @@ export class Searcher {
 
     public async update(row: Row, oldText: string, newText: string) {
         // only updates changed words
-        const oldTokens = oldText.split(' ');
-        const newTokens = newText.split(' ');
+        oldText = oldText.replace(punctRE, '').replace(spaceRE, ' ');
+        newText = newText.replace(punctRE, '').replace(spaceRE, ' ');
+
+        const oldTokens = oldText.toLowerCase().split(' ');
+        const newTokens = newText.toLowerCase().split(' ');
         const oldSet = new Set(oldTokens);
         const newSet = new Set(newTokens);
         return Promise.all(newTokens.map(async (token) => {
             // add new tokens
             if (!oldSet.has(token)) {
                 const rows = await this.searchStore.getRows(token);
-                rows.add(row);
+                if (rows.size < this.maxRowsStored) {
+                    rows.add(row);
+                }
                 return this.searchStore.setRows(token, rows);
             }
         }).concat(oldTokens.map(async (token) => {
@@ -44,6 +53,7 @@ export class Searcher {
             return new Set();
         }
         let allRows = await Promise.all(queries.map(async (token) => {
+            token = token.replace(punctRE, '').replace(spaceRE, '');
             return this.searchStore.getRows(token);
         }));
 
