@@ -65,6 +65,10 @@ export class KeyStream extends EventEmitter {
     this.queue.enqueue(val);
   }
 
+  public stop() {
+    this.queue.stop();
+  }
+
   public keep() {
     this.saveIndex = this.curSequence.length;
   }
@@ -114,7 +118,17 @@ export default class KeyHandler extends EventEmitter {
     const oldSave = this.session.save;
     this.session.save = () => null;
     const recordKeyStream = new KeyStream(recording);
-    await this._processKeys(recordKeyStream);
+    recordKeyStream.stop();
+    try {
+      await this._processKeys(recordKeyStream);
+    } catch (e) {
+      // console.log('caught', e, e.name);
+      if (e.name === 'QueueStoppedError') {
+        // console.log('failed to fully play', recording);
+      } else {
+        throw e;
+      }
+    }
     this.session.save = oldSave;
   }
 
@@ -257,7 +271,7 @@ export default class KeyHandler extends EventEmitter {
       if (motion === null) {
         return null;
       }
-      motion = motion;
+      // motion = motion;
     }
 
     return {

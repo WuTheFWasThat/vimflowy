@@ -104,9 +104,9 @@ if (browser_utils.isFirefox()) {
 }
 
 export default class KeyEmitter extends EventEmitter {
-  constructor() {
-    super();
-  }
+  // constructor() {
+  //   super();
+  // }
 
   public listen() {
     // IME event

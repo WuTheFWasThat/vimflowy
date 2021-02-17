@@ -65,9 +65,9 @@ interface SettingsCheckboxProps {
 }
 
 class SettingsCheckbox extends React.Component<SettingsCheckboxProps, {}> {
-  constructor(props: SettingsCheckboxProps) {
-    super(props);
-  }
+  // constructor(props: SettingsCheckboxProps) {
+  //   super(props);
+  // }
 
   public render() {
     return (

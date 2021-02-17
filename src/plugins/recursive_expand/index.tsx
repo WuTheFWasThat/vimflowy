@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 import { registerPlugin } from '../../assets/ts/plugins';
 import Session from '../../assets/ts/session';
 import logger from '../../shared/utils/logger';
