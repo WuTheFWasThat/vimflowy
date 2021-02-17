@@ -742,7 +742,7 @@ export default class Document extends EventEmitter {
     const lastInserted = await this.searcher.searchStore.getLastRow();
     const lastRow = await this.store.getLastIDKey();
     for (let i = lastInserted + 1; i <= lastRow; i++) {
-      console.log(i, lastRow);
+      console.log('inserting row', i, 'out of', lastRow);
       await this.searcher.update(i, '', await this.getText(i));
       await this.searcher.searchStore.setLastRow(i);
     }

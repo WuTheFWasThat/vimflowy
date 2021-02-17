@@ -28,6 +28,14 @@ export class Searcher {
         const newTokens = newText.toLowerCase().split(' ');
         const oldSet = new Set(oldTokens);
         const newSet = new Set(newTokens);
+        await Promise.all(oldTokens.map(async (token) => {
+            // remove deleted tokens
+            if (!newSet.has(token)) {
+                const rows = await this.searchStore.getRows(token);
+                rows.delete(row);
+                return this.searchStore.setRows(token, rows);
+            }
+        }));
         return Promise.all(newTokens.map(async (token) => {
             // add new tokens
             if (!oldSet.has(token)) {
@@ -37,14 +45,7 @@ export class Searcher {
                 }
                 return this.searchStore.setRows(token, rows);
             }
-        }).concat(oldTokens.map(async (token) => {
-            // remove deleted tokens
-            if (!newSet.has(token)) {
-                const rows = await this.searchStore.getRows(token);
-                rows.delete(row);
-                return this.searchStore.setRows(token, rows);
-            }
-        })));
+        }));
     }
 
     // returns a list of rows which could match the query. Returns null if too many results
