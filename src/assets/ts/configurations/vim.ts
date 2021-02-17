@@ -265,6 +265,13 @@ function getDefaultData(): Array<SerializedBlock> {
         'Link to marks with the @ symbol, like this:  @im_a_mark.  Use gm to follow the link.',
         'Delete marks by using dm, or just mark with empty string',
       ] },
+      { text: 'Tags', plugins: { tags: ['tag'] }, collapsed: true, children: [
+        { text: 'I am tagged!', plugins: { tags: ['tag', 'another_tag'] } },
+        'Each row can have multiple tags, and rows can share the same tags',
+        'Press # to start adding a tag to a line, and enter to finish',
+        'Use - to search and jump to tags',
+        'Delete the i\'th tag by using d#i',
+      ] },
       { text: 'Cloning', collapsed: true, children: [
         { text: 'I am a clone!  Try editing me', id: 1 },
         { text: 'Clones can\'t be siblings or descendants of each other', children: [
@@ -331,12 +338,12 @@ const config: Config = {
   // TODO: get the keys from modes.ts
   defaultMappings:
     new KeyMappings({
-      [ 'NORMAL' ]: NORMAL_MODE_MAPPINGS,
-      [ 'INSERT' ]: INSERT_MODE_MAPPINGS,
-      [ 'VISUAL' ]: VISUAL_MODE_MAPPINGS,
-      [ 'VISUAL_LINE' ]: VISUAL_LINE_MODE_MAPPINGS,
-      [ 'SEARCH' ]: SEARCH_MODE_MAPPINGS,
-      [ 'SETTINGS' ]: SETTINGS_MODE_MAPPINGS,
+       NORMAL : NORMAL_MODE_MAPPINGS,
+       INSERT : INSERT_MODE_MAPPINGS,
+       VISUAL : VISUAL_MODE_MAPPINGS,
+       VISUAL_LINE : VISUAL_LINE_MODE_MAPPINGS,
+       SEARCH : SEARCH_MODE_MAPPINGS,
+       SETTINGS : SETTINGS_MODE_MAPPINGS,
     }),
 };
 export default config;

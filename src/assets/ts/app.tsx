@@ -31,7 +31,7 @@ import { ClientStore, DocumentStore, SearchStore } from './datastore';
 import DataBackend, { SynchronousInMemory, InMemory } from '../../shared/data_backend';
 import {
   BackendType, SynchronousLocalStorageBackend,
-  LocalStorageBackend, FirebaseBackend, ClientSocketBackend
+  LocalStorageBackend, FirebaseBackend, ClientSocketBackend, IndexedDBBackend
 } from './data_backend';
 import Document from './document';
 import { PluginsManager } from './plugins';
@@ -130,7 +130,7 @@ $(document).ready(async () => {
   }
 
   function getLocalStore(): Stores {
-     return getStores(new LocalStorageBackend(docname), docname);
+     return getStores(new IndexedDBBackend(docname), docname);
   }
 
   async function getFirebaseStore(): Promise<Stores> {

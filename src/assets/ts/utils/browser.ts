@@ -42,7 +42,7 @@ export function isScrolledIntoView($elem: any, $container: any) {
 }
 
 export function getParameterByName(name: string) {
-  name = name.replace(/[\[\]]/g, '\\$&');
+  name = name.replace(/[[\]]/g, '\\$&');
   const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
   const results = regex.exec(window.location.href);
   if (!results) { return null; }

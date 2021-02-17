@@ -30,9 +30,9 @@ export class SynchronousDataBackend {
 
 export class SynchronousInMemory extends SynchronousDataBackend {
   private cache: {[key: string]: any} = {};
-  constructor() {
-    super();
-  }
+  // constructor() {
+  //   super();
+  // }
 
   public get(key: string): string | null {
     if (key in this.cache) {

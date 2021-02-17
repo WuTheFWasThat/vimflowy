@@ -26,13 +26,13 @@ export type LineProps = {
 // NOTE: hacky! we don't include .:/?= since urls contain it
 // should instead make tokenizer for URLs
 // also not including @ for marks
-const word_boundary_chars = '\t\r\n ,!()\"\'*+\\;<>\\[\\]`{}|';
+const word_boundary_chars = '\t\r\n ,!()"\'*+\\;<>\\[\\]`{}|';
 
 export default class LineComponent extends React.Component<LineProps, {}> {
 
-  constructor(props: LineProps) {
-    super(props);
-  }
+  // constructor(props: LineProps) {
+  //   super(props);
+  // }
 
   public render() {
     const cursorBetween: boolean = this.props.cursorBetween || false;
