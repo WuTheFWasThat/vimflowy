@@ -44,9 +44,15 @@ export class Searcher {
 
         const oldTokens = oldText.toLowerCase().split(' ');
         const newTokens = newText.toLowerCase().split(' ');
-        const oldSet = new Set(oldTokens);
-        const newSet = new Set(newTokens);
-        await Promise.all(oldTokens.map(async (token) => {
+
+        const getPrefixs = (token: string) => {
+            return _.range(token.length).map((idx) => token.slice(0, idx + 1));
+        };
+        const oldPrefixs = _.flatMap(oldTokens, (token) => getPrefixs(token));
+        const newPrefixes = _.flatMap(newTokens, (token) => getPrefixs(token));
+        const oldSet = new Set(oldPrefixs);
+        const newSet = new Set(newPrefixes);
+        await Promise.all(oldPrefixs.map(async (token) => {
             // remove deleted tokens
             if (!newSet.has(token)) {
                 const rows = await this.searchStore.getRows(token);
@@ -54,7 +60,7 @@ export class Searcher {
                 return this.searchStore.setRows(token, rows);
             }
         }));
-        return Promise.all(newTokens.map(async (token) => {
+        return Promise.all(newPrefixes.map(async (token) => {
             // add new tokens
             if (!oldSet.has(token)) {
                 const rows = await this.searchStore.getRows(token);

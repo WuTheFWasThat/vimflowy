@@ -742,10 +742,12 @@ export default class Document extends EventEmitter {
     const lastInserted = await this.searcher.searchStore.getLastRow();
     const lastRow = await this.store.getLastIDKey();
     for (let i = lastInserted + 1; i <= lastRow; i++) {
-      console.log('inserting row', i, 'out of', lastRow);
-      this.searcher.rowChange(i, '', await this.getText(i));
-      await this.searcher.update(i);
-      await this.searcher.searchStore.setLastRow(i);
+      if (await this.isAttached(i)) {
+        console.log('inserting row', i, 'out of', lastRow);
+        this.searcher.rowChange(i, '', await this.getText(i));
+        await this.searcher.update(i);
+        await this.searcher.searchStore.setLastRow(i);
+      }
     }
   }
 
@@ -765,12 +767,13 @@ export default class Document extends EventEmitter {
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
     const possibleRows = await this.searcher.search(query_words);
+    console.log('got rows')
     if (possibleRows === null) {
       return results;
     }
     const possibleRowsArr = Array.from(possibleRows);
-    const chunkedRows = _.chunk(possibleRowsArr, 15);
-    for await (let chunk of chunkedRows) {
+    const chunkedRows = _.chunk(possibleRowsArr, 20);
+    for (let chunk of chunkedRows) {
       if (nresults > 0 && results.length >= nresults) {
         break;
       }
@@ -798,6 +801,7 @@ export default class Document extends EventEmitter {
         }
       }));
     }
+    console.log(results);
     return results;
   }
 
