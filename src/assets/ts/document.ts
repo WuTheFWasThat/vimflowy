@@ -738,7 +738,7 @@ export default class Document extends EventEmitter {
     yield* await helper(root);
   }
 
-  private async initSearcher() {
+  public async initSearcher() {
     const lastInserted = await this.searcher.searchStore.getLastRow();
     const lastRow = await this.store.getLastIDKey();
     for (let i = lastInserted + 1; i <= lastRow; i++) {
@@ -767,7 +767,6 @@ export default class Document extends EventEmitter {
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
     const possibleRows = await this.searcher.search(query_words);
-    console.log('got rows')
     if (possibleRows === null) {
       return results;
     }
@@ -801,7 +800,6 @@ export default class Document extends EventEmitter {
         }
       }));
     }
-    console.log(results);
     return results;
   }
 

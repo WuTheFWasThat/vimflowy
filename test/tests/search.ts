@@ -4,7 +4,7 @@ import TestCase from '../testcase';
 const globalSearchKey = '/';
 const localSearchKey = 'ctrl+/';
 
-describe('global search', function() {
+describe.only('global search', function() {
   it('works in basic cases', async function() {
     let t = new TestCase([
       'blah',
@@ -21,7 +21,7 @@ describe('global search', function() {
     ]);
     t.sendKey(globalSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(5);
+    t.expectNumMenuResults(3);
     t.sendKey('enter');
     t.sendKeys('dd');
     t.expect([
@@ -38,7 +38,7 @@ describe('global search', function() {
     ]);
     t.sendKey(globalSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(4);
+    t.expectNumMenuResults(2);
     await t.done();
   });
 
@@ -58,14 +58,14 @@ describe('global search', function() {
     ]);
     t.sendKey(globalSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(5);
+    t.expectNumMenuResults(3);
     t.sendKey('ctrl+j');
     t.sendKey('enter');
     t.sendKeys('dd');
     t.expect([
       'blah',
       'searchblah',
-      'search',
+      'blahsearchblah',
       'surch',
       { text: 'blahsearch', children: [
         'blah',
@@ -76,7 +76,7 @@ describe('global search', function() {
     ]);
     t.sendKey(globalSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(4);
+    t.expectNumMenuResults(2);
     await t.done();
 
     t = new TestCase([
@@ -94,7 +94,7 @@ describe('global search', function() {
     ]);
     t.sendKey(globalSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(5);
+    t.expectNumMenuResults(3);
     t.sendKey('ctrl+j');
     t.sendKey('ctrl+j');
     t.sendKey('enter');
@@ -103,17 +103,16 @@ describe('global search', function() {
       'blah',
       'searchblah',
       'blahsearchblah',
+      'search',
       'surch',
       { text: 'blahsearch', children: [
         'blah',
       ] },
-      { text: 'blah', children: [
-        'search',
-      ] },
+      'blah'
     ]);
     t.sendKey(globalSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(4);
+    t.expectNumMenuResults(2);
     await t.done();
   });
 
@@ -168,7 +167,7 @@ describe('global search', function() {
     ]);
     t.sendKey(globalSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(5);
+    t.expectNumMenuResults(3);
     t.sendKey('ctrl+k');
     t.sendKey('enter');
     t.sendKeys('dd');
@@ -185,7 +184,7 @@ describe('global search', function() {
     ]);
     t.sendKey(globalSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(4);
+    t.expectNumMenuResults(2);
     await t.done();
   });
 
