@@ -14,15 +14,33 @@ const spaceRE = /\s+/g;
 export class Searcher {
     public searchStore: SearchStore;
     private maxRowsStored: number;
+    private startText: {[row: number]: string};
+    private endText: {[row: number]: string};
+
     constructor(searchStore: SearchStore) {
         this.searchStore = searchStore;
         this.maxRowsStored = 20000;
+        this.startText = {};
+        this.endText = {};
     }
 
-    public async update(row: Row, oldText: string, newText: string) {
+    public rowChange(row: Row, oldText: string, newText: string) {
+        if (!(row in this.startText)) {
+            this.startText[row] = oldText;
+        }
+        this.endText[row] = newText;
+    }
+
+    public async update(row: Row) {
+        if (!(row in this.startText) || !(row in this.endText)) {
+            return;
+        }
         // only updates changed words
-        oldText = oldText.replace(punctRE, '').replace(spaceRE, ' ');
-        newText = newText.replace(punctRE, '').replace(spaceRE, ' ');
+        const oldText = this.startText[row].replace(punctRE, '').replace(spaceRE, ' ');
+        const newText = this.endText[row].replace(punctRE, '').replace(spaceRE, ' ');
+
+        delete this.startText[row];
+        delete this.endText[row];
 
         const oldTokens = oldText.toLowerCase().split(' ');
         const newTokens = newText.toLowerCase().split(' ');

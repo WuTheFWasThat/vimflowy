@@ -211,7 +211,7 @@ export default class Document extends EventEmitter {
   public store: DocumentStore;
   public name: string;
   public root: Path;
-  private searcher: Searcher;
+  public searcher: Searcher;
 
   constructor(store: DocumentStore, searchStore: SearchStore, name = '') {
     super();
@@ -323,7 +323,7 @@ export default class Document extends EventEmitter {
 
   public async setLine(row: Row, line: Line) {
     const oldLine = await this.getText(row);
-    await this.searcher.update(row, oldLine, line.join(''));
+    this.searcher.rowChange(row, oldLine, line.join(''));
     this.cache.setLine(row, line);
     await this.store.setLine(row, line);
   }
@@ -743,12 +743,13 @@ export default class Document extends EventEmitter {
     const lastRow = await this.store.getLastIDKey();
     for (let i = lastInserted + 1; i <= lastRow; i++) {
       console.log('inserting row', i, 'out of', lastRow);
-      await this.searcher.update(i, '', await this.getText(i));
+      this.searcher.rowChange(i, '', await this.getText(i));
+      await this.searcher.update(i);
       await this.searcher.searchStore.setLastRow(i);
     }
   }
 
-  public async search(_root: Path, query: string, options: SearchOptions = {}) {
+  public async search(root: Path, query: string, options: SearchOptions = {}) {
     // TODO: implement local search
     const { nresults = 10, case_sensitive = false } = options;
     const results: Array<{
@@ -773,6 +774,12 @@ export default class Document extends EventEmitter {
       const text = await this.getText(row);
       const line = canonicalize(text);
       const matches: Array<number> = [];
+      const path = await this.canonicalPath(row);
+
+      if (!root.isRoot() && (path === null || !root.isDescendant(path))) {  // might not work with cloned rows
+        continue;
+      }
+
       if (_.every(query_words.map((word) => {
         const index = line.indexOf(word);
         if (index === -1) { return false; }
@@ -781,7 +788,6 @@ export default class Document extends EventEmitter {
         }
         return true;
       }))) {
-        const path = await this.canonicalPath(row);
         if (path) {
           results.push({ path, matches });
         }

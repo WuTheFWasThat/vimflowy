@@ -53,6 +53,7 @@ export default class Cursor extends EventEmitter {
 
   public async _setPath(path: Path) {
     await this.emitAsync('rowChange', this.path, path);
+    this.session.document.searcher.update(this.path.row);
     this.path = path;
   }
 
