@@ -750,7 +750,6 @@ export default class Document extends EventEmitter {
   }
 
   public async search(root: Path, query: string, options: SearchOptions = {}) {
-    // TODO: implement local search
     const { nresults = 10, case_sensitive = false } = options;
     const results: Array<{
       path: Path,
@@ -770,31 +769,34 @@ export default class Document extends EventEmitter {
       return results;
     }
     const possibleRowsArr = Array.from(possibleRows);
-    for await (let row of possibleRowsArr) {
-      const text = await this.getText(row);
-      const line = canonicalize(text);
-      const matches: Array<number> = [];
-      const path = await this.canonicalPath(row);
-
-      if (!root.isRoot() && (path === null || !root.isDescendant(path))) {  // might not work with cloned rows
-        continue;
-      }
-
-      if (_.every(query_words.map((word) => {
-        const index = line.indexOf(word);
-        if (index === -1) { return false; }
-        for (let j = index; j < index + word.length; j++) {
-          matches.push(j);
-        }
-        return true;
-      }))) {
-        if (path) {
-          results.push({ path, matches });
-        }
-      }
-      if (nresults > 0 && results.length === nresults) {
+    const chunkedRows = _.chunk(possibleRowsArr, 15);
+    for await (let chunk of chunkedRows) {
+      if (nresults > 0 && results.length >= nresults) {
         break;
       }
+      await Promise.all(chunk.map(async (row) => {
+        const text = await this.getText(row);
+        const line = canonicalize(text);
+        const matches: Array<number> = [];
+        const path = await this.canonicalPath(row);
+
+        if (!root.isRoot() && (path === null || !root.isDescendant(path))) {  // might not work with cloned rows
+          return;
+        }
+
+        if (_.every(query_words.map((word) => {
+          const index = line.indexOf(word);
+          if (index === -1) { return false; }
+          for (let j = index; j < index + word.length; j++) {
+            matches.push(j);
+          }
+          return true;
+        }))) {
+          if (path && (nresults == 0 || results.length < nresults)) {
+            results.push({ path, matches });
+          }
+        }
+      }));
     }
     return results;
   }
