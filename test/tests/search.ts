@@ -4,7 +4,7 @@ import TestCase from '../testcase';
 const globalSearchKey = '/';
 const localSearchKey = 'ctrl+/';
 
-describe.only('global search', function() {
+describe('global search', function() {
   it('works in basic cases', async function() {
     let t = new TestCase([
       'blah',
@@ -293,12 +293,17 @@ describe('local search', function() {
     t.sendKey('enter');
     t.sendKey(localSearchKey);
     t.sendKeys('search');
-    t.expectNumMenuResults(3);
+    t.expectNumMenuResults(1);
     t.sendKey('enter');
     t.sendKeys('dd');
     t.expect([
       'blah',
       'searchblah',
+      { text: 'blahsearch', children: [
+        'blahsearchblah',
+        'surch',
+        'blah',
+      ] },
       { text: 'blah', children: [
         'search',
       ] },

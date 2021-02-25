@@ -720,30 +720,12 @@ export default class Document extends EventEmitter {
     return path.child(row);
   }
 
-  private async* traverseSubtree(root: Path): AsyncIterableIterator<Path> {
-    const visited_rows: {[row: number]: boolean} = {};
-    let that = this;
-
-    async function* helper(path: Path): AsyncIterableIterator<Path> {
-      if (path.row in visited_rows) {
-        return;
-      }
-      visited_rows[path.row] = true;
-      yield path;
-      const children = await that.getChildren(path);
-      for (let i = 0; i < children.length; i++) {
-        yield* await helper(children[i]);
-      }
-    }
-    yield* await helper(root);
-  }
-
   public async initSearcher() {
     const lastInserted = await this.searcher.searchStore.getLastRow();
     const lastRow = await this.store.getLastIDKey();
     for (let i = lastInserted + 1; i <= lastRow; i++) {
       if (await this.isAttached(i)) {
-        console.log('inserting row', i, 'out of', lastRow);
+        //console.log('inserting row', i, 'out of', lastRow, 'into search store');
         this.searcher.rowChange(i, '', await this.getText(i));
         await this.searcher.update(i);
         await this.searcher.searchStore.setLastRow(i);
@@ -782,7 +764,7 @@ export default class Document extends EventEmitter {
         const matches: Array<number> = [];
         const path = await this.canonicalPath(row);
 
-        if (!root.isRoot() && (path === null || !root.isDescendant(path))) {  // might not work with cloned rows
+        if (path === null || !path.isDescendant(root)) {  // might not work with cloned rows
           return;
         }
 
@@ -800,6 +782,7 @@ export default class Document extends EventEmitter {
         }
       }));
     }
+    //console.log('Search results', results);
     return results;
   }
 
