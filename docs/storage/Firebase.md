@@ -14,8 +14,9 @@ However, you will be able to access it from multiple devices.
 
 To use the Firebase backend, you should first set up a Firebase instance.
 You can do this by clicking `CREATE NEW PROJECT` at https://console.firebase.google.com/.
+You should use the older "Realtime Datbase", *not* firestore.
 
-You should then be given your own Firebase project id,
+You should then be given your own Firebase project id (or "Realtime Database URL"),
 something like `something-fiery-2222`.
 You should be able to now visit your console at a link like
 https://console.firebase.google.com/project/${projectId}, e.g.
@@ -36,7 +37,7 @@ Visit the Authentication tab.
 #### Set up database rules
 
 Visit the `Database > Rules` section (https://console.firebase.google.com/project/${projectId}/database/rules).
-Make sure the rules look like this (it should be the default):
+The rules should look like this:
 
 ```
 {
@@ -46,6 +47,19 @@ Make sure the rules look like this (it should be the default):
     }
 }
 ```
+
+This default should work fine, but will give you email warnings about security. You can silence these emails in settings, or add an extra layer of security:
+
+```
+{
+    "rules": {
+        ".read": "auth != null && auth.uid == '<UID in Auth Page>'",
+        ".write": "auth != null && auth.uid == '<UID in Auth Page>'"
+    }
+}
+```
+
+See [here](https://github.com/WuTheFWasThat/vimflowy/issues/370) for details
 
 ### Configure Vimflowy
 

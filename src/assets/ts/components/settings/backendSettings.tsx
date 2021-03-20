@@ -130,7 +130,7 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
         ),
         config: (
           <div>
-            For details on configuration, <a href={'https://github.com/WuTheFWasThat/vimflowy/tree/master/docs/storage/firebase.md'}>
+            For details on configuration, <a href={'https://github.com/WuTheFWasThat/vimflowy/tree/master/docs/storage/Firebase.md'}>
               see here
             </a>.
             <br/>
