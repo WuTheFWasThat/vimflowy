@@ -436,35 +436,27 @@ export class MarksPlugin {
             let start = index + match.index;
             let end = start + match[0].length;
             index = end;
+            let markStart = start, markEnd = end;
             if (token.text[start] === '@') {
-              const mark = token.text.slice(start + 1, end).replace(/(\.|!|\?)+$/g, '');
-              const path = this.marks_to_paths[mark];
-              if (path) {
-                token.info.slice(start, end).forEach((char_info) => {
-                  char_info.renderOptions.divType = 'a';
-                  char_info.renderOptions.style = char_info.renderOptions.style || {};
-                  Object.assign(char_info.renderOptions.style, getStyles(this.session.clientStore, ['theme-link']));
-                  char_info.renderOptions.onClick = async () => {
-                    await this.session.zoomInto(path);
-                    this.session.save();
-                  };
-                });
-              }
+              markStart = start + 1;
+              markEnd = end;
             }
             if (token.text[start] === '[') {
-              const mark = token.text.slice(start + 2, end - 2).replace(/(\.|!|\?)+$/g, '');
-              const path = this.marks_to_paths[mark];
-              if (path) {
-                token.info.slice(start, end).forEach((char_info) => {
-                  char_info.renderOptions.divType = 'a';
-                  char_info.renderOptions.style = char_info.renderOptions.style || {};
-                  Object.assign(char_info.renderOptions.style, getStyles(this.session.clientStore, ['theme-link']));
-                  char_info.renderOptions.onClick = async () => {
-                    await this.session.zoomInto(path);
-                    this.session.save();
-                  };
-                });
-              }
+              markStart = start + 2;
+              markEnd = end - 2;
+            }
+            const mark = token.text.slice(markStart, markEnd).replace(/(\.|!|\?)+$/g, '');
+            const path = this.marks_to_paths[mark];
+            if (path) {
+              token.info.slice(start, end).forEach((char_info) => {
+                char_info.renderOptions.divType = 'a';
+                char_info.renderOptions.style = char_info.renderOptions.style || {};
+                Object.assign(char_info.renderOptions.style, getStyles(this.session.clientStore, ['theme-link']));
+                char_info.renderOptions.onClick = async () => {
+                  await this.session.zoomInto(path);
+                  this.session.save();
+                };
+              });
             }
           }
         }
