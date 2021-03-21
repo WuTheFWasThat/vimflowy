@@ -175,16 +175,15 @@ export class MarksPlugin {
       },
       key_transforms: [
         async (key, context) => {
-          // must be non-whitespace
+          console.log(key)
+          if (key === 'space') { key = ' '}
           if (key.length === 1) {
-            if (/^\S*$/.test(key)) {
-              if (this.markstate === null) {
-                throw new Error('Mark state null during key transform');
-              }
-              await this.markstate.session.addCharsAtCursor([key]);
-              await this.api.updatedDataForRender(this.markstate.path.row);
-              return [null, context];
+            if (this.markstate === null) {
+              throw new Error('Mark state null during key transform');
             }
+            await this.markstate.session.addCharsAtCursor([key]);
+            await this.api.updatedDataForRender(this.markstate.path.row);
+            return [null, context];
           }
           return [key, context];
         },
