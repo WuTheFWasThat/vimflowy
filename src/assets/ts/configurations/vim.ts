@@ -261,6 +261,7 @@ function getDefaultData(): Array<SerializedBlock> {
       { text: 'Marks', plugins: { mark: 'mark' }, collapsed: true, children: [
         { text: 'I am marked!', plugins: { mark: 'im_a_mark' } },
         'Press m to start marking a line, and enter to finish',
+        'Use M to quickly mark a line with its contents',
         'Use \' to search and jump to marks',
         'Link to marks with the @ symbol or double square brackets, like this:  @im_a_mark or [[im_a_mark]]. Use gm to follow the link.',
         'Delete marks by using dm, or just mark with empty string',

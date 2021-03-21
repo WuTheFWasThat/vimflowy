@@ -242,6 +242,16 @@ export class MarksPlugin {
     );
 
     this.api.registerAction(
+      'set-mark-row-contents',
+      'Set a mark with the current row text',
+      async function({ session, keyStream }) {
+        const err = await that.setMark(session.cursor.row, await session.document.getText(session.cursor.row));
+        if (err) { session.showMessage(err, {text_class: 'error'}); }
+        keyStream.save();
+      },
+    );
+
+    this.api.registerAction(
       'delete-mark',
       'Delete mark at cursor',
       async function({ session, keyStream }) {
@@ -358,6 +368,7 @@ export class MarksPlugin {
       'NORMAL',
       {
         'begin-mark': [['m']],
+        'set-mark-row-contents': [['M']],
         'go-mark': [['g', 'm']],
         'delete-mark': [['d', 'm']],
         'search-marks': [['\''], ['`']],

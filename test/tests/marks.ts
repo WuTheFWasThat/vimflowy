@@ -122,6 +122,14 @@ describe('marks', function() {
       { text: 'a line', plugins: {mark: 'marktest'} },
       { text: 'another line', plugins: {mark: 'mad cat'} },
     ]);
+
+    // can quick mark with M
+    t.sendKeys('M');
+    t.expectMarks({'marktest': 1, 'another line': 2});
+    t.expect([
+      { text: 'a line', plugins: {mark: 'marktest'} },
+      { text: 'another line', plugins: {mark: 'another line'} },
+    ]);
     await t.done();
   });
 
