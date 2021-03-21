@@ -430,7 +430,7 @@ export class MarksPlugin {
       ) => {
         if (this.session.mode === 'NORMAL') {
           let index = 0;
-          const regex = new RegExp('@\\w+')
+          const regex = /(@\S*|\[\[([^\]]*)\]\])/;
           while (true) {
             let match = regex.exec(token.text.slice(index));
             if (!match) { break; }
@@ -440,7 +440,21 @@ export class MarksPlugin {
             if (token.text[start] === '@') {
               const mark = token.text.slice(start + 1, end).replace(/(\.|!|\?)+$/g, '');
               const path = this.marks_to_paths[mark];
-              console.log(mark, path)
+              if (path) {
+                token.info.slice(start, end).forEach((char_info) => {
+                  char_info.renderOptions.divType = 'a';
+                  char_info.renderOptions.style = char_info.renderOptions.style || {};
+                  Object.assign(char_info.renderOptions.style, getStyles(this.session.clientStore, ['theme-link']));
+                  char_info.renderOptions.onClick = async () => {
+                    await this.session.zoomInto(path);
+                    this.session.save();
+                  };
+                });
+              }
+            }
+            if (token.text[start] === '[') {
+              const mark = token.text.slice(start + 2, end - 2).replace(/(\.|!|\?)+$/g, '');
+              const path = this.marks_to_paths[mark];
               if (path) {
                 token.info.slice(start, end).forEach((char_info) => {
                   char_info.renderOptions.divType = 'a';
