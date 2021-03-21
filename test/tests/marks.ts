@@ -19,7 +19,7 @@ class MarksTestCase extends TestCase {
   }
 }
 
-describe('marks', function() {
+describe.only('marks', function() {
   it('works in basic cases', async function() {
     let t = new MarksTestCase([
       'a line',
@@ -112,6 +112,15 @@ describe('marks', function() {
     t.expect([
       { text: 'a line', plugins: {mark: 'marktest'} },
       { text: 'another line', plugins: {mark: 'halo'} },
+    ]);
+
+    // marks can have spaces
+    t.sendKeys('mmad cat');
+    t.sendKey('enter');
+    t.expectMarks({'marktest': 1, 'mad cat': 2});
+    t.expect([
+      { text: 'a line', plugins: {mark: 'marktest'} },
+      { text: 'another line', plugins: {mark: 'mad cat'} },
     ]);
     await t.done();
   });
@@ -227,7 +236,7 @@ describe('marks', function() {
     await t.done();
   });
 
-  it('can be visited with gm', async function() {
+  it('can be visited with gm with @format', async function() {
     let t = new MarksTestCase([
       { text: '@mark2 @mark3', children: [
         'line',
@@ -273,6 +282,58 @@ describe('marks', function() {
         { text: 'lin', plugins: {mark: 'mark3'} },
       ] },
       { text: 'tuf', plugins: {mark: 'mark2'}, children: [
+        'more stuff',
+      ] },
+    ]);
+    await t.done();
+  });
+
+  it('can be visited with gm with [[format]] with spaces', async function() {
+    let t = new MarksTestCase([
+      { text: '[[mark 2]] [[mark3]]', children: [
+        'line',
+        { text: 'line', plugins: {mark: 'mark3'} },
+      ] },
+      { text: 'stuff', plugins: {mark: 'mark 2'}, children: [
+        'more stuff',
+      ] },
+    ], {plugins: [Marks.pluginName]});
+    t.sendKeys('gmx');
+    t.expectViewRoot(4);
+    t.expect([
+      { text: '[[mark 2]] [[mark3]]', children: [
+        'line',
+        { text: 'line', plugins: {mark: 'mark3'} },
+      ] },
+      { text: 'tuff', plugins: {mark: 'mark 2'}, children: [
+        'more stuff',
+      ] },
+    ]);
+    // goes nowhere
+    t.sendKeys('$gmx');
+    t.expect([
+      { text: '[[mark 2]] [[mark3]]', children: [
+        'line',
+        { text: 'line', plugins: {mark: 'mark3'} },
+      ] },
+      { text: 'tuf', plugins: {mark: 'mark 2'}, children: [
+        'more stuff',
+      ] },
+    ]);
+    // back to top
+    t.sendKey('shift+enter');
+    t.sendKeys('gg');
+    t.expectViewRoot(0);
+    t.expectCursor(1, 0);
+    t.sendKeys('$gmx');
+    t.expectViewRoot(3);
+    t.expectCursor(3, 2);
+    t.expect([
+      { text: '[[mark 2]] [[mark3]]', children: [
+        'line',
+        { text: 'lin', plugins: {mark: 'mark3'} },
+      ] },
+      { text: 'tuf', plugins: {mark: 'mark 2'}, children: [
         'more stuff',
       ] },
     ]);

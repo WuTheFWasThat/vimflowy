@@ -175,7 +175,6 @@ export class MarksPlugin {
       },
       key_transforms: [
         async (key, context) => {
-          console.log(key)
           if (key === 'space') { key = ' '}
           if (key.length === 1) {
             if (this.markstate === null) {
@@ -220,7 +219,13 @@ export class MarksPlugin {
       async function({ session }) {
         return async cursor => {
           const line = await session.document.getText(cursor.row);
-          const mark = that.getMarkUnderCursor(line, cursor.col);
+          const matches = that.getMarkMatches(line);
+          let mark = '';
+          matches.map((pos) => {
+            if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
+              mark = that.parseMarkMatch(line.slice(pos[0], pos[1]));
+            }
+          });
           if (!mark) {
             session.showMessage(`Cursor should be over a mark link`);
             return;
@@ -428,24 +433,11 @@ export class MarksPlugin {
         token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
       ) => {
         if (this.session.mode === 'NORMAL') {
-          let index = 0;
-          const regex = /(@\S*|\[\[([^\]]*)\]\])/;
-          while (true) {
-            let match = regex.exec(token.text.slice(index));
-            if (!match) { break; }
-            let start = index + match.index;
-            let end = start + match[0].length;
-            index = end;
-            let markStart = start, markEnd = end;
-            if (token.text[start] === '@') {
-              markStart = start + 1;
-              markEnd = end;
-            }
-            if (token.text[start] === '[') {
-              markStart = start + 2;
-              markEnd = end - 2;
-            }
-            const mark = token.text.slice(markStart, markEnd).replace(/(\.|!|\?)+$/g, '');
+          const matches = this.getMarkMatches(token.text);
+          matches.map(pos => {
+            let start = pos[0];
+            let end = pos[1];
+            const mark = this.parseMarkMatch(token.text.slice(start, end));
             const path = this.marks_to_paths[mark];
             if (path) {
               token.info.slice(start, end).forEach((char_info) => {
@@ -458,7 +450,7 @@ export class MarksPlugin {
                 };
               });
             }
-          }
+          });
         }
         emit(...wrapped.unfold(token));
         }));
@@ -600,7 +592,8 @@ export class MarksPlugin {
     return null;
   }
 
-  public getMarkUnderCursor(line: string, col: Col) {
+  public getMarkMatches(line: string) {
+    const matches = [];
     let index = 0;
     const regex = /(@\S*|\[\[([^\]]*)\]\])/;
     while (true) {
@@ -609,20 +602,25 @@ export class MarksPlugin {
       let start = index + match.index;
       let end = start + match[0].length;
       index = end;
-      if (col < start || col > end) { continue }
-      let markStart = start, markEnd = end;
-      if (line[start] === '@') {
-        markStart = start + 1;
-        markEnd = end;
-      }
-      if (line[start] === '[') {
-        markStart = start + 2;
-        markEnd = end - 2;
-      }
-      const mark = line.slice(markStart, markEnd).replace(/(\.|!|\?)+$/g, '');
-      return mark;
+      matches.push([start, end]);
+
     }
-    return '';
+    return matches;
+  }
+
+  public parseMarkMatch(match: string) {
+    const end = match.length;
+    let markStart = 0, markEnd = end;
+    if (match[0] === '@') {
+      markStart = 1;
+      markEnd = end;
+    }
+    if (match[0] === '[') {
+      markStart = 2;
+      markEnd = end - 2;
+    }
+    const mark = match.slice(markStart, markEnd).replace(/(\.|!|\?)+$/g, '');
+    return mark;
   }
 }
 
