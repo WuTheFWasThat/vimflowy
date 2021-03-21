@@ -12,7 +12,7 @@ import Session, { InMemorySession } from '../../assets/ts/session';
 import LineComponent from '../../assets/ts/components/line';
 import Mutation from '../../assets/ts/mutations';
 import Path from '../../assets/ts/path';
-import { Row } from '../../assets/ts/types';
+import { Col, Row } from '../../assets/ts/types';
 import { getStyles } from '../../assets/ts/themes';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
@@ -219,12 +219,12 @@ export class MarksPlugin {
       'Go to the mark indicated by the cursor, if it exists',
       async function({ session }) {
         return async cursor => {
-          const word = await session.document.getWord(cursor.row, cursor.col);
-          if (word.length < 1 || word[0] !== '@') {
-            session.showMessage(`Cursor should be over a @mark link`);
+          const line = await session.document.getText(cursor.row);
+          const mark = that.getMarkUnderCursor(line, cursor.col);
+          if (!mark) {
+            session.showMessage(`Cursor should be over a mark link`);
             return;
           }
-          const mark = word.slice(1);
           const allMarks = await that.listMarks();
           if (mark in allMarks) {
             const path = allMarks[mark];
@@ -598,6 +598,31 @@ export class MarksPlugin {
     }
 
     return null;
+  }
+
+  public getMarkUnderCursor(line: string, col: Col) {
+    let index = 0;
+    const regex = /(@\S*|\[\[([^\]]*)\]\])/;
+    while (true) {
+      let match = regex.exec(line.slice(index));
+      if (!match) { break; }
+      let start = index + match.index;
+      let end = start + match[0].length;
+      index = end;
+      if (col < start || col > end) { continue }
+      let markStart = start, markEnd = end;
+      if (line[start] === '@') {
+        markStart = start + 1;
+        markEnd = end;
+      }
+      if (line[start] === '[') {
+        markStart = start + 2;
+        markEnd = end - 2;
+      }
+      const mark = line.slice(markStart, markEnd).replace(/(\.|!|\?)+$/g, '');
+      return mark;
+    }
+    return '';
   }
 }
 
