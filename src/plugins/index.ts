@@ -10,6 +10,7 @@ import './daily_notes';
 import './deadlines';
 import './tags';
 import './clone_tags';
+import './bracket_completion';
 
 // for developers: uncomment the following lines
 /*

@@ -161,6 +161,7 @@ registerMode({
       if (key.length === 1) {
         // simply insert the key
         await context.session.addCharsAtCursor([key]);
+        await context.session.applyHookAsync('charInserted', {}, { key });
         return [null, context];
       }
       return [key, context];
