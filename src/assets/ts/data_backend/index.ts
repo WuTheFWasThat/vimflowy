@@ -1,5 +1,5 @@
 import firebase from 'firebase';
-import localForage from 'localforage'
+import localForage from 'localforage';
 // import "firebase/auth";
 
 import EventEmitter from '../utils/eventEmitter';

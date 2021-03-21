@@ -19,7 +19,7 @@ class MarksTestCase extends TestCase {
   }
 }
 
-describe.only('marks', function() {
+describe('marks', function() {
   it('works in basic cases', async function() {
     let t = new MarksTestCase([
       'a line',

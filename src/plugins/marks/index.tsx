@@ -175,7 +175,7 @@ export class MarksPlugin {
       },
       key_transforms: [
         async (key, context) => {
-          if (key === 'space') { key = ' '}
+          if (key === 'space') { key = ' '};
           if (key.length === 1) {
             if (this.markstate === null) {
               throw new Error('Mark state null during key transform');
@@ -428,7 +428,7 @@ export class MarksPlugin {
     });
 
 
-    this.api.registerHook('session', 'renderLineTokenHook', (tokenizer, _hooksInfo) => {
+    this.api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
       return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
         token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
       ) => {
