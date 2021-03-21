@@ -423,31 +423,41 @@ export class MarksPlugin {
       return lineContents;
     });
 
-    this.api.registerHook('session', 'renderWordTokenHook', (tokenizer) => {
+
+    this.api.registerHook('session', 'renderLineTokenHook', (tokenizer, _hooksInfo) => {
       return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
         token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
       ) => {
         if (this.session.mode === 'NORMAL') {
-          if (token.text[0] === '@') {
-            const mark = token.text.slice(1).replace(/(\.|!|\?)+$/g, '');
-            const path = this.marks_to_paths[mark];
-            if (path) {
-              token.info.forEach((char_info) => {
-                char_info.renderOptions.divType = 'a';
-                char_info.renderOptions.style = char_info.renderOptions.style || {};
-                Object.assign(char_info.renderOptions.style, getStyles(this.session.clientStore, ['theme-link']));
-                char_info.renderOptions.onClick = async () => {
-                  await this.session.zoomInto(path);
-                  this.session.save();
-                };
-              });
+          let index = 0;
+          const regex = new RegExp('@\\w+')
+          while (true) {
+            let match = regex.exec(token.text.slice(index));
+            if (!match) { break; }
+            let start = index + match.index;
+            let end = start + match[0].length;
+            index = end;
+            if (token.text[start] === '@') {
+              const mark = token.text.slice(start + 1, end).replace(/(\.|!|\?)+$/g, '');
+              const path = this.marks_to_paths[mark];
+              console.log(mark, path)
+              if (path) {
+                token.info.slice(start, end).forEach((char_info) => {
+                  char_info.renderOptions.divType = 'a';
+                  char_info.renderOptions.style = char_info.renderOptions.style || {};
+                  Object.assign(char_info.renderOptions.style, getStyles(this.session.clientStore, ['theme-link']));
+                  char_info.renderOptions.onClick = async () => {
+                    await this.session.zoomInto(path);
+                    this.session.save();
+                  };
+                });
+              }
             }
           }
         }
         emit(...wrapped.unfold(token));
-      }));
+        }));
     });
-
     this.api.registerListener('document', 'afterDetach', async () => {
       this.computeMarksToPaths(); // FIRE AND FORGET
     });
