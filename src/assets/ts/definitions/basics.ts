@@ -519,6 +519,9 @@ keyDefinitions.registerAction(new Action(
   'split-line',
   'Split line at cursor',
   async function({ session }) {
+    const struct = {preventDefault: false};
+    await session.applyHookAsync('split-line', struct, {});
+    if (struct.preventDefault) { return }
     await session.newLineAtCursor();
   },
 ));

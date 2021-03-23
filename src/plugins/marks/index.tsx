@@ -18,7 +18,7 @@ import { getStyles } from '../../assets/ts/themes';
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
 import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
 import { motionKey } from '../../assets/ts/keyDefinitions';
-import Cursor from '../../assets/ts/cursor';
+import { ChangeChars } from '../../assets/ts/mutations';
 
 // TODO: do this elsewhere
 declare const process: any;
@@ -56,6 +56,7 @@ export class MarksPlugin {
   public UnsetMark!: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
   private autocomplete_idx: number;
+  private autocomplete_matches: number;
 
   constructor(api: PluginApi) {
     this.api = api;
@@ -65,7 +66,8 @@ export class MarksPlugin {
     // NOTE: this may not be initialized correctly at first
     // this only affects rendering @marklinks for now
     this.marks_to_paths = {};
-    this.autocomplete_idx = -1;
+    this.autocomplete_idx = 0;
+    this.autocomplete_matches = 0;
   }
 
   public async enable() {
@@ -437,8 +439,11 @@ export class MarksPlugin {
 
     this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
       const { lineData, has_cursor } = info;
-      if (!lineData) { return }
+      if (!lineData || !has_cursor) {
+        return lineContents;
+      }
       const line: string = lineData.join('');
+      let inAutocomplete = false;
       if (this.session.mode === 'INSERT') {
         const matches = this.getMarkMatches(line);
         const cursor = this.session.cursor;
@@ -446,11 +451,16 @@ export class MarksPlugin {
           let start = pos[0];
           let end = pos[1];
           if (cursor.col >= start && cursor.col <= end && has_cursor) {
-            console.log(line)
+            inAutocomplete = true;
             const query = this.parseMarkMatch(line.slice(start, end));
             const matches = this.searchMark(query);
-            console.log(matches);
-            lineContents.unshift(
+            const n = this.autocomplete_matches = matches.length;
+            if (n == 0) {
+              this.autocomplete_idx = 0;
+              return;
+            }
+            this.autocomplete_idx = ((this.autocomplete_idx % n) + n) % n;
+            lineContents.push(
               <span key='autocompleteAnchor'
                 style={{
                   position: 'relative'
@@ -464,9 +474,13 @@ export class MarksPlugin {
                     top: '1.2em'
                   }}
                 > 
-                  {matches.map(mark => {
+                  {matches.map((mark, idx) => {
+                    const theme = (this.autocomplete_idx === idx) ? 'theme-bg-secondary' : 'theme-bg-tertiary';
                     return (
-                      <div>
+                      <div key={`autocomplete-row-${idx}`}
+                        style={{
+                          ...getStyles(this.api.session.clientStore, [theme]),
+                        }}>
                         {mark}
                       </div>
                     );
@@ -477,6 +491,10 @@ export class MarksPlugin {
 
           }
         });
+      }
+      if (!inAutocomplete) {
+        this.autocomplete_idx = 0;
+        this.autocomplete_matches = 0;
       }
       return lineContents;
     });
@@ -514,15 +532,41 @@ export class MarksPlugin {
       console.log(action);
       const line = await that.document.getText(this.session.cursor.row);
       const curMark = that.getMarkUnderCursor(line, this.session.cursor.col);
-      if (!curMark) { return };
-
-      //display popup
+      if (curMark === null) { return };
       
       if (action == 'down') {
         struct['preventDefault'] = true;
+        this.autocomplete_idx++;
+        console.log(this.autocomplete_idx);
+      }
+      if (action == 'up') {
+        struct['preventDefault'] = true;
+        this.autocomplete_idx--;
       }
     });
 
+    this.api.registerHook('session', 'split-line', async (struct) => {
+      // Runs on enter
+      const line = await that.document.getText(this.session.cursor.row);
+      const curMark = that.getMarkUnderCursor(line, this.session.cursor.col);
+      if (curMark === null) { return };
+      if (this.autocomplete_matches > 0) {
+        struct['preventDefault'] = true;
+        // Set mark text
+        const matches = this.getMarkMatches(line);
+        const cursor = this.session.cursor;
+        const match = this.searchMark(curMark)[this.autocomplete_idx];
+        await Promise.all(matches.map(async pos => {
+          if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
+            const start = line[pos[0]] === '@' ? pos[0] + 1 : pos[0] + 2;
+            const end = line[pos[0]] === '@' ? pos[1] : pos[1] - 2;
+            const mutation = new ChangeChars(cursor.row, start, end - start, undefined, match.split(''));
+            await this.session.do(mutation);
+            cursor.col = start + match.length;
+          }
+        }));
+      }
+    });
     this.api.registerListener('document', 'afterDetach', async () => {
       this.computeMarksToPaths(); // FIRE AND FORGET
     });
@@ -691,9 +735,9 @@ export class MarksPlugin {
     return mark;
   }
 
-  public getMarkUnderCursor(line: string, col: Col) {
+  public getMarkUnderCursor(line: string, col: Col): string | null {
     const matches = this.getMarkMatches(line);
-    let mark = '';
+    let mark = null;
     matches.map((pos) => {
       if (col >= pos[0] && col <= pos[1]) {
         mark = this.parseMarkMatch(line.slice(pos[0], pos[1]));
