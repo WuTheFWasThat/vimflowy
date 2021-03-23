@@ -18,6 +18,7 @@ import { getStyles } from '../../assets/ts/themes';
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
 import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
 import { motionKey } from '../../assets/ts/keyDefinitions';
+import Cursor from '../../assets/ts/cursor';
 
 // TODO: do this elsewhere
 declare const process: any;
@@ -54,6 +55,7 @@ export class MarksPlugin {
   public SetMark!: new(row: Row, mark: Mark) => Mutation;
   public UnsetMark!: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
+  private autocomplete_idx: number;
 
   constructor(api: PluginApi) {
     this.api = api;
@@ -63,6 +65,7 @@ export class MarksPlugin {
     // NOTE: this may not be initialized correctly at first
     // this only affects rendering @marklinks for now
     this.marks_to_paths = {};
+    this.autocomplete_idx = -1;
   }
 
   public async enable() {
@@ -219,13 +222,7 @@ export class MarksPlugin {
       async function({ session }) {
         return async cursor => {
           const line = await session.document.getText(cursor.row);
-          const matches = that.getMarkMatches(line);
-          let mark = '';
-          matches.map((pos) => {
-            if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
-              mark = that.parseMarkMatch(line.slice(pos[0], pos[1]));
-            }
-          });
+          const mark = that.getMarkUnderCursor(line, cursor.col);
           if (!mark) {
             session.showMessage(`Cursor should be over a mark link`);
             return;
@@ -438,6 +435,51 @@ export class MarksPlugin {
       return lineContents;
     });
 
+    this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
+      const { lineData, has_cursor } = info;
+      if (!lineData) { return }
+      const line: string = lineData.join('');
+      if (this.session.mode === 'INSERT') {
+        const matches = this.getMarkMatches(line);
+        const cursor = this.session.cursor;
+        matches.map(pos => {
+          let start = pos[0];
+          let end = pos[1];
+          if (cursor.col >= start && cursor.col <= end && has_cursor) {
+            console.log(line)
+            const query = this.parseMarkMatch(line.slice(start, end));
+            const matches = this.searchMark(query);
+            console.log(matches);
+            lineContents.unshift(
+              <span key='autocompleteAnchor'
+                style={{
+                  position: 'relative'
+                }}
+              >
+                <span key='autocompleteContainer'
+                  style={{
+                    ...getStyles(this.api.session.clientStore, ['theme-bg-tertiary']),
+                    position: 'absolute',
+                    width: '200px',
+                    top: '1.2em'
+                  }}
+                > 
+                  {matches.map(mark => {
+                    return (
+                      <div>
+                        {mark}
+                      </div>
+                    );
+                  })}
+                </span>
+              </span>
+            );
+
+          }
+        });
+      }
+      return lineContents;
+    });
 
     this.api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
       return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
@@ -466,6 +508,21 @@ export class MarksPlugin {
         emit(...wrapped.unfold(token));
         }));
     });
+
+    this.api.registerHook('session', 'move-cursor-insert', async (struct, info) => {
+      const { action } = info;
+      console.log(action);
+      const line = await that.document.getText(this.session.cursor.row);
+      const curMark = that.getMarkUnderCursor(line, this.session.cursor.col);
+      if (!curMark) { return };
+
+      //display popup
+      
+      if (action == 'down') {
+        struct['preventDefault'] = true;
+      }
+    });
+
     this.api.registerListener('document', 'afterDetach', async () => {
       this.computeMarksToPaths(); // FIRE AND FORGET
     });
@@ -632,6 +689,25 @@ export class MarksPlugin {
     }
     const mark = match.slice(markStart, markEnd).replace(/(\.|!|\?)+$/g, '');
     return mark;
+  }
+
+  public getMarkUnderCursor(line: string, col: Col) {
+    const matches = this.getMarkMatches(line);
+    let mark = '';
+    matches.map((pos) => {
+      if (col >= pos[0] && col <= pos[1]) {
+        mark = this.parseMarkMatch(line.slice(pos[0], pos[1]));
+      }
+    });
+    return mark;
+  }
+
+  private searchMark(query: string) {
+    const marks = Object.keys(this.marks_to_paths);
+    const matches = marks.filter(mark => {
+      return mark.includes(query);
+    });
+    return matches;
   }
 }
 
