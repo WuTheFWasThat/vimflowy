@@ -12,7 +12,7 @@ import Session, { InMemorySession } from '../../assets/ts/session';
 import LineComponent from '../../assets/ts/components/line';
 import Mutation from '../../assets/ts/mutations';
 import Path from '../../assets/ts/path';
-import { Row } from '../../assets/ts/types';
+import { Col, Row } from '../../assets/ts/types';
 import { getStyles } from '../../assets/ts/themes';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
@@ -175,16 +175,14 @@ export class MarksPlugin {
       },
       key_transforms: [
         async (key, context) => {
-          // must be non-whitespace
+          if (key === 'space') { key = ' '};
           if (key.length === 1) {
-            if (/^\S*$/.test(key)) {
-              if (this.markstate === null) {
-                throw new Error('Mark state null during key transform');
-              }
-              await this.markstate.session.addCharsAtCursor([key]);
-              await this.api.updatedDataForRender(this.markstate.path.row);
-              return [null, context];
+            if (this.markstate === null) {
+              throw new Error('Mark state null during key transform');
             }
+            await this.markstate.session.addCharsAtCursor([key]);
+            await this.api.updatedDataForRender(this.markstate.path.row);
+            return [null, context];
           }
           return [key, context];
         },
@@ -220,12 +218,18 @@ export class MarksPlugin {
       'Go to the mark indicated by the cursor, if it exists',
       async function({ session }) {
         return async cursor => {
-          const word = await session.document.getWord(cursor.row, cursor.col);
-          if (word.length < 1 || word[0] !== '@') {
-            session.showMessage(`Cursor should be over a @mark link`);
+          const line = await session.document.getText(cursor.row);
+          const matches = that.getMarkMatches(line);
+          let mark = '';
+          matches.map((pos) => {
+            if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
+              mark = that.parseMarkMatch(line.slice(pos[0], pos[1]));
+            }
+          });
+          if (!mark) {
+            session.showMessage(`Cursor should be over a mark link`);
             return;
           }
-          const mark = word.slice(1);
           const allMarks = await that.listMarks();
           if (mark in allMarks) {
             const path = allMarks[mark];
@@ -234,6 +238,16 @@ export class MarksPlugin {
             session.showMessage(`No mark ${mark} to go to!`);
           }
         };
+      },
+    );
+
+    this.api.registerAction(
+      'set-mark-row-contents',
+      'Set a mark with the current row text',
+      async function({ session, keyStream }) {
+        const err = await that.setMark(session.cursor.row, await session.document.getText(session.cursor.row));
+        if (err) { session.showMessage(err, {text_class: 'error'}); }
+        keyStream.save();
       },
     );
 
@@ -354,6 +368,7 @@ export class MarksPlugin {
       'NORMAL',
       {
         'begin-mark': [['m']],
+        'set-mark-row-contents': [['M']],
         'go-mark': [['g', 'm']],
         'delete-mark': [['d', 'm']],
         'search-marks': [['\''], ['`']],
@@ -423,16 +438,20 @@ export class MarksPlugin {
       return lineContents;
     });
 
-    this.api.registerHook('session', 'renderWordTokenHook', (tokenizer) => {
+
+    this.api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
       return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
         token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
       ) => {
         if (this.session.mode === 'NORMAL') {
-          if (token.text[0] === '@') {
-            const mark = token.text.slice(1).replace(/(\.|!|\?)+$/g, '');
+          const matches = this.getMarkMatches(token.text);
+          matches.map(pos => {
+            let start = pos[0];
+            let end = pos[1];
+            const mark = this.parseMarkMatch(token.text.slice(start, end));
             const path = this.marks_to_paths[mark];
             if (path) {
-              token.info.forEach((char_info) => {
+              token.info.slice(start, end).forEach((char_info) => {
                 char_info.renderOptions.divType = 'a';
                 char_info.renderOptions.style = char_info.renderOptions.style || {};
                 Object.assign(char_info.renderOptions.style, getStyles(this.session.clientStore, ['theme-link']));
@@ -442,12 +461,11 @@ export class MarksPlugin {
                 };
               });
             }
-          }
+          });
         }
         emit(...wrapped.unfold(token));
-      }));
+        }));
     });
-
     this.api.registerListener('document', 'afterDetach', async () => {
       this.computeMarksToPaths(); // FIRE AND FORGET
     });
@@ -583,6 +601,37 @@ export class MarksPlugin {
     }
 
     return null;
+  }
+
+  public getMarkMatches(line: string) {
+    const matches = [];
+    let index = 0;
+    const regex = /(@\S*|\[\[([^\]]*)\]\])/;
+    while (true) {
+      let match = regex.exec(line.slice(index));
+      if (!match) { break; }
+      let start = index + match.index;
+      let end = start + match[0].length;
+      index = end;
+      matches.push([start, end]);
+
+    }
+    return matches;
+  }
+
+  public parseMarkMatch(match: string) {
+    const end = match.length;
+    let markStart = 0, markEnd = end;
+    if (match[0] === '@') {
+      markStart = 1;
+      markEnd = end;
+    }
+    if (match[0] === '[') {
+      markStart = 2;
+      markEnd = end - 2;
+    }
+    const mark = match.slice(markStart, markEnd).replace(/(\.|!|\?)+$/g, '');
+    return mark;
   }
 }
 
