@@ -180,7 +180,7 @@ export class MarksPlugin {
       },
       key_transforms: [
         async (key, context) => {
-          if (key === 'space') { key = ' '};
+          if (key === 'space') { key = ' '; };
           if (key.length === 1) {
             if (this.markstate === null) {
               throw new Error('Mark state null during key transform');
@@ -452,10 +452,9 @@ export class MarksPlugin {
             inAutocomplete = true;
             if (start === column) {
               const query = this.parseMarkMatch(line.slice(start, end));
-              const matches = this.searchMark(query).slice(0, 10); // only show first 10 results
-              this.autocomplete_matches = matches;
+              this.autocomplete_matches = this.searchMark(query).slice(0, 10); // only show first 10 results
               const n = matches.length;
-              if (n == 0) {
+              if (n === 0) {
                 this.autocomplete_idx = 0;
                 return;
               }
@@ -536,26 +535,25 @@ export class MarksPlugin {
       const { action } = info;
       const line = await that.document.getText(this.session.cursor.row);
       const curMark = that.getMarkUnderCursor(line, this.session.cursor.col);
-      if (curMark === null) { return };
+      if (curMark === null) { return; };
       const n = this.autocomplete_matches.length;
-      
-      if (action == 'down') {
-        struct['preventDefault'] = true;
+      if (action === 'down') {
+        struct.preventDefault = true;
         this.autocomplete_idx = ((this.autocomplete_idx % n) + n + 1) % n;
       }
-      if (action == 'up') {
-        struct['preventDefault'] = true;
+      if (action === 'up') {
+        struct.preventDefault = true;
         this.autocomplete_idx = ((this.autocomplete_idx % n) + n + n - 1) % n;
       }
     });
 
+    // Handles enter in autocomplete
     this.api.registerHook('session', 'split-line', async (struct) => {
-      // Runs when enter key is pressed
       const line = await that.document.getText(this.session.cursor.row);
       const curMark = that.getMarkUnderCursor(line, this.session.cursor.col);
-      if (curMark === null) { return };
+      if (curMark === null) { return; };
       if (this.autocomplete_matches) {
-        struct['preventDefault'] = true;
+        struct.preventDefault = true;
         // Set mark text
         const matches = this.getMarkMatches(line);
         const cursor = this.session.cursor;
