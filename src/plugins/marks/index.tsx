@@ -448,7 +448,7 @@ export class MarksPlugin {
         let inAutocomplete = false;
         matches.map(pos => {
           const start = pos[0], end = pos[1];
-          if (cursor.col >= start && cursor.col <= end) {
+          if (cursor.col >= start + 1 && cursor.col <= end) {
             inAutocomplete = true;
             if (start === column) {
               const query = this.parseMarkMatch(line.slice(start, end));
