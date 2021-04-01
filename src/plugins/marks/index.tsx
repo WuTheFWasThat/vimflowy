@@ -56,7 +56,7 @@ export class MarksPlugin {
   public UnsetMark!: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
   private autocomplete_idx: number;
-  private autocomplete_matches: number;
+  private autocomplete_matches: string[];
 
   constructor(api: PluginApi) {
     this.api = api;
@@ -67,7 +67,7 @@ export class MarksPlugin {
     // this only affects rendering @marklinks for now
     this.marks_to_paths = {};
     this.autocomplete_idx = 0;
-    this.autocomplete_matches = 0;
+    this.autocomplete_matches = [];
   }
 
   public async enable() {
@@ -394,6 +394,7 @@ export class MarksPlugin {
       return options;
     });
 
+    // Renders mark to the left of line
     this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
       const { pluginData } = info;
       if (pluginData.marks) {
@@ -452,12 +453,12 @@ export class MarksPlugin {
             if (start === column) {
               const query = this.parseMarkMatch(line.slice(start, end));
               const matches = this.searchMark(query).slice(0, 10); // only show first 10 results
-              const n = this.autocomplete_matches = matches.length;
+              this.autocomplete_matches = matches;
+              const n = matches.length;
               if (n == 0) {
                 this.autocomplete_idx = 0;
                 return;
               }
-              this.autocomplete_idx = ((this.autocomplete_idx % n) + n) % n;
               children.push(
                 <span key='autocompleteAnchor'
                   style={{
@@ -491,16 +492,17 @@ export class MarksPlugin {
         });
         if (!inAutocomplete) {
           this.autocomplete_idx = 0;
-          this.autocomplete_matches = 0;
+          this.autocomplete_matches = [];
         }
       }
       if (this.session.mode !== 'INSERT') {
         this.autocomplete_idx = 0;
-        this.autocomplete_matches = 0;
+        this.autocomplete_matches = [];
       }
       return children;
     });
 
+    // Renders mark links
     this.api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
       return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
         token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
@@ -529,21 +531,21 @@ export class MarksPlugin {
         }));
     });
 
+    // Handles up and down in autocomplete
     this.api.registerHook('session', 'move-cursor-insert', async (struct, info) => {
       const { action } = info;
-      console.log(action);
       const line = await that.document.getText(this.session.cursor.row);
       const curMark = that.getMarkUnderCursor(line, this.session.cursor.col);
       if (curMark === null) { return };
+      const n = this.autocomplete_matches.length;
       
       if (action == 'down') {
         struct['preventDefault'] = true;
-        this.autocomplete_idx++;
-        console.log(this.autocomplete_idx);
+        this.autocomplete_idx = ((this.autocomplete_idx % n) + n + 1) % n;
       }
       if (action == 'up') {
         struct['preventDefault'] = true;
-        this.autocomplete_idx--;
+        this.autocomplete_idx = ((this.autocomplete_idx % n) + n + n - 1) % n;
       }
     });
 
@@ -551,14 +553,13 @@ export class MarksPlugin {
       // Runs when enter key is pressed
       const line = await that.document.getText(this.session.cursor.row);
       const curMark = that.getMarkUnderCursor(line, this.session.cursor.col);
-      console.log('enter', line, curMark, this.autocomplete_matches)
       if (curMark === null) { return };
-      if (this.autocomplete_matches > 0) {
+      if (this.autocomplete_matches) {
         struct['preventDefault'] = true;
         // Set mark text
         const matches = this.getMarkMatches(line);
         const cursor = this.session.cursor;
-        const match = this.searchMark(curMark)[this.autocomplete_idx];
+        const match = this.autocomplete_matches[this.autocomplete_idx];
         await Promise.all(matches.map(async pos => {
           if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
             const start = line[pos[0]] === '@' ? pos[0] + 1 : pos[0] + 2;
@@ -753,7 +754,7 @@ export class MarksPlugin {
     const marks = Object.keys(this.marks_to_paths);
     const matches = marks.filter(mark => {
       return mark.includes(query);
-    });
+    }).sort();
     return matches;
   }
 }
