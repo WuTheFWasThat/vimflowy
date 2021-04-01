@@ -7,6 +7,7 @@ import {
   EmitFn, Token, Tokenizer, PartialTokenizer,
   RegexTokenizerSplitter, CharInfo, Unfolder, PartialUnfolder
 } from '../utils/token_unfolder';
+import Session from '../session';
 
 export type LineProps = {
   lineData: Line;
@@ -21,6 +22,7 @@ export type LineProps = {
   wordHook?: PartialUnfolder<Token, React.ReactNode>;
   onCharClick?: ((col: Col, e: Event) => void) | undefined;
   cursorBetween?: boolean;
+  session?: Session;
 };
 
 // NOTE: hacky! we don't include .:/?= since urls contain it
@@ -40,6 +42,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
     const cursors = this.props.cursors || {};
     const highlights = this.props.highlights || {};
     const accents = this.props.accents || {};
+    const session = this.props.session;
 
     // ideally this takes up space but is unselectable (uncopyable)
     const cursorChar = ' ';
@@ -106,6 +109,7 @@ export default class LineComponent extends React.Component<LineProps, {}> {
             onClick = this.props.onCharClick.bind(this, column);
           }
         }
+        const children = session?.applyHook('renderCharChildren', [], { lineData, column, cursors });
         const divType = char_info.renderOptions.divType || 'span';
         emit(
           React.createElement(
@@ -118,7 +122,8 @@ export default class LineComponent extends React.Component<LineProps, {}> {
               href: href,
               target: target
             } as React.DOMAttributes<any>,
-            token.text[i] as React.ReactNode
+            token.text[i] as React.ReactNode,
+            children
           )
         );
       }

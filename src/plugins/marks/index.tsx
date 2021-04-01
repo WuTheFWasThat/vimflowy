@@ -437,66 +437,68 @@ export class MarksPlugin {
       return lineContents;
     });
 
-    this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
-      const { lineData, has_cursor } = info;
-      if (!lineData || !has_cursor) {
-        return lineContents;
-      }
+    // Renders autocomplete menu
+    this.api.registerHook('session', 'renderCharChildren', (children, info) => {
+      const { lineData, column, cursors } = info;
       const line: string = lineData.join('');
-      let inAutocomplete = false;
-      if (this.session.mode === 'INSERT') {
+      const cursor = this.session.cursor;
+      if (this.session.mode === 'INSERT' && Object.keys(cursors).length > 0) {
         const matches = this.getMarkMatches(line);
-        const cursor = this.session.cursor;
+        let inAutocomplete = false;
         matches.map(pos => {
-          let start = pos[0];
-          let end = pos[1];
-          if (cursor.col >= start && cursor.col <= end && has_cursor) {
+          const start = pos[0], end = pos[1];
+          if (cursor.col >= start && cursor.col <= end) {
             inAutocomplete = true;
-            const query = this.parseMarkMatch(line.slice(start, end));
-            const matches = this.searchMark(query);
-            const n = this.autocomplete_matches = matches.length;
-            if (n == 0) {
-              this.autocomplete_idx = 0;
-              return;
-            }
-            this.autocomplete_idx = ((this.autocomplete_idx % n) + n) % n;
-            lineContents.push(
-              <span key='autocompleteAnchor'
-                style={{
-                  position: 'relative'
-                }}
-              >
-                <span key='autocompleteContainer'
+            if (start === column) {
+              const query = this.parseMarkMatch(line.slice(start, end));
+              const matches = this.searchMark(query).slice(0, 10); // only show first 10 results
+              const n = this.autocomplete_matches = matches.length;
+              if (n == 0) {
+                this.autocomplete_idx = 0;
+                return;
+              }
+              this.autocomplete_idx = ((this.autocomplete_idx % n) + n) % n;
+              children.push(
+                <span key='autocompleteAnchor'
                   style={{
-                    ...getStyles(this.api.session.clientStore, ['theme-bg-tertiary']),
-                    position: 'absolute',
-                    width: '200px',
-                    top: '1.2em'
-                  }}
-                > 
-                  {matches.map((mark, idx) => {
-                    const theme = (this.autocomplete_idx === idx) ? 'theme-bg-secondary' : 'theme-bg-tertiary';
-                    return (
-                      <div key={`autocomplete-row-${idx}`}
-                        style={{
-                          ...getStyles(this.api.session.clientStore, [theme]),
-                        }}>
-                        {mark}
-                      </div>
-                    );
-                  })}
+                    position: 'relative'
+                  }}>
+                  <span key='autocompleteContainer'
+                    style={{
+                      ...getStyles(this.api.session.clientStore, ['theme-bg-tertiary']),
+                      position: 'absolute',
+                      width: '200px',
+                      top: '1.2em'
+                    }}
+                  > 
+                    {matches.map((mark, idx) => {
+                      const theme = (this.autocomplete_idx === idx) ? 'theme-bg-secondary' : 'theme-bg-tertiary';
+                      return (
+                        <div key={`autocomplete-row-${idx}`}
+                          style={{
+                            ...getStyles(this.api.session.clientStore, [theme]),
+                          }}>
+                          {mark}
+                        </div>
+                      );
+                    })}
+                  </span>
                 </span>
-              </span>
-            );
+              );
+            }
 
           }
         });
+        if (!inAutocomplete) {
+          this.autocomplete_idx = 0;
+          this.autocomplete_matches = 0;
+        }
       }
-      if (!inAutocomplete) {
+      if (this.session.mode !== 'INSERT') {
         this.autocomplete_idx = 0;
         this.autocomplete_matches = 0;
       }
-      return lineContents;
+      return children;
     });
 
     this.api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
@@ -546,9 +548,10 @@ export class MarksPlugin {
     });
 
     this.api.registerHook('session', 'split-line', async (struct) => {
-      // Runs on enter
+      // Runs when enter key is pressed
       const line = await that.document.getText(this.session.cursor.row);
       const curMark = that.getMarkUnderCursor(line, this.session.cursor.col);
+      console.log('enter', line, curMark, this.autocomplete_matches)
       if (curMark === null) { return };
       if (this.autocomplete_matches > 0) {
         struct['preventDefault'] = true;
