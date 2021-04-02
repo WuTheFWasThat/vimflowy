@@ -451,7 +451,6 @@ $(document).ready(async () => {
     keyHandler.queueKey(key);
     // NOTE: this is just a best guess... e.g. the mode could be wrong
     // problem is that we process asynchronously, but need to return synchronously
-    console.log(key)
     return keyBindings.bindings[session.mode].getKey(key) != null || (session.mode == 'INSERT' && key === 'space');
   });
 
