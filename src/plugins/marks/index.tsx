@@ -471,7 +471,7 @@ export class MarksPlugin {
                       top: '1.2em'
                     }}
                   > 
-                    {matches.map((mark, idx) => {
+                    {this.autocomplete_matches.map((mark, idx) => {
                       const theme = (this.autocomplete_idx === idx) ? 'theme-bg-secondary' : 'theme-bg-tertiary';
                       return (
                         <div key={`autocomplete-row-${idx}`}
