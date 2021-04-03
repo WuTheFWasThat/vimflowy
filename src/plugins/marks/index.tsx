@@ -467,6 +467,7 @@ export class MarksPlugin {
                     style={{
                       ...getStyles(this.api.session.clientStore, ['theme-bg-tertiary']),
                       position: 'absolute',
+                      zIndex: 1000,
                       width: '200px',
                       top: '1.2em'
                     }}
