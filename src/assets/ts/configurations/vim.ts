@@ -127,7 +127,7 @@ export const VISUAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'exit-mode': [['esc'], ['ctrl+c'], ['ctrl+[']],
   'swap-visual-cursor': [['o'], ['O']],
   'visual-delete': [['d'], ['x']],
-  'visual-change': [['c']],
+  'visual-change': [['c'], ['s']],
   'visual-yank': [['y']],
   'visual-swap-case': [['~']],
 }, _.pick(NORMAL_MOTION_MAPPINGS, SINGLE_LINE_MOTIONS));
@@ -138,7 +138,7 @@ export const VISUAL_LINE_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'exit-mode': [['esc'], ['ctrl+c'], ['ctrl+[']],
   'swap-visual-cursor': [['o'], ['O']],
   'visual-line-delete': [['d'], ['x']],
-  'visual-line-change': [['c']],
+  'visual-line-change': [['c'], ['s']],
   'visual-line-join': [['J']],
   'visual-line-yank': [['y']],
   'visual-line-yank-clone': [['Y']],
