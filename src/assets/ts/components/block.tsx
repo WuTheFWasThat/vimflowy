@@ -86,7 +86,7 @@ class RowComponent extends React.Component<RowProps, {}> {
       linksStyle: getStyles(session.clientStore, ['theme-link']),
       accentStyle: getStyles(session.clientStore, ['theme-text-accent']),
       cursorBetween: this.props.cursorBetween,
-      session,
+      sessionApplyHook: session.applyHook.bind(session),
     };
 
     const hooksInfo = {
