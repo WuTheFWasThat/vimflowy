@@ -268,17 +268,16 @@ export class MarksPlugin {
         const marks = await that.listMarks();
         session.menu = new Menu(async (text) => {
           // find marks that start with the prefix
-          const findMarks = async (_document: Document, prefix: string, nresults = 10) => {
+          const findMarks = async (_document: Document, query: string, nresults = 10) => {
             const results: Array<{
               path: Path, mark: Mark,
             }> = []; // list of paths
-            for (const mark in marks) {
+            const matches = that.searchMark(query);
+            for (const mark of matches) {
               const path = marks[mark];
-              if (mark.indexOf(prefix) === 0) {
-                results.push({ path, mark });
-                if (nresults > 0 && results.length === nresults) {
-                  break;
-                }
+              results.push({ path, mark });
+              if (nresults > 0 && results.length === nresults) {
+                break;
               }
             }
             return results;
@@ -749,7 +748,7 @@ export class MarksPlugin {
     return mark;
   }
 
-  private searchMark(query: string) {
+  public searchMark(query: string) {
     const marks = Object.keys(this.marks_to_paths);
     const matches = marks.filter(mark => {
       return mark.includes(query);
