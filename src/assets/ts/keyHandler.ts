@@ -209,7 +209,7 @@ export default class KeyHandler extends EventEmitter {
       keyStream,
       keyHandler: this,
     };
-    
+
     [key, context] = await mode_obj.transform_key(key, context);
     if (key === null) {
       // a transform acted (which, for now, we always consider not bad.  could change)

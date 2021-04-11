@@ -335,6 +335,7 @@ export class MarksPlugin {
             const mutation = new ChangeChars(cursor.row, start, end - start, undefined, match.split(''));
             await that.session.do(mutation);
             cursor.col = start + match.length;
+            that.autocomplete_idx = 0;
           }
         }));
     });
@@ -541,7 +542,7 @@ export class MarksPlugin {
               inAutocomplete = true;
             }
           }
-        };
+        }
         if (inAutocomplete && this.session.mode === 'INSERT') {
           this.autocomplete_idx = 0;
           cursor.col++; // exiting insert mode moves cursor left
@@ -570,7 +571,7 @@ export class MarksPlugin {
               const query = this.parseMarkMatch(line.slice(start, end));
               this.autocomplete_matches = this.searchMark(query).slice(0, 10); // only show first 10 results
               if (matches.length === 0) {
-                throw('In autocomplete with 0 matches')
+                throw('In autocomplete with 0 matches');
               }
               children.push(
                 <span key='autocompleteAnchor'
@@ -820,7 +821,16 @@ export class MarksPlugin {
     const marks = Object.keys(this.marks_to_paths);
     const matches = marks.filter(mark => {
       return mark.toLowerCase().includes(query.toLowerCase());
-    }).sort();
+    }).sort((a, b) => {
+      // marks that match prefix first, shortest results first
+      const aPrefix = a.startsWith(query);
+      const bPrefix = b.startsWith(query);
+      if (aPrefix !== bPrefix) {
+        return aPrefix ? -1 : 1;
+      } else {
+        return a.length - b.length;
+      }
+    });
     return matches;
   }
 }

@@ -371,7 +371,7 @@ describe('marks', function() {
       { text: 'wesome', plugins: {mark: 'whoo'} },
     ]);
 
-    t.sendKeys('`r');
+    t.sendKeys('`k');
     t.sendKey('enter');
     t.sendKeys('x');
     // goes nowhere
