@@ -30,10 +30,6 @@ keyDefinitions.registerAction(new Action(
       throw new Error('Motion command was not passed a motion');
     }
     context.keyStream.save();
-    const action = _.last(context.keyStream.lastSequence);
-    const struct = { preventDefault: false };
-    await session.applyHookAsync('move-cursor-insert', struct, { action });
-    if (struct.preventDefault) { return; };
     await motion(session.cursor, {pastEnd: true});
   },
   { acceptsMotion: true },
@@ -519,9 +515,6 @@ keyDefinitions.registerAction(new Action(
   'split-line',
   'Split line at cursor',
   async function({ session }) {
-    const struct = {preventDefault: false};
-    await session.applyHookAsync('split-line', struct, {});
-    if (struct.preventDefault) { return; }
     await session.newLineAtCursor();
   },
 ));
