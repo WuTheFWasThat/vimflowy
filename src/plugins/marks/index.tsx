@@ -751,7 +751,7 @@ export class MarksPlugin {
   public searchMark(query: string) {
     const marks = Object.keys(this.marks_to_paths);
     const matches = marks.filter(mark => {
-      return mark.includes(query);
+      return mark.toLowerCase().includes(query.toLowerCase());
     }).sort();
     return matches;
   }
