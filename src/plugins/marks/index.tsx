@@ -56,8 +56,10 @@ export class MarksPlugin {
   public SetMark!: new(row: Row, mark: Mark) => Mutation;
   public UnsetMark!: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
-  private autocomplete_idx: number;
-  private autocomplete_matches: string[];
+  private autocomplete_state: {
+    idx: number,
+    matches: string[],
+  } = { idx: 0, matches: [] }
 
   constructor(api: PluginApi) {
     this.api = api;
@@ -67,8 +69,6 @@ export class MarksPlugin {
     // NOTE: this may not be initialized correctly at first
     // this only affects rendering @marklinks for now
     this.marks_to_paths = {};
-    this.autocomplete_idx = 0;
-    this.autocomplete_matches = [];
   }
 
   public async enable() {
@@ -230,6 +230,12 @@ export class MarksPlugin {
         // unlike other modes, esc in insert mode keeps changes
         session.save();
       },
+      async enter(session: Session) {
+        // unlike other modes, esc in insert mode keeps changes
+        session.cursor.col++; // exiting insert mode moves cursor left
+        that.autocomplete_state.idx = 0;
+        session.save();
+      },
     });
 
     this.api.registerAction(
@@ -302,8 +308,8 @@ export class MarksPlugin {
       'autocomplete-up',
       'Select above row in menu',
       async function({ keyStream }) {
-        const n = that.autocomplete_matches.length;
-        that.autocomplete_idx = ((that.autocomplete_idx % n) + n + n - 1) % n;
+        const n = that.autocomplete_state.matches.length;
+        that.autocomplete_state.idx = ((that.autocomplete_state.idx % n) + n + n - 1) % n;
         keyStream.save();
       },
     );
@@ -312,8 +318,8 @@ export class MarksPlugin {
       'autocomplete-down',
       'Select below row in menu',
       async function({ keyStream }) {
-        const n = that.autocomplete_matches.length;
-        that.autocomplete_idx = ((that.autocomplete_idx % n) + n + n + 1) % n;
+        const n = that.autocomplete_state.matches.length;
+        that.autocomplete_state.idx = ((that.autocomplete_state.idx % n) + n + n + 1) % n;
         keyStream.save();
       },
     );
@@ -327,7 +333,7 @@ export class MarksPlugin {
         // Set mark text
         const matches = that.getMarkMatches(line);
         const cursor = that.session.cursor;
-        const match = that.autocomplete_matches[that.autocomplete_idx];
+        const match = that.autocomplete_state.matches[that.autocomplete_state.idx];
         await Promise.all(matches.map(async pos => {
           if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
             const start = line[pos[0]] === '@' ? pos[0] + 1 : pos[0] + 2;
@@ -335,7 +341,7 @@ export class MarksPlugin {
             const mutation = new ChangeChars(cursor.row, start, end - start, undefined, match.split(''));
             await that.session.do(mutation);
             cursor.col = start + match.length;
-            that.autocomplete_idx = 0;
+            that.autocomplete_state.idx = 0;
           }
         }));
     });
@@ -526,34 +532,30 @@ export class MarksPlugin {
     });
 
     // Detect when to enter or exit autocomplete mode
-    this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
-      const { has_cursor, lineData } = info;
-      if (has_cursor) {
-        const line: string = lineData.join('');
-        const cursor = this.session.cursor;
+    this.api.registerHook('session', 'colChange', async (_, { newCol }) => {
+        const line: string = (await this.session.curLine()).join('');
         const matches = this.getMarkMatches(line);
         let inAutocomplete = false;
         for (const pos of matches) {
           const start = pos[0], end = pos[1];
-          if (cursor.col >= start + 1 && cursor.col <= end) {
+          if (newCol >= start + 1 && newCol <= end) {
             const query = this.parseMarkMatch(line.slice(start, end));
-            this.autocomplete_matches = this.searchMark(query).slice(0, 10); // only show first 10 results
-            if (this.autocomplete_matches.length > 0) {
+            this.autocomplete_state.matches = this.searchMark(query).slice(0, 10); // only show first 10 results
+            if (this.autocomplete_state.matches.length > 0) {
               inAutocomplete = true;
             }
           }
         }
-        if (inAutocomplete && this.session.mode === 'INSERT') {
-          this.autocomplete_idx = 0;
-          cursor.col++; // exiting insert mode moves cursor left
-          this.session.setMode('AUTOCOMPLETE');
+        if (inAutocomplete && this.session.mode === 'INSERT' && this.autocomplete_state.idx !== -1) {
+          this.autocomplete_state.idx = -1; // make sure this only runs once
+          await this.session.setMode('AUTOCOMPLETE');
         }
         if (!inAutocomplete && this.session.mode === 'AUTOCOMPLETE') {
-          this.session.setMode('INSERT');
+          await this.session.setMode('INSERT');
         }
       }
-      return lineContents;
-    });
+    )
+
     // Renders autocomplete menu
     this.api.registerHook('session', 'renderCharChildren', (children, info) => {
       if (this.session.mode !== 'AUTOCOMPLETE') {
@@ -569,7 +571,7 @@ export class MarksPlugin {
           if (cursor.col >= start + 1 && cursor.col <= end) {
             if (start === column) {
               const query = this.parseMarkMatch(line.slice(start, end));
-              this.autocomplete_matches = this.searchMark(query).slice(0, 10); // only show first 10 results
+              this.autocomplete_state.matches = this.searchMark(query).slice(0, 10); // only show first 10 results
               if (matches.length === 0) {
                 throw('In autocomplete with 0 matches');
               }
@@ -587,8 +589,8 @@ export class MarksPlugin {
                       top: '1.2em'
                     }}
                   > 
-                    {this.autocomplete_matches.map((mark, idx) => {
-                      const theme = (this.autocomplete_idx === idx) ? 'theme-bg-secondary' : 'theme-bg-tertiary';
+                    {this.autocomplete_state.matches.map((mark, idx) => {
+                      const theme = (this.autocomplete_state.idx === idx) ? 'theme-bg-secondary' : 'theme-bg-tertiary';
                       return (
                         <div key={`autocomplete-row-${idx}`}
                           style={{

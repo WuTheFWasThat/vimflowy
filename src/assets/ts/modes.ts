@@ -183,6 +183,9 @@ registerMode({
       session.save();
     }
   },
+  async enter(session: Session) {
+    await session.cursor.setCol(session.cursor.col); // just to call colChange event
+  },
   async exit(session: Session) {
     await session.cursor.left();
     // unlike other modes, esc in insert mode keeps changes
