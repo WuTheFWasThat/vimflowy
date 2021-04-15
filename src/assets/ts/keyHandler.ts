@@ -136,6 +136,11 @@ export default class KeyHandler extends EventEmitter {
 
   public queueKey(key: Key) {
     logger.info('Handling key:', key);
+    const ignoredKeys = ['°', '±', '³', '­­­­¯', '¯', '®']; // common media control keys
+    if (ignoredKeys.includes(key)) {
+      logger.info('Ignored key:', key);
+      return;
+    }
     this.keyStream.enqueue(key);
     this.processKeys(); // FIRE AND FORGET
   }
