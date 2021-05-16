@@ -183,16 +183,14 @@ export class TagsPlugin {
       },
       key_transforms: [
         async (key, context) => {
-          // must be non-whitespace
+          if (key === 'space') { key = ' '};
           if (key.length === 1) {
-            if (/^\S*$/.test(key)) {
-              if (this.tagstate === null) {
-                throw new Error('Tag state null during key transform');
-              }
-              await this.tagstate.session.addCharsAtCursor([key]);
-              await this.api.updatedDataForRender(this.tagstate.path.row);
-              return [null, context];
+            if (this.tagstate === null) {
+              throw new Error('Tag state null during key transform');
             }
+            await this.tagstate.session.addCharsAtCursor([key]);
+            await this.api.updatedDataForRender(this.tagstate.path.row);
+            return [null, context];
           }
           return [key, context];
         },
