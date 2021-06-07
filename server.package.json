@@ -1,0 +1,15 @@
+{
+    "name": "vimflowy",
+    "version": "1.0.0",
+    "private": true,
+    "homepage": "./",
+    "dependencies": {
+        "sqlite3": "^4.1.1",
+        "ws": "^6.1.2",
+        "express": "^4.16.4",
+        "lodash": "^4.17.21"
+    },
+    "scripts": {
+        "start": "node server/prod.js"
+    }
+}
