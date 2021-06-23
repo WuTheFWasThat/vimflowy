@@ -17,6 +17,7 @@ async function start_search(searchRoot: Path, session: Session) {
         });
         return {
           contents: await session.document.getLine(path.row),
+          contentsParent: path.parent ? await session.document.getLine(path.parent.row) : [],
           renderHook(lineDiv: React.ReactElement<any>) {
             const cachedRow = session.document.cache.get(path.row);
             if (!cachedRow) {
@@ -135,4 +136,3 @@ keyDefinitions.registerAction(new Action(
     return session.menu.down();
   },
 ));
-

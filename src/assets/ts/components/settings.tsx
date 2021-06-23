@@ -117,11 +117,13 @@ export default class SettingsComponent extends React.Component<Props, State> {
         return [
           {
             contents: 'Some blah result'.split(''),
+            contentsParent: 'Some blah result'.split(''),
             renderOptions: { accents: makeAccents(5, 8) },
             fn: () => null
           },
           {
             contents: 'Another blah result'.split(''),
+            contentsParent: 'Another blah result'.split(''),
             renderOptions: { accents: makeAccents(8, 11) },
             fn: () => null
           },
