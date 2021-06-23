@@ -21,6 +21,7 @@ export type LineProps = {
   wordHook?: PartialUnfolder<Token, React.ReactNode>;
   onCharClick?: ((col: Col, e: Event) => void) | undefined;
   cursorBetween?: boolean;
+  sessionApplyHook?: (event: string, obj: any, info: any) => Array<React.ReactNode>,
 };
 
 // NOTE: hacky! we don't include .:/?= since urls contain it
@@ -106,6 +107,10 @@ export default class LineComponent extends React.Component<LineProps, {}> {
             onClick = this.props.onCharClick.bind(this, column);
           }
         }
+        let children = null;
+        if (this.props.sessionApplyHook) {
+          children = this.props.sessionApplyHook('renderCharChildren', [], { lineData, column, cursors });
+        }
         const divType = char_info.renderOptions.divType || 'span';
         emit(
           React.createElement(
@@ -118,7 +123,8 @@ export default class LineComponent extends React.Component<LineProps, {}> {
               href: href,
               target: target
             } as React.DOMAttributes<any>,
-            token.text[i] as React.ReactNode
+            token.text[i] as React.ReactNode,
+            children
           )
         );
       }

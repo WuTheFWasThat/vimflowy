@@ -57,7 +57,7 @@ export default class Cursor extends EventEmitter {
   }
 
   private async _setCol(col: Col) {
-    await this.emitAsync('colChange', this.col, col);
+    await this.session.applyHookAsync('colChange', {}, {oldCol: this.col, newCol: col});
     this.col = col;
   }
 

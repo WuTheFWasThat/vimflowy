@@ -118,7 +118,7 @@ const deregisterMode = function(mode: ModeMetadata) {
   delete MODES[mode.name];
 };
 
-const transform_insert_key = function(key: Key) {
+export const transform_insert_key = function(key: Key) {
   if (key === 'shift+enter') {
     key = '\n';
   } else if (key === 'space' || key === 'shift+space') {
@@ -147,7 +147,7 @@ registerMode({
   ],
 });
 
-const nonSavingInsertActions: {[key: string]: boolean} = {
+export const nonSavingInsertActions: {[key: string]: boolean} = {
   'delete-char-before': true,
   'delete-char-after': true,
 };
@@ -182,6 +182,9 @@ registerMode({
       // NOTE: crucially, this doesn't happen if we transform a key into nothing
       session.save();
     }
+  },
+  async enter(session: Session) {
+    await session.cursor.setCol(session.cursor.col); // just to call colChange event
   },
   async exit(session: Session) {
     await session.cursor.left();

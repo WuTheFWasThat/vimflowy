@@ -16,8 +16,10 @@ import { Col, Row } from '../../assets/ts/types';
 import { getStyles } from '../../assets/ts/themes';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
-import { INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
-import { motionKey } from '../../assets/ts/keyDefinitions';
+import { INSERT_MODE_MAPPINGS, INSERT_MOTION_MAPPINGS } from '../../assets/ts/configurations/vim';
+import { ActionContext, ActionName, motionKey } from '../../assets/ts/keyDefinitions';
+import { ChangeChars } from '../../assets/ts/mutations';
+import { nonSavingInsertActions, transform_insert_key } from '../../assets/ts/modes';
 
 // TODO: do this elsewhere
 declare const process: any;
@@ -54,6 +56,10 @@ export class MarksPlugin {
   public SetMark!: new(row: Row, mark: Mark) => Mutation;
   public UnsetMark!: new(row: Row) => Mutation;
   private marks_to_paths: {[mark: string]: Path};
+  private autocomplete_state: {
+    idx: number,
+    matches: string[],
+  } = { idx: 0, matches: [] }
 
   constructor(api: PluginApi) {
     this.api = api;
@@ -175,7 +181,7 @@ export class MarksPlugin {
       },
       key_transforms: [
         async (key, context) => {
-          if (key === 'space') { key = ' '};
+          if (key === 'space') { key = ' '; };
           if (key.length === 1) {
             if (this.markstate === null) {
               throw new Error('Mark state null during key transform');
@@ -187,6 +193,49 @@ export class MarksPlugin {
           return [key, context];
         },
       ],
+    });
+
+    this.api.registerMode({
+      name: 'AUTOCOMPLETE',
+      cursorBetween: true,
+      key_transforms: [
+        async function(key, context) {
+          key = transform_insert_key(key);
+          if (key.length === 1) {
+            // simply insert the key
+            await context.session.addCharsAtCursor([key]);
+            await context.session.applyHookAsync('charInserted', {}, { key });
+            return [null, context];
+          }
+          return [key, context];
+        },
+      ],
+      async beforeEvery(actionName: ActionName, { session, keyStream }) {
+        if (actionName === 'exit-mode') {
+          keyStream.save();
+        } else if (!nonSavingInsertActions[actionName]) {
+          // NOTE: crucially, this doesn't happen if we transform a key into nothing
+          session.save();
+        }
+      },
+      async every(actionName: ActionName, { session }: ActionContext, oldMode) {
+        if ((!nonSavingInsertActions[actionName]) &&
+            (oldMode === 'AUTOCOMPLETE')
+          ) {
+          // NOTE: crucially, this doesn't happen if we transform a key into nothing
+          session.save();
+        }
+      },
+      async exit(session: Session) {
+        // unlike other modes, esc in insert mode keeps changes
+        session.save();
+      },
+      async enter(session: Session) {
+        // unlike other modes, esc in insert mode keeps changes
+        session.cursor.col++; // exiting insert mode moves cursor left
+        that.autocomplete_state.idx = 0;
+        session.save();
+      },
     });
 
     this.api.registerAction(
@@ -219,13 +268,7 @@ export class MarksPlugin {
       async function({ session }) {
         return async cursor => {
           const line = await session.document.getText(cursor.row);
-          const matches = that.getMarkMatches(line);
-          let mark = '';
-          matches.map((pos) => {
-            if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
-              mark = that.parseMarkMatch(line.slice(pos[0], pos[1]));
-            }
-          });
+          const mark = that.getMarkUnderCursor(line, cursor.col);
           if (!mark) {
             session.showMessage(`Cursor should be over a mark link`);
             return;
@@ -262,6 +305,47 @@ export class MarksPlugin {
     );
 
     this.api.registerAction(
+      'autocomplete-up',
+      'Select above row in menu',
+      async function({ keyStream }) {
+        const n = that.autocomplete_state.matches.length;
+        that.autocomplete_state.idx = ((that.autocomplete_state.idx % n) + n + n - 1) % n;
+        keyStream.save();
+      },
+    );
+
+    this.api.registerAction(
+      'autocomplete-down',
+      'Select below row in menu',
+      async function({ keyStream }) {
+        const n = that.autocomplete_state.matches.length;
+        that.autocomplete_state.idx = ((that.autocomplete_state.idx % n) + n + n + 1) % n;
+        keyStream.save();
+      },
+    );
+
+    // Handles enter in autocomplete
+    this.api.registerAction(
+      'autocomplete-select',
+      'Select autocomplete option',
+      async function() {
+        const line = await that.document.getText(that.session.cursor.row);
+        // Set mark text
+        const matches = that.getMarkMatches(line);
+        const cursor = that.session.cursor;
+        const match = that.autocomplete_state.matches[that.autocomplete_state.idx];
+        await Promise.all(matches.map(async pos => {
+          if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
+            const start = line[pos[0]] === '@' ? pos[0] + 1 : pos[0] + 2;
+            const end = line[pos[0]] === '@' ? pos[1] : pos[1] - 2;
+            const mutation = new ChangeChars(cursor.row, start, end - start, undefined, match.split(''));
+            await that.session.do(mutation);
+            cursor.col = start + match.length;
+            that.autocomplete_state.idx = 0;
+          }
+        }));
+    });
+    this.api.registerAction(
       'search-marks',
       'Go to (search for) a mark',
       async function({ session }) {
@@ -269,17 +353,16 @@ export class MarksPlugin {
         const marks = await that.listMarks();
         session.menu = new Menu(async (text) => {
           // find marks that start with the prefix
-          const findMarks = async (_document: Document, prefix: string, nresults = 10) => {
+          const findMarks = async (_document: Document, query: string, nresults = 10) => {
             const results: Array<{
               path: Path, mark: Mark,
             }> = []; // list of paths
-            for (const mark in marks) {
+            const matches = that.searchMark(query);
+            for (const mark of matches) {
               const path = marks[mark];
-              if (mark.indexOf(prefix) === 0) {
-                results.push({ path, mark });
-                if (nresults > 0 && results.length === nresults) {
-                  break;
-                }
+              results.push({ path, mark });
+              if (nresults > 0 && results.length === nresults) {
+                break;
               }
             }
             return results;
@@ -353,6 +436,15 @@ export class MarksPlugin {
     );
 
     this.api.registerDefaultMappings(
+      'AUTOCOMPLETE',
+      Object.assign({
+        'autocomplete-up': [['up']],
+        'autocomplete-down': [['down']],
+        'autocomplete-select': [['enter']],
+      }, _.omit({...INSERT_MODE_MAPPINGS, ...INSERT_MOTION_MAPPINGS}, ['motion-up', 'motion-down', 'split-line']))
+    );
+
+    this.api.registerDefaultMappings(
       'MARK',
       Object.assign({
         'toggle-help': [['ctrl+?']],
@@ -395,6 +487,7 @@ export class MarksPlugin {
       return options;
     });
 
+    // Renders mark to the left of line
     this.api.registerHook('session', 'renderLineContents', (lineContents, info) => {
       const { pluginData } = info;
       if (pluginData.marks) {
@@ -438,7 +531,87 @@ export class MarksPlugin {
       return lineContents;
     });
 
+    // Detect when to enter or exit autocomplete mode
+    this.api.registerHook('session', 'colChange', async (_, { newCol }) => {
+        const line: string = (await this.session.curLine()).join('');
+        const matches = this.getMarkMatches(line);
+        let inAutocomplete = false;
+        for (const pos of matches) {
+          const start = pos[0], end = pos[1];
+          if (newCol >= start + 1 && newCol <= end) {
+            const query = this.parseMarkMatch(line.slice(start, end));
+            this.autocomplete_state.matches = this.searchMark(query).slice(0, 10); // only show first 10 results
+            if (this.autocomplete_state.matches.length > 0) {
+              inAutocomplete = true;
+            }
+          }
+        }
+        if (inAutocomplete && this.session.mode === 'INSERT' && this.autocomplete_state.idx !== -1) {
+          this.autocomplete_state.idx = -1; // make sure this only runs once
+          await this.session.setMode('AUTOCOMPLETE');
+        }
+        if (!inAutocomplete && this.session.mode === 'AUTOCOMPLETE') {
+          await this.session.setMode('INSERT');
+        }
+      }
+    )
 
+    // Renders autocomplete menu
+    this.api.registerHook('session', 'renderCharChildren', (children, info) => {
+      if (this.session.mode !== 'AUTOCOMPLETE') {
+        return;
+      }
+      const { lineData, column, cursors } = info;
+      const line: string = lineData.join('');
+      const cursor = this.session.cursor;
+      if (Object.keys(cursors).length > 0) {
+        const matches = this.getMarkMatches(line);
+        matches.map(pos => {
+          const start = pos[0], end = pos[1];
+          if (cursor.col >= start + 1 && cursor.col <= end) {
+            if (start === column) {
+              const query = this.parseMarkMatch(line.slice(start, end));
+              this.autocomplete_state.matches = this.searchMark(query).slice(0, 10); // only show first 10 results
+              if (matches.length === 0) {
+                throw('In autocomplete with 0 matches');
+              }
+              children.push(
+                <span key='autocompleteAnchor'
+                  style={{
+                    position: 'relative'
+                  }}>
+                  <span key='autocompleteContainer'
+                    style={{
+                      ...getStyles(this.api.session.clientStore, ['theme-bg-tertiary']),
+                      position: 'absolute',
+                      zIndex: 1000,
+                      width: '200px',
+                      top: '1.2em'
+                    }}
+                  > 
+                    {this.autocomplete_state.matches.map((mark, idx) => {
+                      const theme = (this.autocomplete_state.idx === idx) ? 'theme-bg-secondary' : 'theme-bg-tertiary';
+                      return (
+                        <div key={`autocomplete-row-${idx}`}
+                          style={{
+                            ...getStyles(this.api.session.clientStore, [theme]),
+                          }}>
+                          {mark}
+                        </div>
+                      );
+                    })}
+                  </span>
+                </span>
+              );
+            }
+
+          }
+        });
+      }
+      return children;
+    });
+
+    // Renders mark links
     this.api.registerHook('session', 'renderLineTokenHook', (tokenizer) => {
       return tokenizer.then(new PartialUnfolder<Token, React.ReactNode>((
         token: Token, emit: EmitFn<React.ReactNode>, wrapped: Tokenizer
@@ -466,6 +639,7 @@ export class MarksPlugin {
         emit(...wrapped.unfold(token));
         }));
     });
+
     this.api.registerListener('document', 'afterDetach', async () => {
       this.computeMarksToPaths(); // FIRE AND FORGET
     });
@@ -632,6 +806,34 @@ export class MarksPlugin {
     }
     const mark = match.slice(markStart, markEnd).replace(/(\.|!|\?)+$/g, '');
     return mark;
+  }
+
+  public getMarkUnderCursor(line: string, col: Col): string | null {
+    const matches = this.getMarkMatches(line);
+    let mark = null;
+    matches.map((pos) => {
+      if (col >= pos[0] && col <= pos[1]) {
+        mark = this.parseMarkMatch(line.slice(pos[0], pos[1]));
+      }
+    });
+    return mark;
+  }
+
+  public searchMark(query: string) {
+    const marks = Object.keys(this.marks_to_paths);
+    const matches = marks.filter(mark => {
+      return mark.toLowerCase().includes(query.toLowerCase());
+    }).sort((a, b) => {
+      // marks that match prefix first, shortest results first
+      const aPrefix = a.startsWith(query);
+      const bPrefix = b.startsWith(query);
+      if (aPrefix !== bPrefix) {
+        return aPrefix ? -1 : 1;
+      } else {
+        return a.length - b.length;
+      }
+    });
+    return matches;
   }
 }
 
