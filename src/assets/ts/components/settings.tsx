@@ -9,7 +9,7 @@ import { MODES } from '../modes';
 
 import Path from '../path';
 import Document from '../document';
-import { DocumentStore, ClientStore } from '../datastore';
+import { DocumentStore, ClientStore, SearchStore } from '../datastore';
 import { InMemory } from '../../../shared/data_backend';
 import Session from '../session';
 import Menu from '../menu';
@@ -82,7 +82,8 @@ export default class SettingsComponent extends React.Component<Props, State> {
     this.initial_theme = getCurrentTheme(props.session.clientStore);
 
     (async () => {
-      const preview_document = new Document(new DocumentStore(new InMemory()));
+      const backend = new InMemory();
+      const preview_document = new Document(new DocumentStore(backend), new SearchStore(backend));
       await preview_document.load([
         { text: 'Preview document', children: [
           { text: 'Breadcrumbs', children: [

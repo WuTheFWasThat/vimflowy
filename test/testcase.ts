@@ -3,7 +3,7 @@
 import 'mocha';
 import * as _ from 'lodash';
 
-import { DocumentStore, ClientStore } from '../src/assets/ts/datastore';
+import { DocumentStore, ClientStore, SearchStore } from '../src/assets/ts/datastore';
 import { InMemory, SynchronousInMemory } from '../src/shared/data_backend';
 import Document from '../src/assets/ts/document';
 import Session from '../src/assets/ts/session';
@@ -35,6 +35,7 @@ type TestCaseOptions = {
 
 class TestCase {
   public docStore: DocumentStore;
+  private searchStore: SearchStore;
   private clientStore: ClientStore;
   protected document: Document;
   protected plugins: Array<string>;
@@ -45,8 +46,10 @@ class TestCase {
   protected prom: Promise<void>;
 
   constructor(serialized: Array<SerializedBlock> = [''], options: TestCaseOptions = {}) {
-    this.docStore = new DocumentStore(new InMemory());
-    this.document = new Document(this.docStore);
+    const backend = new InMemory();
+    this.docStore = new DocumentStore(backend);
+    this.searchStore = new SearchStore(backend);
+    this.document = new Document(this.docStore, this.searchStore);
     this.clientStore = new ClientStore(new SynchronousInMemory());
 
     this.plugins = options.plugins || [];
@@ -69,6 +72,7 @@ class TestCase {
 
     this._chain(async () => {
       await this.document.load(serialized);
+      await this.document.initSearcher();
 
       // this must be *after* plugin loading because of plugins with state
       // e.g. marks needs the database to have the marks loaded
