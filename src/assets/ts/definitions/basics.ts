@@ -434,6 +434,7 @@ keyDefinitions.registerAction(new Action(
   'delete-char-after',
   'Delete character after the cursor (i.e. del key)',
   async function({ session }) {
+    await session.applyHookAsync('deleteCharAfter', {}, {});
     await session.delCharsAfterCursor(1);
   },
 ));
@@ -454,6 +455,7 @@ keyDefinitions.registerAction(new Action(
   'delete-char-before',
   'Delete previous character (i.e. backspace key)',
   async function({ session }) {
+    await session.applyHookAsync('deleteCharBefore', {}, {});
     await session.deleteAtCursor();
   },
 ));
