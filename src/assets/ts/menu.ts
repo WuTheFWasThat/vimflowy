@@ -9,6 +9,7 @@ Internally uses an entire session object (this is sorta weird..)
 
 export type MenuResult = {
   contents: Line;
+  contentsParent: Line;
 
   // called when selected
   fn: any; // TODO
