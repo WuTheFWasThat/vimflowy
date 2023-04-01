@@ -86,11 +86,12 @@ class RowComponent extends React.Component<RowProps, {}> {
       linksStyle: getStyles(session.clientStore, ['theme-link']),
       accentStyle: getStyles(session.clientStore, ['theme-text-accent']),
       cursorBetween: this.props.cursorBetween,
+      sessionApplyHook: session.applyHook.bind(session),
     };
 
     const hooksInfo = {
       path, pluginData: this.props.cached.pluginData,
-      has_cursor, has_highlight
+      has_cursor, has_highlight, lineData
     };
 
     lineoptions.lineHook = PartialUnfolder.trivial<Token, React.ReactNode>();

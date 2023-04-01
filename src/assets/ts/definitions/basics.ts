@@ -1,5 +1,6 @@
 import { isLink } from '../utils/text';
 import keyDefinitions, { Action, ActionContext, SequenceAction } from '../keyDefinitions';
+import _, { stubObject } from 'lodash';
 
 keyDefinitions.registerAction(new Action(
   'move-cursor-normal',
@@ -28,6 +29,7 @@ keyDefinitions.registerAction(new Action(
     if (motion == null) {
       throw new Error('Motion command was not passed a motion');
     }
+    context.keyStream.save();
     await motion(session.cursor, {pastEnd: true});
   },
   { acceptsMotion: true },

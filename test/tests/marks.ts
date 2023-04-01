@@ -348,6 +348,47 @@ describe('marks', function() {
     await t.done();
   });
 
+  it('can be autocompleted', async function() {
+    let t = new MarksTestCase([
+      { text: '[[]]' },
+      { text: 'whoo', plugins: {mark: 'hip'} },
+      { text: 'yay', plugins: {mark: 'hooray'}, children: [
+        'hip',
+        'hip',
+        { text: 'hooray', plugins: {mark: 'yay'} },
+      ] },
+      { text: 'awesome', plugins: {mark: 'whoo'} },
+    ], {plugins: [Marks.pluginName]});
+    t.sendKeys('f]iwh');
+    t.sendKey('enter');
+    t.sendKey('esc');
+    t.expect([
+      '[[whoo]]',
+      { text: 'whoo', plugins: {mark: 'hip'} },
+      { text: 'yay', plugins: {mark: 'hooray'}, children: [
+        'hip',
+        'hip',
+        { text: 'hooray', plugins: {mark: 'yay'} },
+      ] },
+      { text: 'awesome', plugins: {mark: 'whoo'} },
+    ]);
+    t.sendKeys('o@h');
+    t.sendKey('down');
+    t.sendKey('enter');
+    t.expect([
+      '[[whoo]]',
+      '@hooray',
+      { text: 'whoo', plugins: {mark: 'hip'} },
+      { text: 'yay', plugins: {mark: 'hooray'}, children: [
+        'hip',
+        'hip',
+        { text: 'hooray', plugins: {mark: 'yay'} },
+      ] },
+      { text: 'awesome', plugins: {mark: 'whoo'} },
+    ]);
+
+    await t.done();
+  });
   it('can be searched for', async function() {
     let t = new MarksTestCase([
       { text: 'whoo', plugins: {mark: 'hip'} },
@@ -371,7 +412,7 @@ describe('marks', function() {
       { text: 'wesome', plugins: {mark: 'whoo'} },
     ]);
 
-    t.sendKeys('`r');
+    t.sendKeys('`k');
     t.sendKey('enter');
     t.sendKeys('x');
     // goes nowhere
