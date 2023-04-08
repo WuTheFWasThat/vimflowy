@@ -204,6 +204,104 @@ const decodeParents = (parents: number | Array<number>): Array<number> => {
   return parents;
 };
 
+export class SearchStore {
+  private prefix: string;
+  private docname: string;
+  private backend: DataBackend;
+  private cache: {[key: string]: any} = {};
+  private use_cache: boolean = true;
+
+  constructor(backend: DataBackend, docname = '') {
+    this.backend = backend;
+    this.docname = docname;
+    this.prefix = `${docname}save`;
+  }
+
+  private async _get<T>(
+    key: string,
+    default_value: T,
+    decode: (value: any) => T = fn_utils.id
+  ): Promise<T> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
+
+    if (this.use_cache) {
+      if (key in this.cache) {
+        return this.cache[key];
+      }
+    }
+    let value: any = await this.backend.get(key);
+    try {
+      // need typeof check because of backwards compatibility plus stupidness like
+      // JSON.parse([106]) === 106
+      if (typeof value === 'string') {
+        value = JSON.parse(value);
+      }
+    } catch (e) { /* do nothing - this should only happen for historical reasons */ }
+    let decodedValue: T;
+    if (value === null) {
+      decodedValue = default_value;
+      logger.debug('tried getting', key, 'defaulted to', decodedValue);
+    } else {
+      decodedValue = decode(value);
+      logger.debug('got from storage', key, decodedValue);
+    }
+    if (this.use_cache) {
+      this.cache[key] = decodedValue;
+    }
+    return decodedValue;
+  }
+
+  private async _set(
+    key: string, value: any, encode: (value: any) => any = fn_utils.id
+  ): Promise<void> {
+    if (simulateDelay) { await timeout(simulateDelay * Math.random()); }
+
+    if (this.use_cache) {
+      this.cache[key] = value;
+    }
+    const encodedValue = encode(value);
+    logger.debug('setting to storage', key, encodedValue);
+    // NOTE: fire and forget
+    this.backend.set(key, JSON.stringify(encodedValue)).catch((err) => {
+      setTimeout(() => { throw err; });
+    });
+  }
+
+  private hash(token: string) {
+    // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+    let hash = 0, i, chr;
+    for (i = 0; i < token.length; i++) {
+      chr = token.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+  }
+
+  private _rowsKey_(token: string): string {
+    return `${this.prefix}:rows_${this.hash(token)}`;
+  }
+
+  private _lastRowKey_(): string {
+    return `${this.prefix}:lastRow`;
+  }
+
+  public async setRows(token: string, rows: Set<Row>) {
+    return this._set(this._rowsKey_(token), Array.from(rows));
+  }
+
+  public async setLastRow(last: number) {
+    return this._set(this._lastRowKey_(), last);
+  }
+
+  public async getRows(token: string) {
+    return new Set(await this._get(this._rowsKey_(token), new Array<Row>()));
+  }
+
+  public async getLastRow() {
+    return this._get(this._lastRowKey_(), -1);
+  }
+}
 export class DocumentStore {
   private lastId: number | null;
   private prefix: string;
@@ -366,6 +464,10 @@ export class DocumentStore {
     plugin: string, key: string, default_value: any = undefined
   ): Promise<any> {
     return await this._get(this._pluginDataKey_(plugin, key), default_value);
+  }
+
+  public async getLastIDKey() {
+    return await this._get(this._lastIDKey_(), 0);
   }
 
   // get next row ID

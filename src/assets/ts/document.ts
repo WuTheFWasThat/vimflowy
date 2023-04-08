@@ -7,11 +7,12 @@ import * as fn_utils from './utils/functional';
 // import logger from './utils/logger';
 import { isWhitespace } from './utils/text';
 import Path from './path';
-import { DocumentStore } from './datastore';
+import { DocumentStore, SearchStore } from './datastore';
 import { InMemory } from '../../shared/data_backend';
 import {
   Row, Col, Char, Line, SerializedLine, SerializedBlock
 } from './types';
+import { Searcher } from './searcher';
 
 type RowInfo = {
   readonly line: Line;
@@ -210,13 +211,17 @@ export default class Document extends EventEmitter {
   public store: DocumentStore;
   public name: string;
   public root: Path;
+  public searcher: Searcher;
 
-  constructor(store: DocumentStore, name = '') {
+  constructor(store: DocumentStore, searchStore: SearchStore, name = '') {
     super();
     this.cache = new DocumentCache();
     this.store = store;
     this.name = name;
     this.root = Path.root();
+    this.searcher = new Searcher(searchStore);
+
+    this.initSearcher();
     return this;
   }
 
@@ -317,6 +322,8 @@ export default class Document extends EventEmitter {
   }
 
   public async setLine(row: Row, line: Line) {
+    const oldLine = await this.getText(row);
+    this.searcher.rowChange(row, oldLine, line.join(''));
     this.cache.setLine(row, line);
     await this.store.setLine(row, line);
   }
@@ -713,22 +720,17 @@ export default class Document extends EventEmitter {
     return path.child(row);
   }
 
-  private async* traverseSubtree(root: Path): AsyncIterableIterator<Path> {
-    const visited_rows: {[row: number]: boolean} = {};
-    let that = this;
-
-    async function* helper(path: Path): AsyncIterableIterator<Path> {
-      if (path.row in visited_rows) {
-        return;
-      }
-      visited_rows[path.row] = true;
-      yield path;
-      const children = await that.getChildren(path);
-      for (let i = 0; i < children.length; i++) {
-        yield* await helper(children[i]);
+  public async initSearcher() {
+    const lastInserted = await this.searcher.searchStore.getLastRow();
+    const lastRow = await this.store.getLastIDKey();
+    for (let i = lastInserted + 1; i <= lastRow; i++) {
+      if (await this.isAttached(i)) {
+        //console.log('inserting row', i, 'out of', lastRow, 'into search store');
+        this.searcher.rowChange(i, '', await this.getText(i));
+        await this.searcher.update(i);
+        await this.searcher.searchStore.setLastRow(i);
       }
     }
-    yield* await helper(root);
   }
 
   public async search(root: Path, query: string, options: SearchOptions = {}) {
@@ -746,25 +748,41 @@ export default class Document extends EventEmitter {
     const query_words =
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
-    const paths = this.traverseSubtree(root);
-    for await (let path of paths) {
-      const text = await this.getText(path.row);
-      const line = canonicalize(text);
-      const matches: Array<number> = [];
-      if (_.every(query_words.map((word) => {
-        const index = line.indexOf(word);
-        if (index === -1) { return false; }
-        for (let j = index; j < index + word.length; j++) {
-          matches.push(j);
-        }
-        return true;
-      }))) {
-        results.push({ path, matches });
-      }
-      if (nresults > 0 && results.length === nresults) {
+    const possibleRows = await this.searcher.search(query_words);
+    if (possibleRows === null) {
+      return results;
+    }
+    const possibleRowsArr = Array.from(possibleRows);
+    const chunkedRows = _.chunk(possibleRowsArr, 20);
+    for (let chunk of chunkedRows) {
+      if (nresults > 0 && results.length >= nresults) {
         break;
       }
+      await Promise.all(chunk.map(async (row) => {
+        const text = await this.getText(row);
+        const line = canonicalize(text);
+        const matches: Array<number> = [];
+        const path = await this.canonicalPath(row);
+
+        if (path === null || !path.isDescendant(root)) {  // might not work with cloned rows
+          return;
+        }
+
+        if (_.every(query_words.map((word) => {
+          const index = line.indexOf(word);
+          if (index === -1) { return false; }
+          for (let j = index; j < index + word.length; j++) {
+            matches.push(j);
+          }
+          return true;
+        }))) {
+          if (path && (nresults == 0 || results.length < nresults)) {
+            results.push({ path, matches });
+          }
+        }
+      }));
     }
+    //console.log('Search results', results);
     return results;
   }
 
@@ -891,6 +909,7 @@ export default class Document extends EventEmitter {
 
 export class InMemoryDocument extends Document {
   constructor() {
-    super(new DocumentStore(new InMemory()));
+    const backend = new InMemory();
+    super(new DocumentStore(backend), new SearchStore(backend));
   }
 }
