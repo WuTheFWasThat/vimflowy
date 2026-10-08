@@ -17,12 +17,7 @@ export default class Path {
   }
 
   public static loadFromAncestry(ancestry: SerializedPath): Path {
-    if (ancestry.length === 0) {
-      return Path.root();
-    }
-    const row: Row = ancestry.pop() as Row;
-    const parent = Path.loadFromAncestry(ancestry);
-    return parent.child(row);
+    return Path.root().extend(ancestry);
   }
 
   constructor(parent: Path | null, row: Row) {
